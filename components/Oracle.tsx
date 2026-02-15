@@ -1,15 +1,7 @@
-
 import React from 'react';
-import ResonantOracle from './ResonantOracle'; // We keep the interactive component logic separate if preferred, or inline it. 
-// Ideally we inline it to rename, but for simplicity I will import the existing logic if I didn't rename the file.
-// The prompt implies "Oracle goes to the Oracle hub". I will wrap the interactive part.
-
-import { INVENTORY, STORIES } from '../data/mockData';
-import { ArrowRight, Sparkles, Layers } from 'lucide-react';
-import { Product } from '../types';
-
-// Reusing the interactive component logic but embedding it here
 import InteractiveOracle from './ResonantOracle'; 
+import { INVENTORY, STORIES } from '../data/mockData';
+import { Sparkles, Layers } from 'lucide-react';
 
 const OracleHub: React.FC = () => {
     const oracleProducts = INVENTORY.filter(p => p.category === 'Oracle' || p.category === 'Paper Goods');
@@ -49,7 +41,7 @@ const OracleHub: React.FC = () => {
                      {oracleProducts.map(product => (
                          <div key={product.id} className="group cursor-pointer">
                              <div className="aspect-[3/4] bg-stone-200 mb-6 overflow-hidden relative border border-stone-200">
-                                 <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                 <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={product.title} />
                                  <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors"></div>
                              </div>
                              <h3 className="font-serif text-xl text-stone-900 mb-1">{product.title}</h3>
