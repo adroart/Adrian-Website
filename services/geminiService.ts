@@ -1,9 +1,12 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize the Google GenAI SDK with the API key from environment variables.
-// Always use a named parameter 'apiKey' as per the SDK guidelines.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Use a robust check for process.env in case of browser polyfill issues.
+const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 
+               (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) ? (window as any).process.env.API_KEY : '';
+
+// Ensure we don't crash if key is missing during initialization, though calls will fail.
+const ai = new GoogleGenAI({ apiKey: apiKey });
 
 export const generateOracleInsight = async (intent: string): Promise<string> => {
   try {

@@ -1,11 +1,11 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
 import { 
     ArrowRight, ArrowUpRight, ArrowLeft, 
     Compass, Database, Maximize2,
-    Minus, ShoppingCart, CheckCircle2
+    Minus, ShoppingCart, CheckCircle2,
+    ArrowDown
 } from 'lucide-react';
 
 const MarginSpecs: React.FC<{ label: string; value: string }> = ({ label, value }) => (
@@ -356,17 +356,5 @@ const ArtHub: React.FC<{
         </section>
     );
 };
-
-const ArrowDown: React.FC<{ className?: string; size?: number }> = ({ className, size = 24 }) => (
-    <svg 
-        width={size} height={size} 
-        viewBox="0 0 24 24" fill="none" 
-        stroke="currentColor" strokeWidth="1" 
-        strokeLinecap="round" strokeLinejoin="round" 
-        className={className}
-    >
-        <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
-    </svg>
-);
 
 export default ArtHub;
