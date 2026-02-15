@@ -1,16 +1,38 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Google GenAI SDK with the API key from environment variables.
-// Use a robust check for process.env in case of browser polyfill issues.
-const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 
-               (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) ? (window as any).process.env.API_KEY : '';
+// Robustly retrieve API Key, defaulting to empty string if missing to prevent crash
+const getApiKey = () => {
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        return process.env.API_KEY;
+    }
+    if (typeof window !== 'undefined' && (window as any).process && (window as any).process.env && (window as any).process.env.API_KEY) {
+        return (window as any).process.env.API_KEY;
+    }
+    return '';
+};
 
-// Ensure we don't crash if key is missing during initialization, though calls will fail.
-const ai = new GoogleGenAI({ apiKey: apiKey });
+const apiKey = getApiKey();
+
+// Initialize AI only if we have a key, otherwise create a placeholder or handle gracefully
+// The SDK might throw if apiKey is empty, so we wrap it.
+let ai: GoogleGenAI | null = null;
+try {
+    if (apiKey) {
+        ai = new GoogleGenAI({ apiKey });
+    } else {
+        console.warn("Gemini API Key missing - Oracle features will return mock data.");
+    }
+} catch (e) {
+    console.error("Failed to initialize GoogleGenAI", e);
+}
 
 export const generateOracleInsight = async (intent: string): Promise<string> => {
+  if (!ai) {
+      return "The mists are thick today. (API Key missing)";
+  }
+
   try {
-    // Basic Text Tasks should use 'gemini-3-flash-preview' for optimal performance and reasoning.
+    // Basic Text Tasks should use 'gemini-3-flash-preview'
     const model = 'gemini-3-flash-preview';
     
     const systemInstruction = `
@@ -38,10 +60,9 @@ export const generateOracleInsight = async (intent: string): Promise<string> => 
       }
     });
 
-    // Directly access the .text property from GenerateContentResponse. Do not call it as a method.
     return response.text || "The silence speaks for itself.";
   } catch (error) {
     console.error("Oracle Error:", error);
-    return "Something went wrong. Please try again soon.";
+    return "The connection is faint. Try again.";
   }
 };

@@ -8,18 +8,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Lato:wght@300;400&family=Space+Mono:ital,wght@0,400;1,400&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
     <script>
-      // Polyfill for process.env which is required by the Gemini SDK in browser environments
-      // We attach it to window so it is available globally.
-      if (typeof window !== 'undefined') {
-          window.process = window.process || {
-            env: {
-              NODE_ENV: 'production',
-              API_KEY: '' // This allows the code to load; actual key injection happens via environment or replaced string
-            }
-          };
-      }
+      // 1. Global Error Trap: Prints startup errors to the screen
+      window.onerror = function(message, source, lineno, colno, error) {
+        const root = document.getElementById('root');
+        const errDiv = document.createElement('div');
+        errDiv.style.position = 'fixed';
+        errDiv.style.top = '0';
+        errDiv.style.left = '0';
+        errDiv.style.width = '100%';
+        errDiv.style.background = '#fef2f2';
+        errDiv.style.color = '#991b1b';
+        errDiv.style.padding = '20px';
+        errDiv.style.zIndex = '99999';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.borderBottom = '1px solid #dc2626';
+        errDiv.innerHTML = `<strong>Application Error:</strong><br/>${message}<br/><small>${source}:${lineno}</small>`;
+        document.body.appendChild(errDiv);
+        console.error("Global Error Caught:", message, error);
+      };
 
+      // 2. Robust Process Polyfill
+      window.process = {
+        env: {
+          NODE_ENV: 'production',
+          API_KEY: '' 
+        }
+      };
+      
+      // Tailwind Config
       tailwind.config = {
         theme: {
           extend: {
@@ -31,52 +49,13 @@
               title: ['"Cinzel"', 'serif'],
             },
             colors: {
-              taupe: {
-                DEFAULT: '#453d39', // Softened from 3d3430
-                light: '#594e48',
-              },
-              cream: {
-                DEFAULT: '#f2efe9', // Darker, richer cream
-                dark: '#e6e2d8',
-              },
-              'warm-gold': {
-                DEFAULT: '#b0966b', // Desaturated slightly
-                hover: '#9e8459',
-              },
-              paper: {
-                50: '#f5f4f0', // "Bone" - significantly darker than #fdfbf7 to reduce glare
-                100: '#ebe8e1', // "Parchment"
-                200: '#e0dbcf', // "Aged"
-                300: '#cfc6b5',
-              },
-              wood: {
-                400: '#a89070',
-                500: '#8f7a5b',
-                600: '#736046',
-                700: '#524330',
-                800: '#3d3226',
-                900: '#262321', // "Soft Charcoal" - lifted from #1f160f to remove harshness
-              },
-              stone: {
-                50: '#f7f6f4',
-                100: '#ebe9e6',
-                200: '#dcd9d4',
-                300: '#c2beb8',
-                400: '#a39e96',
-                500: '#878179',
-                600: '#6b665f',
-                700: '#524e49',
-                800: '#3d3a36',
-                900: '#2b2926',
-                950: '#23201e', // "Off-Black" - lifted from #1a1816
-              },
-              bronze: {
-                200: '#e6d9c3',
-                400: '#c4aa7c',
-                500: '#ab9266', // Slightly more muted gold
-                600: '#8a744e',
-                900: '#453825',
-              },
+              taupe: { DEFAULT: '#453d39', light: '#594e48' },
+              cream: { DEFAULT: '#f2efe9', dark: '#e6e2d8' },
+              'warm-gold': { DEFAULT: '#b0966b', hover: '#9e8459' },
+              paper: { 50: '#f5f4f0', 100: '#ebe8e1', 200: '#e0dbcf', 300: '#cfc6b5' },
+              wood: { 400: '#a89070', 500: '#8f7a5b', 600: '#736046', 700: '#524330', 800: '#3d3226', 900: '#262321' },
+              stone: { 50: '#f7f6f4', 100: '#ebe9e6', 200: '#dcd9d4', 300: '#c2beb8', 400: '#a39e96', 500: '#878179', 600: '#6b665f', 700: '#524e49', 800: '#3d3a36', 900: '#2b2926', 950: '#23201e' },
+              bronze: { 200: '#e6d9c3', 400: '#c4aa7c', 500: '#ab9266', 600: '#8a744e', 900: '#453825' },
             },
             animation: {
               'spin-slow': 'spin 20s linear infinite',
@@ -89,42 +68,27 @@
               'ripple': 'ripple 0.6s linear forwards',
             },
             keyframes: {
-              marquee: {
-                '0%': { transform: 'translateX(0%)' },
-                '100%': { transform: 'translateX(-100%)' }
-              },
-              spinReverse: {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(-360deg)' }
-              },
-              draw: {
-                '0%': { strokeDashoffset: '1000' },
-                '100%': { strokeDashoffset: '0' }
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(40px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' }
-              },
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' }
-              },
-              ripple: {
-                '0%': { transform: 'scale(0)', opacity: '1' },
-                '100%': { transform: 'scale(4)', opacity: '0' }
-              }
+              marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } },
+              spinReverse: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(-360deg)' } },
+              draw: { '0%': { strokeDashoffset: '1000' }, '100%': { strokeDashoffset: '0' } },
+              slideUp: { '0%': { transform: 'translateY(40px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              ripple: { '0%': { transform: 'scale(0)', opacity: '1' }, '100%': { transform: 'scale(4)', opacity: '0' } }
             }
           }
         }
       }
     </script>
+
     <style>
       body {
-        background-color: #f5f4f0; /* Updated to match paper-50 */
-        color: #262321; /* Updated to match wood-900 */
+        background-color: #f5f4f0;
+        color: #262321;
+        min-height: 100vh;
       }
-      
-      /* 1. Analog Noise Oscillation */
+      #root {
+        min-height: 100vh;
+      }
       .noise-overlay {
         position: fixed;
         top: -50%;
@@ -133,11 +97,10 @@
         height: 200%;
         pointer-events: none;
         z-index: 9998;
-        opacity: 0.05; /* Reduced slightly to blend better with softer colors */
+        opacity: 0.05;
         background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
         animation: noiseAnimation 0.2s infinite;
       }
-
       @keyframes noiseAnimation {
         0% { transform: translate(0,0) }
         10% { transform: translate(-5%,-5%) }
@@ -151,72 +114,30 @@
         90% { transform: translate(10%,5%) }
         100% { transform: translate(5%,0) }
       }
-
-      /* 5. Golden Thread Scrollbar */
-      ::-webkit-scrollbar {
-        width: 4px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #f5f4f0;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #ab9266;
-        border-radius: 0;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #8a744e;
-      }
-
-      /* 3. Cinematic Image Development */
-      .img-develop {
-        filter: grayscale(100%) blur(5px) contrast(1.1); /* Reduced contrast bump */
-        transition: filter 1.2s ease-out, transform 0.8s ease-out, opacity 0.5s ease-out;
-        opacity: 0;
-      }
-      .img-develop.developed {
-        filter: grayscale(0%) blur(0px) contrast(1);
-        opacity: 1;
-      }
-      
-      /* 10. Click Ripple */
-      .click-ripple {
-        position: fixed;
-        border: 1px solid #ab9266;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 9998;
-        transform: translate(-50%, -50%);
-        animation: ripple 0.6s linear forwards;
-      }
-
-      @keyframes ripple {
-        0% { width: 0; height: 0; opacity: 1; }
-        100% { width: 100px; height: 100px; opacity: 0; }
-      }
-
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      ::selection {
-        background: #c4aa7c;
-        color: #262321;
-      }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: #f5f4f0; }
+      ::-webkit-scrollbar-thumb { background: #ab9266; border-radius: 0; }
+      ::-webkit-scrollbar-thumb:hover { background: #8a744e; }
+      .img-develop { filter: grayscale(100%) blur(5px) contrast(1.1); transition: filter 1.2s ease-out, transform 0.8s ease-out, opacity 0.5s ease-out; opacity: 0; }
+      .img-develop.developed { filter: grayscale(0%) blur(0px) contrast(1); opacity: 1; }
+      .click-ripple { position: fixed; border: 1px solid #ab9266; border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); animation: ripple 0.6s linear forwards; }
+      @keyframes ripple { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 100px; height: 100px; opacity: 0; } }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      ::selection { background: #c4aa7c; color: #262321; }
     </style>
-  <script type="importmap">
+
+    <script type="importmap">
 {
   "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react/jsx-runtime": "https://aistudiocdn.com/react@^19.2.0/jsx-runtime",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "lucide-react": "https://esm.sh/lucide-react@0.300.0",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
   }
 }
 </script>
