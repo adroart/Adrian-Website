@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Story, StoryType, Artwork, Product } from '../types';
 import { STORIES, FULL_ARCHIVE, INVENTORY } from '../data/mockData';
@@ -272,6 +271,7 @@ const Writings: React.FC = () => {
   // Index State
   const [activeFilter, setActiveFilter] = useState<StoryType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   
   // Reader State
   const [readingProgress, setReadingProgress] = useState(0);
@@ -295,6 +295,14 @@ const Writings: React.FC = () => {
       return data;
   }, [activeFilter, searchQuery]);
 
+  // --- SUGGESTIONS LOGIC ---
+  const suggestions = useMemo(() => {
+      if (!searchQuery.trim()) return [];
+      const q = searchQuery.toLowerCase();
+      // Simple match: Title includes query
+      return STORIES.filter(s => s.title.toLowerCase().includes(q)).slice(0, 5);
+  }, [searchQuery]);
+
   const startHereStories = useMemo(() => {
       return STORIES.filter(s => s.isStartHere).slice(0, 3);
   }, []);
@@ -310,6 +318,13 @@ const Writings: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [selectedStory]);
+
+  const handleSuggestionClick = (story: Story) => {
+      setSelectedStory(story);
+      setSearchQuery('');
+      setIsSearchFocused(false);
+      window.scrollTo(0,0);
+  };
 
   // --- VIEW: DETAIL PAGE ---
   if (selectedStory) {
@@ -464,18 +479,58 @@ const Writings: React.FC = () => {
 
               {/* Type Filters & Search - Wrapped properly */}
               <div className="sticky top-[60px] z-30 bg-paper-50/95 backdrop-blur-md -mx-6 px-6 border-b border-wood-200 mb-0 transition-all shadow-sm">
-                  <div className="flex flex-col gap-4 py-4 max-w-4xl mx-auto">
+                  <div className="flex flex-col gap-4 py-4 max-w-4xl mx-auto relative">
                       
-                      {/* Top: Search */}
-                      <div className="relative w-full">
+                      {/* Top: Search & Suggestions */}
+                      <div className="relative w-full z-50">
                             <Search size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-wood-400" />
                             <input 
                                 type="text" 
                                 placeholder="Search the archive..." 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-transparent border-b border-wood-200 pl-7 py-2 font-serif text-base text-wood-900 placeholder-wood-400 focus:outline-none focus:border-bronze-500 transition-colors"
+                                onFocus={() => setIsSearchFocused(true)}
+                                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                                className="w-full bg-transparent border-b border-wood-200 pl-7 pr-8 py-2 font-serif text-base text-wood-900 placeholder-wood-400 focus:outline-none focus:border-bronze-500 transition-colors"
                             />
+                            {searchQuery && (
+                                <button 
+                                    onClick={() => { setSearchQuery(''); setIsSearchFocused(false); }}
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 text-wood-400 hover:text-wood-900 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+
+                            {/* Suggestions Dropdown */}
+                            {isSearchFocused && searchQuery && (
+                                <div className="absolute top-full left-0 w-full bg-paper-50 border border-wood-200 shadow-xl mt-1 animate-fade-in rounded-sm overflow-hidden z-50">
+                                    {suggestions.length > 0 ? (
+                                        suggestions.map(s => {
+                                            const SuggIcon = TYPE_ICONS[s.type];
+                                            return (
+                                                <div 
+                                                    key={s.id}
+                                                    onMouseDown={(e) => { e.preventDefault(); handleSuggestionClick(s); }}
+                                                    className="flex items-center gap-3 p-3 hover:bg-wood-100/50 cursor-pointer border-b border-wood-100 last:border-0 transition-colors"
+                                                >
+                                                    <div className="w-8 h-8 rounded-full bg-wood-100 flex items-center justify-center text-wood-500 shrink-0">
+                                                        <SuggIcon size={14} />
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-serif text-base text-wood-900 truncate font-medium">{s.title}</span>
+                                                        <span className="font-mono text-[9px] uppercase tracking-widest text-wood-500">{s.date}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="p-4 text-center">
+                                            <span className="font-mono text-xs uppercase tracking-widest text-wood-400">No matches found</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                       </div>
 
                       {/* Bottom: Icons Row (Fit on screen) */}
@@ -499,32 +554,4 @@ const Writings: React.FC = () => {
                   </div>
               </div>
 
-              {/* Stories List - Accordion Style */}
-              <div className="flex flex-col min-h-[40vh] border-t border-wood-200 md:border-t-0 mt-4">
-                  {filteredStories.length > 0 ? (
-                      filteredStories.map(story => (
-                          <StoryAccordionItem 
-                              key={story.id} 
-                              story={story} 
-                              onClick={() => { setSelectedStory(story); window.scrollTo(0,0); }} 
-                          />
-                      ))
-                  ) : (
-                      <div className="py-20 text-center opacity-60">
-                          <p className="font-serif text-lg text-wood-500">No stories found.</p>
-                          <button 
-                              onClick={() => { setActiveFilter('all'); setSearchQuery(''); }}
-                              className="mt-4 font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 font-bold"
-                          >
-                              Clear Filters
-                          </button>
-                      </div>
-                  )}
-              </div>
-
-          </div>
-      </section>
-  );
-};
-
-export default Writings;
+              {/* Stories List - Accordion
