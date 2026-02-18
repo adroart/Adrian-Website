@@ -20,17 +20,16 @@
 
       // 2. Global Error Trap
       window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global Error:", message, error);
         const root = document.getElementById('root');
         const loader = root ? root.querySelector('.initial-loader') : null;
         
         // If the loader is still visible, we have a startup crash
         if (loader) {
-            console.error("CRITICAL STARTUP ERROR:", message);
-            
             let helpfulHint = "";
-            if (message.includes("SyntaxError") || message.includes("<")) {
-                helpfulHint = "Browser cannot execute JSX/TSX directly. Ensure your build process (Vite/Build) is compiling index.tsx to .js.";
-            } else if (message.includes("import")) {
+            if (message.toString().includes("SyntaxError") || message.toString().includes("<")) {
+                helpfulHint = "Browser cannot execute JSX/TSX directly. Ensure Cloudflare Build is compiling this file.";
+            } else if (message.toString().includes("import")) {
                 helpfulHint = "Module loading failed. Check your network or import map.";
             }
 

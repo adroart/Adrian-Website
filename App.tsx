@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Product, Artwork } from './types';
 import Navigation from './components/Navigation';
 import Home from './components/Home';
@@ -19,6 +18,11 @@ const App: React.FC = () => {
   const [currentView, setView] = useState<View>(View.HOME);
   const [cart, setCart] = useState<(Product | Artwork)[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Debug verify mount
+  useEffect(() => {
+    console.log("App Component Mounted Successfully");
+  }, []);
 
   // Function to show transient notifications
   const handleShowToast = (msg: string) => {
