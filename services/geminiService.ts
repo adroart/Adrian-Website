@@ -1,17 +1,24 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Google GenAI SDK with the API key from environment variables.
-// Use a robust check for process.env in case of browser polyfill issues.
-const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 
-               (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) ? (window as any).process.env.API_KEY : '';
+// Lazy initialization wrapper to prevent crash on module load
+let aiInstance: GoogleGenAI | null = null;
 
-// Ensure we don't crash if key is missing during initialization, though calls will fail.
-const ai = new GoogleGenAI({ apiKey: apiKey });
+const getAI = () => {
+  if (!aiInstance) {
+    const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 
+                   (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) ? (window as any).process.env.API_KEY : '';
+    
+    // We instantiate even with empty key to allow the app to run (it will just fail on generate)
+    // This prevents the "white screen" crash at startup
+    aiInstance = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-for-init' });
+  }
+  return aiInstance;
+};
 
 export const generateOracleInsight = async (intent: string): Promise<string> => {
   try {
-    // Basic Text Tasks should use 'gemini-3-flash-preview' for optimal performance and reasoning.
-    const model = 'gemini-3-flash-preview';
+    const ai = getAI();
+    const model = 'gemini-2.5-flash-latest';
     
     const systemInstruction = `
       You are a calm, grounded guide for Adrian Rasmussen's art studio.
@@ -20,7 +27,6 @@ export const generateOracleInsight = async (intent: string): Promise<string> => 
       Tone:
       - Simple, clear, and quiet.
       - Avoid complex "mystical" jargon or clichés.
-      - Don't use words like "triangulation", "mechanism", or "celestial".
       - Focus on nature, silence, and the feeling of wood and light.
       
       Task:
@@ -38,10 +44,9 @@ export const generateOracleInsight = async (intent: string): Promise<string> => 
       }
     });
 
-    // Directly access the .text property from GenerateContentResponse. Do not call it as a method.
     return response.text || "The silence speaks for itself.";
   } catch (error) {
     console.error("Oracle Error:", error);
-    return "Something went wrong. Please try again soon.";
+    return "The oracle is silent today. Look within.";
   }
 };

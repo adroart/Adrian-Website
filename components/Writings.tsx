@@ -554,4 +554,32 @@ const Writings: React.FC = () => {
                   </div>
               </div>
 
-              {/* Stories List - Accordion
+              {/* Stories List - Accordion Style */}
+              <div className="flex flex-col min-h-[40vh] border-t border-wood-200 md:border-t-0 mt-4">
+                  {filteredStories.length > 0 ? (
+                      filteredStories.map(story => (
+                          <StoryAccordionItem 
+                              key={story.id} 
+                              story={story} 
+                              onClick={() => { setSelectedStory(story); window.scrollTo(0,0); }} 
+                          />
+                      ))
+                  ) : (
+                      <div className="py-20 text-center opacity-60">
+                          <p className="font-serif text-lg text-wood-500">No stories found.</p>
+                          <button 
+                              onClick={() => { setActiveFilter('all'); setSearchQuery(''); }}
+                              className="mt-4 font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 font-bold"
+                          >
+                              Clear Filters
+                          </button>
+                      </div>
+                  )}
+              </div>
+
+          </div>
+      </section>
+  );
+};
+
+export default Writings;

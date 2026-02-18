@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Product } from '../types';
@@ -87,9 +86,12 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt, onDoubleTap }) 
 };
 
 const VisualLightbox: React.FC<{ src: string; onClose: () => void; }> = ({ src, onClose }) => {
+    // Safety check for SSR or weird load states
+    if (typeof document === 'undefined' || !document.body) return null;
+
     return createPortal(
         <div 
-            className="fixed inset-0 z-[2200] bg-paper-50 flex flex-col animate-fade-in"
+            className="fixed inset-0 z-[9999] bg-paper-50 flex flex-col animate-fade-in"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
             }}
@@ -215,15 +217,24 @@ const InspectionDrawer: React.FC<{
         if (product) {
             setLoaded(false);
             requestAnimationFrame(() => setAnimClass('translate-x-0'));
-            document.body.style.overflow = 'hidden';
+            // Safety: Only set style if body exists (SSR safe)
+            if (typeof document !== 'undefined' && document.body) {
+                document.body.style.overflow = 'hidden';
+            }
         } else {
             setAnimClass('translate-x-full');
-            document.body.style.overflow = '';
+            if (typeof document !== 'undefined' && document.body) {
+                document.body.style.overflow = '';
+            }
         }
-        return () => { document.body.style.overflow = ''; }
+        return () => { 
+            if (typeof document !== 'undefined' && document.body) {
+                document.body.style.overflow = ''; 
+            }
+        }
     }, [product]);
 
-    if (!product) return null;
+    if (!product || typeof document === 'undefined') return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[2000] flex justify-end">
