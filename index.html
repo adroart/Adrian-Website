@@ -18,22 +18,36 @@
         }
       };
 
-      // 2. Global Error Trap: Prints startup errors to the screen
+      // Failsafe: If app hangs for more than 8 seconds, show a helpful message
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        const loader = root ? root.querySelector('.initial-loader') : null;
+        if (loader) {
+            const msg = document.createElement('div');
+            msg.innerHTML = `<p style="margin-top:20px; color:#78350f; font-family:monospace; font-size:12px; max-width:300px; text-align:center;">
+                Taking longer than expected...<br/>
+                If this persists, please check your connection or console.
+            </p>`;
+            loader.appendChild(msg);
+        }
+      }, 8000);
+
+      // 2. Global Error Trap
       window.onerror = function(message, source, lineno, colno, error) {
         const root = document.getElementById('root');
         if (root) {
             const errorMsg = error ? error.toString() : message;
-            // Only show if the app hasn't mounted content yet (still has the loader)
+            // Only show if the app hasn't mounted content yet
             if (root.querySelector('.initial-loader')) {
                 root.innerHTML = `
-                    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fef2f2; color:#7f1d1d; padding:40px; z-index:99999; font-family:monospace; overflow:auto;">
-                        <h2 style="font-size:20px; font-weight:bold; margin-bottom:10px;">Startup Error</h2>
-                        <p style="margin-bottom:20px;">The application failed to initialize.</p>
-                        <div style="background:white; padding:20px; border:1px solid #ef4444; border-radius:4px;">
-                            <strong>Message:</strong> ${errorMsg}<br/>
-                            <strong>Location:</strong> ${source}:${lineno}
+                    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f4f0; color:#262321; padding:40px; z-index:99999; font-family:'Space Mono', monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+                        <h2 style="font-size:24px; font-weight:bold; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.1em;">Studio Error</h2>
+                        <p style="margin-bottom:24px; max-width:500px; line-height:1.6;">The artifact failed to materialize.</p>
+                        <div style="background:#e6e2d8; padding:20px; border:1px solid #d1ccc0; border-radius:4px; text-align:left; font-size:12px; margin-bottom:30px; max-width:600px; overflow:auto;">
+                            <strong>Diagnostic:</strong> ${errorMsg}<br/>
+                            <strong>Source:</strong> ${source}:${lineno}
                         </div>
-                        <button onclick="window.location.reload()" style="margin-top:20px; padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer; font-family:monospace;">RELOAD APPLICATION</button>
+                        <button onclick="window.location.reload()" style="padding:12px 24px; background:#262321; color:#f5f4f0; border:none; cursor:pointer; font-family:'Space Mono', monospace; text-transform:uppercase; letter-spacing:0.2em; font-weight:bold;">RELOAD</button>
                     </div>
                 `;
             }
@@ -41,9 +55,14 @@
         console.error("CRITICAL STARTUP ERROR:", message, error);
       };
 
-      // 3. Catch Promise Rejections (often module loading failures)
+      // 3. Catch Promise Rejections (module loading failures)
       window.addEventListener('unhandledrejection', function(event) {
         console.error("Unhandled rejection:", event.reason);
+        // We trigger the error UI for these too if we are still loading
+        const root = document.getElementById('root');
+        if (root && root.querySelector('.initial-loader')) {
+             window.onerror(event.reason ? event.reason.toString() : "Unknown Promise Error", "Module Loader", 0, 0, event.reason);
+        }
       });
       
       // Tailwind Config
