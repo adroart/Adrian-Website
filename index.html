@@ -10,11 +10,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Lato:wght@300;400&family=Space+Mono:ital,wght@0,400;1,400&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
     
     <script>
-      // 1. Critical Polyfill: Must run before any modules load
+      // 1. Critical Polyfill
       window.process = {
         env: {
           NODE_ENV: 'production',
           API_KEY: '' 
+        }
+      };
+
+      // 2. Global Error Trap
+      window.onerror = function(message, source, lineno, colno, error) {
+        const root = document.getElementById('root');
+        const loader = root ? root.querySelector('.initial-loader') : null;
+        
+        // If the loader is still visible, we have a startup crash
+        if (loader) {
+            console.error("CRITICAL STARTUP ERROR:", message);
+            
+            let helpfulHint = "";
+            if (message.includes("SyntaxError") || message.includes("<")) {
+                helpfulHint = "Browser cannot execute JSX/TSX directly. Ensure your build process (Vite/Build) is compiling index.tsx to .js.";
+            } else if (message.includes("import")) {
+                helpfulHint = "Module loading failed. Check your network or import map.";
+            }
+
+            loader.innerHTML = `
+                <div style="padding:40px; text-align:center; color:#7f1d1d; font-family:monospace; max-width:600px;">
+                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px;">INITIALIZATION FAILURE</h2>
+                    <p style="margin-bottom:20px;">The studio could not load.</p>
+                    <div style="background:#fef2f2; border:1px solid #ef4444; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto;">
+                        <strong>Error:</strong> ${message}<br/>
+                        <strong>Hint:</strong> ${helpfulHint || "Check console for details."}<br/>
+                        <strong>Source:</strong> ${source}:${lineno}
+                    </div>
+                    <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY</button>
+                </div>
+            `;
         }
       };
       
@@ -148,22 +179,22 @@
     <div class="noise-overlay"></div>
     <script type="module" src="./index.tsx"></script>
     
-    <!-- Emergency Failsafe: If React fails to take over in 6 seconds, show error -->
+    <!-- Emergency Failsafe: If app hangs for 8 seconds, assume connection or build error -->
     <script>
         setTimeout(function() {
             const root = document.getElementById('root');
             const loader = root ? root.querySelector('.initial-loader') : null;
             if (loader) {
-                console.error("Emergency Failsafe: App failed to mount.");
+                console.error("Emergency Failsafe: App failed to mount in 8 seconds.");
                 loader.innerHTML = `
                     <div style="text-align:center; padding:20px; color:#7f1d1d; font-family:monospace;">
                         <h2 style="font-size:18px; margin-bottom:10px;">Connection Timeout</h2>
-                        <p style="margin-bottom:20px;">The interface failed to load resources.</p>
+                        <p style="margin-bottom:20px;">The studio failed to materialize.</p>
                         <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY CONNECTION</button>
                     </div>
                 `;
             }
-        }, 6000);
+        }, 8000);
     </script>
   </body>
 </html>

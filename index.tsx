@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
+console.log("Studio Script Execution Started...");
+
 interface ErrorBoundaryProps {
   children?: React.ReactNode;
 }
@@ -49,6 +51,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 const mountApp = () => {
+    console.log("Mounting App...");
     const rootElement = document.getElementById('root');
 
     if (!rootElement) {
@@ -66,6 +69,7 @@ const mountApp = () => {
                 <App />
             </ErrorBoundary>
         );
+        console.log("React Render Initiated");
     } catch (e) {
         console.error("Fatal: React failed to mount.", e);
         rootElement.innerHTML = `<div style="padding:40px; color:red; font-family:monospace;">Fatal: Failed to mount application.<br/><br/>${e}</div>`;
