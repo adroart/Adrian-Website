@@ -17,53 +17,6 @@
           API_KEY: '' 
         }
       };
-
-      // Failsafe: If app hangs for more than 8 seconds, show a helpful message
-      setTimeout(() => {
-        const root = document.getElementById('root');
-        const loader = root ? root.querySelector('.initial-loader') : null;
-        if (loader) {
-            const msg = document.createElement('div');
-            msg.innerHTML = `<p style="margin-top:20px; color:#78350f; font-family:monospace; font-size:12px; max-width:300px; text-align:center;">
-                Taking longer than expected...<br/>
-                If this persists, please check your connection or console.
-            </p>`;
-            loader.appendChild(msg);
-        }
-      }, 8000);
-
-      // 2. Global Error Trap
-      window.onerror = function(message, source, lineno, colno, error) {
-        const root = document.getElementById('root');
-        if (root) {
-            const errorMsg = error ? error.toString() : message;
-            // Only show if the app hasn't mounted content yet
-            if (root.querySelector('.initial-loader')) {
-                root.innerHTML = `
-                    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f4f0; color:#262321; padding:40px; z-index:99999; font-family:'Space Mono', monospace; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                        <h2 style="font-size:24px; font-weight:bold; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.1em;">Studio Error</h2>
-                        <p style="margin-bottom:24px; max-width:500px; line-height:1.6;">The artifact failed to materialize.</p>
-                        <div style="background:#e6e2d8; padding:20px; border:1px solid #d1ccc0; border-radius:4px; text-align:left; font-size:12px; margin-bottom:30px; max-width:600px; overflow:auto;">
-                            <strong>Diagnostic:</strong> ${errorMsg}<br/>
-                            <strong>Source:</strong> ${source}:${lineno}
-                        </div>
-                        <button onclick="window.location.reload()" style="padding:12px 24px; background:#262321; color:#f5f4f0; border:none; cursor:pointer; font-family:'Space Mono', monospace; text-transform:uppercase; letter-spacing:0.2em; font-weight:bold;">RELOAD</button>
-                    </div>
-                `;
-            }
-        }
-        console.error("CRITICAL STARTUP ERROR:", message, error);
-      };
-
-      // 3. Catch Promise Rejections (module loading failures)
-      window.addEventListener('unhandledrejection', function(event) {
-        console.error("Unhandled rejection:", event.reason);
-        // We trigger the error UI for these too if we are still loading
-        const root = document.getElementById('root');
-        if (root && root.querySelector('.initial-loader')) {
-             window.onerror(event.reason ? event.reason.toString() : "Unknown Promise Error", "Module Loader", 0, 0, event.reason);
-        }
-      });
       
       // Tailwind Config
       tailwind.config = {
@@ -194,5 +147,23 @@
     </div>
     <div class="noise-overlay"></div>
     <script type="module" src="./index.tsx"></script>
+    
+    <!-- Emergency Failsafe: If React fails to take over in 6 seconds, show error -->
+    <script>
+        setTimeout(function() {
+            const root = document.getElementById('root');
+            const loader = root ? root.querySelector('.initial-loader') : null;
+            if (loader) {
+                console.error("Emergency Failsafe: App failed to mount.");
+                loader.innerHTML = `
+                    <div style="text-align:center; padding:20px; color:#7f1d1d; font-family:monospace;">
+                        <h2 style="font-size:18px; margin-bottom:10px;">Connection Timeout</h2>
+                        <p style="margin-bottom:20px;">The interface failed to load resources.</p>
+                        <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY CONNECTION</button>
+                    </div>
+                `;
+            }
+        }, 6000);
+    </script>
   </body>
 </html>

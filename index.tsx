@@ -57,30 +57,18 @@ const mountApp = () => {
     }
 
     try {
+        // Explicitly clear the loader content
+        rootElement.innerHTML = '';
+        
         const root = createRoot(rootElement);
         root.render(
             <ErrorBoundary>
                 <App />
             </ErrorBoundary>
         );
-        
-        // Safety cleanup: Ensure the loader is removed if it somehow persisted in the DOM structure
-        // though React normally overwrites the innerHTML of root.
-        const loader = document.querySelector('.initial-loader');
-        if (loader && loader.parentNode !== rootElement) {
-            loader.remove();
-        }
-        
     } catch (e) {
         console.error("Fatal: React failed to mount.", e);
-        // Fallback error UI if React itself crashes during mount
-        rootElement.innerHTML = `
-            <div style="padding:40px; color:#7f1d1d; font-family:monospace; text-align:center; margin-top:100px;">
-                <h3 style="font-size:20px; margin-bottom:10px;">MOUNT FAILURE</h3>
-                <p>The studio could not be initialized.</p>
-                <pre style="margin-top:20px; background:#fef2f2; padding:20px; text-align:left; display:inline-block;">${e}</pre>
-            </div>
-        `;
+        rootElement.innerHTML = `<div style="padding:40px; color:red; font-family:monospace;">Fatal: Failed to mount application.<br/><br/>${e}</div>`;
     }
 };
 
