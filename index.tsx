@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 
 interface ErrorBoundaryProps {
@@ -52,8 +52,8 @@ const rootElement = document.getElementById('root');
 
 if (rootElement) {
     try {
-        const root = ReactDOM.createRoot(rootElement);
-        // Removed StrictMode to prevent double-invocation of effects which can cause issues with canvas cleanup
+        const root = createRoot(rootElement);
+        // Removed StrictMode intentionally for stability in this CDN environment
         root.render(
             <ErrorBoundary>
                 <App />

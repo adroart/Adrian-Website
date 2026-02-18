@@ -5,11 +5,20 @@ let aiInstance: GoogleGenAI | null = null;
 
 const getAI = () => {
   if (!aiInstance) {
-    const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 
-                   (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) ? (window as any).process.env.API_KEY : '';
+    // Safe environment variable access for browser (window.process)
+    let apiKey = '';
     
+    // Check window.process first (set by index.html)
+    if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
+        apiKey = (window as any).process.env.API_KEY;
+    } 
+    // Fallback for some build environments
+    else if (typeof process !== 'undefined' && process.env?.API_KEY) {
+        apiKey = process.env.API_KEY;
+    }
+
     // We instantiate even with empty key to allow the app to run (it will just fail on generate)
-    // This prevents the "white screen" crash at startup
+    // This prevents the "white screen" crash at startup if key is missing
     aiInstance = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-for-init' });
   }
   return aiInstance;
@@ -18,6 +27,7 @@ const getAI = () => {
 export const generateOracleInsight = async (intent: string): Promise<string> => {
   try {
     const ai = getAI();
+    // Using gemini-2.5-flash-latest as per guidelines for standard text tasks
     const model = 'gemini-2.5-flash-latest';
     
     const systemInstruction = `
