@@ -1,32 +1,41 @@
-import { GoogleGenAI } from "@google/genai";
+// Dynamic import wrapper to prevent crash on module load if library has issues
+let aiInstance: any = null;
 
-// Lazy initialization wrapper to prevent crash on module load
-let aiInstance: GoogleGenAI | null = null;
-
-const getAI = () => {
+const getAI = async () => {
   if (!aiInstance) {
-    // Safe environment variable access for browser (window.process)
-    let apiKey = '';
-    
-    // Check window.process first (set by index.html)
-    if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
-        apiKey = (window as any).process.env.API_KEY;
-    } 
-    // Fallback for some build environments
-    else if (typeof process !== 'undefined' && process.env?.API_KEY) {
-        apiKey = process.env.API_KEY;
-    }
+    try {
+        const { GoogleGenAI } = await import("@google/genai");
+        
+        // Safe environment variable access for browser (window.process)
+        let apiKey = '';
+        
+        // Check window.process first (set by index.html)
+        if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
+            apiKey = (window as any).process.env.API_KEY;
+        } 
+        // Fallback for some build environments
+        else if (typeof process !== 'undefined' && process.env?.API_KEY) {
+            apiKey = process.env.API_KEY;
+        }
 
-    // We instantiate even with empty key to allow the app to run (it will just fail on generate)
-    // This prevents the "white screen" crash at startup if key is missing
-    aiInstance = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-for-init' });
+        // We instantiate even with empty key to allow the app to run (it will just fail on generate)
+        aiInstance = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-for-init' });
+    } catch (e) {
+        console.error("Failed to load Google GenAI SDK:", e);
+        return null;
+    }
   }
   return aiInstance;
 };
 
 export const generateOracleInsight = async (intent: string): Promise<string> => {
   try {
-    const ai = getAI();
+    const ai = await getAI();
+    
+    if (!ai) {
+        return "The oracle is disconnected. (SDK Load Failed)";
+    }
+
     // Using gemini-2.5-flash-latest as per guidelines for standard text tasks
     const model = 'gemini-2.5-flash-latest';
     

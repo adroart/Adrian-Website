@@ -23,12 +23,12 @@
         const root = document.getElementById('root');
         if (root) {
             const errorMsg = error ? error.toString() : message;
-            // Only show if the app hasn't mounted content yet
-            if (root.innerHTML.trim() === "") {
+            // Only show if the app hasn't mounted content yet (still has the loader)
+            if (root.querySelector('.initial-loader')) {
                 root.innerHTML = `
                     <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fef2f2; color:#7f1d1d; padding:40px; z-index:99999; font-family:monospace; overflow:auto;">
                         <h2 style="font-size:20px; font-weight:bold; margin-bottom:10px;">Startup Error</h2>
-                        <p style="margin-bottom:20px;">The application failed to initialize due to a dependency conflict.</p>
+                        <p style="margin-bottom:20px;">The application failed to initialize.</p>
                         <div style="background:white; padding:20px; border:1px solid #ef4444; border-radius:4px;">
                             <strong>Message:</strong> ${errorMsg}<br/>
                             <strong>Location:</strong> ${source}:${lineno}
@@ -40,6 +40,11 @@
         }
         console.error("CRITICAL STARTUP ERROR:", message, error);
       };
+
+      // 3. Catch Promise Rejections (often module loading failures)
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error("Unhandled rejection:", event.reason);
+      });
       
       // Tailwind Config
       tailwind.config = {
@@ -152,7 +157,7 @@
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-    "lucide-react": "https://esm.sh/lucide-react@0.300.0?deps=react@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.1.1",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
@@ -161,7 +166,13 @@
 </script>
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+        <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #f5f4f0; color: #262321; font-family: monospace; flex-direction: column; gap: 20px;">
+            <div style="width: 40px; height: 40px; border: 2px solid #e0dbcf; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Initializing Studio...</span>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+        </div>
+    </div>
     <div class="noise-overlay"></div>
     <script type="module" src="./index.tsx"></script>
   </body>

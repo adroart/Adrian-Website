@@ -52,6 +52,9 @@ const rootElement = document.getElementById('root');
 
 if (rootElement) {
     try {
+        // Clear the initial loader HTML before React takes over
+        rootElement.innerHTML = '';
+        
         const root = createRoot(rootElement);
         // Removed StrictMode intentionally for stability in this CDN environment
         root.render(
