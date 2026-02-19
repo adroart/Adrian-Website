@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, STORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 
-const SelectedWorkCard: React.FC<{ art: any; onClick: () => void }> = ({ art, onClick }) => (
-    <div onClick={onClick} className="group cursor-pointer break-inside-avoid mb-8">
+const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
+    <div className="group cursor-pointer break-inside-avoid mb-8">
         <div className="relative overflow-hidden bg-wood-100 border border-wood-200">
             <img
                 src={art.coverImage}
@@ -101,11 +101,8 @@ const Home: React.FC = () => {
 
                 <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
                     {selectedWorks.map((art) => (
-                        <Link key={art.id} to="/creations">
-                            <SelectedWorkCard
-                                art={art}
-                                onClick={() => {}}
-                            />
+                        <Link key={art.id} to={`/creations/${art.id}`}>
+                            <SelectedWorkCard art={art} />
                         </Link>
                     ))}
                 </div>
