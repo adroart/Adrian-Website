@@ -141,7 +141,7 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
                             Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms. The laser-cut shape is the canvas. The painting is the art.
                         </p>
                         <p>
-                            Between the endless ceremony, art is our prayer. Every piece touched by the Technician of the Sacred, yet it is not any one of us but a way. A family, different origins, one mother, earth.
+                            Every piece touched by the Technician of the Sacred. Not one person, but a way. Many hands, different origins, one mother. Earth.
                         </p>
                     </div>
                 </div>
