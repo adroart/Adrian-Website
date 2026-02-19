@@ -1,20 +1,15 @@
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { View } from '../types';
+import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, STORIES } from '../data/mockData';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
-
-interface HomeProps {
-    setView: (view: View) => void;
-    showToast: (msg: string) => void;
-}
+import { ArrowRight } from 'lucide-react';
 
 const SelectedWorkCard: React.FC<{ art: any; onClick: () => void }> = ({ art, onClick }) => (
     <div onClick={onClick} className="group cursor-pointer break-inside-avoid mb-8">
         <div className="relative overflow-hidden bg-wood-100 border border-wood-200">
-            <img 
-                src={art.coverImage} 
-                alt={art.title} 
+            <img
+                src={art.coverImage}
+                alt={art.title}
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (
@@ -43,14 +38,14 @@ const SelectedWorkCard: React.FC<{ art: any; onClick: () => void }> = ({ art, on
     </div>
 );
 
-const PathwayBlock: React.FC<{ 
-    title: string; 
-    subtitle: string; 
-    onClick: () => void;
-}> = ({ title, subtitle, onClick }) => (
-    <button 
-        onClick={onClick}
-        className="group w-full text-left py-12 border-t border-wood-200 hover:bg-white transition-colors relative overflow-hidden"
+const PathwayBlock: React.FC<{
+    title: string;
+    subtitle: string;
+    to: string;
+}> = ({ title, subtitle, to }) => (
+    <Link
+        to={to}
+        className="group w-full text-left py-12 border-t border-wood-200 hover:bg-white transition-colors relative overflow-hidden block"
     >
         <div className="flex justify-between items-end relative z-10 px-4">
             <div>
@@ -65,16 +60,12 @@ const PathwayBlock: React.FC<{
                 <ArrowRight size={20} />
             </div>
         </div>
-    </button>
+    </Link>
 );
 
-const Home: React.FC<HomeProps> = ({ setView }) => {
-    
-    // Master Doc 3.3: Selected Works (Curated 10-20 pieces)
-    // We'll take the featured ones from archive
+const Home: React.FC = () => {
+
     const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
-    
-    // Master Doc 3.6: From the Writings
     const featuredWritings = useMemo(() => STORIES.slice(0, 3), []);
 
     return (
@@ -100,31 +91,32 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
                         <h2 className="font-serif text-4xl text-wood-900 mb-2 font-medium">Selected Works</h2>
                         <p className="font-serif text-lg text-wood-500 italic">Pieces I return to.</p>
                     </div>
-                    <button 
-                        onClick={() => setView(View.CREATIONS)}
+                    <Link
+                        to="/creations"
                         className="hidden md:flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold"
                     >
                         See All Creations <ArrowRight size={14} />
-                    </button>
+                    </Link>
                 </div>
-                
+
                 <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
                     {selectedWorks.map((art) => (
-                        <SelectedWorkCard 
-                            key={art.id} 
-                            art={art} 
-                            onClick={() => setView(View.CREATIONS)} 
-                        />
+                        <Link key={art.id} to="/creations">
+                            <SelectedWorkCard
+                                art={art}
+                                onClick={() => {}}
+                            />
+                        </Link>
                     ))}
                 </div>
 
                 <div className="mt-12 md:hidden text-center">
-                    <button 
-                        onClick={() => setView(View.CREATIONS)}
+                    <Link
+                        to="/creations"
                         className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold"
                     >
                         See All Creations
-                    </button>
+                    </Link>
                 </div>
             </section>
 
@@ -149,20 +141,20 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
 
             {/* 3.5 Pathways */}
             <section className="max-w-4xl mx-auto px-6 py-32">
-                <PathwayBlock 
-                    title="Creations" 
-                    subtitle="See what exists" 
-                    onClick={() => setView(View.CREATIONS)} 
+                <PathwayBlock
+                    title="Creations"
+                    subtitle="See what exists"
+                    to="/creations"
                 />
-                <PathwayBlock 
-                    title="Writings" 
-                    subtitle="Go deeper" 
-                    onClick={() => setView(View.WRITINGS)} 
+                <PathwayBlock
+                    title="Writings"
+                    subtitle="Go deeper"
+                    to="/writings"
                 />
-                <PathwayBlock 
-                    title="Inquire" 
-                    subtitle="Begin a conversation" 
-                    onClick={() => setView(View.INQUIRE)} 
+                <PathwayBlock
+                    title="Inquire"
+                    subtitle="Begin a conversation"
+                    to="/inquire"
                 />
             </section>
 
@@ -171,16 +163,16 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
                 <div className="max-w-[1400px] mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
-                        <button onClick={() => setView(View.WRITINGS)} className="hidden md:flex font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold items-center gap-2">
+                        <Link to="/writings" className="hidden md:flex font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
-                        </button>
+                        </Link>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {featuredWritings.map(story => (
-                            <div 
-                                key={story.id} 
-                                onClick={() => setView(View.WRITINGS)}
+                            <Link
+                                key={story.id}
+                                to="/writings"
                                 className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                             >
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">{story.category}</span>
@@ -190,7 +182,7 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
                                 <p className="font-serif text-wood-600 font-light line-clamp-3 leading-relaxed">
                                     {story.excerpt}
                                 </p>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>

@@ -1,16 +1,3 @@
-
-export enum View {
-  HOME = 'HOME',
-  CREATIONS = 'CREATIONS',
-  WRITINGS = 'WRITINGS',
-  INQUIRE = 'INQUIRE',
-  ABOUT = 'ABOUT',
-  SHOP = 'SHOP',
-  CART = 'CART',
-  // Sub-views can be handled via state in the main views or expanded here if needed
-  SERIES = 'SERIES'
-}
-
 export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 
 export interface Artwork {

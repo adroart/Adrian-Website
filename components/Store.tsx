@@ -405,7 +405,7 @@ const ControlDeck: React.FC<{
     );
 };
 
-const Store: React.FC<{ setView: (v: any) => void; showToast: (m: string) => void; onAddToCart: (p: Product) => void }> = ({ setView, showToast, onAddToCart }) => {
+const Store: React.FC<{ showToast: (m: string) => void; onAddToCart: (p: Product) => void }> = ({ showToast, onAddToCart }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [viewingImage, setViewingImage] = useState<string | null>(null);
     const [isFiltering, setIsFiltering] = useState(false);
