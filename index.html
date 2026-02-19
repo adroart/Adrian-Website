@@ -7,49 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Lato:wght@300;400&family=Space+Mono:ital,wght@0,400;1,400&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              serif: ['"Cormorant Garamond"', 'serif'],
-              sans: ['"Lato"', 'sans-serif'],
-              mono: ['"Space Mono"', 'monospace'],
-              display: ['"Merriweather"', 'serif'],
-              title: ['"Cinzel"', 'serif'],
-            },
-            colors: {
-              taupe: { DEFAULT: '#453d39', light: '#594e48' },
-              cream: { DEFAULT: '#f2efe9', dark: '#e6e2d8' },
-              'warm-gold': { DEFAULT: '#b0966b', hover: '#9e8459' },
-              paper: { 50: '#f5f4f0', 100: '#ebe8e1', 200: '#e0dbcf', 300: '#cfc6b5' },
-              wood: { 400: '#a89070', 500: '#8f7a5b', 600: '#736046', 700: '#524330', 800: '#3d3226', 900: '#262321' },
-              stone: { 50: '#f7f6f4', 100: '#ebe9e6', 200: '#dcd9d4', 300: '#c2beb8', 400: '#a39e96', 500: '#878179', 600: '#6b665f', 700: '#524e49', 800: '#3d3a36', 900: '#2b2926', 950: '#23201e' },
-              bronze: { 200: '#e6d9c3', 400: '#c4aa7c', 500: '#ab9266', 600: '#8a744e', 900: '#453825' },
-            },
-            animation: {
-              'spin-slow': 'spin 20s linear infinite',
-              'spin-reverse-slow': 'spinReverse 25s linear infinite',
-              'draw': 'draw 2s ease-out forwards',
-              'fade-in': 'fadeIn 0.8s ease-out forwards',
-              'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'marquee': 'marquee 25s linear infinite',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'ripple': 'ripple 0.6s linear forwards',
-            },
-            keyframes: {
-              marquee: { '0%': { transform: 'translateX(0%)' }, '100%': { transform: 'translateX(-100%)' } },
-              spinReverse: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(-360deg)' } },
-              draw: { '0%': { strokeDashoffset: '1000' }, '100%': { strokeDashoffset: '0' } },
-              slideUp: { '0%': { transform: 'translateY(40px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              ripple: { '0%': { transform: 'scale(0)', opacity: '1' }, '100%': { transform: 'scale(4)', opacity: '0' } }
-            }
-          }
-        }
-      }
-    </script>
   </head>
   <body class="bg-[#262321]">
     <div id="root">

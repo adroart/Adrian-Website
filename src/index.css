@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@source "../";
+@source "../components";
+
+@theme {
+  /* Font families */
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Lato", sans-serif;
+  --font-mono: "Space Mono", monospace;
+  --font-display: "Merriweather", serif;
+  --font-title: "Cinzel", serif;
+
+  /* Colors: taupe */
+  --color-taupe: #453d39;
+  --color-taupe-light: #594e48;
+
+  /* Colors: cream */
+  --color-cream: #f2efe9;
+  --color-cream-dark: #e6e2d8;
+
+  /* Colors: warm-gold */
+  --color-warm-gold: #b0966b;
+  --color-warm-gold-hover: #9e8459;
+
+  /* Colors: paper */
+  --color-paper-50: #f5f4f0;
+  --color-paper-100: #ebe8e1;
+  --color-paper-200: #e0dbcf;
+  --color-paper-300: #cfc6b5;
+
+  /* Colors: wood */
+  --color-wood-400: #a89070;
+  --color-wood-500: #8f7a5b;
+  --color-wood-600: #736046;
+  --color-wood-700: #524330;
+  --color-wood-800: #3d3226;
+  --color-wood-900: #262321;
+
+  /* Colors: stone */
+  --color-stone-50: #f7f6f4;
+  --color-stone-100: #ebe9e6;
+  --color-stone-200: #dcd9d4;
+  --color-stone-300: #c2beb8;
+  --color-stone-400: #a39e96;
+  --color-stone-500: #878179;
+  --color-stone-600: #6b665f;
+  --color-stone-700: #524e49;
+  --color-stone-800: #3d3a36;
+  --color-stone-900: #2b2926;
+  --color-stone-950: #23201e;
+
+  /* Colors: bronze */
+  --color-bronze-200: #e6d9c3;
+  --color-bronze-400: #c4aa7c;
+  --color-bronze-500: #ab9266;
+  --color-bronze-600: #8a744e;
+  --color-bronze-900: #453825;
+
+  /* Animations */
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-spin-reverse-slow: spinReverse 25s linear infinite;
+  --animate-draw: draw 2s ease-out forwards;
+  --animate-fade-in: fadeIn 0.8s ease-out forwards;
+  --animate-slide-up: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-marquee: marquee 25s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-ripple: ripple 0.6s linear forwards;
+
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
+  }
+  @keyframes spinReverse {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+  }
+  @keyframes draw {
+    0% { stroke-dashoffset: 1000; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(40px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+}
