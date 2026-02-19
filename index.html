@@ -26,15 +26,20 @@
         
         if (loader) {
             let errorText = typeof message === 'string' ? message : JSON.stringify(message);
+            // Check for Import Map errors
+            if (errorText.includes("importmap") || errorText.includes("syntax")) {
+                errorText = "Configuration Error: Invalid Import Map JSON.";
+            }
+
             loader.innerHTML = `
-                <div style="padding:40px; text-align:center; color:#7f1d1d; font-family:monospace; max-width:600px; background:#fff; border:1px solid #7f1d1d;">
-                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px;">CRITICAL FAILURE</h2>
-                    <p style="margin-bottom:20px;">The studio crashed during initialization.</p>
-                    <div style="background:#fef2f2; border:1px solid #ef4444; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto; max-height: 200px;">
+                <div style="padding:40px; text-align:center; color:#ef4444; font-family:monospace; max-width:600px; background:#262321; border:1px solid #7f1d1d;">
+                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px; color: #b0966b;">CRITICAL FAILURE</h2>
+                    <p style="margin-bottom:20px; color: #f5f4f0;">The studio crashed during initialization.</p>
+                    <div style="background:#3d3226; border:1px solid #524330; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto; max-height: 200px; color: #dcd9d4;">
                         <strong>Message:</strong> ${errorText}<br/>
                         <strong>Source:</strong> ${source}:${lineno}
                     </div>
-                    <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY</button>
+                    <button onclick="window.location.reload()" style="padding:10px 20px; background:#b0966b; color:#262321; border:none; cursor:pointer; font-weight: bold;">RETRY</button>
                 </div>
             `;
         }
@@ -92,37 +97,39 @@
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
     "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
 </head>
-  <body>
+  <body class="bg-[#262321]">
     <div id="root">
-        <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #f5f4f0; color: #262321; font-family: monospace; flex-direction: column; gap: 20px;">
-            <div style="width: 40px; height: 40px; border: 2px solid #e0dbcf; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <span style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Initializing Studio...</span>
+        <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #262321; color: #f5f4f0; font-family: monospace; flex-direction: column; gap: 20px;">
+            <div style="width: 40px; height: 40px; border: 2px solid #524330; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #b0966b;">Initializing Studio...</span>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         </div>
     </div>
     <div class="noise-overlay"></div>
     <script type="module" src="./index.tsx"></script>
     
-    <!-- Emergency Failsafe: If app hangs for 8 seconds, assume connection or build error -->
+    <!-- Emergency Failsafe: If app hangs for 15 seconds, assume connection or build error -->
     <script>
         setTimeout(function() {
             const root = document.getElementById('root');
             const loader = root ? root.querySelector('.initial-loader') : null;
             if (loader) {
-                console.error("Emergency Failsafe: App failed to mount in 8 seconds.");
+                console.error("Emergency Failsafe: App failed to mount in 15 seconds.");
                 loader.innerHTML = `
-                    <div style="text-align:center; padding:20px; color:#7f1d1d; font-family:monospace;">
-                        <h2 style="font-size:18px; margin-bottom:10px;">Connection Timeout</h2>
-                        <p style="margin-bottom:20px;">The studio failed to materialize.</p>
-                        <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY CONNECTION</button>
+                    <div style="text-align:center; padding:20px; color:#b0966b; font-family:monospace;">
+                        <h2 style="font-size:18px; margin-bottom:10px; border-bottom: 1px solid #b0966b; display:inline-block; padding-bottom:5px;">Connection Timeout</h2>
+                        <p style="margin-bottom:20px; color: #f5f4f0; margin-top: 15px;">The studio failed to materialize.</p>
+                        <button onclick="window.location.reload()" style="padding:10px 20px; background:#b0966b; color:#262321; border:none; cursor:pointer; font-weight:bold; letter-spacing: 1px;">RETRY CONNECTION</button>
                     </div>
                 `;
             }
-        }, 8000);
+        }, 15000);
     </script>
   </body>
 </html>
