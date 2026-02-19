@@ -11,6 +11,8 @@ import About from './components/About';
 import Inquire from './components/Inquire';
 import Store from './components/Store';
 import Cart from './components/Cart';
+import PiecePage from './components/PiecePage';
+import SeriesPage from './components/SeriesPage';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
@@ -51,6 +53,8 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<><Hero /><Home /></>} />
           <Route path="/creations" element={<Creations onAcquireArt={handleAddToCart} />} />
+          <Route path="/creations/:id" element={<PiecePage onAcquireArt={handleAddToCart} />} />
+          <Route path="/series/:slug" element={<SeriesPage />} />
           <Route path="/writings" element={<Writings />} />
           <Route path="/about" element={<About />} />
           <Route path="/inquire" element={<Inquire />} />

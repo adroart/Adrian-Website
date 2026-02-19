@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES } from '../data/mockData';
-import { ArrowRight, ShoppingCart, Lock, ArrowUpRight } from 'lucide-react';
 
 const CreationCategoryCard: React.FC<{ 
     label: string; 
@@ -29,11 +29,11 @@ const CreationCategoryCard: React.FC<{
     </div>
 );
 
-const PieceCard: React.FC<{ art: Artwork; onClick: () => void }> = ({ art, onClick }) => (
-    <div onClick={onClick} className="group cursor-pointer break-inside-avoid mb-8">
+const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
+    <Link to={`/creations/${art.id}`} className="group cursor-pointer break-inside-avoid mb-8 block">
         <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
-            <img 
-                src={art.coverImage} 
+            <img
+                src={art.coverImage}
                 alt={art.title}
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
@@ -58,102 +58,10 @@ const PieceCard: React.FC<{ art: Artwork; onClick: () => void }> = ({ art, onCli
                 {art.category} {art.availability === 'SOLD' && '• Sold'}
             </p>
         </div>
-    </div>
-);
-
-// Detail Modal for Individual Piece
-const PieceDetail: React.FC<{ art: Artwork; onClose: () => void; onAcquire: (art: Artwork) => void }> = ({ art, onClose, onAcquire }) => (
-    <div className="fixed inset-0 z-[200] bg-paper-50/95 backdrop-blur-xl flex flex-col animate-fade-in overflow-y-auto">
-        <div className="w-full p-6 flex justify-between items-center border-b border-wood-200 sticky top-0 bg-paper-50 z-10">
-            <button onClick={onClose} className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-600 hover:text-wood-900 font-bold">
-                <ArrowRight size={16} className="rotate-180"/> Back to Gallery
-            </button>
-            <span className="font-mono text-xs uppercase tracking-widest text-wood-400 font-bold hidden md:inline">
-                {art.id}
-            </span>
-        </div>
-
-        <div className="max-w-7xl mx-auto w-full p-6 md:p-12 grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div className="space-y-6">
-                <div className="w-full bg-wood-100 border border-wood-200">
-                    <img src={art.coverImage} className="w-full h-auto object-cover" alt={art.title} />
-                </div>
-                {art.images.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4">
-                        {art.images.map((img, i) => (
-                            <img key={i} src={img} className="w-full h-24 object-cover border border-wood-200" />
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="lg:pt-12">
-                <div className="mb-8">
-                     {art.series && (
-                         <button className="flex items-center gap-2 text-bronze-600 font-mono text-xs uppercase tracking-widest font-bold mb-4 hover:underline">
-                            {art.series} Series <ArrowUpRight size={12} />
-                         </button>
-                     )}
-                     <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-tight mb-6 font-medium">
-                         {art.title}
-                     </h1>
-                     <div className="grid grid-cols-2 gap-y-2 font-serif text-lg text-wood-700">
-                         {art.dimensions && <p>{art.dimensions}</p>}
-                         {art.material && <p>{art.material}</p>}
-                         {art.edition && <p className="text-bronze-600">{art.edition}</p>}
-                     </div>
-                </div>
-
-                <div className="prose prose-stone font-serif text-wood-600 font-light mb-12 max-w-lg leading-relaxed">
-                    <p>{art.description}</p>
-                    {art.longDescription && <p>{art.longDescription}</p>}
-                </div>
-
-                <div className="border-t border-wood-200 pt-8 space-y-4">
-                    {art.availability === 'READY_TO_SHIP' ? (
-                        <>
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Ready to Ship</span>
-                                <span className="font-serif text-2xl text-wood-900 font-medium">${art.price}</span>
-                            </div>
-                            <button 
-                                onClick={() => onAcquire(art)}
-                                className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
-                            >
-                                <ShoppingCart size={16} /> Add to Selection
-                            </button>
-                            <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
-                                Ships from Bali • Arrives in 2-3 weeks
-                            </p>
-                        </>
-                    ) : art.availability === 'MADE_TO_ORDER' ? (
-                        <>
-                             <div className="flex justify-between items-center mb-4">
-                                <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Made to Order</span>
-                                <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price}</span>
-                            </div>
-                            <button 
-                                className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors"
-                            >
-                                Configure Design
-                            </button>
-                            <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
-                                4-6 Weeks Production Time
-                            </p>
-                        </>
-                    ) : (
-                        <div className="w-full py-4 border border-wood-200 text-wood-400 font-mono text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-                             <Lock size={14} /> Sold Out
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    </div>
+    </Link>
 );
 
 const Creations: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcquireArt }) => {
-    const [selectedPiece, setSelectedPiece] = useState<Artwork | null>(null);
     const [filter, setFilter] = useState<string | null>(null);
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
@@ -227,10 +135,9 @@ const Creations: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcqui
             <div className="max-w-[1800px] mx-auto px-6">
                 <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8">
                     {(filter ? filteredArchive : selectedWorks).map((art) => (
-                        <PieceCard 
-                            key={art.id} 
-                            art={art} 
-                            onClick={() => setSelectedPiece(art)} 
+                        <PieceCard
+                            key={art.id}
+                            art={art}
                         />
                     ))}
                 </div>
@@ -242,14 +149,6 @@ const Creations: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcqui
                 )}
             </div>
 
-            {/* Modal */}
-            {selectedPiece && (
-                <PieceDetail 
-                    art={selectedPiece} 
-                    onClose={() => setSelectedPiece(null)} 
-                    onAcquire={onAcquireArt}
-                />
-            )}
         </section>
     );
 };
