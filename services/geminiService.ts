@@ -6,17 +6,7 @@ const getAI = async () => {
     try {
         const { GoogleGenAI } = await import("@google/genai");
         
-        // Safe environment variable access for browser (window.process)
-        let apiKey = '';
-        
-        // Check window.process first (set by index.html)
-        if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
-            apiKey = (window as any).process.env.API_KEY;
-        } 
-        // Fallback for some build environments
-        else if (typeof process !== 'undefined' && process.env?.API_KEY) {
-            apiKey = process.env.API_KEY;
-        }
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 
         // We instantiate even with empty key to allow the app to run (it will just fail on generate)
         aiInstance = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-for-init' });
