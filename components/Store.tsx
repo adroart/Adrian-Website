@@ -457,24 +457,37 @@ const Store: React.FC<{ showToast: (m: string) => void; onAddToCart: (p: Product
                                     return (
                                         <React.Fragment key="interstitial">
                                             <CuratorialBlock />
-                                            <ProductCard 
-                                                product={p} 
-                                                index={idx} 
-                                                onClick={() => setSelectedProduct(p)} 
+                                            <ProductCard
+                                                product={p}
+                                                index={idx}
+                                                onClick={() => setSelectedProduct(p)}
                                             />
                                         </React.Fragment>
                                     );
                                 }
                                 return (
-                                    <ProductCard 
-                                        key={p.id} 
-                                        product={p} 
-                                        index={idx} 
-                                        onClick={() => setSelectedProduct(p)} 
+                                    <ProductCard
+                                        key={p.id}
+                                        product={p}
+                                        index={idx}
+                                        onClick={() => setSelectedProduct(p)}
                                     />
                                 );
                             })}
                         </div>
+                        {visibleCount < filteredProducts.length && (
+                            <div className="mt-24 text-center border-t border-wood-200 pt-12">
+                                <button
+                                    onClick={() => setVisibleCount(c => c + 12)}
+                                    className="px-10 py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors"
+                                >
+                                    Load More
+                                </button>
+                                <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
+                                    Showing {Math.min(visibleCount, filteredProducts.length)} of {filteredProducts.length}
+                                </p>
+                            </div>
+                        )}
                     </>
                 )}
             </main>
