@@ -121,6 +121,7 @@ const Writings: React.FC = () => {
                           <div className="md:w-1/4">
                                <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block mb-1 font-bold">{story.date}</span>
                                <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold">{story.category}</span>
+                               <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
                           </div>
                           <div className="md:w-1/2">
                                <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">

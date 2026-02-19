@@ -94,7 +94,7 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
                 key={item.path}
                 to={item.path}
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className={`relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
+                className={`group relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
                   location.pathname === item.path
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
@@ -133,6 +133,18 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
                         {item.label}
                     </button>
                 ))}
+                <button
+                    onClick={() => handleNavClick('/cart')}
+                    className={`flex items-center gap-2 text-lg font-serif tracking-wide ${location.pathname === '/cart' ? 'text-bronze-400' : 'text-paper-50'}`}
+                >
+                    <ShoppingBag size={18} strokeWidth={1.5} />
+                    Selection
+                    {cartCount > 0 && (
+                        <span className="text-[10px] font-bold font-mono w-4 h-4 flex items-center justify-center rounded-full bg-bronze-500 text-stone-900 shadow-md">
+                            {cartCount}
+                        </span>
+                    )}
+                </button>
              </div>
         )}
       </nav>
