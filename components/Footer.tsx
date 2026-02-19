@@ -1,23 +1,19 @@
 
 import React from 'react';
-import { View } from '../types';
+import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 
-interface FooterProps {
-    setView: (view: View) => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ setView }) => {
+const Footer: React.FC = () => {
     return (
         <footer className="bg-wood-100 text-wood-900 pt-16 pb-8 px-6 relative overflow-hidden border-t border-wood-200 print:hidden">
             {/* 8. The Studio Mark (Visual Anchor - Subtle) */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-wood-200 rounded-full opacity-40 pointer-events-none"></div>
 
             <div className="max-w-[1400px] mx-auto relative z-10">
-                
+
                 {/* Top Section: Brand & Newsletter (Horizontal Split) */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-12 mb-16">
-                    
+
                     {/* 3. Refined Branding */}
                     <div className="max-w-md">
                         <h2 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 tracking-tight font-medium">Adrian Rasmussen</h2>
@@ -33,9 +29,9 @@ const Footer: React.FC<FooterProps> = ({ setView }) => {
                             Join the Studio List
                         </span>
                         <form className="flex border-b border-wood-400 focus-within:border-bronze-600 transition-colors pb-1 w-full md:w-80 group" onSubmit={(e) => e.preventDefault()}>
-                            <input 
-                                type="email" 
-                                placeholder="Email address" 
+                            <input
+                                type="email"
+                                placeholder="Email address"
                                 className="bg-transparent w-full outline-none text-wood-900 placeholder-wood-400 font-serif text-lg"
                             />
                             <button type="submit" className="text-wood-400 group-hover:text-bronze-600 transition-colors">
@@ -47,22 +43,22 @@ const Footer: React.FC<FooterProps> = ({ setView }) => {
 
                 {/* Middle Section: Navigation (2. Horizontal Architecture, 5. Curated Nav) */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 border-t border-wood-200 pt-12">
-                    
+
                     {/* Column 1: Main */}
                     <div className="flex flex-col gap-3">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Index</span>
-                        <button onClick={() => setView(View.CREATIONS)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</button>
-                        <button onClick={() => setView(View.WRITINGS)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</button>
-                        <button onClick={() => setView(View.SHOP)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Available Works</button>
+                        <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</Link>
+                        <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</Link>
+                        <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Available Works</Link>
                         <a href="#" target="_blank" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Tea House</a>
                     </div>
 
                     {/* Column 2: Studio */}
                     <div className="flex flex-col gap-3">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Studio</span>
-                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">About</button>
-                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Commissions</button>
-                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Contact</button>
+                        <Link to="/about" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">About</Link>
+                        <Link to="/inquire" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Commissions</Link>
+                        <Link to="/inquire" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Contact</Link>
                     </div>
 
                     {/* Column 3: Info */}

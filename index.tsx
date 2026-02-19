@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import './src/index.css';
 import App from './App';
 
-// Immediate feedback that module loaded
 const statusEl = document.getElementById('loader-status');
 if (statusEl) statusEl.innerText = "Loading Modules...";
 
@@ -42,8 +42,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <pre style={{ padding: '20px', background: 'white', border: '1px solid #ef4444', maxWidth: '800px', overflow: 'auto' }}>
             {this.state.error?.toString()}
           </pre>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             style={{ marginTop: '20px', padding: '10px 20px', background: '#262321', color: '#f5f4f0', border: 'none', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '2px' }}
           >
             Reload Interface
@@ -67,13 +67,14 @@ const mountApp = () => {
     }
 
     try {
-        // Explicitly clear the loader content
         rootElement.innerHTML = '';
-        
+
         const root = createRoot(rootElement);
         root.render(
             <ErrorBoundary>
-                <App />
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
             </ErrorBoundary>
         );
         console.log("React Render Initiated");
@@ -83,7 +84,6 @@ const mountApp = () => {
     }
 };
 
-// Ensure DOM is ready before mounting
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountApp);
 } else {

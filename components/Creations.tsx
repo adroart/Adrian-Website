@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { View, Artwork } from '../types';
+import { Artwork } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES } from '../data/mockData';
 import { ArrowRight, ShoppingCart, Lock, ArrowUpRight } from 'lucide-react';
 
@@ -152,7 +152,7 @@ const PieceDetail: React.FC<{ art: Artwork; onClose: () => void; onAcquire: (art
     </div>
 );
 
-const Creations: React.FC<{ setView: (view: View) => void; onAcquireArt: (art: Artwork) => void }> = ({ setView, onAcquireArt }) => {
+const Creations: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcquireArt }) => {
     const [selectedPiece, setSelectedPiece] = useState<Artwork | null>(null);
     const [filter, setFilter] = useState<string | null>(null);
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);

@@ -1,24 +1,17 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { View } from '../types';
 
-interface HeroProps {
-  setView: (view: View) => void;
-}
-
-const Hero: React.FC<HeroProps> = ({ setView }) => {
+const Hero: React.FC = () => {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Safety check: verify ref.current exists before accessing properties
     if (videoRef.current) {
         videoRef.current.playbackRate = 0.8;
     }
 
     const handleScroll = () => {
-      // Use window.innerHeight safely
       const h = window.innerHeight || 800;
       if (window.scrollY < h * 1.2) {
         setScrollY(window.scrollY);
@@ -32,17 +25,14 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
   const videoTranslateY = scrollY * 0.35;
   const textScale = 1 + (scrollY * 0.00008);
   const textTranslateY = scrollY * -0.15;
-  
-  // Safe opacity calculation to avoid NaN
+
   const winHeight = typeof window !== 'undefined' && window.innerHeight > 0 ? window.innerHeight : 1000;
   const opacity = Math.max(0, 1 - (scrollY / (winHeight * 0.85)));
-  
-  // Ensure opacity is a valid number, default to 1 if something went wrong
   const safeOpacity = isNaN(opacity) ? 1 : opacity;
 
   return (
     <section className="relative w-full h-[105vh] flex flex-col bg-wood-900 overflow-hidden group">
-      <div 
+      <div
         className="absolute inset-0 z-0 will-change-transform"
         style={{ transform: `translateY(${videoTranslateY}px)` }}
       >
@@ -58,25 +48,24 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           >
               <source src="https://video.wixstatic.com/video/e5e2db_603cdbb883e847db9a1f47fd9bb39e26/720p/mp4/file.mp4" type="video/mp4" />
           </video>
-          
+
           {!isVideoLoaded && (
-              <img 
-                  src="https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop" 
+              <img
+                  src="https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop"
                   className="absolute inset-0 w-full h-full object-cover opacity-50"
                   alt="Atmospheric texture"
               />
           )}
-          {/* Subtle Gradient Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
       </div>
 
       <div className="absolute inset-0 bg-wood-900/10 z-1 pointer-events-none mix-blend-multiply"></div>
 
-      <div 
+      <div
         className="absolute bottom-40 md:bottom-[28vh] left-0 w-full z-20 px-6 py-10 md:px-16 flex flex-col items-center md:items-start text-center md:text-left will-change-transform transition-opacity duration-300"
-        style={{ 
+        style={{
             transform: `translateY(${textTranslateY}px) scale(${textScale})`,
-            opacity: safeOpacity 
+            opacity: safeOpacity
         }}
       >
           <div className="animate-fade-in max-w-4xl">
@@ -94,7 +83,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
           </div>
       </div>
 
-      <div 
+      <div
         className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500"
         style={{ opacity: safeOpacity * 0.6 }}
       >

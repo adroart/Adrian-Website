@@ -1,20 +1,21 @@
 
 import React, { useState } from 'react';
-import { View, Product, Artwork } from '../types';
+import { Link, useNavigate } from 'react-router-dom';
+import { Product, Artwork } from '../types';
 import { Trash2, ArrowLeft, ArrowRight, CreditCard, ShieldCheck, ShoppingBag } from 'lucide-react';
 
 interface CartProps {
   items: (Product | Artwork)[];
   onRemove: (index: number) => void;
-  setView: (view: View) => void;
   onClear: () => void;
 }
 
-const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
+const Cart: React.FC<CartProps> = ({ items, onRemove, onClear }) => {
+  const navigate = useNavigate();
   const [checkoutStep, setCheckoutStep] = useState<'REVIEW' | 'PROCESSING' | 'SUCCESS'>('REVIEW');
 
   const subtotal = items.reduce((sum, item) => sum + (item.price || 0), 0);
-  const shipping = subtotal > 0 ? 50 : 0; 
+  const shipping = subtotal > 0 ? 50 : 0;
   const total = subtotal + shipping;
 
   const handleCheckout = () => {
@@ -35,8 +36,8 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
         <p className="font-serif text-xl text-wood-600 max-w-md mb-12">
           Your selected pieces are being prepared for transit. A confirmation has been sent to your email.
         </p>
-        <button 
-          onClick={() => setView(View.HOME)}
+        <button
+          onClick={() => navigate('/')}
           className="px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-widest hover:bg-bronze-600 transition-colors font-bold"
         >
           Return to Studio
@@ -48,7 +49,7 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
   return (
     <section className="pt-32 pb-20 min-h-screen bg-paper-50 selection:bg-bronze-200">
       <div className="max-w-7xl mx-auto px-6">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
@@ -58,34 +59,34 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
             </div>
             <h1 className="text-4xl md:text-6xl font-serif text-wood-900 font-medium">Selected Works</h1>
           </div>
-          <button 
-            onClick={() => setView(View.SHOP)}
+          <Link
+            to="/shop"
             className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-wood-500 hover:text-wood-900 transition-colors font-bold border-b border-wood-200 pb-1"
           >
             <ArrowLeft size={14} /> Continue Exploring
-          </button>
+          </Link>
         </div>
 
         {items.length === 0 ? (
           <div className="py-32 flex flex-col items-center justify-center border border-dashed border-wood-200 bg-white/50">
             <ShoppingBag size={48} className="text-wood-200 mb-6" />
             <p className="font-serif text-2xl text-wood-400 mb-8">No pieces selected.</p>
-            <button 
-              onClick={() => setView(View.SHOP)}
+            <Link
+              to="/shop"
               className="px-8 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-widest hover:bg-bronze-600 transition-all font-bold"
             >
               Browse Works
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-            
+
             {/* List */}
             <div className="lg:col-span-2 space-y-8">
               {items.map((item, idx) => {
                 const isArt = 'coverImage' in item;
                 const image = isArt ? (item as Artwork).coverImage : (item as Product).image;
-                
+
                 return (
                   <div key={`${item.id}-${idx}`} className="group flex flex-col sm:flex-row gap-6 p-6 bg-white border border-wood-100 hover:border-bronze-200 transition-all shadow-sm">
                     <div className="w-full sm:w-32 h-32 bg-wood-50 overflow-hidden shrink-0">
@@ -104,7 +105,7 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
                         </div>
                       </div>
                       <div className="flex justify-end mt-4">
-                        <button 
+                        <button
                           onClick={() => onRemove(idx)}
                           className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-wood-400 hover:text-red-600 transition-colors font-bold"
                         >
@@ -115,7 +116,7 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
                   </div>
                 );
               })}
-              
+
               <div className="pt-8 border-t border-wood-200 flex justify-between items-center text-wood-400 font-mono text-[10px] uppercase tracking-[0.3em] font-bold">
                  <span>Pieces: {String(items.length).padStart(2, '0')}</span>
                  <div className="h-px flex-1 mx-8 bg-wood-100"></div>
@@ -127,7 +128,7 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
             <div className="lg:col-span-1">
               <div className="bg-white border border-wood-200 p-8 shadow-xl sticky top-32">
                 <h2 className="font-serif text-2xl text-wood-900 mb-8 border-b border-wood-100 pb-4">Summary</h2>
-                
+
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-wood-600 font-bold">
                     <span>Subtotal</span>
@@ -152,12 +153,12 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, setView, onClear }) => {
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={handleCheckout}
                   disabled={checkoutStep === 'PROCESSING'}
                   className={`w-full py-5 flex items-center justify-center gap-3 font-mono text-xs uppercase tracking-[0.2em] transition-all font-bold shadow-lg ${
-                    checkoutStep === 'PROCESSING' 
-                    ? 'bg-wood-200 text-wood-400 cursor-wait' 
+                    checkoutStep === 'PROCESSING'
+                    ? 'bg-wood-200 text-wood-400 cursor-wait'
                     : 'bg-wood-900 text-paper-50 hover:bg-bronze-700 shadow-xl'
                   }`}
                 >
