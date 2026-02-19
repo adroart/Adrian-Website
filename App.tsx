@@ -15,6 +15,7 @@ import Cart from './components/Cart';
 import PiecePage from './components/PiecePage';
 import SeriesPage from './components/SeriesPage';
 import Footer from './components/Footer';
+import Oracle from './components/Oracle';
 import GenerativeBackground from './components/GenerativeBackground';
 
 const App: React.FC = () => {
@@ -63,6 +64,7 @@ const App: React.FC = () => {
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/shop" element={<Store showToast={handleShowToast} onAddToCart={handleAddToCart} />} />
           <Route path="/cart" element={<Cart items={cart} onRemove={removeFromCart} onClear={clearCart} />} />
+          <Route path="/oracle" element={<Oracle />} />
           <Route path="*" element={<><Hero /><Home /></>} />
         </Routes>
       </main>

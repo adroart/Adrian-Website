@@ -1,8 +1,13 @@
 
 import React, { useState } from 'react';
-import { Mail, MapPin, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+
+// Set VITE_FORMSPREE_INQUIRE_ID in .env.local to enable form submissions.
+// e.g. VITE_FORMSPREE_INQUIRE_ID=xpwzgjkl
+const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_INQUIRE_ID as string | undefined;
 
 type CommissionType = 'personal' | 'spatial';
+type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
 
 interface FormState {
   name: string;
@@ -45,6 +50,8 @@ const Inquire: React.FC = () => {
   const [showOptionals, setShowOptionals] = useState(false);
   const [showLightCodes, setShowLightCodes] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [sendStatus, setSendStatus] = useState<SendStatus>('IDLE');
+  const [errorMsg, setErrorMsg] = useState('');
   const [form, setForm] = useState<FormState>({
     name: '',
     email: '',
@@ -64,13 +71,57 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, commissionType: type }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSendStatus('SENDING');
+    setErrorMsg('');
+
+    if (FORMSPREE_ID) {
+      try {
+        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(form),
+        });
+        if (res.ok) {
+          setSubmitted(true);
+          setSendStatus('IDLE');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.errors?.[0]?.message || 'Submission failed.');
+        }
+      } catch (err: any) {
+        setSendStatus('ERROR');
+        setErrorMsg(err.message || 'Something went wrong. Please try again.');
+      }
+      return;
+    }
+
+    // Fallback: open pre-filled mailto link
+    const subject = encodeURIComponent(`Commission Inquiry from ${form.name} (${form.commissionType})`);
+    const body = encodeURIComponent(
+      [
+        `Name: ${form.name}`,
+        `Email: ${form.email}`,
+        `Type: ${form.commissionType}`,
+        form.budget ? `Budget: ${form.budget}` : '',
+        form.timeline ? `Timeline: ${form.timeline}` : '',
+        form.referral ? `Referral: ${form.referral}` : '',
+        '',
+        form.vision,
+      ]
+        .filter(Boolean)
+        .join('\n')
+    );
+    window.location.href = `mailto:hello@adrianrasmussen.art?subject=${subject}&body=${body}`;
     setSubmitted(true);
+    setSendStatus('IDLE');
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setSendStatus('IDLE');
+    setErrorMsg('');
     setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', referral: '' });
     setCommissionType('personal');
     setShowOptionals(false);
@@ -278,12 +329,24 @@ const Inquire: React.FC = () => {
                      )}
                    </div>
 
+                   {sendStatus === 'ERROR' && (
+                     <div className="flex items-start gap-3 p-4 border border-wood-300 bg-white text-wood-700">
+                       <AlertCircle size={16} className="shrink-0 mt-0.5 text-wood-500" />
+                       <p className="font-serif text-sm">{errorMsg}</p>
+                     </div>
+                   )}
+
                    <div className="flex justify-end pt-4">
                         <button
                           type="submit"
-                          className="px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-widest hover:bg-bronze-600 transition-colors font-bold shadow-lg"
+                          disabled={sendStatus === 'SENDING'}
+                          className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-widest hover:bg-bronze-600 transition-colors font-bold shadow-lg disabled:opacity-60 disabled:cursor-wait"
                         >
-                            Send Transmission
+                          {sendStatus === 'SENDING' ? (
+                            <span className="animate-pulse">Sending...</span>
+                          ) : (
+                            <>Send Transmission <ArrowRight size={14} /></>
+                          )}
                         </button>
                    </div>
                </form>
