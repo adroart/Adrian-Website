@@ -79,31 +79,6 @@ const Home: React.FC<HomeProps> = ({ setView }) => {
 
     return (
         <div className="bg-paper-50 min-h-screen">
-            
-            {/* 3.1 Hero */}
-            <section className="relative w-full h-screen bg-wood-900 overflow-hidden flex items-end pb-24 px-6 md:px-12">
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover opacity-60"
-                    poster="https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop"
-                >
-                    <source src="https://video.wixstatic.com/video/e5e2db_603cdbb883e847db9a1f47fd9bb39e26/720p/mp4/file.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent z-10"></div>
-                
-                <div className="relative z-20 max-w-4xl animate-fade-in">
-                    <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 mb-6 leading-[0.9] tracking-tight font-medium">
-                        Bringing the <br/>formless into form.
-                    </h1>
-                    <p className="font-serif text-xl md:text-2xl text-paper-100/90 font-light max-w-xl border-l border-bronze-500/50 pl-6 leading-relaxed">
-                        From intimate talismans to immersive installations. <br/>
-                        Woven from light, geometry, and intention.
-                    </p>
-                </div>
-            </section>
 
             {/* 3.2 Introduction */}
             <section className="py-24 md:py-32 px-6">
