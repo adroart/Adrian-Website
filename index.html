@@ -13,6 +13,36 @@
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
 
     <script>
+      // --- ADVANCED DIAGNOSTICS: Network Spy ---
+      // This observer watches every script request the browser makes.
+      // If "react@19" appears in any URL, we identify the culprit immediately.
+      const observer = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          if (entry.name.includes('react@19') || entry.name.includes('react@^19')) {
+            console.error("🚨 CRITICAL VERSION CONFLICT DETECTED 🚨");
+            console.error("Source URL:", entry.name);
+            console.error("Initiator Type:", entry.initiatorType);
+            
+            // Visual Alert
+            const root = document.getElementById('root');
+            if (root) {
+                root.innerHTML = `
+                    <div style="position:fixed; inset:0; z-index:9999; background:#262321; color:#ef4444; padding:40px; font-family:monospace; overflow:auto;">
+                        <h1 style="font-size:24px; border-bottom:1px solid #7f1d1d; padding-bottom:20px; margin-bottom:20px;">VERSION CONFLICT DETECTED</h1>
+                        <p style="color:#f5f4f0; margin-bottom:20px;">The browser loaded <strong>React 19</strong> despite configuration settings.</p>
+                        <div style="background:#000; padding:20px; border:1px solid #7f1d1d;">
+                            <strong>Culprit URL:</strong><br/>
+                            ${entry.name}
+                        </div>
+                        <p style="margin-top:20px; color:#9ca3af;">This usually happens when a 3rd party library (like an icon set or animation library) requests the 'latest' React instead of the one we pinned.</p>
+                    </div>
+                `;
+            }
+          }
+        });
+      });
+      observer.observe({ entryTypes: ['resource'] });
+      
       // 1. Critical Polyfill
       window.process = {
         env: {
@@ -98,10 +128,11 @@
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0?dev",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?dev",
-    "react-dom": "https://esm.sh/react-dom@18.2.0?dev",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?dev&deps=react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?dev&deps=react@18.2.0",
     "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime?dev",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?bundle",
+    "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime?dev",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?bundle&deps=react@18.2.0",
     "@google/genai": "https://esm.sh/@google/genai@0.1.1",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
@@ -118,6 +149,6 @@
         </div>
     </div>
     <div class="noise-overlay"></div>
-    <script type="module" src="./index.tsx"></script>
+    <script type="module" src="./index.tsx" crossorigin="anonymous"></script>
   </body>
 </html>
