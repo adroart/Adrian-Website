@@ -52,6 +52,7 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
   const navItems: NavItem[] = [
     { path: '/creations', label: 'Creations' },
     { path: '/writings', label: 'Writings' },
+    { path: '/oracle', label: 'Oracle' },
     { path: '/inquire', label: 'Inquire' },
     { path: '/about', label: 'About' },
     { path: '/shop', label: 'Shop' },

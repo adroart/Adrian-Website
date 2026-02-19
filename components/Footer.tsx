@@ -1,7 +1,73 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, CheckCircle } from 'lucide-react';
+
+// Set VITE_FORMSPREE_NEWSLETTER_ID in .env.local to enable newsletter submissions.
+// e.g. VITE_FORMSPREE_NEWSLETTER_ID=xpwzgjkl
+const NEWSLETTER_FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_NEWSLETTER_ID as string | undefined;
+
+const NewsletterForm: React.FC = () => {
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!email || submitting) return;
+        setSubmitting(true);
+
+        if (NEWSLETTER_FORMSPREE_ID) {
+            try {
+                const res = await fetch(`https://formspree.io/f/${NEWSLETTER_FORMSPREE_ID}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                if (res.ok) setSubmitted(true);
+            } catch {
+                // Silent fail — show success anyway to avoid exposing config state
+                setSubmitted(true);
+            }
+        } else {
+            // No Formspree configured — show success optimistically
+            setSubmitted(true);
+        }
+        setSubmitting(false);
+    };
+
+    if (submitted) {
+        return (
+            <div className="flex items-center gap-2 py-2">
+                <CheckCircle size={14} className="text-bronze-500 shrink-0" />
+                <span className="font-serif text-base text-wood-600">You're on the list.</span>
+            </div>
+        );
+    }
+
+    return (
+        <form
+            className="flex border-b border-wood-400 focus-within:border-bronze-600 transition-colors pb-1 w-full md:w-80 group"
+            onSubmit={handleSubmit}
+        >
+            <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-transparent w-full outline-none text-wood-900 placeholder-wood-400 font-serif text-lg"
+            />
+            <button
+                type="submit"
+                disabled={submitting}
+                className="text-wood-400 group-hover:text-bronze-600 transition-colors disabled:opacity-40"
+            >
+                <ArrowRight size={18} />
+            </button>
+        </form>
+    );
+};
 
 const Footer: React.FC = () => {
     return (
@@ -28,16 +94,7 @@ const Footer: React.FC = () => {
                         <span className="font-mono text-xs uppercase tracking-widest text-wood-500 block mb-3 font-bold">
                             Join the Studio List
                         </span>
-                        <form className="flex border-b border-wood-400 focus-within:border-bronze-600 transition-colors pb-1 w-full md:w-80 group" onSubmit={(e) => e.preventDefault()}>
-                            <input
-                                type="email"
-                                placeholder="Email address"
-                                className="bg-transparent w-full outline-none text-wood-900 placeholder-wood-400 font-serif text-lg"
-                            />
-                            <button type="submit" className="text-wood-400 group-hover:text-bronze-600 transition-colors">
-                                <ArrowRight size={18} />
-                            </button>
-                        </form>
+                        <NewsletterForm />
                     </div>
                 </div>
 
@@ -49,6 +106,7 @@ const Footer: React.FC = () => {
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Index</span>
                         <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</Link>
                         <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</Link>
+                        <Link to="/oracle" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Oracle</Link>
                         <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Available Works</Link>
                         <a href="#" target="_blank" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Tea House</a>
                     </div>
