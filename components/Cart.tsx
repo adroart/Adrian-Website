@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Product, Artwork } from '../types';
 import { Trash2, ArrowLeft, ArrowRight, CreditCard, ShieldCheck, ShoppingBag } from 'lucide-react';
 
+const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
+
 interface CartProps {
   items: (Product | Artwork)[];
   onRemove: (index: number) => void;
@@ -96,7 +98,7 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, onClear }) => {
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-serif text-2xl text-wood-900 leading-tight font-medium">{item.title}</h3>
-                          <span className="font-mono text-lg text-wood-900 font-bold">${item.price}</span>
+                          <span className="font-mono text-lg text-wood-900 font-bold">{formatPrice(item.price || 0)}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold">{item.category}</span>
@@ -132,15 +134,15 @@ const Cart: React.FC<CartProps> = ({ items, onRemove, onClear }) => {
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-wood-600 font-bold">
                     <span>Subtotal</span>
-                    <span>${subtotal}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-wood-600 font-bold">
                     <span>Shipping</span>
-                    <span>${shipping}</span>
+                    <span>{formatPrice(shipping)}</span>
                   </div>
                   <div className="pt-4 border-t border-wood-200 flex justify-between font-mono text-lg text-wood-900 font-bold">
                     <span>Total</span>
-                    <span>${total}</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
                 </div>
 

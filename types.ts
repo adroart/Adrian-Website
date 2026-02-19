@@ -29,12 +29,13 @@ export interface Product {
   category: string;
   image: string;
   available: boolean;
-  description?: string; 
-  longDescription?: string; 
+  description?: string;
+  longDescription?: string;
   dimensions?: string;
   weight?: string;
   origin?: string;
   material?: string;
+  edition?: string;
   isReadyToShip: boolean;
 }
 
