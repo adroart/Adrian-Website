@@ -95,67 +95,6 @@
       }
     </script>
 
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        background-color: #f5f4f0;
-        color: #262321;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-      #root {
-        min-height: 100vh;
-        width: 100%;
-        display: block;
-        position: relative;
-      }
-      .noise-overlay {
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        pointer-events: none;
-        z-index: 9998;
-        opacity: 0.05;
-        background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
-        animation: noiseAnimation 0.2s infinite;
-      }
-      @keyframes noiseAnimation {
-        0% { transform: translate(0,0) }
-        10% { transform: translate(-5%,-5%) }
-        20% { transform: translate(-10%,5%) }
-        30% { transform: translate(5%,-10%) }
-        40% { transform: translate(-5%,15%) }
-        50% { transform: translate(-10%,5%) }
-        60% { transform: translate(15%,0) }
-        70% { transform: translate(0,10%) }
-        80% { transform: translate(-15%,0) }
-        90% { transform: translate(10%,5%) }
-        100% { transform: translate(5%,0) }
-      }
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: #f5f4f0; }
-      ::-webkit-scrollbar-thumb { background: #ab9266; border-radius: 0; }
-      ::-webkit-scrollbar-thumb:hover { background: #8a744e; }
-      .img-develop { filter: grayscale(100%) blur(5px) contrast(1.1); transition: filter 1.2s ease-out, transform 0.8s ease-out, opacity 0.5s ease-out; opacity: 0; }
-      .img-develop.developed { filter: grayscale(0%) blur(0px) contrast(1); opacity: 1; }
-      .click-ripple { position: fixed; border: 1px solid #ab9266; border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); animation: ripple 0.6s linear forwards; }
-      @keyframes ripple { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 100px; height: 100px; opacity: 0; } }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      ::selection { background: #c4aa7c; color: #262321; }
-      
-      /* Utilities */
-      .scrollbar-hide::-webkit-scrollbar { display: none; }
-      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      .cursor-crosshair { cursor: crosshair; }
-    </style>
-
     <script type="importmap">
 {
   "imports": {
