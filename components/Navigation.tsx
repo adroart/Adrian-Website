@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { Menu, X, ShoppingBag, Bookmark, ArrowUpRight, Sparkles } from 'lucide-react';
+import { Menu, X, ShoppingBag, Bookmark, ArrowUpRight } from 'lucide-react';
 
 interface NavigationProps {
   currentView: View;
@@ -13,7 +13,6 @@ interface NavigationProps {
 interface NavItem {
     id: View;
     label: string;
-    children?: { label: string; view?: View; hash?: string }[];
 }
 
 const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount, theme = 'LIGHT' }) => {
@@ -45,51 +44,34 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount
   }, []);
 
   const navItems: NavItem[] = [
-    { 
-        id: View.ART_HUB, 
-        label: 'Art',
-        children: [
-            { label: 'Featured', view: View.ART_HUB },
-            { label: 'Gallery Grid', view: View.ART }
-        ]
-    },
-    { id: View.JEWELRY, label: 'Jewelry' },
-    { id: View.ORACLE, label: 'Oracle' },
-    { id: View.STORIES, label: 'Journal' },
+    { id: View.CREATIONS, label: 'Creations' },
+    { id: View.WRITINGS, label: 'Writings' },
+    { id: View.INQUIRE, label: 'Inquire' },
+    { id: View.ABOUT, label: 'About' },
     { id: View.SHOP, label: 'Shop' },
-    { 
-        id: View.STUDIO, 
-        label: 'Studio',
-        children: [
-            { label: 'Philosophy', hash: 'studio-about' },
-            { label: 'Contact', hash: 'studio-projects' }
-        ]
-    },
   ];
 
-  const handleNavClick = (view: View, hash?: string) => {
+  const handleNavClick = (view: View) => {
     setView(view);
     setIsMobileMenuOpen(false);
-    if (hash) {
-        setTimeout(() => {
-            const element = document.getElementById(hash);
-            if (element) element.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-full h-9 z-[101] flex items-center justify-center bg-stone-950 border-b border-white/5">
-          <div className="flex items-center gap-6">
-              <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-bronze-500 rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-paper-50 font-bold">Adrian Rasmussen Studio</span>
-              </span>
+      <a 
+        href="https://www.teajia.com" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="fixed top-0 left-0 w-full h-9 z-[101] flex items-center justify-center bg-stone-950 border-b border-white/5 hover:bg-wood-900 transition-colors group cursor-pointer"
+      >
+          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
+              <span className="text-[10px] text-wood-600 hidden sm:inline">|</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">The Tea Community Platform</span>
+              <ArrowUpRight size={10} className="text-wood-500 group-hover:text-bronze-400" />
           </div>
-      </div>
+      </a>
 
       <nav className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
@@ -99,44 +81,25 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount
             </span>
           </button>
 
+          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8 xl:gap-12">
             {navItems.map((item) => (
-              <div key={item.id} className="relative group">
-                  <button
-                    onClick={() => handleNavClick(item.id)}
-                    className={`relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
-                      currentView === item.id || (item.id === View.ART_HUB && currentView === View.ART)
-                        ? `${textPrimary}`
-                        : `${textSecondary} hover:${accentColor}`
-                    }`}
-                  >
-                    {item.label}
-                    <span className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${currentView === item.id ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                  </button>
-                  
-                  {item.children && (
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[110]">
-                          <div className={`border border-wood-200 shadow-xl py-2 min-w-[180px] flex flex-col items-center ${isDark ? 'bg-stone-900 border-stone-800' : 'bg-paper-50 border-wood-200'}`}>
-                              {item.children.map((child) => (
-                                  <button
-                                      key={child.label}
-                                      onClick={(e) => { e.stopPropagation(); child.view ? handleNavClick(child.view) : handleNavClick(item.id, child.hash); }}
-                                      className={`w-full text-center py-2 px-4 font-mono text-xs uppercase tracking-widest hover:text-bronze-500 transition-colors font-semibold ${isDark ? 'text-stone-400' : 'text-wood-600'}`}
-                                  >
-                                      {child.label}
-                                  </button>
-                              ))}
-                          </div>
-                      </div>
-                  )}
-              </div>
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
+                  currentView === item.id
+                    ? `${textPrimary}`
+                    : `${textSecondary} hover:${accentColor}`
+                }`}
+              >
+                {item.label}
+                <span className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${currentView === item.id ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </button>
             ))}
           </div>
           
           <div className="flex items-center gap-6">
-            <button onClick={() => handleNavClick(View.COLLECTION)} title="Favorites" className={`relative group transition-colors ${textPrimary} hover:${accentColor}`}>
-                <Bookmark size={20} strokeWidth={1.5} className={currentView === View.COLLECTION ? 'fill-current' : ''} />
-            </button>
             <button onClick={() => handleNavClick(View.CART)} title="Your Selection" className={`relative group transition-colors ${textPrimary} hover:${accentColor}`}>
               <ShoppingBag size={20} strokeWidth={1.5} className={currentView === View.CART ? 'fill-current' : ''} />
               {cartCount > 0 && (
@@ -150,6 +113,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-8 px-6 flex flex-col gap-6 items-center animate-fade-in shadow-2xl">
+                {navItems.map((item) => (
+                    <button
+                        key={item.id}
+                        onClick={() => handleNavClick(item.id)}
+                        className={`text-lg font-serif tracking-wide ${currentView === item.id ? 'text-bronze-400' : 'text-paper-50'}`}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+             </div>
+        )}
       </nav>
     </>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
@@ -229,7 +230,7 @@ const SeriesStudy: React.FC<{
                                                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1s]"
                                                 alt={art.title} 
                                             />
-                                            {art.available && (
+                                            {art.availability === 'READY_TO_SHIP' && (
                                                 <div className="absolute top-4 right-4 z-10">
                                                     <div className="bg-paper-50/95 backdrop-blur-md px-3 py-1 border border-bronze-200 text-bronze-700 font-mono text-[9px] uppercase tracking-widest font-bold shadow-lg">
                                                         In Stock
@@ -242,7 +243,7 @@ const SeriesStudy: React.FC<{
                                         <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium">{art.title}</h4>
                                         <span className="font-mono text-[9px] text-wood-400 uppercase tracking-widest font-bold mt-1 mb-4">{art.material} // No. {art.id.split('-').pop()}</span>
                                         
-                                        {art.available ? (
+                                        {art.availability === 'READY_TO_SHIP' ? (
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); onAcquire(art); }}
                                                 className="w-full py-3 bg-wood-900 text-paper-50 font-mono text-[10px] uppercase tracking-widest font-bold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-2"
@@ -295,7 +296,7 @@ const ArtHub: React.FC<{
             <SeriesStudy 
                 series={selectedSeries} 
                 onClose={() => setSelectedSeries(null)} 
-                onViewArchive={() => setView(View.ART)}
+                onViewArchive={() => setView(View.CREATIONS)}
                 onAcquire={onAcquireArt}
             />
         );
@@ -341,7 +342,7 @@ const ArtHub: React.FC<{
                      </p>
                  </div>
                  <button 
-                    onClick={() => setView(View.ART)}
+                    onClick={() => setView(View.CREATIONS)}
                     className="group flex items-center gap-12 px-12 py-8 bg-white border border-wood-200 hover:border-wood-900 transition-all shadow-sm hover:shadow-xl"
                  >
                      <div className="text-left">

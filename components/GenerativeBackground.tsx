@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { View } from '../types';
 
@@ -117,20 +118,20 @@ const GenerativeBackground: React.FC<Props> = ({ currentView, theme }) => {
             safeParticles.forEach((p, i) => {
                 const spacing = 120;
                 
-                if (currentView === View.ART || currentView === View.COLLECTION) {
+                if (currentView === View.CREATIONS) {
                     const cols = Math.ceil(width / spacing) + 2;
                     const row = Math.floor(i / cols);
                     const col = i % cols;
                     const xOffset = (row % 2) * (spacing / 2);
                     p.targetX = (col * spacing) + xOffset - 50 + Math.sin(timeRef.current + row) * 10;
                     p.targetY = (row * spacing * 0.866) - 50 + Math.cos(timeRef.current + col) * 10;
-                } else if (currentView === View.STORIES) {
+                } else if (currentView === View.WRITINGS) {
                     const sSpace = width / Math.max(1, safeParticles.length);
                     p.targetX = i * sSpace;
                     const wave1 = Math.sin(i * 0.1 + timeRef.current) * 100;
                     const wave2 = Math.cos(i * 0.05 - timeRef.current * 0.5) * 200;
                     p.targetY = (height / 2) + wave1 + wave2;
-                } else if (currentView === View.SHOP || currentView === View.JEWELRY) {
+                } else if (currentView === View.SHOP) {
                     const radius = Math.min(width, height) * 0.35;
                     const cx = width / 2;
                     const cy = height / 2;
@@ -142,15 +143,6 @@ const GenerativeBackground: React.FC<Props> = ({ currentView, theme }) => {
                     const rotatedX = x * Math.cos(timeRef.current * 0.2) - z * Math.sin(timeRef.current * 0.2);
                     p.targetX = cx + rotatedX;
                     p.targetY = cy + y;
-                } else if (currentView === View.ORACLE) {
-                    const cx = width / 2;
-                    const cy = height / 2;
-                    const ringCount = 5;
-                    const ringIndex = i % ringCount;
-                    const radius = (ringIndex + 1) * 80;
-                    const angle = timeRef.current * (ringIndex % 2 === 0 ? 0.5 : -0.5) + i;
-                    p.targetX = cx + Math.cos(angle) * radius;
-                    p.targetY = cy + Math.sin(angle) * radius;
                 } else if (currentView === View.HOME) {
                     // Organic float
                     p.targetX = p.x + Math.sin(timeRef.current + i) * 0.5;
@@ -180,7 +172,7 @@ const GenerativeBackground: React.FC<Props> = ({ currentView, theme }) => {
                     const distSq = dx*dx + dy*dy;
                     
                     // Optimization: Smaller threshold for connections to reduce draw calls
-                    const threshold = currentView === View.ART ? 10000 : 15000;
+                    const threshold = currentView === View.CREATIONS ? 10000 : 15000;
 
                     if (distSq < threshold) {
                         const alpha = 1 - (distSq / threshold);

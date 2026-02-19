@@ -51,8 +51,8 @@ const Footer: React.FC<FooterProps> = ({ setView }) => {
                     {/* Column 1: Main */}
                     <div className="flex flex-col gap-3">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Index</span>
-                        <button onClick={() => setView(View.ART)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</button>
-                        <button onClick={() => setView(View.STORIES)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</button>
+                        <button onClick={() => setView(View.CREATIONS)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</button>
+                        <button onClick={() => setView(View.WRITINGS)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</button>
                         <button onClick={() => setView(View.SHOP)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Available Works</button>
                         <a href="#" target="_blank" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Tea House</a>
                     </div>
@@ -60,9 +60,9 @@ const Footer: React.FC<FooterProps> = ({ setView }) => {
                     {/* Column 2: Studio */}
                     <div className="flex flex-col gap-3">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Studio</span>
-                        <button onClick={() => setView(View.STUDIO)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">About</button>
-                        <button onClick={() => setView(View.STUDIO)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Commissions</button>
-                        <button onClick={() => setView(View.STUDIO)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Contact</button>
+                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">About</button>
+                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Commissions</button>
+                        <button onClick={() => setView(View.ABOUT)} className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Contact</button>
                     </div>
 
                     {/* Column 3: Info */}

@@ -1,15 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { View, Product, Artwork } from './types';
 import Navigation from './components/Navigation';
 import Home from './components/Home';
 import Hero from './components/Hero';
-import ArtHub from './components/ArtHub';
-import Gallery from './components/Gallery';
-import Jewelry from './components/Jewelry';
-import Oracle from './components/Oracle';
+import Creations from './components/Creations';
 import Writings from './components/Writings';
+import About from './components/About';
+import Inquire from './components/Inquire';
 import Store from './components/Store';
-import Studio from './components/Studio';
 import Cart from './components/Cart';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
@@ -56,22 +55,16 @@ const App: React.FC = () => {
             <Home setView={setView} showToast={handleShowToast} />
           </>
         );
-      case View.ART_HUB:
-        return <ArtHub setView={setView} onAcquireArt={handleAddToCart} />;
-      case View.ART:
-        return <Gallery initialViewMode="ALL" onAcquireArt={handleAddToCart} />;
-      case View.COLLECTION:
-        return <Gallery initialViewMode="COLLECTED" onAcquireArt={handleAddToCart} />;
-      case View.JEWELRY:
-        return <Jewelry />;
-      case View.ORACLE:
-        return <Oracle />;
-      case View.STORIES:
+      case View.CREATIONS:
+        return <Creations setView={setView} onAcquireArt={handleAddToCart} />;
+      case View.WRITINGS:
         return <Writings />;
+      case View.ABOUT:
+        return <About />;
+      case View.INQUIRE:
+        return <Inquire />;
       case View.SHOP:
         return <Store setView={setView} showToast={handleShowToast} onAddToCart={handleAddToCart} />;
-      case View.STUDIO:
-        return <Studio />;
       case View.CART:
         return <Cart items={cart} onRemove={removeFromCart} setView={setView} onClear={clearCart} />;
       default:

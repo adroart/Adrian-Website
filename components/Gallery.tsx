@@ -70,7 +70,7 @@ export const ArtifactSpecs: React.FC<{ art: Artwork; onAcquire?: () => void }> =
 
         <div className="pt-8 mt-8 border-t border-wood-200">
              <div className="flex flex-col gap-4">
-                {art.available ? (
+                {art.availability === 'READY_TO_SHIP' ? (
                     <button 
                         onClick={onAcquire}
                         className="w-full py-5 bg-wood-900 border border-wood-900 hover:bg-bronze-600 hover:border-bronze-600 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-xl font-bold"

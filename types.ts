@@ -1,36 +1,38 @@
 
 export enum View {
   HOME = 'HOME',
-  ART = 'ART',         // This remains the technical Archive/Gallery
-  ART_HUB = 'ART_HUB', // The new narrative "Art" hub
-  COLLECTION = 'COLLECTION',
-  JEWELRY = 'JEWELRY',
-  ORACLE = 'ORACLE',
-  STORIES = 'STORIES',
+  CREATIONS = 'CREATIONS',
+  WRITINGS = 'WRITINGS',
+  INQUIRE = 'INQUIRE',
+  ABOUT = 'ABOUT',
   SHOP = 'SHOP',
-  STUDIO = 'STUDIO',
-  CART = 'CART'
+  CART = 'CART',
+  // Sub-views can be handled via state in the main views or expanded here if needed
+  SERIES = 'SERIES'
 }
+
+export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 
 export interface Artwork {
   id: string;
   title: string;
-  category: string;
+  category: string; // e.g. "Multidimensional Art", "Light Codes"
+  series?: string; // e.g. "Universal Language"
   coverImage: string;
   images: string[];
   description: string;
+  longDescription?: string;
   year: string;
   dimensions?: string;
   material?: string;
   
-  // New Art Hub Fields
-  series?: string;
-  featured?: boolean;
+  // New Master Doc Fields
+  featured?: boolean; // For "Selected Works"
+  availability: AvailabilityStatus;
+  price?: number; // Optional if Sold
+  edition?: string; // e.g. "Edition of 10"
+  
   createdDate?: Date;
-
-  // Acquisition Fields
-  price?: number;
-  available?: boolean;
 }
 
 export interface Product {
@@ -46,9 +48,10 @@ export interface Product {
   weight?: string;
   origin?: string;
   material?: string;
+  isReadyToShip: boolean;
 }
 
-export type StoryType = 'art' | 'symbols' | 'jewelry' | 'places' | 'practice' | 'poetry';
+export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';
 
 export interface Story {
   id: string;
@@ -56,7 +59,7 @@ export interface Story {
   title: string;
   subtitle?: string;
   date: string;
-  type: StoryType;
+  category: StoryCategory; // Updated from 'type'
   excerpt: string;
   content: string[]; 
   image?: string; 
@@ -64,10 +67,5 @@ export interface Story {
   tags: string[];
   
   isFeatured?: boolean;
-  isStartHere?: boolean;
-  threadId?: string;
-  threadOrder?: number;
-  
   relatedArtifactId?: string; 
-  relatedProductId?: string;  
 }

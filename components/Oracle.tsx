@@ -1,3 +1,4 @@
+
 import React from 'react';
 import InteractiveOracle from './ResonantOracle'; 
 import { INVENTORY, STORIES } from '../data/mockData';
@@ -5,7 +6,7 @@ import { Sparkles, Layers } from 'lucide-react';
 
 const OracleHub: React.FC = () => {
     const oracleProducts = INVENTORY.filter(p => p.category === 'Oracle' || p.category === 'Paper Goods');
-    const relatedStories = STORIES.filter(s => s.tags.includes('Zen') || s.type === 'symbols');
+    const relatedStories = STORIES.filter(s => s.tags.includes('Zen') || s.tags.includes('Symbols'));
 
     return (
         <section className="pt-32 pb-20 min-h-screen bg-[#f4f1ea]">
