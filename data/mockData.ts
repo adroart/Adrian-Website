@@ -1,5 +1,5 @@
 
-import { Artwork, Product, Story } from '../types';
+import { Artwork, AvailabilityStatus, Product, Story } from '../types';
 
 // --- CONSTANTS FROM MASTER DOC ---
 
@@ -144,9 +144,10 @@ export const FULL_ARCHIVE: Artwork[] = [
     }
 ];
 
-// Fill out archive with more mock data
+// Fill out archive with more mock data (deterministic availability)
 for(let i=0; i<30; i++) {
     const cat = CREATION_CATEGORIES[i % CREATION_CATEGORIES.length];
+    const availabilities: AvailabilityStatus[] = ['READY_TO_SHIP', 'MADE_TO_ORDER', 'READY_TO_SHIP', 'SOLD', 'MADE_TO_ORDER'];
     FULL_ARCHIVE.push({
         id: `GEN-${i}`,
         title: `${cat.label} Study ${i+1}`,
@@ -157,16 +158,17 @@ for(let i=0; i<30; i++) {
         year: '2023',
         dimensions: 'Variable',
         material: 'Mixed Media',
-        availability: Math.random() > 0.5 ? 'READY_TO_SHIP' : 'SOLD',
+        availability: availabilities[i % availabilities.length],
         price: 500 + (i * 100),
+        edition: i % 3 === 0 ? `Edition of ${5 + (i % 10)}` : 'Open Edition',
         featured: false
     });
 }
 
-// --- SHOP INVENTORY (Ready to Ship Only) ---
+// --- SHOP INVENTORY (Ready to Ship + Made to Order) ---
 
 export const INVENTORY: Product[] = FULL_ARCHIVE
-    .filter(a => a.availability === 'READY_TO_SHIP' && a.price)
+    .filter(a => (a.availability === 'READY_TO_SHIP' || a.availability === 'MADE_TO_ORDER') && a.price)
     .map(a => ({
         id: a.id,
         title: a.title,
@@ -175,8 +177,11 @@ export const INVENTORY: Product[] = FULL_ARCHIVE
         image: a.coverImage,
         available: true,
         description: a.description,
+        longDescription: a.longDescription,
         material: a.material,
-        isReadyToShip: true
+        dimensions: a.dimensions,
+        edition: a.edition,
+        isReadyToShip: a.availability === 'READY_TO_SHIP'
     }));
 
 
