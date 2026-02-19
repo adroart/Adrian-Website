@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Product, Artwork } from './types';
+import { useSeoMeta } from './useSeoMeta';
 import Navigation from './components/Navigation';
 import Home from './components/Home';
 import Hero from './components/Hero';
@@ -38,6 +39,8 @@ const App: React.FC = () => {
   };
 
   const clearCart = () => setCart([]);
+
+  useSeoMeta(location.pathname);
 
   const isHome = location.pathname === '/';
   const theme = isHome ? 'DARK' : 'LIGHT';
