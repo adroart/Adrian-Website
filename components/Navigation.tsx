@@ -32,7 +32,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount
   const glassDark = 'bg-stone-950/75 backdrop-blur-xl border-b border-white/10 shadow-sm';
   const glassLight = 'bg-paper-50/80 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
-  let navClasses = `fixed top-9 left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
+  let navClasses = `fixed top-8 left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
   if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark}`;
   else if (useSolid) navClasses += ` py-3 ${isDark ? solidDark : solidLight}`;
   else navClasses += ` py-5 ${isDark ? glassDark : glassLight}`;
@@ -63,13 +63,13 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, cartCount
         href="https://www.teajia.com" 
         target="_blank" 
         rel="noopener noreferrer" 
-        className="fixed top-0 left-0 w-full h-9 z-[101] flex items-center justify-center bg-stone-950 border-b border-white/5 hover:bg-wood-900 transition-colors group cursor-pointer"
+        className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group cursor-pointer backdrop-blur-sm"
       >
-          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
-              <span className="text-[10px] text-wood-600 hidden sm:inline">|</span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">The Tea Community Platform</span>
-              <ArrowUpRight size={10} className="text-wood-500 group-hover:text-bronze-400" />
+          <div className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
+              <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
+              <span className="text-[9px] text-wood-600 hidden sm:inline">|</span>
+              <span className="text-[9px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">The Tea Community Platform</span>
+              <ArrowUpRight size={9} className="text-wood-500 group-hover:text-bronze-400" />
           </div>
       </a>
 
