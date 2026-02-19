@@ -26,20 +26,24 @@
         
         // If the loader is still visible, we have a startup crash
         if (loader) {
-            let helpfulHint = "";
-            if (message.toString().includes("SyntaxError") || message.toString().includes("<")) {
-                helpfulHint = "Browser cannot execute JSX/TSX directly. Ensure Cloudflare Build is compiling this file.";
-            } else if (message.toString().includes("import")) {
-                helpfulHint = "Module loading failed. Check your network or import map.";
+            let errorText = typeof message === 'string' ? message : JSON.stringify(message);
+            let helpfulHint = "Unknown Error";
+            
+            if (errorText.includes("SyntaxError") || errorText.includes("<")) {
+                helpfulHint = "Browser cannot execute JSX/TSX directly. The build step is missing or configured incorrectly.";
+            } else if (errorText.includes("import") || errorText.includes("module")) {
+                helpfulHint = "Module loading failed. Check network or import map.";
+            } else if (errorText.includes("Minified React error")) {
+                helpfulHint = "React Version Mismatch. Ensuring only React 18 is loaded.";
             }
 
             loader.innerHTML = `
-                <div style="padding:40px; text-align:center; color:#7f1d1d; font-family:monospace; max-width:600px;">
-                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px;">INITIALIZATION FAILURE</h2>
-                    <p style="margin-bottom:20px;">The studio could not load.</p>
-                    <div style="background:#fef2f2; border:1px solid #ef4444; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto;">
-                        <strong>Error:</strong> ${message}<br/>
-                        <strong>Hint:</strong> ${helpfulHint || "Check console for details."}<br/>
+                <div style="padding:40px; text-align:center; color:#7f1d1d; font-family:monospace; max-width:600px; background:#fff; border:1px solid #7f1d1d;">
+                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px;">CRITICAL FAILURE</h2>
+                    <p style="margin-bottom:20px;">The studio crashed during initialization.</p>
+                    <div style="background:#fef2f2; border:1px solid #ef4444; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto; max-height: 200px;">
+                        <strong>Message:</strong> ${errorText}<br/>
+                        <strong>Hint:</strong> ${helpfulHint}<br/>
                         <strong>Source:</strong> ${source}:${lineno}
                     </div>
                     <button onclick="window.location.reload()" style="padding:10px 20px; background:#262321; color:#f5f4f0; border:none; cursor:pointer;">RETRY</button>
