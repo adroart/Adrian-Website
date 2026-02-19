@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Lato:wght@300;400&family=Space+Mono:ital,wght@0,400;1,400&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
     
+    <!-- ES Module Shims: Ensures import maps work reliably across all environments -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+
     <script>
       // 1. Critical Polyfill
       window.process = {
@@ -18,32 +21,35 @@
         }
       };
 
-      // 2. Global Error Trap
-      window.onerror = function(message, source, lineno, colno, error) {
-        console.error("Global Error:", message, error);
+      // 2. Global Error Trap with visual feedback
+      window.addEventListener('error', function(e) {
+        console.error("Global Error Caught:", e.message, e.error);
         const root = document.getElementById('root');
         const loader = root ? root.querySelector('.initial-loader') : null;
         
         if (loader) {
-            let errorText = typeof message === 'string' ? message : JSON.stringify(message);
-            // Check for Import Map errors
-            if (errorText.includes("importmap") || errorText.includes("syntax")) {
-                errorText = "Configuration Error: Invalid Import Map JSON.";
+            let errorText = e.message || "Unknown Script Error";
+            let errorDetail = e.error ? e.error.toString() : "";
+            
+            // Common module resolution errors
+            if (errorText.toLowerCase().includes("resolving") || errorText.toLowerCase().includes("import")) {
+                errorText = "Module Resolution Failed. Your browser may be blocking external scripts.";
             }
 
             loader.innerHTML = `
                 <div style="padding:40px; text-align:center; color:#ef4444; font-family:monospace; max-width:600px; background:#262321; border:1px solid #7f1d1d;">
-                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px; color: #b0966b;">CRITICAL FAILURE</h2>
-                    <p style="margin-bottom:20px; color: #f5f4f0;">The studio crashed during initialization.</p>
+                    <h2 style="font-size:16px; font-weight:bold; margin-bottom:10px; color: #b0966b;">INITIALIZATION FAILURE</h2>
+                    <p style="margin-bottom:20px; color: #f5f4f0;">The studio could not load required components.</p>
                     <div style="background:#3d3226; border:1px solid #524330; padding:15px; text-align:left; font-size:11px; margin-bottom:20px; overflow:auto; max-height: 200px; color: #dcd9d4;">
-                        <strong>Message:</strong> ${errorText}<br/>
-                        <strong>Source:</strong> ${source}:${lineno}
+                        <strong>Error:</strong> ${errorText}<br/>
+                        <br/>
+                        <strong>Details:</strong> ${errorDetail}
                     </div>
                     <button onclick="window.location.reload()" style="padding:10px 20px; background:#b0966b; color:#262321; border:none; cursor:pointer; font-weight: bold;">RETRY</button>
                 </div>
             `;
         }
-      };
+      }, true); // Use capture to catch loading errors
       
       // Tailwind Config
       tailwind.config = {
@@ -91,12 +97,14 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
-    "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0",
-    "@google/genai": "https://esm.sh/@google/genai@0.1.1"
+    "react": "https://esm.sh/react@18.2.0?dev",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?dev",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?dev",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime?dev",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?bundle",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
@@ -105,29 +113,11 @@
     <div id="root">
         <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #262321; color: #f5f4f0; font-family: monospace; flex-direction: column; gap: 20px;">
             <div style="width: 40px; height: 40px; border: 2px solid #524330; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <span style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #b0966b;">Initializing Studio...</span>
+            <div id="loader-status" style="font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #b0966b;">Initializing Studio...</div>
             <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         </div>
     </div>
     <div class="noise-overlay"></div>
     <script type="module" src="./index.tsx"></script>
-    
-    <!-- Emergency Failsafe: If app hangs for 15 seconds, assume connection or build error -->
-    <script>
-        setTimeout(function() {
-            const root = document.getElementById('root');
-            const loader = root ? root.querySelector('.initial-loader') : null;
-            if (loader) {
-                console.error("Emergency Failsafe: App failed to mount in 15 seconds.");
-                loader.innerHTML = `
-                    <div style="text-align:center; padding:20px; color:#b0966b; font-family:monospace;">
-                        <h2 style="font-size:18px; margin-bottom:10px; border-bottom: 1px solid #b0966b; display:inline-block; padding-bottom:5px;">Connection Timeout</h2>
-                        <p style="margin-bottom:20px; color: #f5f4f0; margin-top: 15px;">The studio failed to materialize.</p>
-                        <button onclick="window.location.reload()" style="padding:10px 20px; background:#b0966b; color:#262321; border:none; cursor:pointer; font-weight:bold; letter-spacing: 1px;">RETRY CONNECTION</button>
-                    </div>
-                `;
-            }
-        }, 15000);
-    </script>
   </body>
 </html>

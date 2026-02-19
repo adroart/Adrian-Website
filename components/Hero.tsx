@@ -18,7 +18,9 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
     }
 
     const handleScroll = () => {
-      if (window.scrollY < window.innerHeight * 1.2) {
+      // Use window.innerHeight safely
+      const h = window.innerHeight || 800;
+      if (window.scrollY < h * 1.2) {
         setScrollY(window.scrollY);
       }
     };
@@ -30,7 +32,13 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
   const videoTranslateY = scrollY * 0.35;
   const textScale = 1 + (scrollY * 0.00008);
   const textTranslateY = scrollY * -0.15;
-  const opacity = Math.max(0, 1 - (scrollY / (window.innerHeight * 0.85)));
+  
+  // Safe opacity calculation to avoid NaN
+  const winHeight = typeof window !== 'undefined' && window.innerHeight > 0 ? window.innerHeight : 1000;
+  const opacity = Math.max(0, 1 - (scrollY / (winHeight * 0.85)));
+  
+  // Ensure opacity is a valid number, default to 1 if something went wrong
+  const safeOpacity = isNaN(opacity) ? 1 : opacity;
 
   return (
     <section className="relative w-full h-[105vh] flex flex-col bg-wood-900 overflow-hidden group">
@@ -68,7 +76,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
         className="absolute bottom-40 md:bottom-[28vh] left-0 w-full z-20 px-6 py-10 md:px-16 flex flex-col items-center md:items-start text-center md:text-left will-change-transform transition-opacity duration-300"
         style={{ 
             transform: `translateY(${textTranslateY}px) scale(${textScale})`,
-            opacity: opacity 
+            opacity: safeOpacity 
         }}
       >
           <div className="animate-fade-in max-w-4xl">
@@ -88,7 +96,7 @@ const Hero: React.FC<HeroProps> = ({ setView }) => {
 
       <div 
         className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500"
-        style={{ opacity: opacity * 0.6 }}
+        style={{ opacity: safeOpacity * 0.6 }}
       >
           <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-paper-100/60 ml-[0.5em]">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent"></div>

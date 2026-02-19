@@ -1,6 +1,11 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+
+// Immediate feedback that module loaded
+const statusEl = document.getElementById('loader-status');
+if (statusEl) statusEl.innerText = "Loading Modules...";
 
 console.log("Studio Script Execution Started...");
 
@@ -51,6 +56,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 const mountApp = () => {
+    if (statusEl) statusEl.innerText = "Mounting Interface...";
     console.log("Mounting App...");
     const rootElement = document.getElementById('root');
 
