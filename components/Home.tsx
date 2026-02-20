@@ -6,16 +6,16 @@ import { ArrowRight } from 'lucide-react';
 
 const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
     <div className="group cursor-pointer break-inside-avoid mb-8">
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200">
+        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
             <img
                 src={art.coverImage}
-                alt={art.title}
+                alt={`${art.title} by Adrian Rasmussen`}
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                 loading="lazy"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-wood-900 shadow-sm border border-wood-200">
-                    Ready to Ship
+                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-avail-ready shadow-sm border border-wood-200 font-medium">
+                    Ready to ship
                 </div>
             )}
             <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/5 transition-colors duration-500"></div>
@@ -28,8 +28,8 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
                 <span className="font-mono text-[10px] uppercase tracking-widest text-wood-500 font-bold">{art.category}</span>
                 {art.price && (
                     <>
-                        <span className="text-wood-300 text-[10px]">•</span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-900 font-bold">
+                        <span className="text-wood-300 text-[10px]">·</span>
+                        <span className={`font-mono text-[10px] uppercase tracking-widest font-bold ${art.availability === 'SOLD' ? 'text-avail-sold' : 'text-wood-900'}`}>
                             {art.availability === 'SOLD' ? 'Sold' : `From $${art.price}`}
                         </span>
                     </>
@@ -69,7 +69,7 @@ const Home: React.FC = () => {
     const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
 
     return (
-        <div className="bg-paper-50 min-h-screen">
+        <div className="bg-paper-50 min-h-screen animate-fade-in">
 
             {/* 3.2 Introduction */}
             <section className="py-24 md:py-32 px-6">

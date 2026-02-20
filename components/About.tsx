@@ -54,7 +54,7 @@ const About: React.FC = () => {
                      </div>
                 </div>
                 <div className="bg-wood-200 aspect-[3/4] relative overflow-hidden">
-                    <img src="https://picsum.photos/800/1200?random=about1" className="w-full h-full object-cover grayscale opacity-90" alt="Adrian Portrait" loading="lazy" />
+                    <img src="https://picsum.photos/800/1200?random=about1" className="w-full h-full object-cover grayscale opacity-90" alt="Adrian Rasmussen portrait" loading="lazy" />
                 </div>
             </div>
 

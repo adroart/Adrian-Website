@@ -21,9 +21,9 @@ interface FormState {
 
 const BUDGET_OPTIONS = [
   'Under $1,000',
-  '$1,000 – $5,000',
-  '$5,000 – $15,000',
-  '$15,000 – $50,000',
+  '$1,000 to $5,000',
+  '$5,000 to $15,000',
+  '$15,000 to $50,000',
   '$50,000+',
   'Let\'s discuss',
 ];
@@ -33,7 +33,7 @@ const TIMELINE_OPTIONS = [
   'Within 3 months',
   'Within 6 months',
   'Within a year',
-  'Specific date – I\'ll mention in my message',
+  'Specific date, I\'ll mention in my message',
 ];
 
 const REFERRAL_OPTIONS = [
@@ -127,17 +127,17 @@ const Inquire: React.FC = () => {
   };
 
   return (
-    <section className="bg-paper-50 min-h-screen pt-32 pb-20">
+    <section className="bg-paper-50 min-h-screen pt-32 pb-20 animate-fade-in">
 
       {/* 9.1 Hero */}
       <div className="max-w-[1400px] mx-auto px-6 mb-24">
           <div className="flex flex-col md:flex-row gap-1">
               <div className="flex-1 h-[400px] md:h-[600px] bg-wood-100 relative overflow-hidden">
-                  <img src="https://picsum.photos/1000/1200?random=inq1" className="w-full h-full object-cover grayscale" alt="Intimate Piece" loading="lazy" />
+                  <img src="https://picsum.photos/1000/1200?random=inq1" className="w-full h-full object-cover grayscale" alt="Personal commission piece by Adrian Rasmussen" loading="lazy" />
                   <div className="absolute bottom-6 left-6 bg-paper-50/90 px-4 py-2 font-mono text-[10px] uppercase tracking-widest font-bold">Personal</div>
               </div>
               <div className="flex-1 h-[400px] md:h-[600px] bg-wood-100 relative overflow-hidden">
-                  <img src="https://picsum.photos/1200/1000?random=inq2" className="w-full h-full object-cover grayscale" alt="Large Installation" loading="lazy" />
+                  <img src="https://picsum.photos/1200/1000?random=inq2" className="w-full h-full object-cover grayscale" alt="Spatial installation by Adrian Rasmussen" loading="lazy" />
                   <div className="absolute bottom-6 left-6 bg-paper-50/90 px-4 py-2 font-mono text-[10px] uppercase tracking-widest font-bold">Spatial</div>
               </div>
           </div>
@@ -401,7 +401,7 @@ const Inquire: React.FC = () => {
                     How long does a commission take?
                   </h4>
                   <p className="font-serif text-wood-600 leading-relaxed">
-                    Personal pieces typically take 4–8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope — anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
+                    Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
                   </p>
                 </div>
                 <div>
@@ -409,7 +409,7 @@ const Inquire: React.FC = () => {
                     Where do pieces ship from?
                   </h4>
                   <p className="font-serif text-wood-600 leading-relaxed">
-                    Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2–3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
+                    Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
                   </p>
                 </div>
                 <div>
@@ -417,7 +417,7 @@ const Inquire: React.FC = () => {
                     What sizes are available?
                   </h4>
                   <p className="font-serif text-wood-600 leading-relaxed">
-                    I work across all scales — from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
+                    I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
                   </p>
                 </div>
               </div>

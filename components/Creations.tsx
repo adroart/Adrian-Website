@@ -17,7 +17,7 @@ const CreationCategoryCard: React.FC<{
         <img 
             src={`https://picsum.photos/800/800?random=${100 + idx}`} 
             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
-            alt={label}
+            alt={`${label} by Adrian Rasmussen`}
             loading="lazy"
         />
         <div className="absolute inset-0 bg-wood-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
@@ -32,16 +32,16 @@ const CreationCategoryCard: React.FC<{
 
 const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
     <Link to={`/creations/${art.id}`} className="group cursor-pointer break-inside-avoid mb-8 block">
-        <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
+        <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
             <img
                 src={art.coverImage}
-                alt={art.title}
+                alt={`${art.title} by Adrian Rasmussen`}
                 loading="lazy"
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
-                    Ready to Ship
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-medium">
+                    Ready to ship
                 </div>
             )}
         </div>
@@ -57,7 +57,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 )}
             </div>
             <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
-                {art.category} {art.availability === 'SOLD' && '• Sold'}
+                {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
             </p>
         </div>
     </Link>

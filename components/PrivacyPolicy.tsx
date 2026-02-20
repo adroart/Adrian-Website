@@ -13,7 +13,7 @@ const PrivacyPolicy: React.FC = () => {
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Information We Collect</h2>
           <p>
-            When you use this website, we may collect information you provide directly — such as your name and email address when submitting the inquiry form or subscribing to the newsletter.
+            When you use this website, we may collect information you provide directly, such as your name and email address when submitting the inquiry form or subscribing to the newsletter.
           </p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">How We Use Your Information</h2>

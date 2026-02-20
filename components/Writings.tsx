@@ -3,7 +3,7 @@ import React, { useMemo, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES } from '../data/mockData';
-import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Share2 } from 'lucide-react';
 
 // --- Individual Article View ---
 export const WritingArticle: React.FC = () => {
@@ -51,12 +51,23 @@ export const WritingArticle: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
             />
             <div className="max-w-3xl mx-auto">
-                <Link
-                    to="/writings"
-                    className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 mb-12 font-bold"
-                >
-                    <ArrowLeft size={16} /> Return to Index
-                </Link>
+                <div className="flex justify-between items-center mb-12">
+                    <Link
+                        to="/writings"
+                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold"
+                    >
+                        <ArrowLeft size={16} /> Return to Index
+                    </Link>
+                    {typeof navigator !== 'undefined' && 'share' in navigator && (
+                        <button
+                            onClick={() => navigator.share({ title: story.title, url: window.location.href })}
+                            className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                            aria-label="Share this writing"
+                        >
+                            <Share2 size={14} /> Share
+                        </button>
+                    )}
+                </div>
 
                 <div className="text-center mb-16">
                     <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[10px] uppercase tracking-widest text-bronze-600 mb-6 font-bold">
@@ -74,7 +85,7 @@ export const WritingArticle: React.FC = () => {
 
                 {story.image && (
                     <div className="mb-16 bg-wood-100 border border-wood-200">
-                        <img src={story.image} className="w-full h-auto" alt="" loading="lazy" />
+                        <img src={story.image} className="w-full h-auto" alt={`${story.title} by Adrian Rasmussen`} loading="lazy" />
                     </div>
                 )}
 
@@ -104,7 +115,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
     }, [activeCategory]);
 
     return (
-        <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6">
+        <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-5xl mx-auto">
                 {/* 10.1 Intro */}
                 <div className="text-center mb-20">
@@ -154,7 +165,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                                 </Link>
                             </div>
                             <div className="aspect-video bg-wood-200 overflow-hidden relative">
-                                <img src="https://picsum.photos/800/600?random=ymz" className="w-full h-full object-cover" loading="lazy" />
+                                <img src="https://picsum.photos/800/600?random=ymz" className="w-full h-full object-cover" alt="Ye Ming Zhu glowing crystal by Adrian Rasmussen" loading="lazy" />
                             </div>
                         </div>
                     </div>
