@@ -75,22 +75,14 @@ Plan (Section 1.4) defines 6 contextual placement points for Teajia:
 
 ## 3. Plan Internal Inconsistencies
 
-### 3.1 Category Count Mismatch (Section 2.2 vs 5.1)
-- Section 5.1 hero grid lists **9 categories**: Multidimensional Art, Light Codes, Jewelry, Oracle Cards, Tables, Installations, Illuminated Works, Objects, Spaces.
-- Section 2.2 page hierarchy only lists **6 category subpages**: multidimensional-art, jewelry, oracle-cards, tables, installations, spaces.
-- **Missing from hierarchy:** Light Codes, Illuminated Works, Objects.
-- **Action:** Clarify where these 3 categories live. Light Codes appears to be a series under Multidimensional Art, but it's also a standalone category in the grid. Illuminated Works and Objects need hierarchy entries or should be removed from the grid.
+### ~~3.1 Category Count Mismatch (Section 2.2 vs 5.1)~~ RESOLVED
+~~Now **8 top-level category tiles** on /creations: Multidimensional Art, Illuminated Works, Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces. Light Codes moved to a series under Multidimensional Art (see 3.2). Multidimensional Art and Illuminated Works have dedicated routed pages; remaining 6 use search param filtering.~~
 
-### 3.2 Light Codes: Series or Category?
-Light Codes appears as:
-- A **series** under Multidimensional Art (Section 2.2, Section 6, Section 11)
-- A standalone **category** in the Creations hero grid (Section 5.1)
-- A **category** in mockData.ts CREATION_CATEGORIES
+### ~~3.2 Light Codes: Series or Category?~~ RESOLVED
+~~Light Codes is now correctly a **series under Multidimensional Art**, not a top-level category. It appears in `SERIES_LIST` and `SERIES_BY_CATEGORY['Multidimensional Art']`, has a subcategory page at `/creations/multidimensional-art/light-codes`, and is NOT listed in `CREATION_CATEGORIES` as a top-level tile.~~
 
-These are contradictory. Is Light Codes its own category (with its own page), or a series within Multidimensional Art? The plan needs a clear decision here.
-
-### 3.3 "Illuminated Works" - Undefined
-Listed as a category in Section 5.1 hero grid ("Paintings with light and projection") but never mentioned again in the plan. No page hierarchy entry, no category page description, no further detail. Is this a subcategory? A filter? A standalone category?
+### ~~3.3 "Illuminated Works" - Undefined~~ RESOLVED
+~~Illuminated Works now has a dedicated experiential page at `/creations/illuminated-works` (IlluminatedWorks.tsx). It is a top-level category in `CREATION_CATEGORIES` with a `link` property for direct routing. The page includes educational sections about illumination, "Two expressions of light" (Ambient/Living Light), a gallery of illuminated pieces, and a commission pathway. TODO comments remain for Adrian's personal voice on illumination mode names.~~
 
 ### 3.4 "Objects" Category - Underdeveloped
 Listed in Section 5.1 hero grid ("Sphere holders, incense, dimensional pieces") but has no page hierarchy entry, no dedicated description anywhere, and no category page template content.
@@ -111,11 +103,8 @@ Several sections have condensed or modified text compared to the plan:
 - **Added in code but not in plan:** Referral source ("How did you find me?").
 - **Action:** Align the plan and code. Referral is a useful addition; add to plan. Missing fields should either be added to code or removed from plan.
 
-### 3.8 Button Text Inconsistency
-- Plan (Section 9.4): Button says "Start the conversation"
-- Inquire.tsx: Button says "Send Transmission"
-- Plan Commission Paths (Section 9.3): Links say "Begin here"
-- These should be consistent with the site's voice.
+### ~~3.8 Button Text Inconsistency~~ RESOLVED
+~~Inquire.tsx submit button now says "Start the conversation", matching the plan (Section 9.4).~~
 
 ---
 
@@ -227,7 +216,7 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 ### Critical (Blocks Launch)
 1. Resolve tech stack description in plan (Section 1.5)
 2. ~~Implement individual writing routes (/writings/[slug]) for SEO/AEO~~ DONE
-3. Implement category routes or update plan to reflect filter approach
+3. ~~Implement category routes or update plan to reflect filter approach~~ DONE (Multidimensional Art + Illuminated Works have dedicated routes; others use search param filtering `?category=X`)
 4. ~~Fix sold piece behavior (add commission link)~~ DONE
 5. ~~Add image lazy loading~~ DONE
 6. Replace all placeholder images with real photography
@@ -246,8 +235,8 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 17. Add analytics
 
 ### Should Have (First Month)
-18. Clarify Light Codes / Illuminated Works / Objects category hierarchy
-19. Build dedicated category pages
+18. ~~Clarify Light Codes / Illuminated Works / Objects category hierarchy~~ DONE (Light Codes = series under Multi Art; Illuminated Works = top-level with dedicated page; Objects = top-level with filter)
+19. Build dedicated category pages (Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces still filter-only)
 20. ~~Implement Teajia footer copy~~ DONE
 21. Build edition tracking system
 22. ~~Add 404 page~~ DONE
@@ -256,7 +245,7 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 25. Create/locate companion documents referenced in plan
 26. Define content management workflow
 27. Align all copy with Copy Guidelines (Section 13)
-28. Update Welcome page links to match plan
+28. ~~Update Welcome page links to match plan~~ DONE (links present: Creations, Shop, Commission a Piece, Writings, Teajia, Enter Full Site)
 
 ---
 
@@ -303,19 +292,19 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
   - Clear all vs. clear individual filters
   - Whether to show result counts per filter option
   - Empty state messaging when no results match
-  - URL structure for filtered views (for sharing and bookmarking)
+  - ~~URL structure for filtered views (for sharing and bookmarking)~~ DONE (uses `?category=X` search params)
 - [x] Sticky filter bar on scroll. DONE (Creations.tsx, sticky top-[70px]).
 
 ### 8.5 Mobile Experience
 
 - [ ] Implement two-tap pattern on mobile hero grid: tap once reveals category name and one-line description; tap again navigates to category page. Keeps grid clean until visitor engages.
 - [ ] Implement bottom sheet filter overlay for mobile: "Filter" button in sticky position, tapping opens bottom sheet with large touch targets, dismiss on apply or swipe down.
-- [ ] Implement horizontal swipe image galleries with dot indicators on piece pages. Full-width images. No pinch-to-zoom required (images large enough by default).
+- [x] ~~Implement horizontal swipe image galleries with dot indicators on piece pages.~~ DONE. Mobile touch swipe + dot indicators (`lg:hidden`) on PiecePage. Desktop uses clickable thumbnails with bronze border/ring.
 - [ ] Implement "See What's Possible" modal as full-screen overlay on mobile (not centered modal). Tab navigation via horizontal scrollable tabs at top for Finishes, Crystals, Illumination, Framing.
-- [x] ~~Replace spinner-style loading with skeleton screens~~ DONE. Replaced SacredGeometryLoader in Store.tsx with SkeletonCard grid using animate-pulse.
+- [x] ~~Replace spinner-style loading with skeleton screens~~ DONE. SkeletonCard component in Store.tsx using animate-pulse.
 - [ ] Define and implement friendly error state messaging. Light touch, brief. Refer to Copy Guidelines for tone.
 - [ ] Decide newsletter signup placement within mobile hamburger menu.
-- [ ] Sticky bottom bar on mobile piece pages with price and primary CTA. DONE (PiecePage.tsx).
+- [x] ~~Sticky bottom bar on mobile piece pages with price and primary CTA.~~ DONE (PiecePage.tsx).
 
 ### 8.6 Desktop Experience
 
@@ -327,13 +316,13 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 
 ### 8.7 E-Commerce
 
-- [ ] Implement cart drawer sliding from right side (spec recommends drawer over full page for small catalog). Currently no cart; Store.tsx uses an inspection drawer pattern that links directly to Stripe.
-- [ ] Define and implement checkout flow: Review cart, shipping info, payment.
+- [x] ~~Implement cart drawer sliding from right side~~ DONE. CartDrawer.tsx fully implemented with cart context, quantity management, and Stripe Checkout Session integration.
+- [x] ~~Define and implement checkout flow: Review cart, shipping info, payment.~~ DONE. Cart drawer → Stripe Checkout Session handles the full flow.
 - [ ] Implement shipping calculation based on Bali origin. International shipping normalized as standard.
 - [ ] Enable Apple Pay and Google Pay through Stripe.
 - [ ] Implement made-to-order deposit structure: 50% upfront, 50% on completion.
 - [ ] Build post-purchase flow: order confirmation page with warm messaging, confirmation email with timeline expectations, progress update emails at key milestones for made-to-order pieces.
-- **Future to-do:** Plan Snipcart upgrade path when order volume warrants a more integrated cart experience.
+- ~~**Future to-do:** Plan Snipcart upgrade path when order volume warrants a more integrated cart experience.~~ N/A — using Stripe Checkout directly.
 
 ### 8.8 SEO Strategy
 
