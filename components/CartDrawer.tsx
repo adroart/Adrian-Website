@@ -138,7 +138,7 @@ const CartDrawer: React.FC = () => {
                             Cart
                         </span>
                         {totalItems > 0 && (
-                            <span className="font-mono text-[10px] bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
+                            <span className="font-mono text-[11px] bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
                                 {totalItems}
                             </span>
                         )}
@@ -147,7 +147,7 @@ const CartDrawer: React.FC = () => {
                         onClick={closeCart}
                         className="p-4 -mr-4 hover:bg-wood-100 rounded-full transition-colors group flex items-center gap-2"
                     >
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-500 font-bold hidden sm:inline">Close</span>
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-wood-500 font-bold hidden sm:inline">Close</span>
                         <X size={22} className="text-wood-900 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
@@ -187,7 +187,7 @@ const CartDrawer: React.FC = () => {
                                         <h3 className="font-serif text-base text-wood-900 leading-snug mb-1 font-medium">
                                             {product.title}
                                         </h3>
-                                        <p className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-3">
+                                        <p className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mb-3">
                                             {product.isReadyToShip ? (
                                                 <span className="text-avail-ready">Ready to ship</span>
                                             ) : (
@@ -248,12 +248,12 @@ const CartDrawer: React.FC = () => {
                                 <span className="font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">Subtotal</span>
                                 <span className="font-mono text-xl text-wood-900 font-bold">{formatPrice(totalPrice)}</span>
                             </div>
-                            <p className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold px-1 mb-5">
+                            <p className="font-mono text-[11px] uppercase tracking-widest text-wood-300 font-bold px-1 mb-5">
                                 Shipping calculated at checkout
                             </p>
 
                             {error && (
-                                <p className="font-mono text-[10px] text-red-600 uppercase tracking-widest font-bold px-1 mb-4">
+                                <p className="font-mono text-[11px] text-red-600 uppercase tracking-widest font-bold px-1 mb-4">
                                     {error}
                                 </p>
                             )}
@@ -272,7 +272,7 @@ const CartDrawer: React.FC = () => {
 
                             <button
                                 onClick={closeCart}
-                                className="w-full mt-3 py-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold"
+                                className="w-full mt-3 py-2 font-mono text-[11px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold"
                             >
                                 Continue browsing
                             </button>

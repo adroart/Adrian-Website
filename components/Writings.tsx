@@ -108,7 +108,7 @@ export const WritingArticle: React.FC = () => {
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={() => navigator.share({ title: story.title, url: window.location.href })}
-                            className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                            className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
                             aria-label="Share this writing"
                         >
                             <Share2 size={14} /> Share
@@ -117,10 +117,10 @@ export const WritingArticle: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-16">
-                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[10px] uppercase tracking-widest text-bronze-600 mb-6 font-bold">
+                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[11px] uppercase tracking-widest text-bronze-600 mb-6 font-bold">
                         {story.category}
                     </span>
-                    <h1 className="font-serif text-4xl md:text-6xl text-wood-900 leading-tight mb-6 font-medium">
+                    <h1 className="font-serif text-4xl md:text-6xl text-wood-900 leading-[1.1] mb-6 font-medium">
                         {story.title}
                     </h1>
                     {story.subtitle && (
@@ -128,7 +128,7 @@ export const WritingArticle: React.FC = () => {
                             {story.subtitle}
                         </p>
                     )}
-                    <div className="flex items-center justify-center gap-4 font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
+                    <div className="flex items-center justify-center gap-4 font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">
                         <span>{story.date}</span>
                         <span className="text-wood-200">·</span>
                         <span>{story.readMinutes} min read</span>
@@ -141,9 +141,9 @@ export const WritingArticle: React.FC = () => {
                     </div>
                 )}
 
-                <div className="prose prose-xl font-serif text-wood-800 leading-loose mx-auto">
+                <div className="prose prose-xl font-serif text-wood-800 leading-[1.75] mx-auto">
                     {story.content.map((p, i) => (
-                        <p key={i} className="mb-8">{p}</p>
+                        <p key={i} className="mb-6">{p}</p>
                     ))}
                 </div>
 
@@ -169,7 +169,7 @@ export const WritingArticle: React.FC = () => {
                                         <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {art.title}
                                         </h4>
-                                        <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+                                        <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
                                             {art.series ?? art.category}
                                         </p>
                                     </div>
@@ -193,7 +193,7 @@ export const WritingArticle: React.FC = () => {
                                     to={`/writings/${next.slug}`}
                                     className="group bg-white p-6 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm"
                                 >
-                                    <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-2 font-bold">
+                                    <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-2 font-bold">
                                         {next.category}
                                     </span>
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
@@ -254,7 +254,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                         className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === 'All' ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
                     >
                         All
-                        <span className={`text-[9px] ${activeCategory === 'All' ? 'text-wood-500' : 'text-wood-300'}`}>
+                        <span className={`text-[10px] ${activeCategory === 'All' ? 'text-wood-500' : 'text-wood-300'}`}>
                             {categoryCounts['All']}
                         </span>
                     </button>
@@ -265,7 +265,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                             className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === cat ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
                         >
                             {cat}
-                            <span className={`text-[9px] ${activeCategory === cat ? 'text-wood-500' : 'text-wood-300'}`}>
+                            <span className={`text-[10px] ${activeCategory === cat ? 'text-wood-500' : 'text-wood-300'}`}>
                                 {categoryCounts[cat]}
                             </span>
                         </button>
@@ -329,9 +329,9 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                             className="group cursor-pointer bg-white p-6 md:p-8 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm flex flex-col md:flex-row md:items-center gap-6 block"
                         >
                             <div className="md:w-1/4">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block mb-1 font-bold">{story.date}</span>
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold">{story.category}</span>
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
+                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 block mb-1 font-bold">{story.date}</span>
+                                <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 font-bold">{story.category}</span>
+                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
                             </div>
                             <div className="md:w-1/2">
                                 <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">

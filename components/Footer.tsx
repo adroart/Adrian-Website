@@ -93,7 +93,7 @@ const Footer: React.FC = () => {
                     {/* 3. Refined Branding */}
                     <div className="max-w-md">
                         <h2 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 tracking-tight font-medium">Adrian Rasmussen</h2>
-                        <p className="font-sans text-wood-600 text-sm leading-relaxed">
+                        <p className="font-sans text-wood-600 text-sm leading-[1.7]">
                             Resonant artifacts for the modern sanctuary. <br />
                             Exploring the intersection of digital precision and organic imperfection.
                         </p>
@@ -115,8 +115,8 @@ const Footer: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 border-t border-wood-200 pt-12">
 
                     {/* Column 1: Main */}
-                    <div className="flex flex-col gap-3">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Index</span>
+                    <div className="flex flex-col gap-3.5">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold mb-2">Index</span>
                         <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Creations</Link>
                         <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Writings</Link>
                         <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Shop</Link>
@@ -127,24 +127,24 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Column 2: Studio */}
-                    <div className="flex flex-col gap-3">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Studio</span>
+                    <div className="flex flex-col gap-3.5">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold mb-2">Studio</span>
                         <Link to="/about" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">About</Link>
                         <Link to="/inquire" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Commissions</Link>
                         <Link to="/inquire" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Contact</Link>
                     </div>
 
                     {/* Column 3: Info */}
-                    <div className="flex flex-col gap-3">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Information</span>
+                    <div className="flex flex-col gap-3.5">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold mb-2">Information</span>
                         <button className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Shipping & Returns</button>
                         <button className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Care Guide</button>
                         <button className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Authenticity</button>
                     </div>
 
                     {/* Column 4: Social */}
-                    <div className="flex flex-col gap-3">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Connect</span>
+                    <div className="flex flex-col gap-3.5">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold mb-2">Connect</span>
                         <a href="#" className="flex items-center gap-2 font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit group">
                             Instagram <ArrowUpRight size={14} className="text-wood-400 group-hover:text-bronze-600" />
                         </a>
@@ -155,7 +155,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* Bottom Bar: 8. Meta-Data & 1. Light Theme */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-mono uppercase tracking-widest text-wood-500 pt-8 border-t border-wood-200">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 pt-8 border-t border-wood-200">
                     <div className="flex gap-6">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-800 transition-colors">Privacy</Link>

@@ -200,14 +200,14 @@ const Inquire: React.FC = () => {
                     alt={path.alt}
                     loading="lazy"
                   />
-                  <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest font-bold">
+                  <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest font-bold">
                     {path.label}
                   </div>
                 </div>
                 {/* Text */}
                 <div className="p-6 md:p-8 flex flex-col flex-1 bg-white">
                   <h3 className="font-serif text-2xl text-wood-900 mb-3 font-medium">{path.title}</h3>
-                  <p className="font-serif text-wood-600 leading-relaxed mb-6 flex-1 text-[15px]">
+                  <p className="font-serif text-wood-600 leading-[1.65] mb-6 flex-1 text-base">
                     {path.description}
                   </p>
                   <span
@@ -238,7 +238,7 @@ const Inquire: React.FC = () => {
               <div className="text-center py-12">
                 <CheckCircle className="mx-auto mb-6 text-bronze-600" size={48} strokeWidth={1.5} />
                 <h4 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Thank you.</h4>
-                <p className="font-serif text-wood-600 leading-relaxed mb-8">
+                <p className="font-serif text-wood-600 leading-[1.7] mb-8">
                   I have received your message and will be in touch soon.
                 </p>
                 <p className="font-serif text-wood-500 leading-relaxed mb-8">
@@ -258,8 +258,8 @@ const Inquire: React.FC = () => {
               <form className="space-y-8" onSubmit={handleSubmit}>
 
                 {/* Commission Type Toggle */}
-                <div className="space-y-2">
-                  <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold block">Type of Commission</label>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold block">Type of Commission</label>
                   <div className="flex gap-0 border border-wood-300 w-fit">
                     <button
                       type="button"
@@ -294,7 +294,7 @@ const Inquire: React.FC = () => {
                 {/* Name + Email */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div className="space-y-2">
-                         <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">Name</label>
+                         <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Name</label>
                          <input
                            type="text"
                            name="name"
@@ -305,7 +305,7 @@ const Inquire: React.FC = () => {
                          />
                      </div>
                      <div className="space-y-2">
-                         <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">Email</label>
+                         <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Email</label>
                          <input
                            type="email"
                            name="email"
@@ -319,7 +319,7 @@ const Inquire: React.FC = () => {
 
                 {/* Vision */}
                 <div className="space-y-2">
-                     <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">What wants to exist?</label>
+                     <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">What wants to exist?</label>
                      <textarea
                        name="vision"
                        rows={4}
@@ -346,7 +346,7 @@ const Inquire: React.FC = () => {
                     <div className="mt-8 space-y-8">
                       {/* Budget */}
                       <div className="space-y-2">
-                        <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">Budget Range</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Budget Range</label>
                         <select
                           name="budget"
                           value={form.budget}
@@ -362,7 +362,7 @@ const Inquire: React.FC = () => {
 
                       {/* Timeline */}
                       <div className="space-y-2">
-                        <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">Timeline</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Timeline</label>
                         <select
                           name="timeline"
                           value={form.timeline}
@@ -378,7 +378,7 @@ const Inquire: React.FC = () => {
 
                       {/* Referral */}
                       <div className="space-y-2">
-                        <label className="text-xs font-mono uppercase tracking-widest text-wood-500 font-bold">How did you find me?</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">How did you find me?</label>
                         <select
                           name="referral"
                           value={form.referral}
@@ -438,26 +438,26 @@ const Inquire: React.FC = () => {
             <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Common Questions</h3>
             <div className="space-y-8">
               <div>
-                <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
                   How long does a commission take?
                 </h4>
-                <p className="font-serif text-wood-600 leading-relaxed">
+                <p className="font-serif text-wood-600 leading-[1.7]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-serif text-wood-600 leading-relaxed">
+                <p className="font-serif text-wood-600 leading-[1.7]">
                   Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
                   What sizes are available?
                 </h4>
-                <p className="font-serif text-wood-600 leading-relaxed">
+                <p className="font-serif text-wood-600 leading-[1.7]">
                   I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
                 </p>
               </div>

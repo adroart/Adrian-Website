@@ -14,7 +14,7 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
                 loading="lazy"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-avail-ready shadow-sm border border-wood-200 font-medium">
+                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-avail-ready shadow-sm border border-wood-200 font-medium">
                     Ready to ship
                 </div>
             )}
@@ -25,11 +25,11 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
                 {art.title}
             </h3>
             <div className="flex items-center gap-2 mt-2">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-wood-500 font-bold">{art.category}</span>
+                <span className="font-mono text-[11px] uppercase tracking-widest text-wood-500 font-bold">{art.category}</span>
                 {art.price && (
                     <>
-                        <span className="text-wood-300 text-[10px]">·</span>
-                        <span className={`font-mono text-[10px] uppercase tracking-widest font-bold ${art.availability === 'SOLD' ? 'text-avail-sold' : 'text-wood-900'}`}>
+                        <span className="text-wood-300 text-[11px]">·</span>
+                        <span className={`font-mono text-[11px] uppercase tracking-widest font-bold ${art.availability === 'SOLD' ? 'text-avail-sold' : 'text-wood-900'}`}>
                             {art.availability === 'SOLD' ? 'Sold' : `From $${art.price}`}
                         </span>
                     </>
@@ -74,9 +74,9 @@ const Home: React.FC = () => {
             {/* 3.2 Introduction */}
             <section className="py-24 md:py-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
-                    <p className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-relaxed font-light">
-                        "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
-                    </p>
+                    <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light tracking-[-0.01em]">
+                        <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
+                    </blockquote>
                     <div className="mt-12 space-y-6 text-left md:text-center">
                         <p className="font-serif text-lg md:text-xl text-wood-600 leading-relaxed font-light">
                             My pieces bring people together. They find a way of speaking directly through the heart. If someone does not already understand what they are looking at, the art is reminding them. Something they can feel without reading a word.
@@ -126,11 +126,11 @@ const Home: React.FC = () => {
             <section className="py-32 px-6 bg-wood-900 text-paper-50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[50%] h-full bg-[url('https://picsum.photos/1200/1200?random=99')] opacity-10 bg-cover mix-blend-overlay"></div>
                 <div className="max-w-4xl mx-auto relative z-10">
-                    <h2 className="font-serif text-3xl md:text-5xl leading-tight mb-8 font-medium">
+                    <h2 className="font-serif text-3xl md:text-5xl leading-[1.15] mb-10 font-medium">
                         The geometry is exact. The laser is precise. <br/>
                         <span className="text-bronze-300">But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.</span>
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-lg font-serif font-light text-paper-200 leading-relaxed">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-lg font-serif font-light text-paper-200 leading-[1.7]">
                         <p>
                             Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
                         </p>
@@ -175,7 +175,7 @@ const Home: React.FC = () => {
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 Deep explorations earned through direct experience
                             </h3>
@@ -184,7 +184,7 @@ const Home: React.FC = () => {
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The meaning and origins within the work
                             </h3>
@@ -193,7 +193,7 @@ const Home: React.FC = () => {
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 How creation happens
                             </h3>
@@ -202,7 +202,7 @@ const Home: React.FC = () => {
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Path</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Path</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The personal journey behind the art
                             </h3>

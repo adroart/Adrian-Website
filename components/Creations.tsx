@@ -140,14 +140,14 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
 
             {/* Ready to ship badge */}
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-bold leading-none">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-bold leading-none">
                     Available
                 </div>
             )}
 
             {/* Illuminated indicator */}
             {art.illuminated && (
-                <div className="absolute top-3 left-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 text-wood-600 font-bold leading-none">
+                <div className="absolute top-3 left-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-wood-600 font-bold leading-none">
                     Illuminated
                 </div>
             )}
@@ -155,11 +155,11 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
             {/* Story indicator: visible dot + tooltip label */}
             {art.relatedStorySlug && !art.illuminated && (
                 <div
-                    className="absolute top-3 left-3 flex items-center gap-1 bg-paper-50/90 backdrop-blur-sm px-2 py-1 border border-wood-200"
+                    className="absolute top-3 left-3 flex items-center gap-1.5 bg-paper-50/90 backdrop-blur-sm px-2 py-1 border border-wood-200"
                     title="A companion essay accompanies this piece"
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-bronze-500 flex-shrink-0" aria-hidden="true" />
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold leading-none">Essay</span>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-bold leading-none">Essay</span>
                 </div>
             )}
         </div>
@@ -179,7 +179,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
             </div>
 
             {/* Category + availability in readable size */}
-            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold leading-none">
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.15em] mt-1.5 font-bold leading-none">
                 {art.category}
                 {art.series && <span className="text-wood-400 font-normal"> · {art.series}</span>}
                 {art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}
@@ -246,7 +246,7 @@ const CollectionCard: React.FC<{
                         {collection.description}
                     </p>
                 )}
-                <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold mt-2">
+                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-paper-300 font-bold mt-2">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
@@ -528,7 +528,7 @@ const Creations: React.FC = () => {
             {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-8">
-                    <p className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
                             <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">

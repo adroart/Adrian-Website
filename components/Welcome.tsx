@@ -11,7 +11,7 @@ const Welcome: React.FC = () => {
         <h1 className="font-serif text-3xl text-paper-50 mb-2 tracking-tight font-medium">
           Adrian Rasmussen
         </h1>
-        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-12 font-bold">
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-stone-500 mb-12 font-bold">
           Technician of the Sacred
         </p>
 
@@ -54,7 +54,7 @@ const Welcome: React.FC = () => {
         {/* Full site link */}
         <Link
           to="/"
-          className="font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600 hover:text-paper-50 transition-colors font-bold border-b border-stone-700 pb-1"
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600 hover:text-paper-50 transition-colors font-bold border-b border-stone-700 pb-1"
         >
           Enter Full Site
         </Link>
