@@ -66,7 +66,7 @@ const PathwayBlock: React.FC<{
 
 const Home: React.FC = () => {
 
-    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
+    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 4), []);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
@@ -77,7 +77,7 @@ const Home: React.FC = () => {
                     <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light tracking-[-0.01em]">
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
-                    <div className="mt-12 space-y-6 text-left md:text-center">
+                    <div className="mt-12 space-y-6 text-center">
                         <p className="font-serif text-lg md:text-xl text-wood-600 leading-relaxed font-light">
                             My pieces bring people together. They find a way of speaking directly through the heart. If someone does not already understand what they are looking at, the art is reminding them. Something they can feel without reading a word.
                         </p>
@@ -98,27 +98,18 @@ const Home: React.FC = () => {
                     </div>
                     <Link
                         to="/creations"
-                        className="hidden md:flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold"
+                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold"
                     >
                         See All Creations <ArrowRight size={14} />
                     </Link>
                 </div>
 
-                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
+                <div className="columns-1 sm:columns-2 gap-8 space-y-8">
                     {selectedWorks.map((art) => (
                         <Link key={art.id} to={`/creations/${art.id}`}>
                             <SelectedWorkCard art={art} />
                         </Link>
                     ))}
-                </div>
-
-                <div className="mt-12 md:hidden text-center">
-                    <Link
-                        to="/creations"
-                        className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold"
-                    >
-                        See All Creations
-                    </Link>
                 </div>
             </section>
 
@@ -130,7 +121,7 @@ const Home: React.FC = () => {
                         The geometry is exact. The laser is precise. <br/>
                         <span className="text-bronze-300">But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.</span>
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-lg font-serif font-light text-paper-200 leading-[1.7]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 text-lg font-serif font-light text-paper-200 leading-[1.7]">
                         <p>
                             Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
                         </p>

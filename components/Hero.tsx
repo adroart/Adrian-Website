@@ -1,5 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -69,6 +70,14 @@ const Hero: React.FC = () => {
                   From intimate talismans to immersive installations.<br/>
                   Woven from light, geometry, and intention.
               </p>
+              <div className="mt-8 md:hidden">
+                  <Link
+                      to="/creations"
+                      className="inline-block font-mono text-xs uppercase tracking-[0.25em] text-paper-50 border border-paper-50/40 hover:border-bronze-400 hover:text-bronze-300 px-6 py-3 transition-colors duration-300"
+                  >
+                      Explore the Work
+                  </Link>
+              </div>
           </div>
       </div>
 
