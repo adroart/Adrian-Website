@@ -1,5 +1,5 @@
 
-import { Artwork, AvailabilityStatus, Product, Story } from '../types';
+import { Artwork, AvailabilityStatus, Collection, Product, Story } from '../types';
 
 // --- CONSTANTS FROM MASTER DOC ---
 
@@ -9,24 +9,40 @@ export const SERIES_LIST = [
     'Light Codes'
 ];
 
+// Top-level Creations landing tiles. Categories with a `link` navigate to their own page
+// rather than filtering the archive inline.
 export const CREATION_CATEGORIES = [
-    { id: 'MULTI', label: 'Multidimensional Art', desc: 'Windows into the infinite' },
-    { id: 'LIGHT', label: 'Light Codes', desc: 'Patterns and frequencies from the beyond' },
-    { id: 'JEWELRY', label: 'Jewelry', desc: 'Wearable pieces and talismans' },
-    { id: 'ORACLE', label: 'Oracle Cards', desc: 'Tools for reflection' },
-    { id: 'TABLES', label: 'Tables', desc: 'Functional art for gathering' },
-    { id: 'INSTALL', label: 'Installations', desc: 'Immersive environments' },
-    { id: 'ILLUM', label: 'Illuminated Works', desc: 'Paintings with light and projection' },
-    { id: 'OBJECTS', label: 'Objects', desc: 'Sphere holders, incense, dimensional pieces' },
-    { id: 'SPACES', label: 'Spaces', desc: 'Tea houses and environments designed for presence' }
+    { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art' },
+    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works' },
+    { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans' },
+    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection' },
+    { id: 'TABLES',  label: 'Tables',               desc: 'Functional art for gathering' },
+    { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments' },
+    { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual' },
+    { id: 'SPACES',  label: 'Spaces',               desc: 'Tea houses and environments designed for presence' },
+];
+
+// Subcategory tiles shown on the Multidimensional Art hub page.
+// The Illuminated Works entry links back to the shared experiential page.
+export const MULTIDIMENSIONAL_CATEGORIES = [
+    { id: 'MD-UL',    label: 'Universal Language', desc: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key.',       slug: 'universal-language' },
+    { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala' },
+    { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes' },
+    { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces' },
+    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works' },
+];
+
+export const LIGHT_CODE_SUBCATEGORIES = [
+    'Frequency Foundations',
+    'Embodied Vibrations',
+    'Resonant Formations',
 ];
 
 export const STORE_CATEGORIES = [
-    'Multidimensional Art', 
-    'Light Codes', 
-    'Jewelry', 
-    'Oracle Cards', 
-    'Objects'
+    'Multidimensional Art',
+    'Jewelry',
+    'Oracle Cards',
+    'Objects',
 ];
 
 export const SERIES_DATA = [
@@ -59,20 +75,22 @@ export const FULL_ARCHIVE: Artwork[] = [
         category: 'Multidimensional Art',
         series: 'Universal Language',
         coverImage: 'https://picsum.photos/1000/1000?random=1',
-        images: ['https://picsum.photos/1000/1000?random=1a'],
+        images: ['https://picsum.photos/1000/1000?random=1a', 'https://picsum.photos/1000/1000?random=1b'],
         description: 'A study in concentric resonance. The layers build inward, guiding the eye to a center that holds silence.',
         year: '2023',
         dimensions: '24" Diameter',
         material: 'Birch, Acrylic, Gold Leaf',
+        finish: 'Gold Leaf',
         availability: 'READY_TO_SHIP',
         price: 1850,
         edition: 'Edition of 10',
-        featured: true
+        featured: true,
+        relatedStorySlug: 'beneath-surface-mandala',
     },
     {
         id: 'LC-042',
         title: 'Ancestral Signal',
-        category: 'Light Codes',
+        category: 'Multidimensional Art',
         series: 'Light Codes',
         coverImage: 'https://picsum.photos/800/1200?random=2',
         images: ['https://picsum.photos/800/1200?random=2a'],
@@ -80,10 +98,12 @@ export const FULL_ARCHIVE: Artwork[] = [
         year: '2024',
         dimensions: '18" x 36"',
         material: 'Laser Etched Basswood',
+        finish: 'Natural',
+        subcategory: 'Frequency Foundations',
         availability: 'MADE_TO_ORDER',
         price: 950,
         edition: 'Open Edition',
-        featured: true
+        featured: true,
     },
     {
         id: 'JW-005',
@@ -98,7 +118,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         availability: 'READY_TO_SHIP',
         price: 220,
         edition: 'Limited Run',
-        featured: false
+        featured: false,
     },
     {
         id: 'TBL-001',
@@ -111,7 +131,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         dimensions: '48" x 24" x 18"',
         material: 'Black Walnut, Resin',
         availability: 'SOLD',
-        featured: true
+        featured: true,
     },
     {
         id: 'INST-003',
@@ -124,7 +144,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         dimensions: '150ft Wide',
         material: 'Mixed Media, Projection',
         availability: 'SOLD',
-        featured: true
+        featured: true,
     },
     {
         id: 'UL-009',
@@ -137,33 +157,134 @@ export const FULL_ARCHIVE: Artwork[] = [
         year: '2023',
         dimensions: '36" Diameter',
         material: 'Plywood, Crystals, Airbrush',
+        finish: 'Painted',
         availability: 'MADE_TO_ORDER',
         price: 2800,
         edition: 'Edition of 5',
-        featured: true
-    }
+        featured: true,
+    },
+    // Signature piece — no series
+    {
+        id: 'SIG-001',
+        title: 'The Serpent',
+        category: 'Multidimensional Art',
+        coverImage: 'https://picsum.photos/1000/1200?random=7',
+        images: ['https://picsum.photos/1000/1200?random=7a'],
+        description: 'A singular form. Coiled and precise, somewhere between creature and symbol.',
+        year: '2024',
+        dimensions: '18" x 24"',
+        material: 'Walnut, Brass Inlay',
+        finish: 'Natural',
+        availability: 'READY_TO_SHIP',
+        price: 3200,
+        edition: 'One of a Kind',
+        featured: true,
+        isSignaturePiece: true,
+    },
+    // Illuminated piece
+    {
+        id: 'ILLUM-001',
+        title: 'Breath of the Forest',
+        category: 'Multidimensional Art',
+        series: 'Universal Language',
+        coverImage: 'https://picsum.photos/1000/1000?random=8',
+        images: ['https://picsum.photos/1000/1000?random=8a', 'https://picsum.photos/1000/1000?random=8b'],
+        description: 'By day, a layered study in geometry. After dark, the piece opens. Light finds the edges. The room changes.',
+        longDescription: 'Embedded LEDs breathe at a slow rhythm, designed for spaces where presence matters. The illumination can be set to ambient or to a gentle pulse.',
+        year: '2024',
+        dimensions: '30" Diameter',
+        material: 'Birch, Acrylic, LED',
+        finish: 'Painted',
+        availability: 'MADE_TO_ORDER',
+        price: 4200,
+        edition: 'Edition of 5',
+        featured: true,
+        illuminated: true,
+    },
 ];
 
 // Fill out archive with more mock data (deterministic availability)
-for(let i=0; i<30; i++) {
-    const cat = CREATION_CATEGORIES[i % CREATION_CATEGORIES.length];
+// Light Codes is now a series under Multidimensional Art, not its own top-level category.
+const GEN_CATEGORIES = [
+    'Multidimensional Art',
+    'Jewelry',
+    'Oracle Cards',
+    'Tables',
+    'Installations',
+    'Objects',
+    'Spaces',
+];
+
+const SERIES_BY_CATEGORY: Record<string, string[]> = {
+    'Multidimensional Art': ['Universal Language', 'Mandala', 'Light Codes'],
+};
+
+const SUBCATEGORY_BY_SERIES: Record<string, string[]> = {
+    'Light Codes': LIGHT_CODE_SUBCATEGORIES,
+};
+
+const FINISH_OPTIONS = ['Natural', 'Painted', 'Gold Leaf'];
+
+for (let i = 0; i < 30; i++) {
+    const catLabel = GEN_CATEGORIES[i % GEN_CATEGORIES.length];
     const availabilities: AvailabilityStatus[] = ['READY_TO_SHIP', 'MADE_TO_ORDER', 'READY_TO_SHIP', 'SOLD', 'MADE_TO_ORDER'];
+    const seriesOptions = SERIES_BY_CATEGORY[catLabel];
+    const series = seriesOptions ? seriesOptions[Math.floor(i / GEN_CATEGORIES.length) % seriesOptions.length] : undefined;
+    const subcategoryOptions = series ? SUBCATEGORY_BY_SERIES[series] : undefined;
+    const subcategory = subcategoryOptions ? subcategoryOptions[i % subcategoryOptions.length] : undefined;
+    const isMulti = catLabel === 'Multidimensional Art';
+    // Every 7th multi piece is a signature piece (no series)
+    const isSignaturePiece = isMulti && i % 7 === 0;
+
     FULL_ARCHIVE.push({
         id: `GEN-${i}`,
-        title: `${cat.label} Study ${i+1}`,
-        category: cat.label,
-        coverImage: `https://picsum.photos/800/800?random=${100+i}`,
+        title: `${series || catLabel} Study ${i + 1}`,
+        category: catLabel,
+        series: isSignaturePiece ? undefined : series,
+        coverImage: `https://picsum.photos/800/800?random=${100 + i}`,
         images: [],
         description: 'A study in form and resonance.',
         year: '2023',
         dimensions: 'Variable',
         material: 'Mixed Media',
+        finish: isMulti ? FINISH_OPTIONS[i % FINISH_OPTIONS.length] : undefined,
+        subcategory,
+        isSignaturePiece: isSignaturePiece || undefined,
+        illuminated: isMulti && i % 11 === 0 ? true : undefined,
         availability: availabilities[i % availabilities.length],
-        price: 500 + (i * 100),
+        price: 500 + i * 100,
         edition: i % 3 === 0 ? `Edition of ${5 + (i % 10)}` : 'Open Edition',
-        featured: false
+        featured: false,
     });
 }
+
+// --- COLLECTIONS ---
+// Used by the Creations landing page to surface sub-groupings within a category.
+// Light Codes is now a series under Multidimensional Art.
+
+export const COLLECTIONS: Collection[] = [
+    {
+        id: 'col-universal-language',
+        name: 'Universal Language',
+        description: 'Exploring the geometry of silence.',
+        category: 'Multidimensional Art',
+        matchSeries: 'Universal Language',
+    },
+    {
+        id: 'col-mandala',
+        name: 'Mandala',
+        description: 'Maps of the inner and outer cosmos.',
+        category: 'Multidimensional Art',
+        matchSeries: 'Mandala',
+    },
+    {
+        id: 'col-light-codes',
+        name: 'Light Codes',
+        description: 'Frequencies anchored in matter.',
+        category: 'Multidimensional Art',
+        matchSeries: 'Light Codes',
+    },
+];
 
 // --- SHOP INVENTORY (Ready to Ship + Made to Order) ---
 

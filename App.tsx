@@ -11,7 +11,9 @@ import About from './components/About';
 import Inquire from './components/Inquire';
 import Store from './components/Store';
 import PiecePage from './components/PiecePage';
-import SeriesPage from './components/SeriesPage';
+import MultidimensionalArt from './components/MultidimensionalArt';
+import SubcategoryPage from './components/SubcategoryPage';
+import IlluminatedWorks from './components/IlluminatedWorks';
 import Welcome from './components/Welcome';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
@@ -35,9 +37,14 @@ const App: React.FC = () => {
       <main>
         <Routes>
           <Route path="/" element={<><Hero /><Home /></>} />
+
+          {/* Creations — static routes must come before /:id catch-all */}
           <Route path="/creations" element={<Creations />} />
+          <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+          <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
+          <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
           <Route path="/creations/:id" element={<PiecePage />} />
-          <Route path="/series/:slug" element={<SeriesPage />} />
+
           <Route path="/writings" element={<Writings />} />
           <Route path="/about" element={<About />} />
           <Route path="/inquire" element={<Inquire />} />

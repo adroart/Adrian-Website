@@ -16,6 +16,16 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     description:
       'Multidimensional sculptures, jewelry, oracle cards, tables, installations, and spaces. Find what calls to you.',
   },
+  '/creations/illuminated-works': {
+    title: 'Illuminated Works | Adrian Rasmussen',
+    description:
+      'Layered wood sculpture with embedded light. Pieces that reveal a second life after dark.',
+  },
+  '/creations/multidimensional-art': {
+    title: 'Multidimensional Art | Adrian Rasmussen',
+    description:
+      'Universal Language, Mandala, Light Codes, and Signature Pieces. Windows into the infinite.',
+  },
   '/writings': {
     title: 'Writings | Adrian Rasmussen',
     description:
@@ -58,9 +68,32 @@ function setMeta(selector: string, content: string) {
   }
 }
 
+const SUBCATEGORY_NAMES: Record<string, string> = {
+  'universal-language': 'Universal Language',
+  'mandala': 'Mandala',
+  'light-codes': 'Light Codes',
+  'signature-pieces': 'Signature Pieces',
+};
+
+function resolveConfig(pathname: string): SeoConfig {
+  if (SEO_BY_ROUTE[pathname]) return SEO_BY_ROUTE[pathname];
+
+  // Dynamic: /creations/multidimensional-art/:subcategory
+  if (pathname.startsWith('/creations/multidimensional-art/')) {
+    const slug = pathname.split('/').pop() ?? '';
+    const name = SUBCATEGORY_NAMES[slug] ?? slug;
+    return {
+      title: `${name} | Multidimensional Art | Adrian Rasmussen`,
+      description: `Explore the ${name} series — multidimensional sculptures in layered wood and light.`,
+    };
+  }
+
+  return SEO_BY_ROUTE['/'];
+}
+
 export function useSeoMeta(pathname: string) {
   useEffect(() => {
-    const config = SEO_BY_ROUTE[pathname] ?? SEO_BY_ROUTE['/'];
+    const config = resolveConfig(pathname);
 
     document.title = config.title;
     setMeta('meta[name="description"]', config.description);

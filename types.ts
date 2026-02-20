@@ -3,8 +3,8 @@ export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 export interface Artwork {
   id: string;
   title: string;
-  category: string; // e.g. "Multidimensional Art", "Light Codes"
-  series?: string; // e.g. "Universal Language"
+  category: string; // e.g. "Multidimensional Art", "Jewelry"
+  series?: string; // e.g. "Universal Language", "Mandala", "Light Codes"
   coverImage: string;
   images: string[];
   description: string;
@@ -12,14 +12,31 @@ export interface Artwork {
   year: string;
   dimensions?: string;
   material?: string;
-  
-  // New Master Doc Fields
+
+  // Master Doc Fields
   featured?: boolean; // For "Selected Works"
   availability: AvailabilityStatus;
   price?: number; // Optional if Sold
   edition?: string; // e.g. "Edition of 10"
-  
+
   createdDate?: Date;
+
+  // Architecture update fields
+  illuminated?: boolean; // Piece has LED/light work
+  finish?: string; // e.g. "Natural", "Painted", "Gold Leaf"
+  subcategory?: string; // Light Codes: "Frequency Foundations" | "Embodied Vibrations" | "Resonant Formations"
+  relatedStorySlug?: string; // Links to Story.slug for bidirectional story linking
+  isSignaturePiece?: boolean; // Multidimensional Art pieces outside any named series
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  coverImage?: string;
+  category: string;
+  matchSeries?: string;
+  pieceIds?: string[];
 }
 
 export interface Product {

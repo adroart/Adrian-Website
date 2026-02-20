@@ -1,12 +1,26 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
-import { STORIES } from '../data/mockData';
+import { STORIES, FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
 
 const Writings: React.FC = () => {
+  const location = useLocation();
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [activeCategory, setActiveCategory] = useState<StoryCategory | 'All'>('All');
+
+  // Support deep-linking from PiecePage via router state
+  useEffect(() => {
+    const state = location.state as { openStory?: string } | null;
+    if (state?.openStory) {
+      const story = STORIES.find(s => s.slug === state.openStory);
+      if (story) {
+        setSelectedStory(story);
+        window.scrollTo(0, 0);
+      }
+    }
+  }, []);
 
   const categories: StoryCategory[] = ['Living Knowledge', 'Beneath the Surface', 'The Practice', 'The Path'];
 
@@ -27,6 +41,9 @@ const Writings: React.FC = () => {
           publisher: { '@type': 'Person', name: 'Adrian Rasmussen' },
       };
 
+      // Pieces linked to this story via relatedStorySlug
+      const relatedArtworks = FULL_ARCHIVE.filter(a => a.relatedStorySlug === selectedStory.slug);
+
       return (
           <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
               <script
@@ -34,13 +51,13 @@ const Writings: React.FC = () => {
                   dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
               />
               <div className="max-w-3xl mx-auto">
-                  <button 
+                  <button
                       onClick={() => setSelectedStory(null)}
                       className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 mb-12 font-bold"
                   >
                       <ArrowLeft size={16} /> Return to Index
                   </button>
-                  
+
                   <div className="text-center mb-16">
                       <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[10px] uppercase tracking-widest text-bronze-600 mb-6 font-bold">
                           {selectedStory.category}
@@ -66,6 +83,38 @@ const Writings: React.FC = () => {
                           <p key={i} className="mb-8">{p}</p>
                       ))}
                   </div>
+
+                  {/* Related Creations — bidirectional link back to pieces */}
+                  {relatedArtworks.length > 0 && (
+                      <div className="mt-16 pt-12 border-t border-wood-200">
+                          <h3 className="font-serif text-2xl text-wood-900 mb-8 font-medium">Related Creations</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                              {relatedArtworks.map(art => (
+                                  <Link
+                                      key={art.id}
+                                      to={`/creations/${art.id}`}
+                                      className="group flex gap-4 items-start"
+                                  >
+                                      <div className="w-20 h-20 flex-shrink-0 overflow-hidden bg-wood-100 border border-wood-200">
+                                          <img
+                                              src={art.coverImage}
+                                              alt={art.title}
+                                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                          />
+                                      </div>
+                                      <div>
+                                          <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                              {art.title}
+                                          </h4>
+                                          <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+                                              {art.series ?? art.category}
+                                          </p>
+                                      </div>
+                                  </Link>
+                              ))}
+                          </div>
+                      </div>
+                  )}
               </div>
           </article>
       );

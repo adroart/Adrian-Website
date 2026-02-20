@@ -2,7 +2,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
 const Hero: React.FC = () => {
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -42,20 +41,10 @@ const Hero: React.FC = () => {
               loop
               muted
               playsInline
-              onLoadedData={() => setIsVideoLoaded(true)}
-              className={`w-full h-full object-cover transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-60' : 'opacity-0'}`}
-              poster="https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop"
+              className="w-full h-full object-cover opacity-60"
           >
               <source src="https://video.wixstatic.com/video/e5e2db_603cdbb883e847db9a1f47fd9bb39e26/720p/mp4/file.mp4" type="video/mp4" />
           </video>
-
-          {!isVideoLoaded && (
-              <img
-                  src="https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=2500&auto=format&fit=crop"
-                  className="absolute inset-0 w-full h-full object-cover opacity-50"
-                  alt="Atmospheric texture"
-              />
-          )}
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
       </div>
 

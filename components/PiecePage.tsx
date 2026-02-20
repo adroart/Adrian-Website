@@ -1,13 +1,15 @@
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, Lock, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Lock, ArrowUpRight, BookOpen } from 'lucide-react';
 
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const touchStartX = useRef(0);
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
 
@@ -34,8 +36,16 @@ const PiecePage: React.FC = () => {
         return SERIES_DATA.find(s => s.name === art.series) || null;
     }, [art]);
 
+    // All images: cover first, then additional (de-duped)
+    const allImages = useMemo(() => {
+        if (!art) return [];
+        const extras = art.images.filter(img => img !== art.coverImage);
+        return [art.coverImage, ...extras];
+    }, [art]);
+
     useEffect(() => {
         window.scrollTo(0, 0);
+        setActiveImageIndex(0);
     }, [id]);
 
     if (!art) {
@@ -56,6 +66,14 @@ const PiecePage: React.FC = () => {
     }
 
     const seriesSlug = art.series ? art.series.toLowerCase().replace(/\s+/g, '-') : null;
+    const isMultidimensional = art.category === 'Multidimensional Art';
+    // For Multidimensional Art pieces, link into the new subcategory routes
+    const seriesLink = isMultidimensional && seriesSlug
+        ? `/creations/multidimensional-art/${seriesSlug}`
+        : null;
+    const signaturePiecesLink = isMultidimensional && art.isSignaturePiece
+        ? '/creations/multidimensional-art/signature-pieces'
+        : null;
 
     const productSchema = {
         '@context': 'https://schema.org',
@@ -84,33 +102,103 @@ const PiecePage: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
             />
             {/* Breadcrumb */}
-            <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
-                <Link to="/creations" className="hover:text-wood-900 transition-colors">
-                    Creations
-                </Link>
+            <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
+                <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
-                {art.series && seriesSlug && (
+
+                {/* Multidimensional Art hierarchy */}
+                {isMultidimensional && (
                     <>
-                        <Link to={`/series/${seriesSlug}`} className="hover:text-wood-900 transition-colors">
-                            {art.series}
+                        <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">
+                            Multidimensional Art
                         </Link>
                         <span className="text-wood-300">/</span>
+                        {seriesLink && (
+                            <>
+                                <Link to={seriesLink} className="hover:text-wood-900 transition-colors">
+                                    {art.series}
+                                </Link>
+                                <span className="text-wood-300">/</span>
+                            </>
+                        )}
+                        {signaturePiecesLink && (
+                            <>
+                                <Link to={signaturePiecesLink} className="hover:text-wood-900 transition-colors">
+                                    Signature Pieces
+                                </Link>
+                                <span className="text-wood-300">/</span>
+                            </>
+                        )}
                     </>
                 )}
+
                 <span className="text-wood-900">{art.title}</span>
             </div>
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-16">
                 {/* Images */}
-                <div className="space-y-6">
-                    <div className="w-full bg-wood-100 border border-wood-200">
-                        <img src={art.coverImage} className="w-full h-auto object-cover" alt={art.title} />
+                <div className="space-y-4">
+                    {/* Main image — swipeable on mobile */}
+                    <div
+                        className="w-full bg-wood-100 border border-wood-200 overflow-hidden"
+                        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                        onTouchEnd={(e) => {
+                            const diff = touchStartX.current - e.changedTouches[0].clientX;
+                            if (Math.abs(diff) > 40) {
+                                if (diff > 0 && activeImageIndex < allImages.length - 1) {
+                                    setActiveImageIndex(i => i + 1);
+                                } else if (diff < 0 && activeImageIndex > 0) {
+                                    setActiveImageIndex(i => i - 1);
+                                }
+                            }
+                        }}
+                    >
+                        <img
+                            src={allImages[activeImageIndex]}
+                            className="w-full h-auto object-cover transition-opacity duration-300"
+                            alt={art.title}
+                        />
                     </div>
-                    {art.images.length > 0 && (
-                        <div className="grid grid-cols-3 gap-4">
-                            {art.images.map((img, i) => (
-                                <img key={i} src={img} className="w-full h-24 object-cover border border-wood-200" alt={`${art.title} detail ${i + 1}`} />
+
+                    {/* Mobile dot indicators */}
+                    {allImages.length > 1 && (
+                        <div className="flex justify-center gap-2 lg:hidden">
+                            {allImages.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setActiveImageIndex(i)}
+                                    aria-label={`View image ${i + 1}`}
+                                    className={`rounded-full transition-all duration-300 ${
+                                        i === activeImageIndex
+                                            ? 'w-4 h-2 bg-bronze-500'
+                                            : 'w-2 h-2 bg-wood-300 hover:bg-wood-500'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Desktop thumbnails */}
+                    {allImages.length > 1 && (
+                        <div className="hidden lg:grid grid-cols-4 gap-3">
+                            {allImages.map((img, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setActiveImageIndex(i)}
+                                    aria-label={`View image ${i + 1}`}
+                                    className={`relative overflow-hidden border transition-all duration-200 ${
+                                        i === activeImageIndex
+                                            ? 'border-bronze-500 ring-1 ring-bronze-500'
+                                            : 'border-wood-200 opacity-60 hover:opacity-100 hover:border-wood-400'
+                                    }`}
+                                >
+                                    <img
+                                        src={img}
+                                        className="w-full h-20 object-cover"
+                                        alt={`${art.title} view ${i + 1}`}
+                                    />
+                                </button>
                             ))}
                         </div>
                     )}
@@ -119,9 +207,9 @@ const PiecePage: React.FC = () => {
                 {/* Details */}
                 <div className="lg:pt-8">
                     <div className="mb-8">
-                        {art.series && seriesSlug && (
+                        {art.series && (seriesLink || seriesSlug) && (
                             <Link
-                                to={`/series/${seriesSlug}`}
+                                to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
                                 className="flex items-center gap-2 text-bronze-600 font-mono text-xs uppercase tracking-widest font-bold mb-4 hover:underline"
                             >
                                 {art.series} Series <ArrowUpRight size={12} />
@@ -138,10 +226,22 @@ const PiecePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-12 max-w-lg leading-relaxed">
+                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-relaxed">
                         <p>{art.description}</p>
                         {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                     </div>
+
+                    {/* Story link — only shown when a companion essay exists */}
+                    {art.relatedStorySlug && (
+                        <Link
+                            to={`/writings`}
+                            state={{ openStory: art.relatedStorySlug }}
+                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold mb-10"
+                        >
+                            <BookOpen size={14} />
+                            Read the story behind this piece
+                        </Link>
+                    )}
 
                     <div className="border-t border-wood-200 pt-8 space-y-4">
                         {art.availability === 'READY_TO_SHIP' ? (
