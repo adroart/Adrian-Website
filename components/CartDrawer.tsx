@@ -28,15 +28,22 @@ async function startCheckout(
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Checkout failed');
         window.location.href = data.url;
-    } else {
-        // Fallback: open individual Stripe Payment Links
-        for (const item of items) {
-            const url = item.stripeUrl;
-            if (url && url !== 'https://buy.stripe.com/PLACEHOLDER') {
-                window.open(url, '_blank', 'noopener,noreferrer');
-            }
-        }
+        return;
     }
+
+    // Fallback: open individual Stripe Payment Links for items that have them
+    const itemsWithLinks = items.filter(
+        (i) => i.stripeUrl && i.stripeUrl !== 'https://buy.stripe.com/PLACEHOLDER'
+    );
+    if (itemsWithLinks.length > 0) {
+        for (const item of itemsWithLinks) {
+            window.open(item.stripeUrl, '_blank', 'noopener,noreferrer');
+        }
+        return;
+    }
+
+    // No valid Stripe IDs or payment links — surface a clear error
+    throw new Error('Checkout is not yet configured for these items. Please contact the studio.');
 }
 
 const CartDrawer: React.FC = () => {

@@ -98,6 +98,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         editionNumber: 4,
         featured: true,
         relatedStorySlug: 'beneath-surface-mandala',
+        stripePriceId: 'price_UL001_REPLACE_WITH_REAL_ID',
     },
     {
         id: 'LC-042',
@@ -116,6 +117,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         price: 950,
         edition: 'Open Edition',
         featured: true,
+        stripePriceId: 'price_LC042_REPLACE_WITH_REAL_ID',
     },
     {
         id: 'JW-005',
@@ -131,6 +133,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         price: 220,
         edition: 'Limited Run',
         featured: false,
+        stripePriceId: 'price_JW005_REPLACE_WITH_REAL_ID',
     },
     {
         id: 'TBL-001',
@@ -194,6 +197,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         edition: 'One of a Kind',
         featured: true,
         isSignaturePiece: true,
+        stripePriceId: 'price_SIG001_REPLACE_WITH_REAL_ID',
     },
     // Illuminated piece
     {
@@ -215,6 +219,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         editionSize: 5,
         featured: true,
         illuminated: true,
+        stripePriceId: 'price_ILLUM001_REPLACE_WITH_REAL_ID',
     },
 ];
 
@@ -319,7 +324,9 @@ export const INVENTORY: Product[] = FULL_ARCHIVE
         material: a.material,
         dimensions: a.dimensions,
         edition: a.edition,
-        isReadyToShip: a.availability === 'READY_TO_SHIP'
+        isReadyToShip: a.availability === 'READY_TO_SHIP',
+        stripePriceId: a.stripePriceId,
+        stripeUrl: a.stripeUrl,
     }));
 
 

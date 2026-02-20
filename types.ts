@@ -26,6 +26,7 @@ export interface Artwork {
 
   // Commerce
   stripePriceId?: string; // Stripe Price ID (price_xxx) for Checkout Session API
+  stripeUrl?: string;     // Legacy: direct Stripe Payment Link (fallback)
 
   // Architecture update fields
   illuminated?: boolean; // Piece has LED/light work

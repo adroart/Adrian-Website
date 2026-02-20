@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Product } from './types';
 
 export interface CartItem {
@@ -20,11 +20,31 @@ interface CartContextType {
   closeCart: () => void;
 }
 
+const CART_STORAGE_KEY = 'adrian_cart_items';
+
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 const CartContext = createContext<CartContextType | null>(null);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => loadCartFromStorage());
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // localStorage unavailable (e.g. private browsing quota exceeded) — fail silently
+    }
+  }, [items]);
 
   const addToCart = useCallback((product: Product) => {
     setItems(prev => {
