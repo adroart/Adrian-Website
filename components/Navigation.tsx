@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight, ShoppingBag } from 'lucide-react';
+import { useCart } from '../CartContext';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -17,6 +18,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { totalItems, openCart } = useCart();
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
   const textPrimary = isDark ? 'text-paper-50' : 'text-wood-900';
@@ -104,6 +106,20 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               </Link>
             ))}
           </div>
+
+          {/* Cart Icon */}
+          <button
+            onClick={openCart}
+            className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+            aria-label="Open cart"
+          >
+            <ShoppingBag size={20} />
+            {totalItems > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-bronze-600 text-paper-50 rounded-full text-[9px] font-mono font-bold flex items-center justify-center leading-none">
+                {totalItems > 9 ? '9+' : totalItems}
+              </span>
+            )}
+          </button>
 
           <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

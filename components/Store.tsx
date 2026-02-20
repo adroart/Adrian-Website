@@ -5,8 +5,9 @@ import { Product } from '../types';
 import { INVENTORY, STORE_CATEGORIES } from '../data/mockData';
 import {
     X, Search, SlidersHorizontal, ArrowRight, Eye, ShieldCheck,
-    Maximize2, ArrowLeft
+    Maximize2, ArrowLeft, Package, ShoppingBag, Check
 } from 'lucide-react';
+import { useCart } from '../CartContext';
 
 // --- HELPERS ---
 
@@ -214,6 +215,8 @@ const InspectionDrawer: React.FC<{
 }> = ({ product, onClose, onViewImage }) => {
     const [animClass, setAnimClass] = useState('translate-x-full');
     const [loaded, setLoaded] = useState(false);
+    const { addToCart, items } = useCart();
+    const inCart = product ? items.some(i => i.product.id === product.id) : false;
 
     useEffect(() => {
         if (product) {
@@ -339,14 +342,12 @@ const InspectionDrawer: React.FC<{
                     </div>
                     {product.available ? (
                         product.isReadyToShip ? (
-                            <a
-                                href="https://buy.stripe.com/PLACEHOLDER"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
+                            <button
+                                onClick={() => addToCart(product)}
+                                className={`w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg ${inCart ? 'bg-bronze-700 text-paper-50' : 'bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl'}`}
                             >
-                                Buy Now <ArrowRight size={16} />
-                            </a>
+                                {inCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingBag size={16} /> Add to Cart</>}
+                            </button>
                         ) : (
                             <a
                                 href="/inquire"
