@@ -259,3 +259,180 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 26. Define content management workflow
 27. Align all copy with Copy Guidelines (Section 13)
 28. Update Welcome page links to match plan
+
+---
+
+## 8. Technical Specs Review - Additional Items
+
+Items identified from the Technical Specs document (file 16) that are not yet captured above. Grouped by domain. Future to-do items are marked explicitly at the end.
+
+### 8.1 Design System
+
+- [x] ~~Implement availability state colors per spec~~ DONE. Added --color-avail-ready (#1A1A1A), --color-avail-order (#6B6B6B), --color-avail-sold (#9A9A9A) to CSS theme. Applied across PiecePage, Creations, Home, SeriesPage, Store.
+- [x] ~~Enforce middle dot separator (·) format for inline piece details~~ DONE. PiecePage now joins dimensions, material, year with " · " separator. Updated bullet separators across Home, Creations, SeriesPage.
+- [x] ~~Audit and enforce "no icons, no badges, no stickers" rule~~ DONE. Removed Package icon from Store Made to Order badge. Availability states now use text plus color only.
+- [x] ~~Audit all site copy for em dashes~~ DONE. Replaced all em dashes and en dashes in Store, Inquire, Terms, PrivacyPolicy with commas, periods, or "to" for ranges.
+
+### 8.2 Edition Display Logic
+
+- [x] ~~Implement progressive scarcity display rules~~ DONE. Added getEditionDisplay() function in PiecePage with all percentage thresholds. Added editionSize, editionSold, editionNumber fields to Artwork type and mock data.
+- [x] ~~Implement edition format differences~~ DONE. Ready-to-ship shows "Edition of X · #Y · Signed and numbered"; made-to-order uses progressive scarcity text.
+- [x] ~~When an edition closes, change CTA to "Edition closed"~~ DONE. Added isEditionClosed() check. Shows "Edition closed" with "Commission a new original on this form" link to Inquire. Hides sticky mobile CTA when edition closed.
+
+### 8.3 Add-ons Logic
+
+- [ ] Implement add-on checkboxes on made-to-order piece pages: Crystals (+$X), Wood frame (+$X), Illuminate this piece (size-based starting price), Custom laser cut frame ("We'll design this together").
+- [ ] No add-on checkboxes on ready-to-ship pieces (piece is complete as shown).
+- [ ] Implement illumination tier logic: not offered for small (under 12"); starting price varies for medium (12-24"), large (24-36"), major (36"+). Copy: "The work comes alive in the dark. Starting at $[X]. Options range from subtle glow to custom programming."
+- [ ] Implement conversation item flow: when illumination or custom frame is checked, redirect to a pre-filled inquiry form instead of standard checkout. Adrian confirms details and pricing before payment link is sent manually.
+
+### 8.4 Filter System
+
+- [ ] Implement series-specific filters per spec:
+  - Universal Language: Availability, Finish, Size
+  - Mandala: Availability, Finish, Size
+  - Light Codes: Availability, Category (Frequency Foundations / Embodied Vibrations / Resonant Formations), Size
+- [ ] Implement category-specific filters per spec:
+  - Multidimensional Art: Availability, Series, Finish, Size, Illuminated (yes/no), Story piece (yes/no)
+  - Jewelry: Availability, Type (pendant/ring/bracelet/earring), Material, Price range
+  - Oracle Cards: Availability, Deck type
+  - Tables: Availability, Size, Material
+  - Installations: Project type, Scale
+  - Spaces: Project type
+- [ ] Finalize filter UX decisions (spec marks these "To Finalize"):
+  - Single select vs. multi-select per filter type
+  - Active filter display style (pills, inline text, or sidebar)
+  - Clear all vs. clear individual filters
+  - Whether to show result counts per filter option
+  - Empty state messaging when no results match
+  - URL structure for filtered views (for sharing and bookmarking)
+- [x] Sticky filter bar on scroll. DONE (Creations.tsx, sticky top-[70px]).
+
+### 8.5 Mobile Experience
+
+- [ ] Implement two-tap pattern on mobile hero grid: tap once reveals category name and one-line description; tap again navigates to category page. Keeps grid clean until visitor engages.
+- [ ] Implement bottom sheet filter overlay for mobile: "Filter" button in sticky position, tapping opens bottom sheet with large touch targets, dismiss on apply or swipe down.
+- [ ] Implement horizontal swipe image galleries with dot indicators on piece pages. Full-width images. No pinch-to-zoom required (images large enough by default).
+- [ ] Implement "See What's Possible" modal as full-screen overlay on mobile (not centered modal). Tab navigation via horizontal scrollable tabs at top for Finishes, Crystals, Illumination, Framing.
+- [x] ~~Replace spinner-style loading with skeleton screens~~ DONE. Replaced SacredGeometryLoader in Store.tsx with SkeletonCard grid using animate-pulse.
+- [ ] Define and implement friendly error state messaging. Light touch, brief. Refer to Copy Guidelines for tone.
+- [ ] Decide newsletter signup placement within mobile hamburger menu.
+- [ ] Sticky bottom bar on mobile piece pages with price and primary CTA. DONE (PiecePage.tsx).
+
+### 8.6 Desktop Experience
+
+- [x] ~~Implement page transition animations~~ DONE. Added animate-fade-in to Home, Store, Writings landing, Inquire, and Creations pages. PiecePage, WritingArticle, SeriesPage, About already had it. Modals and filter animations still use existing transitions.
+- [x] ~~Verify max content width for text-heavy pages~~ DONE. About inner text blocks use max-w-2xl/max-w-3xl (672-768px). WritingArticle uses max-w-3xl (768px). Both within spec range.
+- [x] ~~Verify piece cards have subtle scale or shadow shift on hover~~ DONE. Added group-hover:shadow-lg to piece cards in Home, Creations, PiecePage (related), SeriesPage, and Store.
+- [ ] Evaluate optional subtle parallax on homepage hero. Hero.tsx has some parallax effect already; confirm it meets spec ("never distracting").
+- [ ] Confirm simple grid layout for category pages and shop. Masonry layout for Selected Works (Home.tsx uses CSS columns, which provides masonry). Confirm editorial feel.
+
+### 8.7 E-Commerce
+
+- [ ] Implement cart drawer sliding from right side (spec recommends drawer over full page for small catalog). Currently no cart; Store.tsx uses an inspection drawer pattern that links directly to Stripe.
+- [ ] Define and implement checkout flow: Review cart, shipping info, payment.
+- [ ] Implement shipping calculation based on Bali origin. International shipping normalized as standard.
+- [ ] Enable Apple Pay and Google Pay through Stripe.
+- [ ] Implement made-to-order deposit structure: 50% upfront, 50% on completion.
+- [ ] Build post-purchase flow: order confirmation page with warm messaging, confirmation email with timeline expectations, progress update emails at key milestones for made-to-order pieces.
+- **Future to-do:** Plan Snipcart upgrade path when order volume warrants a more integrated cart experience.
+
+### 8.8 SEO Strategy
+
+- [ ] Build keyword targeting strategy for primary opportunities:
+  - "Ye Ming Zhu" (highest priority, Living Knowledge as anchor content)
+  - "Glowing crystal" / "glow in dark crystal" / "luminous crystal jewelry" (high)
+  - "Sacred geometry art" (high, competitive)
+  - "Laser cut art" (medium, differentiate through painted finish)
+  - "I Ching art" / "Gene Keys art" (medium, niche but aligned)
+  - "Mandala art" / "mandala wall art" (medium, very competitive, use for long-tail)
+  - "Custom sacred art" (medium, commission-focused)
+- [x] ~~Implement remaining schema markup~~ DONE. Person schema already existed on About page. Added BreadcrumbList schema to PiecePage. ImageObject covered via updated alt text.
+- [x] ~~Write unique meta descriptions (150-160 characters) for primary pages~~ DONE. Updated useSeoMeta.ts with keyword-rich descriptions for Homepage, About, Creations, Writings, Inquire, Shop. Category and series-specific pages still need per-page descriptions when routes are added.
+- [x] ~~Implement image alt text standards~~ DONE. Updated all image alt text across PiecePage, Creations, Home, SeriesPage, Store, Writings, About, Inquire to follow "[Description] by Adrian Rasmussen" format with material context.
+- [x] ~~Add share buttons to Writings pages~~ DONE. Added Share2 button with Web Share API to WritingArticle component, matching PiecePage share behavior.
+- [x] Open Graph meta tags. DONE (index.html).
+- [x] Twitter/X card meta tags. DONE (index.html).
+
+### 8.9 Photography and Video
+
+- [ ] Define and communicate standard shot list to photographer: hero front view (required), detail shot 1 (required), detail shot 2 (optional), scale on wall (required), scale with human (optional), illuminated day (if LEDs), illuminated dark (if LEDs), back/mounting (optional), process shot (optional).
+- [ ] Implement responsive image serving (srcset/sizes) for different screen sizes and resolutions. Not currently implemented; all images use simple src attributes.
+- [ ] Confirm homepage hero video specs: length, format, autoplay behavior, loop, muted by default. Mobile: poster image fallback if autoplay not supported.
+- [ ] Create illumination demo videos (15-30 seconds, loop-friendly) showing LED pieces transitioning from ambient to dark. For use in the Finishes/Options modal.
+- [ ] Ensure all source photography is minimum 2000px on longest side. Serve optimized responsive versions.
+
+### 8.10 Integrations
+
+- [ ] Build newsletter welcome sequence (3 emails): welcome, story, invitation to explore. Requires ConvertKit or similar ESP with automation capability. Formspree cannot do this.
+- [ ] Define newsletter frequency approach: "as inspired, not scheduled. Quality over consistency."
+- [ ] Select and install analytics platform. Spec suggests Google Analytics or privacy-focused alternative like Plausible. Track: page views, time on page, inquiry form submissions, cart additions, purchases.
+- [ ] Implement conversion tracking: inquiry submissions, completed purchases.
+- **Future to-do:** Heat mapping for post-launch optimization (optional).
+
+### 8.11 Pricing (To Be Finalized by Adrian)
+
+- [ ] Finalize base pricing by size tier for natural and painted finishes:
+  - Small (under 12"): $TBD / $TBD
+  - Medium (12-24"): $TBD / $TBD
+  - Large (24-36"): $TBD / $TBD
+  - Major (36"+): $TBD / $TBD
+- [ ] Finalize add-on pricing: Crystals (+$TBD), Wood frame (+$TBD), Illumination medium (starting $TBD), Illumination large (starting $TBD), Illumination major (starting $TBD).
+- [ ] Finalize category pricing ranges: Light Codes ($TBD-$TBD), Jewelry ($TBD-$TBD), Tables ($TBD-$TBD), Oracle Cards ($TBD-$TBD).
+
+### 8.12 Launch Checklist (Items Not Already Captured Above)
+
+**Must Have:**
+- [ ] Format homepage hero video for web (video exists, needs formatting)
+- [ ] Prepare hero grid images (9 images, one per category)
+- [ ] Curate Selected Works for homepage (10-20 pieces)
+- [ ] Adrian hand-edits About page (final review)
+- [ ] At least one series fully populated with pieces
+- [ ] Core product photography complete (hero + detail for each listed piece)
+- [ ] Finishes modal images (Natural, Painted, Crystals, LEDs, Framing)
+- [ ] Complete mobile responsive testing
+- [ ] Test Stripe payment integration end-to-end
+
+**Should Have:**
+- [ ] Publish at least one Living Knowledge presentation (Ye Ming Zhu)
+- [ ] Write series hooks and essays for Universal Language, Mandala, Light Codes
+- [ ] Publish at least one piece in The Path (Writings section)
+- [ ] Configure Open Graph and social meta tags for all pages (base tags done, per-page needed)
+
+**Nice to Have:**
+- [ ] Create process videos for The Practice (Writings section)
+- [ ] Document 2-3 installation projects for Installations portfolio
+- [ ] Build and activate welcome email sequence for Inner Circle
+
+---
+
+## 9. Future To-Do (Discussed But Not Prioritized)
+
+These features have been discussed in the Technical Specs but are explicitly not prioritized for initial launch. Revisit as the site matures and demand warrants.
+
+### 9.1 Features
+- [ ] NFT integration for legacy documentation of commissioned pieces
+- [ ] QR codes on physical plaques linking to digital story pages
+- [ ] Virtual tours or 3D piece viewing
+- [ ] Client portal for commission progress tracking
+- [ ] Community features (forum, member area)
+- [ ] Artist residency and Labyrinth Bali / Nuanu connection page
+- [ ] Events calendar
+- [ ] Press and media section
+
+### 9.2 Pricing Explorer Tool
+Not yet designed. Recommended progression:
+1. **Simple (first version):** Static examples at price tiers. "See what's possible at $500, $1,000, $2,500, $5,000+"
+2. **Interactive (upgrade):** Sliders for size and finish with dynamic price updates.
+3. **Guided (final):** "Share your budget and vision, we'll show what's possible." Routes to inquiry.
+
+### 9.3 Search Functionality
+Not yet designed. Considerations for future implementation:
+- Search bar location (header or dedicated page)
+- What is searchable (pieces, writings, both)
+- Results display format
+- Empty state messaging
+- Autocomplete suggestions
+
+### 9.4 SEO Long-Tail
+- [ ] "Tea house design" keyword targeting (build as Spaces portfolio grows)

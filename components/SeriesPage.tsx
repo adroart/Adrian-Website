@@ -64,7 +64,7 @@ const SeriesPage: React.FC = () => {
             <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
                 <img
                     src={seriesInfo.image}
-                    alt={seriesInfo.name}
+                    alt={`${seriesInfo.name} series by Adrian Rasmussen`}
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/30 to-transparent" />
@@ -110,16 +110,16 @@ const SeriesPage: React.FC = () => {
                                 to={`/creations/${art.id}`}
                                 className="group break-inside-avoid mb-8 block"
                             >
-                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
+                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
                                     <img
                                         src={art.coverImage}
-                                        alt={art.title}
+                                        alt={`${art.title} by Adrian Rasmussen`}
                                         loading="lazy"
                                         className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                     {art.availability === 'READY_TO_SHIP' && (
-                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
-                                            Ready to Ship
+                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-medium">
+                                            Ready to ship
                                         </div>
                                     )}
                                 </div>
@@ -135,7 +135,7 @@ const SeriesPage: React.FC = () => {
                                         )}
                                     </div>
                                     <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
-                                        {art.category} {art.availability === 'SOLD' && '• Sold'}
+                                        {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
                                     </p>
                                 </div>
                             </Link>
@@ -178,7 +178,7 @@ const SeriesPage: React.FC = () => {
                                 >
                                     <img
                                         src={series.image}
-                                        alt={series.name}
+                                        alt={`${series.name} series by Adrian Rasmussen`}
                                         loading="lazy"
                                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                                     />

@@ -23,7 +23,7 @@ const Terms: React.FC = () => {
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Commissions</h2>
           <p>
-            Commission inquiries submitted through the website do not constitute a binding agreement. Terms for commissioned work — including scope, timeline, and payment — are agreed upon separately via direct communication.
+            Commission inquiries submitted through the website do not constitute a binding agreement. Terms for commissioned work, including scope, timeline, and payment, are agreed upon separately via direct communication.
           </p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Shipping</h2>

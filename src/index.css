@@ -49,6 +49,11 @@
   --color-stone-900: #2b2926;
   --color-stone-950: #23201e;
 
+  /* Colors: availability states */
+  --color-avail-ready: #1A1A1A;
+  --color-avail-order: #6B6B6B;
+  --color-avail-sold: #9A9A9A;
+
   /* Colors: bronze */
   --color-bronze-200: #e6d9c3;
   --color-bronze-400: #c4aa7c;
