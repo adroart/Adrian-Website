@@ -3,13 +3,33 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
-import { Artwork } from '../types';
+
+type AvailabilityFilter = 'All' | 'Ready to ship' | 'Made to order';
+type FinishFilter = 'All' | 'Natural' | 'Painted';
+type SizeFilter = 'All' | 'Small' | 'Medium' | 'Large';
+type LightCodesCategoryFilter = 'All' | 'Frequency Foundations' | 'Embodied Vibrations' | 'Resonant Formations';
+
+const FilterButton: React.FC<{ active: boolean; onClick: () => void; label: string }> = ({ active, onClick, label }) => (
+    <button
+        onClick={onClick}
+        className={`font-mono text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 border transition-colors ${
+            active
+                ? 'bg-wood-900 text-paper-50 border-wood-900'
+                : 'bg-transparent text-wood-500 border-wood-200 hover:text-wood-900 hover:border-wood-400'
+        }`}
+    >
+        {label}
+    </button>
+);
 
 const SeriesPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 
-    // Convert slug back to series name
+    const [availFilter, setAvailFilter] = useState<AvailabilityFilter>('All');
+    const [finishFilter, setFinishFilter] = useState<FinishFilter>('All');
+    const [sizeFilter, setSizeFilter] = useState<SizeFilter>('All');
+    const [lcCategoryFilter, setLcCategoryFilter] = useState<LightCodesCategoryFilter>('All');
+
     const seriesName = useMemo(() => {
         if (!slug) return null;
         const series = SERIES_DATA.find(
@@ -23,16 +43,20 @@ const SeriesPage: React.FC = () => {
         return SERIES_DATA.find(s => s.name === seriesName) || null;
     }, [seriesName]);
 
+    const isLightCodes = seriesName === 'Light Codes';
+    const hasFinishFilter = seriesName === 'Universal Language' || seriesName === 'Mandala';
+
     const seriesPieces = useMemo(() => {
         if (!seriesName) return [];
         let pieces = FULL_ARCHIVE.filter(a => a.series === seriesName);
-        if (showAvailableOnly) {
+        if (availFilter === 'Ready to ship') {
             pieces = pieces.filter(a => a.availability === 'READY_TO_SHIP');
+        } else if (availFilter === 'Made to order') {
+            pieces = pieces.filter(a => a.availability === 'MADE_TO_ORDER');
         }
         return pieces;
-    }, [seriesName, showAvailableOnly]);
+    }, [seriesName, availFilter]);
 
-    // All series for the "other series" section
     const otherSeries = useMemo(() => {
         return SERIES_DATA.filter(s => s.name !== seriesName);
     }, [seriesName]);
@@ -59,45 +83,85 @@ const SeriesPage: React.FC = () => {
     }
 
     return (
-        <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
-            {/* Hero */}
-            <div className="relative w-full h-[50vh] min-h-[400px] max-h-[600px] overflow-hidden">
-                <img
-                    src={seriesInfo.image}
-                    alt={seriesInfo.name}
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/30 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 max-w-7xl mx-auto">
-                    <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-paper-200 font-bold mb-4">
-                        <Link to="/creations" className="hover:text-paper-50 transition-colors">
-                            Creations
-                        </Link>
-                        <span className="text-paper-300/50">/</span>
-                        <span className="text-paper-50">Series</span>
-                    </div>
-                    <h1 className="font-serif text-5xl md:text-7xl text-paper-50 mb-4 font-medium">
+        <section className="bg-paper-50 min-h-screen pt-32 pb-32 animate-fade-in">
+
+            {/* Title + Count + Hook */}
+            <div className="max-w-[1800px] mx-auto px-6 mb-12">
+                <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-400 font-bold mb-6">
+                    <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
+                    <span>/</span>
+                    <span className="text-wood-700">Series</span>
+                </div>
+
+                <div className="max-w-4xl">
+                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-3 font-medium">
                         {seriesInfo.name}
                     </h1>
-                    <p className="font-serif text-xl md:text-2xl text-paper-200 max-w-2xl font-light leading-relaxed">
-                        {seriesInfo.description}
-                    </p>
+                    {seriesInfo.pieceCount && (
+                        <p className="font-mono text-xs uppercase tracking-widest text-wood-400 font-bold mb-8">
+                            {seriesInfo.pieceCount}
+                        </p>
+                    )}
+
+                    {seriesInfo.hook && (
+                        <div className="mt-6 mb-3">
+                            <p className="font-serif text-xl md:text-2xl text-wood-700 leading-relaxed font-light max-w-3xl">
+                                {seriesInfo.hook}
+                            </p>
+                        </div>
+                    )}
+
+                    {seriesInfo.essaySlug && (
+                        <Link
+                            to={`/writings/${seriesInfo.essaySlug}`}
+                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-800 transition-colors font-bold border-b border-bronze-300 pb-0.5 mt-4"
+                        >
+                            Read the full story <ArrowRight size={12} />
+                        </Link>
+                    )}
                 </div>
             </div>
 
-            {/* Filter Bar */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-6 border-b border-wood-200 flex justify-between items-center mb-12">
-                <div className="flex items-center gap-4">
-                    <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">
+            {/* Sticky Filter Bar */}
+            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">
+                        Availability
+                    </span>
+                    {(['All', 'Ready to ship', 'Made to order'] as AvailabilityFilter[]).map(f => (
+                        <FilterButton key={f} label={f} active={availFilter === f} onClick={() => setAvailFilter(f)} />
+                    ))}
+
+                    {hasFinishFilter && (
+                        <>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Finish</span>
+                            {(['All', 'Natural', 'Painted'] as FinishFilter[]).map(f => (
+                                <FilterButton key={f} label={f} active={finishFilter === f} onClick={() => setFinishFilter(f)} />
+                            ))}
+                        </>
+                    )}
+
+                    {isLightCodes && (
+                        <>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Category</span>
+                            {(['All', 'Frequency Foundations', 'Embodied Vibrations', 'Resonant Formations'] as LightCodesCategoryFilter[]).map(f => (
+                                <FilterButton key={f} label={f} active={lcCategoryFilter === f} onClick={() => setLcCategoryFilter(f)} />
+                            ))}
+                        </>
+                    )}
+
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Size</span>
+                    {(['All', 'Small', 'Medium', 'Large'] as SizeFilter[]).map(f => (
+                        <FilterButton key={f} label={f} active={sizeFilter === f} onClick={() => setSizeFilter(f)} />
+                    ))}
+
+                    <span className="ml-auto font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
                         {seriesPieces.length} {seriesPieces.length === 1 ? 'Piece' : 'Pieces'}
                     </span>
                 </div>
-                <button
-                    onClick={() => setShowAvailableOnly(!showAvailableOnly)}
-                    className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
-                >
-                    {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
-                </button>
             </div>
 
             {/* Pieces Grid */}
@@ -122,20 +186,27 @@ const SeriesPage: React.FC = () => {
                                             Ready to Ship
                                         </div>
                                     )}
+                                    {art.availability === 'SOLD' && (
+                                        <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-paper-50 font-bold">
+                                            Sold
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="mt-4 px-1">
                                     <div className="flex justify-between items-start">
                                         <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight max-w-[75%]">
                                             {art.title}
                                         </h4>
-                                        {art.price && (
+                                        {art.price && art.availability !== 'SOLD' && (
                                             <span className="font-mono text-xs text-wood-900 font-bold">
                                                 {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price}
                                             </span>
                                         )}
                                     </div>
                                     <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
-                                        {art.category} {art.availability === 'SOLD' && '• Sold'}
+                                        {art.availability === 'READY_TO_SHIP' ? 'Ready to ship'
+                                            : art.availability === 'MADE_TO_ORDER' ? 'Made to order'
+                                            : 'Sold'}
                                     </p>
                                 </div>
                             </Link>
@@ -144,25 +215,56 @@ const SeriesPage: React.FC = () => {
                 ) : (
                     <div className="text-center py-24">
                         <p className="font-serif text-xl text-wood-500 italic">
-                            {showAvailableOnly
-                                ? 'No available pieces in this series at the moment.'
-                                : 'No pieces in this series yet.'}
+                            No pieces match the current filters.
                         </p>
-                        {showAvailableOnly && (
-                            <button
-                                onClick={() => setShowAvailableOnly(false)}
-                                className="mt-4 font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold"
-                            >
-                                Show all pieces
-                            </button>
-                        )}
+                        <button
+                            onClick={() => { setAvailFilter('All'); setFinishFilter('All'); setSizeFilter('All'); setLcCategoryFilter('All'); }}
+                            className="mt-4 font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold"
+                        >
+                            Clear filters
+                        </button>
                     </div>
                 )}
             </div>
 
+            {/* Light Codes Custom Option */}
+            {isLightCodes && (
+                <div className="max-w-[1800px] mx-auto px-6 mt-24">
+                    <div className="bg-wood-900 text-paper-50 p-10 md:p-16 max-w-3xl mx-auto text-center">
+                        <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
+                            A Light Code can also be created for you.
+                        </h3>
+                        <p className="font-serif text-lg text-paper-200 leading-relaxed font-light mb-8">
+                            Through conversation, I receive the energy and intentions of your life, then anchor what wants to come through.
+                        </p>
+                        <Link
+                            to="/inquire"
+                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-bold"
+                        >
+                            Begin the conversation <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                </div>
+            )}
+
+            {/* Close */}
+            <div className="max-w-[1800px] mx-auto px-6 mt-24">
+                <div className="border-t border-wood-200 pt-12 text-center">
+                    <p className="font-serif text-xl text-wood-600 italic mb-6">
+                        Questions about this series?
+                    </p>
+                    <Link
+                        to="/inquire"
+                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 transition-colors font-bold border-b border-wood-900 hover:border-bronze-600 pb-1"
+                    >
+                        Reach out <ArrowRight size={14} />
+                    </Link>
+                </div>
+            </div>
+
             {/* Other Series */}
             {otherSeries.length > 0 && (
-                <div className="max-w-[1800px] mx-auto px-6 mt-32">
+                <div className="max-w-[1800px] mx-auto px-6 mt-24">
                     <div className="border-t border-wood-200 pt-12 mb-12">
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">Other Series</h2>
                     </div>
@@ -188,10 +290,10 @@ const SeriesPage: React.FC = () => {
                                             {series.name}
                                         </h3>
                                         <p className="font-serif text-sm text-paper-200 font-light">
-                                            {series.description}
+                                            {series.hook ? series.hook.substring(0, 80) + '…' : series.description}
                                         </p>
                                         <span className="font-mono text-[10px] uppercase tracking-widest text-paper-300 font-bold mt-2">
-                                            {pieceCount} {pieceCount === 1 ? 'Piece' : 'Pieces'}
+                                            {series.pieceCount || `${pieceCount} ${pieceCount === 1 ? 'Piece' : 'Pieces'}`}
                                         </span>
                                     </div>
                                 </Link>

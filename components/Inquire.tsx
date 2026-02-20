@@ -48,7 +48,6 @@ const REFERRAL_OPTIONS = [
 const Inquire: React.FC = () => {
   const [commissionType, setCommissionType] = useState<CommissionType>('personal');
   const [showOptionals, setShowOptionals] = useState(false);
-  const [showLightCodes, setShowLightCodes] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [sendStatus, setSendStatus] = useState<SendStatus>('IDLE');
   const [errorMsg, setErrorMsg] = useState('');
@@ -152,34 +151,61 @@ const Inquire: React.FC = () => {
                <p className="font-serif text-xl text-wood-700 leading-relaxed font-light mb-6">
                   I take on a small number of commissions each year. Some become intimate pieces for personal spaces. Others become installations that transform environments.
                </p>
+               <p className="font-serif text-lg text-wood-600 leading-relaxed mb-4">
+                  I am selective. Not every project is the right project. The right ones find me, and I recognize them when they do.
+               </p>
                <p className="font-serif text-lg text-wood-600 leading-relaxed">
-                  I'm selective. Not because of budget, but because of fit. The right projects find me, and I recognize them when they do. If you're feeling a pull toward working together, trust that.
+                  If you are feeling a pull toward working together, trust that.
                </p>
           </div>
 
           {/* 9.3 Commission Paths */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-               <div className="bg-white p-8 border border-wood-200">
-                   <h3 className="font-serif text-2xl text-wood-900 mb-3 font-medium">Personal Commissions</h3>
-                   <p className="font-serif text-wood-600 mb-4">Something for your home, your altar, your life. Pieces created from conversation.</p>
+               <div className="bg-white p-8 border border-wood-200 flex flex-col">
+                   <h3 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Personal Commissions</h3>
+                   <p className="font-serif text-wood-600 leading-relaxed mb-6 flex-1">
+                       Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.
+                   </p>
+                   <a
+                       href="#inquiry-form"
+                       className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-300 pb-1 hover:text-bronze-600 hover:border-bronze-300 transition-colors font-bold self-start"
+                   >
+                       Begin here
+                   </a>
                </div>
-               <div className="bg-white p-8 border border-wood-200">
-                   <h3 className="font-serif text-2xl text-wood-900 mb-3 font-medium">Spatial Commissions</h3>
-                   <p className="font-serif text-wood-600 mb-4">Installations. Tea houses. Stages. Spaces where people can gather and connect.</p>
+               <div className="bg-white p-8 border border-wood-200 flex flex-col">
+                   <h3 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Spatial Commissions</h3>
+                   <p className="font-serif text-wood-600 leading-relaxed mb-6 flex-1">
+                       When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.
+                   </p>
+                   <a
+                       href="#inquiry-form"
+                       className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-300 pb-1 hover:text-bronze-600 hover:border-bronze-300 transition-colors font-bold self-start"
+                   >
+                       Begin here
+                   </a>
                </div>
           </div>
 
           {/* 9.4 Form */}
-          <div className="bg-wood-50 p-8 md:p-12 border border-wood-100 relative">
-               <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Start the conversation</h3>
+          <div id="inquiry-form" className="bg-wood-50 p-8 md:p-12 border border-wood-100 relative">
+               <p className="font-serif text-xl text-wood-700 leading-relaxed font-light mb-8">
+                   Tell me what you are imagining. We will figure out the details together.
+               </p>
 
                {submitted ? (
                  /* Success State */
                  <div className="text-center py-12">
                    <CheckCircle className="mx-auto mb-6 text-bronze-600" size={48} strokeWidth={1.5} />
-                   <h4 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Transmission received.</h4>
+                   <h4 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Thank you.</h4>
                    <p className="font-serif text-wood-600 leading-relaxed mb-8">
-                     Thank you for reaching out. I read every message personally and respond to those where I feel alignment. You'll hear from me if the fit is right.
+                     I have received your message and will be in touch soon.
+                   </p>
+                   <p className="font-serif text-wood-500 leading-relaxed mb-8">
+                     In the meantime, you are welcome to explore the{' '}
+                     <a href="/creations" className="underline underline-offset-4 decoration-1 hover:text-wood-700 transition-colors">Creations</a>
+                     {' '}or go deeper in the{' '}
+                     <a href="/writings" className="underline underline-offset-4 decoration-1 hover:text-wood-700 transition-colors">Writings</a>.
                    </p>
                    <button
                      onClick={handleReset}
@@ -345,7 +371,7 @@ const Inquire: React.FC = () => {
                           {sendStatus === 'SENDING' ? (
                             <span className="animate-pulse">Sending...</span>
                           ) : (
-                            <>Send Transmission <ArrowRight size={14} /></>
+                            <>Start the conversation <ArrowRight size={14} /></>
                           )}
                         </button>
                    </div>
@@ -357,28 +383,13 @@ const Inquire: React.FC = () => {
           <div className="mt-12 text-center">
               <p className="font-serif text-wood-600">
                   Light Codes can also be created for you.{' '}
-                  <button
-                    onClick={() => setShowLightCodes(prev => !prev)}
+                  <a
+                    href="/series/light-codes"
                     className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
                   >
-                    {showLightCodes ? 'Close' : 'Learn more'}
-                  </button>
+                    Learn more
+                  </a>
               </p>
-
-              {showLightCodes && (
-                <div className="mt-8 bg-white border border-wood-200 p-8 text-left">
-                  <h4 className="font-serif text-2xl text-wood-900 mb-4 font-medium">Light Codes</h4>
-                  <p className="font-serif text-wood-600 leading-relaxed mb-4">
-                    Light Codes are channeled geometric transmissions — unique to you, your frequency, your intention. Rather than a traditional commission based on imagery or space, a Light Code begins with a conversation about what you're calling in.
-                  </p>
-                  <p className="font-serif text-wood-600 leading-relaxed mb-4">
-                    Each one is laser-etched into basswood and finished by hand. They function as anchors — visual reminders of a frequency you want to embody. Collectors report that hanging a Light Code in a space changes the quality of that space.
-                  </p>
-                  <p className="font-serif text-wood-500 italic text-sm leading-relaxed">
-                    If this resonates, mention it in your message above. I'll know what to do with it.
-                  </p>
-                </div>
-              )}
           </div>
 
           {/* FAQ */}

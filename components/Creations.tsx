@@ -91,7 +91,13 @@ const Creations: React.FC = () => {
                     <div className="mb-12 border-b border-wood-200 pb-8">
                         <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Creations</h1>
                         <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed">
-                            I create across many forms. Some you hang on the wall. Some you wear. Some you sit with. Some you walk into. Find what calls to you.
+                            I create across many forms. Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
+                        </p>
+                        <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed mt-4">
+                            These are not decoration. They are portals. A place to sit with. To find your center. To feel an opening.
+                        </p>
+                        <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed mt-4">
+                            Find what calls to you.
                         </p>
                     </div>
                     
