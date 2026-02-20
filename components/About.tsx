@@ -54,7 +54,7 @@ const About: React.FC = () => {
                      </div>
                 </div>
                 <div className="bg-wood-200 aspect-[3/4] relative overflow-hidden">
-                    <img src="https://picsum.photos/800/1200?random=about1" className="w-full h-full object-cover grayscale opacity-90" alt="Adrian Portrait" />
+                    <img src="https://picsum.photos/800/1200?random=about1" className="w-full h-full object-cover grayscale opacity-90" alt="Adrian Portrait" loading="lazy" />
                 </div>
             </div>
 
@@ -86,9 +86,43 @@ const About: React.FC = () => {
             {/* 4.5 Creation as Practice */}
             <div className="mb-24">
                  <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-4 font-bold">Creation as Practice</span>
-                 <p className="font-serif text-xl text-wood-800 leading-relaxed font-light">
-                    Creating is how I grow. My inner journey. A celebration of creation itself. Through the process, I've learned to speak my truth. To come more and more clear. The more I create, the more authentic I become.
-                 </p>
+                 <div className="prose prose-xl font-serif text-wood-800 max-w-2xl font-light">
+                    <p>
+                        Creating is how I grow. My inner journey. A celebration of creation itself.
+                    </p>
+                    <p>
+                        Through the process, I've learned to speak my truth. To come more and more clear. The more I create, the more authentic I become. And by expressing what is true for me, perhaps others feel permission to do the same.
+                    </p>
+                 </div>
+            </div>
+
+            {/* 4.6 The Team */}
+            <div className="mb-24">
+                 <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-4 font-bold">The Team</span>
+                 <div className="prose prose-xl font-serif text-wood-800 max-w-2xl font-light">
+                    <p>
+                        I don't work alone. Many have walked this path with me. Learning, discovering, creating. We work hand in hand to bring these arts into form and share them with the planet.
+                    </p>
+                    <p>
+                        A family from different origins. One mother. Earth.
+                    </p>
+                 </div>
+            </div>
+
+            {/* 4.7 What Art Can Mean */}
+            <div className="bg-wood-50 p-8 md:p-12 mb-24 border border-wood-200">
+                 <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">What Art Can Mean</span>
+                 <div className="prose prose-lg font-serif text-wood-700 max-w-3xl">
+                    <p>
+                        A young man was gazing into one of my projection-mapped pieces at a festival. He sat there a long time. When he finally stood, he told me what had happened.
+                    </p>
+                    <p>
+                        He had been carrying suicidal feelings. An unclarity about why life was worth living. But sitting in the presence of the piece, something shifted. It allowed him to go inward and discover his own truth. To release the perception that he needed to end his life. He tapped into something that had always been there inside himself. The art was a gateway. Through it, he felt connected to who he was again.
+                    </p>
+                    <p>
+                        He did the work. The piece just held the space.
+                    </p>
+                 </div>
             </div>
 
             {/* 4.8 Close */}

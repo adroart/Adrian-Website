@@ -134,11 +134,11 @@ const Inquire: React.FC = () => {
       <div className="max-w-[1400px] mx-auto px-6 mb-24">
           <div className="flex flex-col md:flex-row gap-1">
               <div className="flex-1 h-[400px] md:h-[600px] bg-wood-100 relative overflow-hidden">
-                  <img src="https://picsum.photos/1000/1200?random=inq1" className="w-full h-full object-cover grayscale" alt="Intimate Piece" />
+                  <img src="https://picsum.photos/1000/1200?random=inq1" className="w-full h-full object-cover grayscale" alt="Intimate Piece" loading="lazy" />
                   <div className="absolute bottom-6 left-6 bg-paper-50/90 px-4 py-2 font-mono text-[10px] uppercase tracking-widest font-bold">Personal</div>
               </div>
               <div className="flex-1 h-[400px] md:h-[600px] bg-wood-100 relative overflow-hidden">
-                  <img src="https://picsum.photos/1200/1000?random=inq2" className="w-full h-full object-cover grayscale" alt="Large Installation" />
+                  <img src="https://picsum.photos/1200/1000?random=inq2" className="w-full h-full object-cover grayscale" alt="Large Installation" loading="lazy" />
                   <div className="absolute bottom-6 left-6 bg-paper-50/90 px-4 py-2 font-mono text-[10px] uppercase tracking-widest font-bold">Spatial</div>
               </div>
           </div>

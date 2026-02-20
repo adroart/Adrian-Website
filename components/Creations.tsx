@@ -18,6 +18,7 @@ const CreationCategoryCard: React.FC<{
             src={`https://picsum.photos/800/800?random=${100 + idx}`} 
             className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
             alt={label}
+            loading="lazy"
         />
         <div className="absolute inset-0 bg-wood-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
         <div className="absolute inset-0 p-6 flex flex-col justify-end bg-gradient-to-t from-stone-950/80 via-transparent to-transparent opacity-100 group-hover:opacity-90 transition-opacity">
@@ -35,6 +36,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
             <img
                 src={art.coverImage}
                 alt={art.title}
+                loading="lazy"
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (

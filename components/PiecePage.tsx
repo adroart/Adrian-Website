@@ -3,7 +3,7 @@ import React, { useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, Lock, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Share2 } from 'lucide-react';
 
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -105,12 +105,12 @@ const PiecePage: React.FC = () => {
                 {/* Images */}
                 <div className="space-y-6">
                     <div className="w-full bg-wood-100 border border-wood-200">
-                        <img src={art.coverImage} className="w-full h-auto object-cover" alt={art.title} />
+                        <img src={art.coverImage} className="w-full h-auto object-cover" alt={art.title} loading="lazy" />
                     </div>
                     {art.images.length > 0 && (
                         <div className="grid grid-cols-3 gap-4">
                             {art.images.map((img, i) => (
-                                <img key={i} src={img} className="w-full h-24 object-cover border border-wood-200" alt={`${art.title} detail ${i + 1}`} />
+                                <img key={i} src={img} className="w-full h-24 object-cover border border-wood-200" alt={`${art.title} detail ${i + 1}`} loading="lazy" />
                             ))}
                         </div>
                     )}
@@ -178,19 +178,61 @@ const PiecePage: React.FC = () => {
                                 </p>
                             </>
                         ) : (
-                            <div className="w-full py-4 border border-wood-200 text-wood-400 font-mono text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-                                <Lock size={14} /> Sold Out
+                            <div className="space-y-4">
+                                <div className="w-full py-4 border border-wood-200 text-wood-400 font-mono text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center">
+                                    Sold
+                                </div>
+                                <Link
+                                    to="/inquire"
+                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                >
+                                    Commission a new original on this form <ArrowRight size={14} />
+                                </Link>
                             </div>
                         )}
                     </div>
 
-                    {/* Category tag */}
-                    <div className="mt-8 pt-8 border-t border-wood-200">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">Category</span>
-                        <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
+                    {/* Share + Category */}
+                    <div className="mt-8 pt-8 border-t border-wood-200 flex justify-between items-start">
+                        <div>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">Category</span>
+                            <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
+                        </div>
+                        {typeof navigator !== 'undefined' && 'share' in navigator && (
+                            <button
+                                onClick={() => navigator.share({ title: art.title, url: window.location.href })}
+                                className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                                aria-label="Share this piece"
+                            >
+                                <Share2 size={14} /> Share
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Sticky Bottom Bar (Mobile) */}
+            {art.availability !== 'SOLD' && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                    <span className="font-serif text-xl text-wood-900 font-medium">
+                        {art.availability === 'MADE_TO_ORDER' ? `From $${art.price}` : `$${art.price}`}
+                    </span>
+                    {art.availability === 'READY_TO_SHIP' ? (
+                        <a
+                            href="https://buy.stripe.com/PLACEHOLDER"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-8 py-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center gap-2"
+                        >
+                            Buy Now <ArrowRight size={14} />
+                        </a>
+                    ) : (
+                        <button className="px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors">
+                            Configure
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Related Pieces */}
             {relatedPieces.length > 0 && (
@@ -211,6 +253,7 @@ const PiecePage: React.FC = () => {
                                     <img
                                         src={related.coverImage}
                                         alt={related.title}
+                                        loading="lazy"
                                         className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                     {related.availability === 'READY_TO_SHIP' && (

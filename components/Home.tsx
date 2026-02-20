@@ -11,6 +11,7 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
                 src={art.coverImage}
                 alt={art.title}
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                loading="lazy"
             />
             {art.availability === 'READY_TO_SHIP' && (
                 <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-wood-900 shadow-sm border border-wood-200">
@@ -169,7 +170,7 @@ const Home: React.FC = () => {
                         {featuredWritings.map(story => (
                             <Link
                                 key={story.id}
-                                to="/writings"
+                                to={`/writings/${story.slug}`}
                                 className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                             >
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">{story.category}</span>
