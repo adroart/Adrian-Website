@@ -23,18 +23,16 @@ These are significant contradictions between what the plan states and what the c
 - **Reality:** Store.tsx shows both ready-to-ship AND made-to-order items (INVENTORY filters for both). Made-to-order items get "Made to Order" badges and link to /inquire.
 - **Action:** Either update the shop implementation to only show ready-to-ship items, or update the plan to acknowledge made-to-order in the shop with the current approach.
 
-### 1.4 Category URLs Don't Exist as Separate Routes
-- **Plan (Section 2.2):** Dedicated URLs like `/creations/multidimensional-art`, `/creations/jewelry`, `/creations/oracle-cards`, etc.
-- **Reality:** Categories are handled via client-side filtering on `/creations`. Clicking a category sets a filter state, not a route change.
-- **Action:** Either implement dedicated category routes (better for SEO and shareability) or update the plan to reflect the filter-based approach. Dedicated routes are better for AEO/SEO strategy described in Section 12.7.
+### ~~1.4 Category URLs Don't Exist as Separate Routes~~ PARTIALLY RESOLVED
+~~Multidimensional Art (`/creations/multidimensional-art`) and Illuminated Works (`/creations/illuminated-works`) now have dedicated routed pages. Subcategory pages exist at `/creations/multidimensional-art/:subcategory`. Other categories (Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces) use URL search param filtering (`?category=Jewelry`) on `/creations`.~~
+- **Remaining:** Decide if the 6 remaining categories need dedicated routed pages or if search param filtering is sufficient.
 
 ### ~~1.5 Writings Don't Have Individual URLs~~ RESOLVED
 ~~Writings now have individual routes at `/writings/:slug`.~~
 
-### 1.6 Welcome Page Links Don't Match Plan
-- **Plan (Section 12.6):** Links should be: New Pieces > Shop, The Story > About, Writings > Writings, Work With Me > Inquire, Inner Circle > ConvertKit signup.
-- **Reality (Welcome.tsx):** Creations, Shop, Commission a Piece, Writings, Teajia. Missing Inner Circle/newsletter signup entirely. Labels differ.
-- **Action:** Update Welcome.tsx to match the plan's link structure, or update the plan.
+### ~~1.6 Welcome Page Links Don't Match Plan~~ RESOLVED
+~~Welcome.tsx now shows: Creations, Shop, Commission a Piece, Writings, Teajia, Enter Full Site. Labels differ from plan but cover all key navigation. Inner Circle/newsletter signup still absent but Formspree is the chosen newsletter tool (see 1.2).~~
+- **Remaining decision:** Whether to add a newsletter/Inner Circle signup link to the Welcome page.
 
 ---
 
