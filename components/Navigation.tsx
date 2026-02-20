@@ -73,10 +73,10 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
         className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group cursor-pointer backdrop-blur-sm"
       >
           <div className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
-              <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
-              <span className="text-[9px] text-wood-600 hidden sm:inline">|</span>
-              <span className="text-[9px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">Global tea culture. Ceremony and treasures.</span>
-              <ArrowUpRight size={9} className="text-wood-500 group-hover:text-bronze-400" />
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
+              <span className="text-[10px] text-wood-600 hidden sm:inline">|</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.08em] text-wood-400 hidden sm:inline">Global tea culture. Ceremony and treasures.</span>
+              <ArrowUpRight size={10} className="text-wood-500 group-hover:text-bronze-400" />
           </div>
       </a>
 
@@ -95,7 +95,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className={`group relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
+                className={`group relative text-xs uppercase tracking-[0.25em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
                   location.pathname === item.path
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
@@ -115,7 +115,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           >
             <ShoppingBag size={20} />
             {totalItems > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-bronze-600 text-paper-50 rounded-full text-[9px] font-mono font-bold flex items-center justify-center leading-none">
+              <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-bold flex items-center justify-center leading-none">
                 {totalItems > 9 ? '9+' : totalItems}
               </span>
             )}
@@ -128,12 +128,12 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-8 px-6 flex flex-col gap-6 items-center animate-fade-in shadow-2xl">
+             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-10 px-6 flex flex-col gap-7 items-center animate-fade-in shadow-2xl">
                 {navItems.map((item) => (
                     <button
                         key={item.path}
                         onClick={() => handleNavClick(item.path)}
-                        className={`text-lg font-serif tracking-wide ${location.pathname === item.path ? 'text-bronze-400' : 'text-paper-50'}`}
+                        className={`text-sm font-mono uppercase tracking-[0.3em] transition-colors ${location.pathname === item.path ? 'text-bronze-400' : 'text-paper-50/80 hover:text-paper-50'}`}
                     >
                         {item.label}
                     </button>

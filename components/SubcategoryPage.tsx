@@ -62,7 +62,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
                     Ready to Ship
                 </div>
             )}
@@ -81,7 +81,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                     </span>
                 )}
             </div>
-            <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
                 {art.subcategory ?? art.series ?? 'Signature'} {art.availability === 'SOLD' && '• Sold'}
             </p>
         </div>
@@ -164,7 +164,7 @@ const SubcategoryPage: React.FC = () => {
                             <span className="text-paper-50">{config.title}</span>
                         </div>
                         <h1 className="font-serif text-5xl md:text-7xl text-paper-50 mb-4 font-medium">{config.title}</h1>
-                        <p className="font-serif text-lg md:text-xl text-paper-200 max-w-2xl font-light leading-relaxed">
+                        <p className="font-serif text-lg md:text-xl text-paper-200 max-w-2xl font-light leading-[1.6]">
                             {config.description}
                         </p>
                     </div>
@@ -180,7 +180,7 @@ const SubcategoryPage: React.FC = () => {
                         <span className="text-wood-900">{config.title}</span>
                     </div>
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">{config.title}</h1>
-                    <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed">{config.description}</p>
+                    <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.65]">{config.description}</p>
                 </div>
             )}
 
@@ -287,7 +287,7 @@ const SubcategoryPage: React.FC = () => {
             {config.showCommissionInvite && (
                 <div className="max-w-[1800px] mx-auto px-6 mt-32">
                     <div className="border-t border-wood-200 pt-16 text-center">
-                        <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light italic mb-8 max-w-xl mx-auto leading-relaxed">
+                        <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light italic mb-8 max-w-xl mx-auto leading-[1.4]">
                             Something calling to you that does not exist yet?
                         </p>
                         <Link

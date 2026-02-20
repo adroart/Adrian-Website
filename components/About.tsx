@@ -112,12 +112,12 @@ const About: React.FC = () => {
               </span>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="font-serif text-6xl md:text-8xl lg:text-[104px] text-wood-900 leading-[0.95] font-medium mb-10">
+              <h1 className="font-serif text-6xl md:text-8xl lg:text-[104px] text-wood-900 leading-[0.93] font-medium mb-10">
                 Adrian<br />Rasmussen
               </h1>
             </Reveal>
             <Reveal delay={160}>
-              <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-relaxed font-light max-w-2xl">
+              <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.45] font-light max-w-2xl">
                 Multidimensional wooden sculptures. Original paintings with projection mapping and LED.
                 Jewelry. Oracle cards. Immersive installations. Tea houses and spaces designed for presence.
                 Artifacts of the future.
@@ -158,8 +158,8 @@ const About: React.FC = () => {
               <div className="relative todo-replace">
                 <span className="todo-replace-badge">⚠ Replace this story</span>
                 <div className="todo-replace-outline">
-                  <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-relaxed font-light max-w-3xl mb-10">
-                    "A young man was gazing into one of my projection-mapped pieces at a festival. He sat
+                  <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-[1.5] font-light max-w-3xl mb-10 border-l-2 border-bronze-400/60 pl-6">
+                    <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat
                     there a long time. When he finally stood, he told me what had happened."
                   </blockquote>
                   <div className="font-serif text-lg text-paper-200 leading-relaxed max-w-2xl space-y-5">
@@ -220,10 +220,10 @@ const About: React.FC = () => {
 
         {/* ─── PULL QUOTE ───────────────────────────────────────────────── */}
         <Reveal>
-          <div className="px-6 py-16 border-y border-wood-100 bg-paper-100">
+          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
             <div className="max-w-3xl mx-auto text-center">
-              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-snug italic">
-                "The intention stayed the same.<br />Bringing the formless into form."
+              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
+                <span className="ml-[-0.4em]">"</span>The intention stayed the same.<br />Bringing the formless into form."
               </p>
             </div>
           </div>
@@ -358,10 +358,10 @@ const About: React.FC = () => {
 
         {/* ─── PULL QUOTE 2 ─────────────────────────────────────────────── */}
         <Reveal>
-          <div className="px-6 py-16 border-y border-wood-100 bg-paper-100">
+          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
             <div className="max-w-3xl mx-auto text-center">
-              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-snug italic">
-                "By expressing what is true for me,<br />perhaps others feel permission to do the same."
+              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
+                <span className="ml-[-0.4em]">"</span>By expressing what is true for me,<br />perhaps others feel permission to do the same."
               </p>
             </div>
           </div>

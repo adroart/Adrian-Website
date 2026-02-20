@@ -331,7 +331,7 @@ const PiecePage: React.FC = () => {
             />
 
             {/* Breadcrumb */}
-            <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex flex-wrap items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
 
@@ -440,7 +440,7 @@ const PiecePage: React.FC = () => {
                                 {art.series} Series <ArrowUpRight size={12} />
                             </Link>
                         )}
-                        <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-tight mb-6 font-medium">
+                        <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-[1.1] mb-6 font-medium">
                             {art.title}
                         </h1>
                         <div className="font-serif text-lg text-wood-700 space-y-2">
@@ -449,7 +449,7 @@ const PiecePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-relaxed">
+                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-[1.7]">
                         <p>{art.description}</p>
                         {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                     </div>
@@ -502,7 +502,7 @@ const PiecePage: React.FC = () => {
                                         : <><ShoppingBag size={16} /> Add to Cart</>
                                     }
                                 </button>
-                                <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
+                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 mt-4 font-bold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
                             </>
@@ -677,12 +677,12 @@ const PiecePage: React.FC = () => {
                                             ${mtoTotal.toLocaleString('en-US')}
                                         </span>
                                     </div>
-                                    <div className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
+                                    <div className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">
                                         <span className="text-avail-order">Made to order</span>
                                         {' · '}4 to 6 weeks
                                     </div>
                                     {editionText && (
-                                        <p className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold mt-1">
+                                        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-bold mt-1">
                                             {editionText}
                                         </p>
                                     )}
@@ -696,7 +696,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     <ShoppingBag size={16} /> Add to Cart
                                 </button>
-                                <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
+                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 mt-4 font-bold">
                                     Ships from Bali
                                 </p>
                             </div>
@@ -714,7 +714,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     Commission Piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
+                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 mt-4 font-bold">
                                     4 to 6 weeks production time
                                 </p>
                             </>
@@ -738,13 +738,13 @@ const PiecePage: React.FC = () => {
                     {/* Share + Category */}
                     <div className="mt-8 pt-8 border-t border-wood-200 flex justify-between items-start">
                         <div>
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">Category</span>
+                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">Category</span>
                             <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
                         </div>
                         {typeof navigator !== 'undefined' && 'share' in navigator && (
                             <button
                                 onClick={() => navigator.share({ title: art.title, url: window.location.href })}
-                                className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
                                 aria-label="Share this piece"
                             >
                                 <Share2 size={14} /> Share
@@ -823,7 +823,7 @@ const PiecePage: React.FC = () => {
                                     <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
-                                    <p className="font-mono text-[10px] uppercase tracking-widest mt-1">
+                                    <p className="font-mono text-[11px] uppercase tracking-[0.15em] mt-1">
                                         <span className="text-wood-500 font-bold">{related.category}</span>
                                         {related.availability === 'SOLD' && <span className="text-avail-sold font-bold"> · Sold</span>}
                                         {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready font-bold"> · Ready to ship</span>}

@@ -129,8 +129,8 @@ const SkeletonCard: React.FC = () => (
 const CuratorialBlock: React.FC = () => (
     <div className="col-span-1 md:col-span-2 lg:col-span-2 aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-8 md:p-12 text-center border border-wood-900">
         <span className="font-mono text-xs uppercase tracking-[0.3em] text-bronze-400 mb-6 block font-bold">Philosophy</span>
-        <p className="font-serif text-xl md:text-3xl leading-relaxed max-w-lg font-light">
-            "We do not own these objects. We are merely their custodians for a brief moment in time."
+        <p className="font-serif text-xl md:text-3xl leading-[1.4] max-w-lg font-light">
+            <span className="ml-[-0.4em]">"</span>We do not own these objects. We are merely their custodians for a brief moment in time."
         </p>
         <div className="w-12 h-px bg-bronze-500 mt-8"></div>
     </div>
@@ -188,7 +188,7 @@ const ProductCard: React.FC<{
 
             <div className="flex justify-between items-start px-1">
                 <div className="max-w-[80%]">
-                    <h3 className="font-serif text-2xl text-wood-900 leading-none mb-2 group-hover:text-bronze-700 transition-colors font-medium">
+                    <h3 className="font-serif text-2xl text-wood-900 leading-snug mb-2 group-hover:text-bronze-700 transition-colors font-medium">
                         {product.title}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2">
@@ -257,13 +257,13 @@ const InspectionDrawer: React.FC<{
                              Ref: {product.id}
                          </span>
                          {product.available && !product.isReadyToShip && (
-                             <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 bg-bronze-50 border border-bronze-200 px-2 py-0.5 font-bold">
+                             <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-bronze-600 bg-bronze-50 border border-bronze-200 px-2 py-0.5 font-bold">
                                  Made to Order
                              </span>
                          )}
                     </div>
                     <button onClick={onClose} className="p-4 -mr-4 hover:bg-wood-100 rounded-full transition-colors group flex items-center gap-2">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-500 font-bold hidden sm:inline">Close</span>
+                        <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500 font-bold hidden sm:inline">Close</span>
                         <X size={28} className="text-wood-900 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
@@ -284,8 +284,8 @@ const InspectionDrawer: React.FC<{
                     </div>
 
                     <div className="mb-10">
-                        <h1 className="text-3xl md:text-5xl font-serif text-wood-900 mb-6 leading-none font-medium">{product.title}</h1>
-                        <p className="font-serif text-lg text-wood-700 leading-relaxed font-normal">
+                        <h1 className="text-3xl md:text-5xl font-serif text-wood-900 mb-6 leading-[1.1] font-medium">{product.title}</h1>
+                        <p className="font-serif text-lg text-wood-700 leading-[1.65] font-normal">
                             {product.longDescription || product.description}
                         </p>
                     </div>
@@ -530,8 +530,8 @@ const Store: React.FC = () => {
             )}
             <div className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto border-b border-wood-100 mb-8">
                 <span className="font-mono text-xs uppercase tracking-[0.3em] text-bronze-600 block mb-4 font-bold">Shop</span>
-                <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium tracking-tight">Available Pieces</h1>
-                <p className="font-serif text-xl text-wood-600 max-w-2xl mx-auto leading-relaxed font-light">
+                <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium tracking-tight leading-[1.05]">Available Pieces</h1>
+                <p className="font-serif text-xl text-wood-600 max-w-2xl mx-auto leading-[1.65] font-light">
                     A curated selection of works ready for your home, alongside pieces made to your commission.
                 </p>
             </div>

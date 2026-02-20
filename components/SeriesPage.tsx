@@ -12,7 +12,7 @@ type LightCodesCategoryFilter = 'All' | 'Frequency Foundations' | 'Embodied Vibr
 const FilterButton: React.FC<{ active: boolean; onClick: () => void; label: string }> = ({ active, onClick, label }) => (
     <button
         onClick={onClick}
-        className={`font-mono text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 border transition-colors ${
+        className={`font-mono text-[11px] uppercase tracking-widest font-bold px-3 py-1.5 border transition-colors ${
             active
                 ? 'bg-wood-900 text-paper-50 border-wood-900'
                 : 'bg-transparent text-wood-500 border-wood-200 hover:text-wood-900 hover:border-wood-400'
@@ -105,7 +105,7 @@ const SeriesPage: React.FC = () => {
 
                     {seriesInfo.hook && (
                         <div className="mt-6 mb-3">
-                            <p className="font-serif text-xl md:text-2xl text-wood-700 leading-relaxed font-light max-w-3xl">
+                            <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.55] font-light max-w-3xl">
                                 {seriesInfo.hook}
                             </p>
                         </div>
@@ -125,7 +125,7 @@ const SeriesPage: React.FC = () => {
             {/* Sticky Filter Bar */}
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
                 <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mr-2">
                         Availability
                     </span>
                     {(['All', 'Ready to ship', 'Made to order'] as AvailabilityFilter[]).map(f => (
@@ -134,8 +134,8 @@ const SeriesPage: React.FC = () => {
 
                     {hasFinishFilter && (
                         <>
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Finish</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mr-2">Finish</span>
                             {(['All', 'Natural', 'Painted'] as FinishFilter[]).map(f => (
                                 <FilterButton key={f} label={f} active={finishFilter === f} onClick={() => setFinishFilter(f)} />
                             ))}
@@ -144,21 +144,21 @@ const SeriesPage: React.FC = () => {
 
                     {isLightCodes && (
                         <>
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
-                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Category</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                            <span className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mr-2">Category</span>
                             {(['All', 'Frequency Foundations', 'Embodied Vibrations', 'Resonant Formations'] as LightCodesCategoryFilter[]).map(f => (
                                 <FilterButton key={f} label={f} active={lcCategoryFilter === f} onClick={() => setLcCategoryFilter(f)} />
                             ))}
                         </>
                     )}
 
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mr-2">Size</span>
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-wood-300 font-bold mx-2">|</span>
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mr-2">Size</span>
                     {(['All', 'Small', 'Medium', 'Large'] as SizeFilter[]).map(f => (
                         <FilterButton key={f} label={f} active={sizeFilter === f} onClick={() => setSizeFilter(f)} />
                     ))}
 
-                    <span className="ml-auto font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
+                    <span className="ml-auto font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold">
                         {seriesPieces.length} {seriesPieces.length === 1 ? 'Piece' : 'Pieces'}
                     </span>
                 </div>
@@ -182,12 +182,12 @@ const SeriesPage: React.FC = () => {
                                         className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                     {art.availability === 'READY_TO_SHIP' && (
-                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-medium">
+                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-medium">
                                             Ready to ship
                                         </div>
                                     )}
                                     {art.availability === 'SOLD' && (
-                                        <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-paper-50 font-bold">
+                                        <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest text-paper-50 font-bold">
                                             Sold
                                         </div>
                                     )}
@@ -203,7 +203,7 @@ const SeriesPage: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+                                    <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
                                         {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
                                     </p>
                                 </div>
@@ -232,7 +232,7 @@ const SeriesPage: React.FC = () => {
                         <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
                             A Light Code can also be created for you.
                         </h3>
-                        <p className="font-serif text-lg text-paper-200 leading-relaxed font-light mb-8">
+                        <p className="font-serif text-lg text-paper-200 leading-[1.7] font-light mb-8">
                             Through conversation, I receive the energy and intentions of your life, then anchor what wants to come through.
                         </p>
                         <Link
@@ -290,7 +290,7 @@ const SeriesPage: React.FC = () => {
                                         <p className="font-serif text-sm text-paper-200 font-light">
                                             {series.hook ? series.hook.substring(0, 80) + '…' : series.description}
                                         </p>
-                                        <span className="font-mono text-[10px] uppercase tracking-widest text-paper-300 font-bold mt-2">
+                                        <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold mt-2">
                                             {series.pieceCount || `${pieceCount} ${pieceCount === 1 ? 'Piece' : 'Pieces'}`}
                                         </span>
                                     </div>

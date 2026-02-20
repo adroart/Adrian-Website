@@ -47,7 +47,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
                     Ready to Ship
                 </div>
             )}
@@ -66,7 +66,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                     </span>
                 )}
             </div>
-            <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
                 {art.series ?? 'Signature'} {art.availability === 'SOLD' && '• Sold'}
             </p>
         </div>
@@ -115,7 +115,7 @@ const MultidimensionalArt: React.FC = () => {
             {/* Hero header */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16 border-b border-wood-200 pb-12">
                 <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Multidimensional Art</h1>
-                <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed">
+                <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.65]">
                     Layered sculpture in wood, crystal, and light. Works that hold geometry, symbol, and presence in the same form.
                 </p>
             </div>

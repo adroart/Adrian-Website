@@ -61,11 +61,11 @@ const Hero: React.FC = () => {
               <span className="font-mono text-xs text-bronze-400 uppercase tracking-[0.4em] mb-6 block opacity-80">
                   Resonant Artifacts
               </span>
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 tracking-tight leading-[0.9] mb-8 drop-shadow-2xl font-medium">
+              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 tracking-tight leading-[0.92] mb-8 drop-shadow-2xl font-medium">
                   Bringing the <br/>formless into form.
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
-              <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-relaxed tracking-wide opacity-90 drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
+              <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-[1.5] tracking-wide opacity-90 drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
                   From intimate talismans to immersive installations.<br/>
                   Woven from light, geometry, and intention.
               </p>
@@ -76,7 +76,7 @@ const Hero: React.FC = () => {
         className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500"
         style={{ opacity: safeOpacity * 0.6 }}
       >
-          <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-paper-100/60 ml-[0.5em]">Enter</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-paper-100/60 ml-[0.5em]">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent"></div>
       </div>
     </section>

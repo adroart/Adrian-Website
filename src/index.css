@@ -2,6 +2,76 @@
 @source "../";
 @source "../components";
 
+/* ─── Global Typography Foundations ───────────────────────────────────────── */
+
+/* #1 Font smoothing — crisper serifs on macOS/iOS */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+
+/* #5 Custom selection color — warm palette instead of jarring blue */
+::selection {
+  background-color: #c4aa7c40;
+  color: #262321;
+}
+
+/* #2 Balanced headings — prevents lopsided line breaks */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/* #6 Pretty wrap on body — eliminates orphaned words at line ends */
+p, li, blockquote, figcaption, label {
+  text-wrap: pretty;
+}
+
+/* #8 Hyphenation on body text for better mobile line-breaking */
+@media (max-width: 640px) {
+  p {
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+}
+
+/* #11 Blockquote styling — left border, indentation, proper spacing */
+blockquote {
+  border-left: 2px solid #c4aa7c;
+  padding-left: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* #21 Tabular figures on prices — digits align in columns */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* #36 Consistent placeholder styling */
+::placeholder {
+  color: #a39e96;
+  opacity: 1;
+}
+
+/* #12 Pull-quote base styling */
+.pull-quote {
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 2px solid #c4aa7c80;
+}
+
+/* #30 Article prose refinements */
+.prose p + p {
+  margin-top: 1.5em;
+}
+
+.prose > p:first-of-type::first-line {
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+}
+
 @theme {
   /* Font families */
   --font-serif: "Cormorant Garamond", serif;

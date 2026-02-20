@@ -22,7 +22,7 @@ const IlluminatedPieceCard: React.FC<{
                 className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
                     Ready to Ship
                 </div>
             )}
@@ -31,7 +31,7 @@ const IlluminatedPieceCard: React.FC<{
             <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                 {title}
             </h4>
-            <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
                 {dimensions ?? 'Dimensions available on inquiry'}
                 {price && ` · From $${price}`}
             </p>
@@ -69,10 +69,10 @@ const IlluminatedWorks: React.FC = () => {
 
             {/* Section 1: What illumination is */}
             <div className="max-w-4xl mx-auto px-6 py-24">
-                <p className="font-serif text-2xl md:text-3xl text-wood-800 font-light leading-relaxed mb-8">
+                <p className="font-serif text-2xl md:text-3xl text-wood-800 font-light leading-[1.4] mb-8">
                     There is a version of every piece that you only discover after dark.
                 </p>
-                <div className="space-y-6 font-serif text-lg text-wood-600 font-light leading-relaxed max-w-2xl">
+                <div className="space-y-6 font-serif text-lg text-wood-600 font-light leading-[1.7] max-w-2xl">
                     <p>
                         Light does something to layered wood that no other medium quite achieves. It travels through the depths. It finds the edges. It makes visible what was always there, waiting for the right conditions to reveal itself.
                     </p>
@@ -93,24 +93,24 @@ const IlluminatedWorks: React.FC = () => {
                     {/* Ambient Illumination */}
                     <div className="bg-wood-900 p-10 md:p-16">
                         {/* TODO: Replace "Ambient Illumination" with Adrian's own language for this distinction */}
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-paper-300 font-bold block mb-6">Ambient Illumination</span>
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold block mb-6">Ambient Illumination</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">A subtle, continuous glow.</h3>
-                        <p className="font-serif text-lg text-paper-300 font-light leading-relaxed mb-6">
+                        <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
                             The piece becomes a presence in the room. Soft. Consistent. Something you stop noticing consciously but feel constantly.
                         </p>
-                        <p className="font-serif text-base text-paper-400 font-light leading-relaxed italic">
+                        <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">
                             Suited for bedrooms, meditation spaces, altars — anywhere presence matters more than attention.
                         </p>
                     </div>
                     {/* Living Light */}
                     <div className="bg-stone-900 p-10 md:p-16">
                         {/* TODO: Replace "Living Light" with Adrian's own language for this distinction */}
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-paper-300 font-bold block mb-6">Living Light</span>
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold block mb-6">Living Light</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmable. Moving. Breathing.</h3>
-                        <p className="font-serif text-lg text-paper-300 font-light leading-relaxed mb-6">
+                        <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
                             Patterns that shift and pulse. Light that participates in the piece rather than simply inhabiting it.
                         </p>
-                        <p className="font-serif text-base text-paper-400 font-light leading-relaxed italic">
+                        <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">
                             Suited for gathering spaces, installations, environments designed for ceremony or experience.
                         </p>
                     </div>
@@ -152,7 +152,7 @@ const IlluminatedWorks: React.FC = () => {
                         >
                             Browse all multidimensional works <ArrowRight size={14} />
                         </Link>
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mt-3">
+                        <p className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold mt-3">
                             Filter by Illuminated to see the full collection
                         </p>
                     </div>
@@ -165,7 +165,7 @@ const IlluminatedWorks: React.FC = () => {
                     <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-8">
                         Begin with a conversation
                     </h2>
-                    <div className="space-y-4 font-serif text-lg text-wood-600 font-light leading-relaxed max-w-xl mx-auto mb-12">
+                    <div className="space-y-4 font-serif text-lg text-wood-600 font-light leading-[1.7] max-w-xl mx-auto mb-12">
                         <p>
                             Illumination can be added to most multidimensional pieces. Whether you have a piece in mind or are beginning from conversation, this is where we start.
                         </p>
