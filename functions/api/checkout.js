@@ -8,6 +8,18 @@
  * Environment variables (set in .dev.vars locally, Cloudflare Pages dashboard in prod):
  *   STRIPE_SECRET_KEY  — sk_live_... or sk_test_...
  */
+
+// Countries to which Adrian ships from Bali.
+// Add or remove codes as needed before going live.
+const SHIPPING_COUNTRIES = [
+  'US', 'CA', 'GB', 'AU', 'NZ',
+  'SG', 'MY', 'ID', 'TH', 'PH', 'JP', 'KR', 'HK', 'TW',
+  'DE', 'FR', 'NL', 'BE', 'CH', 'AT', 'IT', 'ES', 'PT',
+  'SE', 'NO', 'DK', 'FI',
+  'AE', 'IL', 'ZA', 'IN',
+  'BR', 'MX', 'AR',
+];
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -59,6 +71,14 @@ export async function onRequestPost(context) {
     }
   }
 
+  // Build shipping address country params
+  const shippingParams = Object.fromEntries(
+    SHIPPING_COUNTRIES.map((cc, i) => [
+      `shipping_address_collection[allowed_countries][${i}]`,
+      cc,
+    ])
+  );
+
   const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
     headers: {
@@ -74,12 +94,12 @@ export async function onRequestPost(context) {
           [`line_items[${i}][quantity]`, String(item.quantity)],
         ])
       ),
+      // Collect shipping address for all orders (ships internationally from Bali)
+      ...shippingParams,
       success_url: `${origin}/shop?checkout=success`,
       cancel_url: `${origin}/shop?checkout=cancelled`,
       // Allow promo codes
       allow_promotion_codes: 'true',
-      // Collect shipping if needed — disable by default for art/digital pickup
-      // shipping_address_collection[allowed_countries][0]: 'US',
     }),
   });
 

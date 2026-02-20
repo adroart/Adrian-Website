@@ -1,6 +1,51 @@
 
 import { Artwork, AvailabilityStatus, Collection, Product, Story } from '../types';
 
+// --- MADE-TO-ORDER ADD-ON PRICING ---
+// All prices are [DUMMY] placeholders. Replace before going live.
+// Each add-on has its own Stripe Product / Price ID.
+
+export const MADE_TO_ORDER_ADD_ONS = {
+  crystals: {
+    id: 'crystals',
+    label: 'Add crystals',
+    price: 150, // [DUMMY]
+    stripePriceId: 'price_crystals_REPLACE_WITH_REAL_ID',
+  },
+  woodFrame: {
+    id: 'woodFrame',
+    label: 'Add wood frame',
+    price: 200, // [DUMMY]
+    stripePriceId: 'price_wood_frame_REPLACE_WITH_REAL_ID',
+  },
+  illumination: {
+    medium: {
+      id: 'illumination_medium',
+      label: 'Illuminate this piece',
+      price: 350, // [DUMMY] — sizes 12–24"
+      stripePriceId: 'price_illum_medium_REPLACE_WITH_REAL_ID',
+    },
+    large: {
+      id: 'illumination_large',
+      label: 'Illuminate this piece',
+      price: 500, // [DUMMY] — sizes 24–36"
+      stripePriceId: 'price_illum_large_REPLACE_WITH_REAL_ID',
+    },
+    major: {
+      id: 'illumination_major',
+      label: 'Illuminate this piece',
+      price: 750, // [DUMMY] — sizes 36"+
+      stripePriceId: 'price_illum_major_REPLACE_WITH_REAL_ID',
+    },
+  },
+  customFrame: {
+    id: 'customFrame',
+    label: 'Custom laser cut frame',
+    price: 400, // [DUMMY]
+    stripePriceId: 'price_custom_frame_REPLACE_WITH_REAL_ID',
+  },
+} as const;
+
 // --- CONSTANTS FROM MASTER DOC ---
 
 export const SERIES_LIST = [
@@ -114,10 +159,14 @@ export const FULL_ARCHIVE: Artwork[] = [
         finish: 'Natural',
         subcategory: 'Frequency Foundations',
         availability: 'MADE_TO_ORDER',
-        price: 950,
+        price: 950, // [DUMMY] — lowest size price, used for "From $X" displays
         edition: 'Open Edition',
         featured: true,
-        stripePriceId: 'price_LC042_REPLACE_WITH_REAL_ID',
+        madeToOrderSizes: [
+            { size: '18"', price: 950, stripePriceId: 'price_LC042_18_REPLACE_WITH_REAL_ID' },  // [DUMMY]
+            { size: '24"', price: 1200, stripePriceId: 'price_LC042_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+            { size: '36"', price: 1800, stripePriceId: 'price_LC042_36_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        ],
     },
     {
         id: 'JW-005',
@@ -174,11 +223,15 @@ export const FULL_ARCHIVE: Artwork[] = [
         material: 'Plywood, Crystals, Airbrush',
         finish: 'Painted',
         availability: 'MADE_TO_ORDER',
-        price: 2800,
+        price: 1200, // [DUMMY] — lowest size price, used for "From $X" displays
         edition: 'Edition of 5',
         editionSize: 5,
         editionSold: 3,
         featured: true,
+        madeToOrderSizes: [
+            { size: '24"', price: 1200, stripePriceId: 'price_UL009_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+            { size: '36"', price: 2800, stripePriceId: 'price_UL009_36_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        ],
     },
     // Signature piece — no series
     {
@@ -214,12 +267,16 @@ export const FULL_ARCHIVE: Artwork[] = [
         material: 'Birch, Acrylic, LED',
         finish: 'Painted',
         availability: 'MADE_TO_ORDER',
-        price: 4200,
+        price: 950, // [DUMMY] — lowest size price, used for "From $X" displays
         edition: 'Edition of 5',
         editionSize: 5,
         featured: true,
         illuminated: true,
-        stripePriceId: 'price_ILLUM001_REPLACE_WITH_REAL_ID',
+        madeToOrderSizes: [
+            { size: '16"', price: 950,  stripePriceId: 'price_ILLUM001_16_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+            { size: '24"', price: 1200, stripePriceId: 'price_ILLUM001_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+            { size: '30"', price: 1800, stripePriceId: 'price_ILLUM001_30_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        ],
     },
 ];
 

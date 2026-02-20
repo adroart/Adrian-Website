@@ -1,29 +1,41 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
 import { useCart } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
 
 async function startCheckout(
-    items: Array<{ stripePriceId?: string; stripeUrl?: string; quantity: number; title: string }>
+    items: Array<{ stripePriceId?: string; stripeUrl?: string; addOnPriceIds?: string[]; quantity: number; title: string }>
 ): Promise<void> {
-    // If every item has a real Stripe Price ID, use the Checkout Session API
+    // If every item (and its add-ons) has a real Stripe Price ID, use the Checkout Session API
     const allHavePriceId = items.every(
-        (i) => i.stripePriceId && i.stripePriceId.startsWith('price_')
+        (i) =>
+            i.stripePriceId &&
+            i.stripePriceId.startsWith('price_') &&
+            (!i.addOnPriceIds || i.addOnPriceIds.every((id) => id.startsWith('price_')))
     );
 
     if (allHavePriceId) {
+        // Expand each cart item into its constituent Stripe line items
+        // Made-to-order add-ons become separate line items (each multiplied by item quantity)
+        const lineItems: Array<{ stripePriceId: string; quantity: number }> = [];
+
+        for (const item of items) {
+            lineItems.push({ stripePriceId: item.stripePriceId!, quantity: item.quantity });
+            if (item.addOnPriceIds) {
+                for (const addOnId of item.addOnPriceIds) {
+                    lineItems.push({ stripePriceId: addOnId, quantity: item.quantity });
+                }
+            }
+        }
+
         const res = await fetch('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                items: items.map((i) => ({
-                    stripePriceId: i.stripePriceId,
-                    quantity: i.quantity,
-                })),
-            }),
+            body: JSON.stringify({ items: lineItems }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Checkout failed');
@@ -43,7 +55,7 @@ async function startCheckout(
     }
 
     // No valid Stripe IDs or payment links — surface a clear error
-    throw new Error('Checkout is not yet configured for these items. Please contact the studio.');
+    throw new Error('Checkout is not yet configured for these pieces. Please contact the studio.');
 }
 
 const CartDrawer: React.FC = () => {
@@ -68,6 +80,7 @@ const CartDrawer: React.FC = () => {
                 items.map(({ product, quantity }) => ({
                     stripePriceId: product.stripePriceId,
                     stripeUrl: product.stripeUrl,
+                    addOnPriceIds: product.addOnPriceIds,
                     quantity,
                     title: product.title,
                 }))
@@ -121,10 +134,14 @@ const CartDrawer: React.FC = () => {
                     <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
                         <ShoppingBag size={40} className="text-wood-200" />
                         <div>
-                            <p className="font-serif text-2xl text-wood-400 mb-2">Your cart is empty.</p>
-                            <p className="font-mono text-xs uppercase tracking-widest text-wood-300 font-bold">
-                                Add pieces from the shop to begin.
-                            </p>
+                            <p className="font-serif text-2xl text-wood-400 mb-3">Your cart is empty.</p>
+                            <Link
+                                to="/creations"
+                                onClick={closeCart}
+                                className="font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold transition-colors"
+                            >
+                                Explore the creations
+                            </Link>
                         </div>
                     </div>
                 ) : (
@@ -144,13 +161,18 @@ const CartDrawer: React.FC = () => {
 
                                     {/* Details */}
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-serif text-lg text-wood-900 leading-tight mb-1 font-medium truncate">
+                                        <h3 className="font-serif text-base text-wood-900 leading-snug mb-1 font-medium">
                                             {product.title}
                                         </h3>
                                         <p className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-3">
-                                            {product.category}
-                                            {product.material && <span className="text-wood-200"> · </span>}
-                                            {product.material}
+                                            {product.isReadyToShip ? (
+                                                <span className="text-avail-ready">Ready to ship</span>
+                                            ) : (
+                                                <span className="text-avail-order">Made to order</span>
+                                            )}
+                                            {product.material && (
+                                                <><span className="text-wood-200"> · </span>{product.material}</>
+                                            )}
                                         </p>
 
                                         <div className="flex items-center justify-between">
@@ -163,7 +185,7 @@ const CartDrawer: React.FC = () => {
                                                             : updateQuantity(product.id, -1)
                                                     }
                                                     className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
-                                                    aria-label={quantity === 1 ? 'Remove item' : 'Decrease quantity'}
+                                                    aria-label={quantity === 1 ? 'Remove piece' : 'Decrease quantity'}
                                                 >
                                                     <Minus size={12} />
                                                 </button>
@@ -223,6 +245,13 @@ const CartDrawer: React.FC = () => {
                                 ) : (
                                     <>Proceed to Purchase <ArrowRight size={16} /></>
                                 )}
+                            </button>
+
+                            <button
+                                onClick={closeCart}
+                                className="w-full mt-3 py-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold"
+                            >
+                                Continue browsing
                             </button>
                         </div>
                     </>
