@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowRight, CheckCircle } from 'lucide-react';
 
-// Set VITE_FORMSPREE_NEWSLETTER_ID in .env.local to enable newsletter submissions.
-// e.g. VITE_FORMSPREE_NEWSLETTER_ID=xpwzgjkl
-const NEWSLETTER_FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_NEWSLETTER_ID as string | undefined;
+// Kit (ConvertKit) newsletter integration
+// Set VITE_KIT_FORM_ID and VITE_KIT_PUBLIC_API_KEY in .env.local
+const KIT_FORM_ID = import.meta.env.VITE_KIT_FORM_ID as string | undefined;
+const KIT_PUBLIC_API_KEY = import.meta.env.VITE_KIT_PUBLIC_API_KEY as string | undefined;
 
 const NewsletterForm: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -19,23 +20,32 @@ const NewsletterForm: React.FC = () => {
         setSubmitting(true);
         setError(false);
 
-        if (NEWSLETTER_FORMSPREE_ID) {
+        if (KIT_FORM_ID && KIT_PUBLIC_API_KEY) {
             try {
-                const res = await fetch(`https://formspree.io/f/${NEWSLETTER_FORMSPREE_ID}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                    body: JSON.stringify({ email }),
-                });
-                if (res.ok) {
+                const res = await fetch(
+                    `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            api_key: KIT_PUBLIC_API_KEY,
+                            email,
+                        }),
+                    }
+                );
+                if (!res.ok) throw new Error('Subscribe failed');
+                const data = await res.json();
+                if (data.subscription) {
                     setSubmitted(true);
+                    setEmail('');
                 } else {
-                    setError(true);
+                    throw new Error('No subscription returned');
                 }
             } catch {
                 setError(true);
             }
         } else {
-            // No Formspree configured — show success optimistically in development
+            // No Kit configured — show success optimistically in development
             setSubmitted(true);
         }
         setSubmitting(false);
