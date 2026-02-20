@@ -3,7 +3,21 @@ import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork, AvailabilityStatus } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, ArrowUpRight, Share2, BookOpen } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Share2, BookOpen, Loader2 } from 'lucide-react';
+
+async function checkoutPiece(art: Artwork): Promise<void> {
+    if (art.stripePriceId && art.stripePriceId.startsWith('price_')) {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: [{ stripePriceId: art.stripePriceId, quantity: 1 }] }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Checkout failed');
+        window.location.href = data.url;
+    }
+    // If no price ID, button won't be rendered (piece needs wiring in Stripe dashboard first)
+}
 
 // Progressive scarcity edition display per tech spec
 function getEditionDisplay(art: Artwork): string | null {
@@ -41,6 +55,21 @@ const PiecePage: React.FC = () => {
     const navigate = useNavigate();
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const touchStartX = useRef(0);
+    const [buyLoading, setBuyLoading] = useState(false);
+    const [buyError, setBuyError] = useState<string | null>(null);
+
+    const handleBuy = async (artPiece: typeof art) => {
+        if (!artPiece) return;
+        setBuyLoading(true);
+        setBuyError(null);
+        try {
+            await checkoutPiece(artPiece);
+        } catch (err) {
+            setBuyError(err instanceof Error ? err.message : 'Something went wrong.');
+        } finally {
+            setBuyLoading(false);
+        }
+    };
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
 
@@ -330,14 +359,16 @@ const PiecePage: React.FC = () => {
                                     <span className={`font-mono text-xs uppercase tracking-widest ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">${art.price}</span>
                                 </div>
-                                <a
-                                    href="https://buy.stripe.com/PLACEHOLDER"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                {buyError && (
+                                    <p className="font-mono text-[10px] text-red-600 uppercase tracking-widest font-bold mb-3">{buyError}</p>
+                                )}
+                                <button
+                                    onClick={() => handleBuy(art)}
+                                    disabled={buyLoading || !art.stripePriceId}
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
-                                    Buy Now <ArrowRight size={16} />
-                                </a>
+                                    {buyLoading ? <><Loader2 size={16} className="animate-spin" /> Redirecting...</> : <>Buy Now <ArrowRight size={16} /></>}
+                                </button>
                                 <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
@@ -398,14 +429,13 @@ const PiecePage: React.FC = () => {
                         {art.availability === 'MADE_TO_ORDER' ? `From $${art.price}` : `$${art.price}`}
                     </span>
                     {art.availability === 'READY_TO_SHIP' ? (
-                        <a
-                            href="https://buy.stripe.com/PLACEHOLDER"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-8 py-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center gap-2"
+                        <button
+                            onClick={() => handleBuy(art)}
+                            disabled={buyLoading || !art.stripePriceId}
+                            className="px-8 py-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            Buy Now <ArrowRight size={14} />
-                        </a>
+                            {buyLoading ? <Loader2 size={14} className="animate-spin" /> : <>Buy Now <ArrowRight size={14} /></>}
+                        </button>
                     ) : (
                         <button className="px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors">
                             Configure

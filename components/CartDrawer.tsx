@@ -1,19 +1,76 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Minus, Plus, ArrowRight, ShoppingBag } from 'lucide-react';
+import { X, Minus, Plus, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
 import { useCart } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
 
+async function startCheckout(
+    items: Array<{ stripePriceId?: string; stripeUrl?: string; quantity: number; title: string }>
+): Promise<void> {
+    // If every item has a real Stripe Price ID, use the Checkout Session API
+    const allHavePriceId = items.every(
+        (i) => i.stripePriceId && i.stripePriceId.startsWith('price_')
+    );
+
+    if (allHavePriceId) {
+        const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                items: items.map((i) => ({
+                    stripePriceId: i.stripePriceId,
+                    quantity: i.quantity,
+                })),
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Checkout failed');
+        window.location.href = data.url;
+    } else {
+        // Fallback: open individual Stripe Payment Links
+        for (const item of items) {
+            const url = item.stripeUrl;
+            if (url && url !== 'https://buy.stripe.com/PLACEHOLDER') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+    }
+}
+
 const CartDrawer: React.FC = () => {
     const { items, removeFromCart, updateQuantity, totalItems, totalPrice, isCartOpen, closeCart } = useCart();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (typeof document === 'undefined' || !document.body) return;
         document.body.style.overflow = isCartOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [isCartOpen]);
+
+    // Clear error when cart closes or items change
+    useEffect(() => { setError(null); }, [isCartOpen, items.length]);
+
+    const handleCheckout = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            await startCheckout(
+                items.map(({ product, quantity }) => ({
+                    stripePriceId: product.stripePriceId,
+                    stripeUrl: product.stripeUrl,
+                    quantity,
+                    title: product.title,
+                }))
+            );
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (typeof document === 'undefined' || !document.body) return null;
 
@@ -139,36 +196,23 @@ const CartDrawer: React.FC = () => {
                                 Shipping calculated at checkout
                             </p>
 
-                            {items.length === 1 ? (
-                                <a
-                                    href={items[0].product.stripeUrl || 'https://buy.stripe.com/PLACEHOLDER'}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
-                                >
-                                    Proceed to Purchase <ArrowRight size={16} />
-                                </a>
-                            ) : (
-                                <div className="space-y-3">
-                                    <p className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold text-center mb-4">
-                                        Complete each piece separately
-                                    </p>
-                                    {items.map(({ product }) => (
-                                        <a
-                                            key={product.id}
-                                            href={product.stripeUrl || 'https://buy.stripe.com/PLACEHOLDER'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-full py-3 flex items-center justify-between gap-3 text-xs font-mono uppercase tracking-[0.15em] transition-all duration-300 font-bold border border-wood-300 px-4 text-wood-900 hover:bg-wood-900 hover:text-paper-50 hover:border-wood-900"
-                                        >
-                                            <span className="truncate">{product.title}</span>
-                                            <span className="shrink-0 flex items-center gap-2">
-                                                {formatPrice(product.price)} <ArrowRight size={12} />
-                                            </span>
-                                        </a>
-                                    ))}
-                                </div>
+                            {error && (
+                                <p className="font-mono text-[10px] text-red-600 uppercase tracking-widest font-bold px-1 mb-4">
+                                    {error}
+                                </p>
                             )}
+
+                            <button
+                                onClick={handleCheckout}
+                                disabled={loading}
+                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <><Loader2 size={16} className="animate-spin" /> Redirecting...</>
+                                ) : (
+                                    <>Proceed to Purchase <ArrowRight size={16} /></>
+                                )}
+                            </button>
                         </div>
                     </>
                 )}

@@ -24,6 +24,9 @@ export interface Artwork {
 
   createdDate?: Date;
 
+  // Commerce
+  stripePriceId?: string; // Stripe Price ID (price_xxx) for Checkout Session API
+
   // Architecture update fields
   illuminated?: boolean; // Piece has LED/light work
   finish?: string; // e.g. "Natural", "Painted", "Gold Leaf"
@@ -57,7 +60,8 @@ export interface Product {
   material?: string;
   edition?: string;
   isReadyToShip: boolean;
-  stripeUrl?: string;
+  stripeUrl?: string;       // Legacy: direct Stripe Payment Link (fallback)
+  stripePriceId?: string;   // Stripe Price ID (price_xxx) for Checkout Session API
 }
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';

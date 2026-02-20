@@ -1,0 +1,103 @@
+/**
+ * POST /api/checkout
+ *
+ * Body: { items: Array<{ stripePriceId: string; quantity: number }> }
+ *
+ * Returns: { url: string } — Stripe Checkout Session URL to redirect to.
+ *
+ * Environment variables (set in .dev.vars locally, Cloudflare Pages dashboard in prod):
+ *   STRIPE_SECRET_KEY  — sk_live_... or sk_test_...
+ */
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  const origin = request.headers.get('origin') || 'https://adrianrasmussen.com';
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const { items } = body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return new Response(JSON.stringify({ error: 'items must be a non-empty array' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Validate each item has a real price ID (not a placeholder)
+  for (const item of items) {
+    if (!item.stripePriceId || !item.stripePriceId.startsWith('price_')) {
+      return new Response(
+        JSON.stringify({ error: `Invalid stripePriceId: ${item.stripePriceId}` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+      return new Response(
+        JSON.stringify({ error: 'quantity must be a positive integer' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+  }
+
+  const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      mode: 'payment',
+      // Build line_items[N][price] and line_items[N][quantity]
+      ...Object.fromEntries(
+        items.flatMap((item, i) => [
+          [`line_items[${i}][price]`, item.stripePriceId],
+          [`line_items[${i}][quantity]`, String(item.quantity)],
+        ])
+      ),
+      success_url: `${origin}/shop?checkout=success`,
+      cancel_url: `${origin}/shop?checkout=cancelled`,
+      // Allow promo codes
+      allow_promotion_codes: 'true',
+      // Collect shipping if needed — disable by default for art/digital pickup
+      // shipping_address_collection[allowed_countries][0]: 'US',
+    }),
+  });
+
+  const session = await stripeRes.json();
+
+  if (!stripeRes.ok || !session.url) {
+    console.error('Stripe error:', session);
+    return new Response(
+      JSON.stringify({ error: session.error?.message || 'Stripe session creation failed' }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  return new Response(JSON.stringify({ url: session.url }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': origin,
+    },
+  });
+}
+
+// Handle CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
