@@ -107,23 +107,25 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             ))}
           </div>
 
-          {/* Cart Icon */}
-          <button
-            onClick={openCart}
-            className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
-            aria-label="Open cart"
-          >
-            <ShoppingBag size={20} />
-            {totalItems > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-bold flex items-center justify-center leading-none">
-                {totalItems > 9 ? '9+' : totalItems}
-              </span>
-            )}
-          </button>
+          {/* Right-side controls: cart + mobile hamburger */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={openCart}
+              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+              aria-label="Open cart"
+            >
+              <ShoppingBag size={20} />
+              {totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-bold flex items-center justify-center leading-none">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
+            </button>
 
-          <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
