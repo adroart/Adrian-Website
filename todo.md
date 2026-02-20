@@ -1,0 +1,265 @@
+# Adrian Art Website - Plan Review: Gaps, Inconsistencies & Missing Pieces
+
+Review of the Complete Master Document against itself (internal consistency) and against the current codebase implementation.
+
+---
+
+## 1. Major Plan-to-Codebase Misalignments
+
+These are significant contradictions between what the plan states and what the code actually does.
+
+### 1.1 Tech Stack is Wrong in the Plan
+- **Plan (Section 1.5):** "Custom HTML/CSS/JS. No framework dependency."
+- **Reality:** React 18 + TypeScript + Vite + Tailwind CSS 4 + React Router v7 + Lucide React.
+- **Action:** Update Section 1.5 tech stack table to reflect the actual stack. The "Why this stack" rationale also needs rewriting since it references "no CMS dependency, full design control" which is still true, but "no framework dependency" is false.
+
+### 1.2 Newsletter Service Mismatch
+- **Plan (Sections 1.5, 3.7, 15.1):** ConvertKit for newsletter, welcome sequence, Inner Circle.
+- **Reality:** Formspree handles newsletter signups (Footer.tsx, env var `VITE_FORMSPREE_NEWSLETTER_ID`).
+- **Action:** Decide: migrate to ConvertKit as planned, or update the plan to reflect Formspree. ConvertKit offers welcome sequences and segmentation that Formspree does not. If ConvertKit is the goal, the integration needs to be built. If Formspree stays, remove ConvertKit references from the plan and acknowledge the loss of welcome sequence capability.
+
+### 1.3 Shop Includes Made-to-Order (Should Be Ready-to-Ship Only)
+- **Plan (Section 2.3):** "Shop is the clean transactional space. Only ready-to-ship pieces. No sold items. No made-to-order complexity."
+- **Reality:** Store.tsx shows both ready-to-ship AND made-to-order items (INVENTORY filters for both). Made-to-order items get "Made to Order" badges and link to /inquire.
+- **Action:** Either update the shop implementation to only show ready-to-ship items, or update the plan to acknowledge made-to-order in the shop with the current approach.
+
+### 1.4 Category URLs Don't Exist as Separate Routes
+- **Plan (Section 2.2):** Dedicated URLs like `/creations/multidimensional-art`, `/creations/jewelry`, `/creations/oracle-cards`, etc.
+- **Reality:** Categories are handled via client-side filtering on `/creations`. Clicking a category sets a filter state, not a route change.
+- **Action:** Either implement dedicated category routes (better for SEO and shareability) or update the plan to reflect the filter-based approach. Dedicated routes are better for AEO/SEO strategy described in Section 12.7.
+
+### 1.5 Writings Don't Have Individual URLs
+- **Plan (Section 2.2):** `/writings/[post-slug]` for individual pieces.
+- **Reality:** Writings.tsx handles story display inline via component state. No separate routes, no shareable URLs per article.
+- **Action:** Implement individual writing routes. This is critical for the AEO strategy (Section 12.7) - AI models can't reference content that doesn't have its own URL.
+
+### 1.6 Welcome Page Links Don't Match Plan
+- **Plan (Section 12.6):** Links should be: New Pieces > Shop, The Story > About, Writings > Writings, Work With Me > Inquire, Inner Circle > ConvertKit signup.
+- **Reality (Welcome.tsx):** Creations, Shop, Commission a Piece, Writings, Teajia. Missing Inner Circle/newsletter signup entirely. Labels differ.
+- **Action:** Update Welcome.tsx to match the plan's link structure, or update the plan.
+
+---
+
+## 2. Missing Implementations (Described in Plan, Not Built)
+
+### 2.1 Finishes/Options Modal (Section 8)
+The entire modal system with tabs for Finishes, Crystals, Illumination, and Framing is described in detail but has no implementation. The "See what's possible" trigger from piece pages doesn't exist.
+
+### 2.2 Made-to-Order Configuration UI (Section 7.2)
+Plan describes: size selection with prices, add-on checkboxes (crystals, wood frame, illumination, custom frame), dynamic total updates, and conditional CTA changes. PiecePage.tsx only has a static "Configure Design" button that does nothing.
+
+### 2.3 Sold Piece Behavior (Section 7.6)
+- **Plan:** Sold pieces show "Commission a new original on this form" linking to Inquire.
+- **Reality:** PiecePage.tsx shows "Sold Out" with a lock icon and no actionable link.
+- **Action:** Add commission link for sold pieces.
+
+### 2.4 Share Button on Piece Pages (Section 12.6)
+Plan describes a subtle share icon triggering native share sheet (`navigator.share`). Not implemented on any piece page.
+
+### 2.5 Sticky Bottom Bar on Mobile Piece Pages (Section 12.5)
+Plan specifies "Sticky bottom bar: price + primary CTA always visible" on mobile. Not implemented.
+
+### 2.6 Dedicated "Available Now" Section on Creations Landing (Section 5.4)
+Plan describes a separate "Available Now" section with its own heading and grid, distinct from "Selected Works." Creations.tsx has a toggle filter but not a separate section.
+
+### 2.7 Image Lazy Loading (Section 12.5)
+Plan requires lazy loading for images below the fold. No `loading="lazy"` attributes on any `<img>` tags in the codebase.
+
+### 2.8 Category Page Templates (Sections 5.5, 5.6)
+Plan describes dedicated pages for each category (Jewelry, Tables, Installations, Spaces) with category-specific intro text. These don't exist as separate pages or components.
+
+### 2.9 Teajia Integration Points Missing
+Plan (Section 1.4) defines 6 contextual placement points for Teajia:
+1. Footer - Partially done (link exists, but specific copy "Global tea culture. Ceremony and treasures." is missing)
+2. About Page / The Path - Done (Teajia link in The Path section)
+3. Spaces Category Page - Not built (no Spaces page)
+4. Tables Category Page - Not built (no Tables page)
+5. Living Knowledge - Future
+6. Inquire Page / Spatial Commissions - Not implemented (no Teajia link under spatial commissions)
+
+---
+
+## 3. Plan Internal Inconsistencies
+
+### 3.1 Category Count Mismatch (Section 2.2 vs 5.1)
+- Section 5.1 hero grid lists **9 categories**: Multidimensional Art, Light Codes, Jewelry, Oracle Cards, Tables, Installations, Illuminated Works, Objects, Spaces.
+- Section 2.2 page hierarchy only lists **6 category subpages**: multidimensional-art, jewelry, oracle-cards, tables, installations, spaces.
+- **Missing from hierarchy:** Light Codes, Illuminated Works, Objects.
+- **Action:** Clarify where these 3 categories live. Light Codes appears to be a series under Multidimensional Art, but it's also a standalone category in the grid. Illuminated Works and Objects need hierarchy entries or should be removed from the grid.
+
+### 3.2 Light Codes: Series or Category?
+Light Codes appears as:
+- A **series** under Multidimensional Art (Section 2.2, Section 6, Section 11)
+- A standalone **category** in the Creations hero grid (Section 5.1)
+- A **category** in mockData.ts CREATION_CATEGORIES
+
+These are contradictory. Is Light Codes its own category (with its own page), or a series within Multidimensional Art? The plan needs a clear decision here.
+
+### 3.3 "Illuminated Works" - Undefined
+Listed as a category in Section 5.1 hero grid ("Paintings with light and projection") but never mentioned again in the plan. No page hierarchy entry, no category page description, no further detail. Is this a subcategory? A filter? A standalone category?
+
+### 3.4 "Objects" Category - Underdeveloped
+Listed in Section 5.1 hero grid ("Sphere holders, incense, dimensional pieces") but has no page hierarchy entry, no dedicated description anywhere, and no category page template content.
+
+### 3.5 About Page Section Numbering Jumps
+Plan defines sections 4.1 through 4.8 but the current About.tsx implementation skips "The Team" (4.6) and "What Art Can Mean" (4.7). The plan marks the About page as "Complete draft (awaiting Adrian's hand edit)" but these two sections are entirely absent from the code.
+
+### 3.6 About Page Text Deviations
+Several sections have condensed or modified text compared to the plan:
+- "The Root" (4.2): Final sentence about "what I wish for people to feel in the presence of my creations" is truncated.
+- "Connection" (4.4): Omits First Friday details, Tannery Lofts specifics ("100 units of housing for artists"), Arise festival name, and "150-foot stage" detail. Also omits "Designed the 150-foot stage for Arise" and "Over 120 exhibitions and live paintings since 2009."
+- Need to decide: is the plan the source of truth (restore full text) or has the code been intentionally condensed?
+
+### 3.7 Form Fields Don't Match Plan (Section 9.4 vs Inquire.tsx)
+- **Plan fields:** Name, Email, Vision (required) + Location, Size range, Budget, Timeline, Image upload (optional, collapsed).
+- **Code fields:** Name, Email, Vision (required) + Budget, Timeline, Referral (optional, collapsed).
+- **Missing from code:** Location, Approximate size range, Image upload.
+- **Added in code but not in plan:** Referral source ("How did you find me?").
+- **Action:** Align the plan and code. Referral is a useful addition; add to plan. Missing fields should either be added to code or removed from plan.
+
+### 3.8 Button Text Inconsistency
+- Plan (Section 9.4): Button says "Start the conversation"
+- Inquire.tsx: Button says "Send Transmission"
+- Plan Commission Paths (Section 9.3): Links say "Begin here"
+- These should be consistent with the site's voice.
+
+---
+
+## 4. Content That Needs Creating (From Plan, Acknowledged but Empty)
+
+### 4.1 Pricing Placeholders
+These appear throughout the plan with placeholder values:
+- [ ] LED starting prices per size tier (Section 8.3: $[X], $[Y], $[Z])
+- [ ] Crystal add-on pricing (Section 12.1: +$X)
+- [ ] Wood frame add-on pricing (Section 12.1: +$X)
+- [ ] All individual piece final pricing
+- [ ] Stripe Payment Links for each ready-to-ship piece (currently all use `PLACEHOLDER` URL)
+
+### 4.2 Missing Written Content
+- [ ] Universal Language series hook (Section 6.3: "Adrian: Write hooks when ready")
+- [ ] Mandala series hook (Section 6.3: "Adrian: Write hooks when ready")
+- [ ] Framing descriptions for Finishes modal (Section 8.2: "Adrian: Add descriptions for framing when ready")
+
+### 4.3 Image Assets
+- [ ] All images are placeholders (picsum.photos/unsplash). Every component needs real photography.
+- [ ] Hero grid: 9 specific images representing each category (Section 5.1)
+- [ ] Finishes modal: images for Natural, Painted, Crystal, LED, Framing states (Section 8.2)
+- [ ] Inquire hero: split image (intimate piece + large installation)
+- [ ] About page: portrait photo
+
+---
+
+## 5. Missing from the Plan Entirely
+
+These topics are not addressed anywhere in the master document but are needed for a production website.
+
+### 5.1 Analytics
+No analytics tool mentioned. Options: Google Analytics 4, Plausible, Fathom, Cloudflare Web Analytics (free with Cloudflare Pages). Without analytics, there's no way to measure traffic, understand visitor behavior, or validate the AEO strategy.
+
+### 5.2 Accessibility (a11y)
+No WCAG guidelines, screen reader considerations, alt text standards, keyboard navigation requirements, or color contrast rules. Given the art-focused audience and potential gallery/museum connections, accessibility matters both ethically and for SEO.
+
+### 5.3 Content Management Workflow
+With no CMS, how does Adrian add new pieces or publish new writings after launch? Currently requires code changes (editing mockData.ts, creating new components). The plan should address:
+- Who makes these changes? (Adrian, a developer, a CMS later?)
+- What's the process for adding a new piece?
+- What's the process for publishing a new writing?
+
+### 5.4 Shipping, Returns, and Customs
+"Ships from Bali" is mentioned, but nowhere does the plan address:
+- Shipping cost calculation or flat rates
+- Customs and import duties (buyer's responsibility?)
+- Insurance for high-value pieces
+- Return policy
+- Damage during shipping
+- The Footer.tsx has "Shipping & Returns" and "Care Guide" buttons that don't link anywhere.
+
+### 5.5 Edition Tracking System
+Section 12.3 describes sophisticated display rules (0-40% sold shows one thing, 40-70% another, etc.) but there's no system for tracking actual edition counts. Currently, edition info is a static string in mockData.ts. Need a data source for real-time edition tracking.
+
+### 5.6 Inventory Management
+No system described for:
+- Marking pieces as sold after purchase
+- Updating availability from ready-to-ship to sold
+- Tracking stock of multiple editions
+- Syncing with Stripe payment status
+
+### 5.7 404 / Error Page
+Plan doesn't address what happens when someone hits a bad URL. Current code falls back to homepage (catch-all route `/*`). A dedicated 404 page would be better for UX and SEO.
+
+### 5.8 Cookie Consent
+Privacy Policy page exists but no cookie consent mechanism is described. If using analytics, font services, or any third-party tracking, GDPR/CCPA compliance may require consent.
+
+### 5.9 Testing Strategy
+No mention of:
+- Cross-browser testing (Safari, Firefox, Chrome, mobile browsers)
+- Device testing beyond "test on real phone"
+- Automated tests
+- Performance testing/benchmarks
+
+### 5.10 Deployment Pipeline
+No CI/CD described. How are changes deployed? Manual push to Cloudflare Pages? GitHub integration? Preview deployments for review?
+
+### 5.11 Backup Strategy
+No backup plan for content, images, or order data.
+
+### 5.12 Email Domain
+Inquire.tsx fallback uses `hello@adrianrasmussen.art` but the plan says the domain is `adrianrasmussen.com`. Which email domain is correct? Is the .art domain also owned?
+
+---
+
+## 6. Document Quality Issues
+
+### 6.1 Character Encoding Corruption
+The entire plan document has UTF-8 double-encoding issues. All special characters are garbled:
+- Em dashes appear as "ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â" instead of "—"
+- Arrows appear as "ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢" instead of "→"
+- Bullet separators appear as "Ãƒâ€šÃ‚Â·" instead of "·"
+- Copyright symbol appears as "Ãƒâ€šÃ‚Â©" instead of "©"
+- "Teajia" sometimes appears with diacritical corruption
+
+The plan should be re-exported with proper UTF-8 encoding.
+
+### 6.2 Copy Guidelines Self-Violation
+Section 13.2 says "Avoid em dashes." However, multiple sections of the plan's own copy use em dashes (encoded or not). Review all copy for compliance with stated guidelines.
+
+### 6.3 Referenced Companion Documents Not in Repository
+Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Planning Guide, Items to Develop, Audience Understanding, Collected Words." None of these files exist in the repository.
+
+---
+
+## 7. Prioritized Action Items
+
+### Critical (Blocks Launch)
+1. Resolve tech stack description in plan (Section 1.5)
+2. Implement individual writing routes (/writings/[slug]) for SEO/AEO
+3. Implement category routes or update plan to reflect filter approach
+4. Fix sold piece behavior (add commission link)
+5. Add image lazy loading
+6. Replace all placeholder images with real photography
+7. Replace Stripe PLACEHOLDER URLs with real Payment Links
+8. Decide and resolve ConvertKit vs Formspree for newsletter
+9. Add shipping/returns policy content (Footer links are dead)
+
+### Important (First Week After Launch)
+10. Build Finishes/Options modal
+11. Build made-to-order configuration UI on piece pages
+12. Implement share functionality on piece pages
+13. Add sticky bottom bar on mobile piece pages
+14. Align form fields between plan and implementation
+15. Add missing About page sections (The Team, What Art Can Mean)
+16. Implement "Available Now" as dedicated section on Creations landing
+17. Add analytics
+
+### Should Have (First Month)
+18. Clarify Light Codes / Illuminated Works / Objects category hierarchy
+19. Build dedicated category pages
+20. Implement Teajia integration points 3, 4, and 6
+21. Build edition tracking system
+22. Add 404 page
+23. Add accessibility guidelines and implement
+24. Fix character encoding in plan document
+25. Create/locate companion documents referenced in plan
+26. Define content management workflow
+27. Align all copy with Copy Guidelines (Section 13)
+28. Update Welcome page links to match plan
