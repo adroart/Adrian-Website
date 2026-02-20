@@ -1,80 +1,19 @@
 
-import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ChevronUp, ArrowUpDown } from 'lucide-react';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
 
-const CreationCategoryCard: React.FC<{
-    label: string;
-    desc: string;
-    onClick: () => void;
-    link?: string;
-    idx: number;
-}> = ({ label, desc, onClick, link, idx }) => {
-    const navigate = useNavigate();
-    const handleClick = () => link ? navigate(link) : onClick();
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-    return (
-        <div
-            onClick={handleClick}
-            className="group relative aspect-square bg-wood-100 border border-wood-200 overflow-hidden cursor-pointer"
-        >
-            <img
-                src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
-                alt={`${label} by Adrian Rasmussen`}
-                loading="lazy"
-            />
-            <div className="absolute inset-0 bg-wood-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
-            <div className="absolute inset-0 p-6 flex flex-col justify-end bg-gradient-to-t from-stone-950/80 via-transparent to-transparent opacity-100 group-hover:opacity-90 transition-opacity">
-                <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">{label}</h3>
-                <p className="font-serif text-sm md:text-base text-paper-200 font-light opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                    {desc}
-                </p>
-            </div>
-        </div>
-    );
-};
+type SortOption = 'default' | 'price-asc' | 'price-desc' | 'newest';
 
-const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <Link to={`/creations/${art.id}`} className="group cursor-pointer break-inside-avoid mb-8 block">
-        <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
-            <img
-                src={art.coverImage}
-                alt={`${art.title} by Adrian Rasmussen`}
-                loading="lazy"
-                className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-            />
-            {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-medium">
-                    Ready to ship
-                </div>
-            )}
-            {/* Story indicator — subtle bronze dot when a companion essay exists */}
-            {art.relatedStorySlug && (
-                <div
-                    className="absolute top-3 left-3 w-2 h-2 rounded-full bg-bronze-500"
-                    title="Companion story available"
-                />
-            )}
-        </div>
-        <div className="mt-4 px-1">
-            <div className="flex justify-between items-start">
-                <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight max-w-[75%]">
-                    {art.title}
-                </h4>
-                {art.price && (
-                    <span className="font-mono text-xs text-wood-900 font-bold">
-                        {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price}
-                    </span>
-                )}
-            </div>
-            <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
-                {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
-            </p>
-        </div>
-    </Link>
-);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatPrice(n: number): string {
+    return n.toLocaleString('en-US');
+}
 
 /** Resolve which pieces belong to a collection */
 function getCollectionPieces(collection: Collection, archive: Artwork[]): Artwork[] {
@@ -97,6 +36,169 @@ function getCollectionCover(collection: Collection, pieces: Artwork[]): string |
     return pieces[0]?.coverImage;
 }
 
+function sortArchive(data: Artwork[], sort: SortOption): Artwork[] {
+    if (sort === 'price-asc') return [...data].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    if (sort === 'price-desc') return [...data].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    if (sort === 'newest') return [...data].sort((a, b) => Number(b.year) - Number(a.year));
+    return data; // 'default' — keep original order
+}
+
+const SORT_LABELS: Record<SortOption, string> = {
+    default: 'Default',
+    'price-asc': 'Price: Low to High',
+    'price-desc': 'Price: High to Low',
+    newest: 'Newest First',
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/**
+ * One tile in the hero category grid.
+ * Renders as <Link> when a route exists, or as <button> for inline filters.
+ * Fully keyboard-accessible in both cases.
+ */
+const CreationCategoryCard: React.FC<{
+    label: string;
+    desc: string;
+    onClick: () => void;
+    link?: string;
+    idx: number;
+}> = ({ label, desc, onClick, link, idx }) => {
+    const inner = (
+        <>
+            {/* Background image — neutral grey tint until real photography arrives */}
+            <div className="absolute inset-0 bg-wood-100" />
+            <img
+                src={`https://picsum.photos/800/800?random=${100 + idx}`}
+                className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                width={800}
+                height={800}
+            />
+            {/* Scrim */}
+            <div className="absolute inset-0 bg-wood-900/15 group-hover:bg-transparent transition-colors duration-500 pointer-events-none" />
+            {/* Text */}
+            <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent pointer-events-none">
+                <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 mb-1 font-medium leading-tight text-left">
+                    {label}
+                </h3>
+                {/* Always visible on mobile; refined on desktop with hover reveal */}
+                <p className="font-serif text-sm text-paper-200 font-light leading-snug text-left
+                              opacity-100 sm:opacity-0 sm:translate-y-3
+                              sm:group-hover:opacity-100 sm:group-hover:translate-y-0
+                              transition-all duration-500 delay-75">
+                    {desc}
+                </p>
+            </div>
+        </>
+    );
+
+    if (link) {
+        return (
+            <Link
+                to={link}
+                className="group relative aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+                aria-label={`Explore ${label}: ${desc}`}
+            >
+                {inner}
+            </Link>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="group relative aspect-square overflow-hidden cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+            aria-label={`Browse ${label}: ${desc}`}
+        >
+            {inner}
+        </button>
+    );
+};
+
+/**
+ * A card in the masonry artwork grid.
+ */
+const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
+    <Link
+        to={`/creations/${art.id}`}
+        className="group cursor-pointer break-inside-avoid mb-6 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+    >
+        {/* Image container with explicit aspect hint to prevent CLS */}
+        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg group-hover:shadow-wood-200/60">
+            <img
+                src={art.coverImage}
+                alt={`${art.title} by Adrian Rasmussen`}
+                loading="lazy"
+                width={800}
+                height={800}
+                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+
+            {/* Ready to ship badge */}
+            {art.availability === 'READY_TO_SHIP' && (
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 text-avail-ready font-bold leading-none">
+                    Available
+                </div>
+            )}
+
+            {/* Illuminated indicator */}
+            {art.illuminated && (
+                <div className="absolute top-3 left-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 text-wood-600 font-bold leading-none">
+                    Illuminated
+                </div>
+            )}
+
+            {/* Story indicator: visible dot + tooltip label */}
+            {art.relatedStorySlug && !art.illuminated && (
+                <div
+                    className="absolute top-3 left-3 flex items-center gap-1 bg-paper-50/90 backdrop-blur-sm px-2 py-1 border border-wood-200"
+                    title="A companion essay accompanies this piece"
+                >
+                    <span className="w-1.5 h-1.5 rounded-full bg-bronze-500 flex-shrink-0" aria-hidden="true" />
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 font-bold leading-none">Essay</span>
+                </div>
+            )}
+        </div>
+
+        {/* Card text */}
+        <div className="mt-3 px-0.5">
+            <div className="flex justify-between items-start gap-2">
+                <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                    {art.title}
+                </h4>
+                {art.price && (
+                    <span className="font-mono text-xs text-wood-900 font-bold whitespace-nowrap flex-shrink-0 pt-0.5">
+                        {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-500 font-normal">From </span>}
+                        ${formatPrice(art.price)}
+                    </span>
+                )}
+            </div>
+
+            {/* Category + availability in readable size */}
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold leading-none">
+                {art.category}
+                {art.series && <span className="text-wood-400 font-normal"> · {art.series}</span>}
+                {art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}
+                {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
+            </p>
+
+            {/* One-line description teaser */}
+            {art.description && (
+                <p className="font-serif text-sm text-wood-500 font-light leading-snug mt-1.5 line-clamp-2">
+                    {art.description}
+                </p>
+            )}
+        </div>
+    </Link>
+);
+
+/**
+ * A collection card — uses <button> for proper semantics and keyboard access.
+ */
 const CollectionCard: React.FC<{
     collection: Collection;
     pieces: Artwork[];
@@ -106,56 +208,126 @@ const CollectionCard: React.FC<{
     const cover = getCollectionCover(collection, pieces);
 
     return (
-        <div
+        <button
+            type="button"
             onClick={onClick}
-            className={`group relative aspect-[3/2] overflow-hidden cursor-pointer transition-all duration-500 ${
+            aria-pressed={isActive}
+            className={`group relative aspect-[3/2] overflow-hidden cursor-pointer transition-all duration-500 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 ${
                 isActive
                     ? 'ring-2 ring-bronze-500 ring-offset-2 ring-offset-paper-50'
                     : 'border border-wood-200 hover:border-wood-400'
             }`}
+            aria-label={`${isActive ? 'Deselect' : 'Filter by'} collection: ${collection.name}`}
         >
+            {/* Placeholder background */}
+            <div className="absolute inset-0 bg-wood-100" />
             {cover && (
                 <img
                     src={cover}
-                    alt={collection.name}
-                    className={`w-full h-full object-cover transition-all duration-[1.5s] ease-out group-hover:scale-105 ${
+                    alt=""
+                    aria-hidden="true"
+                    width={800}
+                    height={533}
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${
                         isActive ? 'grayscale-0' : 'grayscale group-hover:grayscale-0'
                     }`}
                 />
             )}
-            {!cover && (
-                <div className="w-full h-full bg-wood-100" />
-            )}
-            <div className="absolute inset-0 bg-wood-900/10 group-hover:bg-transparent transition-colors duration-500"></div>
-            <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent">
+            <div className="absolute inset-0 bg-wood-900/15 group-hover:bg-transparent transition-colors duration-500" />
+            <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent">
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 mb-1 font-medium leading-tight">
                     {collection.name}
                 </h4>
                 {collection.description && (
-                    <p className="font-serif text-sm text-paper-200 font-light opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-500 delay-100 line-clamp-2">
+                    <p className="font-serif text-sm text-paper-200 font-light
+                                  opacity-100 sm:opacity-0 sm:translate-y-2
+                                  sm:group-hover:opacity-100 sm:group-hover:translate-y-0
+                                  transition-all duration-500 delay-75 line-clamp-2">
                         {collection.description}
                     </p>
                 )}
-                <span className="font-mono text-[10px] uppercase tracking-widest text-paper-300 font-bold mt-2">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold mt-2">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
+                    {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
             </div>
-        </div>
+        </button>
     );
 };
 
+// ─── Sort Dropdown ─────────────────────────────────────────────────────────────
+
+const SortDropdown: React.FC<{
+    value: SortOption;
+    onChange: (v: SortOption) => void;
+}> = ({ value, onChange }) => (
+    <div className="relative flex items-center gap-1.5">
+        <ArrowUpDown size={12} className="text-wood-400 flex-shrink-0" aria-hidden="true" />
+        <label htmlFor="sort-select" className="sr-only">Sort pieces</label>
+        <select
+            id="sort-select"
+            value={value}
+            onChange={e => onChange(e.target.value as SortOption)}
+            className="font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-bold"
+        >
+            {(Object.keys(SORT_LABELS) as SortOption[]).map(opt => (
+                <option key={opt} value={opt}>{SORT_LABELS[opt]}</option>
+            ))}
+        </select>
+    </div>
+);
+
+// ─── Back-to-Top Button ────────────────────────────────────────────────────────
+
+const BackToTop: React.FC = () => {
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const handler = () => setVisible(window.scrollY > 600);
+        window.addEventListener('scroll', handler, { passive: true });
+        return () => window.removeEventListener('scroll', handler);
+    }, []);
+
+    if (!visible) return null;
+
+    return (
+        <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Back to top"
+            className="fixed bottom-8 right-6 z-50 bg-paper-50 border border-wood-200 shadow-md p-3 hover:border-wood-400 hover:shadow-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+        >
+            <ChevronUp size={18} className="text-wood-700" aria-hidden="true" />
+        </button>
+    );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const Creations: React.FC = () => {
-    const [filter, setFilter] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Category is stored in the URL as ?category=Jewelry so it's shareable + bookmarkable
+    const filter = searchParams.get('category');
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
+    const [sort, setSort] = useState<SortOption>('default');
 
-    // Reset active collection when category changes
-    const handleCategoryChange = (category: string | null) => {
-        setFilter(category);
+    const gridRef = useRef<HTMLDivElement>(null);
+
+    const handleCategoryChange = useCallback((category: string | null) => {
         setActiveCollection(null);
-    };
+        setSort('default');
+        if (category) {
+            setSearchParams({ category });
+        } else {
+            setSearchParams({});
+        }
+        // Scroll back to top of page when changing category
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [setSearchParams]);
 
-    // 5.3 Selected Works (First 12 featured items)
+    // Selected works: first 12 featured items
     const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 12), []);
 
     // Collections for the current category
@@ -164,115 +336,168 @@ const Creations: React.FC = () => {
         return COLLECTIONS.filter(c => c.category === filter);
     }, [filter]);
 
-    // Pre-compute pieces for each collection (for counts and cover images)
+    // Pre-compute pieces for each collection (counts + covers)
     const collectionPiecesMap = useMemo(() => {
         const map = new Map<string, Artwork[]>();
         for (const col of categoryCollections) {
-            const pieces = getCollectionPieces(col, FULL_ARCHIVE);
-            map.set(col.id, pieces);
+            map.set(col.id, getCollectionPieces(col, FULL_ARCHIVE));
         }
         return map;
     }, [categoryCollections]);
 
-    // Filtered list for the grid
+    // Build filtered + sorted list for the grid
     const filteredArchive = useMemo(() => {
         let data = FULL_ARCHIVE;
 
-        if (filter) {
-            data = data.filter(a => a.category === filter);
-        }
+        if (filter) data = data.filter(a => a.category === filter);
 
-        // Apply collection filter
         if (activeCollection) {
             const col = categoryCollections.find(c => c.id === activeCollection);
             if (col) {
-                const collectionPieces = collectionPiecesMap.get(col.id) || [];
-                const pieceIds = new Set(collectionPieces.map(p => p.id));
+                const pieceIds = new Set((collectionPiecesMap.get(col.id) ?? []).map(p => p.id));
                 data = data.filter(a => pieceIds.has(a.id));
             }
         }
 
-        if (showAvailableOnly) {
-            data = data.filter(a => a.availability === 'READY_TO_SHIP');
+        if (showAvailableOnly) data = data.filter(a => a.availability === 'READY_TO_SHIP');
+
+        return sortArchive(data, sort);
+    }, [filter, activeCollection, showAvailableOnly, sort, categoryCollections, collectionPiecesMap]);
+
+    const displayedPieces = filter ? filteredArchive : selectedWorks;
+    const showCollectionCards = !!filter && categoryCollections.length >= 2;
+
+    // Count available pieces for the toggle label
+    const availableCount = useMemo(() => {
+        let data = FULL_ARCHIVE;
+        if (filter) data = data.filter(a => a.category === filter);
+        if (activeCollection) {
+            const col = categoryCollections.find(c => c.id === activeCollection);
+            if (col) {
+                const pieceIds = new Set((collectionPiecesMap.get(col.id) ?? []).map(p => p.id));
+                data = data.filter(a => pieceIds.has(a.id));
+            }
         }
-
-        return data;
-    }, [filter, activeCollection, showAvailableOnly, categoryCollections, collectionPiecesMap]);
-
-    const showCollectionCards = filter && categoryCollections.length >= 2;
+        return data.filter(a => a.availability === 'READY_TO_SHIP').length;
+    }, [filter, activeCollection, categoryCollections, collectionPiecesMap]);
 
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32">
 
-            {/* 5.1 Hero Grid (Categories) */}
+            {/* ── 5.1 Hero Category Grid ─────────────────────────────────── */}
             {!filter && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-32 animate-fade-in">
-                    <div className="mb-12 border-b border-wood-200 pb-8">
-                        <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Creations</h1>
-                        <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed">
-                            I create across many forms. Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
+                <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
+                    {/* Hero header */}
+                    <div className="mb-12 border-b border-wood-200 pb-10">
+                        <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-8 font-medium tracking-tight">
+                            Creations
+                        </h1>
+                        <p className="font-serif text-2xl md:text-3xl text-wood-800 max-w-2xl font-medium leading-snug mb-4">
+                            I create across many forms.
                         </p>
-                        <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed mt-4">
-                            These are not decoration. They are portals. A place to sit with. To find your center. To feel an opening.
+                        <p className="font-serif text-lg md:text-xl text-wood-600 max-w-xl font-light leading-relaxed">
+                            Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-relaxed mt-4">
-                            Find what calls to you.
+                        <p className="font-serif text-base text-wood-500 max-w-xl font-light leading-relaxed mt-3 italic">
+                            These are not decoration. They are portals. A place to sit with. To find your center.
+                            To feel an opening. Find what calls to you.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
+                    {/* Category grid */}
+                    <div
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"
+                        role="list"
+                        aria-label="Art categories"
+                    >
                         {CREATION_CATEGORIES.map((cat, idx) => (
-                            <CreationCategoryCard
-                                key={cat.id}
-                                label={cat.label}
-                                desc={cat.desc}
-                                idx={idx}
-                                link={(cat as { link?: string }).link}
-                                onClick={() => handleCategoryChange(cat.label)}
-                            />
+                            <div key={cat.id} role="listitem">
+                                <CreationCategoryCard
+                                    label={cat.label}
+                                    desc={cat.desc}
+                                    idx={idx}
+                                    link={(cat as { link?: string }).link}
+                                    onClick={() => handleCategoryChange(cat.label)}
+                                />
+                            </div>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Filter / Header for Grid */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-6 border-b border-wood-200 flex justify-between items-center mb-12">
-                <div className="flex items-center gap-4">
-                    {filter ? (
-                        <div className="flex items-center gap-2">
-                             <button onClick={() => handleCategoryChange(null)} className="text-wood-500 hover:text-wood-900 font-mono text-xs uppercase tracking-widest font-bold">
-                                 All Creations
-                             </button>
-                             <span className="text-wood-300">/</span>
-                             <span className="text-wood-900 font-mono text-xs uppercase tracking-widest font-bold">{filter}</span>
-                             {activeCollection && (
-                                 <>
-                                     <span className="text-wood-300">/</span>
-                                     <span className="text-bronze-600 font-mono text-xs uppercase tracking-widest font-bold">
-                                         {categoryCollections.find(c => c.id === activeCollection)?.name}
-                                     </span>
-                                 </>
-                             )}
-                        </div>
-                    ) : (
-                        <h2 className="font-serif text-3xl text-wood-900 font-medium">Selected Works</h2>
-                    )}
-                </div>
+            {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
+            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
 
-                <button
-                    onClick={() => setShowAvailableOnly(!showAvailableOnly)}
-                    className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
-                >
-                    {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
-                </button>
+                    {/* Left: title / breadcrumb */}
+                    <div className="flex items-center gap-2 min-w-0">
+                        {filter ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => handleCategoryChange(null)}
+                                    className="font-mono text-xs uppercase tracking-widest font-bold text-wood-400 hover:text-wood-900 transition-colors underline-offset-2 hover:underline flex-shrink-0 focus-visible:outline-none focus-visible:underline"
+                                    aria-label="Back to all creations"
+                                >
+                                    All
+                                </button>
+                                <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                <span className="font-mono text-xs uppercase tracking-widest font-bold text-wood-900 truncate">
+                                    {filter}
+                                </span>
+                                {activeCollection && (
+                                    <>
+                                        <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
+                                        <span className="font-mono text-xs uppercase tracking-widest font-bold text-bronze-600 truncate">
+                                            {categoryCollections.find(c => c.id === activeCollection)?.name}
+                                        </span>
+                                    </>
+                                )}
+                            </>
+                        ) : (
+                            <h2 className="font-serif text-2xl text-wood-900 font-medium">Selected Works</h2>
+                        )}
+                    </div>
+
+                    {/* Right: controls */}
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                        {/* Sort — only shown in filtered views */}
+                        {filter && (
+                            <SortDropdown value={sort} onChange={setSort} />
+                        )}
+
+                        {/* Divider */}
+                        {filter && <span className="text-wood-200" aria-hidden="true">|</span>}
+
+                        {/* Available-only toggle */}
+                        <button
+                            type="button"
+                            onClick={() => setShowAvailableOnly(v => !v)}
+                            aria-pressed={showAvailableOnly}
+                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors focus-visible:outline-none focus-visible:underline ${
+                                showAvailableOnly
+                                    ? 'text-bronze-600'
+                                    : 'text-wood-400 hover:text-wood-900'
+                            }`}
+                        >
+                            {showAvailableOnly
+                                ? `Available (${availableCount})`
+                                : `Available Only`}
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            {/* Collection Cards (when 2+ collections exist for category) */}
+            {/* ── Collection Cards ───────────────────────────────────────── */}
             {showCollectionCards && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-16 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categoryCollections.map((col) => {
-                            const pieces = collectionPiecesMap.get(col.id) || [];
+                <div className="max-w-[1800px] mx-auto px-6 mb-14 animate-fade-in">
+                    <div
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                        role="group"
+                        aria-label="Filter by collection"
+                    >
+                        {categoryCollections.map(col => {
+                            const pieces = collectionPiecesMap.get(col.id) ?? [];
                             if (pieces.length === 0) return null;
                             return (
                                 <CollectionCard
@@ -280,80 +505,111 @@ const Creations: React.FC = () => {
                                     collection={col}
                                     pieces={pieces}
                                     isActive={activeCollection === col.id}
-                                    onClick={() => setActiveCollection(
-                                        activeCollection === col.id ? null : col.id
-                                    )}
+                                    onClick={() =>
+                                        setActiveCollection(p => p === col.id ? null : col.id)
+                                    }
                                 />
                             );
                         })}
                     </div>
+
                     {activeCollection && (
                         <button
+                            type="button"
                             onClick={() => setActiveCollection(null)}
-                            className="mt-6 font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold transition-colors"
+                            className="mt-5 font-mono text-xs uppercase tracking-widest text-wood-400 hover:text-wood-900 font-bold transition-colors focus-visible:outline-none focus-visible:underline"
                         >
-                            Show all in {filter}
+                            ← Show all in {filter}
                         </button>
                     )}
                 </div>
             )}
 
-            {/* Single collection subtitle (when exactly 1 collection exists) */}
+            {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-8">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
-                        {categoryCollections[0].name} {categoryCollections[0].description && `— ${categoryCollections[0].description}`}
+                    <p className="font-mono text-[11px] uppercase tracking-widest text-wood-400 font-bold">
+                        {categoryCollections[0].name}
+                        {categoryCollections[0].description && (
+                            <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">
+                                — {categoryCollections[0].description}
+                            </span>
+                        )}
                     </p>
                 </div>
             )}
 
-            {/* Main Grid */}
-            <div className="max-w-[1800px] mx-auto px-6">
-                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8">
-                    {(filter ? filteredArchive : selectedWorks).map((art) => (
-                        <PieceCard
-                            key={art.id}
-                            art={art}
-                        />
-                    ))}
-                </div>
+            {/* ── Main Masonry Grid ──────────────────────────────────────── */}
+            <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
-                {!filter && (
-                    <div className="mt-24 text-center border-t border-wood-200 pt-12">
-                         <p className="font-serif text-wood-500 italic mb-6">Viewing selected works. Explore categories to see full archive.</p>
+                {displayedPieces.length > 0 ? (
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
+                        {displayedPieces.map(art => (
+                            <PieceCard key={art.id} art={art} />
+                        ))}
                     </div>
-                )}
-
-                {filter && filteredArchive.length === 0 && (
-                    <div className="text-center py-24">
-                        <p className="font-serif text-xl text-wood-500 italic">
+                ) : (
+                    /* ── Empty State ─────────────────────────────────────── */
+                    <div className="text-center py-24 px-6">
+                        <p className="font-serif text-2xl text-wood-600 italic mb-3">
                             {showAvailableOnly
                                 ? 'No available pieces in this selection.'
                                 : 'No pieces found.'}
                         </p>
-                        {(showAvailableOnly || activeCollection) && (
-                            <div className="flex justify-center gap-4 mt-4">
-                                {activeCollection && (
-                                    <button
-                                        onClick={() => setActiveCollection(null)}
-                                        className="font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold"
-                                    >
-                                        Show all in {filter}
-                                    </button>
-                                )}
-                                {showAvailableOnly && (
-                                    <button
-                                        onClick={() => setShowAvailableOnly(false)}
-                                        className="font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold"
-                                    >
-                                        Show all availability
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                        <p className="font-serif text-base text-wood-400 font-light mb-8">
+                            {showAvailableOnly
+                                ? 'More pieces are made to order. Remove the filter to see the full archive.'
+                                : 'Try a different category or remove active filters.'}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                            {activeCollection && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveCollection(null)}
+                                    className="font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                >
+                                    Clear collection filter
+                                </button>
+                            )}
+                            {showAvailableOnly && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAvailableOnly(false)}
+                                    className="font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                >
+                                    Show all availability
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => handleCategoryChange(null)}
+                                className="font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                            >
+                                Back to all categories
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer note for Selected Works view */}
+                {!filter && displayedPieces.length > 0 && (
+                    <div className="mt-20 pt-10 border-t border-wood-200 text-center">
+                        <p className="font-serif text-wood-500 italic mb-5 text-base">
+                            Viewing selected works. Choose a category above to explore the full archive.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            className="font-mono text-xs uppercase tracking-widest text-wood-400 hover:text-wood-900 font-bold transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:underline"
+                        >
+                            Back to categories
+                        </button>
                     </div>
                 )}
             </div>
+
+            {/* Floating back-to-top button */}
+            <BackToTop />
 
         </section>
     );

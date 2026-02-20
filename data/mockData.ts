@@ -302,6 +302,139 @@ const SUBCATEGORY_BY_SERIES: Record<string, string[]> = {
 
 const FINISH_OPTIONS = ['Natural', 'Painted', 'Gold Leaf'];
 
+// Richer name pools so generated pieces feel like real work
+const GEN_TITLES: Record<string, string[]> = {
+    'Universal Language': [
+        'Gate of Becoming', 'Silent Threshold', 'Harmonic Field', 'Resonant Ground',
+        'The 49th Gate', 'Spiral Descent', 'Frequency of Return', 'Open Circuit',
+        'The Witness', 'Unfolding Axis', 'Primordial Arc', 'Held in Form',
+    ],
+    'Mandala': [
+        'Inner Compass', 'Still Center', 'Radiant Wheel', 'Infinite Return',
+        'The Eye of Silence', 'Cosmic Breath', 'Lotus Geometry', 'Axis of Light',
+        'Mandala of the Void', 'Circle of Becoming', 'Golden Ratio Study', 'The Seed Form',
+    ],
+    'Light Codes': [
+        'Frequency Anchor', 'Luminous Signal', 'The Transmission', 'Code of the Deep',
+        'Resonant Field', 'Ithaca', 'Dreamtime Glyph', 'Council of Light',
+        'Encoded Matrix', 'Star Language', 'Waking Frequency', 'Root Signal',
+    ],
+    'Jewelry': [
+        'Talisman of Stillness', 'Sacred Arc Pendant', 'Geometry Ring', 'Spiral Earring Pair',
+        'Lunar Pendant', 'Chrysalis Cuff', 'Labradorite Talisman', 'Oxidized Circle Pendant',
+        'Brass Eye Pendant', 'River Stone Ring', 'Golden Gate Pendant', 'Resonance Band',
+    ],
+    'Oracle Cards': [
+        'The Journey Deck', 'Light Codes Oracle', 'Gene Keys Reflection Set',
+        'Ceremony Cards', 'Inner Compass Deck', 'Threshold Oracle',
+        'Presence Cards', 'Sacred Mirror Deck', 'Elements Oracle', 'Path of Return Deck',
+        'Spiral Oracle', 'The Witness Deck',
+    ],
+    'Tables': [
+        'River Table', 'Altar Platform', 'Low Ceremony Table', 'Living Edge Console',
+        'Tea Ceremony Slab', 'Black Walnut Bench', 'Resin River Desk', 'Stone and Wood Shelf',
+        'Gathering Table', 'Forest Table', 'Meditation Platform', 'Ritual Surface',
+    ],
+    'Installations': [
+        'Portal Arch', 'Sacred Grove', 'The Threshold Room', 'Light Cathedral',
+        'Frequency Field', 'The Nest', 'Ceremonial Ring', 'Forest of Forms',
+        'Void Structure II', 'Living Canopy', 'Star Map Installation', 'Sound Garden',
+    ],
+    'Objects': [
+        'Sphere Cradle', 'Incense Altar', 'Obsidian Weight', 'Crystal Throne',
+        'Brass Cone Holder', 'Cedar Box', 'Ritual Bowl', 'Stone Egg Cradle',
+        'Geometry Paperweight', 'Smudge Platform', 'Selenite Stand', 'Bamboo Vessel',
+    ],
+    'Spaces': [
+        'Bamboo Tea House', 'Garden Sanctuary', 'The Listening Room', 'Forest Threshold',
+        'Meditation Alcove', 'Ceremonial Pavilion', 'River Pavilion', 'Elevated Retreat',
+        'Sacred Ground Studio', 'The Still Room', 'Floating Platform Space', 'Fire Circle',
+    ],
+};
+
+const GEN_DESCRIPTIONS: Record<string, string[]> = {
+    'Universal Language': [
+        'A hexagram expressed in layered birch and acrylic. Each ring corresponds to a movement within the Gene Keys cycle.',
+        'Laser-cut geometry aligned to one of sixty-four thresholds. The form holds silence.',
+        'Three planes of geometry nested inside each other. The center is unreachable by eye but felt immediately.',
+        'A meditation on the interplay between yin and yang expressed in physical layers and negative space.',
+    ],
+    'Mandala': [
+        'Sacred geometry forms rendered in laser-cut birch. Painted by hand. No two the same.',
+        'A window inward. The geometry is exact; the brushwork is free.',
+        'Map of the inner cosmos. Each ring painted in sequence, moving from chaos to stillness.',
+        'Concentric precision. The eye finds the center and rests there.',
+    ],
+    'Light Codes': [
+        'Anchoring of an unseen realm. The form came after a dreamtime session. The light language is embedded in the cut.',
+        'Frequencies made visible. After dark, embedded LEDs bring a second layer forward.',
+        'A glyph received in meditation, rendered in physical form. The intention is coded into each layer.',
+        'This piece carries a transmission. It came quickly, all at once. Some works are found, not made.',
+    ],
+    'Jewelry': [
+        'Oxidized brass that warms to the body almost immediately. A wearable anchor.',
+        'Labradorite set in silver. Light shifts through the stone depending on angle and mood.',
+        'Sacred geometry reduced to its most essential form. Worn close to the heart.',
+        'Hammered and oxidized by hand. No two identical. This piece carries its own character.',
+    ],
+    'Oracle Cards': [
+        'A reflection tool, not a prediction system. Each card opens a question.',
+        'Forty cards. Each one a doorway into a different frequency of awareness.',
+        'Designed for ceremony and daily practice. Pull one card. Sit with it.',
+        'Printed on heavyweight stock. Illustrated from original artworks.',
+    ],
+    'Tables': [
+        'Live edge black walnut. A resin river through the center holds preserved botanical matter.',
+        'Designed for the tea practice. Low platform height. Unfinished oil finish.',
+        'Built for gathering. The wood grain runs continuously across the joined slabs.',
+        'A functional art piece. Meant to be used, touched, and lived with.',
+    ],
+    'Installations': [
+        'Built for a festival environment. Designed to hold ceremony within it.',
+        'Steel armature with hand-applied panels. Changes character depending on time of day and lighting.',
+        'An immersive environment. The piece is the space, not an object within it.',
+        'Commissioned for a permanent installation. Site-specific geometry based on the land.',
+    ],
+    'Objects': [
+        'A cradle for the crystal ball. Carved walnut with brass inlay detail.',
+        'Incense platform with channel routing. Cedar and stone. Designed for daily ritual.',
+        'A small geometry in solid brass. Heavy for its size. Satisfying to hold.',
+        'Sphere holder in oxidized steel. Adjustable grip. Works with any sphere from 60-100mm.',
+    ],
+    'Spaces': [
+        'Designed for the tea practice. Natural ventilation, low platform seating, bamboo and stone materials.',
+        'A room for listening. Acoustically considered. Single entrance. No windows on the north wall.',
+        'Garden sanctuary built around an existing tree. The tree is the center.',
+        'Meditation alcove within a larger home. Separated from the main living space by a threshold.',
+    ],
+};
+
+const GEN_DIMENSIONS: Record<string, string[]> = {
+    'Universal Language': ['24" Diameter', '30" Diameter', '18" x 24"', '36" Diameter', '12" x 18"'],
+    'Mandala': ['24" Diameter', '30" Diameter', '18" Diameter', '36" Diameter', '12" Diameter'],
+    'Light Codes': ['18" x 24"', '24" x 36"', '12" x 18"', '30" x 40"', '16" x 20"'],
+    'Jewelry': ['2" Pendant', '1.5" Ring', '3" Cuff', '1" Earring Pair', '2.5" Pendant'],
+    'Oracle Cards': ['3.5" x 5" · 40 Cards', '3" x 5" · 44 Cards', '4" x 6" · 36 Cards'],
+    'Tables': ['60" x 24" x 18"', '48" x 20" x 16"', '72" x 30" x 30"', '36" x 18" x 14"'],
+    'Installations': ['Variable', '20ft Wide', '30ft Wide', '40ft x 20ft', '15ft Diameter'],
+    'Objects': ['4" Diameter', '6" x 4"', '3" x 3" x 2"', '8" x 6"'],
+    'Spaces': ['Variable', '12ft x 12ft', '20ft x 15ft', '8ft x 10ft'],
+};
+
+const GEN_MATERIALS: Record<string, string[]> = {
+    'Universal Language': ['Birch, Acrylic', 'Birch, Gold Leaf', 'Plywood, Airbrush', 'Birch, Crystals, Acrylic'],
+    'Mandala': ['Birch, Acrylic', 'Plywood, Gold Leaf', 'Birch, Painted Finish', 'MDF, Metallic Paint'],
+    'Light Codes': ['Basswood, LED', 'Birch, Acrylic, LED', 'Laser Etched Basswood', 'Plywood, RGB LED'],
+    'Jewelry': ['Oxidized Brass', 'Sterling Silver, Labradorite', 'Raw Brass', 'Argentium Silver'],
+    'Oracle Cards': ['Heavyweight Card Stock', 'Matte Laminate Card Stock', 'Textured Art Card'],
+    'Tables': ['Black Walnut, Resin', 'Live Edge Cedar', 'White Oak, Steel Base', 'Black Walnut, Brass Inlay'],
+    'Installations': ['Mixed Media', 'Steel, Fabric', 'Bamboo, Lighting', 'Wood, Projection Surface'],
+    'Objects': ['Walnut, Brass', 'Cedar, Stone', 'Solid Brass', 'Oxidized Steel'],
+    'Spaces': ['Bamboo, Stone', 'Cedar, Glass', 'Mixed Natural Materials', 'Stone, Timber'],
+};
+
+const GEN_YEARS = ['2022', '2023', '2024', '2024', '2023'];
+
 for (let i = 0; i < 30; i++) {
     const catLabel = GEN_CATEGORIES[i % GEN_CATEGORIES.length];
     const availabilities: AvailabilityStatus[] = ['READY_TO_SHIP', 'MADE_TO_ORDER', 'READY_TO_SHIP', 'SOLD', 'MADE_TO_ORDER'];
@@ -310,26 +443,41 @@ for (let i = 0; i < 30; i++) {
     const subcategoryOptions = series ? SUBCATEGORY_BY_SERIES[series] : undefined;
     const subcategory = subcategoryOptions ? subcategoryOptions[i % subcategoryOptions.length] : undefined;
     const isMulti = catLabel === 'Multidimensional Art';
-    // Every 7th multi piece is a signature piece (no series)
     const isSignaturePiece = isMulti && i % 7 === 0;
+
+    // Pull from rich name/description/material pools
+    const titleKey = series || catLabel;
+    const titlePool = GEN_TITLES[titleKey] ?? GEN_TITLES[catLabel] ?? [];
+    const descPool = GEN_DESCRIPTIONS[series || catLabel] ?? GEN_DESCRIPTIONS[catLabel] ?? [];
+    const dimPool = GEN_DIMENSIONS[series || catLabel] ?? GEN_DIMENSIONS[catLabel] ?? ['Variable'];
+    const matPool = GEN_MATERIALS[series || catLabel] ?? GEN_MATERIALS[catLabel] ?? ['Mixed Media'];
+
+    const title = titlePool[i % titlePool.length] ?? `${titleKey} No. ${i + 1}`;
+    const description = descPool[i % descPool.length] ?? 'A study in form and resonance.';
+    const dimensions = dimPool[i % dimPool.length] ?? 'Variable';
+    const material = matPool[i % matPool.length] ?? 'Mixed Media';
+
+    // Vary image aspect ratios to make the masonry feel more natural
+    const aspectSeeds = ['800/800', '800/1100', '1000/800', '800/950', '900/800'];
+    const [w, h] = (aspectSeeds[i % aspectSeeds.length]).split('/');
 
     FULL_ARCHIVE.push({
         id: `GEN-${i}`,
-        title: `${series || catLabel} Study ${i + 1}`,
+        title,
         category: catLabel,
         series: isSignaturePiece ? undefined : series,
-        coverImage: `https://picsum.photos/800/800?random=${100 + i}`,
+        coverImage: `https://picsum.photos/${w}/${h}?random=${100 + i}`,
         images: [],
-        description: 'A study in form and resonance.',
-        year: '2023',
-        dimensions: 'Variable',
-        material: 'Mixed Media',
+        description,
+        year: GEN_YEARS[i % GEN_YEARS.length],
+        dimensions,
+        material,
         finish: isMulti ? FINISH_OPTIONS[i % FINISH_OPTIONS.length] : undefined,
         subcategory,
         isSignaturePiece: isSignaturePiece || undefined,
         illuminated: isMulti && i % 11 === 0 ? true : undefined,
         availability: availabilities[i % availabilities.length],
-        price: 500 + i * 100,
+        price: 500 + i * 75,
         edition: i % 3 === 0 ? `Edition of ${5 + (i % 10)}` : 'Open Edition',
         editionSize: i % 3 === 0 ? 5 + (i % 10) : undefined,
         editionSold: i % 3 === 0 ? Math.min(i % 5, 5 + (i % 10)) : undefined,
