@@ -2,7 +2,9 @@
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useSeoMeta } from './useSeoMeta';
+import { CartProvider } from './CartContext';
 import Navigation from './components/Navigation';
+import CartDrawer from './components/CartDrawer';
 import Home from './components/Home';
 import Hero from './components/Hero';
 import Creations from './components/Creations';
@@ -19,7 +21,7 @@ import Terms from './components/Terms';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
-const App: React.FC = () => {
+const AppInner: React.FC = () => {
   const location = useLocation();
 
   useSeoMeta(location.pathname);
@@ -52,8 +54,15 @@ const App: React.FC = () => {
       </main>
 
       {!isWelcome && <Footer />}
+      <CartDrawer />
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <CartProvider>
+    <AppInner />
+  </CartProvider>
+);
 
 export default App;

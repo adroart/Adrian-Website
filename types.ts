@@ -40,6 +40,7 @@ export interface Product {
   material?: string;
   edition?: string;
   isReadyToShip: boolean;
+  stripeUrl?: string;
 }
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';
