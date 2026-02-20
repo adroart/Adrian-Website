@@ -58,7 +58,7 @@ const PiecePage: React.FC = () => {
     const [buyLoading, setBuyLoading] = useState(false);
     const [buyError, setBuyError] = useState<string | null>(null);
 
-    const handleBuy = async (artPiece: typeof art) => {
+    const handleBuy = async (artPiece: Artwork | undefined) => {
         if (!artPiece) return;
         setBuyLoading(true);
         setBuyError(null);
@@ -379,11 +379,12 @@ const PiecePage: React.FC = () => {
                                     <span className={`font-mono text-xs uppercase tracking-widest ${availabilityColor}`}>Made to order</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price}</span>
                                 </div>
-                                <button
-                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors"
+                                <Link
+                                    to="/inquire"
+                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Configure Design
-                                </button>
+                                    Commission Piece <ArrowRight size={14} />
+                                </Link>
                                 <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
                                     4 to 6 weeks production time
                                 </p>
@@ -437,9 +438,12 @@ const PiecePage: React.FC = () => {
                             {buyLoading ? <Loader2 size={14} className="animate-spin" /> : <>Buy Now <ArrowRight size={14} /></>}
                         </button>
                     ) : (
-                        <button className="px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors">
-                            Configure
-                        </button>
+                        <Link
+                            to="/inquire"
+                            className="px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors"
+                        >
+                            Commission
+                        </Link>
                     )}
                 </div>
             )}

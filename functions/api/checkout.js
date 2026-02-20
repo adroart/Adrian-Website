@@ -13,13 +13,25 @@ export async function onRequestPost(context) {
 
   const origin = request.headers.get('origin') || 'https://adrianrasmussen.com';
 
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': origin,
+  };
+
   let body;
   try {
     body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
+    });
+  }
+
+  if (!env.STRIPE_SECRET_KEY) {
+    return new Response(JSON.stringify({ error: 'Payment system is not configured. Please contact the studio.' }), {
+      status: 503,
+      headers: corsHeaders,
     });
   }
 
@@ -27,7 +39,7 @@ export async function onRequestPost(context) {
   if (!Array.isArray(items) || items.length === 0) {
     return new Response(JSON.stringify({ error: 'items must be a non-empty array' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   }
 
@@ -36,13 +48,13 @@ export async function onRequestPost(context) {
     if (!item.stripePriceId || !item.stripePriceId.startsWith('price_')) {
       return new Response(
         JSON.stringify({ error: `Invalid stripePriceId: ${item.stripePriceId}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       );
     }
     if (!Number.isInteger(item.quantity) || item.quantity < 1) {
       return new Response(
         JSON.stringify({ error: 'quantity must be a positive integer' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       );
     }
   }
@@ -77,25 +89,23 @@ export async function onRequestPost(context) {
     console.error('Stripe error:', session);
     return new Response(
       JSON.stringify({ error: session.error?.message || 'Stripe session creation failed' }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
+      { status: 502, headers: corsHeaders }
     );
   }
 
   return new Response(JSON.stringify({ url: session.url }), {
     status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': origin,
-    },
+    headers: corsHeaders,
   });
 }
 
 // Handle CORS preflight
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const origin = context.request.headers.get('origin') || 'https://adrianrasmussen.com';
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },

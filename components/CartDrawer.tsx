@@ -28,15 +28,22 @@ async function startCheckout(
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Checkout failed');
         window.location.href = data.url;
-    } else {
-        // Fallback: open individual Stripe Payment Links
-        for (const item of items) {
-            const url = item.stripeUrl;
-            if (url && url !== 'https://buy.stripe.com/PLACEHOLDER') {
-                window.open(url, '_blank', 'noopener,noreferrer');
-            }
-        }
+        return;
     }
+
+    // Fallback: open individual Stripe Payment Links for items that have them
+    const itemsWithLinks = items.filter(
+        (i) => i.stripeUrl && i.stripeUrl !== 'https://buy.stripe.com/PLACEHOLDER'
+    );
+    if (itemsWithLinks.length > 0) {
+        for (const item of itemsWithLinks) {
+            window.open(item.stripeUrl, '_blank', 'noopener,noreferrer');
+        }
+        return;
+    }
+
+    // No valid Stripe IDs or payment links — surface a clear error
+    throw new Error('Checkout is not yet configured for these items. Please contact the studio.');
 }
 
 const CartDrawer: React.FC = () => {
@@ -150,9 +157,13 @@ const CartDrawer: React.FC = () => {
                                             {/* Quantity controls */}
                                             <div className="flex items-center border border-wood-200 h-8">
                                                 <button
-                                                    onClick={() => updateQuantity(product.id, -1)}
+                                                    onClick={() =>
+                                                        quantity === 1
+                                                            ? removeFromCart(product.id)
+                                                            : updateQuantity(product.id, -1)
+                                                    }
                                                     className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
-                                                    aria-label="Decrease quantity"
+                                                    aria-label={quantity === 1 ? 'Remove item' : 'Decrease quantity'}
                                                 >
                                                     <Minus size={12} />
                                                 </button>

@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Product } from '../types';
 import { INVENTORY, STORE_CATEGORIES } from '../data/mockData';
 import {
@@ -462,6 +463,24 @@ const Store: React.FC = () => {
     const [sort, setSort] = useState<'NEW' | 'PRICE_ASC' | 'PRICE_DESC'>('NEW');
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(12);
+    const [checkoutBanner, setCheckoutBanner] = useState<'success' | 'cancelled' | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { clearCart, closeCart } = useCart();
+
+    // Handle Stripe redirect back with ?checkout=success|cancelled
+    useEffect(() => {
+        const status = searchParams.get('checkout');
+        if (status === 'success') {
+            clearCart();
+            closeCart();
+            setCheckoutBanner('success');
+            setSearchParams({}, { replace: true });
+        } else if (status === 'cancelled') {
+            setCheckoutBanner('cancelled');
+            setSearchParams({}, { replace: true });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         setIsFiltering(true);
@@ -489,6 +508,26 @@ const Store: React.FC = () => {
 
     return (
         <section className="pt-24 min-h-screen bg-paper-50 animate-fade-in">
+            {checkoutBanner === 'success' && (
+                <div className="bg-green-50 border-b border-green-200 px-6 py-4 flex items-center justify-between">
+                    <p className="font-mono text-xs uppercase tracking-widest text-green-800 font-bold">
+                        Your order was placed successfully. Thank you.
+                    </p>
+                    <button onClick={() => setCheckoutBanner(null)} className="text-green-600 hover:text-green-900 transition-colors">
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
+            {checkoutBanner === 'cancelled' && (
+                <div className="bg-wood-50 border-b border-wood-200 px-6 py-4 flex items-center justify-between">
+                    <p className="font-mono text-xs uppercase tracking-widest text-wood-600 font-bold">
+                        Checkout was cancelled. Your cart has been preserved.
+                    </p>
+                    <button onClick={() => setCheckoutBanner(null)} className="text-wood-400 hover:text-wood-900 transition-colors">
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
             <div className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto border-b border-wood-100 mb-8">
                 <span className="font-mono text-xs uppercase tracking-[0.3em] text-bronze-600 block mb-4 font-bold">Shop</span>
                 <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium tracking-tight">Available Pieces</h1>
