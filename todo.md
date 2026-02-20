@@ -318,7 +318,12 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 
 - [x] ~~Implement cart drawer sliding from right side~~ DONE. CartDrawer.tsx fully implemented with cart context, quantity management, and Stripe Checkout Session integration.
 - [x] ~~Define and implement checkout flow: Review cart, shipping info, payment.~~ DONE. Cart drawer → Stripe Checkout Session handles the full flow.
-- [ ] Implement shipping calculation based on Bali origin. International shipping normalized as standard.
+- [ ] Configure Stripe Shipping Rates for checkout. Code already creates Checkout Sessions with address collection and ships to 30+ countries, but actual shipping rate options need to be created in Stripe Dashboard (Products → Shipping Rates). Decisions needed:
+  - What shipping carrier(s) to use from Bali (DHL, FedEx, local post, etc.)
+  - Flat rate vs. weight-based vs. item-based pricing
+  - Different rates for different regions (e.g., cheaper for SE Asia, more for Europe/US)
+  - Free shipping above a certain order value?
+  - Once rates are created in Stripe, optionally pass shipping rate IDs into the checkout session in `functions/api/checkout.js`
 - [ ] Enable Apple Pay and Google Pay through Stripe.
 - [ ] Implement made-to-order deposit structure: 50% upfront, 50% on completion.
 - [ ] Build post-purchase flow: order confirmation page with warm messaging, confirmation email with timeline expectations, progress update emails at key milestones for made-to-order pieces.

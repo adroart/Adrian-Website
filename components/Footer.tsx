@@ -5,53 +5,47 @@ import { ArrowUpRight, ArrowRight, CheckCircle } from 'lucide-react';
 
 // Kit (ConvertKit) newsletter integration
 // Set VITE_KIT_FORM_ID and VITE_KIT_PUBLIC_API_KEY in .env.local
-const KIT_FORM_ID = import.meta.env.VITE_KIT_FORM_ID as string | undefined;
-const KIT_PUBLIC_API_KEY = import.meta.env.VITE_KIT_PUBLIC_API_KEY as string | undefined;
 
 const NewsletterForm: React.FC = () => {
     const [email, setEmail] = useState('');
-    const [submitted, setSubmitted] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState(false);
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || submitting) return;
-        setSubmitting(true);
-        setError(false);
+        if (!email || status === 'loading') return;
+        setStatus('loading');
 
-        if (KIT_FORM_ID && KIT_PUBLIC_API_KEY) {
-            try {
-                const res = await fetch(
-                    `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            api_key: KIT_PUBLIC_API_KEY,
-                            email,
-                        }),
-                    }
-                );
-                if (!res.ok) throw new Error('Subscribe failed');
-                const data = await res.json();
-                if (data.subscription) {
-                    setSubmitted(true);
-                    setEmail('');
-                } else {
-                    throw new Error('No subscription returned');
+        try {
+            const KIT_FORM_ID = import.meta.env.VITE_KIT_FORM_ID;
+            const KIT_API_KEY = import.meta.env.VITE_KIT_PUBLIC_API_KEY;
+
+            const res = await fetch(
+                `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                    body: JSON.stringify({
+                        api_key: KIT_API_KEY,
+                        email,
+                    }),
                 }
-            } catch {
-                setError(true);
+            );
+
+            const data = await res.json();
+
+            if (data.subscription) {
+                setStatus('success');
+                setEmail('');
+            } else {
+                throw new Error(data.message || 'Subscription failed');
             }
-        } else {
-            // No Kit configured — show success optimistically in development
-            setSubmitted(true);
+        } catch (err) {
+            console.error(err);
+            setStatus('error');
         }
-        setSubmitting(false);
     };
 
-    if (submitted) {
+    if (status === 'success') {
         return (
             <div className="flex items-center gap-2 py-2">
                 <CheckCircle size={14} className="text-bronze-500 shrink-0" />
@@ -63,26 +57,26 @@ const NewsletterForm: React.FC = () => {
     return (
         <div className="w-full md:w-80">
         <form
-            className={`flex border-b ${error ? 'border-red-400' : 'border-wood-400'} focus-within:border-bronze-600 transition-colors pb-1 w-full group`}
+            className={`flex border-b ${status === 'error' ? 'border-red-400' : 'border-wood-400'} focus-within:border-bronze-600 transition-colors pb-1 w-full group`}
             onSubmit={handleSubmit}
         >
             <input
                 type="email"
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(false); }}
+                onChange={(e) => { setEmail(e.target.value); if (status === 'error') setStatus('idle'); }}
                 required
                 className="bg-transparent w-full outline-none text-wood-900 placeholder-wood-400 font-serif text-lg"
             />
             <button
                 type="submit"
-                disabled={submitting}
+                disabled={status === 'loading'}
                 className="text-wood-400 group-hover:text-bronze-600 transition-colors disabled:opacity-40"
             >
                 <ArrowRight size={18} />
             </button>
         </form>
-        {error && (
+        {status === 'error' && (
             <p className="font-serif text-xs text-red-500 mt-1">Something went wrong. Please try again.</p>
         )}
         </div>

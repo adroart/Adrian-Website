@@ -99,7 +99,7 @@ const CreationCategoryCard: React.FC<{
         return (
             <Link
                 to={link}
-                className="group relative aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+                className="group relative block aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
                 aria-label={`Explore ${label}: ${desc}`}
             >
                 {inner}
