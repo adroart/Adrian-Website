@@ -11,11 +11,13 @@ const NewsletterForm: React.FC = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!email || submitting) return;
         setSubmitting(true);
+        setError(false);
 
         if (NEWSLETTER_FORMSPREE_ID) {
             try {
@@ -24,13 +26,16 @@ const NewsletterForm: React.FC = () => {
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                     body: JSON.stringify({ email }),
                 });
-                if (res.ok) setSubmitted(true);
+                if (res.ok) {
+                    setSubmitted(true);
+                } else {
+                    setError(true);
+                }
             } catch {
-                // Silent fail — show success anyway to avoid exposing config state
-                setSubmitted(true);
+                setError(true);
             }
         } else {
-            // No Formspree configured — show success optimistically
+            // No Formspree configured — show success optimistically in development
             setSubmitted(true);
         }
         setSubmitting(false);
@@ -46,15 +51,16 @@ const NewsletterForm: React.FC = () => {
     }
 
     return (
+        <div className="w-full md:w-80">
         <form
-            className="flex border-b border-wood-400 focus-within:border-bronze-600 transition-colors pb-1 w-full md:w-80 group"
+            className={`flex border-b ${error ? 'border-red-400' : 'border-wood-400'} focus-within:border-bronze-600 transition-colors pb-1 w-full group`}
             onSubmit={handleSubmit}
         >
             <input
                 type="email"
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(false); }}
                 required
                 className="bg-transparent w-full outline-none text-wood-900 placeholder-wood-400 font-serif text-lg"
             />
@@ -66,6 +72,10 @@ const NewsletterForm: React.FC = () => {
                 <ArrowRight size={18} />
             </button>
         </form>
+        {error && (
+            <p className="font-serif text-xs text-red-500 mt-1">Something went wrong. Please try again.</p>
+        )}
+        </div>
     );
 };
 

@@ -21,11 +21,34 @@ interface CartContextType {
 }
 
 const CART_STORAGE_KEY = 'adrian_cart_items';
+const MAX_QUANTITY_PER_ITEM = 10;
+
+// Validate a single cart item has the expected shape and safe values
+function isValidCartItem(item: unknown): item is CartItem {
+  if (typeof item !== 'object' || item === null) return false;
+  const obj = item as Record<string, unknown>;
+  if (typeof obj.quantity !== 'number' || !Number.isFinite(obj.quantity) || obj.quantity < 1) return false;
+  if (typeof obj.product !== 'object' || obj.product === null) return false;
+  const prod = obj.product as Record<string, unknown>;
+  if (typeof prod.id !== 'string' || prod.id.length === 0) return false;
+  if (typeof prod.title !== 'string') return false;
+  if (typeof prod.price !== 'number' || !Number.isFinite(prod.price) || prod.price < 0) return false;
+  return true;
+}
 
 function loadCartFromStorage(): CartItem[] {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Validate each item and clamp quantities
+    return parsed
+      .filter(isValidCartItem)
+      .map(item => ({
+        ...item,
+        quantity: Math.min(item.quantity, MAX_QUANTITY_PER_ITEM),
+      }));
   } catch {
     return [];
   }
@@ -51,7 +74,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) {
         return prev.map(i =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.product.id === product.id
+            ? { ...i, quantity: Math.min(i.quantity + 1, MAX_QUANTITY_PER_ITEM) }
+            : i
         );
       }
       return [...prev, { product, quantity: 1 }];
@@ -66,7 +91,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateQuantity = useCallback((productId: string, delta: number) => {
     setItems(prev =>
       prev
-        .map(i => i.product.id === productId ? { ...i, quantity: i.quantity + delta } : i)
+        .map(i => i.product.id === productId
+          ? { ...i, quantity: Math.min(Math.max(i.quantity + delta, 0), MAX_QUANTITY_PER_ITEM) }
+          : i
+        )
         .filter(i => i.quantity > 0)
     );
   }, []);

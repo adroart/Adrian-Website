@@ -33,6 +33,14 @@ const CATEGORY_FEATURED: Record<StoryCategory, { heading: string; body: string }
     },
 };
 
+// Safely serialize data for embedding in <script type="application/ld+json"> tags.
+function safeJsonLd(data: unknown): string {
+    return JSON.stringify(data)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026');
+}
+
 // --- Individual Article View ---
 export const WritingArticle: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -87,7 +95,7 @@ export const WritingArticle: React.FC = () => {
         <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(articleSchema) }}
             />
             <div className="max-w-3xl mx-auto">
                 <div className="flex justify-between items-center mb-12">
