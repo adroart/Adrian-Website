@@ -38,10 +38,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div style={{ padding: '40px', fontFamily: 'monospace', color: '#7f1d1d', background: '#fef2f2', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>System Error</h1>
-          <p style={{marginBottom: '20px'}}>The application encountered an unexpected state.</p>
-          <pre style={{ padding: '20px', background: 'white', border: '1px solid #ef4444', maxWidth: '800px', overflow: 'auto' }}>
-            {this.state.error?.toString()}
-          </pre>
+          <p style={{marginBottom: '20px'}}>The application encountered an unexpected state. Please reload the page.</p>
           <button
             onClick={() => window.location.reload()}
             style={{ marginTop: '20px', padding: '10px 20px', background: '#262321', color: '#f5f4f0', border: 'none', cursor: 'pointer', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '2px' }}

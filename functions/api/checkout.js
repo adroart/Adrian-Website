@@ -20,10 +20,37 @@ const SHIPPING_COUNTRIES = [
   'BR', 'MX', 'AR',
 ];
 
+// Allowed origins for CORS and redirect URLs.
+// Add localhost variants for local development as needed.
+const ALLOWED_ORIGINS = [
+  'https://adrianrasmussen.com',
+  'https://www.adrianrasmussen.com',
+  'https://adrian-rasmussen-art.pages.dev',
+];
+
+// In development, also allow localhost origins
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow localhost for development
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+const MAX_ITEMS = 20;
+const MAX_QUANTITY_PER_ITEM = 10;
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  const origin = request.headers.get('origin') || 'https://adrianrasmussen.com';
+  const requestOrigin = request.headers.get('origin') || '';
+  const origin = isAllowedOrigin(requestOrigin)
+    ? requestOrigin
+    : ALLOWED_ORIGINS[0];
 
   const corsHeaders = {
     'Content-Type': 'application/json',
@@ -55,17 +82,24 @@ export async function onRequestPost(context) {
     });
   }
 
+  if (items.length > MAX_ITEMS) {
+    return new Response(JSON.stringify({ error: `Too many items. Maximum is ${MAX_ITEMS}.` }), {
+      status: 400,
+      headers: corsHeaders,
+    });
+  }
+
   // Validate each item has a real price ID (not a placeholder)
   for (const item of items) {
-    if (!item.stripePriceId || !item.stripePriceId.startsWith('price_')) {
+    if (typeof item.stripePriceId !== 'string' || !item.stripePriceId.startsWith('price_')) {
       return new Response(
-        JSON.stringify({ error: `Invalid stripePriceId: ${item.stripePriceId}` }),
+        JSON.stringify({ error: 'One or more items have an invalid price identifier.' }),
         { status: 400, headers: corsHeaders }
       );
     }
-    if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_QUANTITY_PER_ITEM) {
       return new Response(
-        JSON.stringify({ error: 'quantity must be a positive integer' }),
+        JSON.stringify({ error: `Quantity must be between 1 and ${MAX_QUANTITY_PER_ITEM}.` }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -106,9 +140,10 @@ export async function onRequestPost(context) {
   const session = await stripeRes.json();
 
   if (!stripeRes.ok || !session.url) {
-    console.error('Stripe error:', session);
+    // Log full error server-side for debugging, but never expose to client
+    console.error('Stripe error:', JSON.stringify(session));
     return new Response(
-      JSON.stringify({ error: session.error?.message || 'Stripe session creation failed' }),
+      JSON.stringify({ error: 'Payment session could not be created. Please try again or contact the studio.' }),
       { status: 502, headers: corsHeaders }
     );
   }
@@ -121,7 +156,11 @@ export async function onRequestPost(context) {
 
 // Handle CORS preflight
 export async function onRequestOptions(context) {
-  const origin = context.request.headers.get('origin') || 'https://adrianrasmussen.com';
+  const requestOrigin = context.request.headers.get('origin') || '';
+  const origin = isAllowedOrigin(requestOrigin)
+    ? requestOrigin
+    : ALLOWED_ORIGINS[0];
+
   return new Response(null, {
     status: 204,
     headers: {

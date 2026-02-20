@@ -8,6 +8,16 @@ import { useCart } from '../CartContext';
 
 // --- Helpers ---
 
+// Safely serialize data for embedding in <script type="application/ld+json"> tags.
+// JSON.stringify does NOT escape </script>, so a malicious value could break out of
+// the script element. This escapes <, >, and & to their unicode equivalents.
+function safeJsonLd(data: unknown): string {
+    return JSON.stringify(data)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026');
+}
+
 // Determine illumination tier from a size string like '24"', '36"', '16"'
 function getIlluminationTier(sizeStr: string): 'none' | 'medium' | 'large' | 'major' {
     const match = sizeStr.match(/(\d+)/);
@@ -323,11 +333,11 @@ const PiecePage: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(productSchema) }}
             />
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
             />
 
             {/* Breadcrumb */}

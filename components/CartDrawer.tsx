@@ -7,6 +7,26 @@ import { useCart } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
 
+// Validate that a URL is a legitimate Stripe checkout URL before redirecting
+function isValidStripeUrl(url: string): boolean {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' &&
+            (parsed.hostname === 'checkout.stripe.com' || parsed.hostname.endsWith('.stripe.com'));
+    } catch {
+        return false;
+    }
+}
+
+function isValidStripePaymentLink(url: string): boolean {
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' && parsed.hostname === 'buy.stripe.com';
+    } catch {
+        return false;
+    }
+}
+
 async function startCheckout(
     items: Array<{ stripePriceId?: string; stripeUrl?: string; addOnPriceIds?: string[]; quantity: number; title: string }>
 ): Promise<void> {
@@ -39,13 +59,16 @@ async function startCheckout(
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Checkout failed');
+        if (!data.url || !isValidStripeUrl(data.url)) {
+            throw new Error('Received an invalid checkout URL. Please try again or contact the studio.');
+        }
         window.location.href = data.url;
         return;
     }
 
     // Fallback: open individual Stripe Payment Links for items that have them
     const itemsWithLinks = items.filter(
-        (i) => i.stripeUrl && i.stripeUrl !== 'https://buy.stripe.com/PLACEHOLDER'
+        (i) => i.stripeUrl && i.stripeUrl !== 'https://buy.stripe.com/PLACEHOLDER' && isValidStripePaymentLink(i.stripeUrl!)
     );
     if (itemsWithLinks.length > 0) {
         for (const item of itemsWithLinks) {
