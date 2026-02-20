@@ -67,6 +67,9 @@ export const FULL_ARCHIVE: Artwork[] = [
         availability: 'READY_TO_SHIP',
         price: 1850,
         edition: 'Edition of 10',
+        editionSize: 10,
+        editionSold: 3,
+        editionNumber: 4,
         featured: true
     },
     {
@@ -140,6 +143,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         availability: 'MADE_TO_ORDER',
         price: 2800,
         edition: 'Edition of 5',
+        editionSize: 5,
+        editionSold: 3,
         featured: true
     }
 ];
@@ -161,6 +166,8 @@ for(let i=0; i<30; i++) {
         availability: availabilities[i % availabilities.length],
         price: 500 + (i * 100),
         edition: i % 3 === 0 ? `Edition of ${5 + (i % 10)}` : 'Open Edition',
+        editionSize: i % 3 === 0 ? 5 + (i % 10) : undefined,
+        editionSold: i % 3 === 0 ? Math.min(i % 5, 5 + (i % 10)) : undefined,
         featured: false
     });
 }
