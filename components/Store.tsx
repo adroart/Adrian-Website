@@ -351,10 +351,10 @@ const InspectionDrawer: React.FC<{
                             </button>
                         ) : (
                             <a
-                                href="/inquire"
+                                href={`/creations/${product.id}`}
                                 className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
                             >
-                                Commission Piece <ArrowRight size={16} />
+                                Configure <ArrowRight size={16} />
                             </a>
                         )
                     ) : (

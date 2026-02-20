@@ -1,5 +1,11 @@
 export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 
+export interface MadeToOrderSize {
+  size: string;           // e.g., '16"', '24"', '36"'
+  price: number;          // [DUMMY] placeholder — replace before going live
+  stripePriceId?: string; // Stripe Price ID for this size (e.g. price_xxx)
+}
+
 export interface Artwork {
   id: string;
   title: string;
@@ -16,7 +22,7 @@ export interface Artwork {
   // Master Doc Fields
   featured?: boolean; // For "Selected Works"
   availability: AvailabilityStatus;
-  price?: number; // Optional if Sold
+  price?: number; // Optional if Sold. For MTO with madeToOrderSizes, use lowest size price.
   edition?: string; // e.g. "Edition of 10"
   editionSize?: number; // Total edition size (e.g. 10)
   editionSold?: number; // How many have sold
@@ -27,6 +33,10 @@ export interface Artwork {
   // Commerce
   stripePriceId?: string; // Stripe Price ID (price_xxx) for Checkout Session API
   stripeUrl?: string;     // Legacy: direct Stripe Payment Link (fallback)
+
+  // Made-to-order sizing — if set, piece page shows full MTO template
+  // Each size has its own Stripe Price ID
+  madeToOrderSizes?: MadeToOrderSize[];
 
   // Architecture update fields
   illuminated?: boolean; // Piece has LED/light work
@@ -63,6 +73,8 @@ export interface Product {
   isReadyToShip: boolean;
   stripeUrl?: string;       // Legacy: direct Stripe Payment Link (fallback)
   stripePriceId?: string;   // Stripe Price ID (price_xxx) for Checkout Session API
+  // For configured made-to-order items: add-on Stripe Price IDs sent as additional line items
+  addOnPriceIds?: string[];
 }
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';
@@ -75,11 +87,11 @@ export interface Story {
   date: string;
   category: StoryCategory; // Updated from 'type'
   excerpt: string;
-  content: string[]; 
-  image?: string; 
+  content: string[];
+  image?: string;
   readMinutes: number;
   tags: string[];
-  
+
   isFeatured?: boolean;
-  relatedArtifactId?: string; 
+  relatedArtifactId?: string;
 }
