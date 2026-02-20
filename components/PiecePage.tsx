@@ -345,6 +345,17 @@ const PiecePage: React.FC = () => {
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
 
+                {/* Non-Multidimensional category breadcrumb */}
+                {!isMultidimensional && art.category && (
+                    <>
+                        <Link to={`/creations?category=${encodeURIComponent(art.category)}`} className="hover:text-wood-900 transition-colors">
+                            {art.category}
+                        </Link>
+                        <span className="text-wood-300">/</span>
+                    </>
+                )}
+
+                {/* Multidimensional Art hierarchy */}
                 {isMultidimensional && (
                     <>
                         <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">
