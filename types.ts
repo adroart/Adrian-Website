@@ -18,6 +18,9 @@ export interface Artwork {
   availability: AvailabilityStatus;
   price?: number; // Optional if Sold
   edition?: string; // e.g. "Edition of 10"
+  editionSize?: number; // Total edition size (e.g. 10)
+  editionSold?: number; // How many have sold
+  editionNumber?: number; // This specific piece's number in the edition
 
   createdDate?: Date;
 
@@ -54,6 +57,7 @@ export interface Product {
   material?: string;
   edition?: string;
   isReadyToShip: boolean;
+  stripeUrl?: string;
 }
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';

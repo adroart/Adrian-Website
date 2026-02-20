@@ -5,8 +5,9 @@ import { Product } from '../types';
 import { INVENTORY, STORE_CATEGORIES } from '../data/mockData';
 import {
     X, Search, SlidersHorizontal, ArrowRight, Eye, ShieldCheck,
-    Maximize2, ArrowLeft, Package
+    Maximize2, ArrowLeft, Package, ShoppingBag, Check
 } from 'lucide-react';
+import { useCart } from '../CartContext';
 
 // --- HELPERS ---
 
@@ -114,22 +115,15 @@ const VisualLightbox: React.FC<{ src: string; onClose: () => void; }> = ({ src, 
     );
 };
 
-const SacredGeometryLoader: React.FC<{ dark?: boolean }> = ({ dark = false }) => {
-    const border = dark ? 'border-wood-300' : 'border-stone-700';
-    const dashed = dark ? 'border-wood-400/50' : 'border-bronze-500/50';
-    const inner = dark ? 'border-wood-500' : 'border-bronze-500';
-    const core = dark ? 'bg-wood-900' : 'bg-bronze-500';
-
-    return (
-        <div className="relative flex items-center justify-center w-16 h-16">
-            <div className={`absolute inset-0 border ${border} opacity-50 rounded-full animate-[spin_12s_linear_infinite]`}></div>
-            <div className={`absolute inset-2 border border-dashed ${dashed} rounded-full animate-[spin_15s_linear_infinite_reverse]`}></div>
-            <div className={`absolute w-[60%] h-[60%] border ${inner} opacity-40 animate-[spin_6s_linear_infinite]`}></div>
-            <div className={`absolute w-[60%] h-[60%] border ${inner} opacity-40 animate-[spin_6s_linear_infinite] rotate-45`}></div>
-            <div className={`w-1.5 h-1.5 ${core} rounded-full animate-pulse shadow-sm`}></div>
+const SkeletonCard: React.FC = () => (
+    <div className="flex flex-col animate-pulse">
+        <div className="w-full bg-wood-200 aspect-[4/5] md:h-[500px]"></div>
+        <div className="mt-4 space-y-2 px-1">
+            <div className="h-6 bg-wood-200 rounded w-3/4"></div>
+            <div className="h-4 bg-wood-100 rounded w-1/2"></div>
         </div>
-    );
-};
+    </div>
+);
 
 const CuratorialBlock: React.FC = () => (
     <div className="col-span-1 md:col-span-2 lg:col-span-2 aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-8 md:p-12 text-center border border-wood-900">
@@ -156,10 +150,10 @@ const ProductCard: React.FC<{
             onClick={onClick}
             className={`group relative flex flex-col cursor-pointer ${spanClass} mb-12 md:mb-0`}
         >
-            <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-4 aspect-[4/5] md:aspect-auto md:h-[500px]">
+            <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
                 <img
                     src={product.image}
-                    alt={product.title}
+                    alt={`${product.title} by Adrian Rasmussen, ${product.material || 'mixed media'}`}
                     onLoad={() => setLoaded(true)}
                     className={`
                         w-full h-full object-cover transition-all duration-[1.5s] ease-out transform
@@ -176,9 +170,8 @@ const ProductCard: React.FC<{
                 )}
 
                 {product.available && !product.isReadyToShip && (
-                    <div className="absolute top-4 right-4 bg-bronze-700/90 text-paper-50 px-3 py-1.5 text-xs font-mono uppercase tracking-widest border border-bronze-600 shadow-xl font-bold flex items-center gap-1.5">
-                        <Package size={10} />
-                        Made to Order
+                    <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-mono uppercase tracking-widest border border-wood-200 text-avail-order font-bold">
+                        Made to order
                     </div>
                 )}
 
@@ -222,6 +215,8 @@ const InspectionDrawer: React.FC<{
 }> = ({ product, onClose, onViewImage }) => {
     const [animClass, setAnimClass] = useState('translate-x-full');
     const [loaded, setLoaded] = useState(false);
+    const { addToCart, items } = useCart();
+    const inCart = product ? items.some(i => i.product.id === product.id) : false;
 
     useEffect(() => {
         if (product) {
@@ -332,7 +327,7 @@ const InspectionDrawer: React.FC<{
                             <Package size={20} className="text-bronze-600 shrink-0" />
                             <div className="flex flex-col">
                                  <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Made to Order</span>
-                                 <span className="text-xs text-wood-600 font-serif">This piece is crafted upon commission. Lead time is 4–6 weeks.</span>
+                                 <span className="text-xs text-wood-600 font-serif">This piece is crafted upon commission. Lead time is 4 to 6 weeks.</span>
                             </div>
                         </div>
                     )}
@@ -347,14 +342,12 @@ const InspectionDrawer: React.FC<{
                     </div>
                     {product.available ? (
                         product.isReadyToShip ? (
-                            <a
-                                href="https://buy.stripe.com/PLACEHOLDER"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
+                            <button
+                                onClick={() => addToCart(product)}
+                                className={`w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg ${inCart ? 'bg-bronze-700 text-paper-50' : 'bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl'}`}
                             >
-                                Buy Now <ArrowRight size={16} />
-                            </a>
+                                {inCart ? <><Check size={16} /> Added to Cart</> : <><ShoppingBag size={16} /> Add to Cart</>}
+                            </button>
                         ) : (
                             <a
                                 href="/inquire"
@@ -495,7 +488,7 @@ const Store: React.FC = () => {
     }, [filters, sort, search]);
 
     return (
-        <section className="pt-24 min-h-screen bg-paper-50">
+        <section className="pt-24 min-h-screen bg-paper-50 animate-fade-in">
             <div className="pt-16 pb-12 px-6 text-center max-w-4xl mx-auto border-b border-wood-100 mb-8">
                 <span className="font-mono text-xs uppercase tracking-[0.3em] text-bronze-600 block mb-4 font-bold">Shop</span>
                 <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium tracking-tight">Available Pieces</h1>
@@ -514,9 +507,9 @@ const Store: React.FC = () => {
             />
             <main className="max-w-[1800px] mx-auto px-6 py-12 min-h-[60vh] relative">
                 {isFiltering ? (
-                    <div className="flex flex-col items-center justify-center py-32">
-                         <SacredGeometryLoader dark />
-                         <span className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-wood-400 animate-pulse font-bold">Loading...</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+                         <SkeletonCard /><SkeletonCard /><SkeletonCard />
+                         <SkeletonCard /><SkeletonCard /><SkeletonCard />
                     </div>
                 ) : filteredProducts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 text-center">

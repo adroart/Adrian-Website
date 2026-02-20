@@ -1,9 +1,40 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Artwork } from '../types';
+import { Artwork, AvailabilityStatus } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, Lock, ArrowUpRight, BookOpen } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Share2, BookOpen } from 'lucide-react';
+
+// Progressive scarcity edition display per tech spec
+function getEditionDisplay(art: Artwork): string | null {
+    if (art.editionSize) {
+        const sold = art.editionSold || 0;
+        const percentSold = (sold / art.editionSize) * 100;
+
+        if (percentSold >= 100) return 'Edition closed';
+
+        // Ready-to-ship: show specific piece number
+        if (art.availability === 'READY_TO_SHIP' && art.editionNumber) {
+            return `Edition of ${art.editionSize} · #${art.editionNumber} · Signed and numbered`;
+        }
+
+        // Progressive scarcity rules
+        if (percentSold >= 90) return `Edition of ${art.editionSize} · Final one available`;
+        if (percentSold >= 70) return `Edition of ${art.editionSize} · Few remaining`;
+        if (percentSold >= 40) {
+            const remaining = art.editionSize - sold;
+            return `Edition of ${art.editionSize} · ${remaining} remaining`;
+        }
+        return `Limited edition of ${art.editionSize}`;
+    }
+    return art.edition || null;
+}
+
+// Check if edition is fully closed
+function isEditionClosed(art: Artwork): boolean {
+    if (!art.editionSize || !art.editionSold) return false;
+    return art.editionSold >= art.editionSize;
+}
 
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -74,6 +105,15 @@ const PiecePage: React.FC = () => {
     const signaturePiecesLink = isMultidimensional && art.isSignaturePiece
         ? '/creations/multidimensional-art/signature-pieces'
         : null;
+    const editionText = getEditionDisplay(art);
+    const editionClosed = isEditionClosed(art);
+
+    // Availability text color per spec
+    const availabilityColor = art.availability === 'READY_TO_SHIP'
+        ? 'text-avail-ready font-medium'
+        : art.availability === 'MADE_TO_ORDER'
+        ? 'text-avail-order'
+        : 'text-avail-sold';
 
     const productSchema = {
         '@context': 'https://schema.org',
@@ -95,11 +135,41 @@ const PiecePage: React.FC = () => {
         }),
     };
 
+    // BreadcrumbList schema
+    const breadcrumbItems = [
+        { '@type': 'ListItem', position: 1, name: 'Creations', item: 'https://adrianrasmussen.com/creations' },
+    ];
+    if (art.series && seriesSlug) {
+        breadcrumbItems.push({
+            '@type': 'ListItem', position: 2, name: art.series, item: `https://adrianrasmussen.com/series/${seriesSlug}`,
+        });
+        breadcrumbItems.push({
+            '@type': 'ListItem', position: 3, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+        });
+    } else {
+        breadcrumbItems.push({
+            '@type': 'ListItem', position: 2, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
+        });
+    }
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbItems,
+    };
+
+    // Middle dot separator for inline details
+    const detailParts = [art.dimensions, art.material, art.year].filter(Boolean);
+    const detailString = detailParts.join(' · ');
+
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
             />
             {/* Breadcrumb */}
             <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
@@ -218,11 +288,9 @@ const PiecePage: React.FC = () => {
                         <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-tight mb-6 font-medium">
                             {art.title}
                         </h1>
-                        <div className="grid grid-cols-2 gap-y-2 font-serif text-lg text-wood-700">
-                            {art.dimensions && <p>{art.dimensions}</p>}
-                            {art.material && <p>{art.material}</p>}
-                            <p>{art.year}</p>
-                            {art.edition && <p className="text-bronze-600">{art.edition}</p>}
+                        <div className="font-serif text-lg text-wood-700 space-y-2">
+                            <p>{detailString}</p>
+                            {editionText && <p className="text-bronze-600">{editionText}</p>}
                         </div>
                     </div>
 
@@ -244,10 +312,22 @@ const PiecePage: React.FC = () => {
                     )}
 
                     <div className="border-t border-wood-200 pt-8 space-y-4">
-                        {art.availability === 'READY_TO_SHIP' ? (
+                        {editionClosed ? (
+                            <div className="space-y-4">
+                                <div className="w-full py-4 border border-wood-200 text-avail-sold font-mono text-xs uppercase tracking-[0.2em] flex items-center justify-center">
+                                    Edition closed
+                                </div>
+                                <Link
+                                    to="/inquire"
+                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                >
+                                    Commission a new original on this form <ArrowRight size={14} />
+                                </Link>
+                            </div>
+                        ) : art.availability === 'READY_TO_SHIP' ? (
                             <>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Ready to Ship</span>
+                                    <span className={`font-mono text-xs uppercase tracking-widest ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">${art.price}</span>
                                 </div>
                                 <a
@@ -259,13 +339,13 @@ const PiecePage: React.FC = () => {
                                     Buy Now <ArrowRight size={16} />
                                 </a>
                                 <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
-                                    Ships from Bali &bull; Arrives in 2-3 weeks
+                                    Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
                             </>
                         ) : art.availability === 'MADE_TO_ORDER' ? (
                             <>
                                 <div className="flex justify-between items-center mb-4">
-                                    <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Made to Order</span>
+                                    <span className={`font-mono text-xs uppercase tracking-widest ${availabilityColor}`}>Made to order</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price}</span>
                                 </div>
                                 <button
@@ -274,23 +354,65 @@ const PiecePage: React.FC = () => {
                                     Configure Design
                                 </button>
                                 <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
-                                    4-6 Weeks Production Time
+                                    4 to 6 weeks production time
                                 </p>
                             </>
                         ) : (
-                            <div className="w-full py-4 border border-wood-200 text-wood-400 font-mono text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 cursor-not-allowed">
-                                <Lock size={14} /> Sold Out
+                            <div className="space-y-4">
+                                <div className={`w-full py-4 border border-wood-200 ${availabilityColor} font-mono text-xs uppercase tracking-[0.2em] flex items-center justify-center`}>
+                                    Sold
+                                </div>
+                                <Link
+                                    to="/inquire"
+                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                >
+                                    Commission a new original on this form <ArrowRight size={14} />
+                                </Link>
                             </div>
                         )}
                     </div>
 
-                    {/* Category tag */}
-                    <div className="mt-8 pt-8 border-t border-wood-200">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">Category</span>
-                        <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
+                    {/* Share + Category */}
+                    <div className="mt-8 pt-8 border-t border-wood-200 flex justify-between items-start">
+                        <div>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">Category</span>
+                            <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
+                        </div>
+                        {typeof navigator !== 'undefined' && 'share' in navigator && (
+                            <button
+                                onClick={() => navigator.share({ title: art.title, url: window.location.href })}
+                                className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                                aria-label="Share this piece"
+                            >
+                                <Share2 size={14} /> Share
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Sticky Bottom Bar (Mobile) */}
+            {art.availability !== 'SOLD' && !editionClosed && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                    <span className="font-serif text-xl text-wood-900 font-medium">
+                        {art.availability === 'MADE_TO_ORDER' ? `From $${art.price}` : `$${art.price}`}
+                    </span>
+                    {art.availability === 'READY_TO_SHIP' ? (
+                        <a
+                            href="https://buy.stripe.com/PLACEHOLDER"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-8 py-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center gap-2"
+                        >
+                            Buy Now <ArrowRight size={14} />
+                        </a>
+                    ) : (
+                        <button className="px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-wood-900 hover:text-paper-50 transition-colors">
+                            Configure
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Related Pieces */}
             {relatedPieces.length > 0 && (
@@ -307,24 +429,23 @@ const PiecePage: React.FC = () => {
                                 to={`/creations/${related.id}`}
                                 className="group"
                             >
-                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
+                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
                                     <img
                                         src={related.coverImage}
-                                        alt={related.title}
+                                        alt={`${related.title} by Adrian Rasmussen`}
+                                        loading="lazy"
                                         className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
-                                    {related.availability === 'READY_TO_SHIP' && (
-                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[9px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
-                                            Ready to Ship
-                                        </div>
-                                    )}
                                 </div>
                                 <div className="mt-4">
                                     <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
-                                    <p className="font-mono text-[10px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
-                                        {related.category} {related.availability === 'SOLD' && '• Sold'}
+                                    <p className="font-mono text-[10px] uppercase tracking-widest mt-1">
+                                        <span className="text-wood-500 font-bold">{related.category}</span>
+                                        {related.availability === 'SOLD' && <span className="text-avail-sold font-bold"> · Sold</span>}
+                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready font-bold"> · Ready to ship</span>}
+                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order font-bold"> · Made to order</span>}
                                     </p>
                                 </div>
                             </Link>

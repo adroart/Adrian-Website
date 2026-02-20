@@ -1,20 +1,21 @@
 
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FULL_ARCHIVE, STORIES } from '../data/mockData';
+import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 
 const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
     <div className="group cursor-pointer break-inside-avoid mb-8">
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200">
+        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
             <img
                 src={art.coverImage}
-                alt={art.title}
+                alt={`${art.title} by Adrian Rasmussen`}
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                loading="lazy"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-wood-900 shadow-sm border border-wood-200">
-                    Ready to Ship
+                <div className="absolute top-4 right-4 bg-paper-50/90 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-avail-ready shadow-sm border border-wood-200 font-medium">
+                    Ready to ship
                 </div>
             )}
             <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/5 transition-colors duration-500"></div>
@@ -27,8 +28,8 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
                 <span className="font-mono text-[10px] uppercase tracking-widest text-wood-500 font-bold">{art.category}</span>
                 {art.price && (
                     <>
-                        <span className="text-wood-300 text-[10px]">•</span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-wood-900 font-bold">
+                        <span className="text-wood-300 text-[10px]">·</span>
+                        <span className={`font-mono text-[10px] uppercase tracking-widest font-bold ${art.availability === 'SOLD' ? 'text-avail-sold' : 'text-wood-900'}`}>
                             {art.availability === 'SOLD' ? 'Sold' : `From $${art.price}`}
                         </span>
                     </>
@@ -66,10 +67,9 @@ const PathwayBlock: React.FC<{
 const Home: React.FC = () => {
 
     const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
-    const featuredWritings = useMemo(() => STORIES.slice(0, 3), []);
 
     return (
-        <div className="bg-paper-50 min-h-screen">
+        <div className="bg-paper-50 min-h-screen animate-fade-in">
 
             {/* 3.2 Introduction */}
             <section className="py-24 md:py-32 px-6">
@@ -77,6 +77,11 @@ const Home: React.FC = () => {
                     <p className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-relaxed font-light">
                         "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </p>
+                    <div className="mt-12 space-y-6 text-left md:text-center">
+                        <p className="font-serif text-lg md:text-xl text-wood-600 leading-relaxed font-light">
+                            My pieces bring people together. They find a way of speaking directly through the heart. If someone does not already understand what they are looking at, the art is reminding them. Something they can feel without reading a word.
+                        </p>
+                    </div>
                     <div className="mt-12 flex flex-col items-center gap-4">
                         <div className="w-px h-16 bg-wood-300"></div>
                         <span className="font-mono text-xs uppercase tracking-[0.3em] text-wood-500 font-bold">Welcome</span>
@@ -123,14 +128,14 @@ const Home: React.FC = () => {
                 <div className="max-w-4xl mx-auto relative z-10">
                     <h2 className="font-serif text-3xl md:text-5xl leading-tight mb-8 font-medium">
                         The geometry is exact. The laser is precise. <br/>
-                        <span className="text-bronze-300">But we humans embrace the imperfect.</span>
+                        <span className="text-bronze-300">But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.</span>
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-lg font-serif font-light text-paper-200 leading-relaxed">
                         <p>
-                            Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms. The laser-cut shape is the canvas. The painting is the art.
+                            Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
                         </p>
                         <p>
-                            Every piece touched by the Technician of the Sacred. Not one person, but a way. Many hands, different origins, one mother. Earth.
+                            Between the endless ceremony, art is our prayer. Every piece touched by the Technician of the Sacred, yet it is not any one of us but a way. A family, different origins, one mother, earth.
                         </p>
                     </div>
                 </div>
@@ -166,21 +171,39 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {featuredWritings.map(story => (
-                            <Link
-                                key={story.id}
-                                to="/writings"
-                                className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
-                            >
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">{story.category}</span>
-                                <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                    {story.title}
-                                </h3>
-                                <p className="font-serif text-wood-600 font-light line-clamp-3 leading-relaxed">
-                                    {story.excerpt}
-                                </p>
-                            </Link>
-                        ))}
+                        <Link
+                            to="/writings"
+                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
+                        >
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
+                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
+                                Deep explorations of subjects earned through experience
+                            </h3>
+                        </Link>
+                        <Link
+                            to="/writings"
+                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
+                        >
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
+                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
+                                Meaning and origins within the work
+                            </h3>
+                        </Link>
+                        <Link
+                            to="/writings"
+                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
+                        >
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
+                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
+                                How I create
+                            </h3>
+                        </Link>
+                    </div>
+
+                    <div className="mt-8 md:hidden text-center">
+                        <Link to="/writings" className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold">
+                            Explore All Writings
+                        </Link>
                     </div>
                 </div>
             </section>
