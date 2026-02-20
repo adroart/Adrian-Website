@@ -28,10 +28,8 @@ These are significant contradictions between what the plan states and what the c
 - **Reality:** Categories are handled via client-side filtering on `/creations`. Clicking a category sets a filter state, not a route change.
 - **Action:** Either implement dedicated category routes (better for SEO and shareability) or update the plan to reflect the filter-based approach. Dedicated routes are better for AEO/SEO strategy described in Section 12.7.
 
-### 1.5 Writings Don't Have Individual URLs
-- **Plan (Section 2.2):** `/writings/[post-slug]` for individual pieces.
-- **Reality:** Writings.tsx handles story display inline via component state. No separate routes, no shareable URLs per article.
-- **Action:** Implement individual writing routes. This is critical for the AEO strategy (Section 12.7) - AI models can't reference content that doesn't have its own URL.
+### ~~1.5 Writings Don't Have Individual URLs~~ RESOLVED
+~~Writings now have individual routes at `/writings/:slug`.~~
 
 ### 1.6 Welcome Page Links Don't Match Plan
 - **Plan (Section 12.6):** Links should be: New Pieces > Shop, The Story > About, Writings > Writings, Work With Me > Inquire, Inner Circle > ConvertKit signup.
@@ -48,29 +46,27 @@ The entire modal system with tabs for Finishes, Crystals, Illumination, and Fram
 ### 2.2 Made-to-Order Configuration UI (Section 7.2)
 Plan describes: size selection with prices, add-on checkboxes (crystals, wood frame, illumination, custom frame), dynamic total updates, and conditional CTA changes. PiecePage.tsx only has a static "Configure Design" button that does nothing.
 
-### 2.3 Sold Piece Behavior (Section 7.6)
-- **Plan:** Sold pieces show "Commission a new original on this form" linking to Inquire.
-- **Reality:** PiecePage.tsx shows "Sold Out" with a lock icon and no actionable link.
-- **Action:** Add commission link for sold pieces.
+### ~~2.3 Sold Piece Behavior (Section 7.6)~~ RESOLVED
+~~Sold pieces now show "Commission a new original on this form" linking to /inquire.~~
 
-### 2.4 Share Button on Piece Pages (Section 12.6)
-Plan describes a subtle share icon triggering native share sheet (`navigator.share`). Not implemented on any piece page.
+### ~~2.4 Share Button on Piece Pages (Section 12.6)~~ RESOLVED
+~~Share button implemented using `navigator.share` API with fallback detection.~~
 
-### 2.5 Sticky Bottom Bar on Mobile Piece Pages (Section 12.5)
-Plan specifies "Sticky bottom bar: price + primary CTA always visible" on mobile. Not implemented.
+### ~~2.5 Sticky Bottom Bar on Mobile Piece Pages (Section 12.5)~~ RESOLVED
+~~Sticky bottom bar with price + CTA now shows on mobile (below lg breakpoint).~~
 
 ### 2.6 Dedicated "Available Now" Section on Creations Landing (Section 5.4)
 Plan describes a separate "Available Now" section with its own heading and grid, distinct from "Selected Works." Creations.tsx has a toggle filter but not a separate section.
 
-### 2.7 Image Lazy Loading (Section 12.5)
-Plan requires lazy loading for images below the fold. No `loading="lazy"` attributes on any `<img>` tags in the codebase.
+### ~~2.7 Image Lazy Loading (Section 12.5)~~ RESOLVED
+~~`loading="lazy"` added to all below-fold images across all components.~~
 
 ### 2.8 Category Page Templates (Sections 5.5, 5.6)
 Plan describes dedicated pages for each category (Jewelry, Tables, Installations, Spaces) with category-specific intro text. These don't exist as separate pages or components.
 
 ### 2.9 Teajia Integration Points Missing
 Plan (Section 1.4) defines 6 contextual placement points for Teajia:
-1. Footer - Partially done (link exists, but specific copy "Global tea culture. Ceremony and treasures." is missing)
+1. ~~Footer~~ RESOLVED - Now includes "Global tea culture. Ceremony and treasures."
 2. About Page / The Path - Done (Teajia link in The Path section)
 3. Spaces Category Page - Not built (no Spaces page)
 4. Tables Category Page - Not built (no Tables page)
@@ -101,8 +97,8 @@ Listed as a category in Section 5.1 hero grid ("Paintings with light and project
 ### 3.4 "Objects" Category - Underdeveloped
 Listed in Section 5.1 hero grid ("Sphere holders, incense, dimensional pieces") but has no page hierarchy entry, no dedicated description anywhere, and no category page template content.
 
-### 3.5 About Page Section Numbering Jumps
-Plan defines sections 4.1 through 4.8 but the current About.tsx implementation skips "The Team" (4.6) and "What Art Can Mean" (4.7). The plan marks the About page as "Complete draft (awaiting Adrian's hand edit)" but these two sections are entirely absent from the code.
+### ~~3.5 About Page Section Numbering Jumps~~ RESOLVED
+~~"The Team" (4.6) and "What Art Can Mean" (4.7) sections added to About.tsx with verbatim copy from the plan.~~
 
 ### 3.6 About Page Text Deviations
 Several sections have condensed or modified text compared to the plan:
@@ -184,8 +180,8 @@ No system described for:
 - Tracking stock of multiple editions
 - Syncing with Stripe payment status
 
-### 5.7 404 / Error Page
-Plan doesn't address what happens when someone hits a bad URL. Current code falls back to homepage (catch-all route `/*`). A dedicated 404 page would be better for UX and SEO.
+### ~~5.7 404 / Error Page~~ RESOLVED
+~~Dedicated NotFound component created. Catch-all route now renders proper 404 page instead of homepage.~~
 
 ### 5.8 Cookie Consent
 Privacy Policy page exists but no cookie consent mechanism is described. If using analytics, font services, or any third-party tracking, GDPR/CCPA compliance may require consent.
@@ -232,10 +228,10 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 
 ### Critical (Blocks Launch)
 1. Resolve tech stack description in plan (Section 1.5)
-2. Implement individual writing routes (/writings/[slug]) for SEO/AEO
+2. ~~Implement individual writing routes (/writings/[slug]) for SEO/AEO~~ DONE
 3. Implement category routes or update plan to reflect filter approach
-4. Fix sold piece behavior (add commission link)
-5. Add image lazy loading
+4. ~~Fix sold piece behavior (add commission link)~~ DONE
+5. ~~Add image lazy loading~~ DONE
 6. Replace all placeholder images with real photography
 7. Replace Stripe PLACEHOLDER URLs with real Payment Links
 8. Decide and resolve ConvertKit vs Formspree for newsletter
@@ -244,19 +240,19 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 ### Important (First Week After Launch)
 10. Build Finishes/Options modal
 11. Build made-to-order configuration UI on piece pages
-12. Implement share functionality on piece pages
-13. Add sticky bottom bar on mobile piece pages
+12. ~~Implement share functionality on piece pages~~ DONE
+13. ~~Add sticky bottom bar on mobile piece pages~~ DONE
 14. Align form fields between plan and implementation
-15. Add missing About page sections (The Team, What Art Can Mean)
+15. ~~Add missing About page sections (The Team, What Art Can Mean)~~ DONE
 16. Implement "Available Now" as dedicated section on Creations landing
 17. Add analytics
 
 ### Should Have (First Month)
 18. Clarify Light Codes / Illuminated Works / Objects category hierarchy
 19. Build dedicated category pages
-20. Implement Teajia integration points 3, 4, and 6
+20. ~~Implement Teajia footer copy~~ DONE
 21. Build edition tracking system
-22. Add 404 page
+22. ~~Add 404 page~~ DONE
 23. Add accessibility guidelines and implement
 24. Fix character encoding in plan document
 25. Create/locate companion documents referenced in plan

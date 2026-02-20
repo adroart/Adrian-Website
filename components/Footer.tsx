@@ -110,7 +110,10 @@ const Footer: React.FC = () => {
                         <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Creations</Link>
                         <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Writings</Link>
                         <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Shop</Link>
-                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Teajia</a>
+                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit group">
+                            <span>Teajia</span>
+                            <span className="block font-serif text-xs text-wood-500 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
+                        </a>
                     </div>
 
                     {/* Column 2: Studio */}

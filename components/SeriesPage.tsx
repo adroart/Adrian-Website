@@ -114,6 +114,7 @@ const SeriesPage: React.FC = () => {
                                     <img
                                         src={art.coverImage}
                                         alt={art.title}
+                                        loading="lazy"
                                         className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                     {art.availability === 'READY_TO_SHIP' && (
@@ -178,6 +179,7 @@ const SeriesPage: React.FC = () => {
                                     <img
                                         src={series.image}
                                         alt={series.name}
+                                        loading="lazy"
                                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent opacity-100 group-hover:opacity-90 transition-opacity" />

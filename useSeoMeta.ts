@@ -60,7 +60,16 @@ function setMeta(selector: string, content: string) {
 
 export function useSeoMeta(pathname: string) {
   useEffect(() => {
-    const config = SEO_BY_ROUTE[pathname] ?? SEO_BY_ROUTE['/'];
+    // Match dynamic routes to their parent config
+    let routeKey = pathname;
+    if (pathname.startsWith('/writings/') && pathname !== '/writings') {
+      routeKey = '/writings';
+    } else if (pathname.startsWith('/creations/') && pathname !== '/creations') {
+      routeKey = '/creations';
+    } else if (pathname.startsWith('/series/')) {
+      routeKey = '/creations';
+    }
+    const config = SEO_BY_ROUTE[routeKey] ?? SEO_BY_ROUTE['/'];
 
     document.title = config.title;
     setMeta('meta[name="description"]', config.description);
