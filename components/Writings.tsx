@@ -3,13 +3,50 @@ import React, { useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
-import { ArrowLeft, ArrowRight, BookOpen, Share2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Share2, Feather } from 'lucide-react';
+
+// Category subtext descriptions — the soul of each section
+const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
+    'Living Knowledge': 'Deep explorations of subjects earned through direct experience — not theory, but embodied understanding.',
+    'Beneath the Surface': 'The meaning, origins, and stories woven into each body of work.',
+    'The Practice': 'How creation happens — the rituals, tools, and inner process behind the art.',
+    'The Path': 'The personal journey. Where this all began, and where it continues to lead.',
+};
+
+// Category-specific featured intro text
+const CATEGORY_FEATURED: Record<StoryCategory, { heading: string; body: string }> = {
+    'Living Knowledge': {
+        heading: 'Earned, Not Learned',
+        body: 'These writings come from years of immersion — into crystals, ceremony, cultures, and creation. Each piece shares knowledge that can only be gathered through direct experience.',
+    },
+    'Beneath the Surface': {
+        heading: 'What the Work Holds',
+        body: 'Every series carries a story deeper than what meets the eye. These writings reveal the philosophy, symbolism, and experiences behind each body of work.',
+    },
+    'The Practice': {
+        heading: 'From Formless to Form',
+        body: 'The creative process is its own practice — equal parts discipline and surrender. These writings open the studio door.',
+    },
+    'The Path': {
+        heading: 'The Thread That Connects',
+        body: 'Tea, travel, ceremony, community. The path is not separate from the art — it is the art. These writings trace the journey.',
+    },
+};
 
 // --- Individual Article View ---
 export const WritingArticle: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
 
     const story = useMemo(() => STORIES.find(s => s.slug === slug), [slug]);
+
+    // Find next readings (other stories, excluding current, max 2)
+    const nextReadings = useMemo(() => {
+        if (!story) return [];
+        return STORIES
+            .filter(s => s.slug !== slug)
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 2);
+    }, [slug, story]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -79,10 +116,15 @@ export const WritingArticle: React.FC = () => {
                         {story.title}
                     </h1>
                     {story.subtitle && (
-                        <p className="font-serif text-xl md:text-2xl text-wood-600 italic font-light">
+                        <p className="font-serif text-xl md:text-2xl text-wood-600 italic font-light mb-6">
                             {story.subtitle}
                         </p>
                     )}
+                    <div className="flex items-center justify-center gap-4 font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold">
+                        <span>{story.date}</span>
+                        <span className="text-wood-200">·</span>
+                        <span>{story.readMinutes} min read</span>
+                    </div>
                 </div>
 
                 {story.image && (
@@ -128,6 +170,35 @@ export const WritingArticle: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Continue the Journey — next readings */}
+                {nextReadings.length > 0 && (
+                    <div className="mt-16 pt-12 border-t border-wood-200">
+                        <div className="flex items-center gap-3 mb-8">
+                            <Feather size={16} className="text-bronze-600" />
+                            <h3 className="font-mono text-xs uppercase tracking-widest text-bronze-600 font-bold">Continue the Journey</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            {nextReadings.map(next => (
+                                <Link
+                                    key={next.id}
+                                    to={`/writings/${next.slug}`}
+                                    className="group bg-white p-6 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm"
+                                >
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-2 font-bold">
+                                        {next.category}
+                                    </span>
+                                    <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
+                                        {next.title}
+                                    </h4>
+                                    <p className="font-serif text-sm text-wood-500 italic font-light line-clamp-2">
+                                        {next.subtitle || next.excerpt}
+                                    </p>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </article>
     );
@@ -148,37 +219,61 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
         return STORIES.filter(s => s.category === activeCategory);
     }, [activeCategory]);
 
+    // Count articles per category
+    const categoryCounts = useMemo(() => {
+        const counts: Record<string, number> = { All: STORIES.length };
+        categories.forEach(cat => {
+            counts[cat] = STORIES.filter(s => s.category === cat).length;
+        });
+        return counts;
+    }, []);
+
     return (
         <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-5xl mx-auto">
-                {/* 10.1 Intro */}
+                {/* Intro */}
                 <div className="text-center mb-20">
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Writings</h1>
-                    <p className="font-serif text-xl text-wood-600 italic font-light">
-                        Sharing the experiences of growth and wisdom.
+                    <p className="font-serif text-xl text-wood-600 italic font-light max-w-2xl mx-auto">
+                        The philosophy behind the work. The glowing crystal. The geometry. The path from formless to form.
                     </p>
                 </div>
 
-                {/* Category Filter */}
-                <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-16 border-b border-wood-200 pb-8">
+                {/* Category Filter with counts */}
+                <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6 border-b border-wood-200 pb-8">
                     <button
                         onClick={() => setActiveCategory('All')}
-                        className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${activeCategory === 'All' ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
+                        className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === 'All' ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
                     >
                         All
+                        <span className={`text-[9px] ${activeCategory === 'All' ? 'text-wood-500' : 'text-wood-300'}`}>
+                            {categoryCounts['All']}
+                        </span>
                     </button>
                     {categories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
-                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${activeCategory === cat ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
+                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === cat ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
                         >
                             {cat}
+                            <span className={`text-[9px] ${activeCategory === cat ? 'text-wood-500' : 'text-wood-300'}`}>
+                                {categoryCounts[cat]}
+                            </span>
                         </button>
                     ))}
                 </div>
 
-                {/* 10.3 Living Knowledge (Highlighting) */}
+                {/* Category Subtext — visible when a specific category is selected */}
+                {activeCategory !== 'All' && (
+                    <div className="text-center mb-16 animate-fade-in">
+                        <p className="font-serif text-lg text-wood-500 italic font-light max-w-2xl mx-auto">
+                            {CATEGORY_SUBTEXT[activeCategory]}
+                        </p>
+                    </div>
+                )}
+
+                {/* Featured Living Knowledge — shown on "All" view */}
                 {activeCategory === 'All' && (
                     <div className="mb-20 bg-wood-100/50 p-8 md:p-12 border border-wood-200">
                         <div className="flex items-center gap-3 mb-6">
@@ -195,7 +290,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                                     to="/writings/ye-ming-zhu"
                                     className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold"
                                 >
-                                    Read Presentation
+                                    Begin Reading
                                 </Link>
                             </div>
                             <div className="aspect-video bg-wood-200 overflow-hidden relative">
@@ -205,7 +300,19 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                     </div>
                 )}
 
-                {/* 10.6 All Writings List */}
+                {/* Category-specific featured header — shown when filtering by category */}
+                {activeCategory !== 'All' && (
+                    <div className="mb-16 bg-wood-100/30 p-8 md:p-10 border border-wood-200 animate-fade-in">
+                        <h2 className="font-serif text-3xl text-wood-900 mb-3 font-medium">
+                            {CATEGORY_FEATURED[activeCategory].heading}
+                        </h2>
+                        <p className="font-serif text-lg text-wood-600 leading-relaxed font-light max-w-3xl">
+                            {CATEGORY_FEATURED[activeCategory].body}
+                        </p>
+                    </div>
+                )}
+
+                {/* All Writings List */}
                 <div className="space-y-4">
                     {filteredStories.map(story => (
                         <Link
@@ -222,7 +329,7 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                                 <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
                                     {story.title}
                                 </h3>
-                                <p className="font-serif text-wood-500 line-clamp-1 italic font-light">
+                                <p className="font-serif text-wood-500 line-clamp-2 italic font-light">
                                     {story.subtitle || story.excerpt}
                                 </p>
                             </div>
@@ -233,6 +340,19 @@ const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
                             </div>
                         </Link>
                     ))}
+                </div>
+
+                {/* Closing invitation */}
+                <div className="mt-24 pt-16 border-t border-wood-200 text-center">
+                    <p className="font-serif text-xl text-wood-600 italic font-light mb-8 max-w-xl mx-auto">
+                        If something here resonated, there is more to explore. Every piece begins with a conversation.
+                    </p>
+                    <Link
+                        to="/inquire"
+                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 pb-1"
+                    >
+                        Begin a Conversation <ArrowRight size={14} />
+                    </Link>
                 </div>
             </div>
         </section>

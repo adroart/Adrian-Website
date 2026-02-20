@@ -150,7 +150,7 @@ const Home: React.FC = () => {
                 />
                 <PathwayBlock
                     title="Writings"
-                    subtitle="Go deeper"
+                    subtitle="The philosophy behind the work"
                     to="/writings"
                 />
                 <PathwayBlock
@@ -170,14 +170,14 @@ const Home: React.FC = () => {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <Link
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
                             <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                Deep explorations of subjects earned through experience
+                                Deep explorations earned through direct experience
                             </h3>
                         </Link>
                         <Link
@@ -186,7 +186,7 @@ const Home: React.FC = () => {
                         >
                             <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                Meaning and origins within the work
+                                The meaning and origins within the work
                             </h3>
                         </Link>
                         <Link
@@ -195,7 +195,16 @@ const Home: React.FC = () => {
                         >
                             <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                How I create
+                                How creation happens
+                            </h3>
+                        </Link>
+                        <Link
+                            to="/writings"
+                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
+                        >
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Path</span>
+                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
+                                The personal journey behind the art
                             </h3>
                         </Link>
                     </div>
