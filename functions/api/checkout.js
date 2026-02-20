@@ -28,6 +28,13 @@ export async function onRequestPost(context) {
     });
   }
 
+  if (!env.STRIPE_SECRET_KEY) {
+    return new Response(JSON.stringify({ error: 'Payment system is not configured. Please contact the studio.' }), {
+      status: 503,
+      headers: corsHeaders,
+    });
+  }
+
   const { items } = body;
   if (!Array.isArray(items) || items.length === 0) {
     return new Response(JSON.stringify({ error: 'items must be a non-empty array' }), {
@@ -93,11 +100,12 @@ export async function onRequestPost(context) {
 }
 
 // Handle CORS preflight
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const origin = context.request.headers.get('origin') || 'https://adrianrasmussen.com';
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },

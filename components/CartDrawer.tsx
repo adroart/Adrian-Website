@@ -157,9 +157,13 @@ const CartDrawer: React.FC = () => {
                                             {/* Quantity controls */}
                                             <div className="flex items-center border border-wood-200 h-8">
                                                 <button
-                                                    onClick={() => updateQuantity(product.id, -1)}
+                                                    onClick={() =>
+                                                        quantity === 1
+                                                            ? removeFromCart(product.id)
+                                                            : updateQuantity(product.id, -1)
+                                                    }
                                                     className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
-                                                    aria-label="Decrease quantity"
+                                                    aria-label={quantity === 1 ? 'Remove item' : 'Decrease quantity'}
                                                 >
                                                     <Minus size={12} />
                                                 </button>

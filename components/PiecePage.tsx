@@ -58,7 +58,7 @@ const PiecePage: React.FC = () => {
     const [buyLoading, setBuyLoading] = useState(false);
     const [buyError, setBuyError] = useState<string | null>(null);
 
-    const handleBuy = async (artPiece: typeof art) => {
+    const handleBuy = async (artPiece: Artwork | undefined) => {
         if (!artPiece) return;
         setBuyLoading(true);
         setBuyError(null);

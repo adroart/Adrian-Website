@@ -465,13 +465,14 @@ const Store: React.FC = () => {
     const [visibleCount, setVisibleCount] = useState(12);
     const [checkoutBanner, setCheckoutBanner] = useState<'success' | 'cancelled' | null>(null);
     const [searchParams, setSearchParams] = useSearchParams();
-    const { clearCart } = useCart();
+    const { clearCart, closeCart } = useCart();
 
     // Handle Stripe redirect back with ?checkout=success|cancelled
     useEffect(() => {
         const status = searchParams.get('checkout');
         if (status === 'success') {
             clearCart();
+            closeCart();
             setCheckoutBanner('success');
             setSearchParams({}, { replace: true });
         } else if (status === 'cancelled') {
