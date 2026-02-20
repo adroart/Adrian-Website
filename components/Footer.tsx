@@ -91,8 +91,11 @@ const Footer: React.FC = () => {
 
                     {/* 4. Minimalist Newsletter */}
                     <div className="w-full md:w-auto">
-                        <span className="font-mono text-xs uppercase tracking-widest text-wood-500 block mb-3 font-bold">
-                            Join the Studio List
+                        <span className="font-mono text-xs uppercase tracking-widest text-wood-500 block mb-1 font-bold">
+                            Join the Inner Circle
+                        </span>
+                        <span className="font-serif text-sm text-wood-500 italic block mb-3">
+                            When something wants to be shared, it arrives here first.
                         </span>
                         <NewsletterForm />
                     </div>
@@ -104,11 +107,10 @@ const Footer: React.FC = () => {
                     {/* Column 1: Main */}
                     <div className="flex flex-col gap-3">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 font-bold mb-1">Index</span>
-                        <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">The Archive</Link>
-                        <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Journal</Link>
-                        <Link to="/oracle" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Oracle</Link>
-                        <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Available Works</Link>
-                        <a href="#" target="_blank" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Tea House</a>
+                        <Link to="/creations" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Creations</Link>
+                        <Link to="/writings" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Writings</Link>
+                        <Link to="/shop" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Shop</Link>
+                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="text-left font-serif text-base text-wood-700 hover:text-bronze-600 transition-colors w-fit">Teajia</a>
                     </div>
 
                     {/* Column 2: Studio */}
@@ -143,8 +145,8 @@ const Footer: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-mono uppercase tracking-widest text-wood-500 pt-8 border-t border-wood-200">
                     <div className="flex gap-6">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
-                        <button className="hover:text-wood-800 transition-colors">Privacy</button>
-                        <button className="hover:text-wood-800 transition-colors">Terms</button>
+                        <Link to="/privacy" className="hover:text-wood-800 transition-colors">Privacy</Link>
+                        <Link to="/terms" className="hover:text-wood-800 transition-colors">Terms</Link>
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-bronze-400"></span>

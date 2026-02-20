@@ -61,7 +61,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
     </Link>
 );
 
-const Creations: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcquireArt }) => {
+const Creations: React.FC = () => {
     const [filter, setFilter] = useState<string | null>(null);
     const [showAvailableOnly, setShowAvailableOnly] = useState(false);
 

@@ -218,9 +218,8 @@ const ProductCard: React.FC<{
 const InspectionDrawer: React.FC<{
     product: Product | null;
     onClose: () => void;
-    onAddToCart: (p: Product) => void;
     onViewImage: (img: string) => void;
-}> = ({ product, onClose, onAddToCart, onViewImage }) => {
+}> = ({ product, onClose, onViewImage }) => {
     const [animClass, setAnimClass] = useState('translate-x-full');
     const [loaded, setLoaded] = useState(false);
 
@@ -346,21 +345,29 @@ const InspectionDrawer: React.FC<{
                         <span className="font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">Valuation</span>
                         <span className="font-mono text-xl text-wood-900 font-bold">{formatPrice(product.price)}</span>
                     </div>
-                    <button
-                        onClick={() => onAddToCart(product)}
-                        disabled={!product.available}
-                        className={`w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg ${
-                            product.available
-                            ? 'bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl'
-                            : 'bg-wood-200 text-wood-400 cursor-not-allowed shadow-none'
-                        }`}
-                    >
-                        {product.available ? (
-                            <>
-                                {product.isReadyToShip ? 'Add to Selection' : 'Commission Piece'} <ArrowRight size={16} />
-                            </>
-                        ) : 'Private Collection'}
-                    </button>
+                    {product.available ? (
+                        product.isReadyToShip ? (
+                            <a
+                                href="https://buy.stripe.com/PLACEHOLDER"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
+                            >
+                                Buy Now <ArrowRight size={16} />
+                            </a>
+                        ) : (
+                            <a
+                                href="/inquire"
+                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-bold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
+                            >
+                                Commission Piece <ArrowRight size={16} />
+                            </a>
+                        )
+                    ) : (
+                        <div className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] font-bold bg-wood-200 text-wood-400 cursor-not-allowed shadow-none">
+                            Private Collection
+                        </div>
+                    )}
                 </div>
             </div>
         </div>,
@@ -454,7 +461,7 @@ const ControlDeck: React.FC<{
     );
 };
 
-const Store: React.FC<{ showToast: (m: string) => void; onAddToCart: (p: Product) => void }> = ({ showToast, onAddToCart }) => {
+const Store: React.FC = () => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [viewingImage, setViewingImage] = useState<string | null>(null);
     const [isFiltering, setIsFiltering] = useState(false);
@@ -561,7 +568,6 @@ const Store: React.FC<{ showToast: (m: string) => void; onAddToCart: (p: Product
             <InspectionDrawer
                 product={selectedProduct}
                 onClose={() => setSelectedProduct(null)}
-                onAddToCart={(p) => { onAddToCart(p); setSelectedProduct(null); }}
                 onViewImage={setViewingImage}
             />
             {viewingImage && (

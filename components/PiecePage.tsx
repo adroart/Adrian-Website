@@ -3,9 +3,9 @@ import React, { useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA } from '../data/mockData';
-import { ArrowRight, ShoppingCart, Lock, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Lock, ArrowUpRight } from 'lucide-react';
 
-const PiecePage: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcquireArt }) => {
+const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
@@ -57,8 +57,32 @@ const PiecePage: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcqui
 
     const seriesSlug = art.series ? art.series.toLowerCase().replace(/\s+/g, '-') : null;
 
+    const productSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: art.title,
+        description: art.description,
+        image: art.coverImage,
+        brand: { '@type': 'Brand', name: 'Adrian Rasmussen' },
+        ...(art.material && { material: art.material }),
+        ...(art.price && {
+            offers: {
+                '@type': 'Offer',
+                price: art.price,
+                priceCurrency: 'USD',
+                availability: art.availability === 'SOLD'
+                    ? 'https://schema.org/SoldOut'
+                    : 'https://schema.org/InStock',
+            },
+        }),
+    };
+
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+            />
             {/* Breadcrumb */}
             <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">
@@ -126,12 +150,14 @@ const PiecePage: React.FC<{ onAcquireArt: (art: Artwork) => void }> = ({ onAcqui
                                     <span className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold">Ready to Ship</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">${art.price}</span>
                                 </div>
-                                <button
-                                    onClick={() => onAcquireArt(art)}
+                                <a
+                                    href="https://buy.stripe.com/PLACEHOLDER"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-bold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    <ShoppingCart size={16} /> Add to Selection
-                                </button>
+                                    Buy Now <ArrowRight size={16} />
+                                </a>
                                 <p className="text-center font-mono text-[10px] uppercase tracking-widest text-wood-400 mt-4 font-bold">
                                     Ships from Bali &bull; Arrives in 2-3 weeks
                                 </p>

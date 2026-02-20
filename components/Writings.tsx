@@ -16,8 +16,23 @@ const Writings: React.FC = () => {
   }, [activeCategory]);
 
   if (selectedStory) {
+      const articleSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: selectedStory.title,
+          author: { '@type': 'Person', name: 'Adrian Rasmussen' },
+          datePublished: selectedStory.date,
+          description: selectedStory.subtitle || selectedStory.excerpt,
+          ...(selectedStory.image && { image: selectedStory.image }),
+          publisher: { '@type': 'Person', name: 'Adrian Rasmussen' },
+      };
+
       return (
           <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+              <script
+                  type="application/ld+json"
+                  dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+              />
               <div className="max-w-3xl mx-auto">
                   <button 
                       onClick={() => setSelectedStory(null)}

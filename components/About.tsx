@@ -1,9 +1,29 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
+
+const PERSON_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Adrian Rasmussen',
+  url: 'https://adrianrasmussen.com',
+  jobTitle: 'Multidimensional Artist',
+  description: 'Technician of the Sacred. Multidimensional artist working between studios in Bali and Santa Cruz, California.',
+  sameAs: ['https://www.instagram.com/adrianrasmussen'],
+  knowsAbout: ['Sculpture', 'Installation Art', 'Laser Cutting', 'Projection Mapping', 'Tea Ceremony'],
+  workLocation: [
+    { '@type': 'Place', name: 'Bali, Indonesia' },
+    { '@type': 'Place', name: 'Santa Cruz, California' },
+  ],
+};
 
 const About: React.FC = () => {
   return (
     <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}
+        />
         <div className="max-w-4xl mx-auto animate-fade-in">
             
             {/* 4.1 What I Create */}
@@ -43,10 +63,14 @@ const About: React.FC = () => {
                  <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-4 font-bold">The Path</span>
                  <div className="prose prose-xl font-serif text-wood-800 max-w-2xl">
                      <p>
-                        Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures. Qigong, Tai Chi, meditation, tea ceremony. Since 2010, I've been trading artwork for Chinese tea.
+                        Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures. Qigong, Tai Chi, meditation, tea ceremony. Since 2010, I've been trading artwork for Chinese tea. Two practices that had always been connected. This practice now lives at{' '}
+                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors">Teajia</a>, where I share twenty years of tea culture.
                      </p>
                      <p>
                         Along the way, I found new tools. Laser cutting, LEDs, airbrushing, projection mapping. The forms evolved. The intention stayed the same. Bringing the formless into form.
+                     </p>
+                     <p>
+                        Since 2020, I've been developing an artist residency, Makerspace, and gallery with Labyrinth Bali in the Nuanu Project.
                      </p>
                  </div>
             </div>
@@ -70,8 +94,14 @@ const About: React.FC = () => {
             {/* 4.8 Close */}
             <div className="text-center pt-12 border-t border-wood-200">
                  <p className="font-serif text-lg text-wood-500 italic mb-6">
-                    "The Writings hold more. The philosophy behind the work. The glowing crystal. The geometry. The path from formless to form."
+                    The Writings hold more. The philosophy behind the work. The glowing crystal. The geometry. The path from formless to form.
                  </p>
+                 <Link
+                    to="/writings"
+                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 pb-1"
+                 >
+                    Go deeper
+                 </Link>
             </div>
 
         </div>

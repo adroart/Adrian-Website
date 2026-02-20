@@ -7,38 +7,47 @@ interface SeoConfig {
 
 const SEO_BY_ROUTE: Record<string, SeoConfig> = {
   '/': {
-    title: 'Adrian Rasmussen | Resonant Artifacts',
+    title: 'Adrian Rasmussen | Bringing the Formless into Form',
     description:
-      'Multi-dimensional laser cut artwork, original paintings, and sacred geometry by Adrian Rasmussen. Created between Bali and California.',
+      'Multidimensional art, sculptures, and immersive installations. From intimate talismans to immersive installations. Created between Bali and California.',
   },
   '/creations': {
     title: 'Creations | Adrian Rasmussen',
     description:
-      'Explore the full gallery of laser-cut sculptures, LED paintings, jewelry, oracle cards, and immersive installations by Adrian Rasmussen.',
+      'Multidimensional sculptures, jewelry, oracle cards, tables, installations, and spaces. Find what calls to you.',
   },
   '/writings': {
     title: 'Writings | Adrian Rasmussen',
     description:
-      'Reflections on art, consciousness, tea, and craftsmanship by Adrian Rasmussen. Sharing experiences of growth and wisdom.',
+      'Sharing the experiences of growth and wisdom. Living Knowledge, practice, and the path.',
   },
   '/about': {
     title: 'About | Adrian Rasmussen',
     description:
-      'Adrian Rasmussen is an artist and craftsman creating multi-dimensional wooden sculptures, paintings, and spaces designed for presence. Working between Bali and California.',
+      'Technician of the Sacred. Multidimensional artist working between studios in Bali and Santa Cruz, California.',
   },
   '/inquire': {
     title: 'Inquire | Adrian Rasmussen',
     description:
-      "Commission a piece or begin a conversation about acquiring original artwork from Adrian Rasmussen's studio in Bali.",
+      'Commission a piece. From personal talismans to immersive installations.',
   },
   '/shop': {
     title: 'Shop | Adrian Rasmussen',
     description:
-      'Browse available artworks ready to ship from Bali. Original laser-cut sculptures, paintings, teas, and accessories.',
+      'Ready-to-ship artwork. Multidimensional sculptures, Light Codes, jewelry, and more.',
   },
-  '/cart': {
-    title: 'Your Selection | Adrian Rasmussen',
-    description: "Review your selected pieces from Adrian Rasmussen's studio.",
+  '/welcome': {
+    title: 'Adrian Rasmussen | Technician of the Sacred',
+    description:
+      'Multidimensional art between Bali and California. Explore creations, writings, and commissions.',
+  },
+  '/privacy': {
+    title: 'Privacy Policy | Adrian Rasmussen',
+    description: 'Privacy policy for adrianrasmussen.com.',
+  },
+  '/terms': {
+    title: 'Terms of Service | Adrian Rasmussen',
+    description: 'Terms of service for adrianrasmussen.com.',
   },
 };
 

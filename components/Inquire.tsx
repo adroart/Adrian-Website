@@ -381,6 +381,37 @@ const Inquire: React.FC = () => {
               )}
           </div>
 
+          {/* FAQ */}
+          <div className="mt-24 border-t border-wood-200 pt-12">
+              <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Common Questions</h3>
+              <div className="space-y-8">
+                <div>
+                  <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                    How long does a commission take?
+                  </h4>
+                  <p className="font-serif text-wood-600 leading-relaxed">
+                    Personal pieces typically take 4–8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope — anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                    Where do pieces ship from?
+                  </h4>
+                  <p className="font-serif text-wood-600 leading-relaxed">
+                    Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2–3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-mono text-xs uppercase tracking-widest text-wood-900 font-bold mb-3">
+                    What sizes are available?
+                  </h4>
+                  <p className="font-serif text-wood-600 leading-relaxed">
+                    I work across all scales — from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
+                  </p>
+                </div>
+              </div>
+          </div>
+
       </div>
     </section>
   );

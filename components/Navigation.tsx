@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingBag, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 
 interface NavigationProps {
-  cartCount: number;
   theme?: 'LIGHT' | 'DARK';
 }
 
@@ -13,7 +12,7 @@ interface NavItem {
     label: string;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) => {
+const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -52,7 +51,6 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
   const navItems: NavItem[] = [
     { path: '/creations', label: 'Creations' },
     { path: '/writings', label: 'Writings' },
-    { path: '/oracle', label: 'Oracle' },
     { path: '/inquire', label: 'Inquire' },
     { path: '/about', label: 'About' },
     { path: '/shop', label: 'Shop' },
@@ -75,7 +73,7 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
           <div className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
               <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
               <span className="text-[9px] text-wood-600 hidden sm:inline">|</span>
-              <span className="text-[9px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">The Tea Community Platform</span>
+              <span className="text-[9px] font-mono uppercase tracking-[0.05em] text-wood-400 hidden sm:inline">Global tea culture. Ceremony and treasures.</span>
               <ArrowUpRight size={9} className="text-wood-500 group-hover:text-bronze-400" />
           </div>
       </a>
@@ -107,19 +105,9 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
             ))}
           </div>
 
-          <div className="flex items-center gap-6">
-            <Link to="/cart" title="Your Selection" className={`relative group transition-colors ${textPrimary} hover:${accentColor}`}>
-              <ShoppingBag size={20} strokeWidth={1.5} className={location.pathname === '/cart' ? 'fill-current' : ''} />
-              {cartCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 text-[10px] font-bold font-mono w-4 h-4 flex items-center justify-center rounded-full shadow-md ${isDark ? 'bg-bronze-500 text-stone-900' : 'bg-wood-900 text-paper-50'}`}>
-                      {cartCount}
-                  </span>
-              )}
-            </Link>
-            <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity ml-2 p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
         {/* Mobile Menu */}
@@ -134,18 +122,6 @@ const Navigation: React.FC<NavigationProps> = ({ cartCount, theme = 'LIGHT' }) =
                         {item.label}
                     </button>
                 ))}
-                <button
-                    onClick={() => handleNavClick('/cart')}
-                    className={`flex items-center gap-2 text-lg font-serif tracking-wide ${location.pathname === '/cart' ? 'text-bronze-400' : 'text-paper-50'}`}
-                >
-                    <ShoppingBag size={18} strokeWidth={1.5} />
-                    Selection
-                    {cartCount > 0 && (
-                        <span className="text-[10px] font-bold font-mono w-4 h-4 flex items-center justify-center rounded-full bg-bronze-500 text-stone-900 shadow-md">
-                            {cartCount}
-                        </span>
-                    )}
-                </button>
              </div>
         )}
       </nav>
