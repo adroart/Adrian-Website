@@ -98,7 +98,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         editionNumber: 4,
         featured: true,
         relatedStorySlug: 'beneath-surface-mandala',
-        stripePriceId: 'price_UL001_REPLACE_WITH_REAL_ID',
+        stripePriceId: 'price_1T2uiNKY1VOkG4eGYcTkmWE3',
     },
     {
         id: 'LC-042',
