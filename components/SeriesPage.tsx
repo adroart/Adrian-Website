@@ -228,7 +228,7 @@ const SeriesPage: React.FC = () => {
             {/* Light Codes Custom Option */}
             {isLightCodes && (
                 <div className="max-w-[1800px] mx-auto px-6 mt-24">
-                    <div className="bg-wood-900 text-paper-50 p-10 md:p-16 max-w-3xl mx-auto text-center">
+                    <div className="bg-wood-900 text-paper-50 p-10 md:p-16 max-w-3xl mx-auto text-center dark-preserve">
                         <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
                             A Light Code can also be created for you.
                         </h3>
@@ -274,7 +274,7 @@ const SeriesPage: React.FC = () => {
                                 <Link
                                     key={series.id}
                                     to={`/series/${seriesSlug}`}
-                                    className="group relative aspect-[2/1] bg-wood-100 overflow-hidden"
+                                    className="group relative aspect-[2/1] bg-wood-100 overflow-hidden dark-preserve"
                                 >
                                     <img
                                         src={series.image}

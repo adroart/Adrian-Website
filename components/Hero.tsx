@@ -31,7 +31,7 @@ const Hero: React.FC = () => {
   const safeOpacity = isNaN(opacity) ? 1 : opacity;
 
   return (
-    <section className="relative w-full h-[105vh] flex flex-col bg-wood-900 overflow-hidden group">
+    <section className="relative w-full h-[105vh] flex flex-col bg-wood-900 overflow-hidden group dark-preserve">
       <div
         className="absolute inset-0 z-0 will-change-transform"
         style={{ transform: `translateY(${videoTranslateY}px)` }}

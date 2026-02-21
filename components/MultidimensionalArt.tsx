@@ -20,7 +20,7 @@ const SubcategoryTile: React.FC<{
     return (
         <div
             onClick={() => navigate(to)}
-            className="group relative aspect-[4/3] bg-wood-100 border border-wood-200 overflow-hidden cursor-pointer"
+            className="group relative aspect-[4/3] bg-wood-100 border border-wood-200 overflow-hidden cursor-pointer dark-preserve"
         >
             <img
                 src={`https://picsum.photos/800/600?random=${200 + idx}`}

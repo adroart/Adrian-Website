@@ -37,9 +37,9 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const glassLight = 'bg-paper-50/80 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
   let navClasses = `fixed top-8 left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
-  if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark}`;
-  else if (useSolid) navClasses += ` py-3 ${isDark ? solidDark : solidLight}`;
-  else navClasses += ` py-5 ${isDark ? glassDark : glassLight}`;
+  if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark} dark-preserve`;
+  else if (useSolid) navClasses += ` py-3 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
+  else navClasses += ` py-5 ${isDark ? `${glassDark} dark-preserve` : glassLight}`;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -72,7 +72,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
         href="https://www.teajia.com"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group cursor-pointer backdrop-blur-sm"
+        className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group cursor-pointer backdrop-blur-sm dark-preserve"
       >
           <div className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
@@ -140,7 +140,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-10 px-6 flex flex-col gap-7 items-center animate-fade-in shadow-2xl">
+             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-10 px-6 flex flex-col gap-7 items-center animate-fade-in shadow-2xl dark-preserve">
                 {navItems.map((item) => (
                     <button
                         key={item.path}

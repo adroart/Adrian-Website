@@ -114,7 +114,7 @@ const Home: React.FC = () => {
             </section>
 
             {/* 3.4 The Differentiator */}
-            <section className="py-32 px-6 bg-wood-900 text-paper-50 relative overflow-hidden">
+            <section className="py-32 px-6 bg-wood-900 text-paper-50 relative overflow-hidden dark-preserve">
                 <div className="absolute top-0 right-0 w-[50%] h-full bg-[url('https://picsum.photos/1200/1200?random=99')] opacity-10 bg-cover mix-blend-overlay"></div>
                 <div className="max-w-4xl mx-auto relative z-10">
                     <h2 className="font-serif text-3xl md:text-5xl leading-[1.15] mb-10 font-medium">

@@ -247,7 +247,7 @@ const About: React.FC = () => {
 
         {/* ─── 4.4 CONNECTION + 4.6 THE TEAM ────────────────────────────── */}
         <Reveal>
-          <div className="px-6 py-20 bg-wood-800">
+          <div className="px-6 py-20 bg-wood-800 dark-preserve">
             <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16">
               <div>
                 <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-6 font-bold">
@@ -346,7 +346,7 @@ const About: React.FC = () => {
 
         {/* ─── 4.7 WHAT ART CAN MEAN ────────────────────────────────────── */}
         {/* TODO_REPLACE: Paused. Needs rework. Story has inaccuracies that need to be corrected from Adrian's actual memory of the experience. Do not publish as written. Adrian to retell this story from memory with accurate details, then we refine. */}
-        <div className="px-6 py-28 bg-wood-900">
+        <div className="px-6 py-28 bg-wood-900 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal>
               <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-10 font-bold">

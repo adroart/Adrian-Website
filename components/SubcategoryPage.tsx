@@ -151,7 +151,7 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Hero */}
             {config.image ? (
-                <div className="relative w-full h-[45vh] min-h-[360px] max-h-[560px] overflow-hidden mb-0">
+                <div className="relative w-full h-[45vh] min-h-[360px] max-h-[560px] overflow-hidden mb-0 dark-preserve">
                     <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent" />
                     <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 max-w-[1800px] mx-auto">

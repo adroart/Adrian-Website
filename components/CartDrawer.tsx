@@ -123,7 +123,7 @@ const CartDrawer: React.FC = () => {
         >
             {/* Overlay */}
             <div
-                className={`absolute inset-0 bg-wood-900/30 backdrop-blur-sm transition-opacity duration-500 ${isCartOpen ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 bg-wood-900/30 backdrop-blur-sm transition-opacity duration-500 dark-overlay ${isCartOpen ? 'opacity-100' : 'opacity-0'}`}
                 onClick={closeCart}
             />
 
