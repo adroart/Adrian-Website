@@ -3,7 +3,7 @@ import React, { useMemo, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
-import { ArrowLeft, ArrowRight, BookOpen, Share2, Feather } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Share2, Feather } from 'lucide-react';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -11,26 +11,6 @@ const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
     'Beneath the Surface': 'The meaning, origins, and stories woven into each body of work.',
     'The Practice': 'How creation happens — the rituals, tools, and inner process behind the art.',
     'The Path': 'The personal journey. Where this all began, and where it continues to lead.',
-};
-
-// Category-specific featured intro text
-const CATEGORY_FEATURED: Record<StoryCategory, { heading: string; body: string }> = {
-    'Living Knowledge': {
-        heading: 'Earned, Not Learned',
-        body: 'These writings come from years of immersion — into crystals, ceremony, cultures, and creation. Each piece shares knowledge that can only be gathered through direct experience.',
-    },
-    'Beneath the Surface': {
-        heading: 'What the Work Holds',
-        body: 'Every series carries a story deeper than what meets the eye. These writings reveal the philosophy, symbolism, and experiences behind each body of work.',
-    },
-    'The Practice': {
-        heading: 'From Formless to Form',
-        body: 'The creative process is its own practice — equal parts discipline and surrender. These writings open the studio door.',
-    },
-    'The Path': {
-        heading: 'The Thread That Connects',
-        body: 'Tea, travel, ceremony, community. The path is not separate from the art — it is the art. These writings trace the journey.',
-    },
 };
 
 // Safely serialize data for embedding in <script type="application/ld+json"> tags.
@@ -212,146 +192,108 @@ export const WritingArticle: React.FC = () => {
     );
 };
 
+// Converts a category name to a URL-safe anchor id
+const categorySlug = (cat: StoryCategory): string =>
+    cat.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
 // --- Writings Landing Page ---
-interface WritingsProps {
-    initialCategory?: StoryCategory | 'All';
-}
-
-const Writings: React.FC<WritingsProps> = ({ initialCategory = 'All' }) => {
-    const [activeCategory, setActiveCategory] = React.useState<StoryCategory | 'All'>(initialCategory);
-
+const Writings: React.FC = () => {
     const categories: StoryCategory[] = ['Living Knowledge', 'Beneath the Surface', 'The Practice', 'The Path'];
 
-    const filteredStories = useMemo(() => {
-        if (activeCategory === 'All') return STORIES;
-        return STORIES.filter(s => s.category === activeCategory);
-    }, [activeCategory]);
+    const storiesByCategory = useMemo(() => {
+        const grouped: Record<StoryCategory, Story[]> = {
+            'Living Knowledge': [],
+            'Beneath the Surface': [],
+            'The Practice': [],
+            'The Path': [],
+        };
+        STORIES.forEach(s => grouped[s.category].push(s));
+        return grouped;
+    }, []);
 
-    // Count articles per category
-    const categoryCounts = useMemo(() => {
-        const counts: Record<string, number> = { All: STORIES.length };
-        categories.forEach(cat => {
-            counts[cat] = STORIES.filter(s => s.category === cat).length;
-        });
-        return counts;
+    // Scroll to hash anchor on mount (for links arriving from other pages)
+    useEffect(() => {
+        if (window.location.hash) {
+            const id = window.location.hash.slice(1);
+            const el = document.getElementById(id);
+            if (el) {
+                setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
+        } else {
+            window.scrollTo(0, 0);
+        }
     }, []);
 
     return (
         <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-5xl mx-auto">
-                {/* Intro */}
-                <div className="text-center mb-20">
-                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Writings</h1>
-                    <p className="font-serif text-xl text-wood-600 italic font-light max-w-2xl mx-auto">
-                        The philosophy behind the work. The glowing crystal. The geometry. The path from formless to form.
-                    </p>
+
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium">Writings</h1>
                 </div>
 
-                {/* Category Filter with counts */}
-                <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6 border-b border-wood-200 pb-8">
-                    <button
-                        onClick={() => setActiveCategory('All')}
-                        className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === 'All' ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
-                    >
-                        All
-                        <span className={`text-[10px] ${activeCategory === 'All' ? 'text-wood-500' : 'text-wood-300'}`}>
-                            {categoryCounts['All']}
-                        </span>
-                    </button>
+                {/* Anchor navigation */}
+                <nav className="flex flex-wrap justify-center gap-6 md:gap-10 border-b border-wood-200 pb-8 mb-24" aria-label="Writing sections">
                     {categories.map(cat => (
-                        <button
+                        <a
                             key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-1.5 ${activeCategory === cat ? 'text-wood-900' : 'text-wood-400 hover:text-wood-600'}`}
+                            href={`#${categorySlug(cat)}`}
+                            className="font-mono text-xs uppercase tracking-widest font-bold text-wood-400 hover:text-wood-900 transition-colors"
                         >
                             {cat}
-                            <span className={`text-[10px] ${activeCategory === cat ? 'text-wood-500' : 'text-wood-300'}`}>
-                                {categoryCounts[cat]}
-                            </span>
-                        </button>
+                        </a>
                     ))}
-                </div>
+                </nav>
 
-                {/* Category Subtext — visible when a specific category is selected */}
-                {activeCategory !== 'All' && (
-                    <div className="text-center mb-16 animate-fade-in">
-                        <p className="font-serif text-lg text-wood-500 italic font-light max-w-2xl mx-auto">
-                            {CATEGORY_SUBTEXT[activeCategory]}
-                        </p>
-                    </div>
-                )}
-
-                {/* Featured Living Knowledge — shown on "All" view */}
-                {activeCategory === 'All' && (
-                    <div className="mb-20 bg-wood-100/50 p-8 md:p-12 border border-wood-200">
-                        <div className="flex items-center gap-3 mb-6">
-                            <BookOpen size={18} className="text-bronze-600" />
-                            <span className="font-mono text-xs uppercase tracking-widest text-bronze-600 font-bold">Featured Living Knowledge</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                            <div>
-                                <h2 className="font-serif text-4xl text-wood-900 mb-4 font-medium">Ye Ming Zhu</h2>
-                                <p className="font-serif text-lg text-wood-600 mb-8 leading-relaxed">
-                                    The glowing crystal. History, mysteries, meaning, and my journey with the Dragon's Pearl.
-                                </p>
-                                <Link
-                                    to="/writings/ye-ming-zhu"
-                                    className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold"
-                                >
-                                    Begin Reading
-                                </Link>
-                            </div>
-                            <div className="aspect-video bg-wood-200 overflow-hidden relative">
-                                <img src="https://picsum.photos/800/600?random=ymz" className="w-full h-full object-cover" alt="Ye Ming Zhu glowing crystal by Adrian Rasmussen" loading="lazy" />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Category-specific featured header — shown when filtering by category */}
-                {activeCategory !== 'All' && (
-                    <div className="mb-16 bg-wood-100/30 p-8 md:p-10 border border-wood-200 animate-fade-in">
-                        <h2 className="font-serif text-3xl text-wood-900 mb-3 font-medium">
-                            {CATEGORY_FEATURED[activeCategory].heading}
-                        </h2>
-                        <p className="font-serif text-lg text-wood-600 leading-relaxed font-light max-w-3xl">
-                            {CATEGORY_FEATURED[activeCategory].body}
-                        </p>
-                    </div>
-                )}
-
-                {/* All Writings List */}
-                <div className="space-y-4">
-                    {filteredStories.map(story => (
-                        <Link
-                            key={story.id}
-                            to={`/writings/${story.slug}`}
-                            className="group cursor-pointer bg-white p-6 md:p-8 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm flex flex-col md:flex-row md:items-center gap-6 block"
-                        >
-                            <div className="md:w-1/4">
-                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 block mb-1 font-bold">{story.date}</span>
-                                <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 font-bold">{story.category}</span>
-                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
-                            </div>
-                            <div className="md:w-1/2">
-                                <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
-                                    {story.title}
-                                </h3>
-                                <p className="font-serif text-wood-500 line-clamp-2 italic font-light">
-                                    {story.subtitle || story.excerpt}
+                {/* Category sections */}
+                {categories.map(cat => {
+                    const stories = storiesByCategory[cat];
+                    if (!stories || stories.length === 0) return null;
+                    return (
+                        <div key={cat} id={categorySlug(cat)} className="mb-24 scroll-mt-28">
+                            <div className="mb-8 pb-6 border-b border-wood-100">
+                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
+                                <p className="font-serif text-base text-wood-500 italic font-light">
+                                    {CATEGORY_SUBTEXT[cat]}
                                 </p>
                             </div>
-                            <div className="md:w-1/4 flex justify-end">
-                                <div className="w-10 h-10 rounded-full border border-wood-100 flex items-center justify-center text-wood-300 group-hover:text-bronze-600 group-hover:border-bronze-200 transition-all">
-                                    <ArrowRight size={16} />
-                                </div>
+                            <div className="space-y-4">
+                                {stories.map(story => (
+                                    <Link
+                                        key={story.id}
+                                        to={`/writings/${story.slug}`}
+                                        className="group bg-white p-6 md:p-8 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm flex flex-col md:flex-row md:items-center gap-6"
+                                    >
+                                        <div className="md:w-1/4">
+                                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 block mb-1 font-bold">{story.date}</span>
+                                            {story.isFeatured && (
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-500 block mb-1 font-bold">Featured</span>
+                                            )}
+                                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
+                                        </div>
+                                        <div className="md:w-1/2">
+                                            <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
+                                                {story.title}
+                                            </h3>
+                                            <p className="font-serif text-wood-500 line-clamp-2 italic font-light">
+                                                {story.subtitle || story.excerpt}
+                                            </p>
+                                        </div>
+                                        <div className="md:w-1/4 flex justify-end">
+                                            <div className="w-10 h-10 rounded-full border border-wood-100 flex items-center justify-center text-wood-300 group-hover:text-bronze-600 group-hover:border-bronze-200 transition-all">
+                                                <ArrowRight size={16} />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                        </Link>
-                    ))}
-                </div>
+                        </div>
+                    );
+                })}
 
                 {/* Closing invitation */}
-                <div className="mt-24 pt-16 border-t border-wood-200 text-center">
+                <div className="mt-8 pt-16 border-t border-wood-200 text-center">
                     <p className="font-serif text-xl text-wood-600 italic font-light mb-8 max-w-xl mx-auto">
                         If something here resonated, there is more to explore. Every piece begins with a conversation.
                     </p>

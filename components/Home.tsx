@@ -172,7 +172,7 @@ const Home: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <Link
-                            to="/writings"
+                            to="/writings#living-knowledge"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
                             <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
@@ -181,7 +181,7 @@ const Home: React.FC = () => {
                             </h3>
                         </Link>
                         <Link
-                            to="/writings"
+                            to="/writings#beneath-the-surface"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
                             <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
@@ -190,7 +190,7 @@ const Home: React.FC = () => {
                             </h3>
                         </Link>
                         <Link
-                            to="/writings"
+                            to="/writings#the-practice"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
                             <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
@@ -199,7 +199,7 @@ const Home: React.FC = () => {
                             </h3>
                         </Link>
                         <Link
-                            to="/writings"
+                            to="/writings#the-path"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
                             <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Path</span>
