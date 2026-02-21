@@ -123,70 +123,80 @@ const CreationCategoryCard: React.FC<{
 const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
     <Link
         to={`/creations/${art.id}`}
-        className="group cursor-pointer break-inside-avoid mb-6 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+        // Mobile: border separator + generous padding between cards.
+        // sm+: return to standard masonry column spacing, no divider.
+        className="group cursor-pointer break-inside-avoid block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 border-b border-wood-100 pb-5 mb-3 sm:border-b-0 sm:pb-0 sm:mb-6"
     >
-        {/* Image container with explicit aspect hint to prevent CLS */}
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg group-hover:shadow-wood-200/60">
+        {/* Image container — enforces 4:3 on mobile for consistent heights;
+            natural image ratio on sm+ for masonry variety. */}
+        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg group-hover:shadow-wood-200/60 aspect-[4/3] sm:aspect-auto">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
                 loading="lazy"
                 width={800}
                 height={800}
-                className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                // Mobile: absolutely fills the 4:3 container.
+                // sm+: static in-flow with natural height (drives container height).
+                className="absolute inset-0 w-full h-full object-cover sm:static sm:h-auto transition-transform duration-700 group-hover:scale-105"
             />
-
-            {/* Ready to ship badge */}
-            {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-bold leading-none">
-                    Available
-                </div>
-            )}
-
-            {/* Illuminated indicator */}
-            {art.illuminated && (
-                <div className="absolute top-3 left-3 bg-paper-50/90 backdrop-blur-sm px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-wood-600 font-bold leading-none">
-                    Illuminated
-                </div>
-            )}
-
-            {/* Story indicator: visible dot + tooltip label */}
-            {art.relatedStorySlug && !art.illuminated && (
-                <div
-                    className="absolute top-3 left-3 flex items-center gap-1.5 bg-paper-50/90 backdrop-blur-sm px-2 py-1 border border-wood-200"
-                    title="A companion essay accompanies this piece"
-                >
-                    <span className="w-1.5 h-1.5 rounded-full bg-bronze-500 flex-shrink-0" aria-hidden="true" />
-                    <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-bold leading-none">Essay</span>
-                </div>
-            )}
         </div>
 
         {/* Card text */}
-        <div className="mt-3 px-0.5">
-            <div className="flex justify-between items-start gap-2">
-                <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
-                    {art.title}
-                </h4>
-                {art.price && (
-                    <span className="font-mono text-xs text-wood-900 font-bold whitespace-nowrap flex-shrink-0 pt-0.5">
-                        {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-500 font-normal">From </span>}
-                        ${formatPrice(art.price)}
-                    </span>
-                )}
-            </div>
+        <div className="mt-3 px-1">
 
-            {/* Category + availability in readable size */}
-            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.15em] mt-1.5 font-bold leading-none">
+            {/* Badges — moved below image so they never overlap the artwork.
+                All use the same pill style for visual consistency. */}
+            {(art.availability === 'READY_TO_SHIP' || art.illuminated || art.relatedStorySlug) && (
+                <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    {art.availability === 'READY_TO_SHIP' && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-bold leading-none">
+                            Available
+                        </span>
+                    )}
+                    {art.illuminated && (
+                        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-wood-600 font-bold leading-none">
+                            Illuminated
+                        </span>
+                    )}
+                    {art.relatedStorySlug && (
+                        <span
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-bronze-600 font-bold leading-none"
+                            title="A companion essay accompanies this piece"
+                        >
+                            <span className="w-1.5 h-1.5 rounded-full bg-bronze-500 flex-shrink-0" aria-hidden="true" />
+                            Essay
+                        </span>
+                    )}
+                </div>
+            )}
+
+            {/* Title */}
+            <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                {art.title}
+            </h4>
+
+            {/* Price — own line below title, elegant serif instead of monospace.
+                No longer competing with the title for horizontal space on mobile. */}
+            {art.price && (
+                <p className="font-serif text-sm text-wood-800 mt-1 font-medium">
+                    {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
+                    ${formatPrice(art.price)}
+                </p>
+            )}
+
+            {/* Category + series + availability — bumped to text-xs (12px) and
+                tighter tracking for better mobile legibility. */}
+            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-bold leading-none">
                 {art.category}
                 {art.series && <span className="text-wood-400 font-normal"> · {art.series}</span>}
                 {art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}
                 {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
             </p>
 
-            {/* One-line description teaser */}
+            {/* Description teaser — font-normal for legibility (was font-light) */}
             {art.description && (
-                <p className="font-serif text-sm text-wood-500 font-light leading-snug mt-1.5 line-clamp-2">
+                <p className="font-serif text-sm text-wood-500 font-normal leading-snug mt-2 line-clamp-2">
                     {art.description}
                 </p>
             )}
@@ -243,7 +253,7 @@ const CollectionCard: React.FC<{
                         {collection.description}
                     </p>
                 )}
-                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-paper-300 font-bold mt-2">
+                <span className="font-mono text-xs uppercase tracking-[0.1em] text-paper-300 font-bold mt-2">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
@@ -525,7 +535,7 @@ const Creations: React.FC = () => {
             {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-8">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">
+                    <p className="font-mono text-xs uppercase tracking-[0.1em] text-wood-400 font-bold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
                             <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">
