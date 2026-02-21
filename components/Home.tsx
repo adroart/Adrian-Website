@@ -50,10 +50,10 @@ const PathwayBlock: React.FC<{
     >
         <div className="flex justify-between items-end relative z-10 px-4">
             <div>
-                <h3 className="font-serif text-4xl md:text-5xl text-wood-900 mb-2 group-hover:translate-x-2 transition-transform duration-500 font-medium">
+                <h3 className="font-serif text-4xl md:text-5xl text-wood-900 mb-2 group-hover:translate-x-2 active:translate-x-1 transition-transform duration-500 font-medium">
                     {title}
                 </h3>
-                <p className="font-serif text-xl text-wood-500 group-hover:translate-x-2 transition-transform duration-500 delay-75 italic font-light">
+                <p className="font-serif text-xl text-wood-500 group-hover:translate-x-2 active:translate-x-1 transition-transform duration-500 delay-75 italic font-light">
                     {subtitle}
                 </p>
             </div>
@@ -79,7 +79,7 @@ const Home: React.FC = () => {
                     </blockquote>
                     <div className="mt-12 space-y-6 text-center">
                         <p className="font-serif text-lg md:text-xl text-wood-600 leading-relaxed font-light">
-                            My pieces bring people together. They find a way of speaking directly through the heart. If someone does not already understand what they are looking at, the art is reminding them. Something they can feel without reading a word.
+                            My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
                         </p>
                     </div>
                     <div className="mt-12 flex flex-col items-center gap-4">
@@ -123,7 +123,7 @@ const Home: React.FC = () => {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 text-lg font-serif font-light text-paper-200 leading-[1.7]">
                         <p>
-                            Not everything here is painted. Some pieces honor the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
+                            Not everything here is painted. Some leave the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
                         </p>
                         <p>
                             Between the endless ceremony, art is our prayer. Every piece touched by the Technician of the Sacred, yet it is not any one of us but a way. A family, different origins, one mother, earth.
@@ -161,7 +161,7 @@ const Home: React.FC = () => {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                         <Link
                             to="/writings"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"

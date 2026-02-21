@@ -67,7 +67,7 @@ const Hero: React.FC = () => {
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
               <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-[1.5] tracking-wide opacity-90 drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
-                  From intimate talismans to immersive installations.<br/>
+                  From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>
               <div className="mt-8 md:hidden">
