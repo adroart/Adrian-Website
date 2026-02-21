@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowUpRight, ShoppingBag } from 'lucide-react';
+import { Menu, X, ArrowUpRight, ShoppingBag, Sun, Moon } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { useDarkMode } from '../DarkModeContext';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -19,6 +20,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, openCart } = useCart();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
   const textPrimary = isDark ? 'text-paper-50' : 'text-wood-900';
@@ -107,8 +109,16 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             ))}
           </div>
 
-          {/* Right-side controls: cart + mobile hamburger */}
+          {/* Right-side controls: dark mode + cart + mobile hamburger */}
           <div className="flex items-center gap-1">
+            <button
+              onClick={toggleDarkMode}
+              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
             <button
               onClick={openCart}
               className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}

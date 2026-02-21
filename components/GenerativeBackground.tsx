@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
+import { useDarkMode } from '../DarkModeContext';
 
 interface Props {
     pathname: string;
@@ -54,6 +55,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
     const frameRef = useRef(0);
     const timeRef = useRef(0);
     const resizeTimeoutRef = useRef<any>(null);
+    const { isDarkMode } = useDarkMode();
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -109,7 +111,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
 
             ctx.clearRect(0, 0, width, height);
 
-            const isDark = theme === 'DARK';
+            const isDark = theme === 'DARK' || isDarkMode;
             ctx.strokeStyle = isDark ? 'rgba(176, 141, 85, 0.15)' : 'rgba(100, 80, 60, 0.08)';
             ctx.fillStyle = isDark ? 'rgba(176, 141, 85, 0.3)' : 'rgba(100, 80, 60, 0.2)';
             ctx.lineWidth = 0.5;
@@ -176,7 +178,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
                         ctx.beginPath();
                         ctx.moveTo(p1.x, p1.y);
                         ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = isDark
+                        ctx.strokeStyle = (isDark)
                             ? `rgba(176, 141, 85, ${alpha * 0.2})`
                             : `rgba(60, 50, 40, ${alpha * 0.1})`;
                         ctx.stroke();
@@ -193,13 +195,15 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
             if (resizeTimeoutRef.current) cancelAnimationFrame(resizeTimeoutRef.current);
             cancelAnimationFrame(frameRef.current);
         };
-    }, [pathname, theme]);
+    }, [pathname, theme, isDarkMode]);
+
+    const effectivelyDark = theme === 'DARK' || isDarkMode;
 
     return (
         <canvas
             ref={canvasRef}
             className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pathname === '/' ? 'opacity-0' : 'opacity-100'}`}
-            style={{ mixBlendMode: theme === 'DARK' ? 'screen' : 'multiply' }}
+            style={{ mixBlendMode: effectivelyDark ? 'screen' : 'multiply' }}
         />
     );
 };

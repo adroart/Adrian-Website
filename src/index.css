@@ -17,6 +17,10 @@ html {
   background-color: #c4aa7c40;
   color: #262321;
 }
+.dark ::selection {
+  background-color: #c4aa7c50;
+  color: #f0ede7;
+}
 
 /* #2 Balanced headings — prevents lopsided line breaks */
 h1, h2, h3, h4, h5, h6 {
@@ -43,6 +47,9 @@ blockquote {
   margin-left: 0;
   margin-right: 0;
 }
+.dark blockquote {
+  border-left-color: #d4b88a;
+}
 
 /* #21 Tabular figures on prices — digits align in columns */
 .font-mono {
@@ -54,12 +61,18 @@ blockquote {
   color: #a39e96;
   opacity: 1;
 }
+.dark ::placeholder {
+  color: #6b665f;
+}
 
 /* #12 Pull-quote base styling */
 .pull-quote {
   position: relative;
   padding-left: 1.5rem;
   border-left: 2px solid #c4aa7c80;
+}
+.dark .pull-quote {
+  border-left-color: #d4b88a80;
 }
 
 /* #30 Article prose refinements */
@@ -99,6 +112,10 @@ blockquote {
   --color-paper-300: #cfc6b5;
 
   /* Colors: wood */
+  --color-wood-50: #faf9f7;
+  --color-wood-100: #f0ece5;
+  --color-wood-200: #e0d8cc;
+  --color-wood-300: #c8bda8;
   --color-wood-400: #a89070;
   --color-wood-500: #8f7a5b;
   --color-wood-600: #736046;
@@ -125,10 +142,14 @@ blockquote {
   --color-avail-sold: #9A9A9A;
 
   /* Colors: bronze */
+  --color-bronze-50: #faf6f0;
+  --color-bronze-100: #f0e8d8;
   --color-bronze-200: #e6d9c3;
+  --color-bronze-300: #d5c1a0;
   --color-bronze-400: #c4aa7c;
   --color-bronze-500: #ab9266;
   --color-bronze-600: #8a744e;
+  --color-bronze-700: #6d5a3c;
   --color-bronze-900: #453825;
 
   /* Animations */
@@ -165,4 +186,99 @@ blockquote {
     0% { transform: scale(0); opacity: 1; }
     100% { transform: scale(4); opacity: 0; }
   }
+}
+
+/* ─── Dark Mode: Full Inversion via CSS Variable Remapping ──────────────── */
+/* Every Tailwind utility that references these variables (bg-paper-50,
+   text-wood-900, border-stone-200, etc.) will automatically adapt.         */
+
+.dark {
+  color-scheme: dark;
+
+  /* Paper: light surfaces → deep warm darks */
+  --color-paper-50: #1a1816;
+  --color-paper-100: #21201c;
+  --color-paper-200: #2b2820;
+  --color-paper-300: #3a3529;
+
+  /* Wood: full scale inversion */
+  --color-wood-50: #1e1c18;
+  --color-wood-100: #252320;
+  --color-wood-200: #302d28;
+  --color-wood-300: #4a4540;
+  --color-wood-400: #9a9490;
+  --color-wood-500: #a8a29c;
+  --color-wood-600: #bcb6ad;
+  --color-wood-700: #ccc7be;
+  --color-wood-800: #dedad0;
+  --color-wood-900: #f0ede7;
+
+  /* Stone: invert the entire gray scale */
+  --color-stone-50: #1a1816;
+  --color-stone-100: #21201c;
+  --color-stone-200: #2e2b26;
+  --color-stone-300: #3d3935;
+  --color-stone-400: #7a756e;
+  --color-stone-500: #9a958d;
+  --color-stone-600: #b5b0a8;
+  --color-stone-700: #c5c0b8;
+  --color-stone-800: #d5d2cc;
+  --color-stone-900: #e5e3de;
+  --color-stone-950: #f0ede8;
+
+  /* Cream → warm darks */
+  --color-cream: #1e1c18;
+  --color-cream-dark: #262320;
+
+  /* Taupe → light taupe */
+  --color-taupe: #c5beb8;
+  --color-taupe-light: #b0a89f;
+
+  /* Warm gold: brighten for dark backgrounds */
+  --color-warm-gold: #c8a878;
+  --color-warm-gold-hover: #b89868;
+
+  /* Bronze: full scale inversion for dark backgrounds */
+  --color-bronze-50: #2a2418;
+  --color-bronze-100: #3a3020;
+  --color-bronze-200: #5a4a30;
+  --color-bronze-300: #7a6848;
+  --color-bronze-400: #d4b88a;
+  --color-bronze-500: #c4a878;
+  --color-bronze-600: #d4b88a;
+  --color-bronze-700: #9a8058;
+  --color-bronze-900: #3a2e1a;
+
+  /* Availability: invert for dark-bg readability */
+  --color-avail-ready: #e0e0e0;
+  --color-avail-order: #a0a0a0;
+  --color-avail-sold: #707070;
+}
+
+/* bg-white is a Tailwind built-in — override it in dark mode */
+.dark .bg-white,
+.dark .hover\:bg-white:hover {
+  background-color: #21201c;
+}
+/* Semantic status colors on dark backgrounds */
+.dark .bg-green-50 {
+  background-color: #0a2010;
+}
+.dark .border-green-200 {
+  border-color: #1a4030;
+}
+.dark .text-green-800 {
+  color: #6ee7a0;
+}
+.dark .text-green-600 {
+  color: #4ade80;
+}
+
+/* Transition the body background smoothly */
+body {
+  transition: background-color 0.5s ease;
+}
+.dark body,
+html.dark body {
+  background-color: #1a1816;
 }
