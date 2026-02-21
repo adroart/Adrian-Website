@@ -103,7 +103,7 @@ const About: React.FC = () => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_SCHEMA) }}
         />
 
-        {/* ─── HERO: Identity & Hook ─────────────────────────────────────── */}
+        {/* ─── HERO: 4.1 What I Create ────────────────────────────────────── */}
         <div className="relative pt-40 pb-32 px-6 overflow-hidden">
           <div className="max-w-5xl mx-auto">
             <Reveal>
@@ -117,11 +117,23 @@ const About: React.FC = () => {
               </h1>
             </Reveal>
             <Reveal delay={160}>
-              <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.45] font-light max-w-2xl">
-                Multidimensional wooden sculptures. Original paintings with projection mapping and LED.
-                Jewelry. Oracle cards. Immersive installations. Tea houses and spaces designed for presence.
-                Artifacts of the future.
-              </p>
+              <div className="space-y-6 font-serif text-2xl md:text-3xl text-wood-700 leading-[1.45] font-light max-w-2xl">
+                <p>
+                  I create art and spaces of presence and connection. Multidimensional wooden sculptures
+                  with original paintings, light, and crystals. Jewelry. Oracle cards. Tea houses. Stages.
+                  Immersive installations you can walk into.
+                </p>
+                <p>
+                  Some pieces are intimate enough to hold. Others transform entire environments. Hundreds
+                  live throughout the world now, from Dubai to South Africa to the US and beyond. I work
+                  between studios in Bali and California.
+                </p>
+                <p>
+                  The art is not the point. The connection between people is the point. The art holds a
+                  space which all of us rest inside. It is there as a confirmation, as a feeling, as a
+                  recognition.
+                </p>
+              </div>
             </Reveal>
           </div>
         </div>
@@ -145,8 +157,211 @@ const About: React.FC = () => {
           </div>
         </Reveal>
 
-        {/* ─── WHAT ART CAN MEAN (moved up — most powerful story) ──────── */}
-        {/* TODO_REPLACE: Adrian — please replace this story with a new one. The wording below is preserved exactly as original. */}
+        {/* ─── 4.2 THE ROOT (text left / image right) ──────────────────── */}
+        <div className="px-6 py-28">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <Reveal>
+              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
+                The Root
+              </span>
+              <div className="space-y-5 font-serif text-lg text-wood-700 leading-relaxed">
+                <p>
+                  In my earliest years of school, I sat with the founder of Mount Madonna who had taken
+                  a vow of silence. He was from India but had decided to bring his wisdom to the West.
+                  People still flew from India to see him.
+                </p>
+                <p>
+                  I had the opportunity to ask questions. He would respond on a chalkboard. But the feeling
+                  of sitting next to him was enough. The feeling of being seen. The feeling of presence.
+                  Truth that comes through direct connection to the Divine was the only question that
+                  mattered. And there was no answer. Except to sit and enjoy the Divinity.
+                </p>
+                <p>
+                  Those years taught me the value of just being. Centered in yourself. Unconditionally
+                  being there with someone.
+                </p>
+                <p>
+                  This is what inspires me to create and what I wish for people to feel in the presence
+                  of my creations.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="aspect-[3/4] relative overflow-hidden bg-wood-200">
+                <img
+                  src="https://picsum.photos/800/1200?random=about1"
+                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
+                  alt="Adrian Rasmussen portrait"
+                  loading="lazy"
+                />
+              </div>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* ─── PULL QUOTE ───────────────────────────────────────────────── */}
+        <Reveal>
+          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
+                <span className="ml-[-0.4em]">"</span>The art is not the point.<br />The connection between people is the point."
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ─── 4.3 THE PATH (image left / text right) ──────────────────── */}
+        <div className="px-6 py-28">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <Reveal delay={120}>
+              <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:order-first order-last">
+                <img
+                  src="https://picsum.photos/800/1200?random=about2"
+                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
+                  alt="Tea ceremony and travels"
+                  loading="lazy"
+                />
+              </div>
+            </Reveal>
+            <Reveal>
+              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
+                The Path
+              </span>
+              <div className="space-y-5 font-serif text-lg text-wood-700 leading-relaxed">
+                <p>
+                  I've been creating since before I can remember. Graffiti culture shaped my eye.
+                  I painted over 3,000 one-of-a-kind hats, shifted to canvas, toured West Coast galleries
+                  and festivals. Then I discovered laser cutting and everything started to come together.
+                  Painting, digital design, airbrush, lapidary, jewelry, 3D printing. Many skills becoming
+                  one expression.
+                </p>
+                <p>
+                  My tea journey came early. My father introduced it when I was young, and it never left.
+                  In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
+                  guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
+                  effortlessly intertwined in creating spaces to experience communion.
+                </p>
+                <p>
+                  Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
+                  several studios built between Santa Cruz and Bali. Had over 120 exhibitions and live
+                  painted at many events. The forms keep evolving. The intention stays the same. Art is
+                  the journey, bringing the formless into form in communion with something bigger than
+                  any one.
+                </p>
+                <p>
+                  Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
+                  creating together. That's been true since 2002 and it's true now.
+                </p>
+              </div>
+              <div className="mt-10">
+                <Link
+                  to="/creations"
+                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                >
+                  See the work
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* ─── 4.4 CONNECTION + 4.6 THE TEAM ────────────────────────────── */}
+        <Reveal>
+          <div className="px-6 py-20 bg-wood-800">
+            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div>
+                <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-6 font-bold">
+                  Connection
+                </span>
+                <div className="space-y-5 font-serif text-xl text-paper-100 leading-relaxed font-light">
+                  <p>
+                    Bringing people together in cocreation has always inspired me.
+                  </p>
+                  <p>
+                    In Santa Cruz, I co-founded the Hide Gallery, which won Best Art Gallery. I helped
+                    launch First Friday, growing it from 3 galleries to over 200 locations. I worked with
+                    the city and ArtSpace to bring the Tannery Lofts into being. 100 units of housing for
+                    artists. Over the years, ten Burning Man festivals, the 150-foot stage for Arise, over
+                    120 exhibitions and live paintings.
+                  </p>
+                  <p>
+                    Now I design tea houses and spaces where people can gather. The art, the space, the
+                    ceremony. All in service of what happens between people when presence is held. The tea
+                    and the art have always been intertwined. We sit in these spaces and connect to the
+                    elements, the room, the sounds, the sensations, the connection with all that is around us.
+                  </p>
+                </div>
+                <div className="mt-10">
+                  <Link
+                    to="/inquire"
+                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-bronze-400 hover:text-bronze-300 font-bold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
+                  >
+                    Work together
+                  </Link>
+                </div>
+              </div>
+              <div className="md:border-l border-wood-600 md:pl-16">
+                <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-6 font-bold">
+                  The Team
+                </span>
+                <div className="space-y-5 font-serif text-xl text-paper-100 leading-relaxed font-light">
+                  <p>
+                    I don't work alone. Many have walked this path with me. Learning, discovering, creating.
+                    We work hand in hand to bring these arts into form and share them with the planet.
+                  </p>
+                  <p className="text-bronze-300 italic">
+                    A family from different origins. One mother. Earth.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ─── 4.5 CREATION AS PRACTICE (text + image side by side) ────── */}
+        <div className="px-6 py-28">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <Reveal>
+              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
+                Creation as Practice
+              </span>
+              <div className="space-y-5 font-serif text-xl text-wood-800 leading-relaxed font-light">
+                <p>
+                  Creating is how I grow. My inner journey. A celebration of creation itself.
+                </p>
+                <p>
+                  Through the process of creation I find deeper alignment with what is true to me.
+                  The more I create, the more authentic I become. And by expressing what is true for me,
+                  perhaps others feel permission to do the same.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="aspect-square relative overflow-hidden bg-wood-200">
+                <img
+                  src="https://picsum.photos/800/800?random=about3"
+                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
+                  alt="Creation in the studio"
+                  loading="lazy"
+                />
+              </div>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* ─── PULL QUOTE 2 ─────────────────────────────────────────────── */}
+        <Reveal>
+          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
+            <div className="max-w-3xl mx-auto text-center">
+              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
+                <span className="ml-[-0.4em]">"</span>By expressing what is true for me,<br />perhaps others feel permission to do the same."
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ─── 4.7 WHAT ART CAN MEAN ────────────────────────────────────── */}
+        {/* TODO_REPLACE: Paused. Needs rework. Story has inaccuracies that need to be corrected from Adrian's actual memory of the experience. Do not publish as written. Adrian to retell this story from memory with accurate details, then we refine. */}
         <div className="px-6 py-28 bg-wood-900">
           <div className="max-w-5xl mx-auto">
             <Reveal>
@@ -180,194 +395,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* ─── THE ROOT (text left / image right) ──────────────────────── */}
-        <div className="px-6 py-28">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <Reveal>
-              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
-                The Root
-              </span>
-              <div className="space-y-5 font-serif text-lg text-wood-700 leading-relaxed">
-                <p>
-                  In my earliest years of school, I sat with the founder who had taken a vow of silence.
-                  He was from India but had decided to bring his wisdom to the West. People still flew from
-                  India to see him.
-                </p>
-                <p>
-                  I had the opportunity to ask questions. He would respond on a chalkboard. But the feeling
-                  of sitting next to him was enough. The feeling of being seen. The feeling of presence.
-                  The feeling of truth that comes through your connection directly to the Divine was the only
-                  question that mattered. And there was no answer. Except to sit and enjoy the Divinity.
-                </p>
-                <p>
-                  Those years taught me the value of just being. Centered in yourself. Just unconditionally
-                  being there with someone. This is what inspires me to create.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={120}>
-              <div className="aspect-[3/4] relative overflow-hidden bg-wood-200">
-                <img
-                  src="https://picsum.photos/800/1200?random=about1"
-                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
-                  alt="Adrian Rasmussen portrait"
-                  loading="lazy"
-                />
-              </div>
-            </Reveal>
-          </div>
-        </div>
-
-        {/* ─── PULL QUOTE ───────────────────────────────────────────────── */}
-        <Reveal>
-          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
-                <span className="ml-[-0.4em]">"</span>The intention stayed the same.<br />Bringing the formless into form."
-              </p>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ─── THE PATH (image left / text right) ──────────────────────── */}
-        <div className="px-6 py-28">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <Reveal delay={120}>
-              <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:order-first order-last">
-                <img
-                  src="https://picsum.photos/800/1200?random=about2"
-                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
-                  alt="Tea ceremony and travels"
-                  loading="lazy"
-                />
-              </div>
-            </Reveal>
-            <Reveal>
-              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
-                The Path
-              </span>
-              <div className="space-y-5 font-serif text-lg text-wood-700 leading-relaxed">
-                <p>
-                  Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia.
-                  China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures. Qigong,
-                  Tai Chi, meditation, tea ceremony. Since 2010, I've been trading artwork for Chinese tea.
-                  Two practices that had always been connected. This practice now lives at{' '}
-                  <a
-                    href="https://teajia.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
-                  >
-                    Teajia
-                  </a>
-                  , where I share twenty years of tea culture.
-                </p>
-                <p>
-                  Along the way, I found new tools. Laser cutting, LEDs, airbrushing, projection mapping.
-                  The forms evolved. The intention stayed the same. Bringing the formless into form.
-                </p>
-                <p>
-                  Since 2020, I've been developing an artist residency, Makerspace, and gallery with
-                  Labyrinth Bali in the Nuanu Project.
-                </p>
-              </div>
-              <div className="mt-10">
-                <Link
-                  to="/creations"
-                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
-                >
-                  See the work
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-
-        {/* ─── CONNECTION + TEAM (merged) ───────────────────────────────── */}
-        <Reveal>
-          <div className="px-6 py-20 bg-wood-800">
-            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16">
-              <div>
-                <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-6 font-bold">
-                  Connection
-                </span>
-                <p className="font-serif text-xl text-paper-100 leading-relaxed font-light">
-                  Bringing people together has always been the thread. In Santa Cruz, I co-founded the
-                  Hide Gallery, which won Best Art Gallery. I worked with the city to bring the Tannery
-                  Lofts into being. I created installations for ten Burning Man festivals. Now I design tea
-                  houses and spaces where people can gather. All in service of what happens between people
-                  when presence is held.
-                </p>
-                <div className="mt-10">
-                  <Link
-                    to="/inquire"
-                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-bronze-400 hover:text-bronze-300 font-bold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
-                  >
-                    Work together
-                  </Link>
-                </div>
-              </div>
-              <div className="md:border-l border-wood-600 md:pl-16">
-                <span className="font-mono text-xs text-bronze-400 uppercase tracking-widest block mb-6 font-bold">
-                  The Team
-                </span>
-                <div className="space-y-5 font-serif text-xl text-paper-100 leading-relaxed font-light">
-                  <p>
-                    I don't work alone. Many have walked this path with me. Learning, discovering, creating.
-                    We work hand in hand to bring these arts into form and share them with the planet.
-                  </p>
-                  <p className="text-bronze-300 italic">
-                    A family from different origins. One mother. Earth.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ─── CREATION AS PRACTICE (text + image side by side) ────────── */}
-        <div className="px-6 py-28">
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <Reveal>
-              <span className="font-mono text-xs text-bronze-600 uppercase tracking-widest block mb-6 font-bold">
-                Creation as Practice
-              </span>
-              <div className="space-y-5 font-serif text-xl text-wood-800 leading-relaxed font-light">
-                <p>
-                  Creating is how I grow. My inner journey. A celebration of creation itself.
-                </p>
-                <p>
-                  Through the process, I've learned to speak my truth. To come more and more clear.
-                  The more I create, the more authentic I become. And by expressing what is true for me,
-                  perhaps others feel permission to do the same.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={120}>
-              <div className="aspect-square relative overflow-hidden bg-wood-200">
-                <img
-                  src="https://picsum.photos/800/800?random=about3"
-                  className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s]"
-                  alt="Creation in the studio"
-                  loading="lazy"
-                />
-              </div>
-            </Reveal>
-          </div>
-        </div>
-
-        {/* ─── PULL QUOTE 2 ─────────────────────────────────────────────── */}
-        <Reveal>
-          <div className="px-6 py-20 border-y border-wood-100 bg-paper-100">
-            <div className="max-w-3xl mx-auto text-center">
-              <p className="font-serif text-3xl md:text-4xl text-wood-800 font-light leading-[1.3] italic">
-                <span className="ml-[-0.4em]">"</span>By expressing what is true for me,<br />perhaps others feel permission to do the same."
-              </p>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ─── CLOSE / GO DEEPER ────────────────────────────────────────── */}
+        {/* ─── 4.8 CLOSE / GO DEEPER ────────────────────────────────────── */}
         <div className="px-6 py-32 text-center">
           <Reveal>
             <p className="font-serif text-xl text-wood-500 italic mb-10 max-w-xl mx-auto leading-relaxed">
