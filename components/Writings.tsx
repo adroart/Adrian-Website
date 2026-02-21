@@ -1,9 +1,9 @@
 
-import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
-import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -315,8 +315,6 @@ const Writings: React.FC = () => {
 
     // #6 Active category tracking via IntersectionObserver
     const [activeCategory, setActiveCategory] = useState('');
-    // #20 Accordion state for mobile — all collapsed by default
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -331,15 +329,6 @@ const Writings: React.FC = () => {
         return grouped;
     }, []);
 
-    const toggleCategory = useCallback((cat: string) => {
-        setExpandedCategories(prev => {
-            const next = new Set(prev);
-            if (next.has(cat)) next.delete(cat);
-            else next.add(cat);
-            return next;
-        });
-    }, []);
-
     // Scroll to hash anchor on mount (for links arriving from other pages)
     useEffect(() => {
         if (window.location.hash) {
@@ -347,9 +336,6 @@ const Writings: React.FC = () => {
             const el = document.getElementById(id);
             if (el) {
                 setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
-                // Also expand that category on mobile
-                const cat = categories.find(c => categorySlug(c) === id);
-                if (cat) setExpandedCategories(new Set([cat]));
             }
         } else {
             window.scrollTo(0, 0);
@@ -412,7 +398,6 @@ const Writings: React.FC = () => {
                 {categories.map(cat => {
                     const stories = storiesByCategory[cat];
                     if (!stories || stories.length === 0) return null;
-                    const isExpanded = expandedCategories.has(cat);
                     return (
                         <div
                             key={cat}
@@ -420,28 +405,15 @@ const Writings: React.FC = () => {
                             className="mb-24 scroll-mt-36"
                             ref={el => { sectionRefs.current[categorySlug(cat)] = el; }}
                         >
-                            {/* #20 Clickable category header for mobile accordion */}
-                            <div
-                                className="mb-8 pb-6 border-b border-wood-100 cursor-pointer md:cursor-default"
-                                onClick={() => toggleCategory(cat)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={e => e.key === 'Enter' && toggleCategory(cat)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
-                                    <ChevronDown
-                                        size={20}
-                                        className={`md:hidden text-wood-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                                    />
-                                </div>
+                            <div className="mb-8 pb-6 border-b border-wood-100">
+                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
                                 <p className="font-serif text-base text-wood-500 italic font-light">
                                     {CATEGORY_SUBTEXT[cat]}
                                 </p>
                             </div>
 
-                            {/* #8 Better mobile spacing + #20 Accordion: hidden on mobile unless expanded, always visible on desktop */}
-                            <div className={`space-y-6 md:space-y-4 transition-all duration-300 ${isExpanded ? 'block' : 'hidden'} md:block`}>
+                            {/* #8 Better mobile spacing */}
+                            <div className="space-y-6 md:space-y-4">
                                 {stories.map((story, i) => (
                                     <Link
                                         key={story.id}
