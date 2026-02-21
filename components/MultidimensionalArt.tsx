@@ -24,13 +24,15 @@ const SubcategoryTile: React.FC<{
         >
             <img
                 src={`https://picsum.photos/800/600?random=${200 + idx}`}
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
+                className="w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                 alt={label}
             />
-            <div className="absolute inset-0 bg-wood-900/10 group-hover:bg-transparent transition-colors duration-500" />
-            <div className="absolute inset-0 p-6 flex flex-col justify-end bg-gradient-to-t from-stone-950/80 via-transparent to-transparent opacity-100 group-hover:opacity-90 transition-opacity">
+            <div className="absolute bottom-0 inset-x-0 p-6 bg-stone-950/60 backdrop-blur-md">
                 <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">{label}</h3>
-                <p className="font-serif text-sm text-paper-200 font-light opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                <p className="font-serif text-sm text-paper-200 font-light
+                              opacity-100 sm:opacity-0 sm:translate-y-3
+                              sm:group-hover:opacity-100 sm:group-hover:translate-y-0
+                              transition-all duration-500 delay-100">
                     {desc}
                 </p>
             </div>

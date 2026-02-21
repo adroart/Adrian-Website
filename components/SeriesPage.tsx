@@ -280,10 +280,9 @@ const SeriesPage: React.FC = () => {
                                         src={series.image}
                                         alt={`${series.name} series by Adrian Rasmussen`}
                                         loading="lazy"
-                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
+                                        className="w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent opacity-100 group-hover:opacity-90 transition-opacity" />
-                                    <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-end">
+                                    <div className="absolute bottom-0 inset-x-0 p-6 md:p-8 bg-stone-950/60 backdrop-blur-md">
                                         <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">
                                             {series.name}
                                         </h3>
