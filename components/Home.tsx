@@ -5,39 +5,50 @@ import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 
 const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
-    <div className="group cursor-pointer break-inside-avoid">
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
+    <div className="group cursor-pointer break-inside-avoid border-b border-wood-100 pb-5 sm:border-b-0 sm:pb-0">
+        {/* Image — 4:3 on mobile for consistent heights; natural ratio on sm+ */}
+        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg aspect-[4/3] sm:aspect-auto">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
-                className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover sm:static sm:h-auto transition-transform duration-[1.5s] group-hover:scale-105"
                 loading="lazy"
             />
-            <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/5 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/5 transition-colors duration-500" />
         </div>
-        <div className="mt-4">
+        <div className="mt-3 px-1">
+            {/* Badge — pill below the image instead of inline text */}
+            {art.availability === 'READY_TO_SHIP' && (
+                <div className="mb-2">
+                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-bold leading-none">
+                        Available
+                    </span>
+                </div>
+            )}
+
             <h3 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                 {art.title}
             </h3>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="font-mono text-[11px] uppercase tracking-widest text-wood-500 font-bold">{art.category}</span>
-                {art.price && (
-                    <>
-                        <span className="text-wood-300 text-[11px]">·</span>
-                        <span className={`font-mono text-[11px] uppercase tracking-widest font-bold ${art.availability === 'SOLD' ? 'text-avail-sold' : 'text-wood-900'}`}>
-                            {art.availability === 'SOLD' ? 'Sold' : `From $${art.price}`}
-                        </span>
-                    </>
-                )}
-                {art.availability === 'READY_TO_SHIP' && (
-                    <>
-                        <span className="text-wood-300 text-[11px]">·</span>
-                        <span className="font-mono text-[11px] uppercase tracking-widest text-avail-ready font-bold">
-                            Ready to ship
-                        </span>
-                    </>
-                )}
-            </div>
+
+            {/* Price — own line, serif font, properly formatted with commas.
+                "From" only shown for made-to-order; sold gets its own treatment. */}
+            {art.price && (
+                <p className="font-serif text-sm mt-1 font-medium text-wood-800">
+                    {art.availability === 'SOLD' ? (
+                        <span className="text-avail-sold">Sold</span>
+                    ) : (
+                        <>
+                            {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
+                            ${art.price.toLocaleString('en-US')}
+                        </>
+                    )}
+                </p>
+            )}
+
+            {/* Category */}
+            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-bold leading-none">
+                {art.category}
+            </p>
         </div>
     </div>
 );
@@ -90,14 +101,16 @@ const Home: React.FC = () => {
 
             {/* 3.3 Selected Works */}
             <section className="py-20">
-                <div className="flex justify-between items-end mb-16 px-6">
+                {/* Stack title + CTA vertically on mobile so both stay on one line;
+                    side-by-side at sm+ where there's room. */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-10 sm:mb-16 px-6">
                     <div>
-                        <h2 className="font-serif text-4xl text-wood-900 mb-2 font-medium">Selected Works</h2>
+                        <h2 className="font-serif text-4xl text-wood-900 mb-1 font-medium">Selected Works</h2>
                         <p className="font-serif text-lg text-wood-500 italic">Pieces I return to.</p>
                     </div>
                     <Link
                         to="/creations"
-                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold"
+                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-wood-900 hover:text-bronze-600 font-bold whitespace-nowrap"
                     >
                         See All Creations <ArrowRight size={14} />
                     </Link>
@@ -166,7 +179,7 @@ const Home: React.FC = () => {
                             to="/writings#living-knowledge"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 Deep explorations earned through direct experience
                             </h3>
@@ -175,7 +188,7 @@ const Home: React.FC = () => {
                             to="/writings#beneath-the-surface"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The meaning and origins within the work
                             </h3>
@@ -184,7 +197,7 @@ const Home: React.FC = () => {
                             to="/writings#the-practice"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Practice</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">The Practice</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 How creation happens
                             </h3>
@@ -193,7 +206,7 @@ const Home: React.FC = () => {
                             to="/writings#the-path"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-3 font-bold">The Path</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">The Path</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The personal journey behind the art
                             </h3>
