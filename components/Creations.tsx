@@ -70,17 +70,15 @@ const CreationCategoryCard: React.FC<{
             <div className="absolute inset-0 bg-wood-100" />
             <img
                 src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
                 alt=""
                 aria-hidden="true"
                 loading="lazy"
                 width={800}
                 height={800}
             />
-            {/* Scrim */}
-            <div className="absolute inset-0 bg-wood-900/15 group-hover:bg-transparent transition-colors duration-500 pointer-events-none" />
-            {/* Text */}
-            <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent pointer-events-none">
+            {/* Text — pinned bottom bar with backdrop blur for reliable readability */}
+            <div className="absolute bottom-0 inset-x-0 p-5 bg-stone-950/60 backdrop-blur-md pointer-events-none">
                 <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 mb-1 font-medium leading-tight text-left">
                     {label}
                 </h3>
@@ -229,12 +227,11 @@ const CollectionCard: React.FC<{
                     width={800}
                     height={533}
                     className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${
-                        isActive ? 'grayscale-0' : 'grayscale group-hover:grayscale-0'
+                        isActive ? 'grayscale-0' : 'sm:grayscale sm:group-hover:grayscale-0'
                     }`}
                 />
             )}
-            <div className="absolute inset-0 bg-wood-900/15 group-hover:bg-transparent transition-colors duration-500" />
-            <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent">
+            <div className="absolute bottom-0 inset-x-0 p-5 bg-stone-950/60 backdrop-blur-md">
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 mb-1 font-medium leading-tight">
                     {collection.name}
                 </h4>
