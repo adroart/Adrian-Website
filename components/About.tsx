@@ -124,9 +124,9 @@ const About: React.FC = () => {
                   Immersive installations you can walk into.
                 </p>
                 <p>
-                  Some pieces are intimate enough to hold. Others transform entire environments. Hundreds
-                  live throughout the world now, from Dubai to South Africa to the US and beyond. I work
-                  between studios in Bali and California.
+                  Some pieces are intimate enough to hold. Others transform entire environments. They've
+                  found their way into homes and spaces across dozens of countries. I work globally but
+                  spend most of my time between Bali and California.
                 </p>
                 <p>
                   The art is not the point. The connection between people is the point. The art holds a
@@ -137,25 +137,6 @@ const About: React.FC = () => {
             </Reveal>
           </div>
         </div>
-
-        {/* ─── STATS RIBBON ─────────────────────────────────────────────── */}
-        <Reveal>
-          <div className="border-y border-wood-200 bg-paper-100 px-6 py-10">
-            <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x divide-wood-200">
-              {[
-                { number: '100s', label: 'Pieces Collected Worldwide' },
-                { number: '10', label: 'Burning Man Installations' },
-                { number: '20+', label: 'Years of Tea Culture' },
-                { number: '4', label: 'Continents Represented' },
-              ].map(({ number, label }) => (
-                <div key={label} className="md:px-10 first:pl-0 last:pr-0 text-center md:text-left">
-                  <p className="font-serif text-5xl text-wood-900 font-medium mb-1">{number}</p>
-                  <p className="font-mono text-xs text-bronze-600 uppercase tracking-widest leading-snug">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
 
         {/* ─── 4.2 THE ROOT (text left / image right) ──────────────────── */}
         <div className="px-6 py-28">
@@ -230,8 +211,8 @@ const About: React.FC = () => {
               <div className="space-y-5 font-serif text-lg text-wood-700 leading-relaxed">
                 <p>
                   I've been creating since before I can remember. Graffiti culture shaped my eye.
-                  I painted over 3,000 one-of-a-kind hats, shifted to canvas, toured West Coast galleries
-                  and festivals. Then I discovered laser cutting and everything started to come together.
+                  I painted thousands of one-of-a-kind hats, moved to canvas, and followed the work
+                  wherever it led. Then I discovered laser cutting and everything started to come together.
                   Painting, digital design, airbrush, lapidary, jewelry, 3D printing. Many skills becoming
                   one expression.
                 </p>
@@ -243,10 +224,9 @@ const About: React.FC = () => {
                 </p>
                 <p>
                   Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
-                  several studios built between Santa Cruz and Bali. Had over 120 exhibitions and live
-                  painted at many events. The forms keep evolving. The intention stays the same. Art is
-                  the journey, bringing the formless into form in communion with something bigger than
-                  any one.
+                  several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
+                  stays the same. Art is the journey, bringing the formless into form in communion with
+                  something bigger than any one.
                 </p>
                 <p>
                   Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
@@ -279,10 +259,10 @@ const About: React.FC = () => {
                   </p>
                   <p>
                     In Santa Cruz, I co-founded the Hide Gallery, which won Best Art Gallery. I helped
-                    launch First Friday, growing it from 3 galleries to over 200 locations. I worked with
-                    the city and ArtSpace to bring the Tannery Lofts into being. 100 units of housing for
-                    artists. Over the years, ten Burning Man festivals, the 150-foot stage for Arise, over
-                    120 exhibitions and live paintings.
+                    launch First Friday, which grew from a handful of galleries into something the whole
+                    city came out for. I worked with the city and ArtSpace to bring the Tannery Lofts into
+                    being, housing for artists. Ten Burning Man festivals. The 150-foot stage for Arise.
+                    Ceremonies, parties, shows.
                   </p>
                   <p>
                     Now I design tea houses and spaces where people can gather. The art, the space, the
@@ -333,6 +313,10 @@ const About: React.FC = () => {
                   Through the process of creation I find deeper alignment with what is true to me.
                   The more I create, the more authentic I become. And by expressing what is true for me,
                   perhaps others feel permission to do the same.
+                </p>
+                <p>
+                  When my mind leaves during creation, something else arrives. A current. I let go as much
+                  as I can and trust in my skills to bring forth what wants to come through.
                 </p>
               </div>
             </Reveal>
@@ -407,7 +391,7 @@ const About: React.FC = () => {
                 to="/writings"
                 className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
-                Go deeper — Writings
+                Explore the writings
               </Link>
               <Link
                 to="/shop"
