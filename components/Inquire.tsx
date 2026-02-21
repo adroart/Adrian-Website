@@ -163,13 +163,13 @@ const Inquire: React.FC = () => {
         {/* Opening */}
         <div className="mb-16 max-w-3xl">
           <h1 className="font-serif text-5xl text-wood-900 mb-8 font-medium">Inquire</h1>
-          <p className="font-serif text-xl text-wood-700 leading-relaxed font-light mb-6">
+          <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light mb-6">
             I take on a small number of commissions each year. Some become intimate pieces for personal spaces. Others become installations that transform environments.
           </p>
-          <p className="font-serif text-lg text-wood-600 leading-relaxed mb-4">
+          <p className="font-serif text-lg text-wood-600 leading-[1.7] mb-4">
             I am selective. Not every project is the right project. The right ones find me, and I recognize them when they do.
           </p>
-          <p className="font-serif text-lg text-wood-600 leading-relaxed">
+          <p className="font-serif text-lg text-wood-600 leading-[1.7]">
             If you are feeling a pull toward working together, trust that.
           </p>
         </div>
@@ -200,18 +200,18 @@ const Inquire: React.FC = () => {
                     alt={path.alt}
                     loading="lazy"
                   />
-                  <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest font-bold">
+                  <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] font-semibold">
                     {path.label}
                   </div>
                 </div>
                 {/* Text */}
                 <div className="p-6 md:p-8 flex flex-col flex-1 bg-white">
                   <h3 className="font-serif text-2xl text-wood-900 mb-3 font-medium">{path.title}</h3>
-                  <p className="font-serif text-wood-600 leading-[1.65] mb-6 flex-1 text-base">
+                  <p className="font-serif text-wood-600 leading-[1.7] mb-6 flex-1 text-base">
                     {path.description}
                   </p>
                   <span
-                    className={`font-mono text-xs uppercase tracking-widest font-bold self-start flex items-center gap-2 transition-colors duration-300 ${
+                    className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold self-start flex items-center gap-2 transition-colors duration-300 ${
                       isSelected
                         ? 'text-bronze-600'
                         : 'text-wood-500 group-hover:text-wood-900'
@@ -229,7 +229,7 @@ const Inquire: React.FC = () => {
         {/* Form */}
         <div id="inquiry-form" className="max-w-3xl mx-auto scroll-mt-28">
           <div className="bg-wood-50 p-8 md:p-12 border border-wood-100 relative">
-            <p className="font-serif text-xl text-wood-700 leading-relaxed font-light mb-8">
+            <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light mb-8">
               Tell me what you are imagining. We will figure out the details together.
             </p>
 
@@ -241,7 +241,7 @@ const Inquire: React.FC = () => {
                 <p className="font-serif text-wood-600 leading-[1.7] mb-8">
                   I have received your message and will be in touch soon.
                 </p>
-                <p className="font-serif text-wood-500 leading-relaxed mb-8">
+                <p className="font-serif text-wood-500 leading-[1.7] mb-8">
                   In the meantime, you are welcome to explore the{' '}
                   <a href="/creations" className="underline underline-offset-4 decoration-1 hover:text-wood-700 transition-colors">Creations</a>
                   {' '}or go deeper in the{' '}
@@ -249,7 +249,7 @@ const Inquire: React.FC = () => {
                 </p>
                 <button
                   onClick={handleReset}
-                  className="font-mono text-xs uppercase tracking-widest text-wood-500 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
+                  className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
                 >
                   Send another message
                 </button>
@@ -259,12 +259,12 @@ const Inquire: React.FC = () => {
 
                 {/* Commission Type Toggle */}
                 <div className="space-y-3">
-                  <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold block">Type of Commission</label>
+                  <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block">Type of Commission</label>
                   <div className="flex gap-0 border border-wood-300 w-fit">
                     <button
                       type="button"
                       onClick={() => handleCommissionType('personal')}
-                      className={`px-6 py-3 font-mono text-xs uppercase tracking-widest font-bold transition-colors ${
+                      className={`px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${
                         commissionType === 'personal'
                           ? 'bg-wood-900 text-paper-50'
                           : 'bg-transparent text-wood-500 hover:text-wood-900'
@@ -275,7 +275,7 @@ const Inquire: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleCommissionType('spatial')}
-                      className={`px-6 py-3 font-mono text-xs uppercase tracking-widest font-bold transition-colors border-l border-wood-300 ${
+                      className={`px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors border-l border-wood-300 ${
                         commissionType === 'spatial'
                           ? 'bg-wood-900 text-paper-50'
                           : 'bg-transparent text-wood-500 hover:text-wood-900'
@@ -294,7 +294,7 @@ const Inquire: React.FC = () => {
                 {/* Name + Email */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div className="space-y-2">
-                         <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Name</label>
+                         <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">Name</label>
                          <input
                            type="text"
                            name="name"
@@ -305,7 +305,7 @@ const Inquire: React.FC = () => {
                          />
                      </div>
                      <div className="space-y-2">
-                         <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Email</label>
+                         <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">Email</label>
                          <input
                            type="email"
                            name="email"
@@ -319,7 +319,7 @@ const Inquire: React.FC = () => {
 
                 {/* Vision */}
                 <div className="space-y-2">
-                     <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">What wants to exist?</label>
+                     <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">What wants to exist?</label>
                      <textarea
                        name="vision"
                        rows={4}
@@ -336,7 +336,7 @@ const Inquire: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowOptionals(prev => !prev)}
-                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-wood-500 hover:text-wood-900 transition-colors font-bold"
+                    className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 transition-colors font-semibold"
                   >
                     {showOptionals ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     {showOptionals ? 'Fewer details' : 'Add more detail (optional)'}
@@ -346,7 +346,7 @@ const Inquire: React.FC = () => {
                     <div className="mt-8 space-y-8">
                       {/* Budget */}
                       <div className="space-y-2">
-                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Budget Range</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">Budget Range</label>
                         <select
                           name="budget"
                           value={form.budget}
@@ -362,7 +362,7 @@ const Inquire: React.FC = () => {
 
                       {/* Timeline */}
                       <div className="space-y-2">
-                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">Timeline</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">Timeline</label>
                         <select
                           name="timeline"
                           value={form.timeline}
@@ -378,7 +378,7 @@ const Inquire: React.FC = () => {
 
                       {/* Referral */}
                       <div className="space-y-2">
-                        <label className="text-[11px] font-mono uppercase tracking-[0.15em] text-wood-500 font-bold">How did you find me?</label>
+                        <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold">How did you find me?</label>
                         <select
                           name="referral"
                           value={form.referral}
@@ -406,7 +406,7 @@ const Inquire: React.FC = () => {
                      <button
                        type="submit"
                        disabled={sendStatus === 'SENDING'}
-                       className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-widest hover:bg-bronze-600 transition-colors font-bold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+                       className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
                      >
                        {sendStatus === 'SENDING' ? (
                          <span className="animate-pulse">Sending...</span>
@@ -438,7 +438,7 @@ const Inquire: React.FC = () => {
             <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Common Questions</h3>
             <div className="space-y-8">
               <div>
-                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   How long does a commission take?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">
@@ -446,7 +446,7 @@ const Inquire: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   Where do pieces ship from?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">
@@ -454,7 +454,7 @@ const Inquire: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-[13px] uppercase tracking-[0.12em] text-wood-900 font-bold mb-3">
+                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   What sizes are available?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">

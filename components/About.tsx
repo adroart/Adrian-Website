@@ -136,7 +136,7 @@ const SideNav: React.FC = () => {
         const isActive = active === id;
         return (
           <button key={id} onClick={() => go(id)} className="group flex items-center gap-2.5 cursor-pointer" aria-label={`Jump to ${label}`}>
-            <span className={`font-mono text-[9px] uppercase tracking-widest transition-all duration-300 ${isActive ? 'opacity-100 text-bronze-500' : 'opacity-0 text-wood-400 translate-x-2 group-hover:opacity-60 group-hover:translate-x-0'}`}>
+            <span className={`font-mono text-[9px] uppercase tracking-[0.2em] transition-all duration-300 ${isActive ? 'opacity-100 text-bronze-500' : 'opacity-0 text-wood-400 translate-x-2 group-hover:opacity-60 group-hover:translate-x-0'}`}>
               {label}
             </span>
             <span className={`block rounded-full transition-all duration-300 ${isActive ? 'w-2.5 h-2.5 bg-bronze-500 shadow-[0_0_0_2px_rgba(196,170,124,0.25)]' : 'w-1.5 h-1.5 bg-wood-300 group-hover:bg-bronze-400'}`} />
@@ -152,7 +152,7 @@ const SideNav: React.FC = () => {
 const Tag: React.FC<{ light?: boolean; centered?: boolean; children: React.ReactNode }> = ({ light, centered, children }) => (
   <div className={`flex items-center gap-3 mb-8 ${centered ? 'justify-center' : ''}`}>
     {centered && <span className="about-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />}
-    <span className={`font-mono text-xs uppercase tracking-widest font-bold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
+    <span className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
     <span className="about-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />
   </div>
 );
@@ -301,7 +301,7 @@ const About: React.FC = () => {
         .todo-replace-badge {
           position: absolute; top: -14px; right: -10px;
           background: #f59e0b; color: #1c1917;
-          font-family: 'Space Mono', monospace;
+          font-family: 'Josefin Sans', sans-serif;
           font-size: 9px; font-weight: 700;
           letter-spacing: 0.05em; text-transform: uppercase;
           padding: 2px 8px; border-radius: 2px;
@@ -375,22 +375,22 @@ const About: React.FC = () => {
                 <Tag>The Root</Tag>
                 {/* #3 drop cap, #17 opacity gradient, #2 varied widths, #6 spacing */}
                 <div className="space-y-8">
-                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-relaxed">
+                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-[1.7]">
                     In my earliest years of school, I sat with the founder of Mount Madonna who had taken
                     a vow of silence. He was from India but had decided to bring his wisdom to the West.
                     People still flew from India to see him.
                   </p>
-                  <p className="pg-2 font-serif text-lg text-wood-700 leading-relaxed max-w-lg">
+                  <p className="pg-2 font-serif text-lg text-wood-700 leading-[1.7] max-w-lg">
                     I had the opportunity to ask questions. He would respond on a chalkboard. But the feeling
                     of sitting next to him was enough. The feeling of being seen. The feeling of presence.
                     Truth that comes through direct connection to the Divine was the only question that
                     mattered. And there was no answer. Except to sit and enjoy the Divinity.
                   </p>
-                  <p className="pg-3 font-serif text-lg text-wood-700 leading-relaxed">
+                  <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
                     Those years taught me the value of just being. Centered in yourself. Unconditionally
                     being there with someone.
                   </p>
-                  <p className="pg-4 font-serif text-lg text-wood-700 leading-relaxed max-w-md">
+                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7] max-w-md">
                     This is what inspires me to create and what I wish for people to feel in the presence
                     of my creations.
                   </p>
@@ -427,7 +427,7 @@ const About: React.FC = () => {
               <Reveal dir="left" delay={60}>
                 <div className="timeline-node">
                   {/* #3 drop cap on first timeline entry */}
-                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-relaxed">
+                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-[1.7]">
                     I've been creating since before I can remember. Graffiti culture shaped my eye.
                     I painted thousands of one-of-a-kind hats, moved to canvas, and followed the work
                     wherever it led. Then I discovered laser cutting and everything started to come together.
@@ -438,7 +438,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={100}>
                 <div className="timeline-node">
-                  <p className="pg-2 font-serif text-lg text-wood-700 leading-relaxed">
+                  <p className="pg-2 font-serif text-lg text-wood-700 leading-[1.7]">
                     My tea journey came early. My father introduced it when I was young, and it never left.
                     In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
                     guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
@@ -448,7 +448,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={140}>
                 <div className="timeline-node">
-                  <p className="pg-3 font-serif text-lg text-wood-700 leading-relaxed">
+                  <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
                     Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
                     several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
                     stays the same. Art is the journey, bringing the formless into form in communion with
@@ -458,7 +458,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={180}>
                 <div className="timeline-node">
-                  <p className="pg-4 font-serif text-lg text-wood-700 leading-relaxed italic">
+                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7] italic">
                     Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
                     creating together. That's been true since 2002 and it's true now.
                   </p>
@@ -470,7 +470,7 @@ const About: React.FC = () => {
               <div className="mt-10 pl-7">
                 <Link
                   to="/creations"
-                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                 >
                   See the work
                 </Link>
@@ -493,7 +493,7 @@ const About: React.FC = () => {
             {/* #15 — Asymmetric 2/1 grid */}
             <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-12 md:gap-20 items-start">
               <Reveal dir="left" delay={80}>
-                <div className="space-y-8 font-serif text-xl text-paper-100 leading-relaxed font-light">
+                <div className="space-y-8 font-serif text-xl text-paper-100 leading-[1.7] font-light">
                   <p className="drop-cap pg-1">
                     Bringing people together in cocreation has always inspired me.
                   </p>
@@ -514,7 +514,7 @@ const About: React.FC = () => {
                 <div className="mt-10">
                   <Link
                     to="/inquire"
-                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-bronze-400 hover:text-bronze-300 font-bold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-400 hover:text-bronze-300 font-semibold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
                   >
                     Work together
                   </Link>
@@ -536,7 +536,7 @@ const About: React.FC = () => {
           <div className="max-w-xl mx-auto text-center">
             <Reveal dir="scale">
               <Tag light centered>The Team</Tag>
-              <div className="space-y-7 font-serif text-xl text-paper-100 leading-relaxed font-light">
+              <div className="space-y-7 font-serif text-xl text-paper-100 leading-[1.7] font-light">
                 <p className="pg-1">
                   I don't work alone. Many have walked this path with me. Learning, discovering, creating.
                   We work hand in hand to bring these arts into form and share them with the planet.
@@ -563,7 +563,7 @@ const About: React.FC = () => {
             </Reveal>
             <Reveal dir="right">
               <Tag>Creation as Practice</Tag>
-              <div className="space-y-8 font-serif text-xl text-wood-800 leading-relaxed font-light">
+              <div className="space-y-8 font-serif text-xl text-wood-800 leading-[1.7] font-light">
                 <p className="drop-cap pg-1">
                   Creating is how I grow. My inner journey. A celebration of creation itself.
                 </p>
@@ -613,7 +613,7 @@ const About: React.FC = () => {
                     <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat
                     there a long time. When he finally stood, he told me what had happened."
                   </blockquote>
-                  <div className="font-serif text-lg text-paper-200 leading-relaxed max-w-2xl space-y-6">
+                  <div className="font-serif text-lg text-paper-200 leading-[1.7] max-w-2xl space-y-6">
                     <p>
                       He had been carrying suicidal feelings. An unclarity about why life was worth living.
                       But sitting in the presence of the piece, something shifted. It allowed him to go inward
@@ -634,20 +634,20 @@ const About: React.FC = () => {
         {/* ══ CLOSE / GO DEEPER ═════════════════════════════════════════════ */}
         <div id="about-close" className="px-6 py-32 text-center">
           <Reveal dir="scale">
-            <p className="font-serif text-xl text-wood-500 italic mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="font-serif text-xl text-wood-500 italic mb-10 max-w-xl mx-auto leading-[1.7]">
               The Writings hold more. The philosophy behind the work. The glowing crystal.
               The geometry. The path from formless to form.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
               <Link
                 to="/writings"
-                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
                 Explore the writings
               </Link>
               <Link
                 to="/shop"
-                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
                 Acquire a piece
               </Link>
