@@ -1,9 +1,9 @@
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
-import { ArrowLeft, ArrowRight, Share2, Feather } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather, ChevronDown } from 'lucide-react';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -11,6 +11,14 @@ const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
     'Beneath the Surface': 'The meaning, origins, and stories woven into each body of work.',
     'The Practice': 'How creation happens — the rituals, tools, and inner process behind the art.',
     'The Path': 'The personal journey. Where this all began, and where it continues to lead.',
+};
+
+// #3 Category accent colors for card left borders
+const CATEGORY_ACCENT: Record<StoryCategory, string> = {
+    'Living Knowledge': '#c4aa7c',    // bronze-400
+    'Beneath the Surface': '#736046', // wood-600
+    'The Practice': '#a39e96',        // stone-400
+    'The Path': '#8a744e',            // bronze-600
 };
 
 // Safely serialize data for embedding in <script type="application/ld+json"> tags.
@@ -36,9 +44,37 @@ export const WritingArticle: React.FC = () => {
             .slice(0, 2);
     }, [slug, story]);
 
+    // #18 Prev/next sequential navigation
+    const { prevStory, nextStory } = useMemo(() => {
+        const idx = STORIES.findIndex(s => s.slug === slug);
+        return {
+            prevStory: idx > 0 ? STORIES[idx - 1] : null,
+            nextStory: idx < STORIES.length - 1 ? STORIES[idx + 1] : null,
+        };
+    }, [slug]);
+
+    // #11 Reading progress bar
+    const [readProgress, setReadProgress] = useState(0);
+    // #14 Back to top visibility
+    const [showBackToTop, setShowBackToTop] = useState(false);
+
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [slug]);
+
+    // #11 + #14 Scroll tracking for progress bar and back-to-top
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            if (docHeight > 0) {
+                setReadProgress((scrollTop / docHeight) * 100);
+            }
+            setShowBackToTop(scrollTop > 600);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     if (!story) {
         return (
@@ -73,6 +109,12 @@ export const WritingArticle: React.FC = () => {
 
     return (
         <article className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
+            {/* #11 Reading progress bar */}
+            <div
+                className="fixed top-0 left-0 h-[2px] bg-bronze-400 z-50 transition-[width] duration-150"
+                style={{ width: `${readProgress}%` }}
+            />
+
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(articleSchema) }}
@@ -115,15 +157,37 @@ export const WritingArticle: React.FC = () => {
                     </div>
                 </div>
 
+                {/* #12 Improved image presentation */}
                 {story.image && (
-                    <div className="mb-16 bg-wood-100 border border-wood-200">
-                        <img src={story.image} className="w-full h-auto" alt={`${story.title} by Adrian Rasmussen`} loading="lazy" />
+                    <div className="mb-16 overflow-hidden shadow-sm">
+                        <img
+                            src={story.image}
+                            className="w-full h-auto aspect-[3/2] object-cover"
+                            alt={`${story.title} by Adrian Rasmussen`}
+                            loading="lazy"
+                        />
                     </div>
                 )}
 
-                <div className="prose prose-xl font-serif text-wood-800 leading-[1.75] mx-auto">
+                {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
+                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-800 leading-[1.75] mx-auto">
                     {story.content.map((p, i) => (
-                        <p key={i} className="mb-6">{p}</p>
+                        <React.Fragment key={i}>
+                            {/* #15 Subtle divider every 4 paragraphs in long articles */}
+                            {i > 0 && i % 4 === 0 && story.content.length > 6 && (
+                                <div className="flex justify-center py-4 not-prose">
+                                    <span className="text-bronze-400 tracking-[0.5em] text-xs select-none" aria-hidden="true">···</span>
+                                </div>
+                            )}
+                            {/* #13 Pull quotes for paragraphs starting with "> " */}
+                            {p.startsWith('> ') ? (
+                                <blockquote className="pull-quote my-10 text-xl md:text-2xl text-wood-600 italic leading-relaxed">
+                                    {p.slice(2)}
+                                </blockquote>
+                            ) : (
+                                <p className="mb-6">{p}</p>
+                            )}
+                        </React.Fragment>
                     ))}
                 </div>
 
@@ -159,6 +223,36 @@ export const WritingArticle: React.FC = () => {
                     </div>
                 )}
 
+                {/* #18 Prev/Next sequential navigation */}
+                <div className="mt-16 pt-12 border-t border-wood-200">
+                    <div className="flex justify-between items-start gap-6">
+                        {prevStory ? (
+                            <Link
+                                to={`/writings/${prevStory.slug}`}
+                                className="group flex items-center gap-3 py-3 min-w-0 flex-1"
+                            >
+                                <ArrowLeft size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
+                                <div className="min-w-0">
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block font-bold">Previous</span>
+                                    <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{prevStory.title}</span>
+                                </div>
+                            </Link>
+                        ) : <div className="flex-1" />}
+                        {nextStory ? (
+                            <Link
+                                to={`/writings/${nextStory.slug}`}
+                                className="group flex items-center gap-3 py-3 text-right min-w-0 flex-1 justify-end"
+                            >
+                                <div className="min-w-0">
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block font-bold">Next</span>
+                                    <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{nextStory.title}</span>
+                                </div>
+                                <ArrowRight size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
+                            </Link>
+                        ) : <div className="flex-1" />}
+                    </div>
+                </div>
+
                 {/* Continue the Journey — next readings */}
                 {nextReadings.length > 0 && (
                     <div className="mt-16 pt-12 border-t border-wood-200">
@@ -187,7 +281,26 @@ export const WritingArticle: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* #14 Inline back to top link */}
+                <div className="mt-12 text-center">
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold py-2"
+                    >
+                        <ArrowUp size={14} /> Return to Top
+                    </button>
+                </div>
             </div>
+
+            {/* #14 Floating back to top button */}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className={`fixed bottom-8 right-8 w-10 h-10 rounded-full bg-white border border-wood-200 shadow-md flex items-center justify-center text-wood-500 hover:text-wood-900 hover:border-bronze-300 transition-all duration-300 z-40 ${showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+                aria-label="Back to top"
+            >
+                <ArrowUp size={16} />
+            </button>
         </article>
     );
 };
@@ -200,6 +313,13 @@ const categorySlug = (cat: StoryCategory): string =>
 const Writings: React.FC = () => {
     const categories: StoryCategory[] = ['Living Knowledge', 'Beneath the Surface', 'The Practice', 'The Path'];
 
+    // #6 Active category tracking via IntersectionObserver
+    const [activeCategory, setActiveCategory] = useState('');
+    // #20 Accordion state for mobile — all collapsed by default
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+    const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
     const storiesByCategory = useMemo(() => {
         const grouped: Record<StoryCategory, Story[]> = {
             'Living Knowledge': [],
@@ -211,6 +331,15 @@ const Writings: React.FC = () => {
         return grouped;
     }, []);
 
+    const toggleCategory = useCallback((cat: string) => {
+        setExpandedCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(cat)) next.delete(cat);
+            else next.add(cat);
+            return next;
+        });
+    }, []);
+
     // Scroll to hash anchor on mount (for links arriving from other pages)
     useEffect(() => {
         if (window.location.hash) {
@@ -218,28 +347,61 @@ const Writings: React.FC = () => {
             const el = document.getElementById(id);
             if (el) {
                 setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
+                // Also expand that category on mobile
+                const cat = categories.find(c => categorySlug(c) === id);
+                if (cat) setExpandedCategories(new Set([cat]));
             }
         } else {
             window.scrollTo(0, 0);
         }
     }, []);
 
+    // #6 IntersectionObserver for active category highlighting
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setActiveCategory(entry.target.id);
+                    }
+                });
+            },
+            { rootMargin: '-20% 0px -70% 0px' }
+        );
+
+        Object.values(sectionRefs.current).forEach(el => {
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 animate-fade-in">
             <div className="max-w-5xl mx-auto">
 
-                {/* Header */}
+                {/* #1 Header with subtitle/epigraph */}
                 <div className="text-center mb-12">
-                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium">Writings</h1>
+                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">Writings</h1>
+                    <p className="font-serif text-lg md:text-xl text-wood-500 italic font-light max-w-lg mx-auto">
+                        Reflections on art, knowledge, and the inner life — written from experience.
+                    </p>
                 </div>
 
-                {/* Anchor navigation */}
-                <nav className="flex flex-wrap justify-center gap-6 md:gap-10 border-b border-wood-200 pb-8 mb-24" aria-label="Writing sections">
+                {/* #5 Sticky anchor navigation + #6 Active highlighting + #16 Better touch targets */}
+                <nav
+                    className="sticky top-20 z-10 bg-paper-50/95 backdrop-blur-sm flex flex-wrap justify-center gap-3 md:gap-10 border-b border-wood-200 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    aria-label="Writing sections"
+                >
                     {categories.map(cat => (
                         <a
                             key={cat}
                             href={`#${categorySlug(cat)}`}
-                            className="font-mono text-xs uppercase tracking-widest font-bold text-wood-400 hover:text-wood-900 transition-colors"
+                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors py-2 px-3 md:px-1 ${
+                                activeCategory === categorySlug(cat)
+                                    ? 'text-wood-900 border-b-2 border-bronze-400'
+                                    : 'text-wood-400 hover:text-wood-900'
+                            }`}
                         >
                             {cat}
                         </a>
@@ -250,37 +412,88 @@ const Writings: React.FC = () => {
                 {categories.map(cat => {
                     const stories = storiesByCategory[cat];
                     if (!stories || stories.length === 0) return null;
+                    const isExpanded = expandedCategories.has(cat);
                     return (
-                        <div key={cat} id={categorySlug(cat)} className="mb-24 scroll-mt-28">
-                            <div className="mb-8 pb-6 border-b border-wood-100">
-                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
+                        <div
+                            key={cat}
+                            id={categorySlug(cat)}
+                            className="mb-24 scroll-mt-36"
+                            ref={el => { sectionRefs.current[categorySlug(cat)] = el; }}
+                        >
+                            {/* #20 Clickable category header for mobile accordion */}
+                            <div
+                                className="mb-8 pb-6 border-b border-wood-100 cursor-pointer md:cursor-default"
+                                onClick={() => toggleCategory(cat)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={e => e.key === 'Enter' && toggleCategory(cat)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
+                                    <ChevronDown
+                                        size={20}
+                                        className={`md:hidden text-wood-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                                    />
+                                </div>
                                 <p className="font-serif text-base text-wood-500 italic font-light">
                                     {CATEGORY_SUBTEXT[cat]}
                                 </p>
                             </div>
-                            <div className="space-y-4">
-                                {stories.map(story => (
+
+                            {/* #8 Better mobile spacing + #20 Accordion: hidden on mobile unless expanded, always visible on desktop */}
+                            <div className={`space-y-6 md:space-y-4 transition-all duration-300 ${isExpanded ? 'block' : 'hidden'} md:block`}>
+                                {stories.map((story, i) => (
                                     <Link
                                         key={story.id}
                                         to={`/writings/${story.slug}`}
-                                        className="group bg-white p-6 md:p-8 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm flex flex-col md:flex-row md:items-center gap-6"
+                                        className={`stagger-in group p-6 md:p-8 border hover:border-bronze-300 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 ${
+                                            story.isFeatured
+                                                ? 'bg-stone-50 border-wood-200'
+                                                : 'bg-white border-wood-200'
+                                        }`}
+                                        style={{
+                                            borderLeftWidth: '3px',
+                                            borderLeftColor: CATEGORY_ACCENT[story.category],
+                                            animationDelay: `${i * 80}ms`,
+                                        }}
                                     >
+                                        {/* #17 Compact mobile metadata (date + read time on one line) */}
                                         <div className="md:w-1/4">
-                                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 block mb-1 font-bold">{story.date}</span>
+                                            <div className="flex items-center gap-3 md:block">
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">{story.date}</span>
+                                                <span className="font-mono text-[11px] text-wood-300 md:hidden font-bold">·</span>
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 font-bold md:block md:mt-1">{story.readMinutes} min read</span>
+                                            </div>
+                                            {/* #4 Featured badge — pill style */}
                                             {story.isFeatured && (
-                                                <span className="font-mono text-[10px] uppercase tracking-widest text-bronze-500 block mb-1 font-bold">Featured</span>
+                                                <span className="inline-block mt-2 px-2.5 py-0.5 bg-bronze-200/50 text-bronze-600 font-mono text-[10px] uppercase tracking-widest rounded-full font-bold">
+                                                    Featured
+                                                </span>
                                             )}
-                                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 block mt-1 font-bold">{story.readMinutes} min read</span>
                                         </div>
                                         <div className="md:w-1/2">
-                                            <h3 className="font-serif text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
+                                            <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
                                                 {story.title}
                                             </h3>
-                                            <p className="font-serif text-wood-500 line-clamp-2 italic font-light">
+                                            <p className="font-serif text-wood-500 line-clamp-2 italic font-light text-sm md:text-base">
                                                 {story.subtitle || story.excerpt}
                                             </p>
+                                            {/* #7 Tag pills */}
+                                            {story.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                    {story.tags.slice(0, 3).map(tag => (
+                                                        <span
+                                                            key={tag}
+                                                            className="font-mono text-[10px] uppercase tracking-wider text-wood-400 border border-wood-100 rounded-full px-2.5 py-0.5 font-bold"
+                                                        >
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="md:w-1/4 flex justify-end">
+                                        {/* #9 Arrow hidden on mobile to save space */}
+                                        <div className="hidden md:flex md:w-1/4 justify-end">
                                             <div className="w-10 h-10 rounded-full border border-wood-100 flex items-center justify-center text-wood-300 group-hover:text-bronze-600 group-hover:border-bronze-200 transition-all">
                                                 <ArrowRight size={16} />
                                             </div>

@@ -72,6 +72,26 @@ blockquote {
   letter-spacing: 0.02em;
 }
 
+/* ─── Writings Section Enhancements ─────────────────────────────────────── */
+
+/* #10 Drop cap on first paragraph of articles */
+.article-prose > p:first-of-type::first-letter {
+  float: left;
+  font-family: "Cinzel", serif;
+  font-size: 3.5em;
+  line-height: 0.8;
+  padding-right: 0.1em;
+  padding-top: 0.05em;
+  color: #262321;
+  font-weight: 500;
+}
+
+/* #2 Staggered card entrance animation */
+.stagger-in {
+  opacity: 0;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @theme {
   /* Font families */
   --font-serif: "Cormorant Garamond", serif;
