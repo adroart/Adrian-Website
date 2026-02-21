@@ -122,7 +122,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               )}
             </button>
 
-            <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2 -mr-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
