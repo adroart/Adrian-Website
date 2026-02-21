@@ -30,6 +30,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Lato:wght@300;400&family=Space+Mono:ital,wght@0,400;1,400&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#262321]">
+    <script>
+      // Prevent flash: apply dark mode class before first paint
+      (function() {
+        var stored = localStorage.getItem('dark-mode');
+        var prefersDark = stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (prefersDark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="root">
         <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #262321; color: #f5f4f0; font-family: monospace; flex-direction: column; gap: 20px;">
             <div style="width: 40px; height: 40px; border: 2px solid #524330; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>

@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
+import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import Home from './components/Home';
@@ -25,15 +26,18 @@ import GenerativeBackground from './components/GenerativeBackground';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
+  const { isDarkMode } = useDarkMode();
 
   useSeoMeta(location.pathname);
 
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
+  // Keep theme route-based — CSS variable remapping handles dark mode visuals.
+  // GenerativeBackground reads isDarkMode separately for canvas colors.
   const theme = isHome ? 'DARK' : 'LIGHT';
 
   return (
-    <div className="min-h-screen bg-paper-50 selection:bg-bronze-200">
+    <div className="min-h-screen bg-paper-50 selection:bg-bronze-200 transition-colors duration-500">
       <GenerativeBackground pathname={location.pathname} theme={theme} />
       {!isWelcome && <Navigation theme={theme} />}
 
@@ -67,9 +71,11 @@ const AppInner: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <CartProvider>
-    <AppInner />
-  </CartProvider>
+  <DarkModeProvider>
+    <CartProvider>
+      <AppInner />
+    </CartProvider>
+  </DarkModeProvider>
 );
 
 export default App;
