@@ -66,7 +66,7 @@ const PathwayBlock: React.FC<{
 
 const Home: React.FC = () => {
 
-    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 4), []);
+    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
@@ -104,9 +104,9 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
 
-                <div className="columns-1 sm:columns-2 gap-8 space-y-8">
-                    {selectedWorks.map((art) => (
-                        <Link key={art.id} to={`/creations/${art.id}`}>
+                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8 space-y-8">
+                    {selectedWorks.map((art, index) => (
+                        <Link key={art.id} to={`/creations/${art.id}`} className={index >= 2 ? 'hidden sm:block' : ''}>
                             <SelectedWorkCard art={art} />
                         </Link>
                     ))}
