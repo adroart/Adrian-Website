@@ -73,12 +73,7 @@ blockquote {
 
 /* #30 Article prose refinements */
 .prose p + p {
-  margin-top: 1.5em;
-}
-
-.prose > p:first-of-type::first-line {
-  font-variant: small-caps;
-  letter-spacing: 0.02em;
+  margin-top: 1.75em;
 }
 
 /* ─── Writings Section Enhancements ─────────────────────────────────────── */
@@ -105,9 +100,7 @@ blockquote {
   /* Font families */
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "Lato", sans-serif;
-  --font-mono: "Space Mono", monospace;
-  --font-display: "Merriweather", serif;
-  --font-title: "Cinzel", serif;
+  --font-mono: "Josefin Sans", sans-serif;
 
   /* Colors: taupe */
   --color-taupe: #453d39;
@@ -155,7 +148,7 @@ blockquote {
   /* Colors: availability states */
   --color-avail-ready: #1A1A1A;
   --color-avail-order: #6B6B6B;
-  --color-avail-sold: #9A9A9A;
+  --color-avail-sold: #767676;
 
   /* Colors: bronze */
   --color-bronze-50: #faf6f0;
@@ -268,7 +261,7 @@ blockquote {
   /* Availability: invert for dark-bg readability */
   --color-avail-ready: #e0e0e0;
   --color-avail-order: #a0a0a0;
-  --color-avail-sold: #707070;
+  --color-avail-sold: #8a8a8a;
 }
 
 /* ─── dark-preserve: restores original light-mode colors ────────────────── */

@@ -54,7 +54,7 @@ const PrivacyPolicy: React.FC = () => {
         <div className="mt-16 pt-8 border-t border-wood-200">
           <Link
             to="/"
-            className="font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 transition-colors font-bold"
+            className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 transition-colors font-semibold"
           >
             &larr; Back to Home
           </Link>

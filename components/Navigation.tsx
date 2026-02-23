@@ -97,7 +97,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                 key={item.path}
                 to={item.path}
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className={`group relative text-xs uppercase tracking-[0.25em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-bold ${
+                className={`group relative text-xs uppercase tracking-[0.2em] font-mono py-2 transition-all duration-300 flex items-center gap-1 font-semibold ${
                   location.pathname === item.path
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
@@ -126,7 +126,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             >
               <ShoppingBag size={20} />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-bold flex items-center justify-center leading-none">
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-semibold flex items-center justify-center leading-none">
                   {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}
@@ -145,7 +145,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                     <button
                         key={item.path}
                         onClick={() => handleNavClick(item.path)}
-                        className={`text-sm font-mono uppercase tracking-[0.3em] transition-colors ${location.pathname === item.path ? 'text-bronze-400' : 'text-paper-50/80 hover:text-paper-50'}`}
+                        className={`text-sm font-mono uppercase tracking-[0.2em] transition-colors ${location.pathname === item.path ? 'text-bronze-400' : 'text-paper-50/80 hover:text-paper-50'}`}
                     >
                         {item.label}
                     </button>
