@@ -77,14 +77,16 @@ const CreationCategoryCard: React.FC<{
                 width={800}
                 height={800}
             />
-            {/* Text — pinned bottom bar with backdrop blur for reliable readability */}
-            <div className="absolute bottom-0 inset-x-0 p-5 bg-stone-950/60 backdrop-blur-md pointer-events-none">
-                <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 mb-1 font-medium leading-tight text-left">
+            {/* Gradient scrim — thin, just enough to anchor the title */}
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+            {/* Text */}
+            <div className="absolute bottom-0 inset-x-0 px-5 pb-4 pointer-events-none">
+                <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 font-medium leading-tight text-left">
                     {label}
                 </h3>
-                {/* Always visible on mobile; refined on desktop with hover reveal */}
-                <p className="font-serif text-sm text-paper-200 font-light leading-snug text-left
-                              opacity-100 sm:opacity-0 sm:translate-y-3
+                {/* Hidden on mobile. Desktop: invisible by default, fades/slides up on hover */}
+                <p className="hidden sm:block font-serif text-sm text-paper-200 font-light leading-snug text-left mt-1
+                              sm:opacity-0 sm:translate-y-2
                               sm:group-hover:opacity-100 sm:group-hover:translate-y-0
                               transition-all duration-500 delay-75">
                     {desc}
@@ -241,22 +243,23 @@ const CollectionCard: React.FC<{
                     }`}
                 />
             )}
-            <div className="absolute bottom-0 inset-x-0 p-5 bg-stone-950/60 backdrop-blur-md">
-                <h4 className="font-serif text-xl md:text-2xl text-paper-50 mb-1 font-medium leading-tight">
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 px-5 pb-4">
+                <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
-                {collection.description && (
-                    <p className="font-serif text-sm text-paper-200 font-light
-                                  opacity-100 sm:opacity-0 sm:translate-y-2
-                                  sm:group-hover:opacity-100 sm:group-hover:translate-y-0
-                                  transition-all duration-500 delay-75 line-clamp-2">
-                        {collection.description}
-                    </p>
-                )}
-                <span className="font-mono text-xs uppercase tracking-[0.1em] text-paper-300 font-bold mt-2">
+                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-paper-300 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
+                {collection.description && (
+                    <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1
+                                  sm:opacity-0 sm:translate-y-2
+                                  sm:group-hover:opacity-100 sm:group-hover:translate-y-0
+                                  transition-all duration-500 delay-75">
+                        {collection.description}
+                    </p>
+                )}
             </div>
         </button>
     );
