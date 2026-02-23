@@ -84,7 +84,7 @@ export const WritingArticle: React.FC = () => {
                     <p className="font-serif text-lg text-wood-600 mb-8">The piece you're looking for doesn't exist or has been moved.</p>
                     <Link
                         to="/writings"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 pb-1"
+                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
                         <ArrowLeft size={14} /> Back to Writings
                     </Link>
@@ -123,14 +123,14 @@ export const WritingArticle: React.FC = () => {
                 <div className="flex justify-between items-center mb-12">
                     <Link
                         to="/writings"
-                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold"
+                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold"
                     >
                         <ArrowLeft size={16} /> Return to Index
                     </Link>
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={() => navigator.share({ title: story.title, url: window.location.href })}
-                            className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold p-2"
+                            className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2"
                             aria-label="Share this writing"
                         >
                             <Share2 size={14} /> Share
@@ -139,7 +139,7 @@ export const WritingArticle: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-16">
-                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[11px] uppercase tracking-widest text-bronze-600 mb-6 font-bold">
+                    <span className="inline-block px-4 py-1.5 border border-bronze-200 rounded-full font-mono text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-6 font-semibold">
                         {story.category}
                     </span>
                     <h1 className="font-serif text-4xl md:text-6xl text-wood-900 leading-[1.1] mb-6 font-medium">
@@ -150,7 +150,7 @@ export const WritingArticle: React.FC = () => {
                             {story.subtitle}
                         </p>
                     )}
-                    <div className="flex items-center justify-center gap-4 font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">
+                    <div className="flex items-center justify-center gap-4 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                         <span>{story.date}</span>
                         <span className="text-wood-200">·</span>
                         <span>{story.readMinutes} min read</span>
@@ -170,7 +170,7 @@ export const WritingArticle: React.FC = () => {
                 )}
 
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
-                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-800 leading-[1.75] mx-auto">
+                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-800 leading-[1.7] mx-auto">
                     {story.content.map((p, i) => (
                         <React.Fragment key={i}>
                             {/* #15 Subtle divider every 4 paragraphs in long articles */}
@@ -213,7 +213,7 @@ export const WritingArticle: React.FC = () => {
                                         <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {art.title}
                                         </h4>
-                                        <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+                                        <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
                                             {art.series ?? art.category}
                                         </p>
                                     </div>
@@ -233,7 +233,7 @@ export const WritingArticle: React.FC = () => {
                             >
                                 <ArrowLeft size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
                                 <div className="min-w-0">
-                                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block font-bold">Previous</span>
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-wood-400 block font-semibold">Previous</span>
                                     <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{prevStory.title}</span>
                                 </div>
                             </Link>
@@ -244,7 +244,7 @@ export const WritingArticle: React.FC = () => {
                                 className="group flex items-center gap-3 py-3 text-right min-w-0 flex-1 justify-end"
                             >
                                 <div className="min-w-0">
-                                    <span className="font-mono text-[10px] uppercase tracking-widest text-wood-400 block font-bold">Next</span>
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-wood-400 block font-semibold">Next</span>
                                     <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{nextStory.title}</span>
                                 </div>
                                 <ArrowRight size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
@@ -258,7 +258,7 @@ export const WritingArticle: React.FC = () => {
                     <div className="mt-16 pt-12 border-t border-wood-200">
                         <div className="flex items-center gap-3 mb-8">
                             <Feather size={16} className="text-bronze-600" />
-                            <h3 className="font-mono text-xs uppercase tracking-widest text-bronze-600 font-bold">Continue the Journey</h3>
+                            <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold">Continue the Journey</h3>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {nextReadings.map(next => (
@@ -267,7 +267,7 @@ export const WritingArticle: React.FC = () => {
                                     to={`/writings/${next.slug}`}
                                     className="group bg-white p-6 border border-wood-200 hover:border-bronze-300 transition-all hover:shadow-sm"
                                 >
-                                    <span className="font-mono text-[11px] uppercase tracking-widest text-bronze-600 block mb-2 font-bold">
+                                    <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-2 font-semibold">
                                         {next.category}
                                     </span>
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
@@ -286,7 +286,7 @@ export const WritingArticle: React.FC = () => {
                 <div className="mt-12 text-center">
                     <button
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-wood-400 hover:text-wood-900 transition-colors font-bold py-2"
+                        className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold py-2"
                     >
                         <ArrowUp size={14} /> Return to Top
                     </button>
@@ -383,7 +383,7 @@ const Writings: React.FC = () => {
                         <a
                             key={cat}
                             href={`#${categorySlug(cat)}`}
-                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors py-2 px-3 md:px-1 ${
+                            className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors py-2 px-3 md:px-1 ${
                                 activeCategory === categorySlug(cat)
                                     ? 'text-wood-900 border-b-2 border-bronze-400'
                                     : 'text-wood-400 hover:text-wood-900'
@@ -432,13 +432,13 @@ const Writings: React.FC = () => {
                                         {/* #17 Compact mobile metadata (date + read time on one line) */}
                                         <div className="md:w-1/4">
                                             <div className="flex items-center gap-3 md:block">
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-bold">{story.date}</span>
-                                                <span className="font-mono text-[11px] text-wood-300 md:hidden font-bold">·</span>
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-300 font-bold md:block md:mt-1">{story.readMinutes} min read</span>
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">{story.date}</span>
+                                                <span className="font-mono text-[11px] text-wood-300 md:hidden font-semibold">·</span>
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold md:block md:mt-1">{story.readMinutes} min read</span>
                                             </div>
                                             {/* #4 Featured badge — pill style */}
                                             {story.isFeatured && (
-                                                <span className="inline-block mt-2 px-2.5 py-0.5 bg-bronze-200/50 text-bronze-600 font-mono text-[10px] uppercase tracking-widest rounded-full font-bold">
+                                                <span className="inline-block mt-2 px-2.5 py-0.5 bg-bronze-200/50 text-bronze-700 font-mono text-[10px] uppercase tracking-[0.2em] rounded-full font-semibold">
                                                     Featured
                                                 </span>
                                             )}
@@ -456,7 +456,7 @@ const Writings: React.FC = () => {
                                                     {story.tags.slice(0, 3).map(tag => (
                                                         <span
                                                             key={tag}
-                                                            className="font-mono text-[10px] uppercase tracking-wider text-wood-400 border border-wood-100 rounded-full px-2.5 py-0.5 font-bold"
+                                                            className="font-mono text-[10px] uppercase tracking-wider text-wood-400 border border-wood-100 rounded-full px-2.5 py-0.5 font-semibold"
                                                         >
                                                             {tag}
                                                         </span>
@@ -484,7 +484,7 @@ const Writings: React.FC = () => {
                     </p>
                     <Link
                         to="/inquire"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 pb-1"
+                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
                         Begin a Conversation <ArrowRight size={14} />
                     </Link>

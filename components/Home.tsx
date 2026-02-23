@@ -20,7 +20,7 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
             {/* Badge — pill below the image instead of inline text */}
             {art.availability === 'READY_TO_SHIP' && (
                 <div className="mb-2">
-                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-bold leading-none">
+                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-semibold leading-none">
                         Available
                     </span>
                 </div>
@@ -46,7 +46,7 @@ const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
             )}
 
             {/* Category */}
-            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-bold leading-none">
+            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-semibold leading-none">
                 {art.category}
             </p>
         </div>
@@ -88,11 +88,11 @@ const Home: React.FC = () => {
             {/* 3.2 Introduction */}
             <section className="py-16 md:py-24 px-6">
                 <div className="max-w-3xl mx-auto text-center">
-                    <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light tracking-[-0.01em] border-none pl-0">
+                    <blockquote className="font-serif text-2xl md:text-3xl lg:text-4xl text-wood-800 leading-snug font-light border-none pl-0">
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
                     <div className="mt-12 space-y-6 text-center">
-                        <p className="font-serif text-lg md:text-xl text-wood-600 leading-relaxed font-light">
+                        <p className="font-serif text-lg md:text-xl text-wood-600 leading-[1.7] font-light">
                             My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
                         </p>
                     </div>
@@ -110,7 +110,7 @@ const Home: React.FC = () => {
                     </div>
                     <Link
                         to="/creations"
-                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-wood-900 hover:text-bronze-600 font-bold whitespace-nowrap"
+                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
                     >
                         See All Creations <ArrowRight size={14} />
                     </Link>
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
                 <div className="max-w-[1400px] mx-auto">
                     <div className="flex justify-between items-end mb-12">
                         <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
-                        <Link to="/writings" className="hidden md:flex font-mono text-xs uppercase tracking-widest text-wood-500 hover:text-wood-900 font-bold items-center gap-2">
+                        <Link to="/writings" className="hidden md:flex font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
                         </Link>
                     </div>
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
                             to="/writings#living-knowledge"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">Living Knowledge</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">Living Knowledge</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 Deep explorations earned through direct experience
                             </h3>
@@ -188,7 +188,7 @@ const Home: React.FC = () => {
                             to="/writings#beneath-the-surface"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">Beneath the Surface</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">Beneath the Surface</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The meaning and origins within the work
                             </h3>
@@ -197,7 +197,7 @@ const Home: React.FC = () => {
                             to="/writings#the-practice"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">The Practice</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">The Practice</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 How creation happens
                             </h3>
@@ -206,7 +206,7 @@ const Home: React.FC = () => {
                             to="/writings#the-path"
                             className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
                         >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-bold">The Path</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">The Path</span>
                             <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
                                 The personal journey behind the art
                             </h3>
@@ -214,7 +214,7 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="mt-8 md:hidden text-center">
-                        <Link to="/writings" className="font-mono text-xs uppercase tracking-widest text-wood-900 border-b border-wood-900 pb-1 font-bold">
+                        <Link to="/writings" className="font-mono text-xs uppercase tracking-[0.2em] text-wood-900 border-b border-wood-900 pb-1 font-semibold">
                             Explore All Writings
                         </Link>
                     </div>
