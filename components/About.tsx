@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 const PERSON_SCHEMA = {
@@ -147,25 +147,6 @@ const SideNav: React.FC = () => {
   );
 };
 
-// #5 — progressive disclosure
-const Expandable: React.FC<{ children: React.ReactNode[]; show?: number }> = ({ children, show = 2 }) => {
-  const [open, setOpen] = useState(false);
-  const visible = open ? children : children.slice(0, show);
-  return (
-    <div>
-      <div className="space-y-8">{visible}</div>
-      {children.length > show && (
-        <button
-          onClick={() => setOpen(!open)}
-          className="mt-7 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold transition-colors cursor-pointer"
-        >
-          <span className={`inline-block transition-transform duration-300 text-sm leading-none ${open ? 'rotate-45' : ''}`}>+</span>
-          {open ? 'Show less' : 'Continue reading'}
-        </button>
-      )}
-    </div>
-  );
-};
 
 // #16 — animated section tag with extending line
 const Tag: React.FC<{ light?: boolean; centered?: boolean; children: React.ReactNode }> = ({ light, centered, children }) => (
@@ -392,9 +373,8 @@ const About: React.FC = () => {
               {/* #7 — margin annotation wrapper */}
               <div className="with-margin-note">
                 <Tag>The Root</Tag>
-                {/* #5 — progressive disclosure */}
-                <Expandable show={2}>
-                  {/* #3 drop cap, #17 opacity gradient, #2 varied widths, #6 spacing */}
+                {/* #3 drop cap, #17 opacity gradient, #2 varied widths, #6 spacing */}
+                <div className="space-y-8">
                   <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-relaxed">
                     In my earliest years of school, I sat with the founder of Mount Madonna who had taken
                     a vow of silence. He was from India but had decided to bring his wisdom to the West.
@@ -414,7 +394,7 @@ const About: React.FC = () => {
                     This is what inspires me to create and what I wish for people to feel in the presence
                     of my creations.
                   </p>
-                </Expandable>
+                </div>
                 {/* #7 — margin annotation (desktop only via CSS) */}
                 <div className="margin-note" style={{ top: '130px' }}>
                   "The feeling of being seen. The feeling of presence."
@@ -444,48 +424,46 @@ const About: React.FC = () => {
 
             {/* #11 — vertical timeline */}
             <div className="timeline-track">
-              <Expandable show={2}>
-                <Reveal dir="left" delay={60}>
-                  <div className="timeline-node">
-                    {/* #3 drop cap on first timeline entry */}
-                    <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-relaxed">
-                      I've been creating since before I can remember. Graffiti culture shaped my eye.
-                      I painted thousands of one-of-a-kind hats, moved to canvas, and followed the work
-                      wherever it led. Then I discovered laser cutting and everything started to come together.
-                      Painting, digital design, airbrush, lapidary, jewelry, 3D printing. Many skills becoming
-                      one expression.
-                    </p>
-                  </div>
-                </Reveal>
-                <Reveal dir="left" delay={100}>
-                  <div className="timeline-node">
-                    <p className="pg-2 font-serif text-lg text-wood-700 leading-relaxed">
-                      My tea journey came early. My father introduced it when I was young, and it never left.
-                      In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
-                      guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
-                      effortlessly intertwined in creating spaces to experience communion.
-                    </p>
-                  </div>
-                </Reveal>
-                <Reveal dir="left" delay={140}>
-                  <div className="timeline-node">
-                    <p className="pg-3 font-serif text-lg text-wood-700 leading-relaxed">
-                      Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
-                      several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
-                      stays the same. Art is the journey, bringing the formless into form in communion with
-                      something bigger than any one.
-                    </p>
-                  </div>
-                </Reveal>
-                <Reveal dir="left" delay={180}>
-                  <div className="timeline-node">
-                    <p className="pg-4 font-serif text-lg text-wood-700 leading-relaxed italic">
-                      Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
-                      creating together. That's been true since 2002 and it's true now.
-                    </p>
-                  </div>
-                </Reveal>
-              </Expandable>
+              <Reveal dir="left" delay={60}>
+                <div className="timeline-node">
+                  {/* #3 drop cap on first timeline entry */}
+                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-relaxed">
+                    I've been creating since before I can remember. Graffiti culture shaped my eye.
+                    I painted thousands of one-of-a-kind hats, moved to canvas, and followed the work
+                    wherever it led. Then I discovered laser cutting and everything started to come together.
+                    Painting, digital design, airbrush, lapidary, jewelry, 3D printing. Many skills becoming
+                    one expression.
+                  </p>
+                </div>
+              </Reveal>
+              <Reveal dir="left" delay={100}>
+                <div className="timeline-node">
+                  <p className="pg-2 font-serif text-lg text-wood-700 leading-relaxed">
+                    My tea journey came early. My father introduced it when I was young, and it never left.
+                    In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
+                    guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
+                    effortlessly intertwined in creating spaces to experience communion.
+                  </p>
+                </div>
+              </Reveal>
+              <Reveal dir="left" delay={140}>
+                <div className="timeline-node">
+                  <p className="pg-3 font-serif text-lg text-wood-700 leading-relaxed">
+                    Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
+                    several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
+                    stays the same. Art is the journey, bringing the formless into form in communion with
+                    something bigger than any one.
+                  </p>
+                </div>
+              </Reveal>
+              <Reveal dir="left" delay={180}>
+                <div className="timeline-node">
+                  <p className="pg-4 font-serif text-lg text-wood-700 leading-relaxed italic">
+                    Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
+                    creating together. That's been true since 2002 and it's true now.
+                  </p>
+                </div>
+              </Reveal>
             </div>
 
             <Reveal delay={220}>
