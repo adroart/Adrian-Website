@@ -50,7 +50,7 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
             />
             {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-widest border border-wood-200 font-bold">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.2em] border border-wood-200 font-semibold">
                     Ready to Ship
                 </div>
             )}
@@ -64,12 +64,12 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                     {art.title}
                 </h4>
                 {art.price && (
-                    <span className="font-mono text-xs text-wood-900 font-bold">
+                    <span className="font-mono text-xs text-wood-900 font-semibold">
                         {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price}
                     </span>
                 )}
             </div>
-            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-widest mt-1 font-bold">
+            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
                 {art.series ?? 'Signature'} {art.availability === 'SOLD' && '• Sold'}
             </p>
         </div>
@@ -109,7 +109,7 @@ const MultidimensionalArt: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
             {/* Breadcrumb */}
-            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">
+            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
                 <span className="text-wood-900">Multidimensional Art</span>
@@ -118,7 +118,7 @@ const MultidimensionalArt: React.FC = () => {
             {/* Hero header */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16 border-b border-wood-200 pb-12">
                 <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">Multidimensional Art</h1>
-                <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.65]">
+                <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.7]">
                     Layered sculpture in wood, crystal, and light. Works that hold geometry, symbol, and presence in the same form.
                 </p>
             </div>
@@ -155,7 +155,7 @@ const MultidimensionalArt: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6 mb-8 text-center">
                 <button
                     onClick={() => setShowAll(v => !v)}
-                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-wood-900 hover:text-bronze-600 font-bold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                 >
                     {showAll ? 'Collapse' : 'View all multidimensional works'}
                     <ArrowRight size={14} className={`transition-transform ${showAll ? 'rotate-90' : ''}`} />
@@ -168,10 +168,10 @@ const MultidimensionalArt: React.FC = () => {
                     {/* Filter bar */}
                     <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 flex flex-wrap justify-between items-center gap-4 mb-12">
                         <div className="flex flex-wrap items-center gap-3">
-                            <span className="font-mono text-xs uppercase tracking-widest text-wood-500 font-bold">Series</span>
+                            <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Series</span>
                             <button
                                 onClick={() => setSeriesFilter(null)}
-                                className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${!seriesFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
+                                className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${!seriesFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
                             >
                                 All
                             </button>
@@ -179,7 +179,7 @@ const MultidimensionalArt: React.FC = () => {
                                 <button
                                     key={s}
                                     onClick={() => setSeriesFilter(s === seriesFilter ? null : s)}
-                                    className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${seriesFilter === s ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${seriesFilter === s ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
                                 >
                                     {s}
                                 </button>
@@ -187,7 +187,7 @@ const MultidimensionalArt: React.FC = () => {
                         </div>
                         <button
                             onClick={() => setShowAvailableOnly(v => !v)}
-                            className={`font-mono text-xs uppercase tracking-widest font-bold transition-colors ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
+                            className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
                         >
                             {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
                         </button>
@@ -205,7 +205,7 @@ const MultidimensionalArt: React.FC = () => {
                                 <p className="font-serif text-xl text-wood-500 italic">No pieces match the current filters.</p>
                                 <button
                                     onClick={() => { setSeriesFilter(null); setShowAvailableOnly(false); }}
-                                    className="mt-4 font-mono text-xs uppercase tracking-widest text-bronze-600 hover:text-bronze-500 font-bold"
+                                    className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
                                 >
                                     Clear filters
                                 </button>
