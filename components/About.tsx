@@ -485,7 +485,7 @@ const About: React.FC = () => {
         {/* ══ CONNECTION ════════════════════════════════════════════════════ */}
         {/* #10 — Connection is now its own full section, separated from The Team */}
         {/* #13 — full-bleed dark background, wider container */}
-        <div id="about-connection" className="px-6 py-28 bg-wood-800">
+        <div id="about-connection" className="px-6 py-28 bg-wood-800 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal dir="up">
               <Tag light>Connection</Tag>
@@ -599,7 +599,7 @@ const About: React.FC = () => {
 
         {/* ══ WHAT ART CAN MEAN ═════════════════════════════════════════════ */}
         {/* #13 — full-bleed very dark section */}
-        <div id="about-meaning" className="px-6 py-28 bg-wood-900">
+        <div id="about-meaning" className="px-6 py-28 bg-wood-900 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal>
               <Tag light>What Art Can Mean</Tag>

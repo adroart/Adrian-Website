@@ -97,7 +97,7 @@ const CreationCategoryCard: React.FC<{
         return (
             <Link
                 to={link}
-                className="group relative block aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+                className="group relative block aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
                 aria-label={`Explore ${label}: ${desc}`}
             >
                 {inner}
@@ -109,7 +109,7 @@ const CreationCategoryCard: React.FC<{
         <button
             type="button"
             onClick={onClick}
-            className="group relative aspect-square overflow-hidden cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
+            className="group relative aspect-square overflow-hidden cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
             aria-label={`Browse ${label}: ${desc}`}
         >
             {inner}
@@ -220,7 +220,7 @@ const CollectionCard: React.FC<{
             type="button"
             onClick={onClick}
             aria-pressed={isActive}
-            className={`group relative aspect-[3/2] overflow-hidden cursor-pointer transition-all duration-500 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 ${
+            className={`group relative aspect-[3/2] overflow-hidden cursor-pointer transition-all duration-500 w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve ${
                 isActive
                     ? 'ring-2 ring-bronze-500 ring-offset-2 ring-offset-paper-50'
                     : 'border border-wood-200 hover:border-wood-400'

@@ -33,9 +33,7 @@
     <script>
       // Prevent flash: apply dark mode class before first paint
       (function() {
-        var stored = localStorage.getItem('dark-mode');
-        var prefersDark = stored === 'true' || (stored === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (prefersDark) document.documentElement.classList.add('dark');
+        if (localStorage.getItem('dark-mode') === 'true') document.documentElement.classList.add('dark');
       })();
     </script>
     <div id="root">

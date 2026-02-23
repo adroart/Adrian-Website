@@ -61,10 +61,6 @@ blockquote {
   color: #a39e96;
   opacity: 1;
 }
-.dark ::placeholder {
-  color: #6b665f;
-}
-
 /* #12 Pull-quote base styling */
 .pull-quote {
   position: relative;
@@ -201,47 +197,47 @@ blockquote {
   }
 }
 
-/* ─── Dark Mode: Full Inversion via CSS Variable Remapping ──────────────── */
-/* Every Tailwind utility that references these variables (bg-paper-50,
-   text-wood-900, border-stone-200, etc.) will automatically adapt.         */
+/* ─── Dark Mode: CSS Variable Remapping ─────────────────────────────────── */
+/* Overrides color tokens so all Tailwind utilities adapt automatically.
+   Intentionally dark sections use .dark-preserve to keep original colors. */
 
 .dark {
   color-scheme: dark;
 
-  /* Paper: light surfaces → deep warm darks */
-  --color-paper-50: #1a1816;
-  --color-paper-100: #21201c;
-  --color-paper-200: #2b2820;
-  --color-paper-300: #3a3529;
+  /* Paper: light surfaces → warm darks (wider spread for separation) */
+  --color-paper-50: #141210;
+  --color-paper-100: #1c1a17;
+  --color-paper-200: #26231e;
+  --color-paper-300: #332f28;
 
-  /* Wood: full scale inversion */
-  --color-wood-50: #1e1c18;
-  --color-wood-100: #252320;
-  --color-wood-200: #302d28;
-  --color-wood-300: #4a4540;
-  --color-wood-400: #9a9490;
-  --color-wood-500: #a8a29c;
-  --color-wood-600: #bcb6ad;
-  --color-wood-700: #ccc7be;
+  /* Wood: dark → light  (low end = dark surfaces, high end = light text) */
+  --color-wood-50: #181614;
+  --color-wood-100: #1f1d1a;
+  --color-wood-200: #3a3630;
+  --color-wood-300: #504a42;
+  --color-wood-400: #a09a90;
+  --color-wood-500: #b0a99e;
+  --color-wood-600: #c2bbb0;
+  --color-wood-700: #d0cabe;
   --color-wood-800: #dedad0;
-  --color-wood-900: #f0ede7;
+  --color-wood-900: #ede9e2;
 
-  /* Stone: invert the entire gray scale */
-  --color-stone-50: #1a1816;
-  --color-stone-100: #21201c;
+  /* Stone: inverted gray scale */
+  --color-stone-50: #141210;
+  --color-stone-100: #1c1a17;
   --color-stone-200: #2e2b26;
-  --color-stone-300: #3d3935;
-  --color-stone-400: #7a756e;
-  --color-stone-500: #9a958d;
-  --color-stone-600: #b5b0a8;
-  --color-stone-700: #c5c0b8;
-  --color-stone-800: #d5d2cc;
-  --color-stone-900: #e5e3de;
+  --color-stone-300: #403c36;
+  --color-stone-400: #8a857e;
+  --color-stone-500: #a09a92;
+  --color-stone-600: #b8b2aa;
+  --color-stone-700: #c8c2ba;
+  --color-stone-800: #d8d4cc;
+  --color-stone-900: #e8e5de;
   --color-stone-950: #f0ede8;
 
   /* Cream → warm darks */
-  --color-cream: #1e1c18;
-  --color-cream-dark: #262320;
+  --color-cream: #1a1816;
+  --color-cream-dark: #222018;
 
   /* Taupe → light taupe */
   --color-taupe: #c5beb8;
@@ -251,7 +247,7 @@ blockquote {
   --color-warm-gold: #c8a878;
   --color-warm-gold-hover: #b89868;
 
-  /* Bronze: full scale inversion for dark backgrounds */
+  /* Bronze: brighten accents for dark backgrounds */
   --color-bronze-50: #2a2418;
   --color-bronze-100: #3a3020;
   --color-bronze-200: #5a4a30;
@@ -268,30 +264,62 @@ blockquote {
   --color-avail-sold: #8a8a8a;
 }
 
-/* bg-white is a Tailwind built-in — override it in dark mode */
-.dark .bg-white,
-.dark .hover\:bg-white:hover {
-  background-color: #21201c;
-}
-/* Semantic status colors on dark backgrounds */
-.dark .bg-green-50 {
-  background-color: #0a2010;
-}
-.dark .border-green-200 {
-  border-color: #1a4030;
-}
-.dark .text-green-800 {
-  color: #6ee7a0;
-}
-.dark .text-green-600 {
-  color: #4ade80;
+/* ─── dark-preserve: restores original light-mode colors ────────────────── */
+/* Apply to sections that are intentionally dark (hero, accent blocks,
+   image-overlay gradients). They stay dark in both light & dark mode.      */
+
+.dark .dark-preserve {
+  --color-paper-50: #f5f4f0;
+  --color-paper-100: #ebe8e1;
+  --color-paper-200: #e0dbcf;
+  --color-paper-300: #cfc6b5;
+  --color-wood-50: #faf9f7;
+  --color-wood-100: #f0ece5;
+  --color-wood-200: #e0d8cc;
+  --color-wood-300: #c8bda8;
+  --color-wood-400: #a89070;
+  --color-wood-500: #8f7a5b;
+  --color-wood-600: #736046;
+  --color-wood-700: #524330;
+  --color-wood-800: #3d3226;
+  --color-wood-900: #262321;
+  --color-stone-50: #f7f6f4;
+  --color-stone-100: #ebe9e6;
+  --color-stone-200: #dcd9d4;
+  --color-stone-300: #c2beb8;
+  --color-stone-400: #a39e96;
+  --color-stone-500: #878179;
+  --color-stone-600: #6b665f;
+  --color-stone-700: #524e49;
+  --color-stone-800: #3d3a36;
+  --color-stone-900: #2b2926;
+  --color-stone-950: #23201e;
+  --color-bronze-200: #e6d9c3;
+  --color-bronze-300: #d5c1a0;
+  --color-bronze-400: #c4aa7c;
+  --color-bronze-500: #ab9266;
+  --color-bronze-600: #8a744e;
 }
 
-/* Transition the body background smoothly */
-body {
-  transition: background-color 0.5s ease;
+/* bg-white is a Tailwind built-in — override in dark mode */
+.dark .bg-white,
+.dark .hover\:bg-white:hover {
+  background-color: #1f1d1a;
 }
-.dark body,
-html.dark body {
-  background-color: #1a1816;
+/* Semantic status colors on dark backgrounds */
+.dark .bg-green-50 { background-color: #0a2010; }
+.dark .border-green-200 { border-color: #1a4030; }
+.dark .text-green-800 { color: #6ee7a0; }
+.dark .text-green-600 { color: #4ade80; }
+
+/* Cart overlay scrim stays dark */
+.dark .dark-overlay {
+  --color-wood-900: #262321;
 }
+
+/* Body background */
+body { transition: background-color 0.5s ease; }
+html.dark body { background-color: #141210; }
+
+/* Placeholder text — slightly brighter in dark mode */
+.dark ::placeholder { color: #78736a; }

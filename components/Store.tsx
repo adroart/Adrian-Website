@@ -127,7 +127,7 @@ const SkeletonCard: React.FC = () => (
 );
 
 const CuratorialBlock: React.FC = () => (
-    <div className="col-span-1 md:col-span-2 lg:col-span-2 aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-8 md:p-12 text-center border border-wood-900">
+    <div className="col-span-1 md:col-span-2 lg:col-span-2 aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-8 md:p-12 text-center border border-wood-900 dark-preserve">
         <span className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-400 mb-4 block font-semibold">Philosophy</span>
         <p className="font-serif text-xl md:text-3xl leading-[1.4] max-w-lg font-light">
             <span className="ml-[-0.4em]">"</span>We do not own these objects. We are merely their custodians for a brief moment in time."
@@ -165,7 +165,7 @@ const ProductCard: React.FC<{
                 />
 
                 {!product.available && (
-                    <div className="absolute top-4 right-4 bg-wood-900/90 text-paper-50 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.2em] border border-wood-700 shadow-xl font-semibold">
+                    <div className="absolute top-4 right-4 bg-wood-900/90 text-paper-50 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.2em] border border-wood-700 shadow-xl font-semibold dark-preserve">
                         Archived
                     </div>
                 )}

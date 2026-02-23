@@ -51,7 +51,7 @@ const IlluminatedWorks: React.FC = () => {
         <article className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
             {/* Hero — full-width image placeholder */}
-            <div className="relative w-full h-[60vh] min-h-[400px] max-h-[700px] overflow-hidden mb-0">
+            <div className="relative w-full h-[60vh] min-h-[400px] max-h-[700px] overflow-hidden mb-0 dark-preserve">
                 {/* TODO: Replace with a real video or hero image of a piece transitioning from daylight to dark */}
                 <img
                     src="https://picsum.photos/1800/900?random=illum-hero"
@@ -89,7 +89,7 @@ const IlluminatedWorks: React.FC = () => {
                 <div className="border-t border-wood-200 pt-16 mb-12">
                     <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Two expressions of light</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 dark-preserve">
                     {/* Ambient Illumination */}
                     <div className="bg-wood-900 p-10 md:p-16">
                         {/* TODO: Replace "Ambient Illumination" with Adrian's own language for this distinction */}

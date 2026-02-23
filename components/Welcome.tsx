@@ -5,7 +5,7 @@ import { ArrowUpRight } from 'lucide-react';
 
 const Welcome: React.FC = () => {
   return (
-    <section className="min-h-screen bg-stone-950 flex flex-col items-center justify-center px-6 py-16">
+    <section className="min-h-screen bg-stone-950 flex flex-col items-center justify-center px-6 py-16 dark-preserve">
       <div className="max-w-sm w-full text-center">
         {/* Name */}
         <h1 className="font-serif text-3xl text-paper-50 mb-2 tracking-tight font-medium">
