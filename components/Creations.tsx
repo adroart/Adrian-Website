@@ -125,12 +125,9 @@ const CreationCategoryCard: React.FC<{
 const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
     <Link
         to={`/creations/${art.id}`}
-        // Mobile: border separator + generous padding between cards.
-        // sm+: return to standard masonry column spacing, no divider.
-        className="group cursor-pointer break-inside-avoid block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 border-b border-wood-100 pb-5 mb-3 sm:border-b-0 sm:pb-0 sm:mb-6"
+        className="group cursor-pointer break-inside-avoid block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 mb-3 sm:mb-8"
     >
-        {/* Image container — enforces 4:3 on mobile for consistent heights;
-            natural image ratio on sm+ for masonry variety. */}
+        {/* Image — enforces 4:3 on mobile; natural ratio on sm+ for masonry variety */}
         <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg group-hover:shadow-wood-200/60 aspect-[4/3] sm:aspect-auto">
             <img
                 src={art.coverImage}
@@ -138,70 +135,27 @@ const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 loading="lazy"
                 width={800}
                 height={800}
-                // Mobile: absolutely fills the 4:3 container.
-                // sm+: static in-flow with natural height (drives container height).
                 className="absolute inset-0 w-full h-full object-cover sm:static sm:h-auto transition-transform duration-700 group-hover:scale-105"
             />
         </div>
 
-        {/* Card text */}
+        {/* Minimal caption: title + price + availability dot */}
         <div className="mt-3 px-1">
-
-            {/* Badges — moved below image so they never overlap the artwork.
-                All use the same pill style for visual consistency. */}
-            {(art.availability === 'READY_TO_SHIP' || art.illuminated || art.relatedStorySlug) && (
-                <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                    {art.availability === 'READY_TO_SHIP' && (
-                        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-semibold leading-none">
-                            Available
-                        </span>
-                    )}
-                    {art.illuminated && (
-                        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-wood-600 font-semibold leading-none">
-                            Illuminated
-                        </span>
-                    )}
-                    {art.relatedStorySlug && (
-                        <span
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-bronze-600 font-semibold leading-none"
-                            title="A companion essay accompanies this piece"
-                        >
-                            <span className="w-1.5 h-1.5 rounded-full bg-bronze-500 flex-shrink-0" aria-hidden="true" />
-                            Essay
-                        </span>
-                    )}
-                </div>
-            )}
-
-            {/* Title */}
             <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                 {art.title}
             </h4>
 
-            {/* Price — own line below title, elegant serif instead of monospace.
-                No longer competing with the title for horizontal space on mobile. */}
-            {art.price && (
-                <p className="font-serif text-sm text-wood-800 mt-1 font-medium">
-                    {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
-                    ${formatPrice(art.price)}
-                </p>
-            )}
-
-            {/* Category + series + availability — bumped to text-xs (12px) and
-                tighter tracking for better mobile legibility. */}
-            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-semibold leading-none">
-                {art.category}
-                {art.series && <span className="text-wood-400 font-normal"> · {art.series}</span>}
-                {art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}
-                {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
-            </p>
-
-            {/* Description teaser — font-normal for legibility (was font-light) */}
-            {art.description && (
-                <p className="font-serif text-sm text-wood-500 font-normal leading-snug mt-2 line-clamp-2">
-                    {art.description}
-                </p>
-            )}
+            <div className="flex items-center gap-2 mt-1.5">
+                {art.availability === 'READY_TO_SHIP' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-600 flex-shrink-0" aria-label="Available" />
+                )}
+                {art.price && (
+                    <p className="font-serif text-sm text-wood-600 font-medium">
+                        {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
+                        ${formatPrice(art.price)}
+                    </p>
+                )}
+            </div>
         </div>
     </Link>
 );
