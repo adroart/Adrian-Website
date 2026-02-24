@@ -67,23 +67,21 @@ const CreationCategoryCard: React.FC<{
 }> = ({ label, desc, onClick, link, idx }) => {
     const inner = (
         <>
-            {/* Gallery mat frame */}
-            <div className="bg-paper-100 border border-wood-200 p-4 sm:p-5 md:p-6">
-                <div className="overflow-hidden">
-                    <img
-                        src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                        className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        width={800}
-                        height={800}
-                    />
-                </div>
+            {/* Image */}
+            <div className="overflow-hidden">
+                <img
+                    src={`https://picsum.photos/800/800?random=${100 + idx}`}
+                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    width={800}
+                    height={800}
+                />
             </div>
 
-            {/* Museum plaque */}
-            <div className="text-center pt-5 sm:pt-6 pb-2 px-2">
+            {/* Title — snug under the photo */}
+            <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>

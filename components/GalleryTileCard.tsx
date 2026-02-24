@@ -25,32 +25,29 @@ interface GalleryTileCardProps {
  * Category label links to that category's browse page.
  */
 const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, subtitleOverride }) => (
-    <div className="group break-inside-avoid mb-5 sm:mb-6 lg:mb-8 bg-paper-100 border border-wood-200 transition-all duration-500 hover:shadow-lg hover:border-wood-300">
-        {/* Mat padding around image */}
-        <div className="p-3 sm:p-4 pb-0 sm:pb-0">
-            {/* Image — links to the piece */}
-            <Link to={`/creations/${art.id}`} className="block overflow-hidden relative">
-                <img
-                    src={art.coverImage}
-                    alt={`${art.title} by Adrian Rasmussen`}
-                    className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
-                    loading="lazy"
-                />
-                {/* Availability badge */}
-                {showDetails && art.availability === 'READY_TO_SHIP' && (
-                    <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-medium">
-                        Ready to ship
-                    </div>
-                )}
-                {showDetails && art.availability === 'SOLD' && (
-                    <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
-                        Sold
-                    </div>
-                )}
-            </Link>
-        </div>
-        {/* Label band — spaced below the photo */}
-        <div className="px-3 pt-4 pb-3 sm:px-4 sm:pt-5 sm:pb-4">
+    <div className="group break-inside-avoid mb-5 sm:mb-6 lg:mb-8 transition-all duration-500 hover:shadow-lg">
+        {/* Image — links to the piece */}
+        <Link to={`/creations/${art.id}`} className="block overflow-hidden relative">
+            <img
+                src={art.coverImage}
+                alt={`${art.title} by Adrian Rasmussen`}
+                className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
+                loading="lazy"
+            />
+            {/* Availability badge */}
+            {showDetails && art.availability === 'READY_TO_SHIP' && (
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-medium">
+                    Ready to ship
+                </div>
+            )}
+            {showDetails && art.availability === 'SOLD' && (
+                <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
+                    Sold
+                </div>
+            )}
+        </Link>
+        {/* Label — tight under the photo */}
+        <div className="px-1 pt-2 pb-1 sm:px-2 sm:pt-2.5">
             <div className="flex justify-between items-start gap-2">
                 <Link to={`/creations/${art.id}`} className="min-w-0">
                     <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
