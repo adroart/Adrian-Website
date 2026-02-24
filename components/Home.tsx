@@ -1,33 +1,46 @@
 
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FULL_ARCHIVE } from '../data/mockData';
+import { FULL_ARCHIVE, CREATION_CATEGORIES } from '../data/mockData';
 import { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
 
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+
+/* Map category label → URL. Categories with a dedicated page use their `link`,
+   others fall back to the creations page with a category filter.              */
+const CATEGORY_URL_MAP: Record<string, string> = {};
+for (const cat of CREATION_CATEGORIES) {
+    CATEGORY_URL_MAP[cat.label] = (cat as { link?: string }).link
+        ?? `/creations?category=${encodeURIComponent(cat.label)}`;
+}
+
 /* ─── Gallery Tile Card ───────────────────────────────────────────────────── */
-/* Self-contained card: image at natural aspect ratio + label band inside
-   the same border. The tinted band visually bonds name to image.            */
+/* Image + title link to the piece. Category label links to the category.     */
 
 const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <div className="group cursor-pointer break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
-        {/* Image — natural aspect ratio, no overlay */}
-        <div className="overflow-hidden">
+    <div className="group break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
+        {/* Image — links to the piece */}
+        <Link to={`/creations/${art.id}`} className="block overflow-hidden">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
                 className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
             />
-        </div>
-        {/* Label band — tinted background, inside the card border */}
+        </Link>
+        {/* Label band */}
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
-            <h3 className="font-serif text-sm sm:text-base text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
-                {art.title}
-            </h3>
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold mt-1 block leading-none">
-                {art.category}
-            </span>
+            <Link to={`/creations/${art.id}`}>
+                <h3 className="font-serif text-sm sm:text-base text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                    {art.title}
+                </h3>
+            </Link>
+            <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-1 block">
+                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                    {art.category}
+                </span>
+            </Link>
         </div>
     </div>
 );
@@ -102,9 +115,7 @@ const Home: React.FC = () => {
                 {featuredPieces.length > 0 ? (
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
                         {featuredPieces.map(art => (
-                            <Link key={art.id} to={`/creations/${art.id}`}>
-                                <GalleryTileCard art={art} />
-                            </Link>
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 ) : (
