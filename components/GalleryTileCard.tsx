@@ -25,7 +25,7 @@ interface GalleryTileCardProps {
  * Category label links to that category's browse page.
  */
 const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, subtitleOverride }) => (
-    <div className="group break-inside-avoid mb-5 sm:mb-6 lg:mb-8 transition-all duration-500 hover:shadow-lg">
+    <div className="group break-inside-avoid mb-5 sm:mb-6 lg:mb-8 bg-paper-100 border border-wood-200 transition-all duration-500 hover:shadow-lg hover:border-wood-300">
         {/* Image — links to the piece */}
         <Link to={`/creations/${art.id}`} className="block overflow-hidden relative">
             <img
@@ -47,7 +47,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             )}
         </Link>
         {/* Label — tight under the photo */}
-        <div className="px-1 pt-2 pb-1 sm:px-2 sm:pt-2.5">
+        <div className="px-2 pt-2 pb-2 sm:px-3 sm:pt-2.5 sm:pb-3">
             <div className="flex justify-between items-start gap-2">
                 <Link to={`/creations/${art.id}`} className="min-w-0">
                     <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
