@@ -11,34 +11,67 @@ for (const cat of CREATION_CATEGORIES) {
         ?? `/creations?category=${encodeURIComponent(cat.label)}`;
 }
 
+interface GalleryTileCardProps {
+    art: Artwork;
+    /** Show availability badge, price, and richer metadata. Used on subcategory pages. */
+    showDetails?: boolean;
+    /** Override the subtitle line (defaults to art.category). */
+    subtitleOverride?: string;
+}
+
 /**
  * Shared gallery tile card — image at natural aspect ratio + label band.
  * Image + title link to the piece page.
  * Category label links to that category's browse page.
  */
-const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
+const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, subtitleOverride }) => (
     <div className="group break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
         {/* Image — links to the piece */}
-        <Link to={`/creations/${art.id}`} className="block overflow-hidden">
+        <Link to={`/creations/${art.id}`} className="block overflow-hidden relative">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
                 className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
             />
+            {/* Availability badge */}
+            {showDetails && art.availability === 'READY_TO_SHIP' && (
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-medium">
+                    Ready to ship
+                </div>
+            )}
+            {showDetails && art.availability === 'SOLD' && (
+                <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
+                    Sold
+                </div>
+            )}
         </Link>
         {/* Label band */}
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
-            <Link to={`/creations/${art.id}`}>
-                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
-                    {art.title}
-                </h3>
-            </Link>
-            <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-1 block">
-                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
-                    {art.category}
-                </span>
-            </Link>
+            <div className="flex justify-between items-start gap-2">
+                <Link to={`/creations/${art.id}`} className="min-w-0">
+                    <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                        {art.title}
+                    </h3>
+                </Link>
+                {showDetails && art.price != null && art.availability !== 'SOLD' && (
+                    <span className="font-mono text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
+                        {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price.toLocaleString('en-US')}
+                    </span>
+                )}
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+                <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
+                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                        {subtitleOverride || art.category}
+                    </span>
+                </Link>
+                {showDetails && art.availability === 'MADE_TO_ORDER' && (
+                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-avail-order font-semibold leading-none">
+                        · Made to order
+                    </span>
+                )}
+            </div>
         </div>
     </div>
 );
