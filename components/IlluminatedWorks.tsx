@@ -3,41 +3,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
-
-// --- Featured piece cards ---
-
-const IlluminatedPieceCard: React.FC<{
-    id: string;
-    title: string;
-    coverImage: string;
-    dimensions?: string;
-    price?: number;
-    availability: string;
-}> = ({ id, title, coverImage, dimensions, price, availability }) => (
-    <Link to={`/creations/${id}`} className="group cursor-pointer block">
-        <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
-            <img
-                src={coverImage}
-                alt={title}
-                className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-            />
-            {availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.2em] border border-wood-200 font-semibold">
-                    Ready to Ship
-                </div>
-            )}
-        </div>
-        <div className="mt-4 px-1">
-            <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
-                {title}
-            </h4>
-            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
-                {dimensions ?? 'Dimensions available on inquiry'}
-                {price && ` · From $${price}`}
-            </p>
-        </div>
-    </Link>
-);
+import GalleryTileCard from './GalleryTileCard';
 
 // --- Main component ---
 
@@ -132,17 +98,9 @@ const IlluminatedWorks: React.FC = () => {
                     <div className="border-t border-wood-200 pt-16 mb-12">
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">From the collection</h2>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
+                    <div className="columns-2 lg:columns-3 xl:columns-5 gap-3 sm:gap-4 lg:gap-5 mb-12">
                         {illuminatedPieces.map(art => (
-                            <IlluminatedPieceCard
-                                key={art.id}
-                                id={art.id}
-                                title={art.title}
-                                coverImage={art.coverImage}
-                                dimensions={art.dimensions}
-                                price={art.price}
-                                availability={art.availability}
-                            />
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                     <div className="text-center">

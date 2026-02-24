@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronUp, ArrowUpDown } from 'lucide-react';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
+import GalleryTileCard from './GalleryTileCard';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -118,47 +119,6 @@ const CreationCategoryCard: React.FC<{
         </button>
     );
 };
-
-/**
- * A card in the masonry artwork grid.
- */
-const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <Link
-        to={`/creations/${art.id}`}
-        className="group cursor-pointer break-inside-avoid block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 mb-3 sm:mb-8"
-    >
-        {/* Image — enforces 4:3 on mobile; natural ratio on sm+ for masonry variety */}
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg group-hover:shadow-wood-200/60 aspect-[4/3] sm:aspect-auto">
-            <img
-                src={art.coverImage}
-                alt={`${art.title} by Adrian Rasmussen`}
-                loading="lazy"
-                width={800}
-                height={800}
-                className="absolute inset-0 w-full h-full object-cover sm:static sm:h-auto transition-transform duration-700 group-hover:scale-105"
-            />
-        </div>
-
-        {/* Minimal caption: title + price + availability dot */}
-        <div className="mt-3 px-1">
-            <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
-                {art.title}
-            </h4>
-
-            <div className="flex items-center gap-2 mt-1.5">
-                {art.availability === 'READY_TO_SHIP' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-600 flex-shrink-0" aria-label="Available" />
-                )}
-                {art.price && (
-                    <p className="font-serif text-sm text-wood-600 font-medium">
-                        {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
-                        ${formatPrice(art.price)}
-                    </p>
-                )}
-            </div>
-        </div>
-    </Link>
-);
 
 /**
  * A collection card — uses <button> for proper semantics and keyboard access.
@@ -509,7 +469,7 @@ const Creations: React.FC = () => {
                 {displayedPieces.length > 0 ? (
                     <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
                         {displayedPieces.map(art => (
-                            <PieceCard key={art.id} art={art} />
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 ) : (

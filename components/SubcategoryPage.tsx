@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, LIGHT_CODE_SUBCATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
+import GalleryTileCard from './GalleryTileCard';
 
 // --- Subcategory config ---
 
@@ -50,43 +51,6 @@ const SLUG_MAP: Record<string, SubcategoryConfig> = {
         showCommissionInvite: true,
     },
 };
-
-// --- Piece card (same visual pattern throughout) ---
-
-const PieceCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <Link to={`/creations/${art.id}`} className="group cursor-pointer break-inside-avoid mb-8 block">
-        <div className="relative overflow-hidden bg-wood-50 border border-wood-200">
-            <img
-                src={art.coverImage}
-                alt={art.title}
-                className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-            />
-            {art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.2em] border border-wood-200 font-semibold">
-                    Ready to Ship
-                </div>
-            )}
-            {art.relatedStorySlug && (
-                <div className="absolute top-3 left-3 w-2 h-2 rounded-full bg-bronze-500" title="Companion story available" />
-            )}
-        </div>
-        <div className="mt-4 px-1">
-            <div className="flex justify-between items-start">
-                <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight max-w-[75%]">
-                    {art.title}
-                </h4>
-                {art.price && (
-                    <span className="font-mono text-xs text-wood-900 font-semibold">
-                        {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price}
-                    </span>
-                )}
-            </div>
-            <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
-                {art.subcategory ?? art.series ?? 'Signature'} {art.availability === 'SOLD' && '• Sold'}
-            </p>
-        </div>
-    </Link>
-);
 
 // --- Main component ---
 
@@ -261,7 +225,7 @@ const SubcategoryPage: React.FC = () => {
                 {filteredPieces.length > 0 ? (
                     <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8">
                         {filteredPieces.map(art => (
-                            <PieceCard key={art.id} art={art} />
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 ) : (
