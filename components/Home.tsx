@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
@@ -9,41 +9,9 @@ import GalleryTileCard from './GalleryTileCard';
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
-const GALLERY_LIMIT = 12;
-
 const Home: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-    /* Piece counts per category — for chip labels */
-    const categoryCounts = useMemo(() => {
-        const counts: Record<string, number> = {};
-        for (const art of FULL_ARCHIVE) {
-            counts[art.category] = (counts[art.category] || 0) + 1;
-        }
-        return counts;
-    }, []);
-
-    /* Filtered + limited pieces for the grid */
-    const displayedPieces = useMemo(() => {
-        if (!activeCategory) {
-            return FULL_ARCHIVE.filter(a => a.featured).slice(0, GALLERY_LIMIT);
-        }
-        return FULL_ARCHIVE.filter(a => a.category === activeCategory).slice(0, GALLERY_LIMIT);
-    }, [activeCategory]);
-
-    /* Total count for "See all" link */
-    const totalInCategory = useMemo(() => {
-        if (!activeCategory) return FULL_ARCHIVE.filter(a => a.featured).length;
-        return FULL_ARCHIVE.filter(a => a.category === activeCategory).length;
-    }, [activeCategory]);
-
-    /* Build the "See all" destination — uses dedicated page when one exists */
-    const seeAllLink = useMemo(() => {
-        if (!activeCategory) return '/creations';
-        const cat = CREATION_CATEGORIES.find(c => c.label === activeCategory);
-        if (cat && (cat as { link?: string }).link) return (cat as { link?: string }).link!;
-        return `/creations?category=${encodeURIComponent(activeCategory)}`;
-    }, [activeCategory]);
+    /* Show only pieces you've marked as featured in mockData */
+    const featuredPieces = useMemo(() => FULL_ARCHIVE.filter(a => a.featured), []);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
@@ -68,7 +36,7 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 sm:mb-8 px-4 sm:px-6">
                     <div>
                         <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 mb-1 font-medium">Creations</h2>
-                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Browse by category.</p>
+                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Selected works.</p>
                     </div>
                     <Link
                         to="/creations"
@@ -78,43 +46,10 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Category chip bar — horizontally scrollable on mobile */}
-                <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-2 mb-8 sm:mb-10 scrollbar-hide">
-                    {/* "All" chip */}
-                    <button
-                        type="button"
-                        onClick={() => setActiveCategory(null)}
-                        className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
-                            !activeCategory
-                                ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
-                                : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
-                        }`}
-                    >
-                        All
-                    </button>
-                    {CREATION_CATEGORIES.map(cat => (
-                        <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => setActiveCategory(cat.label)}
-                            className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
-                                activeCategory === cat.label
-                                    ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
-                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
-                            }`}
-                        >
-                            {cat.label}
-                            <span className={`ml-1.5 ${activeCategory === cat.label ? 'text-bronze-400' : 'text-wood-300'}`}>
-                                {categoryCounts[cat.label] || 0}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Tile card grid — 2 cols mobile, 3 cols desktop, 4 cols xl */}
-                {displayedPieces.length > 0 ? (
+                {/* Tile card grid — featured pieces only */}
+                {featuredPieces.length > 0 ? (
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
-                        {displayedPieces.map(art => (
+                        {featuredPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
@@ -123,18 +58,6 @@ const Home: React.FC = () => {
                         <p className="font-serif text-xl text-wood-500 italic">
                             Pieces coming soon.
                         </p>
-                    </div>
-                )}
-
-                {/* "See all" link — shown when the category has more pieces than the grid limit */}
-                {totalInCategory > GALLERY_LIMIT && (
-                    <div className="text-center mt-10 px-4">
-                        <Link
-                            to={seeAllLink}
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold border border-wood-200 px-6 py-3 hover:border-bronze-400 transition-all"
-                        >
-                            See all {totalInCategory} pieces <ArrowRight size={14} />
-                        </Link>
                     </div>
                 )}
             </section>
