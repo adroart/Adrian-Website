@@ -1,10 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
-
-// Set VITE_FORMSPREE_INQUIRE_ID in .env.local to enable form submissions.
-// e.g. VITE_FORMSPREE_INQUIRE_ID=xpwzgjkl
-const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_INQUIRE_ID as string | undefined;
 
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
@@ -233,17 +228,16 @@ const Inquire: React.FC = () => {
   const allRequiredTouched = touched.name && touched.email && touched.vision;
 
   useEffect(() => {
-    if (!coreSubmitted && FORMSPREE_ID && allRequiredTouched && requiredValid) {
+    if (!coreSubmitted && allRequiredTouched && requiredValid) {
       setCoreSubmitted(true);
-      fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      fetch('/api/inquire', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
           vision: form.vision,
           commissionType: form.commissionType,
-          _subject: `[Inquiry] ${form.name} (${form.commissionType})`,
         }),
       }).catch(() => {});
     }
@@ -275,46 +269,23 @@ const Inquire: React.FC = () => {
     setSendStatus('SENDING');
     setErrorMsg('');
 
-    if (FORMSPREE_ID) {
-      try {
-        const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify(form),
-        });
-        if (res.ok) {
-          setSubmitted(true);
-          setSendStatus('IDLE');
-        } else {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data?.errors?.[0]?.message || 'Submission failed.');
-        }
-      } catch (err: any) {
-        setSendStatus('ERROR');
-        setErrorMsg(err.message || 'Something went wrong. Please try again.');
+    try {
+      const res = await fetch('/api/inquire', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setSendStatus('IDLE');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Submission failed.');
       }
-      return;
+    } catch (err: any) {
+      setSendStatus('ERROR');
+      setErrorMsg(err.message || 'Something went wrong. Please try again.');
     }
-
-    // Fallback: open pre-filled mailto link
-    const subject = encodeURIComponent(`Commission Inquiry from ${form.name} (${form.commissionType})`);
-    const body = encodeURIComponent(
-      [
-        `Name: ${form.name}`,
-        `Email: ${form.email}`,
-        `Type: ${form.commissionType}`,
-        form.budget ? `Budget: ${form.budget}` : '',
-        form.timeline ? `Timeline: ${form.timeline}` : '',
-        form.referral ? `Referral: ${form.referral}` : '',
-        '',
-        form.vision,
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    );
-    window.location.href = `mailto:hello@adrianrasmussen.art?subject=${subject}&body=${body}`;
-    setSubmitted(true);
-    setSendStatus('IDLE');
   };
 
   const handleReset = () => {
