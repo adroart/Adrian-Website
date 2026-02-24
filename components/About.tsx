@@ -136,7 +136,7 @@ const SideNav: React.FC = () => {
         const isActive = active === id;
         return (
           <button key={id} onClick={() => go(id)} className="group flex items-center gap-2.5 cursor-pointer" aria-label={`Jump to ${label}`}>
-            <span className={`font-mono text-[9px] uppercase tracking-[0.2em] transition-all duration-300 ${isActive ? 'opacity-100 text-bronze-500' : 'opacity-0 text-wood-400 translate-x-2 group-hover:opacity-60 group-hover:translate-x-0'}`}>
+            <span className={`font-label text-[11px] uppercase tracking-[0.2em] transition-all duration-300 ${isActive ? 'opacity-100 text-bronze-500' : 'opacity-0 text-wood-400 translate-x-2 group-hover:opacity-60 group-hover:translate-x-0'}`}>
               {label}
             </span>
             <span className={`block rounded-full transition-all duration-300 ${isActive ? 'w-2.5 h-2.5 bg-bronze-500 shadow-[0_0_0_2px_rgba(196,170,124,0.25)]' : 'w-1.5 h-1.5 bg-wood-300 group-hover:bg-bronze-400'}`} />
@@ -152,7 +152,7 @@ const SideNav: React.FC = () => {
 const Tag: React.FC<{ light?: boolean; centered?: boolean; children: React.ReactNode }> = ({ light, centered, children }) => (
   <div className={`flex items-center gap-3 mb-8 ${centered ? 'justify-center' : ''}`}>
     {centered && <span className="about-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />}
-    <span className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
+    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
     <span className="about-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />
   </div>
 );
@@ -470,7 +470,7 @@ const About: React.FC = () => {
               <div className="mt-10 pl-7">
                 <Link
                   to="/creations"
-                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                  className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                 >
                   See the work
                 </Link>
@@ -514,7 +514,7 @@ const About: React.FC = () => {
                 <div className="mt-10">
                   <Link
                     to="/inquire"
-                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-400 hover:text-bronze-300 font-semibold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-400 hover:text-bronze-300 font-semibold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
                   >
                     Work together
                   </Link>
@@ -641,13 +641,13 @@ const About: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
               <Link
                 to="/writings"
-                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
                 Explore the writings
               </Link>
               <Link
                 to="/shop"
-                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
                 Acquire a piece
               </Link>

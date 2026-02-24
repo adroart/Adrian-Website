@@ -11,7 +11,7 @@ const Welcome: React.FC = () => {
         <h1 className="font-serif text-3xl text-paper-50 mb-2 tracking-tight font-medium">
           Adrian Rasmussen
         </h1>
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-12 font-semibold">
+        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-12 font-semibold">
           Technician of the Sacred
         </p>
 
@@ -19,25 +19,25 @@ const Welcome: React.FC = () => {
         <div className="flex flex-col gap-3 mb-16">
           <Link
             to="/creations"
-            className="w-full py-4 border border-stone-700 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
+            className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
           >
             Creations
           </Link>
           <Link
             to="/shop"
-            className="w-full py-4 border border-stone-700 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
+            className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
           >
             Shop
           </Link>
           <Link
             to="/inquire"
-            className="w-full py-4 border border-stone-700 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
+            className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
           >
             Commission a Piece
           </Link>
           <Link
             to="/writings"
-            className="w-full py-4 border border-stone-700 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
+            className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
           >
             Writings
           </Link>
@@ -45,7 +45,7 @@ const Welcome: React.FC = () => {
             href="https://teajia.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 border border-stone-700 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors flex items-center justify-center gap-2"
           >
             Teajia <ArrowUpRight size={12} />
           </a>
@@ -54,7 +54,7 @@ const Welcome: React.FC = () => {
         {/* Full site link */}
         <Link
           to="/"
-          className="font-mono text-[11px] uppercase tracking-[0.2em] text-stone-600 hover:text-paper-50 transition-colors font-semibold border-b border-stone-700 pb-1"
+          className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-600 hover:text-paper-50 transition-colors font-semibold border-b border-stone-700 pb-1"
         >
           Enter Full Site
         </Link>
