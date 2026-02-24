@@ -1,57 +1,38 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FULL_ARCHIVE } from '../data/mockData';
+import { FULL_ARCHIVE, CREATION_CATEGORIES } from '../data/mockData';
+import { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
 
-const SelectedWorkCard: React.FC<{ art: any }> = ({ art }) => (
-    <div className="group cursor-pointer break-inside-avoid border-b border-wood-100 pb-5 sm:border-b-0 sm:pb-0">
-        {/* Image — 4:3 on mobile for consistent heights; natural ratio on sm+ */}
-        <div className="relative overflow-hidden bg-wood-100 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg aspect-[4/3] sm:aspect-auto">
+/* ─── Gallery Tile Card ───────────────────────────────────────────────────── */
+/* Self-contained card: image at natural aspect ratio + label band inside
+   the same border. The tinted band visually bonds name to image.            */
+
+const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
+    <div className="group cursor-pointer break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
+        {/* Image — natural aspect ratio, no overlay */}
+        <div className="overflow-hidden">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
-                className="absolute inset-0 w-full h-full object-cover sm:static sm:h-auto transition-transform duration-[1.5s] group-hover:scale-105"
+                className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
             />
-            <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/5 transition-colors duration-500" />
         </div>
-        <div className="mt-3 px-1">
-            {/* Badge — pill below the image instead of inline text */}
-            {art.availability === 'READY_TO_SHIP' && (
-                <div className="mb-2">
-                    <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase tracking-[0.1em] border border-wood-200 text-avail-ready font-semibold leading-none">
-                        Available
-                    </span>
-                </div>
-            )}
-
-            <h3 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
+        {/* Label band — tinted background, inside the card border */}
+        <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
+            <h3 className="font-serif text-sm sm:text-base text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                 {art.title}
             </h3>
-
-            {/* Price — own line, serif font, properly formatted with commas.
-                "From" only shown for made-to-order; sold gets its own treatment. */}
-            {art.price && (
-                <p className="font-serif text-sm mt-1 font-medium text-wood-800">
-                    {art.availability === 'SOLD' ? (
-                        <span className="text-avail-sold">Sold</span>
-                    ) : (
-                        <>
-                            {art.availability === 'MADE_TO_ORDER' && <span className="text-wood-400 font-light">From </span>}
-                            ${art.price.toLocaleString('en-US')}
-                        </>
-                    )}
-                </p>
-            )}
-
-            {/* Category */}
-            <p className="font-mono text-xs text-wood-500 uppercase tracking-[0.1em] mt-2 font-semibold leading-none">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold mt-1 block leading-none">
                 {art.category}
-            </p>
+            </span>
         </div>
     </div>
 );
+
+/* ─── Pathway Block ───────────────────────────────────────────────────────── */
 
 const PathwayBlock: React.FC<{
     title: string;
@@ -78,9 +59,43 @@ const PathwayBlock: React.FC<{
     </Link>
 );
 
-const Home: React.FC = () => {
+/* ─── Home Component ──────────────────────────────────────────────────────── */
 
-    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 8), []);
+const GALLERY_LIMIT = 12;
+
+const Home: React.FC = () => {
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+    /* Piece counts per category — for chip labels */
+    const categoryCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const art of FULL_ARCHIVE) {
+            counts[art.category] = (counts[art.category] || 0) + 1;
+        }
+        return counts;
+    }, []);
+
+    /* Filtered + limited pieces for the grid */
+    const displayedPieces = useMemo(() => {
+        if (!activeCategory) {
+            return FULL_ARCHIVE.filter(a => a.featured).slice(0, GALLERY_LIMIT);
+        }
+        return FULL_ARCHIVE.filter(a => a.category === activeCategory).slice(0, GALLERY_LIMIT);
+    }, [activeCategory]);
+
+    /* Total count for "See all" link */
+    const totalInCategory = useMemo(() => {
+        if (!activeCategory) return FULL_ARCHIVE.filter(a => a.featured).length;
+        return FULL_ARCHIVE.filter(a => a.category === activeCategory).length;
+    }, [activeCategory]);
+
+    /* Build the "See all" destination — uses dedicated page when one exists */
+    const seeAllLink = useMemo(() => {
+        if (!activeCategory) return '/creations';
+        const cat = CREATION_CATEGORIES.find(c => c.label === activeCategory);
+        if (cat && (cat as { link?: string }).link) return (cat as { link?: string }).link!;
+        return `/creations?category=${encodeURIComponent(activeCategory)}`;
+    }, [activeCategory]);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
@@ -99,30 +114,83 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* 3.3 Selected Works */}
-            <section className="py-20">
-                {/* Stack title + CTA vertically on mobile so both stay on one line;
-                    side-by-side at sm+ where there's room. */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-10 sm:mb-16 px-6">
+            {/* 3.3 Browse Creations — Tile Cards + Category Chips */}
+            <section className="py-16 sm:py-20">
+                {/* Section header */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 sm:mb-8 px-4 sm:px-6">
                     <div>
-                        <h2 className="font-serif text-4xl text-wood-900 mb-1 font-medium">Selected Works</h2>
-                        <p className="font-serif text-lg text-wood-500 italic">Pieces I return to.</p>
+                        <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 mb-1 font-medium">Creations</h2>
+                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Browse by category.</p>
                     </div>
                     <Link
                         to="/creations"
                         className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
                     >
-                        See All Creations <ArrowRight size={14} />
+                        Full Archive <ArrowRight size={14} />
                     </Link>
                 </div>
 
-                <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 sm:gap-6 lg:gap-8 space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6">
-                    {selectedWorks.map((art, index) => (
-                        <Link key={art.id} to={`/creations/${art.id}`} className={index >= 3 ? 'hidden sm:block' : ''}>
-                            <SelectedWorkCard art={art} />
-                        </Link>
+                {/* Category chip bar — horizontally scrollable on mobile */}
+                <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-2 mb-8 sm:mb-10 scrollbar-hide">
+                    {/* "All" chip */}
+                    <button
+                        type="button"
+                        onClick={() => setActiveCategory(null)}
+                        className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
+                            !activeCategory
+                                ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
+                                : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
+                        }`}
+                    >
+                        All
+                    </button>
+                    {CREATION_CATEGORIES.map(cat => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setActiveCategory(cat.label)}
+                            className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
+                                activeCategory === cat.label
+                                    ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
+                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
+                            }`}
+                        >
+                            {cat.label}
+                            <span className={`ml-1.5 ${activeCategory === cat.label ? 'text-bronze-400' : 'text-wood-300'}`}>
+                                {categoryCounts[cat.label] || 0}
+                            </span>
+                        </button>
                     ))}
                 </div>
+
+                {/* Tile card grid — 2 cols mobile, 3 cols desktop, 4 cols xl */}
+                {displayedPieces.length > 0 ? (
+                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
+                        {displayedPieces.map(art => (
+                            <Link key={art.id} to={`/creations/${art.id}`}>
+                                <GalleryTileCard art={art} />
+                            </Link>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16 px-6">
+                        <p className="font-serif text-xl text-wood-500 italic">
+                            Pieces coming soon.
+                        </p>
+                    </div>
+                )}
+
+                {/* "See all" link — shown when the category has more pieces than the grid limit */}
+                {totalInCategory > GALLERY_LIMIT && (
+                    <div className="text-center mt-10 px-4">
+                        <Link
+                            to={seeAllLink}
+                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold border border-wood-200 px-6 py-3 hover:border-bronze-400 transition-all"
+                        >
+                            See all {totalInCategory} pieces <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                )}
             </section>
 
             {/* 3.4 The Differentiator */}

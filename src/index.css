@@ -324,6 +324,16 @@ html.dark body { background-color: #141210; }
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #78736a; }
 
+/* ─── Scrollbar Hide Utility ───────────────────────────────────────────── */
+/* Used on horizontally-scrollable chip bars and similar UI. */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─── Footer Enhancements ──────────────────────────────────────────────── */
 
 /* #15 Noise texture overlay — subtle paper/linen grain */
