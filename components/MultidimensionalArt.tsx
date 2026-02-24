@@ -26,7 +26,7 @@ const SubcategoryTile: React.FC<{
                 <div className="overflow-hidden">
                     <img
                         src={`https://picsum.photos/800/600?random=${200 + idx}`}
-                        className="w-full aspect-[4/3] object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
+                        className="w-full aspect-[4/3] object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
                         alt={label}
                     />
                 </div>
@@ -36,8 +36,8 @@ const SubcategoryTile: React.FC<{
             <div className="text-center pt-4 pb-2 px-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">{label}</h3>
                 <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
-                              sm:opacity-0 sm:max-h-0 sm:group-hover:opacity-100 sm:group-hover:max-h-20
-                              transition-all duration-500 ease-out">
+                              sm:opacity-0 sm:group-hover:opacity-100
+                              transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
             </div>

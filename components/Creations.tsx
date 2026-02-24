@@ -72,7 +72,7 @@ const CreationCategoryCard: React.FC<{
                 <div className="overflow-hidden">
                     <img
                         src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                        className="w-full aspect-square object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
+                        className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         alt=""
                         aria-hidden="true"
                         loading="lazy"
@@ -88,8 +88,8 @@ const CreationCategoryCard: React.FC<{
                     {label}
                 </h3>
                 <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
-                              sm:opacity-0 sm:max-h-0 sm:group-hover:opacity-100 sm:group-hover:max-h-20
-                              transition-all duration-500 ease-out">
+                              sm:opacity-0 sm:group-hover:opacity-100
+                              transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
             </div>
