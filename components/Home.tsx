@@ -32,7 +32,7 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
         {/* Label band */}
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
             <Link to={`/creations/${art.id}`}>
-                <h3 className="font-serif text-sm sm:text-base text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
                     {art.title}
                 </h3>
             </Link>
