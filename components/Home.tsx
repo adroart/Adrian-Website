@@ -260,11 +260,7 @@ const Home: React.FC = () => {
                                     />
                                 </div>
                                 <div className="p-6 md:p-8">
-                                    <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 font-semibold">
-                                        {story.category}
-                                    </span>
-                                    <span className="font-mono text-xs text-wood-400 ml-3">{story.readMinutes} min read</span>
-                                    <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mt-3 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                    <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                         {story.title}
                                     </h3>
                                     <p className="font-serif text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
@@ -294,11 +290,7 @@ const Home: React.FC = () => {
                                         />
                                     </div>
                                     <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-center min-w-0">
-                                        <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 font-semibold">
-                                            {story.category}
-                                        </span>
-                                        <span className="font-mono text-xs text-wood-400 ml-0 mt-1 block sm:inline sm:mt-0 sm:ml-3">{story.readMinutes} min read</span>
-                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mt-2 mb-2 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {story.title}
                                         </h3>
                                         <p className="font-serif text-sm text-wood-500 leading-relaxed font-light line-clamp-2 hidden sm:block">
