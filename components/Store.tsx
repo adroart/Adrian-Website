@@ -186,24 +186,13 @@ const ProductCard: React.FC<{
                 )}
             </div>
 
-            <div className="flex justify-between items-start px-1">
-                <div className="max-w-[80%]">
-                    <h3 className="font-serif text-2xl text-wood-900 leading-snug mb-2 group-hover:text-bronze-700 transition-colors font-medium">
-                        {product.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2">
-                         <span className="text-xs font-mono text-wood-500 uppercase tracking-[0.2em] font-semibold">
-                            {product.category}
-                        </span>
-                        <span className="text-xs text-wood-300">•</span>
-                         <span className="text-xs font-mono text-wood-500 uppercase tracking-[0.2em] font-semibold">
-                            {product.material}
-                        </span>
-                    </div>
-                </div>
-                <div className="font-mono text-sm text-wood-900 border-b border-transparent group-hover:border-wood-900 transition-all font-semibold">
+            <div className="flex justify-between items-baseline px-1">
+                <h3 className="font-serif text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium max-w-[75%]">
+                    {product.title}
+                </h3>
+                <span className="font-serif text-sm text-wood-600 font-medium flex-shrink-0">
                     {formatPrice(product.price)}
-                </div>
+                </span>
             </div>
         </div>
     );
