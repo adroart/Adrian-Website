@@ -111,12 +111,16 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           <div className="flex items-center gap-1">
             <button
               onClick={openCart}
-              className={`relative p-2 hover:opacity-70 transition-opacity flex items-center gap-1.5 ${textPrimary}`}
+              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
               aria-label="Open cart"
             >
-              <span className="font-mono text-[11px] uppercase tracking-[0.15em] font-semibold">Cart</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
               {totalItems > 0 && (
-                <span className={`font-mono text-[11px] font-semibold ${isDark ? 'text-bronze-400' : 'text-bronze-600'}`}>
+                <span className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full text-[9px] font-mono font-semibold leading-none ${isDark ? 'bg-bronze-400 text-stone-950' : 'bg-bronze-600 text-paper-50'}`}>
                   {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}
