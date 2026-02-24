@@ -562,12 +562,12 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
-                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-emerald-50 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
                                     <span className="block font-serif text-4xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-end">
-                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-emerald-50 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <button
@@ -759,7 +759,7 @@ const PiecePage: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                        <span className="inline-block px-2 py-0.5 bg-amber-50 text-avail-order rounded-sm mr-1">Made to order</span>
+                                        <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-order rounded-sm mr-1">Made to order</span>
                                         {' · '}4 to 6 weeks
                                     </div>
                                     {editionText && (
@@ -787,12 +787,12 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
-                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-amber-50 ${availabilityColor}`}>Made to order</span>
+                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
                                     <span className="block font-serif text-4xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-end">
-                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-amber-50 ${availabilityColor}`}>Made to order</span>
+                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
                                     <span className="font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <Link
@@ -921,10 +921,10 @@ const PiecePage: React.FC = () => {
                                     )}
                                     <span className={`inline-block mt-2 px-2 py-0.5 font-label text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold rounded-sm ${
                                         related.availability === 'SOLD'
-                                            ? 'bg-red-50 text-avail-sold'
+                                            ? 'bg-wood-100 text-avail-sold'
                                             : related.availability === 'READY_TO_SHIP'
-                                            ? 'bg-emerald-50 text-avail-ready'
-                                            : 'bg-amber-50 text-avail-order'
+                                            ? 'bg-wood-100 text-avail-ready'
+                                            : 'bg-wood-100 text-avail-order'
                                     }`}>
                                         {related.availability === 'SOLD' && 'Sold'}
                                         {related.availability === 'READY_TO_SHIP' && 'Ready to ship'}
