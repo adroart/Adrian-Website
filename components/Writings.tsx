@@ -170,7 +170,7 @@ export const WritingArticle: React.FC = () => {
                 )}
 
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
-                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-800 leading-[1.7] mx-auto">
+                <div className="article-prose prose prose-lg md:prose-xl font-body text-wood-800 leading-[1.85] tracking-[0.01em] mx-auto">
                     {story.content.map((p, i) => (
                         <React.Fragment key={i}>
                             {/* #15 Subtle divider every 4 paragraphs in long articles */}
@@ -181,7 +181,7 @@ export const WritingArticle: React.FC = () => {
                             )}
                             {/* #13 Pull quotes for paragraphs starting with "> " */}
                             {p.startsWith('> ') ? (
-                                <blockquote className="pull-quote my-10 text-xl md:text-2xl text-wood-600 italic leading-relaxed">
+                                <blockquote className="pull-quote my-10 text-xl md:text-2xl text-wood-600 font-serif italic leading-relaxed">
                                     {p.slice(2)}
                                 </blockquote>
                             ) : (
@@ -273,7 +273,7 @@ export const WritingArticle: React.FC = () => {
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
                                         {next.title}
                                     </h4>
-                                    <p className="font-serif text-sm text-wood-600 font-light line-clamp-2 leading-relaxed">
+                                    <p className="font-body text-sm text-wood-600 line-clamp-2 leading-relaxed">
                                         {next.excerpt}
                                     </p>
                                 </Link>
@@ -441,7 +441,7 @@ const Writings: React.FC = () => {
                                                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                                     {story.title}
                                                 </h3>
-                                                <p className="font-serif text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
+                                                <p className="font-body text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
                                                     {story.excerpt}
                                                 </p>
                                                 {/* Refined tag pills */}

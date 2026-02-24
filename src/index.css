@@ -87,7 +87,7 @@ blockquote {
   line-height: 0.8;
   padding-right: 0.1em;
   padding-top: 0.05em;
-  color: #262321;
+  color: var(--color-wood-900);
   font-weight: 500;
 }
 
@@ -102,6 +102,7 @@ blockquote {
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "Lato", sans-serif;
   --font-mono: "Josefin Sans", sans-serif;
+  --font-body: "Lora", serif;
 
   /* Colors: taupe */
   --color-taupe: #453d39;
