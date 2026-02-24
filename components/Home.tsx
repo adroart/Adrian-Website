@@ -2,35 +2,8 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
-import { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
-
-/* ─── Gallery Tile Card ───────────────────────────────────────────────────── */
-/* Self-contained card: image at natural aspect ratio + label band inside
-   the same border. The tinted band visually bonds name to image.            */
-
-const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <div className="group cursor-pointer break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
-        {/* Image — natural aspect ratio, no overlay */}
-        <div className="overflow-hidden">
-            <img
-                src={art.coverImage}
-                alt={`${art.title} by Adrian Rasmussen`}
-                className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
-                loading="lazy"
-            />
-        </div>
-        {/* Label band — tinted background, inside the card border */}
-        <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
-            <h3 className="font-serif text-sm sm:text-base text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
-                {art.title}
-            </h3>
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold mt-1 block leading-none">
-                {art.category}
-            </span>
-        </div>
-    </div>
-);
+import GalleryTileCard from './GalleryTileCard';
 
 /* ─── Commission Invitation ────────────────────────────────────────────── */
 
@@ -142,9 +115,7 @@ const Home: React.FC = () => {
                 {displayedPieces.length > 0 ? (
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
                         {displayedPieces.map(art => (
-                            <Link key={art.id} to={`/creations/${art.id}`}>
-                                <GalleryTileCard art={art} />
-                            </Link>
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 ) : (
