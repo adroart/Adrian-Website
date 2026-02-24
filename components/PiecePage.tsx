@@ -179,7 +179,7 @@ const PiecePage: React.FC = () => {
                     <p className="font-serif text-lg text-wood-600 mb-8">The piece you are looking for does not exist or has been moved.</p>
                     <Link
                         to="/creations"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
                         <ArrowRight size={14} className="rotate-180" /> Back to Creations
                     </Link>
@@ -356,7 +356,7 @@ const PiecePage: React.FC = () => {
                             ? (seriesLink ?? '/creations/multidimensional-art')
                             : (art.category ? `/creations?category=${encodeURIComponent(art.category)}` : '/creations')
                     }
-                    className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
+                    className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
                 >
                     <ArrowRight size={12} className="rotate-180" />
                     {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
@@ -364,7 +364,7 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Desktop breadcrumb — full path */}
-            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6 flex-wrap items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
+            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6 flex-wrap items-center gap-2.5 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
 
@@ -479,7 +479,7 @@ const PiecePage: React.FC = () => {
                         {art.series && (seriesLink || seriesSlug) && (
                             <Link
                                 to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
-                                className="flex items-center gap-2 text-bronze-600 font-mono text-xs uppercase tracking-[0.2em] font-semibold mb-4 hover:underline"
+                                className="flex items-center gap-2 text-bronze-600 font-label text-xs uppercase tracking-[0.2em] font-semibold mb-4 hover:underline"
                             >
                                 {art.series} Series <ArrowUpRight size={12} />
                             </Link>
@@ -492,13 +492,13 @@ const PiecePage: React.FC = () => {
                         <div className="md:hidden space-y-2.5">
                             {metadataRows.map(row => (
                                 <div key={row.label} className="flex items-baseline justify-between gap-4">
-                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold shrink-0">{row.label}</span>
+                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold shrink-0">{row.label}</span>
                                     <span className="font-serif text-base text-wood-700 text-right">{row.value}</span>
                                 </div>
                             ))}
                             {editionText && !hasMTOSizes && (
                                 <div className="pt-1.5 mt-1 border-t border-wood-100">
-                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">{editionText}</span>
+                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">{editionText}</span>
                                 </div>
                             )}
                         </div>
@@ -519,7 +519,7 @@ const PiecePage: React.FC = () => {
                         <Link
                             to={`/writings`}
                             state={{ openStory: art.relatedStorySlug }}
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mb-10"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mb-10"
                         >
                             <BookOpen size={14} />
                             Read the story behind this piece
@@ -532,12 +532,12 @@ const PiecePage: React.FC = () => {
                         {/* --- Edition closed --- */}
                         {editionClosed ? (
                             <div className="space-y-4">
-                                <div className="w-full py-4 border border-wood-200 text-avail-sold font-mono text-xs uppercase tracking-[0.2em] flex items-center justify-center">
+                                <div className="w-full py-4 border border-wood-200 text-avail-sold font-label text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center">
                                     Edition closed
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission a new original <ArrowRight size={14} />
                                 </Link>
@@ -548,17 +548,17 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1">
-                                    <span className={`block font-mono text-[10px] uppercase tracking-[0.2em] ${availabilityColor}`}>Ready to ship</span>
+                                    <span className={`block font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Ready to ship</span>
                                     <span className="block font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-center">
-                                    <span className={`font-mono text-xs uppercase tracking-[0.2em] ${availabilityColor}`}>Ready to ship</span>
+                                    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <button
                                     onClick={handleAddToCartRTS}
-                                    className={`w-full py-4 font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-3 ${
+                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-3 ${
                                         rtsAdded
                                             ? 'bg-bronze-600 text-paper-50'
                                             : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
@@ -569,7 +569,7 @@ const PiecePage: React.FC = () => {
                                         : <><ShoppingBag size={16} /> Add to Cart</>
                                     }
                                 </button>
-                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
                             </div>
@@ -580,7 +580,7 @@ const PiecePage: React.FC = () => {
 
                                 {/* Size selector */}
                                 <div className="mb-8">
-                                    <p className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
                                         Select your size
                                     </p>
                                     <div className="space-y-2">
@@ -603,7 +603,7 @@ const PiecePage: React.FC = () => {
                                                     </div>
                                                     <span className="font-serif text-lg text-wood-900">{sizeOption.size}</span>
                                                 </div>
-                                                <span className="font-mono text-sm text-wood-700 font-semibold">
+                                                <span className="font-label text-sm text-wood-700 font-semibold">
                                                     ${sizeOption.price.toLocaleString('en-US')}
                                                 </span>
                                                 <input
@@ -621,7 +621,7 @@ const PiecePage: React.FC = () => {
 
                                 {/* Add-on checkboxes */}
                                 <div className="mb-6">
-                                    <p className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
+                                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
                                         Add to your piece
                                     </p>
                                     <div className="space-y-5">
@@ -636,7 +636,7 @@ const PiecePage: React.FC = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add crystals</span>
-                                                    <span className="font-mono text-sm text-wood-600 font-semibold shrink-0">
+                                                    <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                         +${MADE_TO_ORDER_ADD_ONS.crystals.price.toLocaleString('en-US')}
                                                     </span>
                                                 </div>
@@ -659,7 +659,7 @@ const PiecePage: React.FC = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add wood frame</span>
-                                                    <span className="font-mono text-sm text-wood-600 font-semibold shrink-0">
+                                                    <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                         +${MADE_TO_ORDER_ADD_ONS.woodFrame.price.toLocaleString('en-US')}
                                                     </span>
                                                 </div>
@@ -683,7 +683,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex-1">
                                                     <div className="flex items-baseline justify-between gap-4">
                                                         <span className="font-serif text-lg text-wood-900">Illuminate this piece</span>
-                                                        <span className="font-mono text-sm text-wood-600 font-semibold shrink-0">
+                                                        <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                             +${illuminationPrice.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
@@ -710,7 +710,7 @@ const PiecePage: React.FC = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Custom laser cut frame</span>
-                                                    <span className="font-mono text-sm text-wood-600 font-semibold shrink-0">
+                                                    <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                         +${MADE_TO_ORDER_ADD_ONS.customFrame.price.toLocaleString('en-US')}
                                                     </span>
                                                 </div>
@@ -730,7 +730,7 @@ const PiecePage: React.FC = () => {
                                     {/* See what's possible link */}
                                     <Link
                                         to="/creations"
-                                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mt-6 transition-colors"
+                                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mt-6 transition-colors"
                                     >
                                         See what's possible <ArrowRight size={12} />
                                     </Link>
@@ -739,17 +739,17 @@ const PiecePage: React.FC = () => {
                                 {/* Live total */}
                                 <div className="border-t border-wood-200 pt-6 pb-6">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
+                                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
                                         <span className="font-serif text-2xl text-wood-900 font-medium">
                                             ${mtoTotal.toLocaleString('en-US')}
                                         </span>
                                     </div>
-                                    <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                    <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                         <span className="text-avail-order">Made to order</span>
                                         {' · '}4 to 6 weeks
                                     </div>
                                     {editionText && (
-                                        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-1">
+                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-1">
                                             {editionText}
                                         </p>
                                     )}
@@ -759,11 +759,11 @@ const PiecePage: React.FC = () => {
                                 <button
                                     onClick={handleAddToCartMTO}
                                     disabled={!selectedSize}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <ShoppingBag size={16} /> Add to Cart
                                 </button>
-                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
                                     Ships from Bali
                                 </p>
                             </div>
@@ -773,21 +773,21 @@ const PiecePage: React.FC = () => {
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1">
-                                    <span className={`block font-mono text-[10px] uppercase tracking-[0.2em] ${availabilityColor}`}>Made to order</span>
+                                    <span className={`block font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Made to order</span>
                                     <span className="block font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-center">
-                                    <span className={`font-mono text-xs uppercase tracking-[0.2em] ${availabilityColor}`}>Made to order</span>
+                                    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Made to order</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission This Piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                     4 to 6 weeks production time
                                 </p>
                             </div>
@@ -795,12 +795,12 @@ const PiecePage: React.FC = () => {
                         /* --- Sold --- */
                         ) : (
                             <div className="space-y-4">
-                                <div className={`w-full py-4 border border-wood-200 ${availabilityColor} font-mono text-xs uppercase tracking-[0.2em] flex items-center justify-center`}>
+                                <div className={`w-full py-4 border border-wood-200 ${availabilityColor} font-label text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center`}>
                                     Sold
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission a new original <ArrowRight size={14} />
                                 </Link>
@@ -810,13 +810,13 @@ const PiecePage: React.FC = () => {
 
                     {/* Category + Share — integrated below purchase section */}
                     <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
-                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                             {art.category}
                         </span>
                         {typeof navigator !== 'undefined' && 'share' in navigator && (
                             <button
                                 onClick={() => navigator.share({ title: art.title, url: window.location.href })}
-                                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
+                                className="flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
                                 aria-label="Share this piece"
                             >
                                 <Share2 size={14} /> Share
@@ -841,7 +841,7 @@ const PiecePage: React.FC = () => {
                     {art.availability === 'READY_TO_SHIP' ? (
                         <button
                             onClick={handleAddToCartRTS}
-                            className={`min-h-[44px] px-8 py-3 font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center gap-2 ${
+                            className={`min-h-[44px] px-8 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center gap-2 ${
                                 rtsAdded
                                     ? 'bg-bronze-600 text-paper-50'
                                     : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
@@ -853,14 +853,14 @@ const PiecePage: React.FC = () => {
                         <button
                             onClick={handleAddToCartMTO}
                             disabled={!selectedSize}
-                            className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             <ShoppingBag size={14} /> Add to Cart
                         </button>
                     ) : (
                         <Link
                             to="/inquire"
-                            className="min-h-[44px] px-8 py-3 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
+                            className="min-h-[44px] px-8 py-3 border border-wood-900 text-wood-900 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
                         >
                             Commission
                         </Link>
@@ -895,11 +895,15 @@ const PiecePage: React.FC = () => {
                                     <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] mt-1">
-                                        <span className="text-wood-500 font-semibold">{related.category}</span>
-                                        {related.availability === 'SOLD' && <span className="text-avail-sold font-semibold"> · Sold</span>}
-                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready font-semibold"> · Ready to ship</span>}
-                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order font-semibold"> · Made to order</span>}
+                                    {!art.series && (
+                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-1.5 leading-none">
+                                            {related.category}
+                                        </p>
+                                    )}
+                                    <p className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold mt-1 leading-none">
+                                        {related.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
+                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
+                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
                                     </p>
                                 </div>
                             </Link>

@@ -36,12 +36,12 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             />
             {/* Availability badge */}
             {showDetails && art.availability === 'READY_TO_SHIP' && (
-                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-medium">
+                <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] border border-wood-200 text-avail-ready font-medium">
                     Ready to ship
                 </div>
             )}
             {showDetails && art.availability === 'SOLD' && (
-                <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
+                <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
                     Sold
                 </div>
             )}
@@ -55,19 +55,19 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     </h3>
                 </Link>
                 {showDetails && art.price != null && art.availability !== 'SOLD' && (
-                    <span className="font-mono text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
+                    <span className="font-label text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
                         {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price.toLocaleString('en-US')}
                     </span>
                 )}
             </div>
             <div className="flex items-center gap-2 mt-1">
                 <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
-                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
                         {subtitleOverride || art.category}
                     </span>
                 </Link>
                 {showDetails && art.availability === 'MADE_TO_ORDER' && (
-                    <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-avail-order font-semibold leading-none">
+                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-avail-order font-semibold leading-none">
                         · Made to order
                     </span>
                 )}

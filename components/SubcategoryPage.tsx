@@ -133,7 +133,7 @@ const SubcategoryPage: React.FC = () => {
                     <p className="font-serif text-lg text-wood-600 mb-8">This section does not exist.</p>
                     <Link
                         to="/creations/multidimensional-art"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
                         <ArrowRight size={14} className="rotate-180" /> Back to Multidimensional Art
                     </Link>
@@ -154,7 +154,7 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Header */}
             <div className="max-w-[1800px] mx-auto px-6 pt-10 pb-12 border-b border-wood-200">
-                <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-6">
+                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-6">
                     <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                     <span className="text-wood-300">/</span>
                     <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
@@ -174,7 +174,7 @@ const SubcategoryPage: React.FC = () => {
                     {seriesInfo.essaySlug && (
                         <Link
                             to={`/writings/${seriesInfo.essaySlug}`}
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-6"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-6"
                         >
                             Read the full story <ArrowRight size={12} />
                         </Link>
@@ -186,7 +186,7 @@ const SubcategoryPage: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
                 <div className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
-                    <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0">
+                    <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0">
                         {filteredPieces.length} {filteredPieces.length === 1 ? 'piece' : 'pieces'}
                     </span>
 
@@ -195,7 +195,7 @@ const SubcategoryPage: React.FC = () => {
                         <div className="flex items-center gap-3 flex-shrink-0">
                             <button
                                 onClick={() => setSubcategoryFilter(null)}
-                                className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${!subcategoryFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
+                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${!subcategoryFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
                             >
                                 All
                             </button>
@@ -203,7 +203,7 @@ const SubcategoryPage: React.FC = () => {
                                 <button
                                     key={sc}
                                     onClick={() => setSubcategoryFilter(sc === subcategoryFilter ? null : sc)}
-                                    className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${subcategoryFilter === sc ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${subcategoryFilter === sc ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
                                 >
                                     {sc}
                                 </button>
@@ -218,7 +218,7 @@ const SubcategoryPage: React.FC = () => {
                                 <button
                                     key={f}
                                     onClick={() => setFinishFilter(f === finishFilter ? null : f)}
-                                    className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${finishFilter === f ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${finishFilter === f ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
                                 >
                                     {f}
                                 </button>
@@ -230,7 +230,7 @@ const SubcategoryPage: React.FC = () => {
                     {config.filters.includes('hasStory') && basePieces.some(p => p.relatedStorySlug) && (
                         <button
                             onClick={() => setHasStoryFilter(v => !v)}
-                            className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${hasStoryFilter ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${hasStoryFilter ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
                         >
                             Has Story
                         </button>
@@ -241,14 +241,14 @@ const SubcategoryPage: React.FC = () => {
                     {hasFiltersActive && (
                         <button
                             onClick={clearAllFilters}
-                            className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap"
+                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap"
                         >
                             Clear filters
                         </button>
                     )}
                     <button
                         onClick={() => setShowAvailableOnly(v => !v)}
-                        className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
+                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
                     >
                         {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
                     </button>
@@ -279,7 +279,7 @@ const SubcategoryPage: React.FC = () => {
                         {hasFiltersActive && (
                             <button
                                 onClick={clearAllFilters}
-                                className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
+                                className="mt-4 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
                             >
                                 Clear filters
                             </button>
@@ -300,7 +300,7 @@ const SubcategoryPage: React.FC = () => {
                         </p>
                         <Link
                             to="/inquire"
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-semibold"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-semibold"
                         >
                             Begin the conversation <ArrowRight size={14} />
                         </Link>
@@ -315,7 +315,7 @@ const SubcategoryPage: React.FC = () => {
                         </p>
                         <Link
                             to="/inquire"
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                         >
                             Begin a conversation <ArrowRight size={14} />
                         </Link>
@@ -335,7 +335,7 @@ const SubcategoryPage: React.FC = () => {
                             <Link
                                 key={slug}
                                 to={`/creations/multidimensional-art/${slug}`}
-                                className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border-b border-transparent hover:border-wood-900 pb-1 transition-all"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border-b border-transparent hover:border-wood-900 pb-1 transition-all"
                             >
                                 {cfg.title}
                             </Link>
