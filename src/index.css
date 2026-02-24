@@ -333,3 +333,50 @@ html.dark body { background-color: #141210; }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ─── Footer Enhancements ──────────────────────────────────────────────── */
+
+/* #15 Noise texture overlay — subtle paper/linen grain */
+.footer-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+}
+
+/* #6 Sliding underline hover animation + #9 Accent dot marker */
+.footer-link {
+  position: relative;
+  display: inline-block;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.footer-link:hover::after {
+  transform: scaleX(1);
+}
+
+.footer-link::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-bronze-400);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.footer-link:hover::before {
+  transform: translateY(-50%) scale(1);
+}
