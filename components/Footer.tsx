@@ -60,7 +60,7 @@ const NewsletterForm: React.FC = () => {
     return (
         <div className="w-full md:w-80">
         <form
-            className={`flex border-b ${status === 'error' ? 'border-red-400' : 'border-wood-600'} focus-within:border-bronze-400 transition-colors pb-1 w-full group relative`}
+            className={`flex border-b ${status === 'error' ? 'border-red-400' : 'border-wood-500'} focus-within:border-bronze-400 transition-colors pb-1 w-full group relative`}
             onSubmit={handleSubmit}
         >
             {/* #10 Floating label */}
@@ -113,7 +113,7 @@ const ScrollToTop: React.FC = () => {
         <button
             onClick={scrollUp}
             aria-label="Back to top"
-            className={`w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-400 hover:text-bronze-400 hover:border-bronze-400 transition-all duration-300 ${
+            className={`w-10 h-10 rounded-full border border-wood-500 flex items-center justify-center text-wood-400 hover:text-bronze-400 hover:border-bronze-400 transition-all duration-300 ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
         >
@@ -124,19 +124,12 @@ const ScrollToTop: React.FC = () => {
 
 const Footer: React.FC = () => {
     return (
-        <footer className="dark-preserve bg-wood-900 text-wood-300 pt-0 pb-8 px-6 relative overflow-hidden print:hidden">
-            {/* #8 Warm gradient top edge */}
+        <footer className="dark-preserve bg-wood-800 text-wood-300 pt-0 pb-8 px-6 relative overflow-hidden print:hidden">
+            {/* Warm gradient top edge */}
             <div className="h-px w-full bg-gradient-to-r from-transparent via-bronze-400 to-transparent opacity-60"></div>
 
-            {/* #15 Subtle background noise texture */}
+            {/* Subtle background noise texture */}
             <div className="footer-noise absolute inset-0 pointer-events-none"></div>
-
-            {/* #4 Large display name watermark */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap pointer-events-none select-none">
-                <span className="font-serif text-[clamp(80px,12vw,180px)] font-light tracking-tight text-wood-800 opacity-40">
-                    Adrian Rasmussen
-                </span>
-            </div>
 
             <div className="max-w-[1400px] mx-auto relative z-10 pt-16">
 
@@ -146,14 +139,14 @@ const Footer: React.FC = () => {
                     {/* Brand — 60% on desktop */}
                     <div className="md:w-[60%]">
                         <h2 className="font-serif text-3xl md:text-4xl text-wood-100 mb-4 tracking-tight font-medium">Adrian Rasmussen</h2>
-                        <p className="font-sans text-wood-400 text-sm leading-[1.7] max-w-lg">
+                        <p className="font-sans text-wood-300 text-sm leading-[1.7] max-w-lg">
                             Resonant artifacts for the modern sanctuary. <br />
                             Exploring the intersection of digital precision and organic imperfection.
                         </p>
                         {/* #13 "Currently" status line */}
                         <div className="mt-6 flex items-center gap-2.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse-slow"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-500">
+                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400">
                                 Currently — Taking commissions for Spring 2026
                             </span>
                         </div>
@@ -161,10 +154,10 @@ const Footer: React.FC = () => {
 
                     {/* Newsletter — 40% on desktop, appears first on mobile */}
                     <div className="w-full md:w-[40%] order-first md:order-last">
-                        <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 block mb-1 font-semibold">
+                        <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 block mb-1 font-semibold">
                             Join the Inner Circle
                         </span>
-                        <span className="font-serif text-sm text-wood-500 italic block mb-5">
+                        <span className="font-serif text-sm text-wood-400 italic block mb-5">
                             When something wants to be shared, it arrives here first.
                         </span>
                         <NewsletterForm />
@@ -172,7 +165,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* #2 Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-600 to-transparent mb-12"></div>
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent mb-12"></div>
 
                 {/* Navigation grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 mb-16">
@@ -182,14 +175,14 @@ const Footer: React.FC = () => {
                         {/* #5 Decorative line before column header */}
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">Index</span>
+                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Index</span>
                         </div>
-                        <Link to="/creations" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
-                        <Link to="/writings" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
-                        <Link to="/shop" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Shop</Link>
-                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">
+                        <Link to="/creations" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
+                        <Link to="/writings" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
+                        <Link to="/shop" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>
+                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
                             <span>Teajia</span>
-                            <span className="block font-serif text-xs text-wood-600 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
+                            <span className="block font-serif text-xs text-wood-500 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
                         </a>
                     </div>
 
@@ -197,35 +190,35 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">Studio</span>
+                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Studio</span>
                         </div>
-                        <Link to="/about" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">About</Link>
-                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
-                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Contact</Link>
+                        <Link to="/about" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
+                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
+                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Contact</Link>
                     </div>
 
                     {/* Column 3: Info */}
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">Information</span>
+                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Information</span>
                         </div>
-                        <button className="footer-link text-left font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Shipping & Returns</button>
-                        <button className="footer-link text-left font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Care Guide</button>
-                        <button className="footer-link text-left font-serif text-base text-wood-400 hover:text-bronze-400 transition-colors w-fit">Authenticity</button>
+                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shipping & Returns</button>
+                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Care Guide</button>
+                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Authenticity</button>
                     </div>
 
                     {/* Column 4: Connect — #12 Icon buttons with scale hover */}
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">Connect</span>
+                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Connect</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1">
-                            <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-700 flex items-center justify-center text-wood-400 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                                 <Instagram size={18} />
                             </a>
-                            <a href="mailto:hello@adrianrasmussen.art" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-700 flex items-center justify-center text-wood-400 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <a href="mailto:hello@adrianrasmussen.art" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                                 <Mail size={18} />
                             </a>
                         </div>
@@ -233,10 +226,10 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* #2 Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-600 to-transparent"></div>
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent"></div>
 
                 {/* Bottom Bar — "Designed in Ubud, Bali" removed */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-mono uppercase tracking-[0.2em] text-wood-600 pt-8">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 pt-8">
                     <div className="flex gap-6">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
