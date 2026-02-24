@@ -895,11 +895,15 @@ const PiecePage: React.FC = () => {
                                     <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] mt-1">
-                                        <span className="text-wood-500 font-semibold">{related.category}</span>
-                                        {related.availability === 'SOLD' && <span className="text-avail-sold font-semibold"> · Sold</span>}
-                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready font-semibold"> · Ready to ship</span>}
-                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order font-semibold"> · Made to order</span>}
+                                    {!art.series && (
+                                        <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-wood-400 font-semibold mt-1.5 leading-none">
+                                            {related.category}
+                                        </p>
+                                    )}
+                                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] font-semibold mt-1 leading-none">
+                                        {related.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
+                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
+                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
                                     </p>
                                 </div>
                             </Link>

@@ -203,8 +203,10 @@ const SeriesPage: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
-                                        {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
+                                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] font-semibold mt-1 leading-none">
+                                        {art.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
+                                        {art.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
+                                        {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
                                     </p>
                                 </div>
                             </Link>

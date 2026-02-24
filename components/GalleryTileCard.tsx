@@ -39,6 +39,11 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
                     {art.category}
                 </span>
             </Link>
+            <p className="font-mono text-[10px] uppercase tracking-[0.1em] font-semibold mt-1 leading-none">
+                {art.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
+                {art.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
+                {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
+            </p>
         </div>
     </div>
 );
