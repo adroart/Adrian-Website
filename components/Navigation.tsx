@@ -114,7 +114,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               className={`relative p-2 hover:opacity-70 transition-opacity flex items-center gap-1.5 ${textPrimary}`}
               aria-label="Open cart"
             >
-              <span className="font-mono text-[11px] uppercase tracking-[0.15em] font-semibold">Bag</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.15em] font-semibold">Cart</span>
               {totalItems > 0 && (
                 <span className={`font-mono text-[11px] font-semibold ${isDark ? 'text-bronze-400' : 'text-bronze-600'}`}>
                   {totalItems > 9 ? '9+' : totalItems}
