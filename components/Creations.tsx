@@ -67,29 +67,29 @@ const CreationCategoryCard: React.FC<{
 }> = ({ label, desc, onClick, link, idx }) => {
     const inner = (
         <>
-            {/* Background image — neutral grey tint until real photography arrives */}
-            <div className="absolute inset-0 bg-wood-100" />
-            <img
-                src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                className="absolute inset-0 w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-700 ease-out group-hover:scale-105"
-                alt=""
-                aria-hidden="true"
-                loading="lazy"
-                width={800}
-                height={800}
-            />
-            {/* Gradient scrim — thin, just enough to anchor the title */}
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
-            {/* Text */}
-            <div className="absolute bottom-0 inset-x-0 px-5 pb-4 pointer-events-none">
-                <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 font-medium leading-tight text-left">
+            {/* Gallery mat frame */}
+            <div className="bg-paper-100 border border-wood-200 p-3 sm:p-4">
+                <div className="overflow-hidden">
+                    <img
+                        src={`https://picsum.photos/800/800?random=${100 + idx}`}
+                        className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        width={800}
+                        height={800}
+                    />
+                </div>
+            </div>
+
+            {/* Museum plaque */}
+            <div className="text-center pt-4 pb-2 px-2">
+                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>
-                {/* Hidden on mobile. Desktop: invisible by default, fades/slides up on hover */}
-                <p className="hidden sm:block font-serif text-sm text-paper-200 font-light leading-snug text-left mt-1
-                              sm:opacity-0 sm:translate-y-2
-                              sm:group-hover:opacity-100 sm:group-hover:translate-y-0
-                              transition-all duration-500 delay-75">
+                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
+                              sm:opacity-0 sm:group-hover:opacity-100
+                              transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
             </div>
@@ -100,7 +100,7 @@ const CreationCategoryCard: React.FC<{
         return (
             <Link
                 to={link}
-                className="group relative block aspect-square overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
                 aria-label={`Explore ${label}: ${desc}`}
             >
                 {inner}
@@ -112,7 +112,7 @@ const CreationCategoryCard: React.FC<{
         <button
             type="button"
             onClick={onClick}
-            className="group relative aspect-square overflow-hidden cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
             aria-label={`Browse ${label}: ${desc}`}
         >
             {inner}
@@ -316,13 +316,13 @@ const Creations: React.FC = () => {
                         <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-8 font-medium tracking-tight">
                             Creations
                         </h1>
-                        <p className="font-serif text-2xl md:text-3xl text-wood-800 max-w-2xl font-medium leading-snug mb-4">
+                        <p className="font-serif text-2xl md:text-3xl text-wood-800 max-w-4xl font-medium leading-snug mb-4">
                             I create across many forms.
                         </p>
-                        <p className="font-serif text-lg md:text-xl text-wood-600 max-w-xl font-light leading-[1.7]">
+                        <p className="font-serif text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-serif text-base text-wood-500 max-w-xl font-light leading-[1.7] mt-3 italic">
+                        <p className="font-serif text-base text-wood-500 max-w-4xl font-light leading-[1.7] mt-3 italic">
                             These are not decoration. They are portals. A place to sit with. To find your center.
                             To feel an opening. Find what calls to you.
                         </p>
@@ -330,7 +330,7 @@ const Creations: React.FC = () => {
 
                     {/* Category grid */}
                     <div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8"
                         role="list"
                         aria-label="Art categories"
                     >

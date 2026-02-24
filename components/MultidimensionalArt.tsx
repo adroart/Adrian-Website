@@ -19,20 +19,25 @@ const SubcategoryTile: React.FC<{
     return (
         <div
             onClick={() => navigate(to)}
-            className="group relative aspect-[4/3] bg-wood-100 border border-wood-200 overflow-hidden cursor-pointer dark-preserve"
+            className="group cursor-pointer dark-preserve"
         >
-            <img
-                src={`https://picsum.photos/800/600?random=${200 + idx}`}
-                className="w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
-                alt={label}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 inset-x-0 p-6">
-                <h3 className="font-serif text-2xl md:text-3xl text-paper-50 font-medium">{label}</h3>
-                <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1
-                              sm:opacity-0 sm:translate-y-2
-                              sm:group-hover:opacity-100 sm:group-hover:translate-y-0
-                              transition-all duration-500 delay-100">
+            {/* Gallery mat frame */}
+            <div className="bg-paper-100 border border-wood-200 p-3 sm:p-4">
+                <div className="overflow-hidden">
+                    <img
+                        src={`https://picsum.photos/800/600?random=${200 + idx}`}
+                        className="w-full aspect-[4/3] object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                        alt={label}
+                    />
+                </div>
+            </div>
+
+            {/* Museum plaque */}
+            <div className="text-center pt-4 pb-2 px-2">
+                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">{label}</h3>
+                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
+                              sm:opacity-0 sm:group-hover:opacity-100
+                              transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
             </div>
@@ -63,7 +68,7 @@ const MultidimensionalArt: React.FC = () => {
 
             {/* Subcategory tiles — 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16">
-                <div className="grid grid-cols-2 lg:grid-cols-6 gap-1">
+                <div className="grid grid-cols-2 lg:grid-cols-6 gap-6 lg:gap-8">
                     {MULTIDIMENSIONAL_CATEGORIES.map((cat, idx) => (
                         <div key={cat.id} className={`lg:col-span-2${idx === 3 ? ' lg:col-start-2' : ''}`}>
                             <SubcategoryTile
