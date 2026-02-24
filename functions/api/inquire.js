@@ -28,8 +28,8 @@ function isAllowedOrigin(origin) {
   }
 }
 
-const DEFAULT_TO = 'hello@adrianrasmussen.art';
-const DEFAULT_FROM = 'noreply@adrianrasmussen.art';
+const DEFAULT_TO = 'hello@adrianrasmussen.com';
+const DEFAULT_FROM = 'noreply@adrianrasmussen.com';
 
 function escapeHtml(str) {
   return str
