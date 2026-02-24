@@ -130,13 +130,13 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Category chip bar — horizontally scrollable on mobile */}
-                <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-2 mb-8 sm:mb-10 scrollbar-hide">
+                {/* Category chip bar — wraps into rows on mobile, single row on desktop */}
+                <div className="flex flex-wrap gap-2 px-4 sm:px-6 pb-2 mb-8 sm:mb-10">
                     {/* "All" chip */}
                     <button
                         type="button"
                         onClick={() => setActiveCategory(null)}
-                        className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
+                        className={`font-mono text-xs uppercase tracking-[0.15em] font-semibold px-3 py-1.5 sm:px-4 sm:py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
                             !activeCategory
                                 ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
                                 : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
@@ -149,7 +149,7 @@ const Home: React.FC = () => {
                             key={cat.id}
                             type="button"
                             onClick={() => setActiveCategory(cat.label)}
-                            className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
+                            className={`font-mono text-xs uppercase tracking-[0.15em] font-semibold px-3 py-1.5 sm:px-4 sm:py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
                                 activeCategory === cat.label
                                     ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
                                     : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
