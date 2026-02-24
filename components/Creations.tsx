@@ -82,7 +82,7 @@ const CreationCategoryCard: React.FC<{
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
             {/* Text */}
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4 pointer-events-none">
-                <h3 className="font-serif text-xl md:text-2xl lg:text-3xl text-paper-50 font-medium leading-tight text-left">
+                <h3 className="font-serif text-base sm:text-xl md:text-2xl lg:text-3xl text-paper-50 font-medium leading-tight text-left">
                     {label}
                 </h3>
                 {/* Hidden on mobile. Desktop: invisible by default, fades/slides up on hover */}
@@ -159,7 +159,7 @@ const CollectionCard: React.FC<{
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4">
-                <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
+                <h4 className="font-serif text-base sm:text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
                 <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-paper-300 font-bold mt-1 block">
@@ -416,7 +416,7 @@ const Creations: React.FC = () => {
             {showCollectionCards && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-14 animate-fade-in">
                     <div
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                        className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3"
                         role="group"
                         aria-label="Filter by collection"
                     >
@@ -467,7 +467,7 @@ const Creations: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
                 {displayedPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
+                    <div className="columns-2 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-6">
                         {displayedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}

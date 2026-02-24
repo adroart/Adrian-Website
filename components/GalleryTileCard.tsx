@@ -17,7 +17,7 @@ for (const cat of CREATION_CATEGORIES) {
  * Category label links to that category's browse page.
  */
 const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <div className="group break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
+    <div className="group break-inside-avoid mb-2 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
         {/* Image — links to the piece */}
         <Link to={`/creations/${art.id}`} className="block overflow-hidden">
             <img
@@ -28,14 +28,14 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
             />
         </Link>
         {/* Label band */}
-        <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
+        <div className="px-2 py-1.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
             <Link to={`/creations/${art.id}`}>
-                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                <h3 className="font-serif text-sm sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
                     {art.title}
                 </h3>
             </Link>
-            <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-1 block">
-                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+            <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-0.5 sm:mt-1 block">
+                <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
                     {art.category}
                 </span>
             </Link>

@@ -118,7 +118,7 @@ const VisualLightbox: React.FC<{ src: string; onClose: () => void; }> = ({ src, 
 
 const SkeletonCard: React.FC = () => (
     <div className="flex flex-col animate-pulse">
-        <div className="w-full bg-wood-200 aspect-[4/5] md:h-[500px]"></div>
+        <div className="w-full bg-wood-200 aspect-square sm:aspect-[4/5] md:h-[500px]"></div>
         <div className="mt-4 space-y-2 px-1">
             <div className="h-6 bg-wood-200 rounded w-3/4"></div>
             <div className="h-4 bg-wood-100 rounded w-1/2"></div>
@@ -127,7 +127,7 @@ const SkeletonCard: React.FC = () => (
 );
 
 const CuratorialBlock: React.FC = () => (
-    <div className="col-span-1 md:col-span-2 lg:col-span-2 aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-8 md:p-12 text-center border border-wood-900 dark-preserve">
+    <div className="col-span-2 md:col-span-2 lg:col-span-2 aspect-[2/1] sm:aspect-square md:aspect-auto flex flex-col justify-center items-center bg-wood-900 text-paper-50 p-6 sm:p-8 md:p-12 text-center border border-wood-900 dark-preserve">
         <span className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-400 mb-4 block font-semibold">Philosophy</span>
         <p className="font-serif text-xl md:text-3xl leading-[1.4] max-w-lg font-light">
             <span className="ml-[-0.4em]">"</span>We do not own these objects. We are merely their custodians for a brief moment in time."
@@ -149,9 +149,9 @@ const ProductCard: React.FC<{
     return (
         <div
             onClick={onClick}
-            className={`group relative flex flex-col cursor-pointer ${spanClass} mb-12 md:mb-0`}
+            className={`group relative flex flex-col cursor-pointer ${spanClass} mb-4 sm:mb-8 md:mb-0`}
         >
-            <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
+            <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-3 sm:mb-4 aspect-square sm:aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
                 <img
                     src={product.image}
                     alt={`${product.title} by Adrian Rasmussen, ${product.material || 'mixed media'}`}
@@ -165,19 +165,19 @@ const ProductCard: React.FC<{
                 />
 
                 {!product.available && (
-                    <div className="absolute top-4 right-4 bg-wood-900/90 text-paper-50 px-3 py-1.5 text-xs font-mono uppercase tracking-[0.2em] border border-wood-700 shadow-xl font-semibold dark-preserve">
+                    <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-wood-900/90 text-paper-50 px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] border border-wood-700 shadow-xl font-semibold dark-preserve">
                         Archived
                     </div>
                 )}
 
                 {product.available && !product.isReadyToShip && (
-                    <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-mono uppercase tracking-[0.2em] border border-wood-200 text-avail-order font-semibold">
+                    <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-paper-50/90 backdrop-blur px-2 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] border border-wood-200 text-avail-order font-semibold">
                         Made to order
                     </div>
                 )}
 
                 {product.available && (
-                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-500">
+                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-colors hidden sm:flex items-center justify-center opacity-0 group-hover:opacity-100 duration-500">
                         <div className="bg-paper-50/90 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-xl border border-wood-200">
                             <Eye size={16} className="text-wood-900" />
                             <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">View Piece</span>
@@ -187,10 +187,10 @@ const ProductCard: React.FC<{
             </div>
 
             <div className="flex justify-between items-baseline px-1">
-                <h3 className="font-serif text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium max-w-[75%]">
+                <h3 className="font-serif text-sm sm:text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium max-w-[75%]">
                     {product.title}
                 </h3>
-                <span className="font-serif text-sm text-wood-600 font-medium flex-shrink-0">
+                <span className="font-serif text-xs sm:text-sm text-wood-600 font-medium flex-shrink-0">
                     {formatPrice(product.price)}
                 </span>
             </div>
@@ -535,7 +535,7 @@ const Store: React.FC = () => {
             />
             <main className="max-w-[1800px] mx-auto px-6 py-12 min-h-[60vh] relative">
                 {isFiltering ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-4 sm:gap-x-6 sm:gap-y-10 md:gap-x-8 md:gap-y-16">
                          <SkeletonCard /><SkeletonCard /><SkeletonCard />
                          <SkeletonCard /><SkeletonCard /><SkeletonCard />
                     </div>
@@ -547,7 +547,7 @@ const Store: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-4 sm:gap-x-6 sm:gap-y-10 md:gap-x-8 md:gap-y-16">
                             {filteredProducts.slice(0, visibleCount).map((p, idx) => {
                                 if (idx === 4) {
                                     return (
