@@ -10,6 +10,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-kerning: normal;
+  font-variant-numeric: lining-nums;
 }
 
 /* #5 Custom selection color — warm palette instead of jarring blue */
@@ -53,7 +54,7 @@ blockquote {
 
 /* #21 Tabular figures on prices — digits align in columns */
 .font-mono {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* #36 Consistent placeholder styling */
