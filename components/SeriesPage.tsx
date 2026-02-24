@@ -282,16 +282,20 @@ const SeriesPage: React.FC = () => {
                                         loading="lazy"
                                         className="w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                                     />
-                                    <div className="absolute bottom-0 inset-x-0 p-6 md:p-8 bg-stone-950/60 backdrop-blur-md">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+                                    <div className="absolute bottom-0 inset-x-0 p-6 md:p-8">
                                         <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">
                                             {series.name}
                                         </h3>
-                                        <p className="font-serif text-sm text-paper-200 font-light">
-                                            {series.hook ? series.hook.substring(0, 80) + '…' : series.description}
-                                        </p>
-                                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold mt-2">
+                                        <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold block">
                                             {series.pieceCount || `${pieceCount} ${pieceCount === 1 ? 'Piece' : 'Pieces'}`}
                                         </span>
+                                        <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1
+                                                      sm:opacity-0 sm:translate-y-2
+                                                      sm:group-hover:opacity-100 sm:group-hover:translate-y-0
+                                                      transition-all duration-500 delay-75">
+                                            {series.hook ? series.hook.substring(0, 80) + '…' : series.description}
+                                        </p>
                                     </div>
                                 </Link>
                             );

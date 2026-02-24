@@ -27,10 +27,11 @@ const SubcategoryTile: React.FC<{
                 className="w-full h-full object-cover sm:grayscale sm:group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
                 alt={label}
             />
-            <div className="absolute bottom-0 inset-x-0 p-6 bg-stone-950/60 backdrop-blur-md">
-                <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">{label}</h3>
-                <p className="font-serif text-sm text-paper-200 font-light
-                              opacity-100 sm:opacity-0 sm:translate-y-3
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 p-6">
+                <h3 className="font-serif text-2xl md:text-3xl text-paper-50 font-medium">{label}</h3>
+                <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1
+                              sm:opacity-0 sm:translate-y-2
                               sm:group-hover:opacity-100 sm:group-hover:translate-y-0
                               transition-all duration-500 delay-100">
                     {desc}
