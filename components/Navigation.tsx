@@ -108,7 +108,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           </div>
 
           {/* Right-side controls: cart + mobile hamburger */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0">
             <button
               onClick={openCart}
               className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
