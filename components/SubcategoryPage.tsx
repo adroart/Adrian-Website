@@ -259,7 +259,7 @@ const SubcategoryPage: React.FC = () => {
             {/* Grid */}
             <div className="max-w-[1800px] mx-auto px-6">
                 {filteredPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-8">
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
                         {filteredPieces.map(art => (
                             <GalleryTileCard
                                 key={art.id}

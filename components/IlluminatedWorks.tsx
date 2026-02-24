@@ -98,7 +98,7 @@ const IlluminatedWorks: React.FC = () => {
                     <div className="border-t border-wood-200 pt-16 mb-12">
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">From the collection</h2>
                     </div>
-                    <div className="columns-2 lg:columns-3 xl:columns-5 gap-3 sm:gap-4 lg:gap-5 mb-12">
+                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 mb-12">
                         {illuminatedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}

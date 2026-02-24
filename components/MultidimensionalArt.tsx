@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MULTIDIMENSIONAL_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 
@@ -13,31 +13,39 @@ const SubcategoryTile: React.FC<{
     link?: string;
     idx: number;
 }> = ({ label, desc, slug, link, idx }) => {
-    const navigate = useNavigate();
     const to = link ?? `/creations/multidimensional-art/${slug}`;
 
     return (
-        <div
-            onClick={() => navigate(to)}
-            className="group cursor-pointer dark-preserve flex gap-4 sm:gap-6 items-start"
+        <Link
+            to={to}
+            className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+            aria-label={`Explore ${label}: ${desc}`}
         >
             {/* Image */}
-            <div className="overflow-hidden flex-shrink-0 w-1/2">
+            <div className="overflow-hidden">
                 <img
-                    src={`https://picsum.photos/800/600?random=${200 + idx}`}
-                    className="w-full aspect-[4/3] object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-                    alt={label}
+                    src={`https://picsum.photos/800/800?random=${200 + idx}`}
+                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    width={800}
+                    height={800}
                 />
             </div>
 
-            {/* Text — to the right of the image */}
-            <div className="flex-1 pt-1 sm:pt-2">
-                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">{label}</h3>
-                <p className="font-serif text-sm text-wood-500 font-light mt-2 leading-relaxed">
+            {/* Title — snug under the photo */}
+            <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
+                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
+                    {label}
+                </h3>
+                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
+                              sm:opacity-0 sm:group-hover:opacity-100
+                              transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
             </div>
-        </div>
+        </Link>
     );
 };
 
@@ -64,7 +72,7 @@ const MultidimensionalArt: React.FC = () => {
 
             {/* Subcategory tiles — 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                     {MULTIDIMENSIONAL_CATEGORIES.map((cat, idx) => (
                         <div key={cat.id}>
                             <SubcategoryTile
