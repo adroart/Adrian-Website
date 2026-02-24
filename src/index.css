@@ -53,6 +53,7 @@ blockquote {
 }
 
 /* #21 Tabular figures on prices — digits align in columns */
+.font-label,
 .font-mono {
   font-variant-numeric: lining-nums tabular-nums;
 }
@@ -87,7 +88,7 @@ blockquote {
   line-height: 0.8;
   padding-right: 0.1em;
   padding-top: 0.05em;
-  color: #262321;
+  color: var(--color-wood-900);
   font-weight: 500;
 }
 
@@ -101,7 +102,9 @@ blockquote {
   /* Font families */
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "Lato", sans-serif;
-  --font-mono: "Josefin Sans", sans-serif;
+  --font-mono: "Josefin Sans", sans-serif;   /* kept for backward compat */
+  --font-label: "Josefin Sans", sans-serif;  /* semantic alias — use font-label in new code */
+  --font-display: "Cinzel", serif;           /* structural titles: brand name, page headings */
 
   /* Colors: taupe */
   --color-taupe: #453d39;

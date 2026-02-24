@@ -12,7 +12,7 @@ type LightCodesCategoryFilter = 'All' | 'Frequency Foundations' | 'Embodied Vibr
 const FilterButton: React.FC<{ active: boolean; onClick: () => void; label: string }> = ({ active, onClick, label }) => (
     <button
         onClick={onClick}
-        className={`font-mono text-[11px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
+        className={`font-label text-[11px] uppercase tracking-[0.2em] font-semibold px-3 py-1.5 border transition-colors ${
             active
                 ? 'bg-wood-900 text-paper-50 border-wood-900'
                 : 'bg-transparent text-wood-500 border-wood-200 hover:text-wood-900 hover:border-wood-400'
@@ -73,7 +73,7 @@ const SeriesPage: React.FC = () => {
                     <p className="font-serif text-lg text-wood-600 mb-8">The series you're looking for doesn't exist.</p>
                     <Link
                         to="/creations"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
                         <ArrowRight size={14} className="rotate-180" /> Back to Creations
                     </Link>
@@ -87,7 +87,7 @@ const SeriesPage: React.FC = () => {
 
             {/* Title + Count + Hook */}
             <div className="max-w-[1800px] mx-auto px-6 mb-12">
-                <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold mb-6">
+                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold mb-6">
                     <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
                     <span>/</span>
                     <span className="text-wood-700">Series</span>
@@ -98,7 +98,7 @@ const SeriesPage: React.FC = () => {
                         {seriesInfo.name}
                     </h1>
                     {seriesInfo.pieceCount && (
-                        <p className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold mb-8">
+                        <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold mb-8">
                             {seriesInfo.pieceCount}
                         </p>
                     )}
@@ -114,7 +114,7 @@ const SeriesPage: React.FC = () => {
                     {seriesInfo.essaySlug && (
                         <Link
                             to={`/writings/${seriesInfo.essaySlug}`}
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-4"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-4"
                         >
                             Read the full story <ArrowRight size={12} />
                         </Link>
@@ -125,7 +125,7 @@ const SeriesPage: React.FC = () => {
             {/* Sticky Filter Bar */}
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
                 <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">
+                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">
                         Availability
                     </span>
                     {(['All', 'Ready to ship', 'Made to order'] as AvailabilityFilter[]).map(f => (
@@ -134,8 +134,8 @@ const SeriesPage: React.FC = () => {
 
                     {hasFinishFilter && (
                         <>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Finish</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Finish</span>
                             {(['All', 'Natural', 'Painted'] as FinishFilter[]).map(f => (
                                 <FilterButton key={f} label={f} active={finishFilter === f} onClick={() => setFinishFilter(f)} />
                             ))}
@@ -144,21 +144,21 @@ const SeriesPage: React.FC = () => {
 
                     {isLightCodes && (
                         <>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Category</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Category</span>
                             {(['All', 'Frequency Foundations', 'Embodied Vibrations', 'Resonant Formations'] as LightCodesCategoryFilter[]).map(f => (
                                 <FilterButton key={f} label={f} active={lcCategoryFilter === f} onClick={() => setLcCategoryFilter(f)} />
                             ))}
                         </>
                     )}
 
-                    <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
-                    <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Size</span>
+                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold mx-2">|</span>
+                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-2">Size</span>
                     {(['All', 'Small', 'Medium', 'Large'] as SizeFilter[]).map(f => (
                         <FilterButton key={f} label={f} active={sizeFilter === f} onClick={() => setSizeFilter(f)} />
                     ))}
 
-                    <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                    <span className="ml-auto font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                         {seriesPieces.length} {seriesPieces.length === 1 ? 'Piece' : 'Pieces'}
                     </span>
                 </div>
@@ -182,12 +182,12 @@ const SeriesPage: React.FC = () => {
                                         className="w-full h-auto object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                     {art.availability === 'READY_TO_SHIP' && (
-                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.2em] border border-wood-200 text-avail-ready font-medium">
+                                        <div className="absolute top-3 right-3 bg-paper-50/90 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.2em] border border-wood-200 text-avail-ready font-medium">
                                             Ready to ship
                                         </div>
                                     )}
                                     {art.availability === 'SOLD' && (
-                                        <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-mono uppercase tracking-[0.2em] text-paper-50 font-semibold">
+                                        <div className="absolute top-3 right-3 bg-wood-900/80 backdrop-blur px-2 py-1 text-[11px] font-label uppercase tracking-[0.2em] text-paper-50 font-semibold">
                                             Sold
                                         </div>
                                     )}
@@ -198,13 +198,15 @@ const SeriesPage: React.FC = () => {
                                             {art.title}
                                         </h4>
                                         {art.price && art.availability !== 'SOLD' && (
-                                            <span className="font-mono text-xs text-wood-900 font-semibold">
+                                            <span className="font-label text-xs text-wood-900 font-semibold">
                                                 {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="font-mono text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
-                                        {art.category}{art.availability === 'SOLD' && <span className="text-avail-sold"> · Sold</span>}{art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order"> · Made to order</span>}
+                                    <p className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold mt-1 leading-none">
+                                        {art.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
+                                        {art.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
+                                        {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
                                     </p>
                                 </div>
                             </Link>
@@ -217,7 +219,7 @@ const SeriesPage: React.FC = () => {
                         </p>
                         <button
                             onClick={() => { setAvailFilter('All'); setFinishFilter('All'); setSizeFilter('All'); setLcCategoryFilter('All'); }}
-                            className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
+                            className="mt-4 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold"
                         >
                             Clear filters
                         </button>
@@ -237,7 +239,7 @@ const SeriesPage: React.FC = () => {
                         </p>
                         <Link
                             to="/inquire"
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-semibold"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-semibold"
                         >
                             Begin the conversation <ArrowRight size={14} />
                         </Link>
@@ -253,7 +255,7 @@ const SeriesPage: React.FC = () => {
                     </p>
                     <Link
                         to="/inquire"
-                        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 transition-colors font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 transition-colors font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1"
                     >
                         Reach out <ArrowRight size={14} />
                     </Link>
@@ -287,7 +289,7 @@ const SeriesPage: React.FC = () => {
                                         <h3 className="font-serif text-2xl md:text-3xl text-paper-50 mb-1 font-medium">
                                             {series.name}
                                         </h3>
-                                        <span className="font-mono text-[11px] uppercase tracking-widest text-paper-300 font-bold block">
+                                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-bold block">
                                             {series.pieceCount || `${pieceCount} ${pieceCount === 1 ? 'Piece' : 'Pieces'}`}
                                         </span>
                                         <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1

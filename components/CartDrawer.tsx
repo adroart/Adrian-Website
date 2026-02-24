@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { X, Minus, Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
 import { useCart, getMaxQuantity } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
@@ -132,12 +132,13 @@ const CartDrawer: React.FC = () => {
 
                 {/* Header */}
                 <div className="h-16 border-b border-wood-200 flex items-center justify-between px-6 bg-paper-50 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">
+                    <div className="flex items-center gap-3">
+                        <ShoppingBag size={16} className="text-wood-600" />
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">
                             Cart
                         </span>
                         {totalItems > 0 && (
-                            <span className="font-mono text-[11px] text-bronze-600 font-semibold">
+                            <span className="font-label text-[11px] bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
                                 {totalItems}
                             </span>
                         )}
@@ -146,7 +147,7 @@ const CartDrawer: React.FC = () => {
                         onClick={closeCart}
                         className="p-4 -mr-4 hover:bg-wood-100 rounded-full transition-colors group flex items-center gap-2"
                     >
-                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hidden sm:inline">Close</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hidden sm:inline">Close</span>
                         <X size={22} className="text-wood-900 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
@@ -159,7 +160,7 @@ const CartDrawer: React.FC = () => {
                             <Link
                                 to="/creations"
                                 onClick={closeCart}
-                                className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold transition-colors"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold transition-colors"
                             >
                                 Explore the creations
                             </Link>
@@ -185,7 +186,7 @@ const CartDrawer: React.FC = () => {
                                         <h3 className="font-serif text-base text-wood-900 leading-snug mb-1 font-medium">
                                             {product.title}
                                         </h3>
-                                        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
+                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
                                             {product.isReadyToShip ? (
                                                 <span className="text-avail-ready">Ready to ship</span>
                                             ) : (
@@ -198,7 +199,7 @@ const CartDrawer: React.FC = () => {
 
                                         <div className="flex items-center justify-between">
                                             {getMaxQuantity(product) === 1 ? (
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
+                                                <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
                                                     One of one
                                                 </span>
                                             ) : (
@@ -214,7 +215,7 @@ const CartDrawer: React.FC = () => {
                                                     >
                                                         <Minus size={12} />
                                                     </button>
-                                                    <span className="w-8 text-center font-mono text-xs text-wood-900 font-semibold">
+                                                    <span className="w-8 text-center font-label text-xs text-wood-900 font-semibold">
                                                         {quantity}
                                                     </span>
                                                     <button
@@ -227,7 +228,7 @@ const CartDrawer: React.FC = () => {
                                                 </div>
                                             )}
 
-                                            <span className="font-mono text-sm text-wood-900 font-semibold">
+                                            <span className="font-label text-sm text-wood-900 font-semibold">
                                                 {formatPrice(product.price * quantity)}
                                             </span>
                                         </div>
@@ -248,15 +249,15 @@ const CartDrawer: React.FC = () => {
                         {/* Footer */}
                         <div className="border-t border-wood-200 p-6 bg-paper-50 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
                             <div className="flex items-center justify-between mb-1 px-1">
-                                <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Subtotal</span>
-                                <span className="font-mono text-xl text-wood-900 font-semibold">{formatPrice(totalPrice)}</span>
+                                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Subtotal</span>
+                                <span className="font-label text-xl text-wood-900 font-semibold">{formatPrice(totalPrice)}</span>
                             </div>
-                            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold px-1 mb-5">
+                            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold px-1 mb-5">
                                 Shipping calculated at checkout
                             </p>
 
                             {error && (
-                                <p className="font-mono text-[11px] text-red-600 uppercase tracking-[0.2em] font-semibold px-1 mb-4">
+                                <p className="font-label text-[11px] text-red-600 uppercase tracking-[0.2em] font-semibold px-1 mb-4">
                                     {error}
                                 </p>
                             )}
@@ -264,7 +265,7 @@ const CartDrawer: React.FC = () => {
                             <button
                                 onClick={handleCheckout}
                                 disabled={loading}
-                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-mono uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-label uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {loading ? (
                                     <><Loader2 size={16} className="animate-spin" /> Redirecting...</>
@@ -275,7 +276,7 @@ const CartDrawer: React.FC = () => {
 
                             <button
                                 onClick={closeCart}
-                                className="w-full mt-3 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
+                                className="w-full mt-3 py-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
                             >
                                 Continue browsing
                             </button>
