@@ -427,7 +427,7 @@ const Writings: React.FC = () => {
                                         <div className="flex flex-row">
                                             {/* Article thumbnail */}
                                             {story.image && (
-                                                <div className="w-24 h-24 flex-shrink-0 md:w-2/5 md:h-auto md:min-h-[220px] overflow-hidden bg-wood-100">
+                                                <div className="w-24 self-stretch flex-shrink-0 md:w-2/5 md:min-h-[220px] overflow-hidden bg-wood-100">
                                                     <img
                                                         src={story.image}
                                                         alt={story.title}
