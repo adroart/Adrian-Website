@@ -260,6 +260,9 @@ const Home: React.FC = () => {
                                     />
                                 </div>
                                 <div className="p-6 md:p-8">
+                                    <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 font-semibold block mb-3">
+                                        {story.category}
+                                    </span>
                                     <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                         {story.title}
                                     </h3>
@@ -290,10 +293,13 @@ const Home: React.FC = () => {
                                         />
                                     </div>
                                     <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-center min-w-0">
-                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {story.title}
                                         </h3>
-                                        <p className="font-serif text-sm text-wood-500 leading-relaxed font-light line-clamp-2 hidden sm:block">
+                                        <p className="font-serif text-sm italic text-bronze-600/80 mb-2 leading-snug">
+                                            {story.subtitle}
+                                        </p>
+                                        <p className="font-serif text-sm text-wood-500 leading-relaxed font-light line-clamp-2">
                                             {story.excerpt}
                                         </p>
                                     </div>
