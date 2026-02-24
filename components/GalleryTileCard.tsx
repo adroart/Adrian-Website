@@ -35,11 +35,11 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
                 </h3>
             </Link>
             <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-1 block">
-                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
                     {art.category}
                 </span>
             </Link>
-            <p className="font-mono text-[10px] uppercase tracking-[0.1em] font-semibold mt-1 leading-none">
+            <p className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold mt-1 leading-none">
                 {art.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
                 {art.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
                 {art.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}

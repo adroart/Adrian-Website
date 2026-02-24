@@ -26,7 +26,7 @@ const IlluminatedWorks: React.FC = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/10 to-transparent" />
                 {/* Breadcrumb */}
-                <div className="absolute top-6 left-6 md:left-12 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-paper-300 font-semibold">
+                <div className="absolute top-6 left-6 md:left-12 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-300 font-semibold">
                     <Link to="/creations" className="hover:text-paper-50 transition-colors">Creations</Link>
                     <span className="text-paper-300/50">/</span>
                     <span className="text-paper-50">Illuminated Works</span>
@@ -59,7 +59,7 @@ const IlluminatedWorks: React.FC = () => {
                     {/* Ambient Illumination */}
                     <div className="bg-wood-900 p-10 md:p-16">
                         {/* TODO: Replace "Ambient Illumination" with Adrian's own language for this distinction */}
-                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Ambient Illumination</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Ambient Illumination</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">A subtle, continuous glow.</h3>
                         <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
                             The piece becomes a presence in the room. Soft. Consistent. Something you stop noticing consciously but feel constantly.
@@ -71,7 +71,7 @@ const IlluminatedWorks: React.FC = () => {
                     {/* Living Light */}
                     <div className="bg-stone-900 p-10 md:p-16">
                         {/* TODO: Replace "Living Light" with Adrian's own language for this distinction */}
-                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Living Light</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Living Light</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmable. Moving. Breathing.</h3>
                         <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
                             Patterns that shift and pulse. Light that participates in the piece rather than simply inhabiting it.
@@ -106,11 +106,11 @@ const IlluminatedWorks: React.FC = () => {
                     <div className="text-center">
                         <Link
                             to="/creations/multidimensional-art"
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                         >
                             Browse all multidimensional works <ArrowRight size={14} />
                         </Link>
-                        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-3">
+                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-3">
                             Filter by Illuminated to see the full collection
                         </p>
                     </div>
@@ -133,7 +133,7 @@ const IlluminatedWorks: React.FC = () => {
                     </div>
                     <Link
                         to="/inquire"
-                        className="inline-flex items-center gap-3 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold px-8 py-4 hover:bg-bronze-600 transition-colors"
+                        className="inline-flex items-center gap-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold px-8 py-4 hover:bg-bronze-600 transition-colors"
                     >
                         Begin the conversation <ArrowRight size={16} />
                     </Link>

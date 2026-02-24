@@ -162,7 +162,7 @@ const CollectionCard: React.FC<{
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
-                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-paper-300 font-bold mt-1 block">
+                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
@@ -192,7 +192,7 @@ const SortDropdown: React.FC<{
             id="sort-select"
             value={value}
             onChange={e => onChange(e.target.value as SortOption)}
-            className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
+            className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-1 transition-colors font-semibold"
         >
             {(Object.keys(SORT_LABELS) as SortOption[]).map(opt => (
                 <option key={opt} value={opt}>{SORT_LABELS[opt]}</option>
@@ -360,19 +360,19 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => handleCategoryChange(null)}
-                                    className="font-mono text-xs uppercase tracking-[0.2em] font-semibold text-wood-400 hover:text-wood-900 transition-colors underline-offset-2 hover:underline flex-shrink-0 focus-visible:outline-none focus-visible:underline"
+                                    className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-400 hover:text-wood-900 transition-colors underline-offset-2 hover:underline flex-shrink-0 focus-visible:outline-none focus-visible:underline"
                                     aria-label="Back to all creations"
                                 >
                                     All
                                 </button>
                                 <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
-                                <span className="font-mono text-xs uppercase tracking-[0.2em] font-semibold text-wood-900 truncate">
+                                <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-900 truncate">
                                     {filter}
                                 </span>
                                 {activeCollection && (
                                     <>
                                         <span className="text-wood-300 flex-shrink-0" aria-hidden="true">/</span>
-                                        <span className="font-mono text-xs uppercase tracking-[0.2em] font-semibold text-bronze-600 truncate">
+                                        <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-bronze-600 truncate">
                                             {categoryCollections.find(c => c.id === activeCollection)?.name}
                                         </span>
                                     </>
@@ -398,7 +398,7 @@ const Creations: React.FC = () => {
                             type="button"
                             onClick={() => setShowAvailableOnly(v => !v)}
                             aria-pressed={showAvailableOnly}
-                            className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-colors focus-visible:outline-none focus-visible:underline ${
+                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors focus-visible:outline-none focus-visible:underline ${
                                 showAvailableOnly
                                     ? 'text-bronze-600'
                                     : 'text-wood-400 hover:text-wood-900'
@@ -441,7 +441,7 @@ const Creations: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setActiveCollection(null)}
-                            className="mt-5 font-mono text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors focus-visible:outline-none focus-visible:underline"
+                            className="mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors focus-visible:outline-none focus-visible:underline"
                         >
                             ← Show all in {filter}
                         </button>
@@ -452,7 +452,7 @@ const Creations: React.FC = () => {
             {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-8">
-                    <p className="font-mono text-xs uppercase tracking-[0.1em] text-wood-400 font-semibold">
+                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
                             <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">
@@ -490,7 +490,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setActiveCollection(null)}
-                                    className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Clear collection filter
                                 </button>
@@ -499,7 +499,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowAvailableOnly(false)}
-                                    className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                    className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border border-bronze-400 px-4 py-2 hover:bg-bronze-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                 >
                                     Show all availability
                                 </button>
@@ -507,7 +507,7 @@ const Creations: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => handleCategoryChange(null)}
-                                className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border border-wood-300 px-4 py-2 hover:bg-wood-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                             >
                                 Back to all categories
                             </button>
@@ -524,7 +524,7 @@ const Creations: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                            className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:underline"
+                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:underline"
                         >
                             Back to categories
                         </button>
