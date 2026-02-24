@@ -412,7 +412,7 @@ const PiecePage: React.FC = () => {
                 {/* Images */}
                 <div className="space-y-4">
                     <div
-                        className="w-full bg-wood-100 border border-wood-200 overflow-hidden"
+                        className="w-full bg-wood-100 overflow-hidden"
                         onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
                         onTouchEnd={(e) => {
                             const diff = touchStartX.current - e.changedTouches[0].clientX;
@@ -902,7 +902,7 @@ const PiecePage: React.FC = () => {
                                 to={`/creations/${related.id}`}
                                 className="group"
                             >
-                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-all duration-500 group-hover:shadow-lg group-hover:border-wood-300">
+                                <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">
                                     <img
                                         src={related.coverImage}
                                         alt={`${related.title} by Adrian Rasmussen`}
