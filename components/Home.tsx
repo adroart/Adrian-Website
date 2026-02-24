@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FULL_ARCHIVE, CREATION_CATEGORIES } from '../data/mockData';
+import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
 import { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
 
@@ -233,43 +233,70 @@ const Home: React.FC = () => {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <Link
-                            to="/writings#living-knowledge"
-                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
-                        >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">Living Knowledge</span>
-                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                Deep explorations earned through direct experience
-                            </h3>
-                        </Link>
-                        <Link
-                            to="/writings#beneath-the-surface"
-                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
-                        >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">Beneath the Surface</span>
-                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                The meaning and origins within the work
-                            </h3>
-                        </Link>
-                        <Link
-                            to="/writings#the-practice"
-                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
-                        >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">The Practice</span>
-                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                How creation happens
-                            </h3>
-                        </Link>
-                        <Link
-                            to="/writings#the-path"
-                            className="group cursor-pointer bg-white p-8 border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-sm"
-                        >
-                            <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 block mb-3 font-semibold">The Path</span>
-                            <h3 className="font-serif text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium">
-                                The personal journey behind the art
-                            </h3>
-                        </Link>
+                    {/* Hero + supporting layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                        {/* Featured story — large card */}
+                        {STORIES.filter(s => s.isFeatured).slice(0, 1).map(story => (
+                            <Link
+                                key={story.id}
+                                to={`/writings/${story.slug}`}
+                                className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md overflow-hidden"
+                            >
+                                <div className="aspect-[16/10] overflow-hidden">
+                                    <img
+                                        src={story.image}
+                                        alt={story.title}
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div className="p-6 md:p-8">
+                                    <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 font-semibold block mb-3">
+                                        {story.category}
+                                    </span>
+                                    <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                        {story.title}
+                                    </h3>
+                                    <p className="font-serif text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
+                                        {story.excerpt}
+                                    </p>
+                                    <span className="inline-flex items-center gap-2 mt-5 font-mono text-xs uppercase tracking-[0.15em] text-wood-500 group-hover:text-bronze-600 font-semibold transition-colors">
+                                        Read <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+
+                        {/* Supporting stories — stacked column */}
+                        <div className="flex flex-col gap-6 lg:gap-8">
+                            {STORIES.filter(s => !s.isFeatured).slice(0, 3).map(story => (
+                                <Link
+                                    key={story.id}
+                                    to={`/writings/${story.slug}`}
+                                    className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md flex overflow-hidden"
+                                >
+                                    <div className="w-28 sm:w-36 md:w-44 flex-shrink-0 overflow-hidden">
+                                        <img
+                                            src={story.image}
+                                            alt={story.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                    <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-center min-w-0">
+                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                            {story.title}
+                                        </h3>
+                                        <p className="font-serif text-sm italic text-bronze-600/80 mb-2 leading-snug">
+                                            {story.subtitle}
+                                        </p>
+                                        <p className="font-serif text-sm text-wood-500 leading-relaxed font-light line-clamp-2">
+                                            {story.excerpt}
+                                        </p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="mt-8 md:hidden text-center">
