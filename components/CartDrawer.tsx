@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { X, Minus, Plus, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
+import { X, Minus, Plus, ArrowRight, Loader2 } from 'lucide-react';
 import { useCart, getMaxQuantity } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
@@ -132,13 +132,12 @@ const CartDrawer: React.FC = () => {
 
                 {/* Header */}
                 <div className="h-16 border-b border-wood-200 flex items-center justify-between px-6 bg-paper-50 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <ShoppingBag size={16} className="text-wood-600" />
+                    <div className="flex items-center gap-2">
                         <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">
                             Cart
                         </span>
                         {totalItems > 0 && (
-                            <span className="font-mono text-[11px] bg-wood-900 text-paper-50 px-2 py-0.5 rounded-full">
+                            <span className="font-mono text-[11px] text-bronze-600 font-semibold">
                                 {totalItems}
                             </span>
                         )}
@@ -155,9 +154,8 @@ const CartDrawer: React.FC = () => {
                 {/* Content */}
                 {items.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center px-8">
-                        <ShoppingBag size={40} className="text-wood-200" />
                         <div>
-                            <p className="font-serif text-2xl text-wood-400 mb-3">Your cart is empty.</p>
+                            <p className="font-serif text-2xl text-wood-400 mb-3">Nothing here yet.</p>
                             <Link
                                 to="/creations"
                                 onClick={closeCart}
