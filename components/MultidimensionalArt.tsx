@@ -19,25 +19,21 @@ const SubcategoryTile: React.FC<{
     return (
         <div
             onClick={() => navigate(to)}
-            className="group cursor-pointer dark-preserve"
+            className="group cursor-pointer dark-preserve flex gap-4 sm:gap-6 items-start"
         >
-            {/* Gallery mat frame */}
-            <div className="bg-paper-100 border border-wood-200 p-3 sm:p-4">
-                <div className="overflow-hidden">
-                    <img
-                        src={`https://picsum.photos/800/600?random=${200 + idx}`}
-                        className="w-full aspect-[4/3] object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-                        alt={label}
-                    />
-                </div>
+            {/* Image */}
+            <div className="overflow-hidden flex-shrink-0 w-1/2">
+                <img
+                    src={`https://picsum.photos/800/600?random=${200 + idx}`}
+                    className="w-full aspect-[4/3] object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                    alt={label}
+                />
             </div>
 
-            {/* Museum plaque */}
-            <div className="text-center pt-4 pb-2 px-2">
+            {/* Text — to the right of the image */}
+            <div className="flex-1 pt-1 sm:pt-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">{label}</h3>
-                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
-                              sm:opacity-0 sm:group-hover:opacity-100
-                              transition-opacity duration-500 ease-out">
+                <p className="font-serif text-sm text-wood-500 font-light mt-2 leading-relaxed">
                     {desc}
                 </p>
             </div>
@@ -68,9 +64,9 @@ const MultidimensionalArt: React.FC = () => {
 
             {/* Subcategory tiles — 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16">
-                <div className="grid grid-cols-2 lg:grid-cols-6 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                     {MULTIDIMENSIONAL_CATEGORIES.map((cat, idx) => (
-                        <div key={cat.id} className={`lg:col-span-2${idx === 3 ? ' lg:col-start-2' : ''}`}>
+                        <div key={cat.id}>
                             <SubcategoryTile
                                 label={cat.label}
                                 desc={cat.desc}
