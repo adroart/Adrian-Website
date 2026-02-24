@@ -40,7 +40,7 @@ const Home: React.FC = () => {
                     </div>
                     <Link
                         to="/creations"
-                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.1em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
+                        className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
                     >
                         Full Archive <ArrowRight size={14} />
                     </Link>
@@ -77,7 +77,7 @@ const Home: React.FC = () => {
                     {/* Text side */}
                     <div className="bg-paper-100 flex items-center px-8 md:px-16 py-16 md:py-24">
                         <div className="max-w-lg">
-                            <span className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-6">
+                            <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-6">
                                 Commission
                             </span>
                             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-wood-900 leading-[1.15] mb-6 font-medium">
@@ -91,7 +91,7 @@ const Home: React.FC = () => {
                             </p>
                             <Link
                                 to="/inquire"
-                                className="inline-block font-mono text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold border-b-2 border-bronze-400 pb-1 hover:text-bronze-700 hover:border-bronze-600 transition-colors"
+                                className="inline-block font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold border-b-2 border-bronze-400 pb-1 hover:text-bronze-700 hover:border-bronze-600 transition-colors"
                             >
                                 Begin an Inquiry
                             </Link>
@@ -108,7 +108,7 @@ const Home: React.FC = () => {
                             <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
                             <p className="font-serif text-base sm:text-lg text-wood-600 italic leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
                         </div>
-                        <Link to="/writings" className="hidden md:flex font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold items-center gap-2">
+                        <Link to="/writings" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
                         </Link>
                     </div>
@@ -131,7 +131,7 @@ const Home: React.FC = () => {
                                     />
                                 </div>
                                 <div className="p-6 md:p-8">
-                                    <span className="font-mono text-xs uppercase tracking-[0.1em] text-bronze-600 font-semibold block mb-3">
+                                    <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">
                                         {story.category}
                                     </span>
                                     <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
@@ -140,7 +140,7 @@ const Home: React.FC = () => {
                                     <p className="font-serif text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
                                         {story.excerpt}
                                     </p>
-                                    <span className="inline-flex items-center gap-2 mt-5 font-mono text-xs uppercase tracking-[0.15em] text-wood-500 group-hover:text-bronze-600 font-semibold transition-colors">
+                                    <span className="inline-flex items-center gap-2 mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-500 group-hover:text-bronze-600 font-semibold transition-colors">
                                         Read <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
                                     </span>
                                 </div>
@@ -180,7 +180,7 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="mt-8 md:hidden text-center">
-                        <Link to="/writings" className="font-mono text-xs uppercase tracking-[0.2em] text-wood-900 border-b border-wood-900 pb-1 font-semibold">
+                        <Link to="/writings" className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 border-b border-wood-900 pb-1 font-semibold">
                             Explore All Writings
                         </Link>
                     </div>

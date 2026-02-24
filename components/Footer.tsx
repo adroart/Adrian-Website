@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUp, CheckCircle, Instagram, Mail } from 'lucide-react';
+import { useDarkMode } from '../DarkModeContext';
 
 // Kit (ConvertKit) newsletter integration
 // Set VITE_KIT_FORM_ID and VITE_KIT_PUBLIC_API_KEY in .env.local
@@ -123,6 +124,8 @@ const ScrollToTop: React.FC = () => {
 };
 
 const Footer: React.FC = () => {
+    const { isDarkMode, toggleDarkMode } = useDarkMode();
+
     return (
         <footer className="dark-preserve bg-wood-800 text-wood-300 pt-0 pb-8 px-6 relative overflow-hidden print:hidden">
             {/* Warm gradient top edge */}
@@ -138,7 +141,7 @@ const Footer: React.FC = () => {
 
                     {/* Brand — 60% on desktop */}
                     <div className="md:w-[60%]">
-                        <h2 className="font-serif text-3xl md:text-4xl text-wood-100 mb-4 tracking-tight font-medium">Adrian Rasmussen</h2>
+                        <h2 className="font-display text-3xl md:text-4xl text-wood-100 mb-4 tracking-normal font-normal">Adrian Rasmussen</h2>
                         <p className="font-sans text-wood-300 text-sm leading-[1.7] max-w-lg">
                             Resonant artifacts for the modern sanctuary. <br />
                             Exploring the intersection of digital precision and organic imperfection.
@@ -146,7 +149,7 @@ const Footer: React.FC = () => {
                         {/* #13 "Currently" status line */}
                         <div className="mt-6 flex items-center gap-2.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse-slow"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400">
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold text-wood-400">
                                 Currently — Taking commissions for Spring 2026
                             </span>
                         </div>
@@ -154,7 +157,7 @@ const Footer: React.FC = () => {
 
                     {/* Newsletter — 40% on desktop, appears first on mobile */}
                     <div className="w-full md:w-[40%] order-first md:order-last">
-                        <span className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 block mb-1 font-semibold">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 block mb-1 font-semibold">
                             Join the Inner Circle
                         </span>
                         <span className="font-serif text-sm text-wood-400 italic block mb-5">
@@ -175,7 +178,7 @@ const Footer: React.FC = () => {
                         {/* #5 Decorative line before column header */}
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Index</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Index</span>
                         </div>
                         <Link to="/creations" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
                         <Link to="/writings" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
@@ -190,7 +193,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Studio</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Studio</span>
                         </div>
                         <Link to="/about" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
                         <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
@@ -201,7 +204,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Information</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Information</span>
                         </div>
                         <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shipping & Returns</button>
                         <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Care Guide</button>
@@ -212,7 +215,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Connect</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Connect</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1">
                             <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
@@ -229,11 +232,14 @@ const Footer: React.FC = () => {
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent"></div>
 
                 {/* Bottom Bar — "Designed in Ubud, Bali" removed */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 pt-8">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-500 pt-8">
                     <div className="flex gap-6">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
                         <Link to="/terms" className="hover:text-wood-300 transition-colors">Terms</Link>
+                        <button onClick={toggleDarkMode} className="hover:text-bronze-400 transition-colors">
+                            {isDarkMode ? 'Day Mode' : 'Night Mode'}
+                        </button>
                     </div>
                     {/* #11 Scroll-to-top */}
                     <ScrollToTop />

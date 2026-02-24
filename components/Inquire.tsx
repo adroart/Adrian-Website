@@ -76,7 +76,7 @@ const EXPECT_STEPS = [
   { label: 'Creation begins', sub: 'When it\'s right' },
 ];
 
-/* ── #2 Scroll-reveal hook ──────────────────────────────────────────── */
+/* ── Scroll-reveal hook ─────────────────────────────────────────────── */
 function useReveal(delay = 0) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -139,7 +139,7 @@ const Inquire: React.FC = () => {
   const timelineReveal = useReveal(100);
   const faqReveal = useReveal();
 
-  /* ── #1 Parallax hero ─────────────────────────────────────────────── */
+  /* ── Parallax hero ────────────────────────────────────────────────── */
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -155,7 +155,7 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  /* #8 Auto-grow textarea */
+  /* Auto-grow textarea */
   const handleVisionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleChange(e);
     const el = visionRef.current;
@@ -165,7 +165,7 @@ const Inquire: React.FC = () => {
     }
   };
 
-  /* #7 Inline validation */
+  /* Inline validation */
   const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   const getFieldError = (field: string): string | null => {
@@ -195,10 +195,10 @@ const Inquire: React.FC = () => {
     return 'border-wood-300 focus:border-bronze-500';
   };
 
-  /* #6 Floating label class */
+  /* Floating label class */
   const floatLabel = (field: string) => {
     const isUp = focused[field] || form[field as keyof FormState]?.trim();
-    return `absolute left-0 pointer-events-none font-mono uppercase tracking-[0.2em] font-semibold transition-all duration-200 ${
+    return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.2em] font-semibold transition-all duration-200 ${
       isUp
         ? 'top-0 text-[10px] text-wood-500'
         : 'top-5 text-xs text-wood-400'
@@ -210,7 +210,7 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, commissionType: type }));
   };
 
-  /* #3 Select card & scroll to form */
+  /* Select card & scroll to form */
   const selectAndScroll = (type: CommissionType) => {
     handleCommissionType(type);
     requestAnimationFrame(() => {
@@ -218,12 +218,12 @@ const Inquire: React.FC = () => {
     });
   };
 
-  /* #10 Pill toggle */
+  /* Pill toggle */
   const handlePillSelect = (field: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [field]: prev[field] === value ? '' : value }));
   };
 
-  /* ── #11 Silent early submit ──────────────────────────────────────── */
+  /* ── Silent early submit ──────────────────────────────────────────── */
   const requiredValid =
     form.name.trim() !== '' &&
     form.email.trim() !== '' &&
@@ -249,7 +249,7 @@ const Inquire: React.FC = () => {
     }
   }, [allRequiredTouched, requiredValid, coreSubmitted, form.name, form.email, form.vision, form.commissionType]);
 
-  /* #5 Form completion progress */
+  /* Form completion progress */
   const completionCount = [
     true, // commission type always selected
     form.name.trim(),
@@ -261,7 +261,7 @@ const Inquire: React.FC = () => {
   ].filter(Boolean).length;
   const completionPercent = Math.round((completionCount / 7) * 100);
 
-  /* #9 Vision word count */
+  /* Vision word count */
   const wordCount = form.vision.trim() ? form.vision.trim().split(/\s+/).length : 0;
 
   /* ── Submit ───────────────────────────────────────────────────────── */
@@ -334,7 +334,7 @@ const Inquire: React.FC = () => {
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
 
-      {/* ── #1 Parallax Hero ────────────────────────────────────────── */}
+      {/* ── Parallax Hero ───────────────────────────────────────────── */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <div ref={heroRef} className="absolute inset-0 will-change-transform">
           <img
@@ -371,7 +371,7 @@ const Inquire: React.FC = () => {
           </p>
         </div>
 
-        {/* ── #3 Commission Path Cards (scroll-reveal) ──────────────── */}
+        {/* ── Commission Path Cards (scroll-reveal) ─────────────────── */}
         <div ref={cardsReveal.ref} className={cardsReveal.cls}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {(Object.keys(COMMISSION_PATHS) as CommissionType[]).map((type) => {
@@ -404,7 +404,7 @@ const Inquire: React.FC = () => {
                         isSelected ? 'opacity-0' : 'opacity-10'
                       }`}
                     />
-                    <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] font-semibold">
+                    <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-label text-[11px] uppercase tracking-[0.2em] font-semibold">
                       {path.label}
                     </div>
                   </div>
@@ -420,7 +420,7 @@ const Inquire: React.FC = () => {
                       {path.description}
                     </p>
                     <span
-                      className={`font-mono text-xs uppercase tracking-[0.2em] font-semibold self-start flex items-center gap-2 transition-all duration-300 ${
+                      className={`font-label text-xs uppercase tracking-[0.2em] font-semibold self-start flex items-center gap-2 transition-all duration-300 ${
                         isSelected ? 'text-bronze-600' : 'text-wood-500 group-hover:text-wood-900'
                       }`}
                     >
@@ -439,7 +439,7 @@ const Inquire: React.FC = () => {
           </div>
         </div>
 
-        {/* ── #4 Testimonial (scroll-reveal) ────────────────────────── */}
+        {/* ── Testimonial (scroll-reveal) ───────────────────────────── */}
         <div ref={testimonialReveal.ref} className={testimonialReveal.cls}>
           <div className="max-w-2xl mx-auto text-center py-8 mb-8">
             <blockquote className="font-serif text-lg text-wood-500 italic leading-[1.8]">
@@ -447,7 +447,7 @@ const Inquire: React.FC = () => {
               hand-carved tea tables, festival stage designs, and
               illuminated altar pieces."
             </blockquote>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
               From the Studio
             </p>
           </div>
@@ -458,7 +458,7 @@ const Inquire: React.FC = () => {
           <div ref={formRef} className="max-w-3xl mx-auto scroll-mt-28">
 
             {submitted ? (
-              /* ── #14 Rich Success State ──────────────────────────── */
+              /* ── Rich Success State ──────────────────────────────── */
               <div className="bg-wood-50 border border-wood-100 p-8 md:p-16 text-center relative overflow-hidden">
                 <div
                   className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -480,7 +480,7 @@ const Inquire: React.FC = () => {
                     I'll be in touch within a few days.
                   </p>
                   <div className="border-t border-wood-200 pt-8 mb-8">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-4">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-4">
                       While you wait
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -501,7 +501,7 @@ const Inquire: React.FC = () => {
                   </div>
                   <button
                     onClick={handleReset}
-                    className="font-mono text-xs uppercase tracking-[0.2em] text-wood-500 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
+                    className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
                   >
                     Send another message
                   </button>
@@ -510,7 +510,7 @@ const Inquire: React.FC = () => {
             ) : (
               <form onSubmit={handleSubmit}>
 
-                {/* ── #5 Form Completion Bar ─────────────────────── */}
+                {/* ── Form Completion Bar ────────────────────────── */}
                 <div className="h-1 bg-wood-100 overflow-hidden">
                   <div
                     className="h-full bg-bronze-500 transition-all duration-500 ease-out"
@@ -525,7 +525,7 @@ const Inquire: React.FC = () => {
 
                   {/* Commission Type Toggle */}
                   <div className="mb-10">
-                    <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                    <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
                       Type of Commission
                     </label>
                     <div className="flex gap-0 border border-wood-300 w-fit">
@@ -534,7 +534,7 @@ const Inquire: React.FC = () => {
                           key={type}
                           type="button"
                           onClick={() => handleCommissionType(type)}
-                          className={`px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-200 ${
+                          className={`px-6 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-200 ${
                             type !== 'personal' ? 'border-l border-wood-300' : ''
                           } ${
                             commissionType === type
@@ -553,7 +553,7 @@ const Inquire: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* ── #6 Name + Email with Floating Labels ──── */}
+                  {/* ── Name + Email with Floating Labels ────────── */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
                     <div className="relative pt-4">
                       <input
@@ -599,11 +599,11 @@ const Inquire: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* ── #8 + #9 Vision with Auto-grow + Word Count */}
+                  {/* ── Vision with Auto-grow + Word Count ───────── */}
                   <div className="mb-10">
                     <label
                       htmlFor="field-vision"
-                      className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2"
+                      className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2"
                     >
                       What wants to exist?
                     </label>
@@ -629,25 +629,25 @@ const Inquire: React.FC = () => {
                         <span />
                       )}
                       {wordCount > 0 && (
-                        <p className="font-mono text-[10px] text-wood-400 transition-opacity duration-300">
+                        <p className="font-label text-[10px] text-wood-400 transition-opacity duration-300">
                           {wordCount} {wordCount === 1 ? 'word' : 'words'}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* ── Divider ─────────────────────────────────── */}
+                  {/* ── Divider ──────────────────────────────────── */}
                   <div className="border-t border-wood-200 pt-8 mb-8">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                       If you'd like to share more
                     </p>
                   </div>
 
-                  {/* ── #10 Pill Selectors ──────────────────────── */}
+                  {/* ── Pill Selectors ───────────────────────────── */}
                   <div className="space-y-8 mb-10">
                     {/* Budget */}
                     <div>
-                      <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
                         Budget Range
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -656,7 +656,7 @@ const Inquire: React.FC = () => {
                             key={opt}
                             type="button"
                             onClick={() => handlePillSelect('budget', opt)}
-                            className={`px-4 py-2 border font-mono text-xs tracking-wide transition-all duration-200 active:scale-95 ${
+                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
                               form.budget === opt
                                 ? 'border-wood-900 bg-wood-900 text-paper-50'
                                 : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
@@ -670,7 +670,7 @@ const Inquire: React.FC = () => {
 
                     {/* Timeline */}
                     <div>
-                      <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
                         Timeline
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -679,7 +679,7 @@ const Inquire: React.FC = () => {
                             key={opt}
                             type="button"
                             onClick={() => handlePillSelect('timeline', opt)}
-                            className={`px-4 py-2 border font-mono text-xs tracking-wide transition-all duration-200 active:scale-95 ${
+                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
                               form.timeline === opt
                                 ? 'border-wood-900 bg-wood-900 text-paper-50'
                                 : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
@@ -693,7 +693,7 @@ const Inquire: React.FC = () => {
 
                     {/* Referral */}
                     <div>
-                      <label className="text-[11px] font-mono uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
                         How did you find me?
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -702,7 +702,7 @@ const Inquire: React.FC = () => {
                             key={opt}
                             type="button"
                             onClick={() => handlePillSelect('referral', opt)}
-                            className={`px-4 py-2 border font-mono text-xs tracking-wide transition-all duration-200 active:scale-95 ${
+                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
                               form.referral === opt
                                 ? 'border-wood-900 bg-wood-900 text-paper-50'
                                 : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
@@ -728,7 +728,7 @@ const Inquire: React.FC = () => {
                     <button
                       type="submit"
                       disabled={sendStatus === 'SENDING'}
-                      className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+                      className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
                     >
                       {sendStatus === 'SENDING' ? (
                         <span className="animate-pulse">Sending...</span>
@@ -743,7 +743,7 @@ const Inquire: React.FC = () => {
           </div>
         </div>
 
-        {/* ── #13 "What to expect" micro-timeline (scroll-reveal) ──── */}
+        {/* ── "What to expect" micro-timeline (scroll-reveal) ───────── */}
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
             <div className="mt-12 flex justify-center">
@@ -756,7 +756,7 @@ const Inquire: React.FC = () => {
                           i === 0 ? 'bg-bronze-500' : 'bg-wood-300'
                         }`}
                       />
-                      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
+                      <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
                         {item.label}
                       </p>
                       <p className="font-serif text-xs text-wood-400 mt-1">
@@ -773,17 +773,17 @@ const Inquire: React.FC = () => {
           </div>
         )}
 
-        {/* ── #12 Sticky mobile submit ──────────────────────────────── */}
+        {/* ── Sticky mobile submit ──────────────────────────────────── */}
         {!submitted && requiredValid && (
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-paper-50/95 backdrop-blur-sm border-t border-wood-200 md:hidden z-40">
             <button
               type="button"
-              onClick={(e) => {
+              onClick={() => {
                 const formEl = formRef.current?.querySelector('form');
                 if (formEl) formEl.requestSubmit();
               }}
               disabled={sendStatus === 'SENDING'}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
             >
               {sendStatus === 'SENDING' ? (
                 <span className="animate-pulse">Sending...</span>
@@ -800,7 +800,7 @@ const Inquire: React.FC = () => {
             <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Common Questions</h3>
             <div className="space-y-8">
               <div>
-                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   How long does a commission take?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">
@@ -808,7 +808,7 @@ const Inquire: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   Where do pieces ship from?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">
@@ -816,7 +816,7 @@ const Inquire: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
                   What sizes are available?
                 </h4>
                 <p className="font-serif text-wood-600 leading-[1.7]">

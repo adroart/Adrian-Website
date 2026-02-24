@@ -23,6 +23,15 @@ interface CartContextType {
 const CART_STORAGE_KEY = 'adrian_cart_items';
 const MAX_QUANTITY_PER_ITEM = 10;
 
+/** One-of-one and numbered editions are limited to qty 1. Open/limited runs allow multiples. */
+export function getMaxQuantity(product: Product): number {
+  if (!product.edition) return 1;
+  const e = product.edition.toLowerCase();
+  if (e === 'one of a kind' || e === '1 of 1' || e.startsWith('edition of')) return 1;
+  // Open Edition, Limited Run, etc.
+  return MAX_QUANTITY_PER_ITEM;
+}
+
 // Validate a single cart item has the expected shape and safe values
 function isValidCartItem(item: unknown): item is CartItem {
   if (typeof item !== 'object' || item === null) return false;
@@ -70,12 +79,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = useCallback((product: Product) => {
+    const max = getMaxQuantity(product);
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) {
         return prev.map(i =>
           i.product.id === product.id
-            ? { ...i, quantity: Math.min(i.quantity + 1, MAX_QUANTITY_PER_ITEM) }
+            ? { ...i, quantity: Math.min(i.quantity + 1, max) }
             : i
         );
       }
@@ -91,10 +101,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateQuantity = useCallback((productId: string, delta: number) => {
     setItems(prev =>
       prev
-        .map(i => i.product.id === productId
-          ? { ...i, quantity: Math.min(Math.max(i.quantity + delta, 0), MAX_QUANTITY_PER_ITEM) }
-          : i
-        )
+        .map(i => {
+          if (i.product.id !== productId) return i;
+          const max = getMaxQuantity(i.product);
+          return { ...i, quantity: Math.min(Math.max(i.quantity + delta, 0), max) };
+        })
         .filter(i => i.quantity > 0)
     );
   }, []);

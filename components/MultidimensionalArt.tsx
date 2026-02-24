@@ -47,7 +47,7 @@ const MultidimensionalArt: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
             {/* Breadcrumb */}
-            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
                 <span className="text-wood-900">Multidimensional Art</span>
@@ -82,7 +82,7 @@ const MultidimensionalArt: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6 mb-8 text-center">
                 <Link
                     to="/creations?category=Multidimensional+Art"
-                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                    className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
                 >
                     View all multidimensional art
                     <ArrowRight size={14} />
