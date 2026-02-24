@@ -329,6 +329,13 @@ const PiecePage: React.FC = () => {
     const detailParts = [art.dimensions, art.material, art.year].filter(Boolean);
     const detailString = detailParts.join(' · ');
 
+    // Structured metadata for mobile-first stacked display
+    const metadataRows = [
+        art.dimensions && { label: 'Dimensions', value: art.dimensions },
+        art.material && { label: 'Material', value: art.material },
+        art.year && { label: 'Year', value: art.year },
+    ].filter(Boolean) as { label: string; value: string }[];
+
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
             <script
@@ -340,8 +347,24 @@ const PiecePage: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
             />
 
-            {/* Breadcrumb */}
-            <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex flex-wrap items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
+            {/* Breadcrumb — Mobile: simplified (← Category), Desktop: full path */}
+            {/* Mobile breadcrumb */}
+            <div className="md:hidden max-w-7xl mx-auto px-6 py-4">
+                <Link
+                    to={
+                        isMultidimensional
+                            ? (seriesLink ?? '/creations/multidimensional-art')
+                            : (art.category ? `/creations?category=${encodeURIComponent(art.category)}` : '/creations')
+                    }
+                    className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
+                >
+                    <ArrowRight size={12} className="rotate-180" />
+                    {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
+                </Link>
+            </div>
+
+            {/* Desktop breadcrumb — full path */}
+            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6 flex-wrap items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
 
@@ -452,7 +475,7 @@ const PiecePage: React.FC = () => {
 
                 {/* Details */}
                 <div className="lg:pt-8">
-                    <div className="mb-8">
+                    <div className="mb-6 md:mb-8">
                         {art.series && (seriesLink || seriesSlug) && (
                             <Link
                                 to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
@@ -464,13 +487,30 @@ const PiecePage: React.FC = () => {
                         <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-[1.1] mb-6 font-medium">
                             {art.title}
                         </h1>
-                        <div className="font-serif text-lg text-wood-700 space-y-2">
+
+                        {/* Mobile: stacked labeled metadata rows */}
+                        <div className="md:hidden space-y-2.5">
+                            {metadataRows.map(row => (
+                                <div key={row.label} className="flex items-baseline justify-between gap-4">
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold shrink-0">{row.label}</span>
+                                    <span className="font-serif text-base text-wood-700 text-right">{row.value}</span>
+                                </div>
+                            ))}
+                            {editionText && !hasMTOSizes && (
+                                <div className="pt-1.5 mt-1 border-t border-wood-100">
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">{editionText}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Desktop: inline dot-separated detail string */}
+                        <div className="hidden md:block font-serif text-lg text-wood-700 space-y-2">
                             <p>{detailString}</p>
                             {editionText && !hasMTOSizes && <p className="text-bronze-600">{editionText}</p>}
                         </div>
                     </div>
 
-                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-[1.7]">
+                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-[1.7] text-[15px] md:text-base">
                         <p>{art.description}</p>
                         {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                     </div>
@@ -487,7 +527,7 @@ const PiecePage: React.FC = () => {
                     )}
 
                     {/* Purchase section */}
-                    <div className="border-t border-wood-200 pt-8 space-y-4">
+                    <div className="border-t border-wood-200 pt-6 md:pt-8 mt-2 md:mt-0">
 
                         {/* --- Edition closed --- */}
                         {editionClosed ? (
@@ -497,16 +537,22 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Commission a new original on this form <ArrowRight size={14} />
+                                    Commission a new original <ArrowRight size={14} />
                                 </Link>
                             </div>
 
                         /* --- Ready to ship: Add to Cart --- */
                         ) : art.availability === 'READY_TO_SHIP' ? (
-                            <>
-                                <div className="flex justify-between items-center mb-4">
+                            <div className="space-y-5">
+                                {/* Mobile: stacked label + price */}
+                                <div className="md:hidden space-y-1">
+                                    <span className={`block font-mono text-[10px] uppercase tracking-[0.2em] ${availabilityColor}`}>Ready to ship</span>
+                                    <span className="block font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                </div>
+                                {/* Desktop: side by side */}
+                                <div className="hidden md:flex justify-between items-center">
                                     <span className={`font-mono text-xs uppercase tracking-[0.2em] ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
@@ -523,10 +569,10 @@ const PiecePage: React.FC = () => {
                                         : <><ShoppingBag size={16} /> Add to Cart</>
                                     }
                                 </button>
-                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
-                            </>
+                            </div>
 
                         /* --- Made to order WITH size options: full MTO template --- */
                         ) : art.availability === 'MADE_TO_ORDER' && hasMTOSizes ? (
@@ -722,23 +768,29 @@ const PiecePage: React.FC = () => {
                                 </p>
                             </div>
 
-                        /* --- Made to order WITHOUT size options: legacy Commission link --- */
+                        /* --- Made to order WITHOUT size options: Commission link --- */
                         ) : art.availability === 'MADE_TO_ORDER' ? (
-                            <>
-                                <div className="flex justify-between items-center mb-4">
+                            <div className="space-y-5">
+                                {/* Mobile: stacked label + price */}
+                                <div className="md:hidden space-y-1">
+                                    <span className={`block font-mono text-[10px] uppercase tracking-[0.2em] ${availabilityColor}`}>Made to order</span>
+                                    <span className="block font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
+                                </div>
+                                {/* Desktop: side by side */}
+                                <div className="hidden md:flex justify-between items-center">
                                     <span className={`font-mono text-xs uppercase tracking-[0.2em] ${availabilityColor}`}>Made to order</span>
                                     <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Commission Piece <ArrowRight size={14} />
+                                    Commission This Piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+                                <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                     4 to 6 weeks production time
                                 </p>
-                            </>
+                            </div>
 
                         /* --- Sold --- */
                         ) : (
@@ -748,24 +800,23 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    className="w-full py-4 border border-wood-900 text-wood-900 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Commission a new original on this form <ArrowRight size={14} />
+                                    Commission a new original <ArrowRight size={14} />
                                 </Link>
                             </div>
                         )}
                     </div>
 
-                    {/* Share + Category */}
-                    <div className="mt-8 pt-8 border-t border-wood-200 flex justify-between items-start">
-                        <div>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Category</span>
-                            <p className="font-serif text-lg text-wood-700 mt-1">{art.category}</p>
-                        </div>
+                    {/* Category + Share — integrated below purchase section */}
+                    <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                            {art.category}
+                        </span>
                         {typeof navigator !== 'undefined' && 'share' in navigator && (
                             <button
                                 onClick={() => navigator.share({ title: art.title, url: window.location.href })}
-                                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2"
+                                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
                                 aria-label="Share this piece"
                             >
                                 <Share2 size={14} /> Share
