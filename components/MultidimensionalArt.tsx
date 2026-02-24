@@ -88,30 +88,19 @@ const MultidimensionalArt: React.FC = () => {
                 </p>
             </div>
 
-            {/* Subcategory tiles — 2×2 on mobile, 3+2 on desktop */}
+            {/* Subcategory tiles — 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16">
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 mb-1">
-                    {MULTIDIMENSIONAL_CATEGORIES.slice(0, 3).map((cat, idx) => (
-                        <SubcategoryTile
-                            key={cat.id}
-                            label={cat.label}
-                            desc={cat.desc}
-                            slug={(cat as { slug?: string }).slug}
-                            link={(cat as { link?: string }).link}
-                            idx={idx}
-                        />
-                    ))}
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                    {MULTIDIMENSIONAL_CATEGORIES.slice(3).map((cat, idx) => (
-                        <SubcategoryTile
-                            key={cat.id}
-                            label={cat.label}
-                            desc={cat.desc}
-                            slug={(cat as { slug?: string }).slug}
-                            link={(cat as { link?: string }).link}
-                            idx={idx + 3}
-                        />
+                <div className="grid grid-cols-2 lg:grid-cols-6 gap-1">
+                    {MULTIDIMENSIONAL_CATEGORIES.map((cat, idx) => (
+                        <div key={cat.id} className={`lg:col-span-2${idx === 3 ? ' lg:col-start-2' : ''}`}>
+                            <SubcategoryTile
+                                label={cat.label}
+                                desc={cat.desc}
+                                slug={(cat as { slug?: string }).slug}
+                                link={(cat as { link?: string }).link}
+                                idx={idx}
+                            />
+                        </div>
                     ))}
                 </div>
             </div>
