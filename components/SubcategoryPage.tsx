@@ -146,39 +146,24 @@ const SubcategoryPage: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
             {/* Hero */}
-            {config.image ? (
-                <div className="relative w-full h-[45vh] min-h-[360px] max-h-[560px] overflow-hidden mb-0 dark-preserve">
+            {config.image && (
+                <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden">
                     <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent" />
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 max-w-[1800px] mx-auto">
-                        {/* Breadcrumb on hero */}
-                        <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-paper-300 font-semibold mb-4">
-                            <Link to="/creations" className="hover:text-paper-50 transition-colors">Creations</Link>
-                            <span className="text-paper-300/50">/</span>
-                            <Link to="/creations/multidimensional-art" className="hover:text-paper-50 transition-colors">Multidimensional Art</Link>
-                            <span className="text-paper-300/50">/</span>
-                            <span className="text-paper-50">{config.title}</span>
-                        </div>
-                        <h1 className="font-serif text-5xl md:text-7xl text-paper-50 mb-4 font-medium">{config.title}</h1>
-                        <p className="font-serif text-lg md:text-xl text-paper-200 max-w-2xl font-light leading-[1.6]">
-                            {config.description}
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                /* No hero image — text header */
-                <div className="max-w-[1800px] mx-auto px-6 pb-12 border-b border-wood-200">
-                    <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-6">
-                        <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
-                        <span className="text-wood-300">/</span>
-                        <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
-                        <span className="text-wood-300">/</span>
-                        <span className="text-wood-900">{config.title}</span>
-                    </div>
-                    <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">{config.title}</h1>
-                    <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.7]">{config.description}</p>
                 </div>
             )}
+
+            {/* Header */}
+            <div className="max-w-[1800px] mx-auto px-6 pt-10 pb-12 border-b border-wood-200">
+                <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-6">
+                    <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
+                    <span className="text-wood-300">/</span>
+                    <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
+                    <span className="text-wood-300">/</span>
+                    <span className="text-wood-900">{config.title}</span>
+                </div>
+                <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">{config.title}</h1>
+                <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.7]">{config.description}</p>
+            </div>
 
             {/* Series hook + essay link */}
             {seriesInfo?.hook && (
