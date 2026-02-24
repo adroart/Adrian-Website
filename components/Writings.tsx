@@ -13,7 +13,7 @@ const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
     'The Path': 'The personal journey. Where this all began, and where it continues to lead.',
 };
 
-// #3 Category accent colors for card left borders
+// #3 Category accent colors for card top borders
 const CATEGORY_ACCENT: Record<StoryCategory, string> = {
     'Living Knowledge': '#c4aa7c',    // bronze-400
     'Beneath the Surface': '#736046', // wood-600
@@ -273,8 +273,8 @@ export const WritingArticle: React.FC = () => {
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
                                         {next.title}
                                     </h4>
-                                    <p className="font-serif text-sm text-wood-500 italic font-light line-clamp-2">
-                                        {next.subtitle || next.excerpt}
+                                    <p className="font-serif text-sm text-wood-600 font-light line-clamp-2 leading-relaxed">
+                                        {next.excerpt}
                                     </p>
                                 </Link>
                             ))}
@@ -369,7 +369,7 @@ const Writings: React.FC = () => {
                 {/* #1 Header with subtitle/epigraph */}
                 <div className="text-center mb-12">
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">Writings</h1>
-                    <p className="font-serif text-lg md:text-xl text-wood-500 italic font-light max-w-lg mx-auto">
+                    <p className="font-serif text-lg md:text-xl text-wood-500 font-light max-w-lg mx-auto leading-relaxed">
                         Reflections on art, knowledge, and the inner life — written from experience.
                     </p>
                 </div>
@@ -405,69 +405,61 @@ const Writings: React.FC = () => {
                             className="mb-24 scroll-mt-36"
                             ref={el => { sectionRefs.current[categorySlug(cat)] = el; }}
                         >
-                            <div className="mb-8 pb-6 border-b border-wood-100">
+                            <div className="mb-10 pb-6 border-b border-wood-100">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
-                                <p className="font-serif text-base text-wood-500 italic font-light">
+                                <p className="font-serif text-base text-wood-500 font-light leading-relaxed">
                                     {CATEGORY_SUBTEXT[cat]}
                                 </p>
                             </div>
 
-                            {/* #8 Better mobile spacing */}
-                            <div className="space-y-6 md:space-y-4">
+                            <div className="space-y-8">
                                 {stories.map((story, i) => (
                                     <Link
                                         key={story.id}
                                         to={`/writings/${story.slug}`}
-                                        className={`stagger-in group p-6 md:p-8 border hover:border-bronze-300 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 flex flex-col md:flex-row md:items-center gap-4 md:gap-6 ${
-                                            story.isFeatured
-                                                ? 'bg-stone-50 border-wood-200'
-                                                : 'bg-white border-wood-200'
-                                        }`}
+                                        className="stagger-in group block overflow-hidden border border-wood-200 hover:border-bronze-300 bg-white transition-all duration-300 hover:shadow-md"
                                         style={{
-                                            borderLeftWidth: '3px',
-                                            borderLeftColor: CATEGORY_ACCENT[story.category],
-                                            animationDelay: `${i * 80}ms`,
+                                            borderTopWidth: '2px',
+                                            borderTopColor: CATEGORY_ACCENT[story.category],
+                                            animationDelay: `${i * 100}ms`,
                                         }}
                                     >
-                                        {/* #17 Compact mobile metadata (date + read time on one line) */}
-                                        <div className="md:w-1/4">
-                                            <div className="flex items-center gap-3 md:block">
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">{story.date}</span>
-                                                <span className="font-mono text-[11px] text-wood-300 md:hidden font-semibold">·</span>
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold md:block md:mt-1">{story.readMinutes} min read</span>
-                                            </div>
-                                            {/* #4 Featured badge — pill style */}
-                                            {story.isFeatured && (
-                                                <span className="inline-block mt-2 px-2.5 py-0.5 bg-bronze-200/50 text-bronze-700 font-mono text-[10px] uppercase tracking-[0.2em] rounded-full font-semibold">
-                                                    Featured
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="md:w-1/2">
-                                            <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-2 group-hover:text-bronze-700 transition-colors font-medium">
-                                                {story.title}
-                                            </h3>
-                                            <p className="font-serif text-wood-500 line-clamp-2 italic font-light text-sm md:text-base">
-                                                {story.subtitle || story.excerpt}
-                                            </p>
-                                            {/* #7 Tag pills */}
-                                            {story.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mt-3">
-                                                    {story.tags.slice(0, 3).map(tag => (
-                                                        <span
-                                                            key={tag}
-                                                            className="font-mono text-[10px] uppercase tracking-wider text-wood-400 border border-wood-100 rounded-full px-2.5 py-0.5 font-semibold"
-                                                        >
-                                                            {tag}
-                                                        </span>
-                                                    ))}
+                                        <div className="flex flex-col md:flex-row">
+                                            {/* Article thumbnail */}
+                                            {story.image && (
+                                                <div className="md:w-2/5 aspect-[3/2] md:aspect-auto md:min-h-[220px] overflow-hidden bg-wood-100">
+                                                    <img
+                                                        src={story.image}
+                                                        alt={story.title}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        loading="lazy"
+                                                    />
                                                 </div>
                                             )}
-                                        </div>
-                                        {/* #9 Arrow hidden on mobile to save space */}
-                                        <div className="hidden md:flex md:w-1/4 justify-end">
-                                            <div className="w-10 h-10 rounded-full border border-wood-100 flex items-center justify-center text-wood-300 group-hover:text-bronze-600 group-hover:border-bronze-200 transition-all">
-                                                <ArrowRight size={16} />
+                                            {/* Content */}
+                                            <div className={`p-6 md:p-8 flex flex-col justify-center ${story.image ? 'md:w-3/5' : 'w-full'}`}>
+                                                <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                                    {story.title}
+                                                </h3>
+                                                <p className="font-serif text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
+                                                    {story.excerpt}
+                                                </p>
+                                                {/* Refined tag pills */}
+                                                {story.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5 mb-5">
+                                                        {story.tags.slice(0, 3).map(tag => (
+                                                            <span
+                                                                key={tag}
+                                                                className="font-mono text-[10px] uppercase tracking-wider text-wood-400 bg-wood-50 rounded px-2 py-0.5 font-semibold"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold inline-flex items-center gap-2 group-hover:text-bronze-700 transition-colors">
+                                                    Read <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
+                                                </span>
                                             </div>
                                         </div>
                                     </Link>
@@ -479,7 +471,7 @@ const Writings: React.FC = () => {
 
                 {/* Closing invitation */}
                 <div className="mt-8 pt-16 border-t border-wood-200 text-center">
-                    <p className="font-serif text-xl text-wood-600 italic font-light mb-8 max-w-xl mx-auto">
+                    <p className="font-serif text-xl text-wood-600 font-light mb-8 max-w-xl mx-auto leading-relaxed">
                         If something here resonated, there is more to explore. Every piece begins with a conversation.
                     </p>
                     <Link
