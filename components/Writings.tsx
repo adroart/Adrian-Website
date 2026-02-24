@@ -424,10 +424,10 @@ const Writings: React.FC = () => {
                                             animationDelay: `${i * 100}ms`,
                                         }}
                                     >
-                                        <div className="flex flex-col md:flex-row">
+                                        <div className="flex flex-row">
                                             {/* Article thumbnail */}
                                             {story.image && (
-                                                <div className="md:w-2/5 aspect-[3/2] md:aspect-auto md:min-h-[220px] overflow-hidden bg-wood-100">
+                                                <div className="w-24 h-24 flex-shrink-0 md:w-2/5 md:h-auto md:min-h-[220px] overflow-hidden bg-wood-100">
                                                     <img
                                                         src={story.image}
                                                         alt={story.title}
@@ -437,7 +437,7 @@ const Writings: React.FC = () => {
                                                 </div>
                                             )}
                                             {/* Content */}
-                                            <div className={`p-6 md:p-8 flex flex-col justify-center ${story.image ? 'md:w-3/5' : 'w-full'}`}>
+                                            <div className={`p-4 md:p-8 flex-1 flex flex-col justify-center ${story.image ? 'md:w-3/5' : 'w-full'}`}>
                                                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                                     {story.title}
                                                 </h3>
