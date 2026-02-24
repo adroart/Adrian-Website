@@ -68,7 +68,7 @@ const CreationCategoryCard: React.FC<{
     const inner = (
         <>
             {/* Gallery mat frame */}
-            <div className="bg-paper-100 border border-wood-200 p-3 sm:p-4">
+            <div className="bg-paper-100 border border-wood-200 p-4 sm:p-5 md:p-6">
                 <div className="overflow-hidden">
                     <img
                         src={`https://picsum.photos/800/800?random=${100 + idx}`}
@@ -83,7 +83,7 @@ const CreationCategoryCard: React.FC<{
             </div>
 
             {/* Museum plaque */}
-            <div className="text-center pt-4 pb-2 px-2">
+            <div className="text-center pt-5 sm:pt-6 pb-2 px-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>
