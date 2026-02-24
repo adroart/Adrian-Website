@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowUpRight, ShoppingBag, Sun, Moon } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useCart } from '../CartContext';
-import { useDarkMode } from '../DarkModeContext';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -20,7 +19,6 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, openCart } = useCart();
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
   const textPrimary = isDark ? 'text-paper-50' : 'text-wood-900';
@@ -109,24 +107,16 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             ))}
           </div>
 
-          {/* Right-side controls: dark mode + cart + mobile hamburger */}
+          {/* Right-side controls: cart + mobile hamburger */}
           <div className="flex items-center gap-1">
             <button
-              onClick={toggleDarkMode}
-              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
-              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
-            <button
               onClick={openCart}
-              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+              className={`relative p-2 hover:opacity-70 transition-opacity flex items-center gap-1.5 ${textPrimary}`}
               aria-label="Open cart"
             >
-              <ShoppingBag size={20} />
+              <span className="font-mono text-[11px] uppercase tracking-[0.15em] font-semibold">Bag</span>
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-mono font-semibold flex items-center justify-center leading-none">
+                <span className={`font-mono text-[11px] font-semibold ${isDark ? 'text-bronze-400' : 'text-bronze-600'}`}>
                   {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}

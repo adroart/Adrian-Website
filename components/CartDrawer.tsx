@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
-import { useCart } from '../CartContext';
+import { useCart, getMaxQuantity } from '../CartContext';
 
 const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
 
@@ -199,30 +199,35 @@ const CartDrawer: React.FC = () => {
                                         </p>
 
                                         <div className="flex items-center justify-between">
-                                            {/* Quantity controls */}
-                                            <div className="flex items-center border border-wood-200 h-8">
-                                                <button
-                                                    onClick={() =>
-                                                        quantity === 1
-                                                            ? removeFromCart(product.id)
-                                                            : updateQuantity(product.id, -1)
-                                                    }
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
-                                                    aria-label={quantity === 1 ? 'Remove piece' : 'Decrease quantity'}
-                                                >
-                                                    <Minus size={12} />
-                                                </button>
-                                                <span className="w-8 text-center font-mono text-xs text-wood-900 font-semibold">
-                                                    {quantity}
+                                            {getMaxQuantity(product) === 1 ? (
+                                                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
+                                                    One of one
                                                 </span>
-                                                <button
-                                                    onClick={() => updateQuantity(product.id, 1)}
-                                                    className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
-                                                    aria-label="Increase quantity"
-                                                >
-                                                    <Plus size={12} />
-                                                </button>
-                                            </div>
+                                            ) : (
+                                                <div className="flex items-center border border-wood-200 h-8">
+                                                    <button
+                                                        onClick={() =>
+                                                            quantity === 1
+                                                                ? removeFromCart(product.id)
+                                                                : updateQuantity(product.id, -1)
+                                                        }
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
+                                                        aria-label={quantity === 1 ? 'Remove piece' : 'Decrease quantity'}
+                                                    >
+                                                        <Minus size={12} />
+                                                    </button>
+                                                    <span className="w-8 text-center font-mono text-xs text-wood-900 font-semibold">
+                                                        {quantity}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => updateQuantity(product.id, 1)}
+                                                        className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <Plus size={12} />
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             <span className="font-mono text-sm text-wood-900 font-semibold">
                                                 {formatPrice(product.price * quantity)}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUp, CheckCircle, Instagram, Mail } from 'lucide-react';
+import { useDarkMode } from '../DarkModeContext';
 
 // Kit (ConvertKit) newsletter integration
 // Set VITE_KIT_FORM_ID and VITE_KIT_PUBLIC_API_KEY in .env.local
@@ -123,6 +124,8 @@ const ScrollToTop: React.FC = () => {
 };
 
 const Footer: React.FC = () => {
+    const { isDarkMode, toggleDarkMode } = useDarkMode();
+
     return (
         <footer className="dark-preserve bg-wood-800 text-wood-300 pt-0 pb-8 px-6 relative overflow-hidden print:hidden">
             {/* Warm gradient top edge */}
@@ -234,6 +237,9 @@ const Footer: React.FC = () => {
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
                         <Link to="/terms" className="hover:text-wood-300 transition-colors">Terms</Link>
+                        <button onClick={toggleDarkMode} className="hover:text-bronze-400 transition-colors">
+                            {isDarkMode ? 'Day Mode' : 'Night Mode'}
+                        </button>
                     </div>
                     {/* #11 Scroll-to-top */}
                     <ScrollToTop />
