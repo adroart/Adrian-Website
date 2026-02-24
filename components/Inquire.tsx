@@ -85,6 +85,7 @@ const Inquire: React.FC = () => {
   const [sendStatus, setSendStatus] = useState<SendStatus>('IDLE');
   const [errorMsg, setErrorMsg] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [coreSubmitted, setCoreSubmitted] = useState(false);
   const [form, setForm] = useState<FormState>({
     name: '',
     email: '',
@@ -160,6 +161,26 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: prev[field] === value ? '' : value }));
   };
 
+  /* ── Silent core submission (fire-and-forget on step 2 → 3) ─────────── */
+  const submitCoreData = () => {
+    if (coreSubmitted || !FORMSPREE_ID) return;
+    setCoreSubmitted(true);
+    const corePayload = {
+      name: form.name,
+      email: form.email,
+      vision: form.vision,
+      commissionType: form.commissionType,
+      _subject: `[Inquiry] ${form.name} (${form.commissionType})`,
+    };
+    fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(corePayload),
+    }).catch(() => {
+      // Silent — full submit on step 3 is the fallback
+    });
+  };
+
   /* ── Step navigation ──────────────────────────────────────────────────── */
   const scrollToFormTop = () => {
     requestAnimationFrame(() => {
@@ -168,6 +189,8 @@ const Inquire: React.FC = () => {
   };
 
   const goToStep = (s: number) => {
+    // Fire core data to Formspree when leaving step 2
+    if (step === 1 && s === 2) submitCoreData();
     setStep(s);
     scrollToFormTop();
   };
@@ -228,6 +251,7 @@ const Inquire: React.FC = () => {
 
   const handleReset = () => {
     setSubmitted(false);
+    setCoreSubmitted(false);
     setStep(0);
     setSendStatus('IDLE');
     setErrorMsg('');
@@ -608,7 +632,7 @@ const Inquire: React.FC = () => {
                 <form className="max-w-3xl mx-auto" onSubmit={handleSubmit}>
                   <div className="bg-wood-50 p-8 md:p-12 border border-wood-100">
                     <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light mb-2">
-                      A few more things, if you'd like to share.
+                      Your inquiry has been received. Share a bit more if you'd like.
                     </p>
                     <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-10">
                       All optional
@@ -703,17 +727,26 @@ const Inquire: React.FC = () => {
                       >
                         <ArrowLeft size={14} /> Back
                       </button>
-                      <button
-                        type="submit"
-                        disabled={sendStatus === 'SENDING'}
-                        className="hidden md:flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
-                      >
-                        {sendStatus === 'SENDING' ? (
-                          <span className="animate-pulse">Sending...</span>
-                        ) : (
-                          <>Start the conversation <ArrowRight size={14} /></>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-6">
+                        <button
+                          type="button"
+                          onClick={() => setSubmitted(true)}
+                          className="font-mono text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 transition-colors font-semibold"
+                        >
+                          Skip
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={sendStatus === 'SENDING'}
+                          className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+                        >
+                          {sendStatus === 'SENDING' ? (
+                            <span className="animate-pulse">Sending...</span>
+                          ) : (
+                            <>Send details <ArrowRight size={14} /></>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -745,35 +778,31 @@ const Inquire: React.FC = () => {
 
                   {/* #6 Sticky mobile submit bar */}
                   <div className="fixed bottom-0 left-0 right-0 p-4 bg-paper-50/95 backdrop-blur-sm border-t border-wood-200 md:hidden z-40">
-                    <button
-                      type="submit"
-                      disabled={sendStatus === 'SENDING'}
-                      className="w-full flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
-                    >
-                      {sendStatus === 'SENDING' ? (
-                        <span className="animate-pulse">Sending...</span>
-                      ) : (
-                        <>Start the conversation <ArrowRight size={14} /></>
-                      )}
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSubmitted(true)}
+                        className="px-5 py-4 border border-wood-300 font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 transition-colors font-semibold"
+                      >
+                        Skip
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={sendStatus === 'SENDING'}
+                        className="flex-1 flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-mono text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+                      >
+                        {sendStatus === 'SENDING' ? (
+                          <span className="animate-pulse">Sending...</span>
+                        ) : (
+                          <>Send details <ArrowRight size={14} /></>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </form>
               )}
             </>
           )}
-        </div>
-
-        {/* Below Form - Light Codes */}
-        <div className="mt-12 text-center max-w-3xl mx-auto">
-          <p className="font-serif text-wood-600">
-            Light Codes can also be created for you.{' '}
-            <a
-              href="/series/light-codes"
-              className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
-            >
-              Learn more
-            </a>
-          </p>
         </div>
 
         {/* FAQ */}
