@@ -1,33 +1,46 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
 import { Artwork } from '../types';
 import { ArrowRight } from 'lucide-react';
 
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+
+/* Map category label → URL. Categories with a dedicated page use their `link`,
+   others fall back to the creations page with a category filter.              */
+const CATEGORY_URL_MAP: Record<string, string> = {};
+for (const cat of CREATION_CATEGORIES) {
+    CATEGORY_URL_MAP[cat.label] = (cat as { link?: string }).link
+        ?? `/creations?category=${encodeURIComponent(cat.label)}`;
+}
+
 /* ─── Gallery Tile Card ───────────────────────────────────────────────────── */
-/* Self-contained card: image at natural aspect ratio + label band inside
-   the same border. The tinted band visually bonds name to image.            */
+/* Image + title link to the piece. Category label links to the category.     */
 
 const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
-    <div className="group cursor-pointer break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
-        {/* Image — natural aspect ratio, no overlay */}
-        <div className="overflow-hidden">
+    <div className="group break-inside-avoid mb-3 sm:mb-4 lg:mb-5 border border-wood-200 bg-white transition-all duration-500 hover:shadow-lg hover:border-wood-300">
+        {/* Image — links to the piece */}
+        <Link to={`/creations/${art.id}`} className="block overflow-hidden">
             <img
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
                 className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
                 loading="lazy"
             />
-        </div>
-        {/* Label band — tinted background, inside the card border */}
+        </Link>
+        {/* Label band */}
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-paper-100 border-t border-wood-100">
-            <h3 className="font-serif text-sm sm:text-base text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
-                {art.title}
-            </h3>
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold mt-1 block leading-none">
-                {art.category}
-            </span>
+            <Link to={`/creations/${art.id}`}>
+                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                    {art.title}
+                </h3>
+            </Link>
+            <Link to={CATEGORY_URL_MAP[art.category] || '/creations'} className="mt-1 block">
+                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                    {art.category}
+                </span>
+            </Link>
         </div>
     </div>
 );
@@ -36,41 +49,9 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
-const GALLERY_LIMIT = 12;
-
 const Home: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-    /* Piece counts per category — for chip labels */
-    const categoryCounts = useMemo(() => {
-        const counts: Record<string, number> = {};
-        for (const art of FULL_ARCHIVE) {
-            counts[art.category] = (counts[art.category] || 0) + 1;
-        }
-        return counts;
-    }, []);
-
-    /* Filtered + limited pieces for the grid */
-    const displayedPieces = useMemo(() => {
-        if (!activeCategory) {
-            return FULL_ARCHIVE.filter(a => a.featured).slice(0, GALLERY_LIMIT);
-        }
-        return FULL_ARCHIVE.filter(a => a.category === activeCategory).slice(0, GALLERY_LIMIT);
-    }, [activeCategory]);
-
-    /* Total count for "See all" link */
-    const totalInCategory = useMemo(() => {
-        if (!activeCategory) return FULL_ARCHIVE.filter(a => a.featured).length;
-        return FULL_ARCHIVE.filter(a => a.category === activeCategory).length;
-    }, [activeCategory]);
-
-    /* Build the "See all" destination — uses dedicated page when one exists */
-    const seeAllLink = useMemo(() => {
-        if (!activeCategory) return '/creations';
-        const cat = CREATION_CATEGORIES.find(c => c.label === activeCategory);
-        if (cat && (cat as { link?: string }).link) return (cat as { link?: string }).link!;
-        return `/creations?category=${encodeURIComponent(activeCategory)}`;
-    }, [activeCategory]);
+    /* Show only pieces you've marked as featured in mockData */
+    const featuredPieces = useMemo(() => FULL_ARCHIVE.filter(a => a.featured), []);
 
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
@@ -95,7 +76,7 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 sm:mb-8 px-4 sm:px-6">
                     <div>
                         <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 mb-1 font-medium">Creations</h2>
-                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Browse by category.</p>
+                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Selected works.</p>
                     </div>
                     <Link
                         to="/creations"
@@ -105,46 +86,11 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Category chip bar — horizontally scrollable on mobile */}
-                <div className="flex gap-2 overflow-x-auto px-4 sm:px-6 pb-2 mb-8 sm:mb-10 scrollbar-hide">
-                    {/* "All" chip */}
-                    <button
-                        type="button"
-                        onClick={() => setActiveCategory(null)}
-                        className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
-                            !activeCategory
-                                ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
-                                : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
-                        }`}
-                    >
-                        All
-                    </button>
-                    {CREATION_CATEGORIES.map(cat => (
-                        <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => setActiveCategory(cat.label)}
-                            className={`flex-shrink-0 font-mono text-xs uppercase tracking-[0.15em] font-semibold px-4 py-2 border transition-all duration-300 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 ${
-                                activeCategory === cat.label
-                                    ? 'border-bronze-500 text-bronze-700 bg-bronze-50'
-                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'
-                            }`}
-                        >
-                            {cat.label}
-                            <span className={`ml-1.5 ${activeCategory === cat.label ? 'text-bronze-400' : 'text-wood-300'}`}>
-                                {categoryCounts[cat.label] || 0}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Tile card grid — 2 cols mobile, 3 cols desktop, 4 cols xl */}
-                {displayedPieces.length > 0 ? (
+                {/* Tile card grid — featured pieces only */}
+                {featuredPieces.length > 0 ? (
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
-                        {displayedPieces.map(art => (
-                            <Link key={art.id} to={`/creations/${art.id}`}>
-                                <GalleryTileCard art={art} />
-                            </Link>
+                        {featuredPieces.map(art => (
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 ) : (
@@ -152,18 +98,6 @@ const Home: React.FC = () => {
                         <p className="font-serif text-xl text-wood-500 italic">
                             Pieces coming soon.
                         </p>
-                    </div>
-                )}
-
-                {/* "See all" link — shown when the category has more pieces than the grid limit */}
-                {totalInCategory > GALLERY_LIMIT && (
-                    <div className="text-center mt-10 px-4">
-                        <Link
-                            to={seeAllLink}
-                            className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold border border-wood-200 px-6 py-3 hover:border-bronze-400 transition-all"
-                        >
-                            See all {totalInCategory} pieces <ArrowRight size={14} />
-                        </Link>
                     </div>
                 )}
             </section>
