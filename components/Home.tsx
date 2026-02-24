@@ -76,7 +76,7 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 sm:mb-8 px-4 sm:px-6">
                     <div>
                         <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 mb-1 font-medium">Creations</h2>
-                        <p className="font-serif text-base sm:text-lg text-wood-500 italic">Selected works.</p>
+                        <p className="font-serif text-base sm:text-lg text-wood-600 italic leading-relaxed">Not everything here is painted. Some leave the wood as it is. Others come to life with light.</p>
                     </div>
                     <Link
                         to="/creations"
@@ -102,26 +102,6 @@ const Home: React.FC = () => {
                 )}
             </section>
 
-            {/* 3.4 The Differentiator */}
-            <section className="py-16 md:py-32 px-6 bg-wood-900 text-paper-50 relative overflow-hidden dark-preserve">
-                <div className="absolute top-0 right-0 w-[50%] h-full bg-[url('https://picsum.photos/1200/1200?random=99')] opacity-10 bg-cover mix-blend-overlay"></div>
-                <div className="max-w-4xl mx-auto relative z-10">
-                    <h2 className="font-serif text-3xl md:text-5xl leading-[1.15] mb-10 font-medium">
-                        The geometry is exact. The laser is precise.{' '}
-                        <span className="hidden md:inline"><br/></span>
-                        <span className="text-bronze-300">But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.</span>
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 text-lg font-serif font-light text-paper-200 leading-[1.7]">
-                        <p>
-                            Not everything here is painted. Some leave the wood as it is. Others come to life with light. Most are original paintings on multidimensional forms.
-                        </p>
-                        <p>
-                            Between the endless ceremony, art is our prayer. Every piece touched by the Technician of the Sacred, yet it is not any one of us but a way. A family, different origins, one mother, earth.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
             {/* 3.5 Commission Invitation */}
             <section className="relative overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2">
@@ -143,6 +123,9 @@ const Home: React.FC = () => {
                             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-wood-900 leading-[1.15] mb-6 font-medium">
                                 Every piece begins with a conversation
                             </h2>
+                            <p className="font-serif text-lg text-wood-600 leading-[1.7] font-light mb-4">
+                                The geometry is exact. The laser is precise. But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.
+                            </p>
                             <p className="font-serif text-lg text-wood-600 leading-[1.7] font-light mb-10">
                                 Whether you're drawn to a specific form or simply feel a resonance with the work, the process starts the same way. Tell me what you're feeling. We'll find the piece together.
                             </p>
@@ -161,7 +144,10 @@ const Home: React.FC = () => {
             <section className="bg-wood-50 py-16 md:py-24 px-6 border-t border-wood-200">
                 <div className="max-w-[1400px] mx-auto">
                     <div className="flex justify-between items-end mb-12">
-                        <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
+                        <div>
+                            <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
+                            <p className="font-serif text-base sm:text-lg text-wood-600 italic leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
+                        </div>
                         <Link to="/writings" className="hidden md:flex font-mono text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
                         </Link>
