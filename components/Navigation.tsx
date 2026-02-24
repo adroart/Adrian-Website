@@ -1,9 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowUpRight, ShoppingBag, Sun, Moon } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useCart } from '../CartContext';
-import { useDarkMode } from '../DarkModeContext';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -20,7 +19,6 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, openCart } = useCart();
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
   const textPrimary = isDark ? 'text-paper-50' : 'text-wood-900';
@@ -109,24 +107,20 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             ))}
           </div>
 
-          {/* Right-side controls: dark mode + cart + mobile hamburger */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleDarkMode}
-              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
-              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
+          {/* Right-side controls: cart + mobile hamburger */}
+          <div className="flex items-center gap-0">
             <button
               onClick={openCart}
               className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
               aria-label="Open cart"
             >
-              <ShoppingBag size={20} />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-bronze-600 text-paper-50 rounded-full text-[10px] font-label font-semibold flex items-center justify-center leading-none">
+                <span className={`absolute -top-0.5 -right-0.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-label font-semibold leading-none ${isDark ? 'bg-bronze-400 text-stone-950' : 'bg-bronze-600 text-paper-50'}`}>
                   {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}
