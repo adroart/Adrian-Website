@@ -32,32 +32,7 @@ const GalleryTileCard: React.FC<{ art: Artwork }> = ({ art }) => (
     </div>
 );
 
-/* ─── Pathway Block ───────────────────────────────────────────────────────── */
-
-const PathwayBlock: React.FC<{
-    title: string;
-    subtitle: string;
-    to: string;
-}> = ({ title, subtitle, to }) => (
-    <Link
-        to={to}
-        className="group w-full text-left py-8 md:py-12 border-t border-wood-200 hover:bg-white transition-colors relative overflow-hidden block"
-    >
-        <div className="flex justify-between items-end relative z-10 px-4">
-            <div>
-                <h3 className="font-serif text-3xl md:text-5xl text-wood-900 mb-2 group-hover:translate-x-2 active:translate-x-1 transition-transform duration-500 font-medium">
-                    {title}
-                </h3>
-                <p className="font-serif text-xl text-wood-500 group-hover:translate-x-2 active:translate-x-1 transition-transform duration-500 delay-75 italic font-light">
-                    {subtitle}
-                </p>
-            </div>
-            <div className="w-12 h-12 rounded-full border border-wood-200 flex items-center justify-center text-wood-400 group-hover:border-bronze-500 group-hover:text-bronze-600 transition-all group-hover:scale-110">
-                <ArrowRight size={20} />
-            </div>
-        </div>
-    </Link>
-);
+/* ─── Commission Invitation ────────────────────────────────────────────── */
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
@@ -213,23 +188,39 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* 3.5 Pathways */}
-            <section className="max-w-4xl mx-auto px-6 py-16 md:py-24">
-                <PathwayBlock
-                    title="Creations"
-                    subtitle="See what exists"
-                    to="/creations"
-                />
-                <PathwayBlock
-                    title="Writings"
-                    subtitle="The philosophy behind the work"
-                    to="/writings"
-                />
-                <PathwayBlock
-                    title="Inquire"
-                    subtitle="Begin a conversation"
-                    to="/inquire"
-                />
+            {/* 3.5 Commission Invitation */}
+            <section className="relative overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2">
+                    {/* Image side */}
+                    <div className="relative h-72 sm:h-96 md:h-auto md:min-h-[520px]">
+                        <img
+                            src="https://picsum.photos/900/1100?random=commission"
+                            alt="Detail of a commissioned piece"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                        />
+                    </div>
+                    {/* Text side */}
+                    <div className="bg-paper-100 flex items-center px-8 md:px-16 py-16 md:py-24">
+                        <div className="max-w-lg">
+                            <span className="font-mono text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-6">
+                                Commission
+                            </span>
+                            <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-wood-900 leading-[1.15] mb-6 font-medium">
+                                Every piece begins with a conversation
+                            </h2>
+                            <p className="font-serif text-lg text-wood-600 leading-[1.7] font-light mb-10">
+                                Whether you're drawn to a specific form or simply feel a resonance with the work, the process starts the same way. Tell me what you're feeling. We'll find the piece together.
+                            </p>
+                            <Link
+                                to="/inquire"
+                                className="inline-block font-mono text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold border-b-2 border-bronze-400 pb-1 hover:text-bronze-700 hover:border-bronze-600 transition-colors"
+                            >
+                                Begin an Inquiry
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             {/* 3.6 From the Writings */}
