@@ -156,7 +156,7 @@ const PiecePage: React.FC = () => {
             );
             related.push(...fromCategory);
         }
-        return related.slice(0, 4);
+        return related.slice(0, 8);
     }, [art]);
 
     const seriesData = useMemo(() => {
@@ -503,31 +503,45 @@ const PiecePage: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Desktop: inline dot-separated detail string */}
-                        <div className="hidden md:block font-serif text-lg text-wood-700 space-y-2">
-                            <p>{detailString}</p>
-                            {editionText && !hasMTOSizes && <p className="text-bronze-600">{editionText}</p>}
+                        {/* Desktop: segmented metadata bar */}
+                        <div className="hidden md:block">
+                            <div className="flex items-center divide-x divide-wood-200 bg-wood-50/60 border border-wood-100 py-3">
+                                {metadataRows.map((row, i) => (
+                                    <div key={row.label} className={`px-5 ${i === 0 ? 'pl-5' : ''}`}>
+                                        <span className="block font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-0.5">{row.label}</span>
+                                        <span className="block font-serif text-base text-wood-800">{row.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {editionText && !hasMTOSizes && (
+                                <p className="font-serif text-base text-bronze-600 mt-3">{editionText}</p>
+                            )}
                         </div>
                     </div>
 
-                    <div className="prose prose-stone font-serif text-wood-600 font-light mb-8 max-w-lg leading-[1.7] text-[15px] md:text-base">
-                        <p>{art.description}</p>
-                        {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
+                    <div className="border-l-2 border-bronze-300/50 pl-5 md:pl-6 mb-8 max-w-lg">
+                        <div className="prose prose-stone font-serif text-wood-600 font-light leading-[1.8] text-[15px] md:text-base">
+                            <p>{art.description}</p>
+                            {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
+                        </div>
                     </div>
 
                     {art.relatedStorySlug && (
                         <Link
                             to={`/writings`}
                             state={{ openStory: art.relatedStorySlug }}
-                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold mb-10"
+                            className="flex items-center gap-3 px-4 py-3 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
                         >
-                            <BookOpen size={14} />
-                            Read the story behind this piece
+                            <BookOpen size={16} className="text-bronze-600 shrink-0" />
+                            <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 group-hover:text-bronze-500 font-semibold">
+                                Read the story behind this piece
+                            </span>
+                            <ArrowRight size={12} className="text-bronze-400 ml-auto shrink-0" />
                         </Link>
                     )}
 
                     {/* Purchase section */}
-                    <div className="border-t border-wood-200 pt-6 md:pt-8 mt-2 md:mt-0">
+                    <div className="border border-wood-200 bg-wood-50/40 p-5 md:p-8 mt-4 md:mt-2">
 
                         {/* --- Edition closed --- */}
                         {editionClosed ? (
@@ -547,14 +561,14 @@ const PiecePage: React.FC = () => {
                         ) : art.availability === 'READY_TO_SHIP' ? (
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
-                                <div className="md:hidden space-y-1">
-                                    <span className={`block font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="block font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                <div className="md:hidden space-y-1.5">
+                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-emerald-50 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className="block font-serif text-4xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
-                                <div className="hidden md:flex justify-between items-center">
-                                    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="font-serif text-2xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                <div className="hidden md:flex justify-between items-end">
+                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-emerald-50 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className="font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <button
                                     onClick={handleAddToCartRTS}
@@ -738,14 +752,14 @@ const PiecePage: React.FC = () => {
 
                                 {/* Live total */}
                                 <div className="border-t border-wood-200 pt-6 pb-6">
-                                    <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-end justify-between mb-3">
                                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
-                                        <span className="font-serif text-2xl text-wood-900 font-medium">
+                                        <span className="font-serif text-3xl text-wood-900 font-medium">
                                             ${mtoTotal.toLocaleString('en-US')}
                                         </span>
                                     </div>
                                     <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                        <span className="text-avail-order">Made to order</span>
+                                        <span className="inline-block px-2 py-0.5 bg-amber-50 text-avail-order rounded-sm mr-1">Made to order</span>
                                         {' · '}4 to 6 weeks
                                     </div>
                                     {editionText && (
@@ -772,14 +786,14 @@ const PiecePage: React.FC = () => {
                         ) : art.availability === 'MADE_TO_ORDER' ? (
                             <div className="space-y-5">
                                 {/* Mobile: stacked label + price */}
-                                <div className="md:hidden space-y-1">
-                                    <span className={`block font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Made to order</span>
-                                    <span className="block font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
+                                <div className="md:hidden space-y-1.5">
+                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-amber-50 ${availabilityColor}`}>Made to order</span>
+                                    <span className="block font-serif text-4xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 {/* Desktop: side by side */}
-                                <div className="hidden md:flex justify-between items-center">
-                                    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${availabilityColor}`}>Made to order</span>
-                                    <span className="font-serif text-2xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
+                                <div className="hidden md:flex justify-between items-end">
+                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-amber-50 ${availabilityColor}`}>Made to order</span>
+                                    <span className="font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
                                 </div>
                                 <Link
                                     to="/inquire"
@@ -871,40 +885,51 @@ const PiecePage: React.FC = () => {
             {/* Related Pieces */}
             {relatedPieces.length > 0 && (
                 <div className="max-w-7xl mx-auto px-6 md:px-12 mt-32">
-                    <div className="border-t border-wood-200 pt-12 mb-12">
+                    <div className="border-t border-wood-200 pt-12 mb-10">
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">
                             {art.series ? `More from ${art.series}` : 'Related Works'}
                         </h2>
+                        <p className="font-serif text-base text-wood-500 mt-2">
+                            {art.series
+                                ? `Explore other pieces in the ${art.series} series`
+                                : 'You may also be drawn to these pieces'}
+                        </p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-12">
                         {relatedPieces.map((related) => (
                             <Link
                                 key={related.id}
                                 to={`/creations/${related.id}`}
                                 className="group"
                             >
-                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-shadow duration-500 group-hover:shadow-lg">
+                                <div className="relative overflow-hidden bg-wood-50 border border-wood-200 transition-all duration-500 group-hover:shadow-lg group-hover:border-wood-300">
                                     <img
                                         src={related.coverImage}
                                         alt={`${related.title} by Adrian Rasmussen`}
                                         loading="lazy"
-                                        className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                                        className="w-full aspect-[4/5] object-cover transition-transform duration-[1.5s] group-hover:scale-105"
                                     />
                                 </div>
-                                <div className="mt-4">
-                                    <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
+                                <div className="mt-3 md:mt-4">
+                                    <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
                                     {!art.series && (
-                                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-1.5 leading-none">
+                                        <p className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-1.5 leading-none">
                                             {related.category}
                                         </p>
                                     )}
-                                    <p className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold mt-1 leading-none">
-                                        {related.availability === 'SOLD' && <span className="text-avail-sold">Sold</span>}
-                                        {related.availability === 'READY_TO_SHIP' && <span className="text-avail-ready">Ready to ship</span>}
-                                        {related.availability === 'MADE_TO_ORDER' && <span className="text-avail-order">Made to order</span>}
-                                    </p>
+                                    <span className={`inline-block mt-2 px-2 py-0.5 font-label text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold rounded-sm ${
+                                        related.availability === 'SOLD'
+                                            ? 'bg-red-50 text-avail-sold'
+                                            : related.availability === 'READY_TO_SHIP'
+                                            ? 'bg-emerald-50 text-avail-ready'
+                                            : 'bg-amber-50 text-avail-order'
+                                    }`}>
+                                        {related.availability === 'SOLD' && 'Sold'}
+                                        {related.availability === 'READY_TO_SHIP' && 'Ready to ship'}
+                                        {related.availability === 'MADE_TO_ORDER' && 'Made to order'}
+                                    </span>
                                 </div>
                             </Link>
                         ))}
