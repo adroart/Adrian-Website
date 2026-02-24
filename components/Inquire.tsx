@@ -334,27 +334,29 @@ const Inquire: React.FC = () => {
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
 
-      {/* ── Parallax Hero ───────────────────────────────────────────── */}
-      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
+      {/* ── Hero Image ─────────────────────────────────────────────── */}
+      <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
         <div ref={heroRef} className="absolute inset-0 will-change-transform">
           <img
             src="https://picsum.photos/1600/900?random=inquire-hero"
             alt="Adrian Rasmussen's studio"
             className="w-full h-[120%] object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-wood-900/40 via-wood-900/20 to-paper-50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper-50" />
         </div>
-        <div className="relative z-10 flex items-end h-full pb-12 px-6">
-          <div className="max-w-5xl mx-auto w-full">
-            <h1 className="font-serif text-5xl md:text-6xl text-white mb-4 font-medium drop-shadow-lg">
-              Inquire
-            </h1>
-            <p className="font-serif text-xl text-white/80 max-w-2xl leading-[1.7] font-light drop-shadow">
-              I take on a small number of commissions each year. Some become
-              intimate pieces for personal spaces. Others become installations
-              that transform environments.
-            </p>
-          </div>
+      </div>
+
+      {/* ── Page Title ─────────────────────────────────────────────── */}
+      <div className="bg-paper-50 px-6 pt-10 pb-6">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="font-serif text-5xl md:text-6xl text-wood-900 mb-4 font-medium">
+            Inquire
+          </h1>
+          <p className="font-serif text-xl text-wood-600 max-w-2xl leading-[1.7] font-light">
+            I take on a small number of commissions each year. Some become
+            intimate pieces for personal spaces. Others become installations
+            that transform environments.
+          </p>
         </div>
       </div>
 
@@ -437,6 +439,21 @@ const Inquire: React.FC = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* ── General Contact ──────────────────────────────────────── */}
+        <div className="flex justify-center mb-6">
+          <a
+            href="mailto:hello@adrianrasmussen.art"
+            className="group flex items-center gap-2 px-6 py-3 border border-wood-200 hover:border-wood-400 transition-all duration-300 bg-white"
+          >
+            <span className="font-serif text-sm text-wood-500 group-hover:text-wood-800 transition-colors">
+              Just want to say hello?
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-500 font-semibold group-hover:text-bronze-700 transition-colors">
+              Send an email
+            </span>
+          </a>
         </div>
 
         {/* ── Testimonial (scroll-reveal) ───────────────────────────── */}
