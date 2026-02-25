@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
+import ArtImage from './ArtImage';
 
 /* ─── Commission Invitation ────────────────────────────────────────────── */
 
@@ -123,10 +124,10 @@ const Home: React.FC = () => {
                                 className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md overflow-hidden"
                             >
                                 <div className="aspect-[16/10] overflow-hidden">
-                                    <img
+                                    <ArtImage
                                         src={story.image}
                                         alt={story.title}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                                        variant="product"
                                         loading="lazy"
                                     />
                                 </div>
@@ -156,10 +157,10 @@ const Home: React.FC = () => {
                                     className="group bg-white border border-wood-100 hover:border-bronze-300 transition-all hover:shadow-md flex overflow-hidden"
                                 >
                                     <div className="w-28 sm:w-36 md:w-44 flex-shrink-0 overflow-hidden">
-                                        <img
+                                        <ArtImage
                                             src={story.image}
                                             alt={story.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                                            variant="product"
                                             loading="lazy"
                                         />
                                     </div>

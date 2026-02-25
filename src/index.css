@@ -2,6 +2,15 @@
 @source "../";
 @source "../components";
 
+/* ─── Art Image Design Tokens ─────────────────────────────────────────────── */
+/* These mirror the constants in components/ArtImage.tsx.
+   Defined here for reference and for any non-component CSS that needs them. */
+:root {
+  --art-hover-scale: 1.03;
+  --art-transition-duration: 700ms;
+  --art-transition-easing: ease-out;
+}
+
 /* ─── Global Typography Foundations ───────────────────────────────────────── */
 
 /* #1 Font smoothing — crisper serifs on macOS/iOS */

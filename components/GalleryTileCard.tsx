@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { CREATION_CATEGORIES } from '../data/mockData';
+import ArtImage from './ArtImage';
 
 /** Pre-computed category → URL map */
 const CATEGORY_URL_MAP: Record<string, string> = {};
@@ -28,10 +29,10 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     <div className="group break-inside-avoid mb-5 sm:mb-6 lg:mb-8 bg-paper-100 border border-wood-200 transition-all duration-500 hover:shadow-lg hover:border-wood-300">
         {/* Image — links to the piece */}
         <Link to={`/creations/${art.id}`} className="block overflow-hidden relative">
-            <img
+            <ArtImage
                 src={art.coverImage}
                 alt={`${art.title} by Adrian Rasmussen`}
-                className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.03]"
+                variant="gallery"
                 loading="lazy"
             />
             {/* Availability badge */}
