@@ -525,11 +525,16 @@ const Inquire: React.FC = () => {
               <form onSubmit={handleSubmit}>
 
                 {/* ── Form Completion Bar ────────────────────────── */}
-                <div className="h-1.5 bg-wood-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-bronze-500 transition-all duration-500 ease-out"
-                    style={{ width: `${completionPercent}%` }}
-                  />
+                <div className="flex items-center gap-4 mb-1">
+                  <div className="flex-1 h-1 bg-wood-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-bronze-500 transition-all duration-500 ease-out rounded-full"
+                      style={{ width: `${completionPercent}%` }}
+                    />
+                  </div>
+                  <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold tabular-nums whitespace-nowrap">
+                    {completionCount} of 7
+                  </span>
                 </div>
 
                 <div className="bg-wood-50 p-8 md:p-14 lg:p-16 border border-wood-100 border-t-0">
@@ -539,15 +544,20 @@ const Inquire: React.FC = () => {
 
                   {/* Commission type indicator (set by card selection above) */}
                   <div className="mb-12 flex items-center gap-3">
-                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                      Commission type
-                    </span>
-                    <span className="font-serif text-wood-700">
-                      {COMMISSION_PATHS[commissionType].label}
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-wood-200 bg-white">
+                      <span className="w-1.5 h-1.5 rounded-full bg-bronze-500" />
+                      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-700 font-semibold">
+                        {COMMISSION_PATHS[commissionType].label} Commission
+                      </span>
                     </span>
                   </div>
 
                   {/* ── Name + Email with Floating Labels ────────── */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">01</span>
+                    <span className="flex-1 h-px bg-wood-100" />
+                    <span className="font-label text-[10px] text-wood-400 tracking-[0.15em] uppercase">Your details</span>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 mb-10">
                     <div className="relative pt-4">
                       <input
@@ -606,6 +616,11 @@ const Inquire: React.FC = () => {
                   </div>
 
                   {/* ── Vision with Auto-grow + Word Count ───────── */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">02</span>
+                    <span className="flex-1 h-px bg-wood-100" />
+                    <span className="font-label text-[10px] text-wood-400 tracking-[0.15em] uppercase">Your vision</span>
+                  </div>
                   <div className="mb-12">
                     <label
                       htmlFor="field-vision"
@@ -649,11 +664,13 @@ const Inquire: React.FC = () => {
                     <div className="form-reveal-inner">
                       {/* Divider */}
                       <div className="border-t border-wood-200 pt-10 mb-10">
-                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                          If you'd like to share more
-                        </p>
-                        <p className="font-serif text-sm text-wood-400 mt-1">
-                          All optional. Helps me prepare for our conversation.
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">03</span>
+                          <span className="flex-1 h-px bg-wood-100" />
+                          <span className="font-label text-[10px] text-bronze-500 tracking-[0.15em] uppercase">Optional</span>
+                        </div>
+                        <p className="font-serif text-sm text-wood-400">
+                          Helps me prepare for our conversation.
                         </p>
                       </div>
 
@@ -714,54 +731,50 @@ const Inquire: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Timeline — conversational fill-in */}
+                        {/* Timeline — pill selection */}
                         <div>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="opacity-40">My timeline is </span>
-                            {TIMELINE_OPTIONS.map((opt, i) => (
-                              <React.Fragment key={opt.value}>
-                                <button
-                                  type="button"
-                                  onClick={() => handlePillSelect('timeline', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
-                                    form.timeline === opt.value
-                                      ? 'text-wood-900 not-italic opacity-100 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
-                                      : 'text-wood-600 italic opacity-30 hover:opacity-60'
-                                  }`}
-                                >
-                                  {opt.label}
-                                </button>
-                                {i < TIMELINE_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 opacity-30 mx-1">/</span>
-                                )}
-                              </React.Fragment>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                            Timeline
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {TIMELINE_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => handlePillSelect('timeline', opt.value)}
+                                className={`px-4 py-2 border font-serif text-sm transition-all duration-300 cursor-pointer ${
+                                  form.timeline === opt.value
+                                    ? 'border-wood-900 bg-wood-900 text-paper-50'
+                                    : 'border-wood-200 bg-white text-wood-600 hover:border-wood-400 hover:text-wood-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
                             ))}
-                          </p>
+                          </div>
                         </div>
 
-                        {/* Referral — conversational fill-in */}
+                        {/* Referral — pill selection */}
                         <div>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="opacity-40">I found you through </span>
-                            {REFERRAL_OPTIONS.map((opt, i) => (
-                              <React.Fragment key={opt.value}>
-                                <button
-                                  type="button"
-                                  onClick={() => handlePillSelect('referral', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
-                                    form.referral === opt.value
-                                      ? 'text-wood-900 not-italic opacity-100 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
-                                      : 'text-wood-600 italic opacity-30 hover:opacity-60'
-                                  }`}
-                                >
-                                  {opt.label}
-                                </button>
-                                {i < REFERRAL_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 opacity-30 mx-1">/</span>
-                                )}
-                              </React.Fragment>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                            How did you find me?
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {REFERRAL_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => handlePillSelect('referral', opt.value)}
+                                className={`px-4 py-2 border font-serif text-sm transition-all duration-300 cursor-pointer ${
+                                  form.referral === opt.value
+                                    ? 'border-wood-900 bg-wood-900 text-paper-50'
+                                    : 'border-wood-200 bg-white text-wood-600 hover:border-wood-400 hover:text-wood-800'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
                             ))}
-                          </p>
+                          </div>
                         </div>
                       </div>
 
@@ -799,27 +812,29 @@ const Inquire: React.FC = () => {
         {/* ── "What to expect" micro-timeline (scroll-reveal) ───────── */}
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
-            <div className="mt-12 flex justify-center">
-              <div className="flex items-center gap-0">
+            <div className="mt-16 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-8">
+              <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 font-semibold text-center mb-6">
+                What happens next
+              </p>
+              <div className="flex items-start justify-between relative">
+                {/* Connecting line behind dots */}
+                <div className="absolute top-[7px] left-[calc(16.67%)] right-[calc(16.67%)] h-px bg-wood-200" />
                 {EXPECT_STEPS.map((item, i) => (
-                  <React.Fragment key={item.label}>
-                    <div className="flex flex-col items-center text-center px-4">
-                      <div
-                        className={`w-3 h-3 rounded-full mb-3 ${
-                          i === 0 ? 'bg-bronze-500' : 'bg-wood-300'
-                        }`}
-                      />
-                      <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
-                        {item.label}
-                      </p>
-                      <p className="font-serif text-xs text-wood-400 mt-1">
-                        {item.sub}
-                      </p>
-                    </div>
-                    {i < EXPECT_STEPS.length - 1 && (
-                      <div className="w-12 sm:w-20 h-px bg-wood-300 -mt-6" />
-                    )}
-                  </React.Fragment>
+                  <div key={item.label} className="flex flex-col items-center text-center flex-1 relative z-10">
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full mb-3 border-2 ${
+                        i === 0
+                          ? 'bg-bronze-500 border-bronze-500'
+                          : 'bg-paper-50 border-wood-300'
+                      }`}
+                    />
+                    <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
+                      {item.label}
+                    </p>
+                    <p className="font-serif text-xs text-wood-400 mt-1">
+                      {item.sub}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
