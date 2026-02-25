@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
@@ -14,30 +14,29 @@ interface FormState {
   referral: string;
 }
 
-const BUDGET_OPTIONS = [
-  'Under $1,000',
-  '$1,000 to $5,000',
-  '$5,000 to $15,000',
-  '$15,000 to $50,000',
-  '$50,000+',
-  'Let\'s discuss',
+/* ── Budget range slider ───────────────────────────────────────────── */
+const BUDGET_STOPS = [500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 7500, 9000, 10000, 15000, 25000, 50000, 75000, 100000];
+
+const formatBudget = (val: number): string => {
+  if (val >= 100000) return '$100,000+';
+  return '$' + val.toLocaleString();
+};
+
+const TIMELINE_OPTIONS: { label: string; value: string }[] = [
+  { label: 'flexible', value: 'Flexible / No rush' },
+  { label: 'within 3 months', value: 'Within 3 months' },
+  { label: 'within 6 months', value: 'Within 6 months' },
+  { label: 'within a year', value: 'Within a year' },
+  { label: 'tied to a specific date', value: 'Specific date' },
 ];
 
-const TIMELINE_OPTIONS = [
-  'Flexible / No rush',
-  'Within 3 months',
-  'Within 6 months',
-  'Within a year',
-  'Specific date',
-];
-
-const REFERRAL_OPTIONS = [
-  'Word of mouth',
-  'Instagram',
-  'Saw a piece in person',
-  'Writings / Blog',
-  'Burning Man or festival',
-  'Other',
+const REFERRAL_OPTIONS: { label: string; value: string }[] = [
+  { label: 'word of mouth', value: 'Word of mouth' },
+  { label: 'Instagram', value: 'Instagram' },
+  { label: 'seeing a piece in person', value: 'Saw a piece in person' },
+  { label: 'your writings', value: 'Writings / Blog' },
+  { label: 'Burning Man or a festival', value: 'Burning Man or festival' },
+  { label: 'somewhere else', value: 'Other' },
 ];
 
 const COMMISSION_PATHS = {
@@ -113,6 +112,7 @@ const Inquire: React.FC = () => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focused, setFocused] = useState<Record<string, boolean>>({});
   const [coreSubmitted, setCoreSubmitted] = useState(false);
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, BUDGET_STOPS.length - 1]);
   const [form, setForm] = useState<FormState>({
     name: '',
     email: '',
@@ -123,6 +123,8 @@ const Inquire: React.FC = () => {
     referral: '',
   });
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const visionRef = useRef<HTMLTextAreaElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,19 @@ const Inquire: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  /* ── Budget range → form.budget sync ────────────────────────────── */
+  useEffect(() => {
+    const low = BUDGET_STOPS[budgetRange[0]];
+    const high = BUDGET_STOPS[budgetRange[1]];
+    if (budgetRange[0] === 0 && budgetRange[1] === BUDGET_STOPS.length - 1) {
+      setForm(prev => ({ ...prev, budget: '' }));
+    } else if (budgetRange[0] === budgetRange[1]) {
+      setForm(prev => ({ ...prev, budget: `Around ${formatBudget(low)}` }));
+    } else {
+      setForm(prev => ({ ...prev, budget: `${formatBudget(low)} to ${formatBudget(high)}` }));
+    }
+  }, [budgetRange]);
 
   /* ── Form helpers ─────────────────────────────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -180,6 +195,16 @@ const Inquire: React.FC = () => {
   const handleBlur = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }));
     setFocused(prev => ({ ...prev, [field]: false }));
+  };
+
+  /* Enter key advances to next field */
+  const handleKeyDown = (field: string, e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = form[field as keyof FormState];
+      if (field === 'name' && value.trim()) emailRef.current?.focus();
+      if (field === 'email' && value.trim() && isValidEmail(value)) visionRef.current?.focus();
+    }
   };
 
   const fieldBorderClass = (field: string) => {
@@ -294,6 +319,7 @@ const Inquire: React.FC = () => {
     setSendStatus('IDLE');
     setErrorMsg('');
     setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', referral: '' });
+    setBudgetRange([0, BUDGET_STOPS.length - 1]);
     setCommissionType('personal');
     setTouched({});
     setFocused({});
@@ -499,52 +525,43 @@ const Inquire: React.FC = () => {
               <form onSubmit={handleSubmit}>
 
                 {/* ── Form Completion Bar ────────────────────────── */}
-                <div className="h-1 bg-wood-100 overflow-hidden">
-                  <div
-                    className="h-full bg-bronze-500 transition-all duration-500 ease-out"
-                    style={{ width: `${completionPercent}%` }}
-                  />
+                <div className="flex items-center gap-4 mb-1">
+                  <div className="flex-1 h-1 bg-wood-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-bronze-500 transition-all duration-500 ease-out rounded-full"
+                      style={{ width: `${completionPercent}%` }}
+                    />
+                  </div>
+                  <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold tabular-nums whitespace-nowrap">
+                    {completionCount} of 7
+                  </span>
                 </div>
 
-                <div className="bg-wood-50 p-8 md:p-12 border border-wood-100 border-t-0">
+                <div className="bg-wood-50 p-8 md:p-14 lg:p-16 border border-wood-100 border-t-0">
                   <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light mb-10">
                     Tell me what you are imagining. We will figure out the details together.
                   </p>
 
-                  {/* Commission Type Toggle */}
-                  <div className="mb-10">
-                    <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
-                      Type of Commission
-                    </label>
-                    <div className="flex gap-0 border border-wood-300 w-fit">
-                      {(Object.keys(COMMISSION_PATHS) as CommissionType[]).map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => handleCommissionType(type)}
-                          className={`px-6 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-200 ${
-                            type !== 'personal' ? 'border-l border-wood-300' : ''
-                          } ${
-                            commissionType === type
-                              ? 'bg-wood-900 text-paper-50'
-                              : 'bg-transparent text-wood-500 hover:text-wood-900'
-                          }`}
-                        >
-                          {COMMISSION_PATHS[type].label}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="font-serif text-sm text-wood-500 italic mt-2">
-                      {commissionType === 'personal'
-                        ? 'Pieces for your home, altar, or personal space.'
-                        : 'Installations, tea houses, stages, and gathering environments.'}
-                    </p>
+                  {/* Commission type indicator (set by card selection above) */}
+                  <div className="mb-12 flex items-center gap-3">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-wood-200 bg-white">
+                      <span className="w-1.5 h-1.5 rounded-full bg-bronze-500" />
+                      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-700 font-semibold">
+                        {COMMISSION_PATHS[commissionType].label} Commission
+                      </span>
+                    </span>
                   </div>
 
                   {/* ── Name + Email with Floating Labels ────────── */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">01</span>
+                    <span className="flex-1 h-px bg-wood-100" />
+                    <span className="font-label text-[10px] text-wood-400 tracking-[0.15em] uppercase">Your details</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 mb-10">
                     <div className="relative pt-4">
                       <input
+                        ref={nameRef}
                         type="text"
                         name="name"
                         id="field-name"
@@ -552,20 +569,26 @@ const Inquire: React.FC = () => {
                         onChange={handleChange}
                         onFocus={() => handleFocus('name')}
                         onBlur={() => handleBlur('name')}
-                        className={`w-full bg-transparent border-b pt-2 pb-2 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
+                        onKeyDown={(e) => handleKeyDown('name', e)}
+                        autoComplete="name"
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
                         required
                       />
                       <label htmlFor="field-name" className={floatLabel('name')}>
                         Name
                       </label>
+                      {touched.name && !getFieldError('name') && form.name.trim() && (
+                        <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
+                      )}
                       {getFieldError('name') && (
-                        <p className="font-serif text-sm text-wood-500 mt-1 animate-fade-in">
+                        <p className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
                           {getFieldError('name')}
                         </p>
                       )}
                     </div>
                     <div className="relative pt-4">
                       <input
+                        ref={emailRef}
                         type="email"
                         name="email"
                         id="field-email"
@@ -573,14 +596,19 @@ const Inquire: React.FC = () => {
                         onChange={handleChange}
                         onFocus={() => handleFocus('email')}
                         onBlur={() => handleBlur('email')}
-                        className={`w-full bg-transparent border-b pt-2 pb-2 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
+                        onKeyDown={(e) => handleKeyDown('email', e)}
+                        autoComplete="email"
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
                         required
                       />
                       <label htmlFor="field-email" className={floatLabel('email')}>
                         Email
                       </label>
+                      {touched.email && !getFieldError('email') && form.email.trim() && isValidEmail(form.email) && (
+                        <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
+                      )}
                       {getFieldError('email') && (
-                        <p className="font-serif text-sm text-wood-500 mt-1 animate-fade-in">
+                        <p className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
                           {getFieldError('email')}
                         </p>
                       )}
@@ -588,27 +616,34 @@ const Inquire: React.FC = () => {
                   </div>
 
                   {/* ── Vision with Auto-grow + Word Count ───────── */}
-                  <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">02</span>
+                    <span className="flex-1 h-px bg-wood-100" />
+                    <span className="font-label text-[10px] text-wood-400 tracking-[0.15em] uppercase">Your vision</span>
+                  </div>
+                  <div className="mb-12">
                     <label
                       htmlFor="field-vision"
-                      className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2"
+                      className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3"
                     >
                       What wants to exist?
                     </label>
-                    <textarea
-                      ref={visionRef}
-                      name="vision"
-                      id="field-vision"
-                      rows={4}
-                      value={form.vision}
-                      onChange={handleVisionChange}
-                      onFocus={() => handleFocus('vision')}
-                      onBlur={() => handleBlur('vision')}
-                      className={`w-full bg-transparent border-b pt-2 pb-2 outline-none font-serif text-lg resize-none overflow-hidden transition-colors duration-300 ${fieldBorderClass('vision')}`}
-                      placeholder="Tell me what you're imagining..."
-                      required
-                    />
-                    <div className="flex justify-between items-center mt-1">
+                    <div className={`transition-all duration-300 ${focused.vision ? 'border-l-2 border-l-bronze-400 pl-4' : 'border-l-2 border-l-transparent pl-4'}`}>
+                      <textarea
+                        ref={visionRef}
+                        name="vision"
+                        id="field-vision"
+                        rows={2}
+                        value={form.vision}
+                        onChange={handleVisionChange}
+                        onFocus={() => handleFocus('vision')}
+                        onBlur={() => handleBlur('vision')}
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
+                        placeholder="A piece for my meditation space, something that holds stillness..."
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-between items-center mt-2 pl-4">
                       {getFieldError('vision') ? (
                         <p className="font-serif text-sm text-wood-500 animate-fade-in">
                           {getFieldError('vision')}
@@ -624,82 +659,145 @@ const Inquire: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* ── Divider ──────────────────────────────────── */}
-                  <div className="border-t border-wood-200 pt-8 mb-8">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                      If you'd like to share more
-                    </p>
-                  </div>
-
-                  {/* ── Pill Selectors ───────────────────────────── */}
-                  <div className="space-y-8 mb-10">
-                    {/* Budget */}
-                    <div>
-                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
-                        Budget Range
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {BUDGET_OPTIONS.map(opt => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => handlePillSelect('budget', opt)}
-                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
-                              form.budget === opt
-                                ? 'border-wood-900 bg-wood-900 text-paper-50'
-                                : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
+                  {/* ── Optional Fields (progressive disclosure) ── */}
+                  <div className={`form-reveal ${requiredValid ? 'is-open' : ''}`}>
+                    <div className="form-reveal-inner">
+                      {/* Divider */}
+                      <div className="border-t border-wood-200 pt-10 mb-10">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="font-label text-[10px] text-wood-400 font-semibold tracking-[0.15em] uppercase">03</span>
+                          <span className="flex-1 h-px bg-wood-100" />
+                          <span className="font-label text-[10px] text-bronze-500 tracking-[0.15em] uppercase">Optional</span>
+                        </div>
+                        <p className="font-serif text-sm text-wood-400">
+                          Helps me prepare for our conversation.
+                        </p>
                       </div>
-                    </div>
 
-                    {/* Timeline */}
-                    <div>
-                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
-                        Timeline
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {TIMELINE_OPTIONS.map(opt => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => handlePillSelect('timeline', opt)}
-                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
-                              form.timeline === opt
-                                ? 'border-wood-900 bg-wood-900 text-paper-50'
-                                : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                      <div className="space-y-10 mb-12">
+                        {/* Budget Range Slider */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2">
+                            Budget Range
+                          </label>
+                          <p className="font-serif text-base text-wood-700 mb-5 min-h-[1.5em]">
+                            {budgetRange[0] === 0 && budgetRange[1] === BUDGET_STOPS.length - 1
+                              ? 'Drag to set your range'
+                              : budgetRange[0] === budgetRange[1]
+                                ? `Around ${formatBudget(BUDGET_STOPS[budgetRange[0]])}`
+                                : `${formatBudget(BUDGET_STOPS[budgetRange[0]])} to ${formatBudget(BUDGET_STOPS[budgetRange[1]])}`}
+                          </p>
+                          <div className="relative h-10 flex items-center">
+                            {/* Track */}
+                            <div className="absolute inset-x-0 h-1 bg-wood-200 rounded-full" />
+                            {/* Active range */}
+                            <div
+                              className="absolute h-1 bg-bronze-400 rounded-full transition-all duration-150"
+                              style={{
+                                left: `${(budgetRange[0] / (BUDGET_STOPS.length - 1)) * 100}%`,
+                                width: `${((budgetRange[1] - budgetRange[0]) / (BUDGET_STOPS.length - 1)) * 100}%`,
+                              }}
+                            />
+                            {/* Low thumb */}
+                            <input
+                              type="range"
+                              min={0}
+                              max={BUDGET_STOPS.length - 1}
+                              value={budgetRange[0]}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                if (val <= budgetRange[1]) setBudgetRange([val, budgetRange[1]]);
+                              }}
+                              className="budget-slider absolute left-0 w-full"
+                              aria-label="Minimum budget"
+                            />
+                            {/* High thumb */}
+                            <input
+                              type="range"
+                              min={0}
+                              max={BUDGET_STOPS.length - 1}
+                              value={budgetRange[1]}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                if (val >= budgetRange[0]) setBudgetRange([budgetRange[0], val]);
+                              }}
+                              className="budget-slider absolute left-0 w-full"
+                              aria-label="Maximum budget"
+                            />
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <span className="font-label text-[10px] text-wood-400">{formatBudget(BUDGET_STOPS[0])}</span>
+                            <span className="font-label text-[10px] text-wood-400">{formatBudget(BUDGET_STOPS[BUDGET_STOPS.length - 1])}</span>
+                          </div>
+                        </div>
 
-                    {/* Referral */}
-                    <div>
-                      <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
-                        How did you find me?
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {REFERRAL_OPTIONS.map(opt => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => handlePillSelect('referral', opt)}
-                            className={`px-4 py-2 border font-label text-xs tracking-wide transition-all duration-200 active:scale-95 ${
-                              form.referral === opt
-                                ? 'border-wood-900 bg-wood-900 text-paper-50'
-                                : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
+                        {/* Timeline — vertical radio list */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
+                            Timeline
+                          </label>
+                          <div className="space-y-0">
+                            {TIMELINE_OPTIONS.map((opt) => {
+                              const selected = form.timeline === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => handlePillSelect('timeline', opt.value)}
+                                  className={`w-full flex items-center gap-4 py-3.5 border-b border-wood-100 text-left transition-colors duration-200 cursor-pointer group ${
+                                    selected ? '' : 'hover:bg-wood-50/50'
+                                  }`}
+                                >
+                                  <span className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
+                                    selected
+                                      ? 'border-bronze-500 bg-bronze-500'
+                                      : 'border-wood-300 bg-transparent group-hover:border-wood-400'
+                                  }`} />
+                                  <span className={`font-serif text-base transition-colors duration-200 ${
+                                    selected ? 'text-wood-900' : 'text-wood-500 group-hover:text-wood-700'
+                                  }`}>
+                                    {opt.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Referral — vertical radio list */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
+                            How did you find me?
+                          </label>
+                          <div className="space-y-0">
+                            {REFERRAL_OPTIONS.map((opt) => {
+                              const selected = form.referral === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => handlePillSelect('referral', opt.value)}
+                                  className={`w-full flex items-center gap-4 py-3.5 border-b border-wood-100 text-left transition-colors duration-200 cursor-pointer group ${
+                                    selected ? '' : 'hover:bg-wood-50/50'
+                                  }`}
+                                >
+                                  <span className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
+                                    selected
+                                      ? 'border-bronze-500 bg-bronze-500'
+                                      : 'border-wood-300 bg-transparent group-hover:border-wood-400'
+                                  }`} />
+                                  <span className={`font-serif text-base transition-colors duration-200 ${
+                                    selected ? 'text-wood-900' : 'text-wood-500 group-hover:text-wood-700'
+                                  }`}>
+                                    {opt.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
+
                     </div>
                   </div>
 
@@ -712,11 +810,11 @@ const Inquire: React.FC = () => {
                   )}
 
                   {/* Submit */}
-                  <div className="flex justify-end">
+                  <div className="flex justify-center pt-4">
                     <button
                       type="submit"
                       disabled={sendStatus === 'SENDING'}
-                      className="flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
+                      className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-wait"
                     >
                       {sendStatus === 'SENDING' ? (
                         <span className="animate-pulse">Sending...</span>
@@ -734,51 +832,32 @@ const Inquire: React.FC = () => {
         {/* ── "What to expect" micro-timeline (scroll-reveal) ───────── */}
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
-            <div className="mt-12 flex justify-center">
-              <div className="flex items-center gap-0">
+            <div className="mt-16 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-8">
+              <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 font-semibold text-center mb-6">
+                What happens next
+              </p>
+              <div className="flex items-start justify-between relative">
+                {/* Connecting line behind dots */}
+                <div className="absolute top-[7px] left-[calc(16.67%)] right-[calc(16.67%)] h-px bg-wood-200" />
                 {EXPECT_STEPS.map((item, i) => (
-                  <React.Fragment key={item.label}>
-                    <div className="flex flex-col items-center text-center px-4">
-                      <div
-                        className={`w-3 h-3 rounded-full mb-3 ${
-                          i === 0 ? 'bg-bronze-500' : 'bg-wood-300'
-                        }`}
-                      />
-                      <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
-                        {item.label}
-                      </p>
-                      <p className="font-serif text-xs text-wood-400 mt-1">
-                        {item.sub}
-                      </p>
-                    </div>
-                    {i < EXPECT_STEPS.length - 1 && (
-                      <div className="w-12 sm:w-20 h-px bg-wood-300 -mt-6" />
-                    )}
-                  </React.Fragment>
+                  <div key={item.label} className="flex flex-col items-center text-center flex-1 relative z-10">
+                    <div
+                      className={`w-3.5 h-3.5 rounded-full mb-3 border-2 ${
+                        i === 0
+                          ? 'bg-bronze-500 border-bronze-500'
+                          : 'bg-paper-50 border-wood-300'
+                      }`}
+                    />
+                    <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
+                      {item.label}
+                    </p>
+                    <p className="font-serif text-xs text-wood-400 mt-1">
+                      {item.sub}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ── Sticky mobile submit ──────────────────────────────────── */}
-        {!submitted && requiredValid && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-paper-50/95 backdrop-blur-sm border-t border-wood-200 md:hidden z-40">
-            <button
-              type="button"
-              onClick={() => {
-                const formEl = formRef.current?.querySelector('form');
-                if (formEl) formEl.requestSubmit();
-              }}
-              disabled={sendStatus === 'SENDING'}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
-            >
-              {sendStatus === 'SENDING' ? (
-                <span className="animate-pulse">Sending...</span>
-              ) : (
-                <>Start the conversation <ArrowRight size={14} /></>
-              )}
-            </button>
           </div>
         )}
 
