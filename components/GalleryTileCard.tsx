@@ -54,11 +54,16 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         {art.title}
                     </h3>
                 </Link>
-                {showDetails && art.price != null && art.availability !== 'SOLD' && (
-                    <span className="font-label text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
-                        {art.availability === 'MADE_TO_ORDER' && 'From '}${art.price.toLocaleString('en-US')}
-                    </span>
-                )}
+                {showDetails && art.price != null && art.availability !== 'SOLD' && (() => {
+                    const variants = art.sizeVariants ?? art.madeToOrderSizes;
+                    const highPrice = variants && variants.length > 0 ? Math.max(...variants.map(v => v.price)) : null;
+                    const showRange = highPrice != null && highPrice !== art.price;
+                    return (
+                        <span className="font-label text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
+                            ${art.price.toLocaleString('en-US')}{showRange && ` to $${highPrice.toLocaleString('en-US')}`}
+                        </span>
+                    );
+                })()}
             </div>
             <div className="flex items-center gap-2 mt-1">
                 <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
@@ -66,9 +71,14 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         {subtitleOverride || art.category}
                     </span>
                 </Link>
-                {showDetails && art.availability === 'MADE_TO_ORDER' && (
+                {showDetails && art.availability === 'MADE_TO_ORDER' && !art.sizeVariants?.some(v => v.availability === 'IN_STOCK') && (
                     <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-avail-order font-semibold leading-none">
                         · Made to order
+                    </span>
+                )}
+                {showDetails && (art.sizeVariants ?? art.madeToOrderSizes) && (art.sizeVariants ?? art.madeToOrderSizes)!.length > 1 && (
+                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
+                        · Multiple sizes
                     </span>
                 )}
             </div>

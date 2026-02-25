@@ -1,7 +1,7 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Artwork, AvailabilityStatus, Product } from '../types';
+import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockData';
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
@@ -30,15 +30,19 @@ function getIlluminationTier(sizeStr: string): 'none' | 'medium' | 'large' | 'ma
 }
 
 // Progressive scarcity edition display per tech spec
-function getEditionDisplay(art: Artwork): string | null {
+function getEditionDisplay(art: Artwork, selectedVariant?: SizeVariant | null): string | null {
     if (art.editionSize) {
         const sold = art.editionSold || 0;
         const percentSold = (sold / art.editionSize) * 100;
 
         if (percentSold >= 100) return 'Edition closed';
 
-        // Ready-to-ship: show specific piece number
-        if (art.availability === 'READY_TO_SHIP' && art.editionNumber) {
+        // Show specific piece number when a variant with editionNumber is selected
+        if (selectedVariant?.editionNumber) {
+            return `Edition of ${art.editionSize} · #${selectedVariant.editionNumber} · Signed and numbered`;
+        }
+        // Legacy: RTS without variants still shows piece number
+        if (art.availability === 'READY_TO_SHIP' && art.editionNumber && !art.sizeVariants) {
             return `Edition of ${art.editionSize} · #${art.editionNumber} · Signed and numbered`;
         }
 
@@ -99,14 +103,19 @@ const PiecePage: React.FC = () => {
         setAddCustomFrame(false);
     }, [id]);
 
+    // Resolve variants: prefer sizeVariants, fall back to legacy madeToOrderSizes
+    const variants = useMemo(() => art?.sizeVariants ?? art?.madeToOrderSizes ?? [], [art]);
+
     // Set default selected size when piece loads or changes
     useEffect(() => {
-        if (art?.madeToOrderSizes && art.madeToOrderSizes.length > 0) {
-            setSelectedSize(art.madeToOrderSizes[0].size);
+        if (variants.length > 0) {
+            // Default to the first in-stock variant if one exists, otherwise first
+            const inStockVariant = variants.find(v => ('availability' in v) && v.availability === 'IN_STOCK');
+            setSelectedSize(inStockVariant?.size ?? variants[0].size);
         } else {
             setSelectedSize('');
         }
-    }, [art]);
+    }, [variants]);
 
     // Illumination tier derived from selected size
     const illuminationTier = useMemo(() => {
@@ -128,10 +137,10 @@ const PiecePage: React.FC = () => {
     }, [illuminationTier]);
 
     // Selected size data object
-    const selectedSizeData = useMemo(() => {
-        if (!art?.madeToOrderSizes || !selectedSize) return null;
-        return art.madeToOrderSizes.find(s => s.size === selectedSize) || null;
-    }, [art, selectedSize]);
+    const selectedSizeData = useMemo((): SizeVariant | null => {
+        if (variants.length === 0 || !selectedSize) return null;
+        return variants.find(s => s.size === selectedSize) || null;
+    }, [variants, selectedSize]);
 
     // Live total for MTO configuration
     const mtoTotal = useMemo(() => {
@@ -196,7 +205,7 @@ const PiecePage: React.FC = () => {
     const signaturePiecesLink = isMultidimensional && art.isSignaturePiece
         ? '/creations/multidimensional-art/signature-pieces'
         : null;
-    const editionText = getEditionDisplay(art);
+    const editionText = getEditionDisplay(art, selectedSizeData);
     const editionClosed = isEditionClosed(art);
 
     // Availability text color per spec
@@ -206,8 +215,11 @@ const PiecePage: React.FC = () => {
         ? 'text-avail-order'
         : 'text-avail-sold';
 
-    // Whether this MTO piece has the full size-selector template
-    const hasMTOSizes = Boolean(art.madeToOrderSizes && art.madeToOrderSizes.length > 0);
+    // Whether this piece has the full variant configurator
+    const hasVariants = variants.length > 0;
+
+    // Whether the currently selected variant is in stock
+    const selectedIsInStock = selectedSizeData?.availability === 'IN_STOCK';
 
     // --- Cart handlers ---
 
@@ -231,8 +243,10 @@ const PiecePage: React.FC = () => {
         setTimeout(() => setRtsAdded(false), 2000);
     };
 
-    const handleAddToCartMTO = () => {
+    const handleAddToCartVariant = () => {
         if (!selectedSizeData) return;
+
+        const isInStock = selectedSizeData.availability === 'IN_STOCK';
 
         // Build human-readable title
         const sizeDisplay = selectedSize.replace('"', ' inch');
@@ -272,7 +286,7 @@ const PiecePage: React.FC = () => {
             category: art.category,
             image: art.coverImage,
             available: true,
-            isReadyToShip: false,
+            isReadyToShip: isInStock,
             material: art.material,
             edition: art.edition,
             dimensions: art.dimensions,
@@ -496,7 +510,7 @@ const PiecePage: React.FC = () => {
                                     <span className="font-serif text-base text-wood-700 text-right">{row.value}</span>
                                 </div>
                             ))}
-                            {editionText && !hasMTOSizes && (
+                            {editionText && !hasVariants && (
                                 <div className="pt-1.5 mt-1 border-t border-wood-100">
                                     <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">{editionText}</span>
                                 </div>
@@ -513,7 +527,7 @@ const PiecePage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            {editionText && !hasMTOSizes && (
+                            {editionText && !hasVariants && (
                                 <p className="font-serif text-base text-bronze-600 mt-3">{editionText}</p>
                             )}
                         </div>
@@ -557,79 +571,61 @@ const PiecePage: React.FC = () => {
                                 </Link>
                             </div>
 
-                        /* --- Ready to ship: Add to Cart --- */
-                        ) : art.availability === 'READY_TO_SHIP' ? (
-                            <div className="space-y-5">
-                                {/* Mobile: stacked label + price */}
-                                <div className="md:hidden space-y-1.5">
-                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="block font-serif text-4xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
-                                </div>
-                                {/* Desktop: side by side */}
-                                <div className="hidden md:flex justify-between items-end">
-                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
-                                </div>
-                                <button
-                                    onClick={handleAddToCartRTS}
-                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-3 ${
-                                        rtsAdded
-                                            ? 'bg-bronze-600 text-paper-50'
-                                            : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
-                                    }`}
-                                >
-                                    {rtsAdded
-                                        ? <><Check size={16} /> Added to Cart</>
-                                        : <><ShoppingBag size={16} /> Add to Cart</>
-                                    }
-                                </button>
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                    Ships from Bali · Arrives in 2 to 3 weeks
-                                </p>
-                            </div>
-
-                        /* --- Made to order WITH size options: full MTO template --- */
-                        ) : art.availability === 'MADE_TO_ORDER' && hasMTOSizes ? (
+                        /* --- Unified configurator: pieces with size variants --- */
+                        ) : hasVariants ? (
                             <div className="space-y-0">
 
-                                {/* Size selector */}
+                                {/* Size selector with per-variant availability */}
                                 <div className="mb-8">
                                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
                                         Select your size
                                     </p>
                                     <div className="space-y-2">
-                                        {art.madeToOrderSizes!.map(sizeOption => (
-                                            <label
-                                                key={sizeOption.size}
-                                                className={`flex items-center justify-between px-4 py-3 border cursor-pointer transition-all duration-150 ${
-                                                    selectedSize === sizeOption.size
-                                                        ? 'border-wood-900 bg-wood-50'
-                                                        : 'border-wood-200 hover:border-wood-400'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                                                        selectedSize === sizeOption.size ? 'border-wood-900' : 'border-wood-300'
-                                                    }`}>
-                                                        {selectedSize === sizeOption.size && (
-                                                            <div className="w-2 h-2 rounded-full bg-wood-900" />
-                                                        )}
+                                        {variants.map(sizeOption => {
+                                            const isInStock = sizeOption.availability === 'IN_STOCK';
+                                            const isSelected = selectedSize === sizeOption.size;
+                                            return (
+                                                <label
+                                                    key={sizeOption.size}
+                                                    className={`flex items-center justify-between px-4 py-3 border cursor-pointer transition-all duration-150 ${
+                                                        isSelected
+                                                            ? 'border-wood-900 bg-wood-50'
+                                                            : 'border-wood-200 hover:border-wood-400'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                                                            isSelected ? 'border-wood-900' : 'border-wood-300'
+                                                        }`}>
+                                                            {isSelected && (
+                                                                <div className="w-2 h-2 rounded-full bg-wood-900" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-serif text-lg text-wood-900">{sizeOption.size}</span>
+                                                            <span className={`font-label text-[10px] uppercase tracking-[0.15em] font-semibold ${
+                                                                isInStock ? 'text-avail-ready' : 'text-wood-400'
+                                                            }`}>
+                                                                {isInStock
+                                                                    ? `In stock${sizeOption.editionNumber ? ` · #${sizeOption.editionNumber}` : ''}`
+                                                                    : 'Made to order · 4 to 6 weeks'}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <span className="font-serif text-lg text-wood-900">{sizeOption.size}</span>
-                                                </div>
-                                                <span className="font-label text-sm text-wood-700 font-semibold">
-                                                    ${sizeOption.price.toLocaleString('en-US')}
-                                                </span>
-                                                <input
-                                                    type="radio"
-                                                    name={`size-${art.id}`}
-                                                    value={sizeOption.size}
-                                                    checked={selectedSize === sizeOption.size}
-                                                    onChange={() => setSelectedSize(sizeOption.size)}
-                                                    className="sr-only"
-                                                />
-                                            </label>
-                                        ))}
+                                                    <span className="font-label text-sm text-wood-700 font-semibold">
+                                                        ${sizeOption.price.toLocaleString('en-US')}
+                                                    </span>
+                                                    <input
+                                                        type="radio"
+                                                        name={`size-${art.id}`}
+                                                        value={sizeOption.size}
+                                                        checked={isSelected}
+                                                        onChange={() => setSelectedSize(sizeOption.size)}
+                                                        className="sr-only"
+                                                    />
+                                                </label>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -750,7 +746,7 @@ const PiecePage: React.FC = () => {
                                     </Link>
                                 </div>
 
-                                {/* Live total */}
+                                {/* Live total with dynamic availability */}
                                 <div className="border-t border-wood-200 pt-6 pb-6">
                                     <div className="flex items-end justify-between mb-3">
                                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
@@ -758,9 +754,18 @@ const PiecePage: React.FC = () => {
                                             ${mtoTotal.toLocaleString('en-US')}
                                         </span>
                                     </div>
-                                    <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                        <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-order rounded-sm mr-1">Made to order</span>
-                                        {' · '}4 to 6 weeks
+                                    <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold transition-all duration-300">
+                                        {selectedIsInStock ? (
+                                            <>
+                                                <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-ready rounded-sm mr-1">In stock</span>
+                                                {' · '}Ships in 2 to 3 weeks
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-order rounded-sm mr-1">Made to order</span>
+                                                {' · '}4 to 6 weeks
+                                            </>
+                                        )}
                                     </div>
                                     {editionText && (
                                         <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mt-1">
@@ -771,7 +776,7 @@ const PiecePage: React.FC = () => {
 
                                 {/* Add to Cart */}
                                 <button
-                                    onClick={handleAddToCartMTO}
+                                    onClick={handleAddToCartVariant}
                                     disabled={!selectedSize}
                                     className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
@@ -779,6 +784,37 @@ const PiecePage: React.FC = () => {
                                 </button>
                                 <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
                                     Ships from Bali
+                                </p>
+                            </div>
+
+                        /* --- Ready to ship (simple, no variants): Add to Cart --- */
+                        ) : art.availability === 'READY_TO_SHIP' ? (
+                            <div className="space-y-5">
+                                {/* Mobile: stacked label + price */}
+                                <div className="md:hidden space-y-1.5">
+                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className="block font-serif text-4xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                </div>
+                                {/* Desktop: side by side */}
+                                <div className="hidden md:flex justify-between items-end">
+                                    <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
+                                    <span className="font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                </div>
+                                <button
+                                    onClick={handleAddToCartRTS}
+                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-3 ${
+                                        rtsAdded
+                                            ? 'bg-bronze-600 text-paper-50'
+                                            : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
+                                    }`}
+                                >
+                                    {rtsAdded
+                                        ? <><Check size={16} /> Added to Cart</>
+                                        : <><ShoppingBag size={16} /> Add to Cart</>
+                                    }
+                                </button>
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                    Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
                             </div>
 
@@ -844,15 +880,23 @@ const PiecePage: React.FC = () => {
             {art.availability !== 'SOLD' && !editionClosed && (
                 <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                     <span className="font-serif text-xl text-wood-900 font-medium">
-                        {art.availability === 'READY_TO_SHIP'
-                            ? `$${art.price?.toLocaleString('en-US')}`
-                            : hasMTOSizes
+                        {hasVariants
                             ? `$${mtoTotal.toLocaleString('en-US')}`
+                            : art.availability === 'READY_TO_SHIP'
+                            ? `$${art.price?.toLocaleString('en-US')}`
                             : `From $${art.price?.toLocaleString('en-US')}`
                         }
                     </span>
 
-                    {art.availability === 'READY_TO_SHIP' ? (
+                    {hasVariants ? (
+                        <button
+                            onClick={handleAddToCartVariant}
+                            disabled={!selectedSize}
+                            className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            <ShoppingBag size={14} /> Add to Cart
+                        </button>
+                    ) : art.availability === 'READY_TO_SHIP' ? (
                         <button
                             onClick={handleAddToCartRTS}
                             className={`min-h-[44px] px-8 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center gap-2 ${
@@ -862,14 +906,6 @@ const PiecePage: React.FC = () => {
                             }`}
                         >
                             {rtsAdded ? <><Check size={14} /> Added</> : <><ShoppingBag size={14} /> Add to Cart</>}
-                        </button>
-                    ) : hasMTOSizes ? (
-                        <button
-                            onClick={handleAddToCartMTO}
-                            disabled={!selectedSize}
-                            className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            <ShoppingBag size={14} /> Add to Cart
                         </button>
                     ) : (
                         <Link

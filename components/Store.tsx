@@ -170,9 +170,14 @@ const ProductCard: React.FC<{
                     </div>
                 )}
 
-                {product.available && !product.isReadyToShip && (
+                {product.available && !product.isReadyToShip && !product.hasVariants && (
                     <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-200 text-avail-order font-semibold">
                         Made to order
+                    </div>
+                )}
+                {product.available && product.hasVariants && (
+                    <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-200 text-wood-600 font-semibold">
+                        Multiple sizes
                     </div>
                 )}
 
@@ -191,7 +196,9 @@ const ProductCard: React.FC<{
                     {product.title}
                 </h3>
                 <span className="font-serif text-sm text-wood-600 font-medium flex-shrink-0">
-                    {formatPrice(product.price)}
+                    {product.highPrice
+                        ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
+                        : formatPrice(product.price)}
                 </span>
             </div>
         </div>
@@ -241,11 +248,16 @@ const InspectionDrawer: React.FC<{
 
                 <div className="h-16 border-b border-wood-200 flex items-center justify-between px-6 bg-paper-50 z-10 shrink-0">
                     <div className="flex items-center gap-3">
-                         <div className={`w-2 h-2 rounded-full ${product.available ? (product.isReadyToShip ? 'bg-green-500' : 'bg-bronze-500') : 'bg-wood-400'} animate-pulse`}></div>
+                         <div className={`w-2 h-2 rounded-full ${product.available ? (product.isReadyToShip ? 'bg-green-500' : product.hasVariants ? 'bg-green-500' : 'bg-bronze-500') : 'bg-wood-400'} animate-pulse`}></div>
                          <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
                              Ref: {product.id}
                          </span>
-                         {product.available && !product.isReadyToShip && (
+                         {product.available && product.hasVariants && (
+                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 bg-wood-100 border border-wood-200 px-2 py-0.5 font-semibold">
+                                 Multiple Sizes
+                             </span>
+                         )}
+                         {product.available && !product.isReadyToShip && !product.hasVariants && (
                              <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 bg-bronze-50 border border-bronze-200 px-2 py-0.5 font-semibold">
                                  Made to Order
                              </span>
@@ -312,7 +324,16 @@ const InspectionDrawer: React.FC<{
                         </div>
                     </div>
 
-                    {product.available && !product.isReadyToShip && (
+                    {product.available && product.hasVariants && (
+                        <div className="flex items-center gap-4 p-4 bg-wood-50 border border-wood-200 mt-4">
+                            <Package size={20} className="text-wood-600 shrink-0" />
+                            <div className="flex flex-col">
+                                 <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">Available in multiple sizes</span>
+                                 <span className="text-xs text-wood-600 font-serif">Configure your piece on the detail page. Some sizes may ship sooner.</span>
+                            </div>
+                        </div>
+                    )}
+                    {product.available && !product.isReadyToShip && !product.hasVariants && (
                         <div className="flex items-center gap-4 p-4 bg-bronze-50 border border-bronze-200 mt-4">
                             <Package size={20} className="text-bronze-600 shrink-0" />
                             <div className="flex flex-col">
@@ -328,10 +349,21 @@ const InspectionDrawer: React.FC<{
                 <div className="border-t border-wood-200 p-6 bg-paper-50 sticky bottom-0 z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
                     <div className="flex items-center justify-between mb-4 px-1">
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Valuation</span>
-                        <span className="font-label text-xl text-wood-900 font-semibold">{formatPrice(product.price)}</span>
+                        <span className="font-label text-xl text-wood-900 font-semibold">
+                            {product.highPrice
+                                ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
+                                : formatPrice(product.price)}
+                        </span>
                     </div>
                     {product.available ? (
-                        product.isReadyToShip ? (
+                        product.hasVariants ? (
+                            <a
+                                href={`/creations/${product.id}`}
+                                className="w-full py-5 flex items-center justify-center gap-3 text-xs font-label uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl"
+                            >
+                                Configure <ArrowRight size={16} />
+                            </a>
+                        ) : product.isReadyToShip ? (
                             <button
                                 onClick={() => addToCart(product)}
                                 className={`w-full py-5 flex items-center justify-center gap-3 text-xs font-label uppercase tracking-[0.2em] transition-all duration-300 font-semibold shadow-lg ${inCart ? 'bg-bronze-700 text-paper-50' : 'bg-wood-900 text-paper-50 hover:bg-bronze-700 hover:shadow-xl'}`}
