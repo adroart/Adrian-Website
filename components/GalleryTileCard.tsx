@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { CREATION_CATEGORIES } from '../data/mockData';
+import ArtImage from './ArtImage';
 
 /** Pre-computed category → URL map */
 const CATEGORY_URL_MAP: Record<string, string> = {};
@@ -36,10 +37,10 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
         <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500">
             {/* Image — links to the piece */}
             <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100">
-                <img
+                <ArtImage
                     src={art.coverImage}
                     alt={`${art.title} by Adrian Rasmussen`}
-                    className="w-full h-auto block transition-transform duration-700 group-hover:scale-[1.04]"
+                    variant="gallery"
                     loading="lazy"
                 />
 
@@ -50,7 +51,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     </span>
                 </div>
 
-                {/* Availability badge — top right */}
+                {/* Availability badge — top left */}
                 {showDetails && art.availability === 'READY_TO_SHIP' && (
                     <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-avail-ready font-semibold">
                         Ready to ship

@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import ArtImage from './ArtImage';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { Product } from '../types';
@@ -141,10 +142,8 @@ const ProductCard: React.FC<{
     index: number;
     onClick: () => void;
 }> = ({ product, index, onClick }) => {
-    const [loaded, setLoaded] = useState(false);
     const isWide = (index + 1) % 3 === 0;
     const spanClass = isWide ? 'md:col-span-2' : 'col-span-1';
-    const opacityClass = !product.available ? 'opacity-70 grayscale sepia-[0.3]' : '';
 
     return (
         <div
@@ -152,16 +151,12 @@ const ProductCard: React.FC<{
             className={`group relative flex flex-col cursor-pointer ${spanClass} mb-12 md:mb-0`}
         >
             <div className="relative w-full bg-wood-100 overflow-hidden mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
-                <img
+                <ArtImage
                     src={product.image}
                     alt={`${product.title} by Adrian Rasmussen, ${product.material || 'mixed media'}`}
-                    onLoad={() => setLoaded(true)}
-                    className={`
-                        w-full h-full object-cover transition-all duration-[1.2s] ease-out transform
-                        group-hover:scale-[1.04]
-                        ${opacityClass}
-                        ${loaded ? 'blur-0 opacity-100' : 'blur-xl opacity-0'}
-                    `}
+                    variant="product"
+                    style={!product.available ? { opacity: 0.7 } : undefined}
+                    className={!product.available ? 'grayscale sepia-[0.3]' : ''}
                 />
 
                 {/* Availability badge — top left, consistent style */}
@@ -177,7 +172,7 @@ const ProductCard: React.FC<{
                 )}
                 {product.available && product.hasVariants && (
                     <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-wood-600 font-semibold">
-                        {product.hasVariants ? 'Multiple sizes' : ''}
+                        Multiple sizes
                     </div>
                 )}
 

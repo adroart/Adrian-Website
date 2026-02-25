@@ -5,6 +5,7 @@ import { ChevronUp, ArrowUpDown } from 'lucide-react';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
+import ArtImage from './ArtImage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,9 +70,9 @@ const CreationCategoryCard: React.FC<{
         <>
             {/* Image */}
             <div className="overflow-hidden">
-                <img
+                <ArtImage
                     src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    variant="tile"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -144,15 +145,14 @@ const CollectionCard: React.FC<{
             {/* Placeholder background */}
             <div className="absolute inset-0 bg-wood-100" />
             {cover && (
-                <img
+                <ArtImage
                     src={cover}
+                    variant="cover"
+                    inactive={!isActive}
                     alt=""
                     aria-hidden="true"
                     width={800}
                     height={533}
-                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.03] ${
-                        isActive ? 'grayscale-0' : 'sm:grayscale sm:group-hover:grayscale-0'
-                    }`}
                 />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
