@@ -16,6 +16,12 @@ interface OracleDeck {
   material: string;
   image: string;
   sampleCardImage?: string;
+  practice?: {
+    heading: string;
+    steps: string[];
+    blessing: string;
+    bringsTo: { label: string; items: string[] };
+  };
 }
 
 const DECKS: OracleDeck[] = [
@@ -32,6 +38,27 @@ const DECKS: OracleDeck[] = [
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
     image: 'https://picsum.photos/900/1100?random=oracle-reflect',
+    practice: {
+      heading: 'To Begin',
+      steps: [
+        'Create a space for reflection',
+        'Take a breath and center',
+        'Clarify an intention or question',
+        'With presence, draw a card',
+        'Allow your truth to emerge',
+        'Answer alone or in a group',
+      ],
+      blessing: 'May each card be a light in the illumination of clarity and peace.',
+      bringsTo: {
+        label: 'Brings to light',
+        items: [
+          'What seeks attention',
+          'Hidden truths ready to emerge',
+          'Clarity and awareness',
+          'Pathways to integration',
+        ],
+      },
+    },
   },
   {
     id: 'connect',
@@ -46,6 +73,25 @@ const DECKS: OracleDeck[] = [
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
     image: 'https://picsum.photos/900/1100?random=oracle-connect',
+    practice: {
+      heading: 'To Begin',
+      steps: [
+        'Gather in a circle',
+        'Pick the first card',
+        'Follow the card',
+        'Pass the cards in a circle',
+      ],
+      blessing: 'May each moment deepen our understanding and compassion.',
+      bringsTo: {
+        label: 'Brings to life',
+        items: [
+          'Honest sharing',
+          'Open hearts',
+          'Community spirit',
+          'Playful moments',
+        ],
+      },
+    },
   },
   {
     id: 'universal-language',
@@ -82,7 +128,6 @@ const DECKS: OracleDeck[] = [
 const SECTIONS = [
   { id: 'oracle-hero',     label: 'Intro' },
   ...DECKS.map(d => ({ id: `oracle-${d.id}`, label: d.name.replace(/^The /, '') })),
-  { id: 'oracle-practice', label: 'Practice' },
   { id: 'oracle-close',    label: 'Acquire' },
 ];
 
@@ -293,6 +338,36 @@ const DeckSection: React.FC<{
               {deck.cardCount} · {deck.dimensions} · {deck.material}
             </div>
           </div>
+
+          {/* Practice steps (Reflect / Connect only) */}
+          {deck.practice && (
+            <div className={`mt-10 pt-8 border-t ${isDark ? 'border-wood-600' : 'border-wood-200'}`}>
+              <span className={`font-label text-[11px] uppercase tracking-[0.2em] font-semibold block mb-6 ${isDark ? 'text-bronze-400' : 'text-bronze-600'}`}>
+                {deck.practice.heading}
+              </span>
+              <ol className="space-y-3">
+                {deck.practice.steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className={`font-serif text-lg font-light flex-shrink-0 leading-none mt-0.5 ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>{i + 1}</span>
+                    <span className={`font-serif text-base font-light leading-[1.6] ${isDark ? 'text-paper-200' : 'text-wood-700'}`}>{step}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className={`font-serif text-sm italic mt-6 leading-[1.7] ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>
+                {deck.practice.blessing}
+              </p>
+              <div className="mt-6">
+                <span className={`font-label text-[11px] uppercase tracking-[0.2em] font-semibold block mb-3 ${isDark ? 'text-bronze-400' : 'text-bronze-600'}`}>
+                  {deck.practice.bringsTo.label}
+                </span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {deck.practice.bringsTo.items.map((item, i) => (
+                    <span key={i} className={`font-serif text-sm font-light ${isDark ? 'text-paper-300' : 'text-wood-500'}`}>{item}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Inline pieces from this deck if any exist in archive */}
           {(pieces as any[]).length > 0 && (
@@ -525,86 +600,6 @@ const OracleCards: React.FC = () => {
             )}
           </React.Fragment>
         ))}
-
-        {/* ══ WORKING WITH THE ORACLE ══════════════════════════════════════ */}
-        <GlyphDivider glyph="\u00A7" />
-
-        <div id="oracle-practice" className="px-6 py-28 bg-wood-900 dark-preserve">
-          <div className="max-w-5xl mx-auto">
-            <Reveal dir="up">
-              <Tag light centered>To Begin</Tag>
-            </Reveal>
-
-            {/* Two practice columns: Reflect (solo) and Connect (group) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
-
-              {/* Reflect practice */}
-              <Reveal delay={80} dir="left">
-                <div>
-                  <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">Alone or in stillness</h3>
-                  <ol className="space-y-5">
-                    {[
-                      'Create a space for reflection',
-                      'Take a breath and center',
-                      'Clarify an intention or question',
-                      'With presence, draw a card',
-                      'Allow your truth to emerge',
-                      'Answer alone or in a group',
-                    ].map((step, i) => (
-                      <li key={i} className="flex items-start gap-4">
-                        <span className="font-serif text-2xl text-bronze-400 font-light flex-shrink-0 leading-none mt-0.5">{i + 1}</span>
-                        <span className="font-serif text-lg text-paper-200 font-light leading-[1.6]">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="font-serif text-base text-bronze-400 italic mt-8 leading-[1.7]">
-                    May each card be a light in the illumination of clarity and peace.
-                  </p>
-                </div>
-              </Reveal>
-
-              {/* Connect practice */}
-              <Reveal delay={160} dir="right">
-                <div>
-                  <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">In a circle</h3>
-                  <ol className="space-y-5">
-                    {[
-                      'Gather in a circle',
-                      'Pick the first card',
-                      'Follow the card',
-                      'Pass the cards in a circle',
-                    ].map((step, i) => (
-                      <li key={i} className="flex items-start gap-4">
-                        <span className="font-serif text-2xl text-bronze-400 font-light flex-shrink-0 leading-none mt-0.5">{i + 1}</span>
-                        <span className="font-serif text-lg text-paper-200 font-light leading-[1.6]">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="font-serif text-base text-bronze-400 italic mt-8 leading-[1.7]">
-                    May each moment deepen our understanding and compassion.
-                  </p>
-                </div>
-              </Reveal>
-            </div>
-
-            {/* Brings to light */}
-            <Reveal delay={240} dir="up">
-              <div className="mt-20 pt-12 border-t border-wood-600 text-center">
-                <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">Brings to light</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {[
-                    'What seeks attention',
-                    'Hidden truths ready to emerge',
-                    'Clarity and awareness',
-                    'Pathways to integration',
-                  ].map((item, i) => (
-                    <p key={i} className="font-serif text-base text-paper-300 font-light leading-[1.6]">{item}</p>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </div>
 
         {/* ══ BROWSE ALL / GALLERY ════════════════════════════════════════ */}
         {oraclePieces.length > 0 && (
