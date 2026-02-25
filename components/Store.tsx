@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import ArtImage from './ArtImage';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { Product } from '../types';
@@ -141,10 +142,8 @@ const ProductCard: React.FC<{
     index: number;
     onClick: () => void;
 }> = ({ product, index, onClick }) => {
-    const [loaded, setLoaded] = useState(false);
     const isWide = (index + 1) % 3 === 0;
     const spanClass = isWide ? 'md:col-span-2' : 'col-span-1';
-    const opacityClass = !product.available ? 'opacity-70 grayscale sepia-[0.3]' : '';
 
     return (
         <div
@@ -152,32 +151,17 @@ const ProductCard: React.FC<{
             className={`group relative flex flex-col cursor-pointer ${spanClass} mb-12 md:mb-0`}
         >
             <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
-                <img
+                <ArtImage
                     src={product.image}
                     alt={`${product.title} by Adrian Rasmussen, ${product.material || 'mixed media'}`}
-                    onLoad={() => setLoaded(true)}
-                    className={`
-                        w-full h-full object-cover transition-all duration-[1.5s] ease-out transform
-                        group-hover:scale-105
-                        ${opacityClass}
-                        ${loaded ? 'blur-0 opacity-100' : 'blur-xl opacity-0'}
-                    `}
+                    variant="product"
+                    style={!product.available ? { opacity: 0.7 } : undefined}
+                    className={!product.available ? 'grayscale sepia-[0.3]' : ''}
                 />
 
                 {!product.available && (
                     <div className="absolute top-4 right-4 bg-wood-900/90 text-paper-50 px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-700 shadow-xl font-semibold dark-preserve">
                         Archived
-                    </div>
-                )}
-
-                {product.available && !product.isReadyToShip && !product.hasVariants && (
-                    <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-200 text-avail-order font-semibold">
-                        Made to order
-                    </div>
-                )}
-                {product.available && product.hasVariants && (
-                    <div className="absolute top-4 right-4 bg-paper-50/90 backdrop-blur px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-200 text-wood-600 font-semibold">
-                        Multiple sizes
                     </div>
                 )}
 
@@ -191,15 +175,32 @@ const ProductCard: React.FC<{
                 )}
             </div>
 
-            <div className="flex justify-between items-baseline px-1">
-                <h3 className="font-serif text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium max-w-[75%]">
-                    {product.title}
-                </h3>
-                <span className="font-serif text-sm text-wood-600 font-medium flex-shrink-0">
-                    {product.highPrice
-                        ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
-                        : formatPrice(product.price)}
-                </span>
+            <div className="px-2 pt-2 pb-2 sm:px-3 sm:pt-2.5 sm:pb-3">
+                <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-serif text-base sm:text-lg text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium">
+                        {product.title}
+                    </h3>
+                    <span className="font-label text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
+                        {product.highPrice
+                            ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
+                            : formatPrice(product.price)}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
+                        {product.category}
+                    </span>
+                    {product.available && !product.isReadyToShip && !product.hasVariants && (
+                        <span className="font-serif text-[11px] text-wood-400 italic leading-none">
+                            · Made to order
+                        </span>
+                    )}
+                    {product.available && product.hasVariants && (
+                        <span className="font-serif text-[11px] text-wood-400 italic leading-none">
+                            · Multiple sizes
+                        </span>
+                    )}
+                </div>
             </div>
         </div>
     );

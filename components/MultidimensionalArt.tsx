@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MULTIDIMENSIONAL_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
+import ArtImage from './ArtImage';
 
 // --- Sub-components ---
 
@@ -23,9 +24,9 @@ const SubcategoryTile: React.FC<{
         >
             {/* Image */}
             <div className="overflow-hidden">
-                <img
+                <ArtImage
                     src={`https://picsum.photos/800/800?random=${200 + idx}`}
-                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    variant="tile"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
