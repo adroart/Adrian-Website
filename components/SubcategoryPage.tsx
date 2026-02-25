@@ -155,19 +155,28 @@ const SubcategoryPage: React.FC = () => {
         );
     }
 
+    /* Pill button helper for filter chips */
+    const pillClass = (active: boolean) =>
+        `font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-all whitespace-nowrap px-3 py-1.5 border ${
+            active
+                ? 'bg-wood-900 text-paper-50 border-wood-900'
+                : 'bg-transparent text-wood-500 border-wood-200 hover:border-wood-400 hover:text-wood-800'
+        }`;
+
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
-            {/* Hero */}
+            {/* Hero — with gradient fade into content */}
             {config.image && (
-                <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden">
+                <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden relative">
                     <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper-50 to-transparent" />
                 </div>
             )}
 
-            {/* Header */}
-            <div className="max-w-[1800px] mx-auto px-6 pt-10 pb-12 border-b border-wood-200">
-                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-6">
+            {/* Header — more breathing room */}
+            <div className="max-w-[1800px] mx-auto px-6 md:px-10 pt-12 pb-14">
+                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-8">
                     <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                     <span className="text-wood-300">/</span>
                     <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
@@ -180,35 +189,40 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Series hook + essay link */}
             {seriesInfo?.hook && (
-                <div className="max-w-[1800px] mx-auto px-6 py-12">
-                    <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.55] font-light max-w-3xl">
-                        {seriesInfo.hook}
-                    </p>
-                    {seriesInfo.essaySlug && (
-                        <Link
-                            to={`/writings/${seriesInfo.essaySlug}`}
-                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-6"
-                        >
-                            Read the full story <ArrowRight size={12} />
-                        </Link>
-                    )}
+                <div className="max-w-[1800px] mx-auto px-6 md:px-10 pb-14">
+                    <div className="max-w-3xl border-l-2 border-bronze-300/50 pl-6">
+                        <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.55] font-light">
+                            {seriesInfo.hook}
+                        </p>
+                        {seriesInfo.essaySlug && (
+                            <Link
+                                to={`/writings/${seriesInfo.essaySlug}`}
+                                className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-0.5 mt-6"
+                            >
+                                Read the full story <ArrowRight size={12} />
+                            </Link>
+                        )}
+                    </div>
                 </div>
             )}
 
-            {/* Filter bar */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
+            {/* Filter bar — pill-style with visual grouping */}
+            <div className="max-w-[1800px] mx-auto px-6 md:px-10 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-4 border-y border-wood-200/60 mb-14">
                 <div className="flex justify-between items-center gap-6">
-                    <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide min-w-0">
-                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0">
+                    <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0 tabular-nums">
                             {filteredPieces.length} {filteredPieces.length === 1 ? 'piece' : 'pieces'}
                         </span>
 
+                        {/* Divider */}
+                        <span className="w-px h-5 bg-wood-200 flex-shrink-0" />
+
                         {/* Subcategory filter (Light Codes only) */}
                         {config.filters.includes('subcategory') && (
-                            <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => setSubcategoryFilter(null)}
-                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${!subcategoryFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
+                                    className={pillClass(!subcategoryFilter)}
                                 >
                                     All
                                 </button>
@@ -216,7 +230,7 @@ const SubcategoryPage: React.FC = () => {
                                     <button
                                         key={sc}
                                         onClick={() => setSubcategoryFilter(sc === subcategoryFilter ? null : sc)}
-                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${subcategoryFilter === sc ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                        className={pillClass(subcategoryFilter === sc)}
                                     >
                                         {sc}
                                     </button>
@@ -226,13 +240,13 @@ const SubcategoryPage: React.FC = () => {
 
                         {/* Size filter */}
                         {config.filters.includes('size') && sizeOptions.length > 1 && (
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Size</span>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-1">Size</span>
                                 {sizeOptions.map(s => (
                                     <button
                                         key={s}
                                         onClick={() => setSizeFilter(s === sizeFilter ? null : s)}
-                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${sizeFilter === s ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                        className={pillClass(sizeFilter === s)}
                                     >
                                         {s}
                                     </button>
@@ -242,13 +256,13 @@ const SubcategoryPage: React.FC = () => {
 
                         {/* Finish filter */}
                         {config.filters.includes('finish') && finishOptions.length > 1 && (
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Finish</span>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-1">Finish</span>
                                 {finishOptions.map(f => (
                                     <button
                                         key={f}
                                         onClick={() => setFinishFilter(f === finishFilter ? null : f)}
-                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${finishFilter === f ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                        className={pillClass(finishFilter === f)}
                                     >
                                         {f}
                                     </button>
@@ -260,7 +274,7 @@ const SubcategoryPage: React.FC = () => {
                         {config.filters.includes('hasStory') && basePieces.some(p => p.relatedStorySlug) && (
                             <button
                                 onClick={() => setHasStoryFilter(v => !v)}
-                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${hasStoryFilter ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                className={pillClass(hasStoryFilter)}
                             >
                                 Has Story
                             </button>
@@ -271,27 +285,27 @@ const SubcategoryPage: React.FC = () => {
                         {hasFiltersActive && (
                             <button
                                 onClick={clearAllFilters}
-                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap"
+                                className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap underline underline-offset-2"
                             >
-                                Clear filters
+                                Clear all
                             </button>
                         )}
                         {config.filters.includes('availability') && (
                             <button
                                 onClick={() => setShowAvailableOnly(v => !v)}
-                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
+                                className={pillClass(showAvailableOnly)}
                             >
-                                {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
+                                {showAvailableOnly ? 'Available' : 'Available Only'}
                             </button>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Grid */}
-            <div className="max-w-[1800px] mx-auto px-6">
+            {/* Grid — wider gaps, staggered entrance */}
+            <div className="max-w-[1800px] mx-auto px-6 md:px-10">
                 {filteredPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 sm:gap-6 lg:gap-8 card-stagger">
                         {filteredPieces.map(art => (
                             <GalleryTileCard
                                 key={art.id}
@@ -322,7 +336,7 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Commission invitation */}
             {config.showCommissionInvite && config.seriesName === 'Light Codes' && (
-                <div className="max-w-[1800px] mx-auto px-6 mt-24">
+                <div className="max-w-[1800px] mx-auto px-6 md:px-10 mt-24">
                     <div className="bg-wood-900 text-paper-50 p-10 md:p-16 max-w-3xl mx-auto text-center dark-preserve">
                         <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
                             A Light Code can also be created for you.
@@ -340,7 +354,7 @@ const SubcategoryPage: React.FC = () => {
                 </div>
             )}
             {config.showCommissionInvite && config.seriesName !== 'Light Codes' && (
-                <div className="max-w-[1800px] mx-auto px-6 mt-32">
+                <div className="max-w-[1800px] mx-auto px-6 md:px-10 mt-32">
                     <div className="border-t border-wood-200 pt-16 text-center">
                         <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light italic mb-8 max-w-xl mx-auto leading-[1.4]">
                             Something calling to you that does not exist yet?
@@ -356,7 +370,7 @@ const SubcategoryPage: React.FC = () => {
             )}
 
             {/* Other subcategories */}
-            <div className="max-w-[1800px] mx-auto px-6 mt-32">
+            <div className="max-w-[1800px] mx-auto px-6 md:px-10 mt-32">
                 <div className="border-t border-wood-200 pt-12 mb-8">
                     <h2 className="font-serif text-2xl text-wood-900 font-medium">Explore more</h2>
                 </div>

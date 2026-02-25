@@ -150,7 +150,7 @@ const ProductCard: React.FC<{
             onClick={onClick}
             className={`group relative flex flex-col cursor-pointer ${spanClass} mb-12 md:mb-0`}
         >
-            <div className="relative w-full bg-wood-100 overflow-hidden border border-wood-200 mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
+            <div className="relative w-full bg-wood-100 overflow-hidden mb-4 aspect-[4/5] md:aspect-auto md:h-[500px] transition-shadow duration-500 group-hover:shadow-lg">
                 <ArtImage
                     src={product.image}
                     alt={`${product.title} by Adrian Rasmussen, ${product.material || 'mixed media'}`}
@@ -159,48 +159,46 @@ const ProductCard: React.FC<{
                     className={!product.available ? 'grayscale sepia-[0.3]' : ''}
                 />
 
+                {/* Availability badge — top left, consistent style */}
                 {!product.available && (
-                    <div className="absolute top-4 right-4 bg-wood-900/90 text-paper-50 px-3 py-1.5 text-xs font-label uppercase tracking-[0.2em] border border-wood-700 shadow-xl font-semibold dark-preserve">
+                    <div className="absolute top-3 left-3 bg-wood-900/85 backdrop-blur-sm text-paper-50 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] font-semibold dark-preserve">
                         Archived
                     </div>
                 )}
+                {product.available && !product.isReadyToShip && !product.hasVariants && (
+                    <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-avail-order font-semibold">
+                        Made to order
+                    </div>
+                )}
+                {product.available && product.hasVariants && (
+                    <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-wood-600 font-semibold">
+                        Multiple sizes
+                    </div>
+                )}
 
+                {/* Hover overlay — unified with gallery cards */}
                 {product.available && (
-                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-500">
-                        <div className="bg-paper-50/90 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 shadow-xl border border-wood-200">
-                            <Eye size={16} className="text-wood-900" />
-                            <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">View Piece</span>
-                        </div>
+                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/15 transition-all duration-500 flex items-center justify-center">
+                        <span className="font-label text-[11px] uppercase tracking-[0.25em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
+                            View
+                        </span>
                     </div>
                 )}
             </div>
 
-            <div className="px-2 pt-2 pb-2 sm:px-3 sm:pt-2.5 sm:pb-3">
-                <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-serif text-base sm:text-lg text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium">
-                        {product.title}
-                    </h3>
-                    <span className="font-label text-xs text-wood-900 font-semibold flex-shrink-0 pt-0.5">
-                        {product.highPrice
-                            ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
-                            : formatPrice(product.price)}
-                    </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
-                        {product.category}
-                    </span>
-                    {product.available && !product.isReadyToShip && !product.hasVariants && (
-                        <span className="font-serif text-[11px] text-wood-400 italic leading-none">
-                            · Made to order
-                        </span>
-                    )}
-                    {product.available && product.hasVariants && (
-                        <span className="font-serif text-[11px] text-wood-400 italic leading-none">
-                            · Multiple sizes
-                        </span>
-                    )}
-                </div>
+            {/* Label band — stacked layout matching GalleryTileCard */}
+            <div className="px-1">
+                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
+                    {product.category}
+                </span>
+                <h3 className="font-serif text-xl md:text-2xl text-wood-900 leading-snug group-hover:text-bronze-700 transition-colors font-medium mt-1">
+                    {product.title}
+                </h3>
+                <span className="block mt-1.5 font-serif text-base text-wood-600 font-medium">
+                    {product.highPrice
+                        ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
+                        : formatPrice(product.price)}
+                </span>
             </div>
         </div>
     );
@@ -580,7 +578,7 @@ const Store: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14 card-stagger">
                             {filteredProducts.slice(0, visibleCount).map((p, idx) => {
                                 if (idx === 4) {
                                     return (
