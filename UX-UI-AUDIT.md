@@ -1,364 +1,323 @@
-# UX/UI Audit Report: Adrian Rasmussen Art Website
+# UI/UX Implementation Audit: 120 Items
 
-**Audit Date:** February 25, 2026
-**Auditor Perspective:** High-end design, fine art marketing, artist business strategy
-**Scope:** Full site, every page, every component, all data, all styles
-**Stack:** Vite + React 18 + React Router v7 + Tailwind CSS 4.2 + TypeScript
+**Scope:** Flow, navigation, graphics, and implementation quality.
+**Out of scope:** Missing content, placeholder images, unbuilt backend features.
 
----
-
-## Executive Summary
-
-This site has genuine bones. The color palette is refined, the typography carries weight, and the philosophical voice is unlike anything else in art e-commerce. Adrian's positioning as a "Technician of the Sacred" is distinctive and defensible.
-
-But the site is not ready to sell to serious collectors. Placeholder images destroy credibility on contact. The commerce flow is broken at checkout. Several pages have unfinished copy flagged with TODO markers. And there are dozens of smaller UX friction points that, taken together, erode the feeling of craftsmanship that the brand promises.
-
-Below are 85 specific findings, organized by severity and area. Each one is actionable.
+**Effort key:** `[S]` = Small (< 1 hour) | `[M]` = Medium (1-4 hours) | `[L]` = Large (4+ hours)
 
 ---
 
-## I. FIRST IMPRESSIONS AND TRUST (Items 1 to 12)
+## TIER 1: CRITICAL (Biggest impact on user experience)
 
-### 1. Every single artwork image is a placeholder
-All `coverImage` and `galleryImages` fields in `mockData.ts` point to `picsum.photos` or Unsplash randoms. A collector arriving at the site sees stock photography where sacred geometry should be. This is the single most damaging issue. Nothing else matters until real images are in place.
+### Navigation & Wayfinding
 
-### 2. Open Graph preview image is a random Unsplash photo
-The `<meta property="og:image">` in `index.html` links to an external Unsplash URL. When someone shares the site on Instagram, LinkedIn, or iMessage, the preview shows a generic landscape, not Adrian's work. This is a missed branding moment on every share.
+**1. `[S]` Nav active state only matches exact path** - `location.pathname === item.path` means browsing `/creations/some-piece` doesn't highlight "Creations" in the nav. Users lose orientation. Use `startsWith` matching so the correct nav item always lights up.
 
-### 3. Hero video is hosted on Wix
-The full-viewport hero loads a video from `video.wixstatic.com`. This introduces a third-party dependency for the single most important visual moment on the site. If Wix throttles bandwidth or changes URLs, the hero breaks silently. The video should be self-hosted on Cloudflare or converted to an optimized MP4/WebM.
+**2. `[S]` No global scroll-to-top on route change** - Only a few pages manually call `window.scrollTo(0, 0)` (SubcategoryPage, OracleCards). Other route transitions carry forward the previous scroll position. Users land mid-page when clicking nav links. Add one global scroll reset in `App.tsx`.
 
-### 4. No video fallback
-If the hero video fails to load (slow connection, blocked CDN, mobile data saver), users see a black void. There is no `<img>` poster fallback. On a high-end art site, this first impression gap is severe.
+**3. `[M]` Teajia promo bar eats 32px of viewport permanently** - The fixed `top-0` bar pushes nav to `top-8` on every page. On a 667px mobile screen, that's 5% of the viewport permanently consumed by an external brand link with no close button. Make it dismissable or collapse on scroll.
 
-### 5. Hero tagline is abstract without context
-"Bringing the formless into form" is poetic but tells a first-time visitor nothing about what Adrian makes or sells. A collector who lands here from a Google search or Instagram link has no immediate signal that this is a fine art studio offering sacred geometry, illuminated works, and custom commissions. The subhead helps, but it appears smaller and lower.
+**4. `[S]` Desktop hero has no CTA** - The "Explore the Work" button is `md:hidden`, meaning desktop visitors see the hero video and text but have zero interactive affordance. The largest screen gets the least guidance. Show a CTA on desktop too.
 
-### 6. No social proof above the fold
-The About page mentions 120+ exhibitions since 2009, collaborations with festivals, and decades of practice. None of this appears on the homepage. A single line of credibility ("120+ exhibitions worldwide since 2009") near the hero would ground the mystical positioning in real-world authority.
+**5. `[M]` Breadcrumbs are inconsistent** - MultidimensionalArt, SubcategoryPage, and IlluminatedWorks have breadcrumbs. Creations, Store, Writings, About, and PiecePage do not. Extract a shared `<Breadcrumb>` component and use it everywhere.
 
-### 7. The `/welcome` page exists but is orphaned
-`Welcome.tsx` provides an alternative landing with a dark, minimal card layout and navigation buttons. But no route in the main navigation links to it, and no external campaign points to it. It is dead weight or an unreferenced experiment.
+**6. `[S]` Back navigation hardcoded instead of using history** - PiecePage links back to `/creations` regardless of where the user came from. If they arrived from `/shop`, `/`, or a subcategory, they're sent somewhere unexpected. Use `navigate(-1)` with a sensible fallback.
 
-### 8. Teajia top banner lacks context
-The fixed banner above the navigation links to teajia.com but provides no explanation of what Teajia is or why a visitor should care. For anyone who is not already familiar with Adrian's tea practice, this is a mysterious distraction from the art site.
+**7. `[S]` Footer "Information" links are dead** - "Shipping & Returns", "Care Guide", and "Authenticity" are `<button>` elements that do nothing. Broken links on an art site destroy credibility. Either build the pages or remove the links.
 
-### 9. The `/teajia` route is declared but has no component
-The route exists in `App.tsx` but renders the Welcome page or nothing meaningful. If someone clicks through expecting tea culture content, they hit a dead end.
+**8. `[M]` No page transition animation** - Route changes are instant with no exit animation. The `animate-fade-in` class handles entrance but exit is abrupt. A shared crossfade or slide transition would make navigation feel intentional.
 
-### 10. No favicon or touch icon visible in config
-The `index.html` has no `<link rel="icon">` tag. Browsers show a generic blank tab icon. For a visual artist, the browser tab is a micro-branding opportunity.
+**9. `[S]` "Enter" scroll indicator on hero looks clickable but isn't** - The "Enter" label with vertical line at the bottom of the hero has hover styles but no `onClick`. Either make it scroll to the first content section, or remove the interactive styling.
 
-### 11. Page title is good but static
-`<title>Adrian Rasmussen | Resonant Artifacts</title>` is well-crafted, but the `useSeoMeta` hook updates `document.title` per route. Verify that the fallback title loads correctly on direct navigation and that each route title is distinct for search engines.
+**10. `[S]` Mobile hamburger tap target too small** - The menu toggle uses `p-2` giving roughly 40x40px. Apple and Google both recommend 44x44px minimum. Increase padding.
 
-### 12. No loading or transition state between routes
-When navigating between pages, there is no visual indicator that the next page is loading. On slower connections, the site appears frozen. A minimal page transition (fade, progress bar, or skeleton) would preserve the feeling of responsiveness.
+### Mobile Experience
 
----
+**11. `[M]` Single-column gallery on mobile wastes space** - `columns-1 sm:columns-2` in SubcategoryPage and Creations means mobile users see one giant card at a time. For a visual art gallery, two columns on mobile shows twice the work and feels more like a gallery.
 
-## II. NAVIGATION AND INFORMATION ARCHITECTURE (Items 13 to 24)
+**12. `[S]` Filter pill touch targets too small** - SubcategoryPage pill buttons are `px-3 py-1.5` with `text-[11px]`. That's roughly 28px tall, well below the 44px minimum. Increase padding to at least `py-2.5`.
 
-### 13. No clear call-to-action hierarchy
-The homepage presents "Explore the Work," "Begin an Inquiry," "Explore All," and "Read" as concurrent CTAs. There is no visual weight distinguishing the primary action (likely "Shop" or "Inquire") from secondary browsing. A serious buyer does not know where to click first.
+**13. `[S]` Store search completely hidden on mobile** - The search input has `hidden sm:flex`, meaning mobile users literally cannot search. Add a search toggle icon or always-visible input.
 
-### 14. "Creations" is ambiguous as a nav label
-For someone unfamiliar with the brand, "Creations" could mean blog posts, courses, or anything else. "Work" or "Gallery" would be more immediately understood while still feeling elevated.
+**14. `[M]` Cart drawer has no swipe-to-close** - The cart slides in from the right. On mobile, swiping right to close is the natural gesture. Currently only the X button or backdrop tap works.
 
-### 15. Mobile hamburger menu is small
-The hamburger icon is 24px. Apple Human Interface Guidelines recommend 44x44px minimum touch targets. On a phone, this is easy to miss or mis-tap.
+**15. `[S]` About/OracleCards side-nav dots hidden on mobile** - Both long-form pages (About, OracleCards) have sticky dot navigation for section-jumping, but only on `lg:` screens. Mobile users scrolling 5000+ pixels of content have no quick-jump navigation.
 
-### 16. Mobile menu auto-closes on navigation with no transition
-When a user taps a link in the mobile menu, the menu vanishes instantly and the new page appears. There is no closing animation or scroll-to-top confirmation. It feels abrupt.
+**16. `[M]` No swipe gesture on PiecePage image gallery** - The image gallery requires tapping thumbnails. On mobile, swiping left/right between images is expected behavior for any gallery.
 
-### 17. Active nav state is too subtle on mobile
-On desktop, the active page gets an underline. On mobile, only the text color changes slightly. In the mobile menu, the active page should be clearly distinguished (bold, underline, or background highlight).
+**17. `[S]` Sticky filter bars don't account for Teajia bar** - Filter bars use `top-[70px]` or `top-[72px]` which assumes the nav is at the top. The 32px Teajia bar pushes everything down, causing overlap on some scroll positions.
 
-### 18. Category routing is inconsistent
-Multidimensional Art and Illuminated Works have dedicated route pages (`/creations/multidimensional-art`, `/creations/illuminated-works`). The other six categories (Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces) use query-string filtering (`/creations?category=Jewelry`). Users experience two different UI patterns for the same conceptual action.
+### Accessibility
 
-### 19. No breadcrumbs on the main Creations page
-Subcategory pages and piece pages have breadcrumbs, but the main `/creations` gallery does not. When a user filters by category, they lose context of where they are in the hierarchy.
+**18. `[M]` No skip-to-content link** - Keyboard and screen reader users must tab through Teajia bar, navigation, and cart icon before reaching page content. Add a visually hidden skip link as the first focusable element.
 
-### 20. Back-to-top button appears at inconsistent scroll depths
-Multiple components (Footer, Creations, Writings, Store) each implement their own back-to-top button with a 600px scroll threshold. Some pages are short enough that the button appears almost immediately; on longer pages it takes significant scrolling. The behavior should be unified and proportional to page length.
+**19. `[M]` No `prefers-reduced-motion` support** - All animations (parallax, scroll reveals, canvas particles, card staggers, hover transitions) run unconditionally. Users with vestibular disorders get no relief. Wrap animations in `@media (prefers-reduced-motion: reduce)` to disable them.
 
-### 21. About page has no section navigation on mobile
-The About page is 8 long sections (5000px+ of scroll). On desktop, a sticky side nav with dot indicators lets users jump between sections. On mobile, this navigation is completely hidden. Mobile users must scroll the entire page linearly.
+**20. `[S]` Hero video missing `aria-hidden`** - The hero video is decorative (muted, autoplay, no controls) but has no `aria-hidden="true"`. Screen readers will try to announce it.
 
-### 22. Writings page has no search
-There are 6+ stories with more planned. The sticky category nav helps, but there is no text search. As the writing catalog grows, discoverability will degrade.
+**21. `[S]` Mobile menu missing ARIA attributes** - No `aria-expanded` on the toggle button, no `aria-controls` pointing to the menu panel, no focus management when the menu opens.
 
-### 23. Footer navigation duplicates header but with different labels
-The footer has four columns (Index, Studio, Information, Connect) with links that partially overlap the header navigation but use different naming. "Index" contains "Selected Works" (which links to `/creations`). In the header, the same page is called "Creations." Consistent labeling builds trust.
+**22. `[S]` Form errors not connected to inputs** - In Inquire.tsx, validation error messages are sibling elements but not connected via `aria-describedby`. Screen readers won't announce what's wrong.
 
-### 24. Cart badge caps at "9+"
-The cart icon shows a count badge, but at 9 items it displays "9+" regardless of actual count. For a collector building a large order, this feels imprecise. Show the real number, or at least cap at "99+."
+**23. `[S]` Budget slider lacks value announcements** - The dual range slider has `aria-label` but no `aria-valuenow` or `aria-valuetext`. Screen reader users can't tell the current budget range.
+
+**24. `[S]` Cart and InspectionDrawer have no focus trap** - When either drawer opens, focus isn't trapped inside. Tab key moves to elements behind the overlay, which is disorienting.
+
+**25. `[S]` No Escape key handler on drawers** - Neither CartDrawer nor Store's InspectionDrawer can be closed with Escape. This is expected behavior for any modal/drawer.
 
 ---
 
-## III. GALLERY AND BROWSING EXPERIENCE (Items 25 to 38)
+## TIER 2: HIGH IMPACT (Polishing the core experience)
 
-### 25. Masonry layout causes column-jumping on load
-The CSS Columns masonry in Creations and SubcategoryPage starts at 1 column and snaps to 3 or 4 as the viewport is measured. This causes a visible layout shift on page load. Consider using a fixed initial column count or a skeleton loader to prevent the jump.
+### Interaction Design
 
-### 26. Filter bar appears only after scrolling past the category grid
-On the main Creations page, the sticky filter bar with sort, availability toggle, and breadcrumb only becomes visible after the user scrolls past the initial category tiles. New visitors may not realize filtering exists.
+**26. `[S]` Hover states invisible on touch devices** - Nearly every interactive element uses hover for visual feedback. Touch devices get zero response. Add `:active` states with brief transforms or color shifts.
 
-### 27. Active filters are not persistently visible
-When a user applies filters (category, availability, collection), the filter panel collapses. There is no persistent chip or tag showing what filters are active. Users forget what they have filtered by and see unexpected results.
+**27. `[M]` Gallery card "View" overlay obscures the art** - On hover, a dark overlay with "View" text covers the image. For an art site, this fights the user's desire to see the work. Replace with a subtle corner indicator or border treatment.
 
-### 28. Sort options only appear when a category is selected
-The sort dropdown (Default, Price ascending, Price descending, Newest) is hidden until the user filters by category. This is unexpected. Sorting should be available at all times.
+**28. `[S]` Clicking a collection card doesn't scroll to results** - When toggling a collection filter in Creations, the grid re-filters but the viewport stays put. If the user is viewing collection cards, the filtered results below may be out of view.
 
-### 29. "Selected Works" label is ambiguous
-When viewing the unfiltered Creations page, the heading says "Selected Works." This could mean curated highlights or all works. It actually shows the first 12 featured pieces. The distinction is unclear to visitors.
+**29. `[S]` PiecePage "Add to Cart" confirmation too subtle** - After adding, the button changes text and color. There's no animation, toast, or cart drawer opening. On a page full of rich content, this confirmation is easy to miss.
 
-### 30. Collection cards have no keyboard alternative
-Within a filtered category, collection cards (series groups) can be toggled by clicking. There is a visual ring + scale effect, but no explicit keyboard focus or ARIA toggle state for screen reader users.
+**30. `[S]` Gallery tile keyboard focus has no visual change** - The "View" overlay appears on hover but not on focus. Keyboard users tabbing through the grid see no visual feedback on the focused card. Add `:focus-within` styles.
 
-### 31. Gallery tile aspect ratios are wildly inconsistent
-Because placeholder images have random dimensions, the masonry grid looks chaotic. Even with real images, there is no aspect-ratio enforcement. Consider standardizing image crops or using a controlled set of aspect ratios (4:5, 1:1, 5:4) so the grid feels curated rather than random.
+**31. `[M]` Image lightbox in Store has no swipe-to-dismiss** - `ZoomableImage` supports pinch-zoom and drag but not swipe-down-to-dismiss, which is the expected mobile gesture for closing an overlaid image.
 
-### 32. No hover preview or quick-view on gallery tiles
-Gallery tiles show title and category on hover, but no price, availability, or quick-view option. In the Store, hovering shows "View Piece." In Creations, it does not. The interaction model differs between the two grids.
+**32. `[S]` Category tile descriptions hidden on desktop** - `sm:opacity-0 sm:group-hover:opacity-100` on MultidimensionalArt subcategory tiles means descriptions are invisible until hover. Touch-device users and non-hovering users never see them. Show by default.
 
-### 33. Illuminated Works gallery shows only 5 pieces
-The Illuminated Works experiential page displays a small gallery at the bottom with only 5 pieces. There is no "View all illuminated works" link that filters the main gallery. Users who want to browse more are stuck.
+**33. `[S]` "Continue the Journey" uses random sorting** - `nextReadings` in WritingArticle calls `.sort(() => 0.5 - Math.random())` producing different recommendations on every render. This is disorienting. Use deterministic recommendations based on category or adjacency.
 
-### 34. Multidimensional Art subcategory tiles hide descriptions on mobile
-The 4 subcategory tiles on `/creations/multidimensional-art` show descriptions only on hover (opacity transition). On mobile, there is no hover. The descriptions are invisible, and users only see the subcategory names over images.
+**34. `[M]` Inquiry form silently submits before user clicks Send** - The `coreSubmitted` useEffect sends data to `/api/inquire` as soon as required fields are valid, before the user takes any explicit submit action. This is a dark pattern. Remove the silent early submit or at minimum disclose it.
 
-### 35. Subcategory filter bar uses horizontal scroll with hidden scrollbar
-On mobile, the filter chips in SubcategoryPage overflow horizontally with `scrollbar-hide`. There is no visual indicator that more filters exist off-screen. Users may not realize they can scroll.
+**35. `[S]` No loading indicator on inquiry form submission** - The submit button text changes to "Sending..." but the form stays interactive. Disable form fields during submission to prevent double-send.
 
-### 36. Empty filter states could be more helpful
-When filters return no results, the empty state says something like "No pieces match your filters" with a "Clear all filters" button. It could additionally suggest related categories or show the closest matches.
+### Visual Consistency
 
-### 37. No "back to results" state after viewing a piece
-When a user clicks into a piece from a filtered gallery and then hits the browser back button, filter state is preserved via URL params (good), but scroll position is lost. The user lands at the top of the gallery instead of where they left off.
+**36. `[S]` Three different back-to-top implementations** - Footer has a circle button, Creations has a square button, WritingArticle has both a text link AND a floating button. Consolidate to one shared component used everywhere.
 
-### 38. Image lazy loading has no blur-up or skeleton
-Images use `loading="lazy"` but have no placeholder shimmer, blur-up effect, or aspect-ratio container. As images load, the layout shifts and white gaps flash in.
+**37. `[S]` Commission CTA text varies wildly** - "Begin an Inquiry" (Home), "Begin the conversation" (SubcategoryPage, IlluminatedWorks), "Work together" (About), "Commission a Piece" (Welcome), "Start the conversation" (Inquire submit). Pick 1-2 consistent phrases.
 
----
+**38. `[S]` Border radius inconsistent** - Most elements are sharp-cornered (on-brand), but cart badges use `rounded-full`, some filter buttons have rounding, social icons in Footer are rounded. Either commit to sharp edges everywhere or define where curves are used.
 
-## IV. INDIVIDUAL PIECE PAGES (Items 39 to 48)
+**39. `[S]` Hover underline mechanics differ** - Nav links use bottom-border. Footer links use `::after` pseudo-elements. Some links use `border-b` Tailwind classes. All three produce visually different underline animations. Unify.
 
-### 39. Made-to-order configuration modal is not implemented
-PiecePage has state management for size selection, add-ons (crystals, wood frame, illumination, custom frame), and dynamic pricing. But the "Configure Design" button is a stub. Clicking it does nothing. This is a broken conversion path for the highest-value items.
+**40. `[S]` Dark mode toggle buried in footer** - Users who want dark mode must scroll to the very bottom of any page to find a text link. Consider adding it to the nav, or a floating corner toggle.
 
-### 40. Add-on pricing is defined but has no UI
-`MADE_TO_ORDER_ADD_ONS` in `mockData.ts` defines crystals ($150), wood frame ($200), illumination ($250 to $600 by size), and custom frame ($400). None of this is surfaced in a configuration interface. Buyers cannot see or select these options.
+**41. `[S]` Footer "Commissions" and "Contact" link to same page** - Both `/inquire`. Remove one or differentiate them.
 
-### 41. Edition scarcity messaging needs real data
-The progressive scarcity system ("Final one available," "Few remaining," "Limited edition") is well-designed in code, but all edition numbers are mock data. If launched with fake scarcity, it damages trust permanently when collectors compare notes.
+### Performance & Loading
 
-### 42. No "Finishes" showcase modal
-The piece page references a "See what's possible" link for finishes (Natural, Painted, Gold Leaf, LED) but the modal is not built. Customization is a key selling point and has no visual representation.
+**42. `[M]` GenerativeBackground runs continuously on every page** - The canvas particle system runs `requestAnimationFrame` on every route. On `/` it skips drawing but still runs the frame loop. On scroll-heavy pages like About, it competes with scroll-linked animations. Pause when not visible or on pages that don't benefit.
 
-### 43. Related pieces algorithm is basic
-Related pieces are pulled from the same series and same category, then shuffled. There is no weighting by price range, availability, or visual similarity. A collector viewing a $2,400 mandala might see a $180 oracle card as "related."
+**43. `[S]` No image placeholder in gallery cards** - Gallery variant images don't fade in (excluded from `FADE_ON_LOAD`). Images pop in abruptly after download. Add a background color or aspect-ratio placeholder.
 
-### 44. No "Read the story behind this piece" link on PiecePage
-The data model supports `relatedStorySlug` for bidirectional linking between pieces and writings. But the piece page does not render a prominent link to the related story. The narrative-to-art connection, one of the site's strongest differentiators, is invisible.
+**44. `[S]` Store skeleton always shows 6 items** - When filtering, the skeleton grid always renders 6 cards regardless of expected results. If only 2 items match, 6 skeletons create false expectations.
 
-### 45. Image gallery has no swipe gesture on mobile
-The piece page image gallery likely requires tap-to-advance. On mobile, users expect swipe gestures for image galleries. Without them, the gallery feels static.
-
-### 46. Lightbox has no visible close affordance
-When the image lightbox opens (full viewport), the close mechanism is not immediately visible. Users unfamiliar with the pattern may feel trapped.
-
-### 47. Sticky mobile CTA bar may obscure content
-On mobile, a sticky bar at the bottom shows the price and purchase button. This is good for conversion, but if it overlaps the last paragraph of the piece description or the specs grid, content is hidden behind it.
-
-### 48. JSON-LD structured data is present but needs real values
-PiecePage embeds JSON-LD for SEO (good). But with placeholder images and mock prices, search engines will index incorrect data. This must be updated before launch.
+**45. `[S]` Scroll listeners not consolidated** - About, Footer, Creations, Hero, and Writings each register their own scroll listeners. While `passive: true` is used, multiple listeners per frame add up. Use more IntersectionObserver or a single scroll manager.
 
 ---
 
-## V. SHOP AND COMMERCE (Items 49 to 60)
+## TIER 3: IMPORTANT (Quality-of-life improvements)
 
-### 49. Every Stripe Price ID is a placeholder
-All 40+ `stripePriceId` values in `mockData.ts` follow the pattern `price_[PIECE_ID]_REPLACE_WITH_REAL_ID`. Checkout will fail for every item. This is the primary commerce blocker.
+### Navigation Refinements
 
-### 50. No Stripe API key configuration visible
-There is no `VITE_STRIPE_PUBLIC_KEY` environment variable referenced in the visible codebase, and no `.env.example` documenting required variables. The Stripe integration is not wired up.
+**46. `[M]` Creations category tiles should show piece count** - Users can't gauge category size before clicking. Add a count like "12 pieces" under each tile.
 
-### 51. Cart has no persistence
-The cart uses React context with no `localStorage` backup. If a user refreshes the page, adds items, and then navigates away, the cart is empty on return. For a considered purchase (art at $500+), session persistence is essential.
+**47. `[S]` Subcategory "Explore more" section uses plain text links** - The other subcategories at the bottom of SubcategoryPage are minimal text links. Using the same tile card format would make them more discoverable and visually consistent.
 
-### 52. No shipping address collection
-The checkout flow has no address form. Stripe Checkout can collect addresses, but the site does not pass that configuration. For physical art pieces, shipping destination affects cost and feasibility.
+**48. `[S]` No "back to writings" link at bottom of articles** - After reading an article, the user sees "Continue the Journey" and "Return to Top" but no direct path back to `/writings`. The top "Return to Index" is scrolled out of view.
 
-### 53. No tax calculation
-There is no visible tax calculation logic. Depending on Adrian's business registration and the buyer's location, sales tax or VAT may be required. This is a legal compliance issue.
+**49. `[S]` Creations "Selected Works" label is confusing** - When landing on `/creations` unfiltered, the sticky bar says "Selected Works" with no explanation. Users expect to see all creations. Clarify this is a curated selection or change the label.
 
-### 54. Inspection drawer body scroll lock can trap users
-When the Store inspection drawer opens, `overflow: hidden` is applied to the body. If the drawer's close button fails or is not found, the user cannot scroll the page. There is no escape-key handler on the drawer.
+**50. `[M]` Writing categories need piece counts** - The Writings page has category tabs, but if some categories have only 1-2 stories, the page feels empty. Show a counter next to each category label.
 
-### 55. Search placeholder is vague
-The Store search input says "Search pieces..." but actually searches across title, category, material, and description. Communicating the breadth of search ("Search by title, material, or category...") would encourage more use.
+**51. `[S]` Sort options hidden until category is selected** - On Creations, the sort dropdown only appears after filtering by category. Sorting should always be available.
 
-### 56. "Curated philosophy" interstitial interrupts browsing
-Every 5th item in the Store grid, a text block about the curation philosophy appears. While the sentiment is on-brand, it breaks the visual scanning rhythm. A collector scrolling through products has to parse unexpected text blocks. Consider placing philosophy content above or below the grid, not inside it.
+### Typography & Readability
 
-### 57. Load More pagination loses context
-The Store shows 12 items initially with a "Load More" button. After loading more, there is no scroll anchor. The page extends and the user must re-orient. Infinite scroll or a "page 2 of 4" indicator would be smoother.
+**52. `[S]` Writing article body too wide on large screens** - Articles use `max-w-3xl` (768px) with `prose-xl` text, which can exceed 75 characters per line. Consider `max-w-2xl` for better readability.
 
-### 58. Product availability badges use similar colors
-"Ready to Ship" and "Made to Order" use `#1A1A1A` and `#6B6B6B` respectively. On a quick scan, these look nearly identical. More visual distinction (a warm bronze for ready, a neutral gray for made-to-order) would help buyers instantly sort what they can have now versus what requires waiting.
+**53. `[S]` Drop cap breaks with leading punctuation** - The `::first-letter` CSS captures the first character. If a paragraph starts with a quotation mark, only the quote mark gets styled as the drop cap, not the first letter. Add a workaround.
 
-### 59. Archived/Sold items show in the grid with reduced opacity
-Sold items appear grayed out in the shop. This signals scarcity (good) but also clutters the grid with items that cannot be purchased. A toggle to "Show sold pieces" (defaulting to hidden) would clean up the browsing experience.
+**54. `[S]` Price formatting uses three different functions** - GalleryTileCard uses inline `toLocaleString`, PiecePage uses `formatCurrency`, Store uses `formatPrice`. Consolidate to one utility.
 
-### 60. Zoom interaction allows over-panning
-The ZoomableImage component in the Store drawer zooms to 2.5x and allows drag panning, but there are no boundary constraints. Users can drag the image completely off-screen and see only white space.
+**55. `[S]` Availability text colors too low contrast** - `text-avail-order` (#6B6B6B) and `text-avail-sold` (#767676) may fail WCAG AA on white backgrounds. Darken these values.
 
----
+**56. `[S]` About and OracleCards inject large inline `<style>` blocks** - Both components embed ~60 lines of CSS in `<style>` tags inside the JSX. This causes style recalculation on re-render and duplicates identical rules. Move to `index.css`.
 
-## VI. INQUIRY AND FORMS (Items 61 to 68)
+### Image & Media
 
-### 61. Silent early submission is invisible to the user
-The Inquire form sends a "silent submit" as soon as name, email, and vision are filled in, before the user clicks the submit button. There is no toast, no confirmation, no indication this happened. If the user abandons the form thinking they have not submitted, Adrian already has their partial data. This is useful for lead capture but may feel invasive if discovered.
+**57. `[M]` No image error handling** - If an image fails to load, `<img>` shows a broken icon. Add an `onError` fallback in ArtImage to show a styled placeholder matching the design system.
 
-### 62. No spam protection on the inquiry form
-There is no reCAPTCHA, honeypot field, or rate limiting visible. A public-facing form without spam protection will accumulate bot submissions quickly.
+**58. `[S]` PiecePage image thumbnails not keyboard accessible** - The thumbnails are clickable divs, not buttons. Keyboard users can't reach or activate them. Change to `<button>` elements.
 
-### 63. Missing form fields reduce inquiry quality
-The Inquire form lacks Location and Size Range fields that were in the original specification. For commission pricing, knowing where the buyer is (shipping logistics, installation context) and what scale they are imagining is critical for Adrian to provide an accurate response.
+**59. `[M]` Hero video has no poster fallback** - If the video fails to load, users see a dark void. Add a `poster` attribute with a static image.
 
-### 64. "Specific date" timeline option has no date input
-The timeline section offers pill options including "Specific date," but selecting it does not reveal a date picker. The user selects it and has nowhere to enter their actual date.
+**60. `[S]` Parallax images can show gaps on short viewports** - The `-15% inset` and `130% height` approach sometimes still shows background edges on very short browser windows.
 
-### 65. Referral "Other" option has no free-text field
-If a user selects "Other" for how they found Adrian, there is no text input to specify. This loses valuable marketing attribution data.
+**61. `[S]` Store lightbox has no loading indicator** - When opening fullscreen lightbox view, the image may take time to load. No spinner is shown.
 
-### 66. Budget ranges may not cover all buyers
-The budget pills go up to a range and then "Let's discuss." For ultra-high-net-worth collectors commissioning large installations, the absence of higher ranges (or a custom input) may feel limiting. Consider adding an open field.
+### Form & Commerce UX
 
-### 67. Commission path cards feel unresponsive
-The two commission type cards (Personal / Spatial) scale to 0.98x when not selected. This subtle shrink feels like a rendering glitch rather than intentional design. An unselected state should feel neutral, not diminished.
+**62. `[S]` Inquiry completion bar starts at 14% before user input** - `completionCount` always counts commission type as true (it's pre-selected). The progress bar appears partially filled before the user does anything.
 
-### 68. Newsletter CTA copy is unclear
-The footer newsletter section says "Share in Living Knowledge." This is poetic but does not tell users what they will receive. "Receive studio updates and new work announcements" would set clear expectations alongside the mystical branding.
+**63. `[S]` Budget slider has no intermediate tick marks** - Only start ($500) and end ($100,000+) are labeled. No visual markers at $5K, $10K, $25K etc. Add subtle ticks or a tooltip showing current value.
+
+**64. `[S]` Cart minus-to-zero removes item without warning** - Clicking minus when quantity is 1 immediately removes the item. Show a trash icon instead of minus, or add a brief confirmation.
+
+**65. `[M]` Cart not persisted across page refreshes** - Cart state lives in React context only. Refreshing the page loses everything. Use `localStorage` to persist.
+
+**66. `[S]` Inquiry form doesn't warn on navigation with unsaved data** - Half-filled forms are lost silently on route change. Add a `beforeunload` listener or React Router's `useBlocker`.
+
+**67. `[S]` PiecePage related pieces section has no fallback** - If no related pieces or stories exist, the page ends abruptly. Add a generic "Browse more" link.
+
+**68. `[S]` Store "Configure" uses `<a>` instead of `<Link>`** - In InspectionDrawer, "Configure" and "Made to Order" buttons use raw `<a href=...>` causing full page reload. Use `<Link>` for SPA navigation.
 
 ---
 
-## VII. CONTENT AND COPYWRITING (Items 69 to 76)
+## TIER 4: NICE-TO-HAVE (Elevated experience)
 
-### 69. About page "The Root" section has a TODO_REPLACE flag
-The About page contains a section marked with a TODO badge indicating the story "has inaccuracies that need correction from Adrian's actual memory." This is visible in the rendered page. Publishing unverified biographical content is a credibility risk.
+### Micro-interactions & Polish
 
-### 70. Illuminated Works page has TODO comments in the source
-Lines in `IlluminatedWorks.tsx` contain TODO markers for voice and narrative that need Adrian's personal language. The page structure is solid but reads as templated rather than authentic.
+**69. `[S]` No animation on cart item removal** - Items disappear instantly from the cart. A slide-out or fade would feel polished.
 
-### 71. No series descriptions for Universal Language, Mandala, Light Codes, or Signature Pieces
-Each subcategory page has a hero and gallery but the introductory copy is thin. These series represent Adrian's deepest artistic threads. Each deserves a paragraph of philosophy and process, written in Adrian's voice, not generic placeholder text.
+**70. `[S]` Cart badge doesn't animate on add** - The nav badge number changes without visual feedback. A brief scale pulse would draw attention to the update.
 
-### 72. Finish options have no descriptions
-Natural, Painted, Gold Leaf, and LED finishes are data labels with no accompanying copy explaining what each finish looks like, feels like, or costs. For a collector choosing between a $200 and $600 option, descriptive context is essential.
+**71. `[S]` Newsletter success state is permanent** - After subscribing, "You're on the list" stays forever with no dismiss option. If the user wants to subscribe a different email, they can't.
 
-### 73. No care guide or shipping policy
-The footer references "Care Guide" and "Shipping" but these pages do not exist. For buyers of delicate sacred geometry pieces, knowing how to care for their purchase and what shipping looks like (crating, insurance, international) directly affects purchase confidence.
+**72. `[S]` `animate-ripple` defined but never used** - The CSS keyframe exists in `index.css` but no button uses it. Either apply it to primary CTAs or remove the dead code.
 
-### 74. Writing articles have strong voice but pull quotes are hard to distinguish
-Pull quotes (lines starting with `>`) render as italic blockquotes. In a page that already uses italic serif for body text, the pull quotes do not stand out enough. A larger size, different color, or left-border treatment would make them pop.
+**73. `[S]` Cart item remove button too subtle** - The X button is `text-wood-300`, nearly invisible on the light background. Make it visible on row hover.
 
-### 75. "Continue the Journey" section uses random story selection
-At the bottom of writing articles, two stories are recommended via `Math.random()`. These are not contextually related to the current article. A reader finishing "The Mandala Series" should see "Light Codes" or "The Universal Language," not a random tea ceremony piece.
+**74. `[S]` Footer newsletter floating label has a visual jump** - The label transitions between sizes, causing a layout shift. Use `transform: scale()` for smoother animation.
 
-### 76. Homepage intro quote is three columns on desktop
-"Art is the experience of listening..." is split across a 3-column layout on desktop. This works for visual rhythm but can feel cramped on tablets where columns narrow. On a 768px screen, each column is only ~200px wide, making the serif text feel squeezed.
+**75. `[S]` No ripple or pressed feedback on primary buttons** - The big "Proceed to Purchase" and "Submit Inquiry" buttons have hover states but no click/active feedback.
 
----
+**76. `[S]` PiecePage share button only works with Web Share API** - Desktop Chrome doesn't support Web Share. Those users see no share option at all. Add a copy-to-clipboard fallback.
 
-## VIII. VISUAL DESIGN AND POLISH (Items 77 to 85)
+### Layout Enhancements
 
-### 77. Z-index values are inconsistent and fragile
-Navigation uses z-100 and z-101. The Teajia banner is z-101. The cart drawer is z-3000. Modals use z-2000 or z-9999. There is no documented z-index scale. Overlapping elements will eventually conflict, especially as new features are added.
+**77. `[M]` Homepage lacks art category orientation** - New visitors see a quote, creations grid, and commission block but get no quick overview of what Adrian creates. A compact "what I make" summary before the gallery would help first-time visitors orient.
 
-### 78. No `prefers-reduced-motion` support
-The site has parallax effects, scroll reveals, canvas particle animations, and hover transitions. None of these respect the user's system preference for reduced motion. This is a WCAG 2.1 accessibility violation and excludes users with vestibular disorders.
+**78. `[S]` Writing landing page cards all look the same** - Every story card uses identical layout. Alternating image sides or featuring one story larger would create visual rhythm.
 
-### 79. GenerativeBackground canvas runs continuously
-The particle animation in `GenerativeBackground.tsx` runs `requestAnimationFrame` on every frame regardless of visibility or user interaction. On mobile devices, this drains battery. On older hardware, it causes jank. There is no frame-rate throttling or visibility check.
+**79. `[S]` 404 page has no personality** - NotFound is functional but plain. For an art site, this is a missed opportunity for a memorable moment.
 
-### 80. Scroll event listeners are not consolidated
-The About page, Footer, Creations page, Hero, and Writings each register their own scroll event listeners. While `passive: true` is used (good), multiple listeners on every scroll tick add up. A single scroll manager or more IntersectionObserver usage would be more efficient.
+**80. `[S]` Store empty search state feels generic** - Just a magnifying glass at 40px. A warmer, on-brand empty state message would be better.
 
-### 81. Dark mode is implemented but not fully tested
-The CSS variable system supports dark mode elegantly. However, several components use `dark-preserve` as a workaround, and some hardcoded colors (especially in inline styles on the About page) may not adapt. The dark mode toggle in the footer works, but no page provides a consistent dark experience end-to-end.
+### Dark Mode Refinements
 
-### 82. No skip-to-content link
-There is no hidden "Skip to main content" link for keyboard and screen reader users. Every page requires tabbing through the Teajia banner, full navigation, and cart icon before reaching content.
+**81. `[S]` No system preference detection** - Dark mode is manual-only via footer toggle. Auto-detect `prefers-color-scheme: dark` on first visit.
 
-### 83. Modal drawers do not trap focus
-The cart drawer and store inspection drawer do not implement focus trapping. A keyboard user who opens the cart can Tab out of the drawer into the page behind it. The escape key does not close these drawers.
+**82. `[S]` Dark mode transition incomplete** - Body background transitions, but some individual elements may flash when toggling. Ensure CSS variable remapping transitions smoothly for all elements.
 
-### 84. Drop cap rendering is fragile
-The `::first-letter` pseudo-element used for drop caps in articles and the About page can break with smart quotes, non-ASCII characters, or certain punctuation as the first character. If a paragraph starts with a quotation mark, the drop cap captures only the quote mark.
+**83. `[S]` Some inline styles use hardcoded colors** - About.tsx and OracleCards.tsx use inline `style` with hex colors like `#ab9266` that won't respond to dark mode CSS variable changes.
 
-### 85. Type scale has too many sizes without clear hierarchy
-The site uses text sizes from `text-sm` through `text-8xl` with no documented scale or ratio. Headings on different pages use different sizes for equivalent hierarchy levels. An h2 on the About page is not the same size as an h2 on the Writings page. Establishing a consistent type scale (e.g., Major Third 1.25 ratio) would unify the visual rhythm.
+**84. `[S]` Dark mode progress bar contrast** - The reading progress bar uses `bg-bronze-400`. Verify it's visible against dark backgrounds.
+
+### Code Quality (UX-Impacting)
+
+**85. `[S]` Duplicated hooks: useScrollProgress, useReveal, useParallax** - Copy-pasted between About.tsx and OracleCards.tsx. If one gets a bug fix, the other doesn't. Extract to shared `hooks/` directory.
+
+**86. `[S]` Duplicated CSS across inline style blocks** - `.reveal-block`, `.drop-cap`, `.pg-*` rules are identically defined in both About and OracleCards `<style>` tags. Move to `index.css`.
+
+**87. `[S]` DarkModeContext re-renders entire app on toggle** - The provider wraps `AppInner`, meaning toggle causes a full re-render tree. Memoize children or use a more targeted state approach.
+
+**88. `[S]` TODO_REPLACE badge visible in production** - About.tsx renders a yellow "Replace this story" badge with dashed outline on the "What Art Can Mean" section. This dev annotation should not be visible to users.
+
+**89. `[S]` Cart context accepts any Product without validation** - `addToCart` doesn't validate price, availability, or required fields. Invalid products could cause checkout errors.
 
 ---
 
-## Priority Matrix
+## TIER 5: FUTURE ENHANCEMENTS
 
-### Launch Blockers (Do These First)
-| # | Item | Effort |
-|---|------|--------|
-| 1 | Replace all placeholder images with real artwork photography | High |
-| 49 | Wire up real Stripe Price IDs | Medium |
-| 50 | Configure Stripe API key and environment variables | Low |
-| 39 | Build the made-to-order configuration modal | High |
-| 69 | Fix or remove About page TODO_REPLACE content | Medium |
-| 4 | Add hero video poster/fallback image | Low |
-| 51 | Add cart persistence (localStorage) | Low |
+**90. `[L]` Page-level loading skeletons** - Show content skeletons during page transitions instead of blank pages while components mount.
 
-### High Impact, Moderate Effort
-| # | Item | Effort |
-|---|------|--------|
-| 13 | Establish clear CTA hierarchy on homepage | Medium |
-| 44 | Add "Read the story" links on piece pages | Low |
-| 18 | Unify category routing (dedicated pages or all filter-based) | High |
-| 27 | Show active filters as persistent chips | Medium |
-| 40 | Build add-on selection UI for MTO pieces | High |
-| 42 | Build finishes showcase modal | Medium |
-| 62 | Add spam protection to inquiry form | Low |
-| 78 | Add `prefers-reduced-motion` media query | Medium |
+**91. `[L]` Responsive images with srcset** - All images load at full size. Add `srcset` and `sizes` for proper responsive delivery.
 
-### Quick Wins (Low Effort, Meaningful Impact)
-| # | Item | Effort |
-|---|------|--------|
-| 2 | Replace OG image with real artwork | Low |
-| 6 | Add social proof line to homepage | Low |
-| 10 | Add favicon and touch icons | Low |
-| 15 | Increase mobile hamburger touch target | Low |
-| 24 | Show real cart count instead of capping at 9+ | Low |
-| 55 | Improve Store search placeholder text | Low |
-| 68 | Clarify newsletter CTA copy | Low |
-| 82 | Add skip-to-content link | Low |
+**92. `[L]` Global site search** - Search only exists in the Store. A universal search covering creations, writings, and products would be very useful.
 
-### Polish and Refinement (Post-Launch)
-| # | Item | Effort |
-|---|------|--------|
-| 3 | Self-host hero video | Medium |
-| 21 | Add mobile section nav to About page | Medium |
-| 22 | Add search to Writings page | Medium |
-| 31 | Standardize gallery image aspect ratios | Medium |
-| 38 | Add blur-up image loading | Medium |
-| 56 | Move philosophy content outside the shop grid | Low |
-| 75 | Replace random story recommendations with contextual ones | Medium |
-| 79 | Add visibility check to GenerativeBackground | Medium |
-| 80 | Consolidate scroll event listeners | Medium |
-| 85 | Establish and document a consistent type scale | Medium |
+**93. `[M]` "Recently Viewed" pieces** - Track piece views and show a small carousel on Creations or PiecePage.
+
+**94. `[M]` Print stylesheet** - Footer has `print:hidden` but no other print consideration. Collectors may want to print piece details.
+
+**95. `[L]` Image comparison slider for illuminated pieces** - IlluminatedWorks talks about day vs. night appearance but has no interactive comparison. A before/after slider would be compelling.
+
+**96. `[M]` Currency selector for international visitors** - All prices in USD. Even approximate conversion would help international collectors.
+
+**97. `[S]` Add favicons and app icons** - No favicon is set in `index.html`. Add proper favicon, apple-touch-icon, and manifest icons.
+
+**98. `[M]` Route-level error boundaries** - The global ErrorBoundary catches everything. Per-route boundaries would allow graceful fallbacks for individual pages.
+
+**99. `[M]` Writing card reading time display** - Stories have `readMinutes` in data but the landing page cards don't show it.
+
+**100. `[S]` PiecePage structured data inconsistency** - PiecePage uses `safeJsonLd` for JSON-LD but About uses raw `JSON.stringify`. Use the safe version consistently.
+
+**101. `[M]` Intersection-based infinite scroll for Store** - The manual "Load More" button could be replaced with auto-loading when the button enters the viewport.
+
+**102. `[M]` Welcome page needs its own OG meta** - If `/welcome` is meant as a link-in-bio page, it needs its own social card and meta.
+
+**103. `[S]` OracleCards page too long with no mobile quick-nav** - Four deck sections + philosophy + gallery. Mobile users scrolling this have no section jump mechanism.
+
+**104. `[S]` Collection card hover should show piece count more prominently** - The count is small text at the bottom. Make it more visible.
+
+**105. `[S]` Footer "Currently" status could link to inquire** - "Currently taking commissions for Spring 2026" is purely informational. Making it a link adds a conversion path.
+
+**106. `[M]` Sticky mobile CTA bar on PiecePage may obscure content** - The sticky bottom bar with price and buy button may overlap the last paragraph of piece descriptions.
+
+**107. `[S]` Category routing is inconsistent** - Multi Art and Illuminated Works have dedicated pages. Other categories use query-string filtering. Two different patterns for the same action.
+
+**108. `[L]` Proper analytics event tracking** - Key interactions (category clicks, piece views, add-to-cart, inquiry submit, newsletter signup) should fire tracking events.
+
+**109. `[M]` Add PWA capabilities** - Service worker and manifest for offline browsing of previously viewed pieces.
+
+**110. `[S]` Z-index scale undocumented** - Nav uses z-100/101, Teajia bar z-101, cart drawer z-3000, modals z-2000/9999. No documented scale. Future features will inevitably conflict.
+
+**111. `[S]` Active filter chips not visible on Creations** - When filters are applied, there's no persistent chip/tag showing what's active. Users may forget their filters.
+
+**112. `[M]` Store philosophy interstitials break scanning** - Every 5th item in the Store grid inserts a text block. This breaks the visual rhythm of browsing. Move philosophy content above or below the grid.
+
+**113. `[S]` Modal drawers missing Escape key handler** - Neither cart nor inspection drawer responds to Escape. Standard modal UX expects this.
+
+**114. `[S]` Scroll position lost on back navigation from piece pages** - Returning from a piece page to a filtered gallery resets scroll to top instead of where the user left off.
+
+**115. `[S]` Commission path cards have odd shrink effect** - Unselected cards scale to 0.98x, which reads as a rendering glitch rather than intentional. Make unselected state neutral.
+
+**116. `[S]` Mobile menu has no backdrop/scrim** - Menu opens over content with no dark overlay behind it. Tapping outside doesn't close it.
+
+**117. `[S]` Cart badge caps at "9+"** - Show the real number for collectors building large orders.
+
+**118. `[S]` Subcategory filter bar uses hidden scrollbar on mobile** - Horizontal pills overflow with `scrollbar-hide` but no visual indicator that more options exist off-screen.
+
+**119. `[S]` No visible sort control in subcategory pages** - SubcategoryPage has filters but no sort option (price, newest). Users can't reorder results.
+
+**120. `[M]` Creations page should remember last-used category** - When returning to `/creations` after viewing a piece, the page resets to the default "Selected Works" view instead of remembering the category the user was browsing.
 
 ---
 
-## Final Note
+## TOP 20 RECOMMENDED ORDER
 
-This site is closer to launch than it might feel from reading 85 items. The design system is genuinely sophisticated. The voice is authentic. The information architecture is sound. What is missing is the final layer: real images, real payment integration, and the handful of interaction flows that turn a beautifully designed portfolio into a functioning art business.
+Start with these. Greatest impact, most achievable:
 
-The highest-leverage move is getting real artwork photography into every image slot. That single change transforms the site from "promising template" to "serious artist studio." Everything else improves when the art is real.
+| Priority | # | Item | Effort | Why First |
+|----------|---|------|--------|-----------|
+| 1 | 2 | Global scroll-to-top on route change | `[S]` | Broken on most navigations, instantly noticeable |
+| 2 | 1 | Nav active state prefix matching | `[S]` | Users constantly lose orientation |
+| 3 | 4 | Desktop hero CTA | `[S]` | Largest screens get zero guidance |
+| 4 | 7 | Fix dead footer links | `[S]` | Broken links destroy trust |
+| 5 | 88 | Remove TODO badge from About page | `[S]` | Dev artifact visible to users |
+| 6 | 97 | Add favicons | `[S]` | Empty browser tab is unprofessional |
+| 7 | 18 | Skip-to-content link | `[S]` | Baseline accessibility |
+| 8 | 19 | Reduced motion support | `[M]` | WCAG compliance, prevents harm |
+| 9 | 13 | Mobile search in Store | `[S]` | Core feature inaccessible on mobile |
+| 10 | 10 | Larger hamburger tap target | `[S]` | 5-second fix, prevents frustration |
+| 11 | 3 | Dismissable Teajia bar | `[M]` | Frees 32px on every page |
+| 12 | 11 | Two-column mobile gallery | `[M]` | Doubles visual density on mobile |
+| 13 | 34 | Remove silent form early-submit | `[M]` | Consent issue, potential GDPR risk |
+| 14 | 56 | Move inline styles to index.css | `[S]` | Eliminates style duplication |
+| 15 | 85 | Extract shared hooks | `[S]` | Eliminates code duplication |
+| 16 | 24 | Focus trap on drawers | `[S]` | Accessibility essential for modals |
+| 17 | 65 | Persist cart in localStorage | `[M]` | Art purchases are considered, span sessions |
+| 18 | 5 | Consistent breadcrumbs | `[M]` | Orientation across all pages |
+| 19 | 8 | Page transition animation | `[M]` | Makes navigation feel intentional |
+| 20 | 27 | Gallery hover alternative to overlay | `[M]` | Don't hide the art on an art site |
