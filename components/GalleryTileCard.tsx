@@ -73,12 +73,12 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     </span>
                 </Link>
                 {showDetails && art.availability === 'MADE_TO_ORDER' && !art.sizeVariants?.some(v => v.availability === 'IN_STOCK') && (
-                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-avail-order font-semibold leading-none">
+                    <span className="font-serif text-[11px] text-wood-400 italic leading-none">
                         · Made to order
                     </span>
                 )}
                 {showDetails && (art.sizeVariants ?? art.madeToOrderSizes) && (art.sizeVariants ?? art.madeToOrderSizes)!.length > 1 && (
-                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
+                    <span className="font-serif text-[11px] text-wood-400 italic leading-none">
                         · Multiple sizes
                     </span>
                 )}
