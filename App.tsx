@@ -17,6 +17,7 @@ import PiecePage from './components/PiecePage';
 import MultidimensionalArt from './components/MultidimensionalArt';
 import SubcategoryPage from './components/SubcategoryPage';
 import IlluminatedWorks from './components/IlluminatedWorks';
+import OracleCards from './components/OracleCards';
 import Welcome from './components/Welcome';
 import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
@@ -48,6 +49,7 @@ const AppInner: React.FC = () => {
           {/* Creations — static routes must come before /:id catch-all */}
           <Route path="/creations" element={<Creations />} />
           <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+          <Route path="/creations/oracle-cards" element={<OracleCards />} />
           <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
           <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
           <Route path="/creations/:id" element={<PiecePage />} />

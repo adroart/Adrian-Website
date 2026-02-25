@@ -60,7 +60,7 @@ export const CREATION_CATEGORIES = [
     { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art' },
     { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works' },
     { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans' },
-    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection' },
+    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/creations/oracle-cards' },
     { id: 'TABLES',  label: 'Tables',               desc: 'Functional art for gathering' },
     { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments' },
     { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual' },
