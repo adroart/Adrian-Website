@@ -328,7 +328,7 @@ const Creations: React.FC = () => {
 
                     {/* Category grid */}
                     <div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 card-stagger"
                         role="list"
                         aria-label="Art categories"
                     >
@@ -465,7 +465,7 @@ const Creations: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
                 {displayedPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 sm:gap-6 lg:gap-8 card-stagger">
                         {displayedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}
