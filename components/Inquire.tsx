@@ -22,21 +22,21 @@ const formatBudget = (val: number): string => {
   return '$' + val.toLocaleString();
 };
 
-const TIMELINE_OPTIONS = [
-  'Flexible / No rush',
-  'Within 3 months',
-  'Within 6 months',
-  'Within a year',
-  'Specific date',
+const TIMELINE_OPTIONS: { label: string; value: string }[] = [
+  { label: 'flexible', value: 'Flexible / No rush' },
+  { label: 'within 3 months', value: 'Within 3 months' },
+  { label: 'within 6 months', value: 'Within 6 months' },
+  { label: 'within a year', value: 'Within a year' },
+  { label: 'tied to a specific date', value: 'Specific date' },
 ];
 
-const REFERRAL_OPTIONS = [
-  'Word of mouth',
-  'Instagram',
-  'Saw a piece in person',
-  'Writings / Blog',
-  'Burning Man or festival',
-  'Other',
+const REFERRAL_OPTIONS: { label: string; value: string }[] = [
+  { label: 'word of mouth', value: 'Word of mouth' },
+  { label: 'Instagram', value: 'Instagram' },
+  { label: 'seeing a piece in person', value: 'Saw a piece in person' },
+  { label: 'your writings', value: 'Writings / Blog' },
+  { label: 'Burning Man or a festival', value: 'Burning Man or festival' },
+  { label: 'somewhere else', value: 'Other' },
 ];
 
 const COMMISSION_PATHS = {
@@ -714,50 +714,54 @@ const Inquire: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Timeline */}
+                        {/* Timeline — conversational fill-in */}
                         <div>
-                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
-                            Timeline
-                          </label>
-                          <div className="flex flex-wrap gap-2.5">
-                            {TIMELINE_OPTIONS.map(opt => (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => handlePillSelect('timeline', opt)}
-                                className={`px-5 py-2.5 rounded-full border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
-                                  form.timeline === opt
-                                    ? 'border-bronze-400 bg-bronze-50 text-wood-900'
-                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-800 bg-transparent'
-                                }`}
-                              >
-                                {opt}
-                              </button>
+                          <p className="font-serif text-lg text-wood-600 leading-[2]">
+                            <span className="text-wood-400">My timeline is </span>
+                            {TIMELINE_OPTIONS.map((opt, i) => (
+                              <React.Fragment key={opt.value}>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePillSelect('timeline', opt.value)}
+                                  className={`font-serif text-lg transition-all duration-200 cursor-pointer ${
+                                    form.timeline === opt.value
+                                      ? 'text-wood-900 font-semibold underline decoration-bronze-400 decoration-2 underline-offset-4'
+                                      : 'text-wood-400 italic hover:text-wood-700'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                                {i < TIMELINE_OPTIONS.length - 1 && (
+                                  <span className="text-wood-300 mx-1">/</span>
+                                )}
+                              </React.Fragment>
                             ))}
-                          </div>
+                          </p>
                         </div>
 
-                        {/* Referral */}
+                        {/* Referral — conversational fill-in */}
                         <div>
-                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
-                            How did you find me?
-                          </label>
-                          <div className="flex flex-wrap gap-2.5">
-                            {REFERRAL_OPTIONS.map(opt => (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => handlePillSelect('referral', opt)}
-                                className={`px-5 py-2.5 rounded-full border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
-                                  form.referral === opt
-                                    ? 'border-bronze-400 bg-bronze-50 text-wood-900'
-                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-800 bg-transparent'
-                                }`}
-                              >
-                                {opt}
-                              </button>
+                          <p className="font-serif text-lg text-wood-600 leading-[2]">
+                            <span className="text-wood-400">I found you through </span>
+                            {REFERRAL_OPTIONS.map((opt, i) => (
+                              <React.Fragment key={opt.value}>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePillSelect('referral', opt.value)}
+                                  className={`font-serif text-lg transition-all duration-200 cursor-pointer ${
+                                    form.referral === opt.value
+                                      ? 'text-wood-900 font-semibold underline decoration-bronze-400 decoration-2 underline-offset-4'
+                                      : 'text-wood-400 italic hover:text-wood-700'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                                {i < REFERRAL_OPTIONS.length - 1 && (
+                                  <span className="text-wood-300 mx-1">/</span>
+                                )}
+                              </React.Fragment>
                             ))}
-                          </div>
+                          </p>
                         </div>
                       </div>
 
