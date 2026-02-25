@@ -317,13 +317,22 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         const isHome = pathname === '/';
         const isCreations = pathname === '/creations';
 
+        // Pause animation when tab is not visible (saves battery)
+        let isVisible = !document.hidden;
+        const handleVisibility = () => { isVisible = !document.hidden; };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        // Respect prefers-reduced-motion: skip animation entirely
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
         const animate = () => {
             timeRef.current += 0.005;
 
             if (!ctx || !canvas) return;
 
-            // Skip all computation on home page (canvas is opacity: 0)
-            if (isHome) {
+            // Skip all computation on home page (canvas is opacity: 0),
+            // when tab is hidden, or when user prefers reduced motion
+            if (isHome || !isVisible || prefersReducedMotion) {
                 frameRef.current = requestAnimationFrame(animate);
                 return;
             }
@@ -446,6 +455,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         animate();
 
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibility);
             window.removeEventListener('resize', handleResize);
             if (resizeTimeoutRef.current) cancelAnimationFrame(resizeTimeoutRef.current);
             cancelAnimationFrame(frameRef.current);
@@ -457,6 +467,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
     return (
         <canvas
             ref={canvasRef}
+            aria-hidden="true"
             className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pathname === '/' ? 'opacity-0' : 'opacity-100'}`}
             style={{ mixBlendMode: effectivelyDark ? 'screen' : 'multiply' }}
         />

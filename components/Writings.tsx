@@ -35,13 +35,21 @@ export const WritingArticle: React.FC = () => {
 
     const story = useMemo(() => STORIES.find(s => s.slug === slug), [slug]);
 
-    // Find next readings (other stories, excluding current, max 2)
+    // Find next readings: prefer same category, then other categories
     const nextReadings = useMemo(() => {
         if (!story) return [];
-        return STORIES
-            .filter(s => s.slug !== slug)
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 2);
+        const others = STORIES.filter(s => s.slug !== slug);
+        const sameCategory = others.filter(s => s.category === story.category);
+        const differentCategory = others.filter(s => s.category !== story.category);
+        const picks: Story[] = [];
+        if (sameCategory.length > 0) picks.push(sameCategory[0]);
+        if (sameCategory.length > 1) picks.push(sameCategory[1]);
+        // Fill remaining slots from different categories
+        for (const s of differentCategory) {
+            if (picks.length >= 2) break;
+            picks.push(s);
+        }
+        return picks.slice(0, 2);
     }, [slug, story]);
 
     // #18 Prev/next sequential navigation

@@ -91,9 +91,32 @@ function resolveConfig(pathname: string): SeoConfig {
   return SEO_BY_ROUTE['/'];
 }
 
+function setCanonical(url: string) {
+  let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'canonical';
+    document.head.appendChild(link);
+  }
+  link.href = url;
+}
+
+function setOgUrl(url: string) {
+  let meta = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('property', 'og:url');
+    document.head.appendChild(meta);
+  }
+  meta.content = url;
+}
+
+const SITE_ORIGIN = 'https://adrianrasmussen.com';
+
 export function useSeoMeta(pathname: string) {
   useEffect(() => {
     const config = resolveConfig(pathname);
+    const canonicalUrl = `${SITE_ORIGIN}${pathname === '/' ? '' : pathname}`;
 
     document.title = config.title;
     setMeta('meta[name="description"]', config.description);
@@ -101,5 +124,7 @@ export function useSeoMeta(pathname: string) {
     setMeta('meta[property="og:description"]', config.description);
     setMeta('meta[name="twitter:title"]', config.title);
     setMeta('meta[name="twitter:description"]', config.description);
+    setCanonical(canonicalUrl);
+    setOgUrl(canonicalUrl);
   }, [pathname]);
 }

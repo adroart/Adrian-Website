@@ -161,7 +161,7 @@ const Footer: React.FC = () => {
                             Join the Inner Circle
                         </span>
                         <span className="font-serif text-sm text-wood-400 italic block mb-5">
-                            When something wants to be shared, it arrives here first.
+                            Studio updates, new work, and writings. Delivered when something wants to be shared.
                         </span>
                         <NewsletterForm />
                     </div>
