@@ -731,50 +731,60 @@ const Inquire: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Timeline — pill selection */}
-                        <div>
-                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
+                        {/* Timeline — conversational field */}
+                        <div className="border border-wood-200 bg-white px-6 py-5">
+                          <label className="text-[10px] font-label uppercase tracking-[0.2em] text-wood-400 font-semibold block mb-3">
                             Timeline
                           </label>
-                          <div className="flex flex-wrap gap-2">
-                            {TIMELINE_OPTIONS.map((opt) => (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => handlePillSelect('timeline', opt.value)}
-                                className={`px-4 py-2 border font-serif text-sm transition-all duration-300 cursor-pointer ${
-                                  form.timeline === opt.value
-                                    ? 'border-wood-900 bg-wood-900 text-paper-50'
-                                    : 'border-wood-200 bg-white text-wood-600 hover:border-wood-400 hover:text-wood-800'
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
+                          <p className="font-serif text-lg text-wood-600 leading-[2]">
+                            <span className="text-wood-400">My timeline is </span>
+                            {TIMELINE_OPTIONS.map((opt, i) => (
+                              <React.Fragment key={opt.value}>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePillSelect('timeline', opt.value)}
+                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
+                                    form.timeline === opt.value
+                                      ? 'text-wood-900 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
+                                      : 'text-wood-500 hover:text-wood-700'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                                {i < TIMELINE_OPTIONS.length - 1 && (
+                                  <span className="text-wood-300 mx-1.5">/</span>
+                                )}
+                              </React.Fragment>
                             ))}
-                          </div>
+                          </p>
                         </div>
 
-                        {/* Referral — pill selection */}
-                        <div>
-                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-3">
-                            How did you find me?
+                        {/* Referral — conversational field */}
+                        <div className="border border-wood-200 bg-white px-6 py-5">
+                          <label className="text-[10px] font-label uppercase tracking-[0.2em] text-wood-400 font-semibold block mb-3">
+                            Referral
                           </label>
-                          <div className="flex flex-wrap gap-2">
-                            {REFERRAL_OPTIONS.map((opt) => (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                onClick={() => handlePillSelect('referral', opt.value)}
-                                className={`px-4 py-2 border font-serif text-sm transition-all duration-300 cursor-pointer ${
-                                  form.referral === opt.value
-                                    ? 'border-wood-900 bg-wood-900 text-paper-50'
-                                    : 'border-wood-200 bg-white text-wood-600 hover:border-wood-400 hover:text-wood-800'
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
+                          <p className="font-serif text-lg text-wood-600 leading-[2]">
+                            <span className="text-wood-400">I found you through </span>
+                            {REFERRAL_OPTIONS.map((opt, i) => (
+                              <React.Fragment key={opt.value}>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePillSelect('referral', opt.value)}
+                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
+                                    form.referral === opt.value
+                                      ? 'text-wood-900 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
+                                      : 'text-wood-500 hover:text-wood-700'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                                {i < REFERRAL_OPTIONS.length - 1 && (
+                                  <span className="text-wood-300 mx-1.5">/</span>
+                                )}
+                              </React.Fragment>
                             ))}
-                          </div>
+                          </p>
                         </div>
                       </div>
 
