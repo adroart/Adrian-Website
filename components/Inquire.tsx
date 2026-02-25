@@ -731,60 +731,70 @@ const Inquire: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Timeline — conversational field */}
-                        <div className="border border-wood-200 bg-white px-6 py-5">
-                          <label className="text-[10px] font-label uppercase tracking-[0.2em] text-wood-400 font-semibold block mb-3">
+                        {/* Timeline — vertical radio list */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
                             Timeline
                           </label>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="text-wood-400">My timeline is </span>
-                            {TIMELINE_OPTIONS.map((opt, i) => (
-                              <React.Fragment key={opt.value}>
+                          <div className="space-y-0">
+                            {TIMELINE_OPTIONS.map((opt) => {
+                              const selected = form.timeline === opt.value;
+                              return (
                                 <button
+                                  key={opt.value}
                                   type="button"
                                   onClick={() => handlePillSelect('timeline', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
-                                    form.timeline === opt.value
-                                      ? 'text-wood-900 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
-                                      : 'text-wood-500 hover:text-wood-700'
+                                  className={`w-full flex items-center gap-4 py-3.5 border-b border-wood-100 text-left transition-colors duration-200 cursor-pointer group ${
+                                    selected ? '' : 'hover:bg-wood-50/50'
                                   }`}
                                 >
-                                  {opt.label}
+                                  <span className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
+                                    selected
+                                      ? 'border-bronze-500 bg-bronze-500'
+                                      : 'border-wood-300 bg-transparent group-hover:border-wood-400'
+                                  }`} />
+                                  <span className={`font-serif text-base transition-colors duration-200 ${
+                                    selected ? 'text-wood-900' : 'text-wood-500 group-hover:text-wood-700'
+                                  }`}>
+                                    {opt.label}
+                                  </span>
                                 </button>
-                                {i < TIMELINE_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 mx-1.5">/</span>
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </p>
+                              );
+                            })}
+                          </div>
                         </div>
 
-                        {/* Referral — conversational field */}
-                        <div className="border border-wood-200 bg-white px-6 py-5">
-                          <label className="text-[10px] font-label uppercase tracking-[0.2em] text-wood-400 font-semibold block mb-3">
-                            Referral
+                        {/* Referral — vertical radio list */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-4">
+                            How did you find me?
                           </label>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="text-wood-400">I found you through </span>
-                            {REFERRAL_OPTIONS.map((opt, i) => (
-                              <React.Fragment key={opt.value}>
+                          <div className="space-y-0">
+                            {REFERRAL_OPTIONS.map((opt) => {
+                              const selected = form.referral === opt.value;
+                              return (
                                 <button
+                                  key={opt.value}
                                   type="button"
                                   onClick={() => handlePillSelect('referral', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-300 cursor-pointer ${
-                                    form.referral === opt.value
-                                      ? 'text-wood-900 underline decoration-bronze-400 decoration-1 underline-offset-[5px]'
-                                      : 'text-wood-500 hover:text-wood-700'
+                                  className={`w-full flex items-center gap-4 py-3.5 border-b border-wood-100 text-left transition-colors duration-200 cursor-pointer group ${
+                                    selected ? '' : 'hover:bg-wood-50/50'
                                   }`}
                                 >
-                                  {opt.label}
+                                  <span className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
+                                    selected
+                                      ? 'border-bronze-500 bg-bronze-500'
+                                      : 'border-wood-300 bg-transparent group-hover:border-wood-400'
+                                  }`} />
+                                  <span className={`font-serif text-base transition-colors duration-200 ${
+                                    selected ? 'text-wood-900' : 'text-wood-500 group-hover:text-wood-700'
+                                  }`}>
+                                    {opt.label}
+                                  </span>
                                 </button>
-                                {i < REFERRAL_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 mx-1.5">/</span>
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </p>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
