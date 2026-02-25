@@ -107,7 +107,7 @@ const SubcategoryPage: React.FC = () => {
 
     const filteredPieces = useMemo(() => {
         let data = basePieces;
-        if (showAvailableOnly) data = data.filter(a => a.availability === 'READY_TO_SHIP');
+        if (showAvailableOnly) data = data.filter(a => a.availability === 'READY_TO_SHIP' || a.availability === 'MADE_TO_ORDER');
         if (finishFilter) data = data.filter(a => a.finish === finishFilter);
         if (subcategoryFilter) data = data.filter(a => a.subcategory === subcategoryFilter);
         if (hasStoryFilter) data = data.filter(a => !!a.relatedStorySlug);

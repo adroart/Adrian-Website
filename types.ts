@@ -1,10 +1,17 @@
 export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 
-export interface MadeToOrderSize {
-  size: string;           // e.g., '16"', '24"', '36"'
-  price: number;          // [DUMMY] placeholder — replace before going live
-  stripePriceId?: string; // Stripe Price ID for this size (e.g. price_xxx)
+export type VariantAvailability = 'IN_STOCK' | 'MADE_TO_ORDER';
+
+export interface SizeVariant {
+  size: string;                        // e.g., '16"', '24"', '36"'
+  price: number;                       // [DUMMY] placeholder — replace before going live
+  stripePriceId?: string;              // Stripe Price ID for this size (e.g. price_xxx)
+  availability: VariantAvailability;   // Per-variant stock status
+  editionNumber?: number;              // For in-stock pieces: which number in the edition
 }
+
+/** @deprecated Use SizeVariant instead */
+export type MadeToOrderSize = SizeVariant;
 
 export interface Artwork {
   id: string;
@@ -34,9 +41,12 @@ export interface Artwork {
   stripePriceId?: string; // Stripe Price ID (price_xxx) for Checkout Session API
   stripeUrl?: string;     // Legacy: direct Stripe Payment Link (fallback)
 
-  // Made-to-order sizing — if set, piece page shows full MTO template
-  // Each size has its own Stripe Price ID
-  madeToOrderSizes?: MadeToOrderSize[];
+  // Size variants — if set, piece page shows unified configurator with per-variant availability.
+  // Each variant has its own Stripe Price ID and stock status.
+  sizeVariants?: SizeVariant[];
+
+  /** @deprecated Use sizeVariants instead */
+  madeToOrderSizes?: SizeVariant[];
 
   // Architecture update fields
   illuminated?: boolean; // Piece has LED/light work
@@ -59,7 +69,8 @@ export interface Collection {
 export interface Product {
   id: string;
   title: string;
-  price: number;
+  price: number;            // Lowest price (for sorting and "From $X")
+  highPrice?: number;       // Highest price (for range display: "$X to $Y")
   category: string;
   image: string;
   available: boolean;
@@ -71,6 +82,7 @@ export interface Product {
   material?: string;
   edition?: string;
   isReadyToShip: boolean;
+  hasVariants?: boolean;    // True when piece has sizeVariants (always goes to Configure)
   stripeUrl?: string;       // Legacy: direct Stripe Payment Link (fallback)
   stripePriceId?: string;   // Stripe Price ID (price_xxx) for Checkout Session API
   // For configured made-to-order items: add-on Stripe Price IDs sent as additional line items

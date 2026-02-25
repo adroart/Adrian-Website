@@ -136,14 +136,17 @@ export const FULL_ARCHIVE: Artwork[] = [
         material: 'Birch, Acrylic, Gold Leaf',
         finish: 'Gold Leaf',
         availability: 'READY_TO_SHIP',
-        price: 1850,
+        price: 950,   // lowest variant price for range display
         edition: 'Edition of 10',
         editionSize: 10,
         editionSold: 3,
-        editionNumber: 4,
         featured: true,
         relatedStorySlug: 'beneath-surface-mandala',
-        stripePriceId: 'price_1T2uiNKY1VOkG4eGYcTkmWE3',
+        sizeVariants: [
+            { size: '18"', price: 950, stripePriceId: 'price_UL001_18_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' },
+            { size: '24"', price: 1850, stripePriceId: 'price_1T2uiNKY1VOkG4eGYcTkmWE3', availability: 'IN_STOCK', editionNumber: 4 },
+            { size: '36"', price: 2800, stripePriceId: 'price_UL001_36_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' },
+        ],
     },
     {
         id: 'LC-042',
@@ -162,10 +165,10 @@ export const FULL_ARCHIVE: Artwork[] = [
         price: 950, // [DUMMY] — lowest size price, used for "From $X" displays
         edition: 'Open Edition',
         featured: true,
-        madeToOrderSizes: [
-            { size: '18"', price: 950, stripePriceId: 'price_LC042_18_REPLACE_WITH_REAL_ID' },  // [DUMMY]
-            { size: '24"', price: 1200, stripePriceId: 'price_LC042_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
-            { size: '36"', price: 1800, stripePriceId: 'price_LC042_36_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        sizeVariants: [
+            { size: '18"', price: 950, stripePriceId: 'price_LC042_18_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' },  // [DUMMY]
+            { size: '24"', price: 1200, stripePriceId: 'price_LC042_24_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
+            { size: '36"', price: 1800, stripePriceId: 'price_LC042_36_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
         ],
     },
     {
@@ -228,9 +231,9 @@ export const FULL_ARCHIVE: Artwork[] = [
         editionSize: 5,
         editionSold: 3,
         featured: true,
-        madeToOrderSizes: [
-            { size: '24"', price: 1200, stripePriceId: 'price_UL009_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
-            { size: '36"', price: 2800, stripePriceId: 'price_UL009_36_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        sizeVariants: [
+            { size: '24"', price: 1200, stripePriceId: 'price_UL009_24_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
+            { size: '36"', price: 2800, stripePriceId: 'price_UL009_36_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
         ],
     },
     // Signature piece — no series
@@ -272,10 +275,10 @@ export const FULL_ARCHIVE: Artwork[] = [
         editionSize: 5,
         featured: true,
         illuminated: true,
-        madeToOrderSizes: [
-            { size: '16"', price: 950,  stripePriceId: 'price_ILLUM001_16_REPLACE_WITH_REAL_ID' }, // [DUMMY]
-            { size: '24"', price: 1200, stripePriceId: 'price_ILLUM001_24_REPLACE_WITH_REAL_ID' }, // [DUMMY]
-            { size: '30"', price: 1800, stripePriceId: 'price_ILLUM001_30_REPLACE_WITH_REAL_ID' }, // [DUMMY]
+        sizeVariants: [
+            { size: '16"', price: 950,  stripePriceId: 'price_ILLUM001_16_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
+            { size: '24"', price: 1200, stripePriceId: 'price_ILLUM001_24_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
+            { size: '30"', price: 1800, stripePriceId: 'price_ILLUM001_30_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
         ],
     },
 ];
@@ -517,22 +520,30 @@ export const COLLECTIONS: Collection[] = [
 
 export const INVENTORY: Product[] = FULL_ARCHIVE
     .filter(a => (a.availability === 'READY_TO_SHIP' || a.availability === 'MADE_TO_ORDER') && a.price)
-    .map(a => ({
-        id: a.id,
-        title: a.title,
-        price: a.price!,
-        category: a.category,
-        image: a.coverImage,
-        available: true,
-        description: a.description,
-        longDescription: a.longDescription,
-        material: a.material,
-        dimensions: a.dimensions,
-        edition: a.edition,
-        isReadyToShip: a.availability === 'READY_TO_SHIP',
-        stripePriceId: a.stripePriceId,
-        stripeUrl: a.stripeUrl,
-    }));
+    .map(a => {
+        const variants = a.sizeVariants ?? a.madeToOrderSizes;
+        const highPrice = variants && variants.length > 0
+            ? Math.max(...variants.map(v => v.price))
+            : undefined;
+        return {
+            id: a.id,
+            title: a.title,
+            price: a.price!,
+            highPrice: highPrice && highPrice !== a.price ? highPrice : undefined,
+            category: a.category,
+            image: a.coverImage,
+            available: true,
+            description: a.description,
+            longDescription: a.longDescription,
+            material: a.material,
+            dimensions: a.dimensions,
+            edition: a.edition,
+            isReadyToShip: a.availability === 'READY_TO_SHIP' && !variants,
+            hasVariants: Boolean(variants && variants.length > 0),
+            stripePriceId: a.stripePriceId,
+            stripeUrl: a.stripeUrl,
+        };
+    });
 
 
 // --- WRITINGS ---
