@@ -13,7 +13,7 @@ interface SubcategoryConfig {
     description: string;
     image?: string;
     getPieces: (archive: Artwork[]) => Artwork[];
-    filters: ('availability' | 'finish' | 'hasStory' | 'subcategory')[];
+    filters: ('availability' | 'finish' | 'hasStory' | 'subcategory' | 'size')[];
     showCommissionInvite: boolean;
     seriesName?: string;
     tileDesc?: string;
@@ -25,7 +25,7 @@ const SLUG_MAP: Record<string, SubcategoryConfig> = {
         description: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key. A complete symbolic language encoded in layered wood.',
         image: SERIES_DATA.find(s => s.name === 'Universal Language')?.image,
         getPieces: (a) => a.filter(p => p.series === 'Universal Language'),
-        filters: ['availability', 'finish', 'hasStory'],
+        filters: ['size', 'finish'],
         showCommissionInvite: false,
         seriesName: 'Universal Language',
     },
@@ -67,6 +67,7 @@ const SubcategoryPage: React.FC = () => {
     const finishFilter = searchParams.get('finish');
     const subcategoryFilter = searchParams.get('sub');
     const hasStoryFilter = searchParams.get('story') === '1';
+    const sizeFilter = searchParams.get('size');
 
     const setParam = useCallback((key: string, value: string | null) => {
         setSearchParams(prev => {
@@ -88,6 +89,7 @@ const SubcategoryPage: React.FC = () => {
         const next = typeof v === 'function' ? v(hasStoryFilter) : v;
         setParam('story', next ? '1' : null);
     }, [setParam, hasStoryFilter]);
+    const setSizeFilter = useCallback((v: string | null) => setParam('size', v), [setParam]);
 
     const clearAllFilters = useCallback(() => {
         setSearchParams({}, { replace: true });
@@ -111,15 +113,26 @@ const SubcategoryPage: React.FC = () => {
         if (finishFilter) data = data.filter(a => a.finish === finishFilter);
         if (subcategoryFilter) data = data.filter(a => a.subcategory === subcategoryFilter);
         if (hasStoryFilter) data = data.filter(a => !!a.relatedStorySlug);
+        if (sizeFilter) data = data.filter(a => {
+            const match = a.dimensions?.match(/(\d+)"/);
+            return match && match[1] + '"' === sizeFilter;
+        });
         return data;
-    }, [basePieces, showAvailableOnly, finishFilter, subcategoryFilter, hasStoryFilter]);
+    }, [basePieces, showAvailableOnly, finishFilter, subcategoryFilter, hasStoryFilter, sizeFilter]);
 
     const finishOptions = useMemo(
         () => [...new Set(basePieces.map(p => p.finish).filter(Boolean) as string[])],
         [basePieces]
     );
 
-    const hasFiltersActive = showAvailableOnly || !!finishFilter || !!subcategoryFilter || hasStoryFilter;
+    const sizeOptions = useMemo(() => {
+        const sizes = basePieces
+            .map(p => { const m = p.dimensions?.match(/(\d+)"/); return m ? parseInt(m[1], 10) : null; })
+            .filter((v): v is number => v !== null);
+        return [...new Set(sizes)].sort((a, b) => a - b).map(s => s + '"');
+    }, [basePieces]);
+
+    const hasFiltersActive = showAvailableOnly || !!finishFilter || !!subcategoryFilter || hasStoryFilter || !!sizeFilter;
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -184,75 +197,94 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Filter bar */}
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-5 border-b border-wood-200 mb-12">
-                <div className="flex justify-between items-center gap-4">
-                <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
-                    <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0">
-                        {filteredPieces.length} {filteredPieces.length === 1 ? 'piece' : 'pieces'}
-                    </span>
+                <div className="flex justify-between items-center gap-6">
+                    <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide min-w-0">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0">
+                            {filteredPieces.length} {filteredPieces.length === 1 ? 'piece' : 'pieces'}
+                        </span>
 
-                    {/* Subcategory filter (Light Codes only) */}
-                    {config.filters.includes('subcategory') && (
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        {/* Subcategory filter (Light Codes only) */}
+                        {config.filters.includes('subcategory') && (
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <button
+                                    onClick={() => setSubcategoryFilter(null)}
+                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${!subcategoryFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
+                                >
+                                    All
+                                </button>
+                                {LIGHT_CODE_SUBCATEGORIES.map(sc => (
+                                    <button
+                                        key={sc}
+                                        onClick={() => setSubcategoryFilter(sc === subcategoryFilter ? null : sc)}
+                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${subcategoryFilter === sc ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    >
+                                        {sc}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Size filter */}
+                        {config.filters.includes('size') && sizeOptions.length > 1 && (
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Size</span>
+                                {sizeOptions.map(s => (
+                                    <button
+                                        key={s}
+                                        onClick={() => setSizeFilter(s === sizeFilter ? null : s)}
+                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${sizeFilter === s ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Finish filter */}
+                        {config.filters.includes('finish') && finishOptions.length > 1 && (
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Finish</span>
+                                {finishOptions.map(f => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setFinishFilter(f === finishFilter ? null : f)}
+                                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${finishFilter === f ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Has Story filter */}
+                        {config.filters.includes('hasStory') && basePieces.some(p => p.relatedStorySlug) && (
                             <button
-                                onClick={() => setSubcategoryFilter(null)}
-                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${!subcategoryFilter ? 'text-wood-900' : 'text-wood-400 hover:text-wood-700'}`}
+                                onClick={() => setHasStoryFilter(v => !v)}
+                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${hasStoryFilter ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
                             >
-                                All
+                                Has Story
                             </button>
-                            {LIGHT_CODE_SUBCATEGORIES.map(sc => (
-                                <button
-                                    key={sc}
-                                    onClick={() => setSubcategoryFilter(sc === subcategoryFilter ? null : sc)}
-                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${subcategoryFilter === sc ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
-                                >
-                                    {sc}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                        )}
+                    </div>
 
-                    {/* Finish filter */}
-                    {config.filters.includes('finish') && finishOptions.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            {finishOptions.map(f => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFinishFilter(f === finishFilter ? null : f)}
-                                    className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors ${finishFilter === f ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
-                                >
-                                    {f}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Has Story filter */}
-                    {config.filters.includes('hasStory') && basePieces.some(p => p.relatedStorySlug) && (
-                        <button
-                            onClick={() => setHasStoryFilter(v => !v)}
-                            className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${hasStoryFilter ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}
-                        >
-                            Has Story
-                        </button>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-4 flex-shrink-0">
-                    {hasFiltersActive && (
-                        <button
-                            onClick={clearAllFilters}
-                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap"
-                        >
-                            Clear filters
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setShowAvailableOnly(v => !v)}
-                        className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
-                    >
-                        {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
-                    </button>
-                </div>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                        {hasFiltersActive && (
+                            <button
+                                onClick={clearAllFilters}
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap"
+                            >
+                                Clear filters
+                            </button>
+                        )}
+                        {config.filters.includes('availability') && (
+                            <button
+                                onClick={() => setShowAvailableOnly(v => !v)}
+                                className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors whitespace-nowrap ${showAvailableOnly ? 'text-bronze-600' : 'text-wood-500 hover:text-wood-900'}`}
+                            >
+                                {showAvailableOnly ? 'Showing Available' : 'Show Available Only'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 

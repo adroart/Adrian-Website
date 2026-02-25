@@ -934,6 +934,28 @@ const PiecePage: React.FC = () => {
                             </Link>
                         ))}
                     </div>
+
+                    {/* Navigation links to series and parent category */}
+                    {isMultidimensional && (
+                        <div className="mt-14 pt-10 border-t border-wood-200 flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-10">
+                            {seriesLink && art.series && (
+                                <Link
+                                    to={seriesLink}
+                                    className="group flex items-center gap-3 font-serif text-lg text-wood-700 hover:text-bronze-700 transition-colors"
+                                >
+                                    <span>View all {art.series}</span>
+                                    <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                                </Link>
+                            )}
+                            <Link
+                                to="/creations/multidimensional-art"
+                                className="group flex items-center gap-3 font-serif text-lg text-wood-700 hover:text-bronze-700 transition-colors"
+                            >
+                                <span>Explore all Multidimensional Art</span>
+                                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
+                    )}
                 </div>
             )}
         </section>
