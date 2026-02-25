@@ -71,7 +71,7 @@ const CreationCategoryCard: React.FC<{
             <div className="overflow-hidden">
                 <img
                     src={`https://picsum.photos/800/800?random=${100 + idx}`}
-                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    className="w-full aspect-square object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                     alt=""
                     aria-hidden="true"
                     loading="lazy"
@@ -150,7 +150,7 @@ const CollectionCard: React.FC<{
                     aria-hidden="true"
                     width={800}
                     height={533}
-                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.03] ${
                         isActive ? 'grayscale-0' : 'sm:grayscale sm:group-hover:grayscale-0'
                     }`}
                 />
@@ -328,7 +328,7 @@ const Creations: React.FC = () => {
 
                     {/* Category grid */}
                     <div
-                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8"
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5"
                         role="list"
                         aria-label="Art categories"
                     >
@@ -465,7 +465,7 @@ const Creations: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
                 {displayedPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
+                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
                         {displayedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}
