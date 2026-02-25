@@ -725,10 +725,10 @@ const Inquire: React.FC = () => {
                                 key={opt}
                                 type="button"
                                 onClick={() => handlePillSelect('timeline', opt)}
-                                className={`px-5 py-2.5 border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
+                                className={`px-5 py-2.5 rounded-full border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
                                   form.timeline === opt
-                                    ? 'border-wood-900 bg-wood-900 text-paper-50 shadow-sm'
-                                    : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
+                                    ? 'border-bronze-400 bg-bronze-50 text-wood-900'
+                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-800 bg-transparent'
                                 }`}
                               >
                                 {opt}
@@ -748,10 +748,10 @@ const Inquire: React.FC = () => {
                                 key={opt}
                                 type="button"
                                 onClick={() => handlePillSelect('referral', opt)}
-                                className={`px-5 py-2.5 border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
+                                className={`px-5 py-2.5 rounded-full border font-label text-[11px] tracking-wide transition-all duration-200 active:scale-[0.97] ${
                                   form.referral === opt
-                                    ? 'border-wood-900 bg-wood-900 text-paper-50 shadow-sm'
-                                    : 'border-wood-300 text-wood-600 hover:border-wood-500 hover:text-wood-900 bg-transparent'
+                                    ? 'border-bronze-400 bg-bronze-50 text-wood-900'
+                                    : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-800 bg-transparent'
                                 }`}
                               >
                                 {opt}
@@ -819,27 +819,6 @@ const Inquire: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ── Sticky mobile submit ──────────────────────────────────── */}
-        {!submitted && requiredValid && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-paper-50/95 backdrop-blur-sm border-t border-wood-200 md:hidden z-40">
-            <button
-              type="button"
-              onClick={() => {
-                const formEl = formRef.current?.querySelector('form');
-                if (formEl) formEl.requestSubmit();
-              }}
-              disabled={sendStatus === 'SENDING'}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors font-semibold shadow-lg disabled:opacity-60 disabled:cursor-wait"
-            >
-              {sendStatus === 'SENDING' ? (
-                <span className="animate-pulse">Sending...</span>
-              ) : (
-                <>Start the conversation <ArrowRight size={14} /></>
-              )}
-            </button>
           </div>
         )}
 
