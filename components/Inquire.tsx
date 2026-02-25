@@ -716,23 +716,23 @@ const Inquire: React.FC = () => {
 
                         {/* Timeline — conversational fill-in */}
                         <div>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="text-wood-400">My timeline is </span>
+                          <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[2.2]">
+                            <span className="text-wood-300">My timeline is </span>
                             {TIMELINE_OPTIONS.map((opt, i) => (
                               <React.Fragment key={opt.value}>
                                 <button
                                   type="button"
                                   onClick={() => handlePillSelect('timeline', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-200 cursor-pointer ${
+                                  className={`font-serif text-xl md:text-2xl transition-all duration-200 cursor-pointer ${
                                     form.timeline === opt.value
-                                      ? 'text-wood-900 font-semibold underline decoration-bronze-400 decoration-2 underline-offset-4'
-                                      : 'text-wood-400 italic hover:text-wood-700'
+                                      ? 'text-bronze-600 font-bold underline decoration-bronze-400 decoration-[3px] underline-offset-[6px]'
+                                      : 'text-wood-300 italic hover:text-wood-600 hover:not-italic'
                                   }`}
                                 >
                                   {opt.label}
                                 </button>
                                 {i < TIMELINE_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 mx-1">/</span>
+                                  <span className="text-wood-200 mx-1.5">/</span>
                                 )}
                               </React.Fragment>
                             ))}
@@ -741,23 +741,23 @@ const Inquire: React.FC = () => {
 
                         {/* Referral — conversational fill-in */}
                         <div>
-                          <p className="font-serif text-lg text-wood-600 leading-[2]">
-                            <span className="text-wood-400">I found you through </span>
+                          <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[2.2]">
+                            <span className="text-wood-300">I found you through </span>
                             {REFERRAL_OPTIONS.map((opt, i) => (
                               <React.Fragment key={opt.value}>
                                 <button
                                   type="button"
                                   onClick={() => handlePillSelect('referral', opt.value)}
-                                  className={`font-serif text-lg transition-all duration-200 cursor-pointer ${
+                                  className={`font-serif text-xl md:text-2xl transition-all duration-200 cursor-pointer ${
                                     form.referral === opt.value
-                                      ? 'text-wood-900 font-semibold underline decoration-bronze-400 decoration-2 underline-offset-4'
-                                      : 'text-wood-400 italic hover:text-wood-700'
+                                      ? 'text-bronze-600 font-bold underline decoration-bronze-400 decoration-[3px] underline-offset-[6px]'
+                                      : 'text-wood-300 italic hover:text-wood-600 hover:not-italic'
                                   }`}
                                 >
                                   {opt.label}
                                 </button>
                                 {i < REFERRAL_OPTIONS.length - 1 && (
-                                  <span className="text-wood-300 mx-1">/</span>
+                                  <span className="text-wood-200 mx-1.5">/</span>
                                 )}
                               </React.Fragment>
                             ))}
