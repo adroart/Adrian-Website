@@ -27,9 +27,9 @@ class Particle {
         this.layer = layer;
     }
 
-    // Layer-dependent size: visible on all layers
+    // Layer-dependent size
     get radius(): number {
-        return this.layer === 0 ? 1.2 : this.layer === 1 ? 2.0 : 3.0;
+        return this.layer === 0 ? 1.0 : this.layer === 1 ? 1.7 : 2.5;
     }
 
     // Layer-dependent spring speed: far layers are slower, near are snappier
@@ -276,8 +276,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        // More particles for a richer mesh
-        const baseCount = window.innerWidth < 768 ? 80 : 140;
+        const baseCount = window.innerWidth < 768 ? 65 : 120;
 
         // Create particles across 3 depth layers
         const layerDistribution = [0.25, 0.45, 0.3]; // 25% far, 45% mid, 30% near
@@ -378,8 +377,8 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
 
                 p.update(width, height, mouseRef.current.x, mouseRef.current.y);
 
-                // Layer-dependent opacity: clearly visible on all layers
-                const layerAlpha = p.layer === 0 ? 0.25 : p.layer === 1 ? 0.4 : 0.55;
+                // Layer-dependent opacity: present but not overpowering
+                const layerAlpha = p.layer === 0 ? 0.15 : p.layer === 1 ? 0.25 : 0.38;
                 ctx.fillStyle = isDark
                     ? `rgba(176, 141, 85, ${layerAlpha})`
                     : `rgba(90, 70, 50, ${layerAlpha})`;
@@ -390,8 +389,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
             });
 
             // --- Draw connections ---
-            // Generous thresholds so the mesh is actually visible
-            const baseThreshold = isCreations ? 18000 : 25000;
+            const baseThreshold = isCreations ? 12000 : 18000;
 
             for (let i = 0; i < safeParticles.length; i++) {
                 for (let j = i + 1; j < safeParticles.length; j++) {
@@ -411,20 +409,19 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
 
                     if (distSq < threshold) {
                         const alpha = 1 - distSq / threshold;
-                        // Visible line opacities
                         const lineAlpha = layerMin === 0
-                            ? alpha * 0.12
+                            ? alpha * 0.06
                             : layerMin === 1
-                                ? alpha * 0.22
-                                : alpha * 0.35;
+                                ? alpha * 0.12
+                                : alpha * 0.2;
 
                         ctx.beginPath();
                         ctx.moveTo(p1.x, p1.y);
                         ctx.lineTo(p2.x, p2.y);
                         ctx.strokeStyle = isDark
                             ? `rgba(176, 141, 85, ${lineAlpha})`
-                            : `rgba(70, 55, 40, ${lineAlpha})`;
-                        ctx.lineWidth = layerMin === 0 ? 0.4 : layerMin === 1 ? 0.6 : 0.9;
+                            : `rgba(80, 65, 45, ${lineAlpha})`;
+                        ctx.lineWidth = layerMin === 0 ? 0.3 : layerMin === 1 ? 0.5 : 0.7;
                         ctx.stroke();
                     }
                 }
