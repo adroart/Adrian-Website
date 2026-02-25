@@ -20,60 +20,60 @@ interface OracleDeck {
 
 const DECKS: OracleDeck[] = [
   {
-    id: 'journey-deck',
-    name: 'The Journey Deck',
-    tagline: 'Sixty-four reflections on the cycle of changes.',
+    id: 'reflect',
+    name: 'Reflect',
+    tagline: 'A Journey of Self-Inquiry. 64 Questions of Light and Shadow.',
     description: [
-      'Each card in this deck corresponds to one of the sixty-four hexagrams. Not as a system to learn, but as a mirror. You pull a card and sit with what arrives.',
-      'The artwork is drawn from the Universal Language series. The same layered geometry that lives in the wooden sculptures, distilled into a form you can hold in your hand.',
-      'This is not divination in the predictive sense. It is a way of asking a question and then listening to what you already know.',
+      'In stillness, wisdom speaks. In reflection, truth emerges. In expression, nature is experienced.',
+      'Reflect is for the moments when you need to turn inward. During tea, meditations, or ceremonies. In your personal journaling space. With friends, family, and coworkers. At your next workshop or retreat. Whenever you invite clarity.',
+      'Each card brings to light what seeks attention. Hidden truths ready to emerge. Clarity and awareness. Pathways to integration.',
     ],
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-journey',
-    sampleCardImage: 'https://picsum.photos/600/900?random=oracle-journey-sample',
+    image: 'https://picsum.photos/900/1100?random=oracle-reflect',
+  },
+  {
+    id: 'connect',
+    name: 'Connect',
+    tagline: 'A Journey of Coming Together. 64 Cards of Connection and Discovery.',
+    description: [
+      'In circles, truth flows freely. In sharing, hearts open naturally. In listening, bonds strengthen.',
+      'Connect is for the spaces between people. During social gatherings. Getting to know each other. In team building. At workshops and retreats. Around the tea table.',
+      'Each card brings to life honest sharing, open hearts, community spirit, and playful moments. May each moment deepen our understanding and compassion.',
+    ],
+    cardCount: '64 Cards',
+    dimensions: '3.5" x 5"',
+    material: 'Heavyweight Card Stock',
+    image: 'https://picsum.photos/900/1100?random=oracle-connect',
+  },
+  {
+    id: 'universal-language',
+    name: 'Universal Language',
+    tagline: 'The sixty-four expressions of the cycle of changes, in the palm of your hand.',
+    description: [
+      'There is a language that all of us know. Elemental. Genetic. Interstellar. Patterns that navigate the experience of life through the passage of time. It existed before the I Ching, Gene Keys, or astrology gave it a name.',
+      'The Universal Language oracle carries the same artwork as the wooden sculptures, each connected to a hexagram from the I Ching and a corresponding Gene Key. Pay close attention to which ones call out to you. When one speaks, there is a reason waiting in the oracle.',
+      'Nothing needs to be understood to speak with these cards. Your presence and experience is how you commune with these frequencies and discover what they hold for you.',
+    ],
+    cardCount: '64 Cards',
+    dimensions: '3.5" x 5"',
+    material: 'Heavyweight Card Stock',
+    image: 'https://picsum.photos/900/1100?random=oracle-ul',
   },
   {
     id: 'light-codes-oracle',
     name: 'Light Codes Oracle',
-    tagline: 'Frequencies made visible. Gateways made portable.',
+    tagline: 'Anchorings of unseen realms. Frequencies made portable.',
     description: [
       'After the Light Codes series emerged from dreamtime, it became clear that these patterns wanted to move beyond the studio wall. Some transmissions are meant to travel.',
-      'Each card carries one of the Light Code glyphs. Pull one before meditation, before ceremony, or when you need to shift the frequency of a moment. Let the pattern speak before the mind interprets.',
+      'Each card carries one of the Light Code glyphs. Frequency Foundations, Embodied Vibrations, Resonant Formations. Pull one before meditation, before ceremony, or when you need to shift the frequency of a moment.',
+      'As you gaze into them you can find signs, sigils, and shapes that inspire things within. What will they awaken in you?',
     ],
     cardCount: '40 Cards',
     dimensions: '3.5" x 5"',
     material: 'Matte Laminate Card Stock',
     image: 'https://picsum.photos/900/1100?random=oracle-lightcodes',
-  },
-  {
-    id: 'elements-oracle',
-    name: 'Elements Oracle',
-    tagline: 'Earth. Water. Fire. Air. Space.',
-    description: [
-      'Five elements, each explored through eight expressions. The Elements Oracle is the most grounded of the decks. It speaks in the language of the body, the seasons, the land.',
-      'Designed for daily practice. Pull one card each morning. Let it orient the day. Not as instruction, but as a quality of attention.',
-      'The imagery draws from natural forms. Wood grain, water patterns, flame geometry, cloud formations, open sky. Each painted by hand before being photographed for the cards.',
-    ],
-    cardCount: '40 Cards',
-    dimensions: '4" x 6"',
-    material: 'Textured Art Card',
-    image: 'https://picsum.photos/900/1100?random=oracle-elements',
-  },
-  {
-    id: 'ceremony-cards',
-    name: 'Ceremony Cards',
-    tagline: 'For the threshold moments.',
-    description: [
-      'Some cards are not for daily use. They are for the moments that matter. The beginning of a gathering. The opening of a ceremony. A birthday. A turning point.',
-      'Each card holds a single intention, a single invitation. Pull one to set the tone for what follows. Place it where it can be seen throughout.',
-      'Smaller than the other decks. Meant to be passed hand to hand.',
-    ],
-    cardCount: '24 Cards',
-    dimensions: '3" x 5"',
-    material: 'Heavyweight Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-ceremony',
   },
 ];
 
@@ -448,21 +448,22 @@ const OracleCards: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
               <Reveal delay={200} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
-                  These are not prediction systems. They are mirrors. Each deck opens a different
-                  quality of attention. You pull a card and discover what you already know.
+                  Four decks. Each one opens a different door. Reflect turns inward.
+                  Connect brings people together. Universal Language speaks through the
+                  sixty-four expressions of the cycle of changes. Light Codes carry
+                  transmissions from unseen realms.
                 </p>
               </Reveal>
               <Reveal delay={300} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
-                  The artwork comes from the same place as the sculptures and the paintings. The same
-                  geometry, the same frequencies, the same intention. Compressed into something you
-                  can hold, carry, and share.
+                  The artwork comes from the same place as the sculptures and the paintings.
+                  The same geometry, the same frequencies, the same intention. Compressed
+                  into something you can hold, carry, and share.
                 </p>
               </Reveal>
               <Reveal delay={400} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[1.45] font-light italic">
-                  An oracle does not tell you what will happen. It shows you where your attention
-                  wants to go. That is the gift. Not an answer, but a deeper question.
+                  May each card be a light in the illumination of clarity and peace.
                 </p>
               </Reveal>
             </div>
@@ -489,14 +490,16 @@ const OracleCards: React.FC = () => {
                     They wanted to participate in the daily practice.
                   </p>
                   <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
-                    Each deck carries a different intention. Some are connected to the Universal
-                    Language and the I Ching. Some carry Light Code transmissions. Some are
-                    grounded in the elements. Some are for ceremony. They all share the same
-                    principle: pull a card, sit with it, and let it speak before the mind interprets.
+                    Two of the decks, Reflect and Connect, are designed as companions. Reflect
+                    turns inward, 64 questions of light and shadow for self-inquiry. Connect
+                    turns outward, 64 cards of connection and discovery for the space between
+                    people. The Universal Language and Light Codes oracles carry the artwork
+                    and frequencies from those bodies of work into something you can hold
+                    in your hand.
                   </p>
                 </div>
                 <div className="margin-note" style={{ top: '80px' }}>
-                  "Pull a card, sit with it, and let it speak before the mind interprets."
+                  "In stillness, wisdom speaks. In reflection, truth emerges."
                 </div>
               </div>
             </Reveal>
@@ -529,44 +532,77 @@ const OracleCards: React.FC = () => {
         <div id="oracle-practice" className="px-6 py-28 bg-wood-900 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal dir="up">
-              <Tag light centered>Working with the Oracle</Tag>
+              <Tag light centered>To Begin</Tag>
             </Reveal>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16">
-              <Reveal delay={80} dir="up">
-                <div className="text-center">
-                  <span className="font-serif text-5xl text-bronze-400 font-light block mb-6">1</span>
-                  <h3 className="font-serif text-xl text-paper-50 font-medium mb-4">Hold the question</h3>
-                  <p className="font-serif text-base text-paper-300 font-light leading-[1.7]">
-                    Before pulling a card, sit for a moment with what is alive for you.
-                    Not a specific question, necessarily. Just whatever is present. Let
-                    the mind settle. Let the body arrive.
+            {/* Two practice columns: Reflect (solo) and Connect (group) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
+
+              {/* Reflect practice */}
+              <Reveal delay={80} dir="left">
+                <div>
+                  <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">Alone or in stillness</h3>
+                  <ol className="space-y-5">
+                    {[
+                      'Create a space for reflection',
+                      'Take a breath and center',
+                      'Clarify an intention or question',
+                      'With presence, draw a card',
+                      'Allow your truth to emerge',
+                      'Answer alone or in a group',
+                    ].map((step, i) => (
+                      <li key={i} className="flex items-start gap-4">
+                        <span className="font-serif text-2xl text-bronze-400 font-light flex-shrink-0 leading-none mt-0.5">{i + 1}</span>
+                        <span className="font-serif text-lg text-paper-200 font-light leading-[1.6]">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="font-serif text-base text-bronze-400 italic mt-8 leading-[1.7]">
+                    May each card be a light in the illumination of clarity and peace.
                   </p>
                 </div>
               </Reveal>
-              <Reveal delay={160} dir="up">
-                <div className="text-center">
-                  <span className="font-serif text-5xl text-bronze-400 font-light block mb-6">2</span>
-                  <h3 className="font-serif text-xl text-paper-50 font-medium mb-4">Pull and pause</h3>
-                  <p className="font-serif text-base text-paper-300 font-light leading-[1.7]">
-                    Draw a single card. Look at the image before reading any words. Let
-                    your body respond. Notice what moves, what opens, what tightens. The
-                    first impression is the truest one.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal delay={240} dir="up">
-                <div className="text-center">
-                  <span className="font-serif text-5xl text-bronze-400 font-light block mb-6">3</span>
-                  <h3 className="font-serif text-xl text-paper-50 font-medium mb-4">Sit with it</h3>
-                  <p className="font-serif text-base text-paper-300 font-light leading-[1.7]">
-                    Place the card where you can see it throughout the day. Let it work
-                    on you. The oracle speaks through the hours, not just in the moment
-                    of pulling. Return to it in the evening and notice what shifted.
+
+              {/* Connect practice */}
+              <Reveal delay={160} dir="right">
+                <div>
+                  <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">In a circle</h3>
+                  <ol className="space-y-5">
+                    {[
+                      'Gather in a circle',
+                      'Pick the first card',
+                      'Follow the card',
+                      'Pass the cards in a circle',
+                    ].map((step, i) => (
+                      <li key={i} className="flex items-start gap-4">
+                        <span className="font-serif text-2xl text-bronze-400 font-light flex-shrink-0 leading-none mt-0.5">{i + 1}</span>
+                        <span className="font-serif text-lg text-paper-200 font-light leading-[1.6]">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="font-serif text-base text-bronze-400 italic mt-8 leading-[1.7]">
+                    May each moment deepen our understanding and compassion.
                   </p>
                 </div>
               </Reveal>
             </div>
+
+            {/* Brings to light */}
+            <Reveal delay={240} dir="up">
+              <div className="mt-20 pt-12 border-t border-wood-600 text-center">
+                <h3 className="font-serif text-2xl text-paper-50 font-medium mb-8">Brings to light</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[
+                    'What seeks attention',
+                    'Hidden truths ready to emerge',
+                    'Clarity and awareness',
+                    'Pathways to integration',
+                  ].map((item, i) => (
+                    <p key={i} className="font-serif text-base text-paper-300 font-light leading-[1.6]">{item}</p>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
 
