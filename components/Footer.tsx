@@ -189,7 +189,7 @@ const Footer: React.FC = () => {
                         </a>
                     </div>
 
-                    {/* Column 2: Studio */}
+                    {/* Column 2: Studio — #41 removed duplicate Contact (was same as Commissions) */}
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
@@ -197,18 +197,16 @@ const Footer: React.FC = () => {
                         </div>
                         <Link to="/about" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
                         <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
-                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Contact</Link>
                     </div>
 
-                    {/* Column 3: Info */}
+                    {/* Column 3: Info — #7 removed dead links that had no destination */}
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Information</span>
                         </div>
-                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shipping & Returns</button>
-                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Care Guide</button>
-                        <button className="footer-link text-left font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Authenticity</button>
+                        <Link to="/privacy" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Privacy Policy</Link>
+                        <Link to="/terms" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Terms</Link>
                     </div>
 
                     {/* Column 4: Connect — #12 Icon buttons with scale hover */}

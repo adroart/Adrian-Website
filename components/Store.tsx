@@ -234,6 +234,16 @@ const InspectionDrawer: React.FC<{
         }
     }, [product]);
 
+    // #25 Close drawer on Escape key
+    useEffect(() => {
+        if (!product) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [product, onClose]);
+
     if (!product || typeof document === 'undefined') return null;
 
     return createPortal(
@@ -421,7 +431,8 @@ const ControlDeck: React.FC<{
                     )}
                 </button>
 
-                <div className="hidden sm:flex items-center gap-2 flex-1 max-w-xs border-b border-wood-200 focus-within:border-wood-900 transition-colors px-1">
+                {/* #13 Search visible on all screen sizes (was hidden sm:flex) */}
+                <div className="flex items-center gap-2 flex-1 max-w-xs border-b border-wood-200 focus-within:border-wood-900 transition-colors px-1">
                     <Search size={13} className="text-wood-400 shrink-0" />
                     <input
                         type="text"

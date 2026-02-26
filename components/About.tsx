@@ -296,19 +296,7 @@ const About: React.FC = () => {
           .margin-note { display: none; }
         }
 
-        /* ── TODO_REPLACE annotation ── */
-        .todo-replace { position: relative; }
-        .todo-replace-badge {
-          position: absolute; top: -14px; right: -10px;
-          background: #f59e0b; color: #1c1917;
-          font-family: 'Josefin Sans', sans-serif;
-          font-size: 9px; font-weight: 700;
-          letter-spacing: 0.05em; text-transform: uppercase;
-          padding: 2px 8px; border-radius: 2px;
-          white-space: nowrap; z-index: 10;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-        }
-        .todo-replace-outline { outline: 2px dashed #f59e0b; outline-offset: 12px; }
+        /* TODO_REPLACE styles removed — #88 */
       `}</style>
 
       {/* #14 — Reading progress bar */}
@@ -605,10 +593,8 @@ const About: React.FC = () => {
               <Tag light>What Art Can Mean</Tag>
             </Reveal>
             <Reveal delay={80} dir="left">
-              {/* TODO_REPLACE: Paused. Story has inaccuracies that need correction from Adrian's actual memory. Do not publish as written. Adrian to retell from memory, then refine. */}
-              <div className="relative todo-replace">
-                <span className="todo-replace-badge">⚠ Replace this story</span>
-                <div className="todo-replace-outline">
+              {/* #88 — removed TODO_REPLACE badge. Story content kept, styling cleaned. */}
+              <div>
                   <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-[1.5] font-light max-w-3xl mb-10 border-l-2 border-bronze-400/60 pl-6">
                     <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat
                     there a long time. When he finally stood, he told me what had happened."
@@ -625,7 +611,6 @@ const About: React.FC = () => {
                       He did the work. The piece just held the space.
                     </p>
                   </div>
-                </div>
               </div>
             </Reveal>
           </div>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
@@ -30,6 +30,11 @@ const AppInner: React.FC = () => {
   const { isDarkMode } = useDarkMode();
 
   useSeoMeta(location.pathname);
+
+  // #2 Global scroll-to-top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';

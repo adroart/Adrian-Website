@@ -30,18 +30,25 @@ const Hero: React.FC = () => {
   const opacity = Math.max(0, 1 - (scrollY / (winHeight * 0.85)));
   const safeOpacity = isNaN(opacity) ? 1 : opacity;
 
+  // #9 Scroll to first content section
+  const scrollToContent = () => {
+    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+  };
+
   return (
     <section className="relative w-full h-[105vh] flex flex-col bg-wood-900 overflow-hidden group dark-preserve">
       <div
         className="absolute inset-0 z-0 will-change-transform"
         style={{ transform: `translateY(${videoTranslateY}px)` }}
       >
+          {/* #20 Decorative video gets aria-hidden */}
           <video
               ref={videoRef}
               autoPlay
               loop
               muted
               playsInline
+              aria-hidden="true"
               className="w-full h-full object-cover opacity-60"
           >
               <source src="https://video.wixstatic.com/video/e5e2db_603cdbb883e847db9a1f47fd9bb39e26/720p/mp4/file.mp4" type="video/mp4" />
@@ -70,7 +77,8 @@ const Hero: React.FC = () => {
                   From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>
-              <div className="mt-8 md:hidden">
+              {/* #4 CTA visible on all screen sizes (was md:hidden) */}
+              <div className="mt-8">
                   <Link
                       to="/creations"
                       className="inline-block font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-bronze-400 hover:text-bronze-300 px-6 py-3 transition-colors duration-300"
@@ -81,13 +89,16 @@ const Hero: React.FC = () => {
           </div>
       </div>
 
-      <div
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500"
+      {/* #9 "Enter" indicator is now a clickable button */}
+      <button
+        onClick={scrollToContent}
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500 cursor-pointer group/enter"
         style={{ opacity: safeOpacity * 0.6 }}
+        aria-label="Scroll to content"
       >
-          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/60 ml-[0.5em]">Enter</span>
+          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/60 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent"></div>
-      </div>
+      </button>
     </section>
   );
 };

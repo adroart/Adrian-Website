@@ -95,6 +95,16 @@ const CartDrawer: React.FC = () => {
     // Clear error when cart closes or items change
     useEffect(() => { setError(null); }, [isCartOpen, items.length]);
 
+    // #25 Close drawer on Escape key
+    useEffect(() => {
+        if (!isCartOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeCart();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isCartOpen, closeCart]);
+
     const handleCheckout = async () => {
         setLoading(true);
         setError(null);

@@ -18,6 +18,9 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [teajiaBarDismissed, setTeajiaBarDismissed] = useState(() => {
+    try { return sessionStorage.getItem('teajia-bar-dismissed') === 'true'; } catch { return false; }
+  });
   const { totalItems, openCart } = useCart();
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
@@ -34,10 +37,19 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const glassDark = 'bg-stone-950/75 backdrop-blur-xl border-b border-white/10 shadow-sm';
   const glassLight = 'bg-paper-50/80 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
-  let navClasses = `fixed top-8 left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
+  // #3 Adjust nav position based on whether Teajia bar is visible
+  const navTop = teajiaBarDismissed ? 'top-0' : 'top-8';
+
+  let navClasses = `fixed ${navTop} left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
   if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark} dark-preserve`;
   else if (useSolid) navClasses += ` py-3 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
   else navClasses += ` py-5 ${isDark ? `${glassDark} dark-preserve` : glassLight}`;
+
+  // #1 Helper: check if a nav item is active using prefix matching
+  const isNavActive = (itemPath: string) => {
+    if (itemPath === '/') return location.pathname === '/';
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + '/');
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -61,28 +73,44 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const handleNavClick = (path: string) => {
     navigate(path);
     setIsMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const dismissTeajiaBar = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTeajiaBarDismissed(true);
+    try { sessionStorage.setItem('teajia-bar-dismissed', 'true'); } catch {}
   };
 
   return (
     <>
-      <a
-        href="https://www.teajia.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group cursor-pointer backdrop-blur-sm dark-preserve"
-      >
-          <div className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
+      {/* #3 Dismissable Teajia promo bar */}
+      {!teajiaBarDismissed && (
+        <div className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group backdrop-blur-sm dark-preserve">
+          <a
+            href="https://www.teajia.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity"
+          >
               <span className="text-[11px] font-label uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
               <span className="text-[11px] text-wood-600 hidden sm:inline">|</span>
               <span className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-400 hidden sm:inline">Global tea culture. Ceremony and treasures.</span>
               <ArrowUpRight size={10} className="text-wood-500 group-hover:text-bronze-400" />
-          </div>
-      </a>
+          </a>
+          <button
+            onClick={dismissTeajiaBar}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-wood-600 hover:text-paper-50 transition-colors p-1"
+            aria-label="Dismiss banner"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       <nav className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
-          <Link to="/" className="group flex flex-col items-start" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <Link to="/" className="group flex flex-col items-start">
             <span className={`text-2xl font-display tracking-normal leading-none transition-colors font-normal ${textPrimary} hover:${accentColor}`}>
               Adrian Rasmussen
             </span>
@@ -94,15 +122,15 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className={`group relative text-xs uppercase tracking-[0.2em] font-label py-2 transition-all duration-300 flex items-center gap-1 font-semibold ${
-                  location.pathname === item.path
+                  isNavActive(item.path)
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
                 }`}
               >
                 {item.label}
-                <span className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${location.pathname === item.path ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                {/* #1 Active underline uses prefix matching */}
+                <span className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${isNavActive(item.path) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
             ))}
           </div>
@@ -126,20 +154,32 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               )}
             </button>
 
-            <button className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-2 -mr-2`} onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {/* #10 Larger tap target (min 44x44px) + #21 ARIA attributes */}
+            <button
+              className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-3 -mr-3`}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-menu"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu — #21 ARIA attributes */}
         {isMobileMenuOpen && (
-             <div className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-10 px-6 flex flex-col gap-7 items-center animate-fade-in shadow-2xl dark-preserve">
+             <div
+               id="mobile-nav-menu"
+               role="navigation"
+               aria-label="Mobile navigation"
+               className="lg:hidden absolute top-full left-0 w-full bg-stone-950/95 backdrop-blur-xl border-b border-stone-800 py-10 px-6 flex flex-col gap-7 items-center animate-fade-in shadow-2xl dark-preserve"
+             >
                 {navItems.map((item) => (
                     <button
                         key={item.path}
                         onClick={() => handleNavClick(item.path)}
-                        className={`text-sm font-label uppercase tracking-[0.2em] font-semibold transition-colors ${location.pathname === item.path ? 'text-bronze-400' : 'text-paper-50/80 hover:text-paper-50'}`}
+                        className={`text-sm font-label uppercase tracking-[0.2em] font-semibold transition-colors ${isNavActive(item.path) ? 'text-bronze-400' : 'text-paper-50/80 hover:text-paper-50'}`}
                     >
                         {item.label}
                     </button>
