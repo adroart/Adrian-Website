@@ -139,8 +139,20 @@ These topics are not addressed anywhere in the master document but are needed fo
 ### 5.1 Analytics
 No analytics tool mentioned. Options: Google Analytics 4, Plausible, Fathom, Cloudflare Web Analytics (free with Cloudflare Pages). Without analytics, there's no way to measure traffic, understand visitor behavior, or validate the AEO strategy.
 
-### 5.2 Accessibility (a11y)
-No WCAG guidelines, screen reader considerations, alt text standards, keyboard navigation requirements, or color contrast rules. Given the art-focused audience and potential gallery/museum connections, accessibility matters both ethically and for SEO.
+### ~~5.2 Accessibility (a11y)~~ PARTIALLY RESOLVED
+Core accessibility infrastructure implemented:
+- [x] Skip-to-content link
+- [x] `prefers-reduced-motion` support (CSS + GenerativeBackground)
+- [x] Focus trapping in CartDrawer
+- [x] Escape key handlers on all drawers, lightbox, and mobile nav
+- [x] `aria-hidden` on decorative elements (canvas, video)
+- [x] `role="dialog"` + `aria-modal` on CartDrawer, Store drawers, lightbox
+- [x] `aria-live` region for Store filter results
+- [x] `aria-expanded` on mobile menu button
+- [x] 48px minimum touch targets on mobile controls
+- [ ] Full color contrast audit (WCAG AA)
+- [ ] Screen reader end-to-end testing
+- [ ] Keyboard navigation audit across all interactive flows
 
 ### 5.3 Content Management Workflow
 With no CMS, how does Adrian add new pieces or publish new writings after launch? Currently requires code changes (editing mockData.ts, creating new components). The plan should address:
@@ -345,6 +357,12 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 - [x] ~~Add share buttons to Writings pages~~ DONE. Added Share2 button with Web Share API to WritingArticle component, matching PiecePage share behavior.
 - [x] Open Graph meta tags. DONE (index.html).
 - [x] Twitter/X card meta tags. DONE (index.html).
+- [x] robots.txt with sitemap reference. DONE.
+- [x] sitemap.xml covering all routes. DONE.
+- [x] Canonical URLs on every page. DONE (useSeoMeta.ts).
+- [x] Per-page og:url meta tags. DONE (useSeoMeta.ts).
+- [ ] Favicon (needs real artwork).
+- [ ] OG image (needs real artwork, currently placeholder Unsplash).
 
 ### 8.9 Photography and Video
 
@@ -389,7 +407,7 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 - [ ] Publish at least one Living Knowledge presentation (Ye Ming Zhu)
 - [ ] Write series hooks and essays for Universal Language, Mandala, Light Codes
 - [ ] Publish at least one piece in The Path (Writings section)
-- [ ] Configure Open Graph and social meta tags for all pages (base tags done, per-page needed)
+- [x] ~~Configure Open Graph and social meta tags for all pages~~ DONE. Per-page title, description, og:title, og:description, og:url, twitter:title, twitter:description, canonical URL all set dynamically via useSeoMeta.ts. robots.txt and sitemap.xml created.
 
 **Nice to Have:**
 - [ ] Create process videos for The Practice (Writings section)
@@ -428,3 +446,43 @@ Not yet designed. Considerations for future implementation:
 
 ### 9.4 SEO Long-Tail
 - [ ] "Tea house design" keyword targeting (build as Spaces portfolio grows)
+
+---
+
+## 10. Requires Adrian's Direct Input (Blocking Launch)
+
+Items that cannot be completed by development alone. These require decisions, content, accounts, or assets from Adrian.
+
+### 10.1 Photography and Assets
+- [ ] **Real artwork photography** for all pieces (replacing picsum.photos / unsplash placeholders)
+- [ ] **Favicon** based on real artwork or brand mark
+- [ ] **OG share image** (1200x630px) for social sharing, using real artwork
+- [ ] **Hero video** hosting decision: keep Wix-hosted video, or re-host on Cloudflare/own CDN?
+
+### 10.2 Stripe and Payments
+- [ ] **Stripe account** fully configured (live mode, not test)
+- [ ] **Real Stripe Price IDs** for every ready-to-ship item (replacing `PLACEHOLDER`)
+- [ ] **Stripe Shipping Rates** configured in Stripe Dashboard
+- [ ] **Final pricing** for all pieces, by size tier, finish, and add-ons
+
+### 10.3 Content and Copy
+- [ ] **About page "The Root" section** review: some biographical details may need correction or Adrian's voice
+- [ ] **Illuminated Works naming** decision: "Ambient Light" vs "Living Light" (or Adrian's preferred terms)
+- [ ] **Universal Language series hook** copy (marked "Adrian: Write hooks when ready")
+- [ ] **Mandala series hook** copy (marked "Adrian: Write hooks when ready")
+- [ ] **Shipping and returns policy** (Footer links to Shipping & Returns, Care Guide, Authenticity are dead buttons)
+
+### 10.4 Service and Provider Decisions
+- [ ] **Newsletter provider**: stay with Formspree (no welcome sequences) or migrate to ConvertKit/Kit (has automation)?
+- [ ] **Analytics**: choose a provider (Cloudflare Web Analytics is free with your hosting, Plausible for privacy, or GA4)
+- [ ] **Email domain**: confirm `hello@adrianrasmussen.art` vs `hello@adrianrasmussen.com`
+
+### 10.5 Recently Completed (No Longer Blocking)
+- [x] ~~Accessibility infrastructure~~ DONE
+- [x] ~~SEO infrastructure (robots.txt, sitemap, canonical URLs, OG meta)~~ DONE
+- [x] ~~Inquire form: date picker for "Specific date" timeline~~ DONE
+- [x] ~~Inquire form: free-text input for "Other" referral~~ DONE
+- [x] ~~TODO_REPLACE badges hidden from production visitors~~ DONE
+- [x] ~~GenerativeBackground pauses when tab hidden / reduced motion~~ DONE
+- [x] ~~Cart drawer focus trapping and escape key~~ DONE
+- [x] ~~PiecePage story link goes directly to writing article~~ DONE
