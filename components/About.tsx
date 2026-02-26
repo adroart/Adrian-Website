@@ -296,19 +296,12 @@ const About: React.FC = () => {
           .margin-note { display: none; }
         }
 
-        /* ── TODO_REPLACE annotation ── */
+        /* ── TODO_REPLACE annotation (dev only) ── */
         .todo-replace { position: relative; }
         .todo-replace-badge {
-          position: absolute; top: -14px; right: -10px;
-          background: #f59e0b; color: #1c1917;
-          font-family: 'Josefin Sans', sans-serif;
-          font-size: 9px; font-weight: 700;
-          letter-spacing: 0.05em; text-transform: uppercase;
-          padding: 2px 8px; border-radius: 2px;
-          white-space: nowrap; z-index: 10;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+          display: none;
         }
-        .todo-replace-outline { outline: 2px dashed #f59e0b; outline-offset: 12px; }
+        .todo-replace-outline { outline: none; }
       `}</style>
 
       {/* #14 — Reading progress bar */}

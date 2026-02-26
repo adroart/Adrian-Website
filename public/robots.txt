@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /welcome
+
+Sitemap: https://adrianrasmussen.com/sitemap.xml

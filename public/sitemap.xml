@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core pages -->
+  <url><loc>https://adrianrasmussen.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adrianrasmussen.com/shop</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://adrianrasmussen.com/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://adrianrasmussen.com/inquire</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Category pages -->
+  <url><loc>https://adrianrasmussen.com/creations/multidimensional-art</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations/illuminated-works</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations/oracle-cards</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- Subcategory pages -->
+  <url><loc>https://adrianrasmussen.com/creations/multidimensional-art/universal-language</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations/multidimensional-art/mandala</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations/multidimensional-art/light-codes</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/creations/multidimensional-art/signature-pieces</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+  <!-- Writings -->
+  <url><loc>https://adrianrasmussen.com/writings/ye-ming-zhu</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings/the-mandala-series</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings/the-universal-language</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings/light-codes</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings/the-practice-creation</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://adrianrasmussen.com/writings/path-tea</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+
+  <!-- Legal -->
+  <url><loc>https://adrianrasmussen.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://adrianrasmussen.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

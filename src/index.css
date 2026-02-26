@@ -486,3 +486,34 @@ html.dark body { background-color: #141210; }
 .footer-link:hover::before {
   transform: translateY(-50%) scale(1);
 }
+
+/* ─── Reduced Motion Support ──────────────────────────────────────────── */
+/* Respects user preference to minimize non-essential animations (WCAG 2.1) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse, .animate-pulse-slow, .animate-spin-slow, .animate-spin-reverse-slow {
+    animation: none !important;
+  }
+  .stagger-in, .card-stagger > * {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+}
+
+/* ─── Screen Reader Only ──────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

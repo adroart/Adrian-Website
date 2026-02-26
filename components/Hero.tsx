@@ -43,9 +43,12 @@ const Hero: React.FC = () => {
               muted
               playsInline
               className="w-full h-full object-cover opacity-60"
+              aria-hidden="true"
           >
               <source src="https://video.wixstatic.com/video/e5e2db_603cdbb883e847db9a1f47fd9bb39e26/720p/mp4/file.mp4" type="video/mp4" />
           </video>
+          {/* Fallback background if video fails to load */}
+          <div className="absolute inset-0 bg-gradient-to-br from-wood-900 via-stone-900 to-wood-800 -z-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
       </div>
 

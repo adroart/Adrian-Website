@@ -36,6 +36,8 @@
         if (localStorage.getItem('dark-mode') === 'true') document.documentElement.classList.add('dark');
       })();
     </script>
+    <!-- Skip to content link for keyboard/screen reader users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#262321] focus:text-[#f5f4f0] focus:outline-2 focus:outline-[#c4aa7c]" style="font-family:'Josefin Sans',sans-serif;font-size:12px;letter-spacing:0.2em;text-transform:uppercase;">Skip to main content</a>
     <div id="root">
         <div class="initial-loader" style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: #262321; color: #f5f4f0; font-family: monospace; flex-direction: column; gap: 20px;">
             <div style="width: 40px; height: 40px; border: 2px solid #524330; border-top-color: #b0966b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
