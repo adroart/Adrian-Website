@@ -295,29 +295,163 @@
 
 ---
 
-## TOP 20 RECOMMENDED ORDER
+## IMPLEMENTATION CHECKLIST
 
-Start with these. Greatest impact, most achievable:
+### TIER 1: CRITICAL
 
-| Priority | # | Item | Effort | Why First |
-|----------|---|------|--------|-----------|
-| 1 | 2 | Global scroll-to-top on route change | `[S]` | Broken on most navigations, instantly noticeable |
-| 2 | 1 | Nav active state prefix matching | `[S]` | Users constantly lose orientation |
-| 3 | 4 | Desktop hero CTA | `[S]` | Largest screens get zero guidance |
-| 4 | 7 | Fix dead footer links | `[S]` | Broken links destroy trust |
-| 5 | 88 | Remove TODO badge from About page | `[S]` | Dev artifact visible to users |
-| 6 | 97 | Add favicons | `[S]` | Empty browser tab is unprofessional |
-| 7 | 18 | Skip-to-content link | `[S]` | Baseline accessibility |
-| 8 | 19 | Reduced motion support | `[M]` | WCAG compliance, prevents harm |
-| 9 | 13 | Mobile search in Store | `[S]` | Core feature inaccessible on mobile |
-| 10 | 10 | Larger hamburger tap target | `[S]` | 5-second fix, prevents frustration |
-| 11 | 3 | Dismissable Teajia bar | `[M]` | Frees 32px on every page |
-| 12 | 11 | Two-column mobile gallery | `[M]` | Doubles visual density on mobile |
-| 13 | 34 | Remove silent form early-submit | `[M]` | Consent issue, potential GDPR risk |
-| 14 | 56 | Move inline styles to index.css | `[S]` | Eliminates style duplication |
-| 15 | 85 | Extract shared hooks | `[S]` | Eliminates code duplication |
-| 16 | 24 | Focus trap on drawers | `[S]` | Accessibility essential for modals |
-| 17 | 65 | Persist cart in localStorage | `[M]` | Art purchases are considered, span sessions |
-| 18 | 5 | Consistent breadcrumbs | `[M]` | Orientation across all pages |
-| 19 | 8 | Page transition animation | `[M]` | Makes navigation feel intentional |
-| 20 | 27 | Gallery hover alternative to overlay | `[M]` | Don't hide the art on an art site |
+#### Navigation & Wayfinding
+- [x] **1.** `[S]` Nav active state prefix matching
+- [x] **2.** `[S]` Global scroll-to-top on route change
+- [x] **3.** `[M]` Dismissable Teajia promo bar
+- [x] **4.** `[S]` Desktop hero CTA
+- [ ] **5.** `[M]` Consistent breadcrumbs across all pages
+- [ ] **6.** `[S]` Back navigation uses history with fallback
+- [x] **7.** `[S]` Remove dead footer links
+- [ ] **8.** `[M]` Page transition animation
+- [x] **9.** `[S]` "Enter" scroll indicator clickable
+- [x] **10.** `[S]` Larger hamburger tap target
+
+#### Mobile Experience
+- [ ] **11.** `[M]` Two-column mobile gallery
+- [ ] **12.** `[S]` Filter pill touch targets too small
+- [x] **13.** `[S]` Store search visible on mobile
+- [ ] **14.** `[M]` Cart drawer swipe-to-close
+- [ ] **15.** `[S]` About/OracleCards side-nav dots on mobile
+- [ ] **16.** `[M]` Swipe gesture on PiecePage image gallery
+- [ ] **17.** `[S]` Sticky filter bars account for Teajia bar
+
+#### Accessibility
+- [ ] **18.** `[M]` Skip-to-content link
+- [ ] **19.** `[M]` `prefers-reduced-motion` support
+- [x] **20.** `[S]` Hero video `aria-hidden`
+- [x] **21.** `[S]` Mobile menu ARIA attributes
+- [ ] **22.** `[S]` Form errors connected via `aria-describedby`
+- [ ] **23.** `[S]` Budget slider `aria-valuenow` / `aria-valuetext`
+- [ ] **24.** `[S]` Focus trap on drawers
+- [x] **25.** `[S]` Escape key handler on drawers
+
+### TIER 2: HIGH IMPACT
+
+#### Interaction Design
+- [ ] **26.** `[S]` `:active` states for touch devices
+- [ ] **27.** `[M]` Gallery hover: replace overlay with subtle indicator
+- [ ] **28.** `[S]` Collection card click scrolls to results
+- [ ] **29.** `[S]` PiecePage "Add to Cart" confirmation more visible
+- [ ] **30.** `[S]` Gallery tile keyboard focus visual
+- [ ] **31.** `[M]` Image lightbox swipe-to-dismiss
+- [ ] **32.** `[S]` Category tile descriptions visible by default
+- [ ] **33.** `[S]` Deterministic "Continue the Journey" sorting
+- [x] **34.** `[M]` Remove silent form early-submit
+- [ ] **35.** `[S]` Loading indicator / disable fields during inquiry submit
+
+#### Visual Consistency
+- [ ] **36.** `[S]` Consolidate back-to-top implementations
+- [ ] **37.** `[S]` Consistent commission CTA text
+- [ ] **38.** `[S]` Consistent border radius policy
+- [ ] **39.** `[S]` Unified hover underline mechanics
+- [ ] **40.** `[S]` Dark mode toggle more discoverable
+- [x] **41.** `[S]` Remove duplicate footer Commissions/Contact
+
+#### Performance & Loading
+- [ ] **42.** `[M]` Pause GenerativeBackground when not visible
+- [ ] **43.** `[S]` Image placeholder in gallery cards
+- [ ] **44.** `[S]` Store skeleton count matches expected results
+- [ ] **45.** `[S]` Consolidate scroll listeners
+
+### TIER 3: IMPORTANT
+
+#### Navigation Refinements
+- [ ] **46.** `[M]` Creations category tiles show piece count
+- [ ] **47.** `[S]` Subcategory "Explore more" uses tile cards
+- [ ] **48.** `[S]` "Back to writings" link at bottom of articles
+- [ ] **49.** `[S]` Clarify "Selected Works" label on Creations
+- [ ] **50.** `[M]` Writing categories show piece counts
+- [ ] **51.** `[S]` Sort options always available on Creations
+
+#### Typography & Readability
+- [ ] **52.** `[S]` Writing article max-width for readability
+- [ ] **53.** `[S]` Drop cap handles leading punctuation
+- [ ] **54.** `[S]` Consolidate price formatting functions
+- [ ] **55.** `[S]` Availability text colors meet WCAG AA contrast
+- [ ] **56.** `[S]` Move inline styles from About/OracleCards to index.css
+
+#### Image & Media
+- [ ] **57.** `[M]` Image error handling with styled fallback
+- [ ] **58.** `[S]` PiecePage thumbnails keyboard accessible
+- [ ] **59.** `[M]` Hero video poster fallback
+- [ ] **60.** `[S]` Parallax images gap fix on short viewports
+- [ ] **61.** `[S]` Store lightbox loading indicator
+
+#### Form & Commerce UX
+- [ ] **62.** `[S]` Inquiry completion bar starts at 0%
+- [ ] **63.** `[S]` Budget slider intermediate tick marks
+- [ ] **64.** `[S]` Cart minus-to-zero shows trash icon
+- [ ] **65.** `[M]` Persist cart in localStorage
+- [ ] **66.** `[S]` Inquiry form warns on unsaved navigation
+- [ ] **67.** `[S]` PiecePage related pieces fallback
+- [ ] **68.** `[S]` Store "Configure" uses `<Link>` not `<a>`
+
+### TIER 4: NICE-TO-HAVE
+
+#### Micro-interactions & Polish
+- [ ] **69.** `[S]` Cart item removal animation
+- [ ] **70.** `[S]` Cart badge pulse on add
+- [ ] **71.** `[S]` Newsletter success state dismissable
+- [ ] **72.** `[S]` Remove or use `animate-ripple`
+- [ ] **73.** `[S]` Cart item remove button more visible
+- [ ] **74.** `[S]` Footer newsletter label smooth animation
+- [ ] **75.** `[S]` Active/pressed feedback on primary buttons
+- [ ] **76.** `[S]` PiecePage share copy-to-clipboard fallback
+
+#### Layout Enhancements
+- [ ] **77.** `[M]` Homepage art category orientation section
+- [ ] **78.** `[S]` Writing cards visual rhythm variation
+- [ ] **79.** `[S]` 404 page personality
+- [ ] **80.** `[S]` Store empty search state on-brand
+
+#### Dark Mode Refinements
+- [ ] **81.** `[S]` System preference detection for dark mode
+- [ ] **82.** `[S]` Dark mode transition completeness
+- [ ] **83.** `[S]` Replace hardcoded inline colors with CSS vars
+- [ ] **84.** `[S]` Dark mode progress bar contrast
+
+#### Code Quality (UX-Impacting)
+- [ ] **85.** `[S]` Extract shared hooks to `hooks/` directory
+- [ ] **86.** `[S]` Move duplicated CSS to index.css
+- [ ] **87.** `[S]` DarkModeContext targeted re-renders
+- [x] **88.** `[S]` Remove TODO_REPLACE badge from About
+- [ ] **89.** `[S]` Cart context product validation
+
+### TIER 5: FUTURE ENHANCEMENTS
+
+- [ ] **90.** `[L]` Page-level loading skeletons
+- [ ] **91.** `[L]` Responsive images with srcset
+- [ ] **92.** `[L]` Global site search
+- [ ] **93.** `[M]` "Recently Viewed" pieces
+- [ ] **94.** `[M]` Print stylesheet
+- [ ] **95.** `[L]` Image comparison slider for illuminated pieces
+- [ ] **96.** `[M]` Currency selector
+- [ ] **97.** `[S]` Add favicons and app icons
+- [ ] **98.** `[M]` Route-level error boundaries
+- [ ] **99.** `[M]` Writing card reading time display
+- [ ] **100.** `[S]` PiecePage structured data consistency
+- [ ] **101.** `[M]` Intersection-based infinite scroll for Store
+- [ ] **102.** `[M]` Welcome page OG meta
+- [ ] **103.** `[S]` OracleCards mobile quick-nav
+- [ ] **104.** `[S]` Collection card piece count prominence
+- [ ] **105.** `[S]` Footer "Currently" links to inquire
+- [ ] **106.** `[M]` Sticky mobile CTA bar content overlap
+- [ ] **107.** `[S]` Consistent category routing pattern
+- [ ] **108.** `[L]` Analytics event tracking
+- [ ] **109.** `[M]` PWA capabilities
+- [ ] **110.** `[S]` Document z-index scale
+- [ ] **111.** `[S]` Active filter chips on Creations
+- [ ] **112.** `[M]` Store philosophy interstitials placement
+- [ ] **113.** `[S]` ~~Modal drawers Escape key~~ (done via #25)
+- [ ] **114.** `[S]` Scroll position preserved on back navigation
+- [ ] **115.** `[S]` Commission path cards neutral unselected state
+- [ ] **116.** `[S]` Mobile menu backdrop/scrim
+- [ ] **117.** `[S]` Cart badge shows real number
+- [ ] **118.** `[S]` Subcategory filter scroll indicator
+- [ ] **119.** `[S]` Sort control in subcategory pages
+- [ ] **120.** `[M]` Creations remembers last-used category
