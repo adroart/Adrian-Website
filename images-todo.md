@@ -123,32 +123,64 @@ Each story has a featured hero image. Landscape orientation (3:2 ratio). These a
 
 ---
 
-## Artwork Categories (for when you add pieces)
+## Artwork Images by Category
 
-No individual artwork images are listed here since none have been added yet. When you begin adding real pieces, each artwork entry needs:
+Every piece needs at minimum a **cover image** (the primary photo shown in galleries and tiles, recommend at least 1000px on the shortest side). Ideally each piece also gets **additional gallery images** (detail shots, alternate angles, in-context shots, process photos).
 
-- **Cover image** — The primary image shown in galleries and tiles (variable aspect ratio, recommend at least 1000px on the shortest side)
-- **Additional gallery images** — Detail shots, alternate angles, context shots, process photos (array of images per piece)
+Fill in your actual piece count per category below, then multiply to get total images needed.
 
-Here are the categories and approximate counts to plan for:
+### Multidimensional Art: Universal Language
+- [ ] **___ pieces** to photograph (up to 64 works, each connected to a hexagram)
+- Each needs: 1 cover image + gallery images showing layers, gemstone details, and scale
 
-| Category | Subcategory | Approx. Pieces to Photograph |
-|---|---|---|
-| **Multidimensional Art** | Universal Language | 64 works |
-| **Multidimensional Art** | Mandala | TBD |
-| **Multidimensional Art** | Light Codes: Frequency Foundations | ~40 works total across 3 subcategories |
-| **Multidimensional Art** | Light Codes: Embodied Vibrations | (included above) |
-| **Multidimensional Art** | Light Codes: Resonant Formations | (included above) |
-| **Multidimensional Art** | Signature Pieces | TBD |
-| **Illuminated Works** | — | TBD (subset of above, shown in illuminated state) |
-| **Jewelry** | — | TBD |
-| **Oracle Cards** | — | 4 decks (covered above) |
-| **Tables** | — | TBD |
-| **Installations** | — | TBD |
-| **Objects** | — | TBD |
-| **Spaces** | — | TBD |
+### Multidimensional Art: Mandala
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image + gallery images showing painted detail and laser-cut geometry together
 
-> For Illuminated Works: these are existing pieces from other categories photographed/filmed in their glowing state after dark. You likely need both a "day" and "night/glow" version of each illuminated piece.
+### Multidimensional Art: Light Codes — Frequency Foundations
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image + gallery images (consider both flat detail and angled shots to show depth)
+
+### Multidimensional Art: Light Codes — Embodied Vibrations
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image + gallery images
+
+### Multidimensional Art: Light Codes — Resonant Formations
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image + gallery images
+
+### Multidimensional Art: Signature Pieces
+- [ ] **___ pieces** to photograph (one-off works outside any series)
+- Each needs: 1 cover image + gallery images
+
+### Illuminated Works (day + night versions)
+- [ ] **___ pieces** to photograph in their illuminated state
+- These are existing pieces from the categories above that also glow after dark
+- Each illuminated piece needs: 1 daylight cover image + 1 glowing/night image (at minimum), ideally also a transition video or GIF
+
+### Jewelry
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image (styled or on body) + gallery images showing detail, clasp, scale on skin
+
+### Oracle Cards
+- [ ] **___ decks** to photograph (deck covers and sample cards are tracked separately above in Oracle Cards Page section)
+- Consider also: spread shots, cards in ceremony context, packaging shots
+
+### Tables
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image (ideally in a real space) + gallery images showing surface detail, joinery, scale
+
+### Installations
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image (wide shot of full installation) + gallery images showing detail, people for scale, different lighting conditions
+
+### Objects
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image + gallery images showing the object in use or on an altar/table
+
+### Spaces
+- [ ] **___ pieces** to photograph
+- Each needs: 1 cover image (wide establishing shot) + gallery images showing interior, details, atmosphere at different times of day
 
 ---
 
@@ -166,4 +198,138 @@ Here are the categories and approximate counts to plan for:
 | Writings (story images) | 6 |
 | Inquire Page | 3 |
 | **Total site-level images** | **41** |
-| Artwork per piece (when added) | 1 cover + multiple gallery each |
+| | |
+| **Artwork (per piece, fill in counts)** | |
+| Universal Language | ___ pieces x (1 cover + gallery) |
+| Mandala | ___ pieces x (1 cover + gallery) |
+| Light Codes: Frequency Foundations | ___ pieces x (1 cover + gallery) |
+| Light Codes: Embodied Vibrations | ___ pieces x (1 cover + gallery) |
+| Light Codes: Resonant Formations | ___ pieces x (1 cover + gallery) |
+| Signature Pieces | ___ pieces x (1 cover + gallery) |
+| Illuminated Works (day + night) | ___ pieces x (2 images minimum) |
+| Jewelry | ___ pieces x (1 cover + gallery) |
+| Oracle Cards (individual cards/spreads) | ___ items x (1 cover + gallery) |
+| Tables | ___ pieces x (1 cover + gallery) |
+| Installations | ___ pieces x (1 cover + gallery) |
+| Objects | ___ pieces x (1 cover + gallery) |
+| Spaces | ___ pieces x (1 cover + gallery) |
+
+---
+---
+
+# Ideal / Future Images
+
+Beyond the essential images above, these are additional images that would strengthen the storytelling on each page. Not required for launch, but would elevate the experience significantly.
+
+---
+
+## Homepage — Storytelling Additions
+
+- [ ] **Commission process sequence** — 2 to 3 images showing the journey of a commission: initial conversation or sketch, in-progress creation, and the finished piece in its home. Would transform the commission section from a single static photo into a narrative.
+- [ ] **Piece in a real home/space** — A lifestyle shot showing one of your works hanging on a wall, sitting on a shelf, or integrated into someone's living space. Brings the work out of the studio and into lived context.
+
+---
+
+## About Page — Storytelling Additions
+
+- [ ] **Bali landscape / surroundings** — Where you live and create. The environment that shapes the work. Could be used as an additional interstitial.
+- [ ] **Materials and tools close-up** — Wood grain, laser bed, brushes, airbrush, crystals laid out. The raw ingredients before they become art.
+- [ ] **Adrian with a finished piece** — You holding or standing beside a completed work. Connects the artist to the object.
+
+---
+
+## Subcategory Pages (Universal Language, Mandala, Light Codes, Signature Pieces) — Storytelling Additions
+
+These pages currently go straight from the hero image and series description into the gallery grid. Each would benefit from visual storytelling in between.
+
+### Universal Language
+- [ ] **Process: Laser cutting a hexagram** — The precision side of the work. Laser in action on wood.
+- [ ] **Process: Painting / airbrushing layers** — The organic, intuitive side. Hands, paint, the moment of creating.
+- [ ] **Detail: Wood layers and gemstone placement** — Macro shot revealing how layers stack and where gemstones sit at energetic points.
+- [ ] **In context: A Universal Language piece in a meditation space or on a wall** — Shows scale and atmosphere.
+
+### Mandala
+- [ ] **Process: The geometry stage** — Laser-cut mandala before painting. The precise underlying form.
+- [ ] **Process: Painting the mandala** — Splatter, color, the "analog chaos" meeting digital precision.
+- [ ] **Detail: Close-up of painted surface on laser-cut geometry** — Where the brush meets the cut edge.
+- [ ] **In context: A mandala in a room** — Showing it as "a place to sit with," not decoration.
+
+### Light Codes
+- [ ] **Process: Drawing a Light Code** — The stream-of-consciousness pen work. Hands, paper, the flow state.
+- [ ] **Process: Engraving in wood** — A Light Code being etched by laser into basswood.
+- [ ] **Detail: Macro of sigils and patterns** — Revealing the layered symbols within a Light Code drawing.
+- [ ] **In context: A Light Code piece in a ceremonial or personal setting**
+
+### Signature Pieces
+- [ ] **Process: One-off creation** — Something showing the unique, non-series nature of these works.
+- [ ] **In context: A signature piece installed in a space** — How these singular works live in the world.
+
+---
+
+## Illuminated Works Page — Storytelling Additions
+
+This page has the biggest storytelling gap. The entire concept hinges on the transformation between daylight and dark.
+
+- [ ] **Video: Daylight to dark transition** — The single most important piece of media for this page. A short loop showing a piece in natural light, then darkness falling, then the LEDs revealing the second life of the work. This could replace the hero image.
+- [ ] **Ambient illumination lifestyle shot** — A piece glowing softly in a bedroom, meditation space, or quiet corner. Soft, warm, lived-in feeling.
+- [ ] **Living light / dynamic illumination shot** — A piece with programmable or responsive light in a more dramatic setting. Gallery, gathering space, or ceremony.
+- [ ] **Detail: Light through wood grain** — Macro shot showing how embedded LEDs reveal the layers and grain of the wood from behind.
+- [ ] **Adrian with an illuminated piece** — Personal connection. You in the studio or a dark room with one of these works glowing. The "what this means to me" moment.
+- [ ] **Before and after pair** — Same piece, same angle: one in daylight, one in darkness. Side by side tells the whole story instantly.
+
+---
+
+## Oracle Cards Page — Storytelling Additions
+
+- [ ] **Hero image: Cards in ceremony** — Wide atmospheric shot for the top of the page. Hands drawing a card, cards spread on cloth, candlelight, tea. Sets the tone immediately.
+- [ ] **Hands shuffling or drawing a card** — Close, personal, human. Shows these are tools, not collectibles.
+- [ ] **Cards in a real ceremony or circle setting** — Group context. People sitting with cards. The communal aspect.
+- [ ] **Detail: Card printing quality** — Close-up showing heavyweight stock, color fidelity, edge detail. Communicates craftsmanship.
+- [ ] **Philosophy section companion image** — Something evocative alongside the dense philosophical text. Historical oracle tools (bones, shells, coins), or the lineage of divination objects leading to these cards.
+- [ ] **Packaging / unboxing** — How the decks arrive. Wrapping, box, presentation. The first moment of receiving.
+
+---
+
+## Individual Piece Pages — Storytelling Additions
+
+These apply across all pieces and would be added to the gallery images array per artwork.
+
+- [ ] **Scale reference shots** — Hand next to piece, piece on wall with furniture visible, person standing beside an installation. Every piece benefits from at least one scale reference.
+- [ ] **In-situ / lifestyle context** — The piece in a real room, on a real wall, in a real space. Not studio-white, but lived-in.
+- [ ] **Process documentation** — At least 1 to 2 process shots per piece: design stage, cutting, painting, assembly. Adds value and depth to the story of each work.
+- [ ] **Material close-ups** — Wood grain, brass inlay, crystal placement, paint texture. The sensory details that can't be seen from gallery distance.
+
+---
+
+## Inquire Page — Storytelling Additions
+
+- [ ] **Commission conversation moment** — You with a client, looking at materials or sketches together. Shows the collaborative nature of the process.
+- [ ] **Commissioned piece in its final home** — The end result of the inquiry process. A piece installed in the space it was designed for.
+- [ ] **Materials spread / mood board** — Wood samples, crystal options, color swatches. What the client gets to choose from.
+- [ ] **Sketch to finished piece sequence** — 2 to 3 images showing the evolution from initial concept to completed work.
+
+---
+
+## Writings Page — Storytelling Additions
+
+- [ ] **Inline images within story content** — Currently stories are text-only in the body. Each essay could benefit from 1 to 3 images woven into the text:
+  - "Ye Ming Zhu" — Glowing crystals in different states, dragon/phoenix symbolism
+  - "The Mandala Series" — Process sequence, geometry close-ups
+  - "The Universal Language" — I Ching connection, layers of wood being assembled
+  - "Light Codes" — The original drawings from the dream period, Ithaca reference imagery
+  - "How I Create" — Studio documentation, tools, the dance between digital and analog
+  - "The Way of Tea" — Tea ware, ceremony moments, the connection between tea patience and art patience
+
+---
+
+## General Studio / Process Library
+
+These are not tied to a specific page but would be reusable across the site wherever a storytelling moment calls for it.
+
+- [ ] **The laser in action** — Cutting, etching, the light and smoke of precision
+- [ ] **Airbrushing / painting** — The organic counterpart to the laser
+- [ ] **Wood selection and preparation** — Raw materials before they become art
+- [ ] **Crystal and gemstone sourcing** — The stones before placement
+- [ ] **The studio space itself** — Wide establishing shot of where everything happens
+- [ ] **Hands at work** — Close-up, no face, just hands and material. The universal artist image.
+- [ ] **Tea in the studio** — The practice that runs through everything. A kettle, a cup, a pause.
