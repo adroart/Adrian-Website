@@ -47,7 +47,7 @@ const AppInner: React.FC = () => {
       <GenerativeBackground pathname={location.pathname} theme={theme} />
       {!isWelcome && <Navigation theme={theme} />}
 
-      <main>
+      <main id="main-content">
         <Routes>
           <Route path="/" element={<><Hero /><Home /></>} />
 

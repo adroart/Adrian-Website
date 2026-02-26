@@ -94,10 +94,21 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt, onDoubleTap }) 
 };
 
 const VisualLightbox: React.FC<{ src: string; onClose: () => void; }> = ({ src, onClose }) => {
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     if (typeof document === 'undefined' || !document.body) return null;
 
     return createPortal(
         <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image detail view"
             className="fixed inset-0 z-[9999] bg-paper-50 flex flex-col animate-fade-in"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
@@ -247,7 +258,7 @@ const InspectionDrawer: React.FC<{
     if (!product || typeof document === 'undefined') return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[2000] flex justify-end">
+        <div className="fixed inset-0 z-[2000] flex justify-end" role="dialog" aria-modal="true" aria-label={`${product.title} details`}>
             <div
                 className="absolute inset-0 bg-wood-900/30 backdrop-blur-sm transition-opacity duration-500"
                 onClick={onClose}
@@ -438,7 +449,7 @@ const ControlDeck: React.FC<{
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search pieces..."
+                        placeholder="Search by title, material, or category..."
                         className="bg-transparent font-label text-xs text-wood-900 outline-none placeholder:text-wood-300 placeholder:capitalize w-full py-1 tracking-wide"
                     />
                     {search && (
@@ -448,7 +459,7 @@ const ControlDeck: React.FC<{
                     )}
                 </div>
 
-                <span className="hidden sm:inline font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold truncate">
+                <span className="hidden sm:inline font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold truncate" aria-live="polite" aria-atomic="true">
                     {count} Results
                 </span>
                 <div className="flex items-center gap-2 shrink-0">

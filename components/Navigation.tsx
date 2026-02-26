@@ -62,6 +62,16 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isMobileMenuOpen]);
+
   const navItems: NavItem[] = [
     { path: '/creations', label: 'Creations' },
     { path: '/writings', label: 'Writings' },
@@ -149,14 +159,14 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               </svg>
               {totalItems > 0 && (
                 <span className={`absolute -top-0.5 -right-0.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-label font-semibold leading-none ${isDark ? 'bg-bronze-400 text-stone-950' : 'bg-bronze-600 text-paper-50'}`}>
-                  {totalItems > 9 ? '9+' : totalItems}
+                  {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
             </button>
 
             {/* #10 Larger tap target (min 44x44px) + #21 ARIA attributes */}
             <button
-              className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-3 -mr-3`}
+              className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-3 -mr-3 min-w-[48px] min-h-[48px] flex items-center justify-center`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-nav-menu"

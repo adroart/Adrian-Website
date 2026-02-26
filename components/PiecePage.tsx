@@ -542,8 +542,7 @@ const PiecePage: React.FC = () => {
 
                     {art.relatedStorySlug && (
                         <Link
-                            to={`/writings`}
-                            state={{ openStory: art.relatedStorySlug }}
+                            to={`/writings/${art.relatedStorySlug}`}
                             className="flex items-center gap-3 px-4 py-3 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
                         >
                             <BookOpen size={16} className="text-bronze-600 shrink-0" />

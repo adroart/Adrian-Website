@@ -11,7 +11,9 @@ interface FormState {
   commissionType: CommissionType;
   budget: string;
   timeline: string;
+  specificDate: string;
   referral: string;
+  referralOther: string;
 }
 
 /* ── Budget range slider ───────────────────────────────────────────── */
@@ -120,7 +122,9 @@ const Inquire: React.FC = () => {
     commissionType: 'personal',
     budget: '',
     timeline: '',
+    specificDate: '',
     referral: '',
+    referralOther: '',
   });
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -295,7 +299,7 @@ const Inquire: React.FC = () => {
     setCoreSubmitted(false);
     setSendStatus('IDLE');
     setErrorMsg('');
-    setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', referral: '' });
+    setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', specificDate: '', referral: '', referralOther: '' });
     setBudgetRange([0, BUDGET_STOPS.length - 1]);
     setCommissionType('personal');
     setTouched({});
@@ -739,6 +743,19 @@ const Inquire: React.FC = () => {
                               );
                             })}
                           </div>
+                          {form.timeline === 'Specific date' && (
+                            <div className="mt-4">
+                              <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2">
+                                Target date
+                              </label>
+                              <input
+                                type="date"
+                                value={form.specificDate}
+                                onChange={(e) => setForm(prev => ({ ...prev, specificDate: e.target.value }))}
+                                className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-bronze-500 transition-colors"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Referral — vertical radio list */}
@@ -772,6 +789,17 @@ const Inquire: React.FC = () => {
                               );
                             })}
                           </div>
+                          {form.referral === 'Other' && (
+                            <div className="mt-4">
+                              <input
+                                type="text"
+                                value={form.referralOther}
+                                onChange={(e) => setForm(prev => ({ ...prev, referralOther: e.target.value }))}
+                                placeholder="Please share how you found me..."
+                                className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-bronze-500 transition-colors"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
 

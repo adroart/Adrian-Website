@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
@@ -85,11 +85,45 @@ const CartDrawer: React.FC = () => {
     const { items, removeFromCart, updateQuantity, totalItems, totalPrice, isCartOpen, closeCart } = useCart();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const drawerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (typeof document === 'undefined' || !document.body) return;
         document.body.style.overflow = isCartOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
+    }, [isCartOpen]);
+
+    // Close on Escape key
+    useEffect(() => {
+        if (!isCartOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeCart();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isCartOpen, closeCart]);
+
+    // Trap focus within drawer when open
+    useEffect(() => {
+        if (!isCartOpen || !drawerRef.current) return;
+        const drawer = drawerRef.current;
+        const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const handleTab = (e: KeyboardEvent) => {
+            if (e.key !== 'Tab') return;
+            const focusable = drawer.querySelectorAll<HTMLElement>(focusableSelector);
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+        document.addEventListener('keydown', handleTab);
+        return () => document.removeEventListener('keydown', handleTab);
     }, [isCartOpen]);
 
     // Clear error when cart closes or items change
@@ -138,7 +172,12 @@ const CartDrawer: React.FC = () => {
             />
 
             {/* Drawer */}
-            <div className={`relative w-full max-w-[480px] h-full bg-paper-50 border-l border-wood-200 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div
+                ref={drawerRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Shopping cart"
+                className={`relative w-full max-w-[480px] h-full bg-paper-50 border-l border-wood-200 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
                 {/* Header */}
                 <div className="h-16 border-b border-wood-200 flex items-center justify-between px-6 bg-paper-50 shrink-0">
