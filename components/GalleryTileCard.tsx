@@ -34,7 +34,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     const showRange = highPrice != null && art.price != null && highPrice !== art.price;
 
     return (
-        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500">
+        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 bg-paper-100 border border-wood-200 transition-all duration-500">
             {/* Image — links to the piece */}
             <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100">
                 <ArtImage
@@ -65,7 +65,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             </Link>
 
             {/* Label band — clean stacked layout */}
-            <div className="pt-3 pb-1 sm:pt-4 sm:pb-2">
+            <div className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
                 {/* Category / Series label */}
                 <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
                     <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
@@ -116,6 +116,9 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 {!showDetails && art.price != null && art.availability !== 'SOLD' && (
                     <span className="block mt-1.5 font-serif text-sm text-wood-500">
                         ${art.price.toLocaleString('en-US')}
+                        {showRange && (
+                            <span className="text-wood-400 font-light"> to ${highPrice!.toLocaleString('en-US')}</span>
+                        )}
                     </span>
                 )}
             </div>
