@@ -113,7 +113,7 @@ const Inquire: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focused, setFocused] = useState<Record<string, boolean>>({});
-  const [coreSubmitted, setCoreSubmitted] = useState(false);
+  // coreSubmitted state removed — #34
   const [budgetRange, setBudgetRange] = useState<[number, number]>([0, BUDGET_STOPS.length - 1]);
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -247,30 +247,7 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: prev[field] === value ? '' : value }));
   };
 
-  /* ── Silent early submit ──────────────────────────────────────────── */
-  const requiredValid =
-    form.name.trim() !== '' &&
-    form.email.trim() !== '' &&
-    isValidEmail(form.email) &&
-    form.vision.trim() !== '';
-
-  const allRequiredTouched = touched.name && touched.email && touched.vision;
-
-  useEffect(() => {
-    if (!coreSubmitted && allRequiredTouched && requiredValid) {
-      setCoreSubmitted(true);
-      fetch('/api/inquire', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          vision: form.vision,
-          commissionType: form.commissionType,
-        }),
-      }).catch(() => {});
-    }
-  }, [allRequiredTouched, requiredValid, coreSubmitted, form.name, form.email, form.vision, form.commissionType]);
+  /* #34 — Removed silent early submit. Data is only sent when the user explicitly submits. */
 
   /* Form completion progress */
   const completionCount = [
