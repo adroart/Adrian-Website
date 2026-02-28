@@ -5,6 +5,7 @@ import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockData';
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { img as cldImg } from '../utils/cloudinary';
 
 // --- Helpers ---
 
@@ -440,7 +441,7 @@ const PiecePage: React.FC = () => {
                         }}
                     >
                         <img
-                            src={allImages[activeImageIndex]}
+                            src={cldImg(allImages[activeImageIndex], { w: 1200 })}
                             className="w-full h-auto object-cover transition-opacity duration-300"
                             alt={art.title}
                         />
@@ -477,7 +478,7 @@ const PiecePage: React.FC = () => {
                                     }`}
                                 >
                                     <img
-                                        src={img}
+                                        src={cldImg(img, { w: 200, h: 80 })}
                                         className="w-full h-20 object-cover"
                                         alt={`${art.title} view ${i + 1}`}
                                     />
@@ -939,7 +940,7 @@ const PiecePage: React.FC = () => {
                             >
                                 <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">
                                     <img
-                                        src={related.coverImage}
+                                        src={cldImg(related.coverImage, { w: 600, h: 750 })}
                                         alt={`${related.title} by Adrian Rasmussen`}
                                         loading="lazy"
                                         className="w-full aspect-[4/5] object-cover transition-transform duration-[1.5s] group-hover:scale-105"

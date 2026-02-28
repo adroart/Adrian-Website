@@ -272,7 +272,7 @@ const ShopHero: React.FC<{
                     className="group md:col-span-2 text-left overflow-hidden bg-wood-100 border border-wood-200 hover:border-wood-400 transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                 >
                     <div className="relative overflow-hidden aspect-[4/3]">
-                        <ArtImage src={main.image} alt={main.title} variant="product" />
+                        <ArtImage publicId={main.image} alt={main.title} variant="product" />
                         <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-all duration-500" />
                         <div className="absolute top-4 left-4 bg-bronze-400 text-paper-50 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.2em] font-semibold dark-preserve">
                             Featured
@@ -307,7 +307,7 @@ const ShopHero: React.FC<{
                         className="group text-left overflow-hidden bg-wood-100 border border-wood-200 hover:border-wood-400 transition-all duration-500 flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                     >
                         <div className="relative overflow-hidden flex-1" style={{ minHeight: '220px' }}>
-                            <ArtImage src={second.image} alt={second.title} variant="product" />
+                            <ArtImage publicId={second.image} alt={second.title} variant="product" />
                             <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-all duration-500" />
                         </div>
                         <div className="p-5 md:p-6 shrink-0">
@@ -351,7 +351,7 @@ const ShopCollectionCard: React.FC<{
         >
             <div className="absolute inset-0 bg-wood-100" />
             <ArtImage
-                src={coverImage}
+                publicId={coverImage}
                 variant="cover"
                 alt=""
                 aria-hidden="true"
@@ -389,7 +389,7 @@ const ProductCard: React.FC<{
         >
             <div className="relative w-full bg-wood-100 overflow-hidden transition-shadow duration-500 group-hover:shadow-lg">
                 <ArtImage
-                    src={product.image}
+                    publicId={product.image}
                     alt={`${product.title} by Adrian Rasmussen${product.material ? `, ${product.material}` : ''}`}
                     variant="gallery"
                     className={!isAvailable ? 'opacity-60' : ''}
@@ -581,10 +581,10 @@ const InspectionDrawer: React.FC<{
                     {/* Product image with zoom trigger */}
                     <div
                         className="w-full bg-wood-50 border border-wood-200 mb-4 overflow-hidden relative group cursor-zoom-in"
-                        onClick={() => onViewImage(product.image)}
+                        onClick={() => onViewImage(img(product.image, { w: 1600 }))}
                     >
                         <img
-                            src={product.image}
+                            src={img(product.image, { w: 1200 })}
                             alt={product.title}
                             onLoad={() => setLoaded(true)}
                             className={`w-full h-auto object-cover transition-all duration-1000 ${loaded ? 'opacity-100 blur-0' : 'opacity-0 blur-lg'}`}
@@ -699,7 +699,7 @@ const InspectionDrawer: React.FC<{
                                         className="group w-full flex gap-4 text-left hover:bg-wood-50 transition-colors p-2 -mx-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
                                     >
                                         <div className="w-20 h-20 bg-wood-100 overflow-hidden shrink-0">
-                                            <ArtImage src={rp.image} alt={rp.title} variant="product" />
+                                            <ArtImage publicId={rp.image} alt={rp.title} variant="product" />
                                         </div>
                                         <div className="flex-1 min-w-0 py-1">
                                             <h4 className="font-serif text-base text-wood-900 font-medium leading-snug group-hover:text-bronze-700 transition-colors truncate">

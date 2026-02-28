@@ -38,7 +38,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             {/* Image — links to the piece */}
             <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100">
                 <ArtImage
-                    src={art.coverImage}
+                    publicId={art.coverImage}
                     alt={`${art.title} by Adrian Rasmussen`}
                     variant="gallery"
                     loading="lazy"
