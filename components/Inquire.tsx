@@ -264,6 +264,9 @@ const Inquire: React.FC = () => {
   /* Vision word count */
   const wordCount = form.vision.trim() ? form.vision.trim().split(/\s+/).length : 0;
 
+  /* Required fields valid */
+  const requiredValid = form.name.trim() && form.email.trim() && isValidEmail(form.email) && form.vision.trim();
+
   /* ── Submit ───────────────────────────────────────────────────────── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,7 +299,6 @@ const Inquire: React.FC = () => {
 
   const handleReset = () => {
     setSubmitted(false);
-    setCoreSubmitted(false);
     setSendStatus('IDLE');
     setErrorMsg('');
     setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', specificDate: '', referral: '', referralOther: '' });
