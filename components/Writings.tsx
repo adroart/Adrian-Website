@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
+import { img } from '../utils/cloudinary';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -169,7 +170,7 @@ export const WritingArticle: React.FC = () => {
                 {story.image && (
                     <div className="mb-16 overflow-hidden shadow-sm">
                         <img
-                            src={story.image}
+                            src={img(story.image, { w: 1200, h: 800 })}
                             className="w-full h-auto aspect-[3/2] object-cover"
                             alt={`${story.title} by Adrian Rasmussen`}
                             loading="lazy"
@@ -212,7 +213,7 @@ export const WritingArticle: React.FC = () => {
                                 >
                                     <div className="w-20 h-20 flex-shrink-0 overflow-hidden bg-wood-100 border border-wood-200">
                                         <img
-                                            src={art.coverImage}
+                                            src={img(art.coverImage, { w: 160, h: 160 })}
                                             alt={art.title}
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                         />
@@ -437,7 +438,7 @@ const Writings: React.FC = () => {
                                             {story.image && (
                                                 <div className="w-24 self-stretch flex-shrink-0 md:w-2/5 md:min-h-[220px] overflow-hidden bg-wood-100">
                                                     <img
-                                                        src={story.image}
+                                                        src={img(story.image, { w: 800, h: 600 })}
                                                         alt={story.title}
                                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                                         loading="lazy"

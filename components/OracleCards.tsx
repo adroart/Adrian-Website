@@ -384,7 +384,7 @@ const DeckSection: React.FC<{
                     className="group flex items-center gap-4"
                   >
                     <div className="w-14 h-14 flex-shrink-0 overflow-hidden bg-wood-100">
-                      <img src={art.coverImage} alt={art.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                      <img src={img(art.coverImage, { w: 112, h: 112 })} alt={art.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                     </div>
                     <div>
                       <span className={`font-serif text-base group-hover:text-bronze-600 transition-colors font-medium ${isDark ? 'text-paper-100' : 'text-wood-900'}`}>

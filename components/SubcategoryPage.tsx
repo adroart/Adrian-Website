@@ -5,6 +5,7 @@ import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, LIGHT_CODE_SUBCATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
+import { img } from '../utils/cloudinary';
 
 // --- Subcategory config ---
 
@@ -169,7 +170,7 @@ const SubcategoryPage: React.FC = () => {
             {/* Hero — with gradient fade into content */}
             {config.image && (
                 <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden relative">
-                    <img src={config.image} alt={config.title} className="w-full h-full object-cover" />
+                    <img src={img(config.image, { w: 1600, h: 900 })} alt={config.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper-50 to-transparent" />
                 </div>
             )}
