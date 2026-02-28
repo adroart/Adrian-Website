@@ -51,7 +51,7 @@ const Hero: React.FC = () => {
               aria-hidden="true"
               className="w-full h-full object-cover opacity-60"
           >
-              <source src="https://res.cloudinary.com/REPLACE_WITH_YOUR_CLOUD_NAME/video/upload/f_auto,q_auto/adrian-website/site/hero/studio-creation-process" type="video/mp4" />
+              <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/adrian-website/site/hero/studio-creation-process" type="video/mp4" />
           </video>
           {/* Fallback background if video fails to load */}
           <div className="absolute inset-0 bg-gradient-to-br from-wood-900 via-stone-900 to-wood-800 -z-10" />

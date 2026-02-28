@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Product, Collection } from '../types';
 import { INVENTORY, STORE_CATEGORIES, COLLECTIONS, FULL_ARCHIVE } from '../data/mockData';
+import { img as cldImg } from '../utils/cloudinary';
 import {
     X, Search, SlidersHorizontal, ArrowRight, ShieldCheck,
     Maximize2, ArrowLeft, Package, ShoppingBag, Check, ChevronUp, BookOpen
@@ -28,7 +29,7 @@ function getCollectionCoverImage(collection: Collection): string {
     const ids = getCollectionProductIds(collection);
     const piece = FULL_ARCHIVE.find(a => ids.has(a.id) && a.featured)
         ?? FULL_ARCHIVE.find(a => ids.has(a.id));
-    return piece?.coverImage ?? `https://picsum.photos/800/533?random=97`;
+    return piece?.coverImage ?? cldImg('adrian-website/site/placeholder', { w: 800, h: 533 });
 }
 
 // ─── ZoomableImage ────────────────────────────────────────────────────────────
@@ -213,10 +214,10 @@ const MaterialBlock: React.FC = () => (
 // ─── Shop Category Tiles ──────────────────────────────────────────────────────
 
 const SHOP_CATEGORY_DATA = [
-    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',              img: 110 },
-    { cat: 'Jewelry',              desc: 'Wearable pieces and talismans',           img: 111 },
-    { cat: 'Oracle Cards',         desc: 'Tools for reflection and guidance',       img: 112 },
-    { cat: 'Objects',              desc: 'Objects for the altar and the everyday',  img: 113 },
+    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',              tileId: 'adrian-website/creations/tiles/multidimensional-art' },
+    { cat: 'Jewelry',              desc: 'Wearable pieces and talismans',           tileId: 'adrian-website/creations/tiles/jewelry' },
+    { cat: 'Oracle Cards',         desc: 'Tools for reflection and guidance',       tileId: 'adrian-website/creations/tiles/oracle-cards' },
+    { cat: 'Objects',              desc: 'Objects for the altar and the everyday',  tileId: 'adrian-website/creations/tiles/objects' },
 ] as const;
 
 const ShopCategoryTile: React.FC<{
@@ -233,7 +234,7 @@ const ShopCategoryTile: React.FC<{
     >
         <div className="overflow-hidden">
             <ArtImage
-                src={`https://picsum.photos/800/800?random=${cat.img}`}
+                publicId={cat.tileId}
                 variant="tile"
                 alt=""
                 aria-hidden="true"

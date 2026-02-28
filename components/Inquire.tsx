@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
+import { img } from '../utils/cloudinary';
 
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
@@ -10,6 +11,8 @@ interface FormState {
   vision: string;
   commissionType: CommissionType;
   budget: string;
+  location: string;
+  sizeRange: string;
   timeline: string;
   specificDate: string;
   referral: string;
@@ -47,7 +50,7 @@ const COMMISSION_PATHS = {
     title: 'Personal Commissions',
     description:
       'Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.',
-    image: 'https://picsum.photos/1000/1200?random=inq1',
+    image: img('adrian-website/site/inquire/personal-commission', { w: 1000, h: 1200 }),
     alt: 'Personal commission piece by Adrian Rasmussen',
     successMsg: 'Your vision for a personal piece is on its way to Bali.',
     suggestLink: '/creations',
@@ -58,7 +61,7 @@ const COMMISSION_PATHS = {
     title: 'Spatial Commissions',
     description:
       'When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.',
-    image: 'https://picsum.photos/1200/1000?random=inq2',
+    image: img('adrian-website/site/inquire/spatial-commission', { w: 1200, h: 1000 }),
     alt: 'Spatial installation by Adrian Rasmussen',
     successMsg: 'Your spatial vision is on its way to Bali.',
     suggestLink: '/creations/multidimensional-art',
@@ -121,11 +124,15 @@ const Inquire: React.FC = () => {
     vision: '',
     commissionType: 'personal',
     budget: '',
+    location: '',
+    sizeRange: '',
     timeline: '',
     specificDate: '',
     referral: '',
     referralOther: '',
   });
+
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -256,13 +263,18 @@ const Inquire: React.FC = () => {
     form.email.trim() && isValidEmail(form.email),
     form.vision.trim(),
     form.budget,
+    form.location.trim(),
+    form.sizeRange.trim(),
     form.timeline,
     form.referral,
   ].filter(Boolean).length;
-  const completionPercent = Math.round((completionCount / 7) * 100);
+  const completionPercent = Math.round((completionCount / 9) * 100);
 
   /* Vision word count */
   const wordCount = form.vision.trim() ? form.vision.trim().split(/\s+/).length : 0;
+
+  /* All required fields are filled and valid */
+  const requiredValid = !!(form.name.trim() && form.email.trim() && isValidEmail(form.email) && form.vision.trim());
 
   /* ── Submit ───────────────────────────────────────────────────────── */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -296,10 +308,10 @@ const Inquire: React.FC = () => {
 
   const handleReset = () => {
     setSubmitted(false);
-    setCoreSubmitted(false);
     setSendStatus('IDLE');
     setErrorMsg('');
-    setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', timeline: '', specificDate: '', referral: '', referralOther: '' });
+    setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', location: '', sizeRange: '', timeline: '', specificDate: '', referral: '', referralOther: '' });
+    setImageFiles([]);
     setBudgetRange([0, BUDGET_STOPS.length - 1]);
     setCommissionType('personal');
     setTouched({});
@@ -316,7 +328,7 @@ const Inquire: React.FC = () => {
       <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
         <div ref={heroRef} className="absolute inset-0 will-change-transform">
           <img
-            src="https://picsum.photos/1600/900?random=inquire-hero"
+            src={img('adrian-website/site/inquire/hero-studio', { w: 1600, h: 900 })}
             alt="Adrian Rasmussen's studio"
             className="w-full h-[120%] object-cover"
           />
@@ -710,6 +722,60 @@ const Inquire: React.FC = () => {
                             <span className="font-label text-[10px] text-wood-400">{formatBudget(BUDGET_STOPS[0])}</span>
                             <span className="font-label text-[10px] text-wood-400">{formatBudget(BUDGET_STOPS[BUDGET_STOPS.length - 1])}</span>
                           </div>
+                        </div>
+
+                        {/* Location */}
+                        <div className="relative pt-5">
+                          <label className={floatLabel('location')}>Location</label>
+                          <input
+                            type="text"
+                            name="location"
+                            value={form.location}
+                            onChange={handleChange}
+                            onFocus={() => handleFocus('location')}
+                            onBlur={() => handleBlur('location')}
+                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
+                            placeholder=""
+                          />
+                          <p className="font-serif text-xs text-wood-400 mt-1.5">City, country, or region where the piece will live.</p>
+                        </div>
+
+                        {/* Approximate Size Range */}
+                        <div className="relative pt-5">
+                          <label className={floatLabel('sizeRange')}>Approximate Size</label>
+                          <input
+                            type="text"
+                            name="sizeRange"
+                            value={form.sizeRange}
+                            onChange={handleChange}
+                            onFocus={() => handleFocus('sizeRange')}
+                            onBlur={() => handleBlur('sizeRange')}
+                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
+                            placeholder=""
+                          />
+                          <p className="font-serif text-xs text-wood-400 mt-1.5">Wall space, table dimensions, or a general sense of scale.</p>
+                        </div>
+
+                        {/* Image Upload */}
+                        <div>
+                          <label className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-500 font-semibold block mb-2">
+                            Inspiration Images
+                          </label>
+                          <p className="font-serif text-xs text-wood-400 mb-3">Photos of the space, reference images, or anything that helps me understand your vision.</p>
+                          <label className="flex items-center justify-center gap-2 py-4 border border-dashed border-wood-300 hover:border-bronze-400 bg-white cursor-pointer transition-colors">
+                            <span className="font-label text-xs uppercase tracking-[0.15em] text-wood-500">
+                              {imageFiles.length > 0 ? `${imageFiles.length} file${imageFiles.length > 1 ? 's' : ''} selected` : 'Choose files'}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="sr-only"
+                              onChange={(e) => {
+                                if (e.target.files) setImageFiles(Array.from(e.target.files));
+                              }}
+                            />
+                          </label>
                         </div>
 
                         {/* Timeline — vertical radio list */}

@@ -1,11 +1,24 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronUp, ArrowUpDown } from 'lucide-react';
+import { ChevronUp, ArrowUpDown, ArrowRight } from 'lucide-react';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
+
+// ─── Category tile Cloudinary public IDs ─────────────────────────────────────
+
+const CATEGORY_TILE_IDS: Record<string, string> = {
+    'Multidimensional Art': 'adrian-website/creations/tiles/multidimensional-art',
+    'Illuminated Works':    'adrian-website/creations/tiles/illuminated-works',
+    'Jewelry':              'adrian-website/creations/tiles/jewelry',
+    'Oracle Cards':         'adrian-website/creations/tiles/oracle-cards',
+    'Tables':               'adrian-website/creations/tiles/tables',
+    'Installations':        'adrian-website/creations/tiles/installations',
+    'Objects':              'adrian-website/creations/tiles/objects',
+    'Spaces':               'adrian-website/creations/tiles/spaces',
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +84,7 @@ const CreationCategoryCard: React.FC<{
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    src={`https://picsum.photos/800/800?random=${100 + idx}`}
+                    publicId={CATEGORY_TILE_IDS[label]}
                     variant="tile"
                     alt=""
                     aria-hidden="true"
@@ -252,6 +265,9 @@ const Creations: React.FC = () => {
     // Selected works: first 12 featured items
     const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 12), []);
 
+    // Available now: ready-to-ship pieces for the dedicated section
+    const availableNow = useMemo(() => FULL_ARCHIVE.filter(a => a.availability === 'READY_TO_SHIP').slice(0, 8), []);
+
     // Collections for the current category
     const categoryCollections = useMemo(() => {
         if (!filter) return [];
@@ -342,6 +358,29 @@ const Creations: React.FC = () => {
                                     onClick={() => handleCategoryChange(cat.label)}
                                 />
                             </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Available Now Section ───────────────────────────────── */}
+            {!filter && availableNow.length > 0 && (
+                <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
+                    <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
+                        <div>
+                            <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 font-medium">Available Now</h2>
+                            <p className="font-serif text-base sm:text-lg text-wood-500 italic leading-relaxed mt-1">Ready to ship from the studio.</p>
+                        </div>
+                        <Link
+                            to="/shop"
+                            className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
+                        >
+                            Visit the Shop <ArrowRight size={14} />
+                        </Link>
+                    </div>
+                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
+                        {availableNow.map(art => (
+                            <GalleryTileCard key={art.id} art={art} />
                         ))}
                     </div>
                 </div>
