@@ -219,7 +219,7 @@ const Footer: React.FC = () => {
                             <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                                 <Instagram size={18} />
                             </a>
-                            <a href="mailto:hello@adrianrasmussen.art" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <a href="mailto:hello@adrianrasmussen.com" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                                 <Mail size={18} />
                             </a>
                         </div>

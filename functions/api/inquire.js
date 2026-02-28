@@ -7,8 +7,8 @@
  *
  * Environment variables (set in .dev.vars locally, Cloudflare Pages dashboard in prod):
  *   RESEND_API_KEY     — re_... API key from resend.com
- *   INQUIRY_TO_EMAIL   — Inbox that receives inquiries (default: hello@adrianrasmussen.art)
- *   RESEND_FROM_EMAIL  — Verified sender address (default: noreply@adrianrasmussen.art)
+ *   INQUIRY_TO_EMAIL   — Inbox that receives inquiries (default: hello@adrianrasmussen.com)
+ *   RESEND_FROM_EMAIL  — Verified sender address (default: noreply@adrianrasmussen.com)
  */
 
 const ALLOWED_ORIGINS = [

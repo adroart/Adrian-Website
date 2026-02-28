@@ -422,7 +422,7 @@ const Inquire: React.FC = () => {
         {/* ── General Contact ──────────────────────────────────────── */}
         <div className="flex justify-center mb-6">
           <a
-            href="mailto:hello@adrianrasmussen.art"
+            href="mailto:hello@adrianrasmussen.com"
             className="group flex items-center gap-2 px-6 py-3 border border-wood-200 hover:border-wood-400 transition-all duration-300 bg-white"
           >
             <span className="font-serif text-sm text-wood-500 group-hover:text-wood-800 transition-colors">

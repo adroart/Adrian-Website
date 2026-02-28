@@ -44,8 +44,8 @@ const Terms: React.FC = () => {
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Contact</h2>
           <p>
             Questions about these terms can be directed to{' '}
-            <a href="mailto:hello@adrianrasmussen.art" className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors">
-              hello@adrianrasmussen.art
+            <a href="mailto:hello@adrianrasmussen.com" className="text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors">
+              hello@adrianrasmussen.com
             </a>.
           </p>
         </div>
