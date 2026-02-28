@@ -5,7 +5,6 @@ import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
-import { img } from '../utils/cloudinary';
 
 /* ─── Commission Invitation ────────────────────────────────────────────── */
 
@@ -70,7 +69,7 @@ const Home: React.FC = () => {
                     {/* Image side */}
                     <div className="relative h-72 sm:h-96 md:h-auto md:min-h-[520px]">
                         <img
-                            src={img('adrian-website/site/home/commission-detail', { w: 900, h: 1100 })}
+                            src="https://picsum.photos/900/1100?random=commission"
                             alt="Detail of a commissioned piece"
                             className="absolute inset-0 w-full h-full object-cover"
                             loading="lazy"

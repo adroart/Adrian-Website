@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
-import { img } from '../utils/cloudinary';
 
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
@@ -50,7 +49,7 @@ const COMMISSION_PATHS = {
     title: 'Personal Commissions',
     description:
       'Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.',
-    image: img('adrian-website/site/inquire/personal-commission', { w: 1000, h: 1200 }),
+    image: 'https://picsum.photos/1000/1200?random=inq1',
     alt: 'Personal commission piece by Adrian Rasmussen',
     successMsg: 'Your vision for a personal piece is on its way to Bali.',
     suggestLink: '/creations',
@@ -61,7 +60,7 @@ const COMMISSION_PATHS = {
     title: 'Spatial Commissions',
     description:
       'When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.',
-    image: img('adrian-website/site/inquire/spatial-commission', { w: 1200, h: 1000 }),
+    image: 'https://picsum.photos/1200/1000?random=inq2',
     alt: 'Spatial installation by Adrian Rasmussen',
     successMsg: 'Your spatial vision is on its way to Bali.',
     suggestLink: '/creations/multidimensional-art',
@@ -328,7 +327,7 @@ const Inquire: React.FC = () => {
       <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
         <div ref={heroRef} className="absolute inset-0 will-change-transform">
           <img
-            src={img('adrian-website/site/inquire/hero-studio', { w: 1600, h: 900 })}
+            src="https://picsum.photos/1600/900?random=inquire-hero"
             alt="Adrian Rasmussen's studio"
             className="w-full h-[120%] object-cover"
           />

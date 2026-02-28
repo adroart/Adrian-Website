@@ -7,19 +7,6 @@ import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 
-// ─── Category tile Cloudinary public IDs ─────────────────────────────────────
-
-const CATEGORY_TILE_IDS: Record<string, string> = {
-    'Multidimensional Art': 'adrian-website/creations/tiles/multidimensional-art',
-    'Illuminated Works':    'adrian-website/creations/tiles/illuminated-works',
-    'Jewelry':              'adrian-website/creations/tiles/jewelry',
-    'Oracle Cards':         'adrian-website/creations/tiles/oracle-cards',
-    'Tables':               'adrian-website/creations/tiles/tables',
-    'Installations':        'adrian-website/creations/tiles/installations',
-    'Objects':              'adrian-website/creations/tiles/objects',
-    'Spaces':               'adrian-website/creations/tiles/spaces',
-};
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'newest';
@@ -84,7 +71,7 @@ const CreationCategoryCard: React.FC<{
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    publicId={CATEGORY_TILE_IDS[label]}
+                    src={`https://picsum.photos/800/800?random=${100 + idx}`}
                     variant="tile"
                     alt=""
                     aria-hidden="true"

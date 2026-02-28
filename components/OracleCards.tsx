@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
-import { img } from '../utils/cloudinary';
 
 /* ─── DECK DATA ────────────────────────────────────────────────────── */
 
@@ -38,7 +37,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: img('adrian-website/creations/oracle-cards/deck-reflect', { w: 900, h: 1100 }),
+    image: 'https://picsum.photos/900/1100?random=oracle-reflect',
     practice: {
       heading: 'To Begin',
       steps: [
@@ -73,7 +72,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: img('adrian-website/creations/oracle-cards/deck-connect', { w: 900, h: 1100 }),
+    image: 'https://picsum.photos/900/1100?random=oracle-connect',
     practice: {
       heading: 'To Begin',
       steps: [
@@ -106,7 +105,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: img('adrian-website/creations/oracle-cards/deck-universal-language', { w: 900, h: 1100 }),
+    image: 'https://picsum.photos/900/1100?random=oracle-ul',
   },
   {
     id: 'light-codes-oracle',
@@ -120,7 +119,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '40 Cards',
     dimensions: '3.5" x 5"',
     material: 'Matte Laminate Card Stock',
-    image: img('adrian-website/creations/oracle-cards/deck-light-codes', { w: 900, h: 1100 }),
+    image: 'https://picsum.photos/900/1100?random=oracle-lightcodes',
   },
 ];
 
@@ -587,7 +586,7 @@ const OracleCards: React.FC = () => {
           <React.Fragment key={deck.id}>
             {i === 2 && (
               <Interstitial
-                src={img('adrian-website/creations/oracle-cards/ceremony-interstitial', { w: 1600, h: 900 })}
+                src="https://picsum.photos/1600/900?random=oracle-interstitial"
                 alt="Oracle cards in a ceremony setting"
               />
             )}

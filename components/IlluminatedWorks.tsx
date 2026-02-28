@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
-import { img } from '../utils/cloudinary';
 
 // --- Main component ---
 
@@ -21,7 +20,7 @@ const IlluminatedWorks: React.FC = () => {
             <div className="relative w-full h-[60vh] min-h-[400px] max-h-[700px] overflow-hidden mb-0 dark-preserve">
                 {/* TODO: Replace with a real video or hero image of a piece transitioning from daylight to dark */}
                 <img
-                    src={img('adrian-website/site/illuminated/hero-transition', { w: 1800, h: 900 })}
+                    src="https://picsum.photos/1800/900?random=illum-hero"
                     alt="An illuminated piece transitioning from daylight to dark"
                     className="w-full h-full object-cover"
                 />

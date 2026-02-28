@@ -29,3 +29,6 @@ dist-ssr
 
 # Claude Code
 .claude/
+
+# Migration data (contains personal info)
+data/migration/

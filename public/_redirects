@@ -1,1 +1,57 @@
+# ============================================================
+# Wix → New Site 301 Redirects
+# Cloudflare Pages processes top-to-bottom, first match wins
+# ============================================================
+
+# ── Core Pages ──────────────────────────────────────────────
+/homepage                       /                               301
+/home-page                      /                               301
+
+# ── Shop ────────────────────────────────────────────────────
+/all-products                   /shop                           301
+/all-art                        /shop                           301
+
+# Shop collection filters (Wix standalone pages → new site)
+/mandala-art                    /creations/multidimensional-art/mandala    301
+/multidimensional-art           /creations/multidimensional-art            301
+/mini-mandalas                  /creations/multidimensional-art/mandala    301
+/lightcodes                     /creations/multidimensional-art/light-codes 301
+/light-codes                    /creations/multidimensional-art/light-codes 301
+/sphere-stands                  /shop                           301
+
+# Product pages (Wix /product-page/slug → /creations or /shop)
+/product-page/*                 /shop                           301
+
+# ── Custom Work / Commissions ───────────────────────────────
+/about-3                        /inquire                        301
+/custom-work                    /inquire                        301
+
+# ── Contact ─────────────────────────────────────────────────
+/contact                        /inquire                        301
+
+# ── Portfolio / Gallery ─────────────────────────────────────
+/gallery                                        /creations                                          301
+/multidimensional-art-gallery                   /creations/multidimensional-art                     301
+/multidimensional-ar                            /creations/multidimensional-art                     301
+/mandala-gallery                                /creations/multidimensional-art/mandala             301
+/alters                                         /creations                                          301
+/projectionmap                                  /creations/illuminated-works                        301
+
+# ── YeMingZhu ───────────────────────────────────────────────
+/yemingzhu                      /creations                      301
+
+# ── Wix system paths (prevent 404s) ────────────────────────
+/members/*                      /                               301
+/account/*                      /                               301
+/cart                           /shop                           301
+/checkout                       /shop                           301
+/thank-you                      /shop                           301
+/product-page                   /shop                           301
+
+# ── Shop collection sub-paths ──────────────────────────────
+/shop/mandalas-layered/*        /shop                           301
+
+# ============================================================
+# SPA catch-all (must be LAST)
+# ============================================================
 /* /index.html 200

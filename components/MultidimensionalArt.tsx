@@ -5,14 +5,6 @@ import { MULTIDIMENSIONAL_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
 
-const SUBCATEGORY_TILE_IDS: Record<string, string> = {
-    'Universal Language': 'adrian-website/creations/tiles/universal-language',
-    'Mandala':            'adrian-website/creations/tiles/mandala',
-    'Light Codes':        'adrian-website/creations/tiles/light-codes',
-    'Signature Pieces':   'adrian-website/creations/tiles/signature-pieces',
-    'Illuminated Works':  'adrian-website/creations/tiles/illuminated-works',
-};
-
 // --- Sub-components ---
 
 const SubcategoryTile: React.FC<{
@@ -33,7 +25,7 @@ const SubcategoryTile: React.FC<{
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    publicId={SUBCATEGORY_TILE_IDS[label]}
+                    src={`https://picsum.photos/800/800?random=${200 + idx}`}
                     variant="tile"
                     alt=""
                     aria-hidden="true"
