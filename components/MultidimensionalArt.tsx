@@ -25,7 +25,7 @@ const SubcategoryTile: React.FC<{
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    src={`https://picsum.photos/800/800?random=${200 + idx}`}
+                    publicId={`adrian-website/placeholders/artwork-square-${(idx % 8) + 1}`}
                     variant="tile"
                     alt=""
                     aria-hidden="true"

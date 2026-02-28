@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import ArtImage from './ArtImage';
+import { img } from '../utils/cloudinary';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Product, Collection } from '../types';
@@ -28,7 +29,7 @@ function getCollectionCoverImage(collection: Collection): string {
     const ids = getCollectionProductIds(collection);
     const piece = FULL_ARCHIVE.find(a => ids.has(a.id) && a.featured)
         ?? FULL_ARCHIVE.find(a => ids.has(a.id));
-    return piece?.coverImage ?? `https://picsum.photos/800/533?random=97`;
+    return piece?.coverImage ?? 'adrian-website/placeholders/artwork-square-1';
 }
 
 // ─── ZoomableImage ────────────────────────────────────────────────────────────
@@ -233,7 +234,7 @@ const ShopCategoryTile: React.FC<{
     >
         <div className="overflow-hidden">
             <ArtImage
-                src={`https://picsum.photos/800/800?random=${cat.img}`}
+                publicId={`adrian-website/placeholders/artwork-square-${(cat.img % 8) + 1}`}
                 variant="tile"
                 alt=""
                 aria-hidden="true"

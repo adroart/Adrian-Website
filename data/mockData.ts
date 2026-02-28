@@ -98,7 +98,7 @@ export const SERIES_DATA = [
         hook: 'There is a language that all of us know. Elemental. Genetic. Interstellar. Patterns that navigate the experience of life through the passage of time. It existed before the I Ching, Gene Keys, or astrology gave it a name. Felt through the diverse experiences of being human. Perceived through a 64-fold cycle of change. These creations are my way of cultivating a relationship to that cycle. Pay close attention to which ones call out to you. When one speaks, there is a reason waiting in the oracle.',
         essaySlug: 'the-universal-language',
         pieceCount: '64 works',
-        image: 'https://picsum.photos/1200/800?random=s1'
+        image: 'adrian-website/placeholders/artwork-square-1'
     },
     {
         id: 'series-2',
@@ -107,7 +107,7 @@ export const SERIES_DATA = [
         hook: 'After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art. These are anchorings of unseen realms.',
         essaySlug: 'light-codes',
         pieceCount: 'Approximately 40 works',
-        image: 'https://picsum.photos/1200/800?random=s2'
+        image: 'adrian-website/placeholders/artwork-square-2'
     },
     {
         id: 'series-3',
@@ -116,7 +116,7 @@ export const SERIES_DATA = [
         hook: 'A mandala is not something to look at. It is a place to enter. Laser-cut geometry aligned with universal ratios. Each one painted by hand. No two the same. Windows inward, to glimpse the infinite.',
         essaySlug: 'the-mandala-series',
         pieceCount: null,
-        image: 'https://picsum.photos/1200/800?random=s3'
+        image: 'adrian-website/placeholders/artwork-square-3'
     }
 ];
 
@@ -128,8 +128,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         title: 'Gate of Stillness',
         category: 'Multidimensional Art',
         series: 'Universal Language',
-        coverImage: 'https://picsum.photos/1000/1000?random=1',
-        images: ['https://picsum.photos/1000/1000?random=1a', 'https://picsum.photos/1000/1000?random=1b'],
+        coverImage: 'adrian-website/placeholders/artwork-square-1',
+        images: ['adrian-website/placeholders/artwork-square-2', 'adrian-website/placeholders/artwork-square-3'],
         description: 'A study in concentric resonance. The layers build inward, guiding the eye to a center that holds silence.',
         year: '2023',
         dimensions: '24" Diameter',
@@ -153,8 +153,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         title: 'Ancestral Signal',
         category: 'Multidimensional Art',
         series: 'Light Codes',
-        coverImage: 'https://picsum.photos/800/1200?random=2',
-        images: ['https://picsum.photos/800/1200?random=2a'],
+        coverImage: 'adrian-website/placeholders/artwork-square-4',
+        images: ['adrian-website/placeholders/artwork-square-5'],
         description: 'Anchoring unseen realms. Energy flowing effortlessly in a stream of consciousness.',
         year: '2024',
         dimensions: '18" x 36"',
@@ -175,8 +175,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'JW-005',
         title: 'Resonance Pendant',
         category: 'Jewelry',
-        coverImage: 'https://picsum.photos/800/800?random=3',
-        images: ['https://picsum.photos/800/800?random=3a'],
+        coverImage: 'adrian-website/placeholders/artwork-square-6',
+        images: ['adrian-website/placeholders/artwork-square-7'],
         description: 'Wearable geometry. Oxidized brass that warms to the body temperature almost instantly.',
         year: '2024',
         dimensions: '2" Pendant',
@@ -191,8 +191,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'TBL-001',
         title: 'Tea Altar Table',
         category: 'Tables',
-        coverImage: 'https://picsum.photos/1200/800?random=4',
-        images: ['https://picsum.photos/1200/800?random=4a'],
+        coverImage: 'adrian-website/placeholders/artwork-square-8',
+        images: ['adrian-website/placeholders/artwork-square-1'],
         description: 'Functional art for gathering. Designed for the tea practice explored at Teajia.',
         year: '2022',
         dimensions: '48" x 24" x 18"',
@@ -204,7 +204,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'INST-003',
         title: 'The Void Structure',
         category: 'Installations',
-        coverImage: 'https://picsum.photos/1600/900?random=5',
+        coverImage: 'adrian-website/placeholders/hero-wide-1',
         images: [],
         description: 'Immersive environment created for the Arise Music Festival. 150-foot stage design.',
         year: '2019',
@@ -218,7 +218,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         title: 'Phi Density',
         category: 'Multidimensional Art',
         series: 'Universal Language',
-        coverImage: 'https://picsum.photos/1000/1000?random=6',
+        coverImage: 'adrian-website/placeholders/artwork-square-2',
         images: [],
         description: 'Original airbrushed painting on a multidimensional form. The geometry is exact, the painting is organic.',
         year: '2023',
@@ -241,8 +241,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'SIG-001',
         title: 'The Serpent',
         category: 'Multidimensional Art',
-        coverImage: 'https://picsum.photos/1000/1200?random=7',
-        images: ['https://picsum.photos/1000/1200?random=7a'],
+        coverImage: 'adrian-website/placeholders/artwork-square-3',
+        images: ['adrian-website/placeholders/artwork-square-4'],
         description: 'A singular form. Coiled and precise, somewhere between creature and symbol.',
         year: '2024',
         dimensions: '18" x 24"',
@@ -261,8 +261,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         title: 'Breath of the Forest',
         category: 'Multidimensional Art',
         series: 'Universal Language',
-        coverImage: 'https://picsum.photos/1000/1000?random=8',
-        images: ['https://picsum.photos/1000/1000?random=8a', 'https://picsum.photos/1000/1000?random=8b'],
+        coverImage: 'adrian-website/placeholders/artwork-square-5',
+        images: ['adrian-website/placeholders/artwork-square-6', 'adrian-website/placeholders/artwork-square-7'],
         description: 'By day, a layered study in geometry. After dark, the piece opens. Light finds the edges. The room changes.',
         longDescription: 'Embedded LEDs breathe at a slow rhythm, designed for spaces where presence matters. The illumination can be set to ambient or to a gentle pulse.',
         year: '2024',
@@ -460,16 +460,15 @@ for (let i = 0; i < 30; i++) {
     const dimensions = dimPool[i % dimPool.length] ?? 'Variable';
     const material = matPool[i % matPool.length] ?? 'Mixed Media';
 
-    // Vary image aspect ratios to make the masonry feel more natural
-    const aspectSeeds = ['800/800', '800/1100', '1000/800', '800/950', '900/800'];
-    const [w, h] = (aspectSeeds[i % aspectSeeds.length]).split('/');
+    // Cycle through placeholder images for generated pieces
+    const placeholderIdx = (i % 8) + 1;
 
     FULL_ARCHIVE.push({
         id: `GEN-${i}`,
         title,
         category: catLabel,
         series: isSignaturePiece ? undefined : series,
-        coverImage: `https://picsum.photos/${w}/${h}?random=${100 + i}`,
+        coverImage: `adrian-website/placeholders/artwork-square-${placeholderIdx}`,
         images: [],
         description,
         year: GEN_YEARS[i % GEN_YEARS.length],
@@ -556,7 +555,7 @@ export const STORIES: Story[] = [
         subtitle: 'History, Mysteries, and the Path of Light',
         category: 'Living Knowledge',
         date: 'Winter 2024',
-        image: 'https://picsum.photos/1200/800?random=20',
+        image: 'adrian-website/placeholders/story-1',
         excerpt: 'These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon\'s glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth.',
         content: [
             "I was first drawn to Ye Ming Zhu through a series of synchronicities.",
@@ -589,7 +588,7 @@ export const STORIES: Story[] = [
         subtitle: 'Windows Inward',
         category: 'Beneath the Surface',
         date: 'Autumn 2023',
-        image: 'https://picsum.photos/1200/800?random=21',
+        image: 'adrian-website/placeholders/story-2',
         excerpt: 'A mandala is not something to look at. It is a place to enter.',
         content: [
             "Most people think a mandala is a pretty pattern. A decorative circle. Something to color in for relaxation.",
@@ -614,7 +613,7 @@ export const STORIES: Story[] = [
         subtitle: '64 Expressions of the Cycle of Changes',
         category: 'Beneath the Surface',
         date: 'Winter 2024',
-        image: 'https://picsum.photos/1200/800?random=25',
+        image: 'adrian-website/placeholders/story-3',
         excerpt: 'There is a language that all of us speak. It exists beyond words and concepts of the mind.',
         content: [
             "There is a language that all of us speak. It exists beyond words and concepts of the mind. These are the expressions of the elements, of our genetics, of our experience of life through this passage of time.",
@@ -642,7 +641,7 @@ export const STORIES: Story[] = [
         subtitle: 'Anchorings of Unseen Realms',
         category: 'Beneath the Surface',
         date: 'Spring 2024',
-        image: 'https://picsum.photos/1200/800?random=26',
+        image: 'adrian-website/placeholders/story-4',
         excerpt: 'After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.',
         content: [
             "In Bali, I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
@@ -670,7 +669,7 @@ export const STORIES: Story[] = [
         subtitle: 'From formless to form.',
         category: 'The Practice',
         date: 'Summer 2023',
-        image: 'https://picsum.photos/1200/800?random=22',
+        image: 'adrian-website/placeholders/story-5',
         excerpt: 'Creating is how I grow. My inner journey. A celebration of creation itself.',
         content: [
             "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment.",
@@ -688,7 +687,7 @@ export const STORIES: Story[] = [
         subtitle: 'Twenty years of culture.',
         category: 'The Path',
         date: 'Spring 2023',
-        image: 'https://picsum.photos/1200/800?random=23',
+        image: 'adrian-website/placeholders/story-6',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
             "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.",

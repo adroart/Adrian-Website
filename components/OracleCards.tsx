@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
+import { img } from '../utils/cloudinary';
 
 /* ─── DECK DATA ────────────────────────────────────────────────────── */
 
@@ -37,7 +38,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-reflect',
+    image: img('adrian-website/placeholders/oracle-card-1', { w: 900, h: 1100 }),
     practice: {
       heading: 'To Begin',
       steps: [
@@ -72,7 +73,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-connect',
+    image: img('adrian-website/placeholders/oracle-card-2', { w: 900, h: 1100 }),
     practice: {
       heading: 'To Begin',
       steps: [
@@ -105,7 +106,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '64 Cards',
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-ul',
+    image: img('adrian-website/placeholders/oracle-card-3', { w: 900, h: 1100 }),
   },
   {
     id: 'light-codes-oracle',
@@ -119,7 +120,7 @@ const DECKS: OracleDeck[] = [
     cardCount: '40 Cards',
     dimensions: '3.5" x 5"',
     material: 'Matte Laminate Card Stock',
-    image: 'https://picsum.photos/900/1100?random=oracle-lightcodes',
+    image: img('adrian-website/placeholders/oracle-card-4', { w: 900, h: 1100 }),
   },
 ];
 
@@ -586,7 +587,7 @@ const OracleCards: React.FC = () => {
           <React.Fragment key={deck.id}>
             {i === 2 && (
               <Interstitial
-                src="https://picsum.photos/1600/900?random=oracle-interstitial"
+                src={img('adrian-website/placeholders/hero-wide-1', { w: 1600, h: 900 })}
                 alt="Oracle cards in a ceremony setting"
               />
             )}

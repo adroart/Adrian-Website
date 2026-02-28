@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { img } from '../utils/cloudinary';
 
 const PERSON_SCHEMA = {
   '@context': 'https://schema.org',
@@ -393,14 +394,14 @@ const About: React.FC = () => {
             {/* #9 — parallax image */}
             <Reveal dir="right" delay={140}>
               <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
-                <ParallaxImg src="https://picsum.photos/800/1200?random=about1" alt="Adrian Rasmussen portrait" />
+                <ParallaxImg src={img('adrian-website/placeholders/portrait-1', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
               </div>
             </Reveal>
           </div>
         </div>
 
         {/* #18 — Full-bleed photo interstitial */}
-        <Interstitial src="https://picsum.photos/1600/900?random=interstitial1" alt="Studio atmosphere" />
+        <Interstitial src={img('adrian-website/placeholders/hero-wide-1', { w: 1600, h: 900 })} alt="Studio atmosphere" />
 
         {/* ══ THE PATH — timeline layout ════════════════════════════════════ */}
         {/* #13 — narrow container for contrast with surrounding sections */}
@@ -511,7 +512,7 @@ const About: React.FC = () => {
 
               <Reveal dir="right" delay={160}>
                 <div className="aspect-[3/4] relative overflow-hidden bg-wood-700">
-                  <ParallaxImg src="https://picsum.photos/800/1200?random=about2" alt="Tea ceremony and travels" />
+                  <ParallaxImg src={img('adrian-website/placeholders/portrait-2', { w: 800, h: 1200 })} alt="Tea ceremony and travels" />
                 </div>
               </Reveal>
             </div>
@@ -538,7 +539,7 @@ const About: React.FC = () => {
         </div>
 
         {/* #18 — Second photo interstitial */}
-        <Interstitial src="https://picsum.photos/1600/900?random=interstitial2" alt="Immersive installation space" />
+        <Interstitial src={img('adrian-website/placeholders/hero-wide-2', { w: 1600, h: 900 })} alt="Immersive installation space" />
 
         {/* ══ CREATION AS PRACTICE ══════════════════════════════════════════ */}
         {/* #15 — Reversed asymmetric grid: image left (narrower), text right (wider) */}
@@ -546,7 +547,7 @@ const About: React.FC = () => {
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 md:gap-20 items-center">
             <Reveal dir="left" delay={120}>
               <div className="aspect-square relative overflow-hidden bg-wood-200">
-                <ParallaxImg src="https://picsum.photos/800/800?random=about3" alt="Creation in the studio" />
+                <ParallaxImg src={img('adrian-website/placeholders/portrait-3', { w: 800 })} alt="Creation in the studio" />
               </div>
             </Reveal>
             <Reveal dir="right">
