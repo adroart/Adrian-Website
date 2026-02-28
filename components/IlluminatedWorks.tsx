@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
+import { img } from '../utils/cloudinary';
 
 // --- Main component ---
 
@@ -56,28 +57,26 @@ const IlluminatedWorks: React.FC = () => {
                     <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Two expressions of light</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 dark-preserve">
-                    {/* Ambient Illumination */}
+                    {/* Basic Illumination */}
                     <div className="bg-wood-900 p-10 md:p-16">
-                        {/* TODO: Replace "Ambient Illumination" with Adrian's own language for this distinction */}
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Ambient Illumination</span>
-                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">A subtle, continuous glow.</h3>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Basic Illumination</span>
+                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Light, included.</h3>
                         <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
-                            The piece becomes a presence in the room. Soft. Consistent. Something you stop noticing consciously but feel constantly.
+                            Standard LED strips with preset modes. The piece glows. It shifts between colors. It does what LEDs do out of the box.
                         </p>
                         <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">
-                            Suited for bedrooms, meditation spaces, altars — anywhere presence matters more than attention.
+                            Included with any illuminated piece. Functional, beautiful, ready to go.
                         </p>
                     </div>
-                    {/* Living Light */}
+                    {/* Curated Light */}
                     <div className="bg-stone-900 p-10 md:p-16">
-                        {/* TODO: Replace "Living Light" with Adrian's own language for this distinction */}
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Living Light</span>
-                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmable. Moving. Breathing.</h3>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Curated Light</span>
+                        <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmed by hand. Felt in the room.</h3>
                         <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
-                            Patterns that shift and pulse. Light that participates in the piece rather than simply inhabiting it.
+                            I personally program every transition, every color palette, every mood. Smooth fades. Ambient rhythms. Light that breathes with the piece instead of competing with it.
                         </p>
                         <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">
-                            Suited for gathering spaces, installations, environments designed for ceremony or experience.
+                            An upgrade for those who want the light to feel as intentional as the art itself.
                         </p>
                     </div>
                 </div>
