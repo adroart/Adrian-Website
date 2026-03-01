@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
+import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart, getMaxQuantity } from '../CartContext';
 import { formatPrice } from '../utils/formatPrice';
 
@@ -261,7 +261,7 @@ const CartDrawer: React.FC = () => {
                                                         className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
                                                         aria-label={quantity === 1 ? 'Remove piece' : 'Decrease quantity'}
                                                     >
-                                                        <Minus size={12} />
+                                                        {quantity === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
                                                     </button>
                                                     <span className="w-8 text-center font-label text-xs text-wood-900 font-semibold">
                                                         {quantity}

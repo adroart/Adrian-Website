@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useBlocker } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 
@@ -157,6 +158,34 @@ const Inquire: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  /* ── Navigation warning when form is dirty ──────────────────────── */
+  const isDirty = !submitted && (
+    form.name !== '' || form.email !== '' || form.vision !== '' ||
+    form.location !== '' || form.sizeRange !== '' || form.timeline !== '' || form.referral !== ''
+  );
+
+  // Browser-level warning (refresh, close tab, external link)
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  // In-app navigation warning via React Router v7
+  const blocker = useBlocker(isDirty);
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const confirmed = window.confirm('You have unsaved form entries. Leave without sending?');
+      if (confirmed) {
+        blocker.proceed();
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker]);
 
   /* ── Budget range → form.budget sync ────────────────────────────── */
   useEffect(() => {

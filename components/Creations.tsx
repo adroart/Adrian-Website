@@ -232,6 +232,13 @@ const Creations: React.FC = () => {
 
     const gridRef = useRef<HTMLDivElement>(null);
 
+    // Scroll to results grid when a collection filter is applied
+    useEffect(() => {
+        if (activeCollection) {
+            gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [activeCollection]);
+
     const handleCategoryChange = useCallback((category: string | null) => {
         setActiveCollection(null);
         setSort('default');

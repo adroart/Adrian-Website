@@ -85,6 +85,9 @@ const PiecePage: React.FC = () => {
     // Ready-to-ship cart state
     const [rtsAdded, setRtsAdded] = useState(false);
 
+    // Share / copy state
+    const [copied, setCopied] = useState(false);
+
     // Made-to-order configuration state
     const [selectedSize, setSelectedSize] = useState('');
     const [addCrystals, setAddCrystals] = useState(false);
@@ -366,17 +369,23 @@ const PiecePage: React.FC = () => {
             {/* Breadcrumb — Mobile: simplified (← Category), Desktop: full path */}
             {/* Mobile breadcrumb */}
             <div className="md:hidden max-w-7xl mx-auto px-6 py-4">
-                <Link
-                    to={
-                        isMultidimensional
-                            ? (seriesLink ?? '/creations/multidimensional-art')
-                            : (art.category ? `/creations?category=${encodeURIComponent(art.category)}` : '/creations')
-                    }
+                <button
+                    onClick={() => {
+                        if (window.history.length <= 1) {
+                            navigate(
+                                isMultidimensional
+                                    ? (seriesLink ?? '/creations/multidimensional-art')
+                                    : (art.category ? `/creations?category=${encodeURIComponent(art.category)}` : '/creations')
+                            );
+                        } else {
+                            navigate(-1);
+                        }
+                    }}
                     className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
                 >
                     <ArrowRight size={12} className="rotate-180" />
                     {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
-                </Link>
+                </button>
             </div>
 
             {/* Desktop breadcrumb — full path */}
@@ -864,15 +873,26 @@ const PiecePage: React.FC = () => {
                         <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                             {art.category}
                         </span>
-                        {typeof navigator !== 'undefined' && 'share' in navigator && (
-                            <button
-                                onClick={() => navigator.share({ title: art.title, url: window.location.href })}
-                                className="flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
-                                aria-label="Share this piece"
-                            >
-                                <Share2 size={14} /> Share
-                            </button>
-                        )}
+                        <button
+                            onClick={async () => {
+                                const url = window.location.href;
+                                try {
+                                    await navigator.share({ title: art.title, url });
+                                } catch {
+                                    try {
+                                        await navigator.clipboard.writeText(url);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                    } catch {
+                                        // clipboard also unavailable — silently ignore
+                                    }
+                                }
+                            }}
+                            className="flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
+                            aria-label="Share this piece"
+                        >
+                            {copied ? <><Check size={14} className="text-bronze-600" /> Copied!</> : <><Share2 size={14} /> Share</>}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -920,6 +940,19 @@ const PiecePage: React.FC = () => {
             )}
 
             {/* Related Pieces */}
+            {relatedPieces.length === 0 && (
+                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-32">
+                    <div className="border-t border-wood-200 pt-12 text-center">
+                        <h2 className="font-serif text-2xl text-wood-700 font-medium mb-3">Explore more</h2>
+                        <Link
+                            to="/creations"
+                            className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold transition-colors border-b border-wood-300 pb-1"
+                        >
+                            Browse all creations <ArrowRight size={12} />
+                        </Link>
+                    </div>
+                </div>
+            )}
             {relatedPieces.length > 0 && (
                 <div className="max-w-7xl mx-auto px-6 md:px-12 mt-32">
                     <div className="border-t border-wood-200 pt-12 mb-10">

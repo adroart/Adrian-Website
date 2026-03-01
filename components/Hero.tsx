@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { img } from '../utils/cloudinary';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -49,6 +50,7 @@ const Hero: React.FC = () => {
               muted
               playsInline
               aria-hidden="true"
+              poster={img('adrian-website/placeholders/hero-poster', { w: 1920 })}
               className="w-full h-full object-cover opacity-60"
           >
               <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/adrian-website/site/hero/studio-creation-process" type="video/mp4" />
