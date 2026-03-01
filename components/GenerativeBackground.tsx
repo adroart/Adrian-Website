@@ -230,9 +230,9 @@ function getPattern(pathname: string): PatternFn {
 }
 
 // Layer rendering constants
-const LAYER_PARTICLE_ALPHA_LIGHT = [0.15, 0.25, 0.38] as const;
+const LAYER_PARTICLE_ALPHA_LIGHT = [0.10, 0.16, 0.24] as const;
 const LAYER_PARTICLE_ALPHA_DARK = [0.15, 0.25, 0.38] as const;
-const LAYER_LINE_ALPHA_MUL = [0.06, 0.12, 0.2] as const;
+const LAYER_LINE_ALPHA_MUL = [0.04, 0.08, 0.13] as const;
 const LAYER_LINE_WIDTH = [0.3, 0.5, 0.7] as const;
 const LAYER_CONN_SCALE = [0.6, 1.0, 1.4] as const;
 
