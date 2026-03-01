@@ -5,6 +5,7 @@ import { Story, StoryCategory } from '../types';
 import { STORIES, FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
 import { img } from '../utils/cloudinary';
+import BackToTop from './shared/BackToTop';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -64,8 +65,7 @@ export const WritingArticle: React.FC = () => {
 
     // #11 Reading progress bar
     const [readProgress, setReadProgress] = useState(0);
-    // #14 Back to top visibility
-    const [showBackToTop, setShowBackToTop] = useState(false);
+    // #14 Back to top visibility handled by shared BackToTop component
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -79,7 +79,6 @@ export const WritingArticle: React.FC = () => {
             if (docHeight > 0) {
                 setReadProgress((scrollTop / docHeight) * 100);
             }
-            setShowBackToTop(scrollTop > 600);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
@@ -303,13 +302,7 @@ export const WritingArticle: React.FC = () => {
             </div>
 
             {/* #14 Floating back to top button */}
-            <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className={`fixed bottom-8 right-8 w-10 h-10 rounded-full bg-white border border-wood-200 shadow-md flex items-center justify-center text-wood-500 hover:text-wood-900 hover:border-bronze-300 transition-all duration-300 z-40 ${showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
-                aria-label="Back to top"
-            >
-                <ArrowUp size={16} />
-            </button>
+            <BackToTop />
         </article>
     );
 };
@@ -487,7 +480,7 @@ const Writings: React.FC = () => {
                         to="/inquire"
                         className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
                     >
-                        Begin a Conversation <ArrowRight size={14} />
+                        Begin a conversation <ArrowRight size={14} />
                     </Link>
                 </div>
             </div>

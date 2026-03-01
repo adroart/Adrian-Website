@@ -95,7 +95,7 @@ const Home: React.FC = () => {
                                 to="/inquire"
                                 className="inline-block font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold border-b-2 border-bronze-400 pb-1 hover:text-bronze-700 hover:border-bronze-600 transition-colors"
                             >
-                                Begin an Inquiry
+                                Begin a conversation
                             </Link>
                         </div>
                     </div>

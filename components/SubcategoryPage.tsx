@@ -158,7 +158,7 @@ const SubcategoryPage: React.FC = () => {
 
     /* Pill button helper for filter chips */
     const pillClass = (active: boolean) =>
-        `font-label text-[11px] uppercase tracking-[0.18em] font-semibold transition-all whitespace-nowrap px-3 py-1.5 border ${
+        `font-label text-xs uppercase tracking-[0.18em] font-semibold transition-all whitespace-nowrap px-4 py-2.5 border ${
             active
                 ? 'bg-wood-900 text-paper-50 border-wood-900'
                 : 'bg-transparent text-wood-500 border-wood-200 hover:border-wood-400 hover:text-wood-800'
@@ -306,7 +306,7 @@ const SubcategoryPage: React.FC = () => {
             {/* Grid — wider gaps, staggered entrance */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10">
                 {filteredPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 sm:gap-6 lg:gap-8 card-stagger">
+                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
                         {filteredPieces.map(art => (
                             <GalleryTileCard
                                 key={art.id}
@@ -349,7 +349,7 @@ const SubcategoryPage: React.FC = () => {
                             to="/inquire"
                             className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-paper-50 px-8 py-4 transition-colors font-semibold"
                         >
-                            Begin the conversation <ArrowRight size={14} />
+                            Begin a conversation <ArrowRight size={14} />
                         </Link>
                     </div>
                 </div>

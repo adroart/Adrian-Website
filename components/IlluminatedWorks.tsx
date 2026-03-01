@@ -134,7 +134,7 @@ const IlluminatedWorks: React.FC = () => {
                         to="/inquire"
                         className="inline-flex items-center gap-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold px-8 py-4 hover:bg-bronze-600 transition-colors"
                     >
-                        Begin the conversation <ArrowRight size={16} />
+                        Begin a conversation <ArrowRight size={16} />
                     </Link>
                 </div>
             </div>

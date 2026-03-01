@@ -277,7 +277,7 @@ const About: React.FC = () => {
                     to="/inquire"
                     className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-400 hover:text-bronze-300 font-semibold border-b border-bronze-400 hover:border-bronze-300 pb-1 transition-colors"
                   >
-                    Work together
+                    Begin a conversation
                   </Link>
                 </div>
               </Reveal>

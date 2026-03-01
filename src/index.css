@@ -184,8 +184,8 @@ blockquote {
 
   /* Colors: availability states */
   --color-avail-ready: #1A1A1A;
-  --color-avail-order: #6B6B6B;
-  --color-avail-sold: #767676;
+  --color-avail-order: #666666;
+  --color-avail-sold: #666666;
 
   /* Colors: bronze */
   --color-bronze-50: #faf6f0;

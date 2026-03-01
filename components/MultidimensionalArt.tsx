@@ -41,7 +41,7 @@ const SubcategoryTile: React.FC<{
                     {label}
                 </h3>
                 <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
-                              sm:opacity-0 sm:group-hover:opacity-100
+                              sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
                 </p>

@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ChevronUp, ArrowUpDown, ArrowRight } from 'lucide-react';
+import { ArrowUpDown, ArrowRight } from 'lucide-react';
+import BackToTop from './shared/BackToTop';
 import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
@@ -82,7 +83,7 @@ const CreationCategoryCard: React.FC<{
                     {label}
                 </h3>
                 <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
-                              sm:opacity-0 sm:group-hover:opacity-100
+                              sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
                 </p>
@@ -193,31 +194,6 @@ const SortDropdown: React.FC<{
         </select>
     </div>
 );
-
-// ─── Back-to-Top Button ────────────────────────────────────────────────────────
-
-const BackToTop: React.FC = () => {
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        const handler = () => setVisible(window.scrollY > 600);
-        window.addEventListener('scroll', handler, { passive: true });
-        return () => window.removeEventListener('scroll', handler);
-    }, []);
-
-    if (!visible) return null;
-
-    return (
-        <button
-            type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            aria-label="Back to top"
-            className="fixed bottom-8 right-6 z-50 bg-paper-50 border border-wood-200 shadow-md p-3 hover:border-wood-400 hover:shadow-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500"
-        >
-            <ChevronUp size={18} className="text-wood-700" aria-hidden="true" />
-        </button>
-    );
-};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -493,7 +469,7 @@ const Creations: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
                 {displayedPieces.length > 0 ? (
-                    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 sm:gap-6 lg:gap-8 card-stagger">
+                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
                         {displayedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
                         ))}
