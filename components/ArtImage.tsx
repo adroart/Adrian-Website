@@ -71,6 +71,14 @@ const VARIANT_SIZES: Record<ArtVariant, string> = {
     cover:   '100vw',
 };
 
+/** Aspect ratio used for the error fallback per variant */
+const VARIANT_ASPECT: Record<ArtVariant, string> = {
+    gallery: 'aspect-[4/3]',
+    tile:    'aspect-square',
+    product: 'aspect-[4/3]',
+    cover:   'aspect-[16/9]',
+};
+
 const ArtImage: React.FC<ArtImageProps> = ({
     variant = 'gallery',
     inactive = false,
@@ -82,6 +90,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
     const hasFade = FADE_ON_LOAD.has(variant);
     // Gallery starts fully visible (no fade); fixed-container variants start hidden
     const [loaded, setLoaded] = useState(!hasFade);
+    const [hasError, setHasError] = useState(false);
 
     // If publicId is provided, generate Cloudinary URLs with responsive srcSet
     const resolvedSrc = publicId
@@ -94,6 +103,24 @@ const ArtImage: React.FC<ArtImageProps> = ({
         ? (rest.sizes ?? VARIANT_SIZES[variant])
         : rest.sizes;
 
+    if (hasError) {
+        return (
+            <div
+                className={[
+                    VARIANT_CLASSES[variant],
+                    variant === 'gallery' ? VARIANT_ASPECT[variant] : '',
+                    'bg-wood-100 flex items-center justify-center',
+                    className,
+                ].filter(Boolean).join(' ')}
+                aria-label={rest.alt ?? 'Image unavailable'}
+            >
+                <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-300 font-semibold">
+                    Image unavailable
+                </span>
+            </div>
+        );
+    }
+
     return (
         <img
             {...rest}
@@ -104,6 +131,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
                 setLoaded(true);
                 externalOnLoad?.(e);
             }}
+            onError={() => setHasError(true)}
             className={[
                 VARIANT_CLASSES[variant],
                 TRANSITION,

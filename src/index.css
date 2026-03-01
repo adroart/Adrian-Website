@@ -487,6 +487,75 @@ html.dark body { background-color: #141210; }
   transform: translateY(-50%) scale(1);
 }
 
+/* ─── Longform Page: Shared Reveal & Typography ────────────────────────── */
+/* Used by About.tsx and OracleCards.tsx. Defined once here so the           */
+/* <style> blocks in those components aren't duplicated on re-render.        */
+
+/* Varied reveal animations */
+.reveal-block {
+  opacity: 0;
+  transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal-up    { transform: translateY(36px); }
+.reveal-left  { transform: translateX(-44px); }
+.reveal-right { transform: translateX(44px); }
+.reveal-scale { transform: scale(0.94); }
+.reveal-fade  { transform: none; }
+.reveal-block.is-visible {
+  opacity: 1;
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+/* Drop caps */
+.drop-cap::first-letter {
+  float: left;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3.6em;
+  line-height: 0.78;
+  padding-right: 0.07em;
+  padding-top: 0.04em;
+  color: #ab9266;
+  font-weight: 500;
+}
+
+/* Paragraph opacity gradient (clears on reveal) */
+.pg-1 { opacity: 1; }
+.pg-2 { opacity: 0.75; transition: opacity 1s ease 0.5s; }
+.pg-3 { opacity: 0.6;  transition: opacity 1s ease 0.7s; }
+.pg-4 { opacity: 0.5;  transition: opacity 1s ease 0.9s; }
+.reveal-block.is-visible .pg-2,
+.reveal-block.is-visible .pg-3,
+.reveal-block.is-visible .pg-4 { opacity: 1; }
+
+/* Section tag line animation (unified — was .about-tag-line / .oracle-tag-line) */
+.tag-line {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s;
+}
+.reveal-block.is-visible .tag-line { transform: scaleX(1); }
+
+/* Margin annotation */
+@media (min-width: 1280px) {
+  .with-margin-note { position: relative; }
+  .margin-note {
+    position: absolute;
+    right: -200px;
+    width: 168px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #ab9266;
+    line-height: 1.45;
+    border-left: 1px solid rgba(196,170,124,0.4);
+    padding-left: 11px;
+    opacity: 0.85;
+  }
+}
+@media (max-width: 1279px) {
+  .margin-note { display: none; }
+}
+
 /* ─── Reduced Motion Support ──────────────────────────────────────────── */
 /* Respects user preference to minimize non-essential animations (WCAG 2.1) */
 @media (prefers-reduced-motion: reduce) {

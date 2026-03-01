@@ -6,16 +6,11 @@ import { Artwork, Collection } from '../types';
 import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
+import { formatPrice } from '../utils/formatPrice';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'newest';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatPrice(n: number): string {
-    return n.toLocaleString('en-US');
-}
 
 /** Resolve which pieces belong to a collection */
 function getCollectionPieces(collection: Collection, archive: Artwork[]): Artwork[] {

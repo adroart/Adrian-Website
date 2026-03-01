@@ -6,6 +6,7 @@ import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockDa
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { img as cldImg } from '../utils/cloudinary';
+import { formatPrice } from '../utils/formatPrice';
 
 // --- Helpers ---
 
@@ -613,7 +614,7 @@ const PiecePage: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <span className="font-label text-sm text-wood-700 font-semibold">
-                                                        ${sizeOption.price.toLocaleString('en-US')}
+                                                        {formatPrice(sizeOption.price)}
                                                     </span>
                                                     <input
                                                         type="radio"
@@ -647,7 +648,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add crystals</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +${MADE_TO_ORDER_ADD_ONS.crystals.price.toLocaleString('en-US')}
+                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.crystals.price)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -670,7 +671,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add wood frame</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +${MADE_TO_ORDER_ADD_ONS.woodFrame.price.toLocaleString('en-US')}
+                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.woodFrame.price)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -694,7 +695,7 @@ const PiecePage: React.FC = () => {
                                                     <div className="flex items-baseline justify-between gap-4">
                                                         <span className="font-serif text-lg text-wood-900">Illuminate this piece</span>
                                                         <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                            +${illuminationPrice.toLocaleString('en-US')}
+                                                            +{formatPrice(illuminationPrice)}
                                                         </span>
                                                     </div>
                                                     <p className="font-serif text-sm text-wood-500 mt-1 leading-[1.7]">
@@ -721,7 +722,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Custom laser cut frame</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +${MADE_TO_ORDER_ADD_ONS.customFrame.price.toLocaleString('en-US')}
+                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.customFrame.price)}
                                                     </span>
                                                 </div>
                                                 <p className="font-serif text-sm text-wood-500 mt-1 leading-[1.7]">
@@ -751,7 +752,7 @@ const PiecePage: React.FC = () => {
                                     <div className="flex items-end justify-between mb-3">
                                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
                                         <span className="font-serif text-3xl text-wood-900 font-medium">
-                                            ${mtoTotal.toLocaleString('en-US')}
+                                            {formatPrice(mtoTotal)}
                                         </span>
                                     </div>
                                     <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold transition-all duration-300">
@@ -793,12 +794,12 @@ const PiecePage: React.FC = () => {
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
                                     <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="block font-serif text-4xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                    <span className="block font-serif text-4xl text-wood-900 font-medium">{art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-end">
                                     <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
-                                    <span className="font-serif text-3xl text-wood-900 font-medium">${art.price?.toLocaleString('en-US')}</span>
+                                    <span className="font-serif text-3xl text-wood-900 font-medium">{art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 <button
                                     onClick={handleAddToCartRTS}
@@ -824,12 +825,12 @@ const PiecePage: React.FC = () => {
                                 {/* Mobile: stacked label + price */}
                                 <div className="md:hidden space-y-1.5">
                                     <span className={`inline-block px-2.5 py-1 text-[11px] font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
-                                    <span className="block font-serif text-4xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
+                                    <span className="block font-serif text-4xl text-wood-900 font-medium">From {art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 {/* Desktop: side by side */}
                                 <div className="hidden md:flex justify-between items-end">
                                     <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Made to order</span>
-                                    <span className="font-serif text-3xl text-wood-900 font-medium">From ${art.price?.toLocaleString('en-US')}</span>
+                                    <span className="font-serif text-3xl text-wood-900 font-medium">From {art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
                                 <Link
                                     to="/inquire"
@@ -881,10 +882,10 @@ const PiecePage: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                     <span className="font-serif text-xl text-wood-900 font-medium">
                         {hasVariants
-                            ? `$${mtoTotal.toLocaleString('en-US')}`
+                            ? formatPrice(mtoTotal)
                             : art.availability === 'READY_TO_SHIP'
-                            ? `$${art.price?.toLocaleString('en-US')}`
-                            : `From $${art.price?.toLocaleString('en-US')}`
+                            ? (art.price != null ? formatPrice(art.price) : '')
+                            : `From ${art.price != null ? formatPrice(art.price) : ''}`
                         }
                     </span>
 

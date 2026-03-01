@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import { CREATION_CATEGORIES } from '../data/mockData';
 import ArtImage from './ArtImage';
+import { formatPrice } from '../utils/formatPrice';
 
 /** Pre-computed category → URL map */
 const CATEGORY_URL_MAP: Record<string, string> = {};
@@ -45,8 +46,8 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 />
 
                 {/* Hover overlay with "View" prompt */}
-                <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/15 transition-all duration-500 flex items-center justify-center">
-                    <span className="font-label text-[11px] uppercase tracking-[0.25em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
+                <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/15 group-focus-within:bg-wood-900/15 transition-all duration-500 flex items-center justify-center">
+                    <span className="font-label text-[11px] uppercase tracking-[0.25em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
                         View
                     </span>
                 </div>
@@ -86,9 +87,9 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         {/* Price */}
                         {art.price != null && art.availability !== 'SOLD' && (
                             <span className="font-serif text-base text-wood-700 font-medium">
-                                ${art.price.toLocaleString('en-US')}
+                                {formatPrice(art.price)}
                                 {showRange && (
-                                    <span className="text-wood-400 font-light"> to ${highPrice!.toLocaleString('en-US')}</span>
+                                    <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>
                                 )}
                             </span>
                         )}
@@ -115,9 +116,9 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 {/* Minimal price for non-detail mode */}
                 {!showDetails && art.price != null && art.availability !== 'SOLD' && (
                     <span className="block mt-1.5 font-serif text-sm text-wood-500">
-                        ${art.price.toLocaleString('en-US')}
+                        {formatPrice(art.price)}
                         {showRange && (
-                            <span className="text-wood-400 font-light"> to ${highPrice!.toLocaleString('en-US')}</span>
+                            <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>
                         )}
                     </span>
                 )}

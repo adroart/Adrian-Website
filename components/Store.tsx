@@ -11,10 +11,9 @@ import {
     Maximize2, ArrowLeft, Package, ShoppingBag, Check, ChevronUp, BookOpen
 } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { formatPrice } from '../utils/formatPrice';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
 
 function getCollectionProductIds(collection: Collection): Set<string> {
     if (collection.pieceIds) return new Set(collection.pieceIds);

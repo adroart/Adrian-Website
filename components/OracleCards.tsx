@@ -1,9 +1,14 @@
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
 import { img } from '../utils/cloudinary';
+import { formatPrice } from '../utils/formatPrice';
+import Reveal from './shared/Reveal';
+import ProgressBar from './shared/ProgressBar';
+import SideNav from './shared/SideNav';
+import { Tag, GlyphDivider, Interstitial, ParallaxImg } from './shared/LongformElements';
 
 /* ─── DECK DATA ────────────────────────────────────────────────────── */
 
@@ -132,160 +137,6 @@ const SECTIONS = [
   { id: 'oracle-close',    label: 'Acquire' },
 ];
 
-/* ─── HOOKS ─────────────────────────────────────────────────────────── */
-
-function useScrollProgress() {
-  const [pct, setPct] = useState(0);
-  useEffect(() => {
-    const onScroll = () => {
-      const top = window.scrollY;
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setPct(total > 0 ? (top / total) * 100 : 0);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return pct;
-}
-
-function useActiveSection() {
-  const [active, setActive] = useState(SECTIONS[0].id);
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
-      },
-      { threshold: 0.35 }
-    );
-    SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) obs.observe(el);
-    });
-    return () => obs.disconnect();
-  }, []);
-  return active;
-}
-
-type RevealDir = 'up' | 'left' | 'right' | 'scale' | 'fade';
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { el.classList.add('is-visible'); obs.disconnect(); } },
-      { threshold: 0.1 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return ref;
-}
-
-function useParallax(speed = 0.18) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const tick = () => {
-      const el = ref.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const offset = (rect.top + rect.height / 2 - window.innerHeight / 2) * speed;
-      el.style.transform = `translateY(${offset}px)`;
-    };
-    window.addEventListener('scroll', tick, { passive: true });
-    tick();
-    return () => window.removeEventListener('scroll', tick);
-  }, [speed]);
-  return ref;
-}
-
-/* ─── SMALL COMPONENTS ──────────────────────────────────────────────── */
-
-const Reveal: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-  dir?: RevealDir;
-}> = ({ children, className = '', delay = 0, dir = 'up' }) => {
-  const ref = useReveal();
-  return (
-    <div ref={ref} className={`reveal-block reveal-${dir} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
-      {children}
-    </div>
-  );
-};
-
-const ProgressBar: React.FC = () => {
-  const pct = useScrollProgress();
-  return (
-    <div className="fixed top-0 left-0 w-full h-[2px] z-50 pointer-events-none">
-      <div className="h-full bg-bronze-400 transition-[width] duration-100 ease-out" style={{ width: `${pct}%` }} />
-    </div>
-  );
-};
-
-const SideNav: React.FC = () => {
-  const active = useActiveSection();
-  const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  return (
-    <nav className="fixed right-5 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-end gap-[14px]" aria-label="Page sections">
-      {SECTIONS.map(({ id, label }) => {
-        const isActive = active === id;
-        return (
-          <button key={id} onClick={() => go(id)} className="group flex items-center gap-2.5 cursor-pointer" aria-label={`Jump to ${label}`}>
-            <span className={`font-label text-[11px] uppercase tracking-[0.2em] transition-all duration-300 ${isActive ? 'opacity-100 text-bronze-500' : 'opacity-0 text-wood-400 translate-x-2 group-hover:opacity-60 group-hover:translate-x-0'}`}>
-              {label}
-            </span>
-            <span className={`block rounded-full transition-all duration-300 ${isActive ? 'w-2.5 h-2.5 bg-bronze-500 shadow-[0_0_0_2px_rgba(196,170,124,0.25)]' : 'w-1.5 h-1.5 bg-wood-300 group-hover:bg-bronze-400'}`} />
-          </button>
-        );
-      })}
-    </nav>
-  );
-};
-
-const Tag: React.FC<{ light?: boolean; centered?: boolean; children: React.ReactNode }> = ({ light, centered, children }) => (
-  <div className={`flex items-center gap-3 mb-8 ${centered ? 'justify-center' : ''}`}>
-    {centered && <span className="oracle-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />}
-    <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
-    <span className="oracle-tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />
-  </div>
-);
-
-const GlyphDivider: React.FC<{ glyph?: string }> = ({ glyph = '&' }) => (
-  <Reveal dir="scale">
-    <div className="flex items-center justify-center py-10 select-none overflow-hidden" aria-hidden="true">
-      <span className="font-serif leading-none font-light" style={{ fontSize: 'clamp(120px, 18vw, 200px)', color: 'rgba(167,143,107,0.09)' }}>
-        {glyph}
-      </span>
-    </div>
-  </Reveal>
-);
-
-const Interstitial: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
-  const ref = useParallax(0.12);
-  return (
-    <div className="relative overflow-hidden" style={{ height: 'clamp(320px, 55vh, 680px)' }}>
-      <div ref={ref} className="absolute" style={{ inset: '-15% 0', height: '130%', width: '100%' }}>
-        <img src={src} alt={alt} className="w-full h-full object-cover grayscale opacity-70" loading="lazy" />
-      </div>
-    </div>
-  );
-};
-
-const ParallaxImg: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className = '' }) => {
-  const ref = useParallax(0.09);
-  return (
-    <div ref={ref} className="absolute" style={{ inset: '-8% 0', height: '116%', width: '100%' }}>
-      <img
-        src={src}
-        alt={alt}
-        className={`w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-[1.5s] ${className}`}
-        loading="lazy"
-      />
-    </div>
-  );
-};
 
 /* ─── DECK SECTION ──────────────────────────────────────────────────── */
 
@@ -392,7 +243,7 @@ const DeckSection: React.FC<{
                       </span>
                       {art.price && (
                         <span className={`block font-label text-[11px] uppercase tracking-[0.2em] mt-0.5 font-semibold ${isDark ? 'text-paper-400' : 'text-wood-400'}`}>
-                          {art.availability === 'MADE_TO_ORDER' ? 'From ' : ''}${art.price.toLocaleString()}
+                          {art.availability === 'MADE_TO_ORDER' ? 'From ' : ''}{formatPrice(art.price)}
                         </span>
                       )}
                     </div>
@@ -430,70 +281,8 @@ const OracleCards: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        .reveal-block {
-          opacity: 0;
-          transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
-        }
-        .reveal-up    { transform: translateY(36px); }
-        .reveal-left  { transform: translateX(-44px); }
-        .reveal-right { transform: translateX(44px); }
-        .reveal-scale { transform: scale(0.94); }
-        .reveal-fade  { transform: none; }
-        .reveal-block.is-visible {
-          opacity: 1;
-          transform: translateY(0) translateX(0) scale(1);
-        }
-
-        .drop-cap::first-letter {
-          float: left;
-          font-family: 'Cormorant Garamond', serif;
-          font-size: 3.6em;
-          line-height: 0.78;
-          padding-right: 0.07em;
-          padding-top: 0.04em;
-          color: #ab9266;
-          font-weight: 500;
-        }
-
-        .pg-1 { opacity: 1; }
-        .pg-2 { opacity: 0.75; transition: opacity 1s ease 0.5s; }
-        .pg-3 { opacity: 0.6;  transition: opacity 1s ease 0.7s; }
-        .pg-4 { opacity: 0.5;  transition: opacity 1s ease 0.9s; }
-        .reveal-block.is-visible .pg-2,
-        .reveal-block.is-visible .pg-3,
-        .reveal-block.is-visible .pg-4 { opacity: 1; }
-
-        .oracle-tag-line {
-          transform: scaleX(0);
-          transform-origin: left;
-          transition: transform 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s;
-        }
-        .reveal-block.is-visible .oracle-tag-line { transform: scaleX(1); }
-
-        @media (min-width: 1280px) {
-          .with-margin-note { position: relative; }
-          .margin-note {
-            position: absolute;
-            right: -200px;
-            width: 168px;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 0.95rem;
-            font-style: italic;
-            color: #ab9266;
-            line-height: 1.45;
-            border-left: 1px solid rgba(196,170,124,0.4);
-            padding-left: 11px;
-            opacity: 0.85;
-          }
-        }
-        @media (max-width: 1279px) {
-          .margin-note { display: none; }
-        }
-      `}</style>
-
       <ProgressBar />
-      <SideNav />
+      <SideNav sections={SECTIONS} />
 
       <section className="bg-paper-50 min-h-screen">
 

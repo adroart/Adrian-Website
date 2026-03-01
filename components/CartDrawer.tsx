@@ -4,8 +4,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
 import { useCart, getMaxQuantity } from '../CartContext';
-
-const formatPrice = (price: number) => `$${price.toLocaleString('en-US')}`;
+import { formatPrice } from '../utils/formatPrice';
 
 // Validate that a URL is a legitimate Stripe checkout URL before redirecting
 function isValidStripeUrl(url: string): boolean {

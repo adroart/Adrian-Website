@@ -258,7 +258,6 @@ const Inquire: React.FC = () => {
 
   /* Form completion progress */
   const completionCount = [
-    true, // commission type always selected
     form.name.trim(),
     form.email.trim() && isValidEmail(form.email),
     form.vision.trim(),
@@ -268,7 +267,7 @@ const Inquire: React.FC = () => {
     form.timeline,
     form.referral,
   ].filter(Boolean).length;
-  const completionPercent = Math.round((completionCount / 9) * 100);
+  const completionPercent = Math.round((completionCount / 8) * 100);
 
   /* Vision word count */
   const wordCount = form.vision.trim() ? form.vision.trim().split(/\s+/).length : 0;
@@ -526,7 +525,7 @@ const Inquire: React.FC = () => {
                     />
                   </div>
                   <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold tabular-nums whitespace-nowrap">
-                    {completionCount} of 7
+                    {completionCount} of 8
                   </span>
                 </div>
 
@@ -564,6 +563,7 @@ const Inquire: React.FC = () => {
                         onBlur={() => handleBlur('name')}
                         onKeyDown={(e) => handleKeyDown('name', e)}
                         autoComplete="name"
+                        aria-describedby={getFieldError('name') ? 'name-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
                         required
                       />
@@ -574,7 +574,7 @@ const Inquire: React.FC = () => {
                         <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('name') && (
-                        <p className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
+                        <p id="name-error" role="alert" className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
                           {getFieldError('name')}
                         </p>
                       )}
@@ -591,6 +591,7 @@ const Inquire: React.FC = () => {
                         onBlur={() => handleBlur('email')}
                         onKeyDown={(e) => handleKeyDown('email', e)}
                         autoComplete="email"
+                        aria-describedby={getFieldError('email') ? 'email-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
                         required
                       />
@@ -601,7 +602,7 @@ const Inquire: React.FC = () => {
                         <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('email') && (
-                        <p className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
+                        <p id="email-error" role="alert" className="font-serif text-sm text-wood-500 mt-1.5 animate-fade-in">
                           {getFieldError('email')}
                         </p>
                       )}
@@ -631,6 +632,7 @@ const Inquire: React.FC = () => {
                         onChange={handleVisionChange}
                         onFocus={() => handleFocus('vision')}
                         onBlur={() => handleBlur('vision')}
+                        aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
                         placeholder="A piece for my meditation space, something that holds stillness..."
                         required
@@ -638,7 +640,7 @@ const Inquire: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center mt-2 pl-4">
                       {getFieldError('vision') ? (
-                        <p className="font-serif text-sm text-wood-500 animate-fade-in">
+                        <p id="vision-error" role="alert" className="font-serif text-sm text-wood-500 animate-fade-in">
                           {getFieldError('vision')}
                         </p>
                       ) : (
@@ -703,6 +705,7 @@ const Inquire: React.FC = () => {
                               }}
                               className="budget-slider absolute left-0 w-full"
                               aria-label="Minimum budget"
+                              aria-valuetext={formatBudget(BUDGET_STOPS[budgetRange[0]])}
                             />
                             {/* High thumb */}
                             <input
@@ -716,6 +719,7 @@ const Inquire: React.FC = () => {
                               }}
                               className="budget-slider absolute left-0 w-full"
                               aria-label="Maximum budget"
+                              aria-valuetext={formatBudget(BUDGET_STOPS[budgetRange[1]])}
                             />
                           </div>
                           <div className="flex justify-between mt-1">
