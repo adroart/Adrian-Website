@@ -28,17 +28,19 @@ const ALLOWED_ORIGINS = [
   'https://adrian-rasmussen-art.pages.dev',
 ];
 
-// In development, also allow localhost origins
-function isAllowedOrigin(origin) {
+function isAllowedOrigin(origin, env) {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Allow localhost for development
-  try {
-    const url = new URL(origin);
-    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-  } catch {
-    return false;
+  // Only allow localhost in development (when using test keys)
+  if (env?.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
+    try {
+      const url = new URL(origin);
+      return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    } catch {
+      return false;
+    }
   }
+  return false;
 }
 
 const MAX_ITEMS = 20;
@@ -48,7 +50,7 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   const requestOrigin = request.headers.get('origin') || '';
-  const origin = isAllowedOrigin(requestOrigin)
+  const origin = isAllowedOrigin(requestOrigin, env)
     ? requestOrigin
     : ALLOWED_ORIGINS[0];
 
@@ -157,7 +159,7 @@ export async function onRequestPost(context) {
 // Handle CORS preflight
 export async function onRequestOptions(context) {
   const requestOrigin = context.request.headers.get('origin') || '';
-  const origin = isAllowedOrigin(requestOrigin)
+  const origin = isAllowedOrigin(requestOrigin, context.env)
     ? requestOrigin
     : ALLOWED_ORIGINS[0];
 

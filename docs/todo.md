@@ -13,10 +13,8 @@ These are significant contradictions between what the plan states and what the c
 - **Reality:** React 18 + TypeScript + Vite + Tailwind CSS 4 + React Router v7 + Lucide React.
 - **Action:** Update Section 1.5 tech stack table to reflect the actual stack. The "Why this stack" rationale also needs rewriting since it references "no CMS dependency, full design control" which is still true, but "no framework dependency" is false.
 
-### 1.2 Newsletter Service Mismatch
-- **Plan (Sections 1.5, 3.7, 15.1):** ConvertKit for newsletter, welcome sequence, Inner Circle.
-- **Reality:** Formspree handles newsletter signups (Footer.tsx, env var `VITE_FORMSPREE_NEWSLETTER_ID`).
-- **Action:** Decide: migrate to ConvertKit as planned, or update the plan to reflect Formspree. ConvertKit offers welcome sequences and segmentation that Formspree does not. If ConvertKit is the goal, the integration needs to be built. If Formspree stays, remove ConvertKit references from the plan and acknowledge the loss of welcome sequence capability.
+### ~~1.2 Newsletter Service Mismatch~~ RESOLVED
+~~**Plan (Sections 1.5, 3.7, 15.1):** ConvertKit for newsletter. **Reality:** Now using Kit (ConvertKit) via their public API. Footer.tsx subscribes via `api.convertkit.com/v3/forms/`. Environment variables: `VITE_KIT_FORM_ID` and `VITE_KIT_PUBLIC_API_KEY` (set in `.env.local`). CSP header updated to allow `api.convertkit.com`. Privacy Policy updated to reference Kit instead of Formspree. Formspree references removed from code.~~
 
 ### 1.3 Shop Includes Made-to-Order (Should Be Ready-to-Ship Only)
 - **Plan (Section 2.3):** "Shop is the clean transactional space. Only ready-to-ship pieces. No sold items. No made-to-order complexity."
@@ -96,12 +94,8 @@ Several sections have condensed or modified text compared to the plan:
 - "Connection" (4.4): Omits First Friday details, Tannery Lofts specifics ("100 units of housing for artists"), Arise festival name, and "150-foot stage" detail. Also omits "Designed the 150-foot stage for Arise" and "Over 120 exhibitions and live paintings since 2009."
 - Need to decide: is the plan the source of truth (restore full text) or has the code been intentionally condensed?
 
-### 3.7 Form Fields Don't Match Plan (Section 9.4 vs Inquire.tsx)
-- **Plan fields:** Name, Email, Vision (required) + Location, Size range, Budget, Timeline, Image upload (optional, collapsed).
-- **Code fields:** Name, Email, Vision (required) + Budget, Timeline, Referral (optional, collapsed).
-- **Missing from code:** Location, Approximate size range, Image upload.
-- **Added in code but not in plan:** Referral source ("How did you find me?").
-- **Action:** Align the plan and code. Referral is a useful addition; add to plan. Missing fields should either be added to code or removed from plan.
+### ~~3.7 Form Fields Don't Match Plan~~ RESOLVED
+~~**Plan fields:** Name, Email, Vision (required) + Location, Size range, Budget, Timeline, Image upload (optional, collapsed). **Code fields:** Name, Email, Vision, Commission Type (required) + Budget (slider), Location, Size Range, Timeline, Referral (optional). Code now includes Location and Size Range. Image upload is not implemented but not critical for launch. Referral is a useful addition not in the original plan. Plan should be updated to match code.~~
 
 ### ~~3.8 Button Text Inconsistency~~ RESOLVED
 ~~Inquire.tsx submit button now says "Start the conversation", matching the plan (Section 9.4).~~
@@ -119,8 +113,9 @@ These appear throughout the plan with placeholder values:
 - [ ] Stripe Payment Links for each ready-to-ship piece (currently all use `PLACEHOLDER` URL)
 
 ### 4.2 Missing Written Content
-- [ ] Universal Language series hook (Section 6.3: "Adrian: Write hooks when ready")
-- [ ] Mandala series hook (Section 6.3: "Adrian: Write hooks when ready")
+- [x] ~~Universal Language series hook~~ DONE. Written in mockData.ts SERIES_DATA.
+- [x] ~~Mandala series hook~~ DONE. Written in mockData.ts SERIES_DATA.
+- [x] ~~Light Codes series hook~~ DONE. Written in mockData.ts SERIES_DATA.
 - [ ] Framing descriptions for Finishes modal (Section 8.2: "Adrian: Add descriptions for framing when ready")
 
 ### 4.3 Image Assets
@@ -136,8 +131,8 @@ These appear throughout the plan with placeholder values:
 
 These topics are not addressed anywhere in the master document but are needed for a production website.
 
-### 5.1 Analytics
-No analytics tool mentioned. Options: Google Analytics 4, Plausible, Fathom, Cloudflare Web Analytics (free with Cloudflare Pages). Without analytics, there's no way to measure traffic, understand visitor behavior, or validate the AEO strategy.
+### ~~5.1 Analytics~~ RESOLVED
+~~Cloudflare Web Analytics enabled via Cloudflare Dashboard (noted in index.html comments). No script tag needed as it's injected by Cloudflare automatically.~~
 
 ### ~~5.2 Accessibility (a11y)~~ PARTIALLY RESOLVED
 Core accessibility infrastructure implemented:
@@ -161,13 +156,13 @@ With no CMS, how does Adrian add new pieces or publish new writings after launch
 - What's the process for publishing a new writing?
 
 ### 5.4 Shipping, Returns, and Customs
-"Ships from Bali" is mentioned, but nowhere does the plan address:
+"Ships from Bali" is mentioned, but needs more detail:
 - Shipping cost calculation or flat rates
 - Customs and import duties (buyer's responsibility?)
 - Insurance for high-value pieces
 - Return policy
 - Damage during shipping
-- The Footer.tsx has "Shipping & Returns" and "Care Guide" buttons that don't link anywhere.
+- Terms page has a basic Shipping section. Footer links to /privacy and /terms (working).
 
 ### 5.5 Edition Tracking System
 Section 12.3 describes sophisticated display rules (0-40% sold shows one thing, 40-70% another, etc.) but there's no system for tracking actual edition counts. Currently, edition info is a static string in mockData.ts. Need a data source for real-time edition tracking.
@@ -198,8 +193,8 @@ No CI/CD described. How are changes deployed? Manual push to Cloudflare Pages? G
 ### 5.11 Backup Strategy
 No backup plan for content, images, or order data.
 
-### 5.12 Email Domain
-Inquire.tsx fallback uses `hello@adrianrasmussen.art` but the plan says the domain is `adrianrasmussen.com`. Which email domain is correct? Is the .art domain also owned?
+### ~~5.12 Email Domain~~ RESOLVED
+~~Inquire.js uses `hello@adrianrasmussen.com` as default (DEFAULT_TO constant). Footer mailto also uses `hello@adrianrasmussen.com`. Consistent across codebase.~~
 
 ---
 
@@ -233,18 +228,18 @@ Section 16 references: "Launch and Beyond (06-launch-and-beyond.md), Content Pla
 5. ~~Add image lazy loading~~ DONE
 6. Replace all placeholder images with real photography
 7. Replace Stripe PLACEHOLDER URLs with real Payment Links
-8. Decide and resolve ConvertKit vs Formspree for newsletter
-9. Add shipping/returns policy content (Footer links are dead)
+8. ~~Decide and resolve ConvertKit vs Formspree for newsletter~~ DONE (Kit/ConvertKit implemented)
+9. Add shipping/returns policy content
 
 ### Important (First Week After Launch)
 10. Build Finishes/Options modal
 11. Build made-to-order configuration UI on piece pages
 12. ~~Implement share functionality on piece pages~~ DONE
 13. ~~Add sticky bottom bar on mobile piece pages~~ DONE
-14. Align form fields between plan and implementation
+14. ~~Align form fields between plan and implementation~~ DONE (form has all key fields)
 15. ~~Add missing About page sections (The Team, What Art Can Mean)~~ DONE
 16. Implement "Available Now" as dedicated section on Creations landing
-17. Add analytics
+17. ~~Add analytics~~ DONE (Cloudflare Web Analytics)
 
 ### Should Have (First Month)
 18. ~~Clarify Light Codes / Illuminated Works / Objects category hierarchy~~ DONE (Light Codes = series under Multi Art; Illuminated Works = top-level with dedicated page; Objects = top-level with filter)
@@ -367,16 +362,16 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 ### 8.9 Photography and Video
 
 - [ ] Define and communicate standard shot list to photographer: hero front view (required), detail shot 1 (required), detail shot 2 (optional), scale on wall (required), scale with human (optional), illuminated day (if LEDs), illuminated dark (if LEDs), back/mounting (optional), process shot (optional).
-- [ ] Implement responsive image serving (srcset/sizes) for different screen sizes and resolutions. Not currently implemented; all images use simple src attributes.
-- [ ] Confirm homepage hero video specs: length, format, autoplay behavior, loop, muted by default. Mobile: poster image fallback if autoplay not supported.
+- [x] ~~Implement responsive image serving (srcset/sizes)~~ DONE. `utils/cloudinary.ts` provides `img()` and `srcset()` helpers. ArtImage component generates responsive srcset. All images served via Cloudinary with automatic format and quality optimization.
+- [x] ~~Confirm homepage hero video specs~~ DONE. Video on Cloudinary (18s, MP4, 960x720). Hero.tsx autoplays muted, loops. Poster image fallback configured (`hero-poster`).
 - [ ] Create illumination demo videos (15-30 seconds, loop-friendly) showing LED pieces transitioning from ambient to dark. For use in the Finishes/Options modal.
 - [ ] Ensure all source photography is minimum 2000px on longest side. Serve optimized responsive versions.
 
 ### 8.10 Integrations
 
-- [ ] Build newsletter welcome sequence (3 emails): welcome, story, invitation to explore. Requires ConvertKit or similar ESP with automation capability. Formspree cannot do this.
+- [ ] Build newsletter welcome sequence (3 emails): welcome, story, invitation to explore. Kit (ConvertKit) is now integrated and supports automation. Configure sequences in Kit dashboard.
 - [ ] Define newsletter frequency approach: "as inspired, not scheduled. Quality over consistency."
-- [ ] Select and install analytics platform. Spec suggests Google Analytics or privacy-focused alternative like Plausible. Track: page views, time on page, inquiry form submissions, cart additions, purchases.
+- [x] ~~Select and install analytics platform.~~ DONE. Cloudflare Web Analytics enabled via Dashboard.
 - [ ] Implement conversion tracking: inquiry submissions, completed purchases.
 - **Future to-do:** Heat mapping for post-launch optimization (optional).
 
@@ -393,7 +388,7 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 ### 8.12 Launch Checklist (Items Not Already Captured Above)
 
 **Must Have:**
-- [ ] Format homepage hero video for web (video exists, needs formatting)
+- [x] ~~Format homepage hero video for web~~ DONE (uploaded to Cloudinary, serving via f_auto,q_auto)
 - [ ] Prepare hero grid images (9 images, one per category)
 - [ ] Curate Selected Works for homepage (10-20 pieces)
 - [ ] Adrian hand-edits About page (final review)
@@ -405,7 +400,7 @@ Items identified from the Technical Specs document (file 16) that are not yet ca
 
 **Should Have:**
 - [ ] Publish at least one Living Knowledge presentation (Ye Ming Zhu)
-- [ ] Write series hooks and essays for Universal Language, Mandala, Light Codes
+- [x] ~~Write series hooks for Universal Language, Mandala, Light Codes~~ DONE (all three in mockData.ts SERIES_DATA)
 - [ ] Publish at least one piece in The Path (Writings section)
 - [x] ~~Configure Open Graph and social meta tags for all pages~~ DONE. Per-page title, description, og:title, og:description, og:url, twitter:title, twitter:description, canonical URL all set dynamically via useSeoMeta.ts. robots.txt and sitemap.xml created.
 
@@ -454,10 +449,10 @@ Not yet designed. Considerations for future implementation:
 Items that cannot be completed by development alone. These require decisions, content, accounts, or assets from Adrian.
 
 ### 10.1 Photography and Assets
-- [ ] **Real artwork photography** for all pieces (replacing picsum.photos / unsplash placeholders)
+- [ ] **Real artwork photography** for all pieces (replacing Cloudinary placeholder images)
 - [ ] **Favicon** based on real artwork or brand mark
 - [ ] **OG share image** (1200x630px) for social sharing, using real artwork
-- [ ] **Hero video** hosting decision: keep Wix-hosted video, or re-host on Cloudflare/own CDN?
+- [x] ~~**Hero video** hosting decision~~ DONE. Uploaded to Cloudinary at `adrian-website/site/hero/studio-creation-process` (18s, 960x720, 3.5MB).
 
 ### 10.2 Stripe and Payments
 - [ ] **Stripe account** fully configured (live mode, not test)
@@ -467,15 +462,16 @@ Items that cannot be completed by development alone. These require decisions, co
 
 ### 10.3 Content and Copy
 - [ ] **About page "The Root" section** review: some biographical details may need correction or Adrian's voice
-- [ ] **Illuminated Works naming** decision: "Ambient Light" vs "Living Light" (or Adrian's preferred terms)
-- [ ] **Universal Language series hook** copy (marked "Adrian: Write hooks when ready")
-- [ ] **Mandala series hook** copy (marked "Adrian: Write hooks when ready")
-- [ ] **Shipping and returns policy** (Footer links to Shipping & Returns, Care Guide, Authenticity are dead buttons)
+- [x] ~~**Illuminated Works naming** decision~~ RESOLVED. Uses "Basic Illumination" and "Curated Light" (not "Ambient Light" / "Living Light").
+- [x] ~~**Universal Language series hook** copy~~ DONE. Written in mockData.ts.
+- [x] ~~**Mandala series hook** copy~~ DONE. Written in mockData.ts.
+- [ ] **Illuminated Works personal copy** — 2-3 sentences in Adrian's voice (TODO in IlluminatedWorks.tsx:50-51)
+- [ ] **Shipping and returns policy** content (Terms page has basic Shipping section; may want dedicated page)
 
-### 10.4 Service and Provider Decisions
-- [ ] **Newsletter provider**: stay with Formspree (no welcome sequences) or migrate to ConvertKit/Kit (has automation)?
-- [ ] **Analytics**: choose a provider (Cloudflare Web Analytics is free with your hosting, Plausible for privacy, or GA4)
-- [ ] **Email domain**: confirm `hello@adrianrasmussen.art` vs `hello@adrianrasmussen.com`
+### ~~10.4 Service and Provider Decisions~~ ALL RESOLVED
+- [x] ~~**Newsletter provider**~~ DONE. Kit (ConvertKit) implemented with API integration.
+- [x] ~~**Analytics**~~ DONE. Cloudflare Web Analytics enabled.
+- [x] ~~**Email domain**~~ DONE. Using `hello@adrianrasmussen.com` consistently.
 
 ### 10.5 Recently Completed (No Longer Blocking)
 - [x] ~~Accessibility infrastructure~~ DONE

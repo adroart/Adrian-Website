@@ -9,7 +9,7 @@ const PrivacyPolicy: React.FC = () => {
         <h1 className="font-serif text-5xl text-wood-900 mb-12 font-medium">Privacy Policy</h1>
 
         <div className="prose prose-lg font-serif text-wood-700 max-w-none">
-          <p className="text-wood-500 text-sm mb-8">Last updated: February 2026</p>
+          <p className="text-wood-500 text-sm mb-8">Last updated: March 2026</p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Information We Collect</h2>
           <p>
@@ -26,7 +26,7 @@ const PrivacyPolicy: React.FC = () => {
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Third-Party Services</h2>
           <p>
-            This site uses Formspree for form submissions, Stripe for payment processing, and Cloudflare for hosting. Each service has its own privacy policy governing the data they process on our behalf.
+            This site uses Resend for inquiry form delivery, Kit (ConvertKit) for newsletter subscriptions, Stripe for payment processing, and Cloudflare for hosting. Each service has its own privacy policy governing the data they process on our behalf.
           </p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Cookies</h2>

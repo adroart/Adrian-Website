@@ -8,7 +8,6 @@ import App from './App';
 const statusEl = document.getElementById('loader-status');
 if (statusEl) statusEl.innerText = "Loading Modules...";
 
-console.log("Studio Script Execution Started...");
 
 interface ErrorBoundaryProps {
   children?: React.ReactNode;
@@ -55,7 +54,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
 const mountApp = () => {
     if (statusEl) statusEl.innerText = "Mounting Interface...";
-    console.log("Mounting App...");
     const rootElement = document.getElementById('root');
 
     if (!rootElement) {
@@ -74,7 +72,6 @@ const mountApp = () => {
                 </BrowserRouter>
             </ErrorBoundary>
         );
-        console.log("React Render Initiated");
     } catch (e) {
         console.error("Fatal: React failed to mount.", e);
         rootElement.innerHTML = `<div style="padding:40px; color:red; font-family:monospace;">Fatal: Failed to mount application.<br/><br/>${e}</div>`;

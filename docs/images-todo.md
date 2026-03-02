@@ -1,12 +1,12 @@
 # Images To-Do: Full Site Audit
 
-Every image currently on the site is a placeholder (picsum.photos or Wix-hosted). This file tracks every real image needed, organized by page. Check off each item as you source or shoot the image.
+Every image currently on the site is a Cloudinary placeholder (uploaded to `adrian-website/placeholders/`). This file tracks every real image needed, organized by page. Check off each item as you source or shoot the image. The Cloudinary pipeline, `img()` helper, and `srcset()` helper are fully built. You just need to upload real images and update the public IDs in `mockData.ts` and components.
 
 ---
 
 ## Homepage
 
-- [ ] **Hero background video** — Your existing video is correct but needs re-hosting (currently on Wix static). Upload to Cloudflare, Vimeo, or your own CDN.
+- [x] ~~**Hero background video**~~ DONE. Uploaded to Cloudinary at `adrian-website/site/hero/studio-creation-process` (18s, 960x720, 3.5MB). Hero.tsx references it directly.
 - [ ] **Commission detail photo** — Close-up or detail shot of a commissioned piece. Portrait orientation (roughly 9:11 ratio). Used in the "Commission an Original" section.
 
 ---
@@ -188,7 +188,7 @@ Fill in your actual piece count per category below, then multiply to get total i
 
 | Section | Images Needed |
 |---|---|
-| Homepage | 2 (1 video re-host + 1 photo) |
+| Homepage | 1 (video done, 1 photo remaining) |
 | About Page | 5 |
 | Creations Category Tiles | 8 |
 | Multidimensional Art Subcategory Tiles | 4 |

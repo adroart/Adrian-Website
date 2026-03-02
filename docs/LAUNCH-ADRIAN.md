@@ -10,8 +10,9 @@ Everything that requires your hands, decisions, or creative input before (and af
 
 You need real images to replace all Cloudinary placeholders. The Cloudinary pipeline is fully built. You just need to shoot, rename (or have Claude rename), and upload.
 
-**Site-level images (41 total):**
+**Site-level images (40 remaining, hero video done):**
 
+- [x] ~~**Homepage hero video:**~~ DONE. Uploaded to Cloudinary.
 - [ ] **Homepage:** Commission detail photo (close-up of a commissioned piece, portrait 9:11)
 - [ ] **About page:** Portrait of Adrian (3:4), tea/travels photo (3:4), studio creation photo (1:1), studio atmosphere interstitial (16:9), installation space interstitial (16:9)
 - [ ] **Creations category tiles (8 square images, 1:1):** Multidimensional Art, Illuminated Works, Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces
@@ -49,7 +50,10 @@ You need real images to replace all Cloudinary placeholders. The Cloudinary pipe
   - Flat rate vs. weight-based?
   - Regional rates (cheaper for SE Asia, more for Europe/US)?
   - Free shipping above a certain order value?
-- [ ] **Set `STRIPE_SECRET_KEY`** (live key) in Cloudflare Pages environment variables
+- [ ] **Set `STRIPE_SECRET_KEY`** (live `sk_live_...` key) in Cloudflare Pages environment variables
+- [ ] **Set `VITE_STRIPE_PUBLISHABLE_KEY`** (live `pk_live_...` key) in Cloudflare Pages environment variables
+- [ ] **Set `RESEND_API_KEY`** (`re_...` key) in Cloudflare Pages environment variables (inquiry form emails won't send without this)
+- [ ] **Verify `VITE_KIT_FORM_ID` and `VITE_KIT_PUBLIC_API_KEY`** are set in Cloudflare Pages (newsletter won't work without these)
 
 ### Shipping & Returns Policy
 
@@ -72,8 +76,9 @@ You need real images to replace all Cloudinary placeholders. The Cloudinary pipe
 ### Content Review
 
 - [ ] **About page "The Root" section:** Skim for biographical accuracy. Mark anything that needs your voice.
-- [ ] **Illuminated Works naming:** The page uses "Ambient Light" and "Living Light" as the two illumination modes. Change these if you have preferred terms.
-- [ ] **Series hooks:** Write short intro copy for Universal Language and Mandala series (marked "Adrian: Write hooks when ready" in the code).
+- [x] ~~**Illuminated Works naming:**~~ DONE. Uses "Basic Illumination" and "Curated Light". Copy is written.
+- [x] ~~**Series hooks:**~~ DONE. All three series (Universal Language, Mandala, Light Codes) have hook copy written in mockData.ts.
+- [ ] **Illuminated Works personal voice:** Add 2-3 sentences about what illuminated work means to you (TODO in IlluminatedWorks.tsx:50-51).
 
 ### Testing
 
@@ -87,6 +92,7 @@ You need real images to replace all Cloudinary placeholders. The Cloudinary pipe
 - [ ] Provide images for Finishes/Options modal: Natural, Painted, Crystal, LED, Framing states
 - [ ] Provide tone/copy direction for post-purchase confirmation page messaging
 - [ ] Review the live site analytics (Cloudflare Web Analytics is active, check the Cloudflare dashboard)
+- [ ] Build newsletter welcome sequence in Kit (ConvertKit) dashboard (3 emails: welcome, story, invitation to explore)
 
 ---
 

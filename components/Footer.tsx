@@ -216,7 +216,7 @@ const Footer: React.FC = () => {
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Connect</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1">
-                            <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <a href="https://www.instagram.com/adrianrasmussen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                                 <Instagram size={18} />
                             </a>
                             <a href="mailto:hello@adrianrasmussen.com" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
