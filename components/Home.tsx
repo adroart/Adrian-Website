@@ -126,7 +126,7 @@ const Home: React.FC = () => {
                             >
                                 <div className="aspect-[16/10] overflow-hidden">
                                     <ArtImage
-                                        src={story.image}
+                                        publicId={story.image}
                                         alt={story.title}
                                         variant="product"
                                         loading="lazy"
@@ -159,7 +159,7 @@ const Home: React.FC = () => {
                                 >
                                     <div className="w-28 sm:w-36 md:w-44 flex-shrink-0 overflow-hidden">
                                         <ArtImage
-                                            src={story.image}
+                                            publicId={story.image}
                                             alt={story.title}
                                             variant="product"
                                             loading="lazy"
