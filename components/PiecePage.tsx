@@ -458,9 +458,9 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12">
                 {/* Images */}
-                <div className="space-y-4">
+                <div className="space-y-4 lg:sticky lg:top-28 lg:self-start">
                     <div
                         className="w-full bg-wood-100 overflow-hidden cursor-zoom-in"
                         onClick={() => {
@@ -528,7 +528,7 @@ const PiecePage: React.FC = () => {
                 </div>
 
                 {/* Details */}
-                <div className="lg:pt-8 lg:sticky lg:top-28 lg:self-start">
+                <div className="lg:pt-0">
                     <div className="mb-6 md:mb-8">
                         {art.series && (seriesLink || seriesSlug) && (
                             <Link
