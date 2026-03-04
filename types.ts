@@ -22,6 +22,7 @@ export interface Artwork {
   images: string[];
   description: string;
   longDescription?: string;
+  seriesDescription?: string; // Series boilerplate; description becomes piece-specific
   year: string;
   dimensions?: string;
   material?: string;

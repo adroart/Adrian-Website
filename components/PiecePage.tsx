@@ -7,6 +7,7 @@ import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from '
 import { useCart } from '../CartContext';
 import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
+import VisualLightbox from './VisualLightbox';
 
 // --- Helpers ---
 
@@ -88,6 +89,13 @@ const PiecePage: React.FC = () => {
     // Share / copy state
     const [copied, setCopied] = useState(false);
 
+    // Lightbox state
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+
+    // Series description collapsible
+    const [seriesDescExpanded, setSeriesDescExpanded] = useState(false);
+
     // Made-to-order configuration state
     const [selectedSize, setSelectedSize] = useState('');
     const [addCrystals, setAddCrystals] = useState(false);
@@ -106,6 +114,8 @@ const PiecePage: React.FC = () => {
         setAddWoodFrame(false);
         setAddIllumination(false);
         setAddCustomFrame(false);
+        setLightboxOpen(false);
+        setSeriesDescExpanded(false);
     }, [id]);
 
     // Resolve variants: prefer sizeVariants, fall back to legacy madeToOrderSizes
@@ -302,6 +312,21 @@ const PiecePage: React.FC = () => {
         // CartContext opens the drawer automatically
     };
 
+    // --- Share handler ---
+
+    const handleShare = async () => {
+        const url = window.location.href;
+        try {
+            await navigator.share({ title: art.title, url });
+        } catch {
+            try {
+                await navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch { /* silently ignore */ }
+        }
+    };
+
     // --- Schema markup ---
 
     const productSchema = {
@@ -433,11 +458,15 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Images */}
                 <div className="space-y-4">
                     <div
-                        className="w-full bg-wood-100 overflow-hidden"
+                        className="w-full bg-wood-100 overflow-hidden cursor-zoom-in"
+                        onClick={() => {
+                            setLightboxIndex(activeImageIndex);
+                            setLightboxOpen(true);
+                        }}
                         onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
                         onTouchEnd={(e) => {
                             const diff = touchStartX.current - e.changedTouches[0].clientX;
@@ -452,7 +481,7 @@ const PiecePage: React.FC = () => {
                     >
                         <img
                             src={cldImg(allImages[activeImageIndex], { w: 1200 })}
-                            className="w-full h-auto object-cover transition-opacity duration-300"
+                            className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
                             alt={art.title}
                         />
                     </div>
@@ -475,7 +504,7 @@ const PiecePage: React.FC = () => {
                     )}
 
                     {allImages.length > 1 && (
-                        <div className="hidden lg:grid grid-cols-4 gap-3">
+                        <div className="hidden lg:grid grid-cols-5 gap-2">
                             {allImages.map((img, i) => (
                                 <button
                                     key={i}
@@ -488,8 +517,8 @@ const PiecePage: React.FC = () => {
                                     }`}
                                 >
                                     <img
-                                        src={cldImg(img, { w: 200, h: 80 })}
-                                        className="w-full h-20 object-cover"
+                                        src={cldImg(img, { w: 150, h: 150 })}
+                                        className="w-full aspect-square object-cover"
                                         alt={`${art.title} view ${i + 1}`}
                                     />
                                 </button>
@@ -499,7 +528,7 @@ const PiecePage: React.FC = () => {
                 </div>
 
                 {/* Details */}
-                <div className="lg:pt-8">
+                <div className="lg:pt-8 lg:sticky lg:top-28 lg:self-start">
                     <div className="mb-6 md:mb-8">
                         {art.series && (seriesLink || seriesSlug) && (
                             <Link
@@ -509,9 +538,18 @@ const PiecePage: React.FC = () => {
                                 {art.series} Series <ArrowUpRight size={12} />
                             </Link>
                         )}
-                        <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-[1.1] mb-6 font-medium">
-                            {art.title}
-                        </h1>
+                        <div className="flex items-start justify-between gap-4 mb-6">
+                            <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-[1.1] font-medium">
+                                {art.title}
+                            </h1>
+                            <button
+                                onClick={handleShare}
+                                className="shrink-0 mt-2 flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
+                                aria-label="Share this piece"
+                            >
+                                {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
+                            </button>
+                        </div>
 
                         {/* Mobile: stacked labeled metadata rows */}
                         <div className="md:hidden space-y-2.5">
@@ -544,11 +582,33 @@ const PiecePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="border-l-2 border-bronze-300/50 pl-5 md:pl-6 mb-8 max-w-lg">
+                    <div className="border-l-2 border-bronze-400 pl-5 md:pl-6 mb-8">
                         <div className="prose prose-stone font-serif text-wood-600 font-light leading-[1.8] text-[15px] md:text-base">
                             <p>{art.description}</p>
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                         </div>
+
+                        {art.seriesDescription && (
+                            <div className="mt-6 border-t border-wood-100 pt-4">
+                                <button
+                                    onClick={() => setSeriesDescExpanded(v => !v)}
+                                    className="flex items-center justify-between w-full text-left group"
+                                    aria-expanded={seriesDescExpanded}
+                                >
+                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                                        About the {art.series ?? 'Series'}
+                                    </span>
+                                    <span className="font-label text-[11px] text-wood-400 font-semibold transition-all duration-200">
+                                        {seriesDescExpanded ? 'Less' : 'More'}
+                                    </span>
+                                </button>
+                                {seriesDescExpanded && (
+                                    <div className="mt-4 font-serif text-wood-500 font-light leading-[1.8] text-[14px] md:text-[15px] animate-fade-in">
+                                        <p>{art.seriesDescription}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {art.relatedStorySlug && (
@@ -565,7 +625,7 @@ const PiecePage: React.FC = () => {
                     )}
 
                     {/* Purchase section */}
-                    <div className="border border-wood-200 bg-wood-50/40 p-5 md:p-8 mt-4 md:mt-2">
+                    <div className="border border-wood-200 bg-wood-50 p-5 md:p-8 mt-4 md:mt-2">
 
                         {/* --- Edition closed --- */}
                         {editionClosed ? (
@@ -575,9 +635,10 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
+                                    state={{ piece: art.title, pieceId: art.id }}
                                     className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Commission a new original <ArrowRight size={14} />
+                                    Commission a similar piece <ArrowRight size={14} />
                                 </Link>
                             </div>
 
@@ -843,6 +904,7 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
+                                    state={{ piece: art.title, pieceId: art.id }}
                                     className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission This Piece <ArrowRight size={14} />
@@ -854,51 +916,66 @@ const PiecePage: React.FC = () => {
 
                         /* --- Sold --- */
                         ) : (
-                            <div className="space-y-4">
-                                <div className={`w-full py-4 border border-wood-200 ${availabilityColor} font-label text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center`}>
-                                    Sold
+                            <div className="space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <span className="inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 text-avail-sold">
+                                        This piece has found its home
+                                    </span>
+                                    {art.price != null && (
+                                        <span className="font-label text-xs text-wood-400 font-semibold">
+                                            Originally {formatPrice(art.price)}
+                                        </span>
+                                    )}
                                 </div>
+
+                                {art.series && seriesLink && seriesData && (
+                                    <p className="font-serif text-sm text-wood-500 leading-[1.7]">
+                                        Part of the{' '}
+                                        <Link to={seriesLink} className="text-bronze-600 hover:underline">
+                                            {art.series} series
+                                        </Link>
+                                        {seriesData.pieceCount ? ` · ${seriesData.pieceCount}` : ''}
+                                    </p>
+                                )}
+
                                 <Link
                                     to="/inquire"
+                                    state={{ piece: art.title, pieceId: art.id }}
                                     className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
-                                    Commission a new original <ArrowRight size={14} />
+                                    Inquire about a similar piece <ArrowRight size={14} />
                                 </Link>
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                    Each piece is made by hand in Bali
+                                </p>
                             </div>
                         )}
                     </div>
 
-                    {/* Category + Share — integrated below purchase section */}
-                    <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
+                    {/* Category label */}
+                    <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200">
                         <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                             {art.category}
                         </span>
-                        <button
-                            onClick={async () => {
-                                const url = window.location.href;
-                                try {
-                                    await navigator.share({ title: art.title, url });
-                                } catch {
-                                    try {
-                                        await navigator.clipboard.writeText(url);
-                                        setCopied(true);
-                                        setTimeout(() => setCopied(false), 2000);
-                                    } catch {
-                                        // clipboard also unavailable — silently ignore
-                                    }
-                                }
-                            }}
-                            className="flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2 -mr-2"
-                            aria-label="Share this piece"
-                        >
-                            {copied ? <><Check size={14} className="text-bronze-600" /> Copied!</> : <><Share2 size={14} /> Share</>}
-                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Sticky Bottom Bar (Mobile) */}
-            {art.availability !== 'SOLD' && !editionClosed && (
+            {(art.availability === 'SOLD' || editionClosed) ? (
+                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-avail-sold font-semibold">
+                        This piece has found its home
+                    </span>
+                    <Link
+                        to="/inquire"
+                        state={{ piece: art.title, pieceId: art.id }}
+                        className="min-h-[44px] px-6 py-3 border border-wood-900 text-wood-900 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
+                    >
+                        Inquire
+                    </Link>
+                </div>
+            ) : (
                 <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                     <span className="font-serif text-xl text-wood-900 font-medium">
                         {hasVariants
@@ -931,6 +1008,7 @@ const PiecePage: React.FC = () => {
                     ) : (
                         <Link
                             to="/inquire"
+                            state={{ piece: art.title, pieceId: art.id }}
                             className="min-h-[44px] px-8 py-3 border border-wood-900 text-wood-900 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
                         >
                             Commission
@@ -965,7 +1043,7 @@ const PiecePage: React.FC = () => {
                                 : 'You may also be drawn to these pieces'}
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-12">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-8 md:gap-x-6 md:gap-y-10">
                         {relatedPieces.map((related) => (
                             <Link
                                 key={related.id}
@@ -974,11 +1052,14 @@ const PiecePage: React.FC = () => {
                             >
                                 <div className="relative overflow-hidden transition-all duration-500 group-hover:shadow-lg">
                                     <img
-                                        src={cldImg(related.coverImage, { w: 600, h: 750 })}
+                                        src={cldImg(related.coverImage, { w: 600 })}
                                         alt={`${related.title} by Adrian Rasmussen`}
                                         loading="lazy"
-                                        className="w-full aspect-[4/5] object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                                        className={`w-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 ${related.availability === 'SOLD' ? 'opacity-60' : ''}`}
                                     />
+                                    {related.availability === 'SOLD' && (
+                                        <div className="absolute inset-0 bg-paper-50/20 pointer-events-none" />
+                                    )}
                                 </div>
                                 <div className="mt-3 md:mt-4">
                                     <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
@@ -1027,6 +1108,15 @@ const PiecePage: React.FC = () => {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Image Lightbox */}
+            {lightboxOpen && (
+                <VisualLightbox
+                    images={allImages.map(i => cldImg(i, { w: 1800 }))}
+                    initialIndex={lightboxIndex}
+                    onClose={() => setLightboxOpen(false)}
+                />
             )}
         </section>
     );

@@ -8,10 +8,11 @@ import { Product, Collection } from '../types';
 import { INVENTORY, STORE_CATEGORIES, COLLECTIONS, FULL_ARCHIVE } from '../data/mockData';
 import {
     X, Search, SlidersHorizontal, ArrowRight, ShieldCheck,
-    Maximize2, ArrowLeft, Package, ShoppingBag, Check, ChevronUp, BookOpen
+    Maximize2, Package, ShoppingBag, Check, ChevronUp, BookOpen
 } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { formatPrice } from '../utils/formatPrice';
+import VisualLightbox from './VisualLightbox';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,109 +31,6 @@ function getCollectionCoverImage(collection: Collection): string {
         ?? FULL_ARCHIVE.find(a => ids.has(a.id));
     return piece?.coverImage ?? 'adrian-website/placeholders/artwork-square-1';
 }
-
-// ─── ZoomableImage ────────────────────────────────────────────────────────────
-
-interface ZoomableImageProps {
-    src: string;
-    alt: string;
-}
-
-const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
-    const [scale, setScale] = useState(1);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [dragging, setDragging] = useState(false);
-
-    const lastPos = useRef({ x: 0, y: 0 });
-    const startPos = useRef({ x: 0, y: 0 });
-
-    const handleStart = (clientX: number, clientY: number) => {
-        startPos.current = { x: clientX, y: clientY };
-        lastPos.current = { x: clientX, y: clientY };
-        setDragging(true);
-    };
-
-    const handleMove = (clientX: number, clientY: number) => {
-        if (!dragging) return;
-        if (scale > 1) {
-            const dx = clientX - lastPos.current.x;
-            const dy = clientY - lastPos.current.y;
-            setPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-            lastPos.current = { x: clientX, y: clientY };
-        }
-    };
-
-    const toggleZoom = () => {
-        if (scale > 1) {
-            setScale(1);
-            setPosition({ x: 0, y: 0 });
-        } else {
-            setScale(2.5);
-        }
-    };
-
-    return (
-        <div
-            className={`relative w-full h-full flex items-center justify-center overflow-hidden touch-none ${scale > 1 ? 'cursor-move' : 'cursor-zoom-in'}`}
-            onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
-            onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
-            onMouseUp={() => setDragging(false)}
-            onMouseLeave={() => setDragging(false)}
-            onTouchStart={(e) => e.touches.length === 1 && handleStart(e.touches[0].clientX, e.touches[0].clientY)}
-            onTouchMove={(e) => e.touches.length === 1 && handleMove(e.touches[0].clientX, e.touches[0].clientY)}
-            onTouchEnd={() => setDragging(false)}
-            onClick={(e) => {
-                if (Math.abs(e.clientX - startPos.current.x) < 5 && Math.abs(e.clientY - startPos.current.y) < 5) {
-                    toggleZoom();
-                }
-            }}
-        >
-            <img
-                src={src}
-                alt={alt}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 ease-out select-none pointer-events-none"
-                style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})` }}
-                draggable={false}
-            />
-        </div>
-    );
-};
-
-// ─── VisualLightbox ───────────────────────────────────────────────────────────
-
-const VisualLightbox: React.FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => {
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', handler);
-        return () => document.removeEventListener('keydown', handler);
-    }, [onClose]);
-
-    if (typeof document === 'undefined' || !document.body) return null;
-
-    return createPortal(
-        <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Image detail view"
-            className="fixed inset-0 z-[9999] bg-paper-50 flex flex-col animate-fade-in"
-            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        >
-            <div className="w-full h-16 flex items-center justify-between px-6 bg-paper-50 border-b border-wood-200 z-50 shrink-0">
-                <button
-                    onClick={onClose}
-                    className="group flex items-center gap-2 text-wood-600 hover:text-wood-900 px-4 py-2 rounded-full transition-colors"
-                >
-                    <ArrowLeft size={16} />
-                    <span className="font-label text-xs uppercase tracking-[0.2em] font-semibold">Close</span>
-                </button>
-            </div>
-            <div className="flex-1 flex items-center justify-center p-0 md:p-8 overflow-hidden bg-wood-100/50">
-                <ZoomableImage src={src} alt="Detail" />
-            </div>
-        </div>,
-        document.body
-    );
-};
 
 // ─── BackToTop ────────────────────────────────────────────────────────────────
 
@@ -1180,7 +1078,7 @@ const Store: React.FC = () => {
             {/* Full-screen lightbox */}
             {viewingImage && (
                 <VisualLightbox
-                    src={viewingImage}
+                    images={[viewingImage]}
                     onClose={() => setViewingImage(null)}
                 />
             )}

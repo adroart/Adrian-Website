@@ -185,7 +185,7 @@ blockquote {
   /* Colors: availability states */
   --color-avail-ready: #1A1A1A;
   --color-avail-order: #666666;
-  --color-avail-sold: #666666;
+  --color-avail-sold: #7a6a5e;
 
   /* Colors: bronze */
   --color-bronze-50: #faf6f0;
@@ -298,7 +298,7 @@ blockquote {
   /* Availability: invert for dark-bg readability */
   --color-avail-ready: #e0e0e0;
   --color-avail-order: #a0a0a0;
-  --color-avail-sold: #8a8a8a;
+  --color-avail-sold: #9a8a7e;
 }
 
 /* ─── dark-preserve: restores original light-mode colors ────────────────── */
@@ -514,7 +514,7 @@ html.dark body { background-color: #141210; }
   line-height: 0.78;
   padding-right: 0.07em;
   padding-top: 0.04em;
-  color: #ab9266;
+  color: var(--color-bronze-500);
   font-weight: 500;
 }
 
@@ -545,7 +545,7 @@ html.dark body { background-color: #141210; }
     font-family: 'Cormorant Garamond', serif;
     font-size: 0.95rem;
     font-style: italic;
-    color: #ab9266;
+    color: var(--color-bronze-500);
     line-height: 1.45;
     border-left: 1px solid rgba(196,170,124,0.4);
     padding-left: 11px;

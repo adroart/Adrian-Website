@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 
@@ -139,6 +140,23 @@ const Inquire: React.FC = () => {
   const visionRef = useRef<HTMLTextAreaElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill vision from router state (e.g. "Inquire about a similar piece" from PiecePage)
+  const location = useLocation();
+  useEffect(() => {
+    const piece = (location.state as { piece?: string } | null)?.piece;
+    if (piece) {
+      const prefill = `I'm interested in a piece similar to "${piece}".`;
+      setForm(prev => ({ ...prev, vision: prefill }));
+      // Auto-grow textarea after pre-fill
+      requestAnimationFrame(() => {
+        if (visionRef.current) {
+          visionRef.current.style.height = 'auto';
+          visionRef.current.style.height = visionRef.current.scrollHeight + 'px';
+        }
+      });
+    }
+  }, [location.state]);
 
   // Scroll reveals for each section
   const cardsReveal = useReveal();

@@ -43,7 +43,7 @@ const AppInner: React.FC = () => {
   const theme = isHome ? 'DARK' : 'LIGHT';
 
   return (
-    <div className="min-h-screen bg-paper-50 selection:bg-bronze-200 transition-colors duration-500">
+    <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       <GenerativeBackground pathname={location.pathname} theme={theme} />
       {!isWelcome && <Navigation theme={theme} />}
 
