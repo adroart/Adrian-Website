@@ -35,7 +35,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     const showRange = highPrice != null && art.price != null && highPrice !== art.price;
 
     return (
-        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 bg-paper-100 border border-wood-200 transition-all duration-500">
+        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 bg-paper-100 border border-wood-200 transition-all duration-500 touch-active">
             {/* Image — links to the piece */}
             <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100">
                 <ArtImage

@@ -129,12 +129,11 @@ export const WritingArticle: React.FC = () => {
             />
             <div className="max-w-3xl mx-auto">
                 <div className="flex justify-between items-center mb-12">
-                    <Link
-                        to="/writings"
-                        className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold"
-                    >
-                        <ArrowLeft size={16} /> Return to Index
-                    </Link>
+                    <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                        <Link to="/writings" className="hover:text-wood-900 transition-colors">Writings</Link>
+                        <span className="text-wood-300">/</span>
+                        <span className="text-wood-400">{story.category}</span>
+                    </div>
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={() => navigator.share({ title: story.title, url: window.location.href })}
@@ -378,7 +377,7 @@ const Writings: React.FC = () => {
 
                 {/* #5 Sticky anchor navigation + #6 Active highlighting + #16 Better touch targets */}
                 <nav
-                    className="sticky top-20 z-10 bg-paper-50/95 backdrop-blur-sm flex flex-wrap justify-center gap-3 md:gap-10 border-b border-wood-200 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    className="sticky top-20 z-10 bg-paper-50 backdrop-blur-sm flex flex-wrap justify-center gap-3 md:gap-10 border-b border-wood-200 pb-6 md:pb-8 mb-24 -mx-6 px-6"
                     aria-label="Writing sections"
                 >
                     {categories.map(cat => (

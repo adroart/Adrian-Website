@@ -95,7 +95,7 @@ const CreationCategoryCard: React.FC<{
         return (
             <Link
                 to={link}
-                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve touch-active"
                 aria-label={`Explore ${label}: ${desc}`}
             >
                 {inner}
@@ -107,7 +107,7 @@ const CreationCategoryCard: React.FC<{
         <button
             type="button"
             onClick={onClick}
-            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve touch-active"
             aria-label={`Browse ${label}: ${desc}`}
         >
             {inner}
@@ -151,7 +151,7 @@ const CollectionCard: React.FC<{
                     height={533}
                 />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4">
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
@@ -352,7 +352,7 @@ const Creations: React.FC = () => {
             )}
 
             {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50/95 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
+            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
                 <div className="flex flex-wrap items-center justify-between gap-3">
 
                     {/* Left: title / breadcrumb */}

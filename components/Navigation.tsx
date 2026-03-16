@@ -34,8 +34,8 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   const solidDark = 'bg-stone-950/95 backdrop-blur-xl border-b border-stone-800';
   const solidLight = 'bg-paper-50/95 backdrop-blur-xl border-b border-wood-200';
-  const glassDark = 'bg-stone-950/75 backdrop-blur-xl border-b border-white/10 shadow-sm';
-  const glassLight = 'bg-paper-50/80 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
+  const glassDark = 'bg-stone-950/85 backdrop-blur-xl border-b border-white/10 shadow-sm';
+  const glassLight = 'bg-paper-50/90 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
   // #3 Adjust nav position based on whether Teajia bar is visible
   const navTop = teajiaBarDismissed ? 'top-0' : 'top-8';

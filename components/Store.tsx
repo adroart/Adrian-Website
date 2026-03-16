@@ -126,7 +126,7 @@ const ShopCategoryTile: React.FC<{
         type="button"
         onClick={onSelect}
         aria-pressed={isActive}
-        className={`group block text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 transition-all duration-300 ${isActive ? 'ring-2 ring-bronze-500 ring-offset-2' : ''}`}
+        className={`group block text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 transition-all duration-300 touch-active ${isActive ? 'ring-2 ring-bronze-500 ring-offset-2' : ''}`}
         aria-label={`Browse ${cat.cat}: ${cat.desc}`}
     >
         <div className="overflow-hidden">
@@ -254,7 +254,7 @@ const ShopCollectionCard: React.FC<{
                 aria-hidden="true"
                 inactive={!isActive}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/10 to-transparent pointer-events-none" />
             <div className="absolute bottom-0 inset-x-0 px-5 pb-4">
                 <h4 className="font-serif text-xl text-paper-50 font-medium leading-tight">{collection.name}</h4>
                 <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-bold mt-1 block">
@@ -315,7 +315,7 @@ const ProductCard: React.FC<{
 
                 {/* Hover detail reveal — material + excerpt + View */}
                 {isAvailable && (
-                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/55 transition-all duration-500 flex flex-col justify-end p-4 pointer-events-none">
+                    <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/70 transition-all duration-500 flex flex-col justify-end p-4 pointer-events-none">
                         <div className="translate-y-3 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 space-y-1.5">
                             {product.material && (
                                 <p className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-300 font-semibold">
@@ -694,7 +694,7 @@ const ControlDeck: React.FC<{
     };
 
     return (
-        <div className="sticky top-[72px] z-40 bg-paper-50/95 backdrop-blur-md border-b border-wood-100 shadow-sm">
+        <div className="sticky top-[72px] z-40 bg-paper-50 backdrop-blur-md border-b border-wood-100 shadow-sm">
             <div className="max-w-[1800px] mx-auto px-6 h-14 flex items-center gap-5">
 
                 {/* Filter toggle — minimal text style */}

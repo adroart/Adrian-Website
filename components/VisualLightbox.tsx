@@ -31,6 +31,13 @@ const VisualLightbox: React.FC<VisualLightboxProps> = ({ images, initialIndex = 
         return () => document.removeEventListener('keydown', handler);
     }, [onClose, goPrev, goNext]);
 
+    // Lock body scroll while lightbox is open
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = prev; };
+    }, []);
+
     if (typeof document === 'undefined' || !document.body) return null;
 
     return createPortal(

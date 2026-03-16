@@ -487,6 +487,37 @@ html.dark body { background-color: #141210; }
   transform: translateY(-50%) scale(1);
 }
 
+/* ─── Unified hover underline ──────────────────────────────────────────── */
+/* Sliding underline from left, matches footer-link style but without the dot */
+.hover-underline {
+  position: relative;
+  display: inline-block;
+}
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.hover-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* ─── Touch active states ─────────────────────────────────────────────── */
+/* Subtle press feedback for interactive elements on touch devices */
+@media (pointer: coarse) {
+  .touch-active:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
 /* ─── Longform Page: Shared Reveal & Typography ────────────────────────── */
 /* Used by About.tsx and OracleCards.tsx. Defined once here so the           */
 /* <style> blocks in those components aren't duplicated on re-render.        */

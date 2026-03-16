@@ -42,9 +42,9 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist based in B
 - Use middle dot separator (·) for inline piece details (dimensions · material · year)
 
 ## Current Status
-- Site is functional but uses placeholder images (picsum.photos/unsplash)
+- Site is functional but uses placeholder images (Cloudinary placeholders)
 - Stripe payment links are placeholders
-- See `todo.md` for detailed gap analysis and remaining work
+- See `todo/README.md` for all remaining work (split into Claude tasks, Adrian tasks, and future items)
 
 ## Working With This Codebase
 - When editing components, check `mockData.ts` for data structure

@@ -25,7 +25,7 @@ const IlluminatedWorks: React.FC = () => {
                     alt="An illuminated piece transitioning from daylight to dark"
                     className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/15 to-transparent" />
                 {/* Breadcrumb */}
                 <div className="absolute top-6 left-6 md:left-12 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-300 font-semibold">
                     <Link to="/creations" className="hover:text-paper-50 transition-colors">Creations</Link>

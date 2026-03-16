@@ -143,11 +143,13 @@ const Inquire: React.FC = () => {
 
   // Pre-fill vision from router state (e.g. "Inquire about a similar piece" from PiecePage)
   const location = useLocation();
+  const [prefilled, setPrefilled] = useState(false);
   useEffect(() => {
     const piece = (location.state as { piece?: string } | null)?.piece;
     if (piece) {
       const prefill = `I'm interested in a piece similar to "${piece}".`;
       setForm(prev => ({ ...prev, vision: prefill }));
+      setPrefilled(true);
       // Auto-grow textarea after pre-fill
       requestAnimationFrame(() => {
         if (visionRef.current) {
@@ -157,6 +159,11 @@ const Inquire: React.FC = () => {
       });
     }
   }, [location.state]);
+
+  // Clear prefilled flag once user edits the vision field
+  const handleVisionFocus = () => {
+    if (prefilled) setPrefilled(false);
+  };
 
   // Scroll reveals for each section
   const cardsReveal = useReveal();
@@ -177,8 +184,11 @@ const Inquire: React.FC = () => {
   }, []);
 
   /* ── Navigation warning when form is dirty ──────────────────────── */
+  // Exclude the pre-filled vision text from the dirty check so navigating
+  // back without typing doesn't trigger a "leave page?" warning
+  const visionIsDirty = form.vision !== '' && !prefilled;
   const isDirty = !submitted && (
-    form.name !== '' || form.email !== '' || form.vision !== '' ||
+    form.name !== '' || form.email !== '' || visionIsDirty ||
     form.location !== '' || form.sizeRange !== '' || form.timeline !== '' || form.referral !== ''
   );
 
@@ -547,6 +557,7 @@ const Inquire: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
+                <fieldset disabled={sendStatus === 'SENDING'} className="disabled:opacity-60 disabled:pointer-events-none transition-opacity duration-300">
 
                 {/* ── Form Completion Bar ────────────────────────── */}
                 <div className="flex items-center gap-4 mb-1">
@@ -662,7 +673,7 @@ const Inquire: React.FC = () => {
                         rows={2}
                         value={form.vision}
                         onChange={handleVisionChange}
-                        onFocus={() => handleFocus('vision')}
+                        onFocus={() => { handleFocus('vision'); handleVisionFocus(); }}
                         onBlur={() => handleBlur('vision')}
                         aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
@@ -931,6 +942,7 @@ const Inquire: React.FC = () => {
                     </button>
                   </div>
                 </div>
+                </fieldset>
               </form>
             )}
           </div>

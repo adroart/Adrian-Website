@@ -8,6 +8,7 @@ import { useCart } from '../CartContext';
 import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
+import { useMetaTags } from '../hooks/useMetaTags';
 
 // --- Helpers ---
 
@@ -21,15 +22,18 @@ function safeJsonLd(data: unknown): string {
         .replace(/&/g, '\\u0026');
 }
 
-// Determine illumination tier from a size string like '24"', '36"', '16"'
+// Determine illumination tier from a size string like '29 cm', '58 cm', '24"'
+// Supports both cm and inch formats. Thresholds: none < 30cm/12", medium 30-60cm/12-24", large 60-90cm/24-36", major 90cm+/36"+
 function getIlluminationTier(sizeStr: string): 'none' | 'medium' | 'large' | 'major' {
     const match = sizeStr.match(/(\d+)/);
     if (!match) return 'medium';
-    const inches = parseInt(match[1], 10);
-    if (inches < 12) return 'none';
-    if (inches <= 24) return 'medium';  // 12–24"
-    if (inches <= 36) return 'large';   // 24–36"
-    return 'major';                     // 36"+
+    const value = parseInt(match[1], 10);
+    const isCm = /cm/i.test(sizeStr);
+    const cm = isCm ? value : value * 2.54;
+    if (cm < 30) return 'none';
+    if (cm <= 60) return 'medium';   // 30-60 cm (12-24")
+    if (cm <= 90) return 'large';    // 60-90 cm (24-36")
+    return 'major';                  // 90 cm+ (36"+)
 }
 
 // Progressive scarcity edition display per tech spec
@@ -104,6 +108,14 @@ const PiecePage: React.FC = () => {
     const [addCustomFrame, setAddCustomFrame] = useState(false);
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+
+    // Dynamic meta tags for sharing
+    const ogImage = art ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${art.coverImage}` : undefined;
+    useMetaTags({
+        title: art?.title,
+        description: art ? `${art.title} by Adrian Rasmussen · ${art.category}${art.dimensions ? ` · ${art.dimensions}` : ''}` : undefined,
+        image: ogImage,
+    });
 
     // Reset state when navigating to a different piece
     useEffect(() => {
@@ -849,7 +861,7 @@ const PiecePage: React.FC = () => {
                                 <button
                                     onClick={handleAddToCartVariant}
                                     disabled={!selectedSize}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <ShoppingBag size={16} /> Add to Cart
                                 </button>
@@ -873,10 +885,10 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={handleAddToCartRTS}
-                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-3 ${
+                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
                                         rtsAdded
-                                            ? 'bg-bronze-600 text-paper-50'
-                                            : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
+                                            ? 'bg-bronze-600 text-paper-50 scale-[1.02] shadow-lg ring-2 ring-bronze-400/50'
+                                            : 'bg-wood-900 text-paper-50 hover:bg-bronze-600 active:scale-[0.98]'
                                     }`}
                                 >
                                     {rtsAdded
@@ -997,10 +1009,10 @@ const PiecePage: React.FC = () => {
                     ) : art.availability === 'READY_TO_SHIP' ? (
                         <button
                             onClick={handleAddToCartRTS}
-                            className={`min-h-[44px] px-8 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center gap-2 ${
+                            className={`min-h-[44px] px-8 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center gap-2 ${
                                 rtsAdded
-                                    ? 'bg-bronze-600 text-paper-50'
-                                    : 'bg-wood-900 text-paper-50 hover:bg-bronze-600'
+                                    ? 'bg-bronze-600 text-paper-50 ring-2 ring-bronze-400/50'
+                                    : 'bg-wood-900 text-paper-50 hover:bg-bronze-600 active:scale-[0.98]'
                             }`}
                         >
                             {rtsAdded ? <><Check size={14} /> Added</> : <><ShoppingBag size={14} /> Add to Cart</>}

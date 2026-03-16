@@ -100,7 +100,7 @@ const Hero: React.FC = () => {
         style={{ opacity: safeOpacity * 0.6 }}
         aria-label="Scroll to content"
       >
-          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/60 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
+          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/80 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent"></div>
       </button>
     </section>
