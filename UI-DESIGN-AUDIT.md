@@ -2,319 +2,483 @@
 
 ## Context
 
-This is a comprehensive graphic and user interface audit of adrianrasmussen.com — a multidisciplinary artist portfolio built with React, Tailwind CSS 4, and Cloudinary. The site has strong foundations (warm palette, Cormorant Garamond typography, solid accessibility), but numerous refinements can elevate it from "well-built" to "gallery-grade luxury experience." Each item below is ordered from highest visual impact to finest detail.
+This is a comprehensive graphic and user interface audit of adrianrasmussen.com — a multidisciplinary artist portfolio built with React, Tailwind CSS 4, and Cloudinary. The site is **mobile-first** with occasional desktop visitors. Every recommendation below is evaluated through that lens: mobile impact comes first, desktop enhancements are marked clearly.
+
+The site has strong foundations (warm palette, Cormorant Garamond typography, `touch-active` press feedback, solid accessibility). These refinements elevate it from "well-built" to "gallery-grade luxury experience."
+
+Each item includes a **Mobile** tag:
+- **[Mobile: Critical]** — directly improves the phone experience
+- **[Mobile: Beneficial]** — helps mobile, also helps desktop
+- **[Mobile: Neutral]** — no mobile impact, purely desktop
+- **[Mobile: Caution]** — could hurt mobile if done wrong (performance, battery, viewport)
 
 ---
 
 ## Tier 1: High-Impact Visual Upgrades (1–15)
 
-### 1. Add Page Transition Animations Between Routes
-**Why:** Currently pages just pop in with a basic `animate-fade-in`. Modern luxury sites (Gagosian, Pace Gallery) use smooth cross-fade or slide transitions between pages. A shared layout transition gives the site a cinematic, app-like feel.
-**Files:** `App.tsx`, new `PageTransition.tsx` wrapper component
-**How:** Wrap route outlet in a CSS transition group or use `framer-motion`'s `AnimatePresence` with a subtle fade + slight upward drift (200–400ms).
-
-### 2. Hero Section — Replace Gradient Text Overlay with Cinematic Split-Screen or Layered Reveal
-**Why:** The hero's text floating over a video with a gradient scrim is functional but generic. A split-screen layout (text left, video right) or a typographic reveal animation (letters/words fading in sequentially) would feel far more intentional and gallery-appropriate.
+### ~~1. Hero Scroll Performance — Add `requestAnimationFrame` Throttling~~ DONE
+**[Mobile: Critical]**
+~~**Why:** The hero parallax fires `setScrollY` on every pixel scrolled. On mobile, this causes jank and battery drain. The scroll listener already uses `{ passive: true }` but the state update on every frame is expensive. This is the single biggest mobile performance issue.~~
 **File:** `components/Hero.tsx`
-**How:** Staggered word-by-word reveal on the h1 using CSS `@keyframes` with `animation-delay` per `<span>`. Add a subtle mask/clip reveal on the subtitle.
+**Applied:** rAF throttling added + parallax fully disabled on touch devices via `matchMedia('(pointer: coarse)')`.
 
-### 3. Introduce Scroll-Triggered Entrance Animations Site-Wide (Not Just About Page)
-**Why:** The About page has beautiful `Reveal` animations, but Home, Creations, Store, and Writings pages lack them. The inconsistency makes the About page feel polished while other pages feel flat.
-**Files:** `components/Home.tsx`, `components/Creations.tsx`, `components/Store.tsx`, `components/Writings.tsx`
-**How:** Wrap key sections with the existing `<Reveal>` component (already built in `components/shared/Reveal.tsx`). No new code needed — just apply it.
+### ~~2. Cart Drawer Touch Targets — Fix Undersized Quantity Buttons~~ DONE
+**[Mobile: Critical]**
+~~**Why:** The +/- quantity buttons in CartDrawer are `w-8 h-8` (32px), well below the WCAG minimum of 44px. On phones, users will mis-tap constantly. This is a conversion-killing usability bug.~~
+**File:** `components/CartDrawer.tsx`
+**Applied:** Increased to `w-11 h-11` (44px) with larger icon sizes (14px).
 
-### 4. Gallery Card Hover — Add Directional Overlay Wipe Instead of Static Fade
-**Why:** The current hover on `GalleryTileCard` is a basic opacity transition. A directional reveal (overlay slides in from bottom or expands from center) feels much more premium. Seen on Artsy, Saatchi Art, and high-end galleries.
-**File:** `components/GalleryTileCard.tsx`
-**How:** Replace the static `bg-wood-900/0 group-hover:bg-wood-900/15` with a `::before` pseudo-element that uses `transform: translateY(100%)` → `translateY(0)` on hover.
+### ~~3. Navigation Scroll Listener — Add Passive Flag~~ DONE
+**[Mobile: Critical]**
+~~**Why:** The nav's scroll listener (detecting scroll > 20px to toggle style) is missing `{ passive: true }`. On mobile browsers, this blocks the compositor thread and causes scroll jank, especially on older Android devices.~~
+**File:** `components/Navigation.tsx`
+**Applied:** Added `{ passive: true }` to scroll listener.
 
-### 5. Typography Scale Refinement — Tighten the Heading Hierarchy
-**Why:** Headings jump erratically: `text-5xl` → `text-3xl` → `text-xl` with no consistent modular scale. A tighter type scale (e.g., Major Third 1.25 or Perfect Fourth 1.333) creates better visual rhythm.
+### 4. Mobile Typography — Reduce Oversized Headings on Small Screens
+**[Mobile: Critical]**
+**Why:** Several headings render at `text-5xl` (3rem / 48px) on mobile, which is too large on a 375px viewport. The hero h1 at `text-5xl` works because of the dramatic context, but section headings on Creations and Store pages at that size waste vertical space and look cramped.
 **Files:** All page components
-**How:** Standardize to a defined scale: h1 = `text-5xl/6xl/7xl`, h2 = `text-3xl/4xl`, h3 = `text-xl/2xl`, body = `text-lg`, small = `text-sm`. Document in CSS custom properties or a Tailwind preset.
+**How:** Audit every heading. Mobile baseline: h1 = `text-3xl` to `text-4xl`, h2 = `text-2xl`, h3 = `text-xl`. Use responsive prefixes (`md:text-5xl`) for desktop scaling. The hero is an exception.
 
-### 6. Add Skeleton Loading States for Images
-**Why:** Currently images show nothing (or a beige box on error) while loading. Skeleton shimmer placeholders communicate responsiveness and feel polished. Every modern luxury e-commerce site uses them.
+### 5. Add Skeleton Loading States for Images
+**[Mobile: Critical]**
+**Why:** On mobile networks (3G/4G), images load slowly. Currently users see nothing or a beige box. Skeleton shimmer placeholders communicate that content is coming and prevent layout shift (CLS), which also affects Core Web Vitals.
 **Files:** `components/ArtImage.tsx`, `src/index.css`
 **How:** Before `loaded` state flips, render a `bg-wood-100 animate-pulse` placeholder matching the image's aspect ratio. Already have `VARIANT_ASPECT` defined — use it.
 
-### 7. Navigation — Add Smooth Active-Link Indicator Animation
-**Why:** The active nav underline currently snaps between links. A sliding indicator (like a pill or underline that physically moves between items using `transform`) creates a much more fluid, high-end navigation feel. Seen on Apple.com, Stripe.
-**File:** `components/Navigation.tsx`
-**How:** Use a positioned `<span>` element that measures the active link's offset/width via `ref` and animates `left` + `width` with `transition`.
+### 6. Introduce Scroll-Triggered Entrance Animations Site-Wide
+**[Mobile: Beneficial]**
+**Why:** The About page has beautiful `Reveal` animations, but Home, Creations, Store, and Writings pages lack them. The inconsistency makes the About page feel polished while other pages feel flat. `IntersectionObserver` (which Reveal uses) is cheap on mobile.
+**Files:** `components/Home.tsx`, `components/Creations.tsx`, `components/Store.tsx`, `components/Writings.tsx`
+**How:** Wrap key sections with the existing `<Reveal>` component (already built in `components/shared/Reveal.tsx`). No new code needed — just apply it. Respect `prefers-reduced-motion`.
 
-### 8. Footer — Reduce Visual Weight and Add Breathing Room
-**Why:** The footer is dense with 4-column grid, newsletter, status line, and bottom bar all competing. Luxury sites (Hermes, Bottega Veneta) use generous whitespace in footers.
-**File:** `components/Footer.tsx`
-**How:** Increase `pt-16` → `pt-24`, increase `mb-16` → `mb-24`, add `gap-y-14` between columns. Consider reducing newsletter to a single-line CTA.
+### 7. Add Page Transition Animations Between Routes
+**[Mobile: Beneficial]**
+**Why:** Currently pages pop in with a basic `animate-fade-in`. A subtle cross-fade gives the site a native-app feel on phones, which is where users are most accustomed to transitions. Keep it CSS-only (no framer-motion) to avoid bundle bloat on mobile.
+**Files:** `App.tsx`, new `PageTransition.tsx` wrapper component
+**How:** Use CSS `@starting-style` + View Transitions API (supported in Chrome/Safari mobile) with a fallback `animate-fade-in`. Keep duration under 300ms — mobile users are impatient. Avoid `framer-motion` (50KB+ gzipped).
 
-### 9. Commission Section (Home) — Add Parallax or Subtle Ken Burns on Image
-**Why:** The commission invitation on the homepage has a static image. Adding a slow Ken Burns zoom or parallax scroll effect (like the About page's `ParallaxImg`) would make it feel alive.
-**File:** `components/Home.tsx`
-**How:** Wrap the commission image with the existing `ParallaxImg` component or add a CSS `@keyframes` slow zoom (scale 1.0 → 1.05 over 20s).
-
-### 10. Writings Cards — Make the Layout More Editorially Distinct
-**Why:** Writing cards currently look similar to product cards. Editorial content should feel different — more magazine-like. Consider a stacked layout with large featured image, dramatic title, and minimal meta.
-**File:** `components/Writings.tsx`
-**How:** For the landing page cards, increase image prominence (make it 60% of card height), use a larger serif title size, and add a subtle category color bar on the left edge instead of top.
-
-### 11. Store — Add a Sticky Product Quick-View or Modal Instead of Always Navigating Away
-**Why:** The store currently requires navigating to each product. A quick-view modal (click to see details, add to cart without leaving) reduces friction and is standard in luxury e-commerce. The lightbox component already exists.
-**File:** `components/Store.tsx`
-**How:** Add a "Quick View" button on hover that opens the existing `VisualLightbox` pattern with product details overlaid.
-
-### 12. Dark Mode Transition — Add Smooth Color Crossfade
-**Why:** `body { transition: background-color 0.5s ease }` only transitions the background. All text, borders, and card colors snap instantly, creating a jarring toggle. Every element should transition.
-**Files:** `src/index.css`
-**How:** Add `* { transition: color 0.3s, background-color 0.3s, border-color 0.3s; }` scoped to the dark mode toggle event (use a `.transitioning` class briefly applied to `<html>`).
-
-### 13. Masonry Grid — Add Responsive Column Transitions
-**Why:** When resizing the browser, columns snap between 2/3/4 without transition. A brief fade-out/fade-in when the column count changes would feel smoother.
-**Files:** `components/Home.tsx`, `components/Creations.tsx`
-**How:** Detect column breakpoint changes and briefly apply `opacity-0` → `opacity-1` transition.
-
-### 14. Hero "Enter" Button — Redesign with Animated Line/Circle Motif
-**Why:** The current "Enter" button is text + a gradient line. It's subtle but feels incomplete. A pulsing circle with an animated draw, or an animated arrow-down SVG, would be more compelling.
+### 8. Hero Section — Add Staggered Text Reveal
+**[Mobile: Beneficial]**
+**Why:** The hero's text over video is functional but the text just appears. A staggered word-by-word reveal on the h1 creates a cinematic first impression. CSS-only, no performance cost. Skip the "split-screen" layout suggestion — on mobile, split-screen means tiny text and tiny video.
 **File:** `components/Hero.tsx`
-**How:** Replace gradient line with an SVG circle that draws itself using `stroke-dasharray` animation (the `draw` keyframe already exists in CSS).
+**How:** Wrap each word in a `<span>` with incremental `animation-delay` and a `@keyframes` fade-up. Use `animation-fill-mode: backwards` so words start invisible. Respect `prefers-reduced-motion` — show all text immediately.
+
+### ~~9. Stagger Animation Timing — Reduce Max Delay~~ DONE
+**[Mobile: Critical]**
+~~**Why:** Card stagger delays reach 700ms+ (13+ items). On mobile where the viewport shows 2-4 cards, users stare at blank space for nearly a second. The first visible card should animate within 100ms.~~
+**File:** `src/index.css` (`.card-stagger` rules)
+**Applied:** Reduced increment from 60ms to 40ms, capped at 400ms (11th+ child).
+
+### 10. Gallery Card — Improve Touch Interaction
+**[Mobile: Beneficial]**
+**Why:** The `touch-active` scale-down already exists (good), but the hover overlay with "View" text is invisible on touch devices since there's no hover state. Mobile users get no indication that cards are tappable beyond the general image-as-link convention.
+**File:** `components/GalleryTileCard.tsx`
+**How:** On touch devices (`@media (pointer: coarse)`), always show the title/info band at the bottom of the card instead of relying on hover reveal. Desktop keeps the hover-reveal behavior. This is more informative on mobile without adding visual clutter.
+
+### 11. Typography Scale Refinement — Define a Modular Scale
+**[Mobile: Beneficial]**
+**Why:** Headings jump erratically: `text-5xl` to `text-3xl` to `text-xl` with no consistent system. A tighter modular scale (Major Third 1.25) creates visual rhythm across all viewports.
+**Files:** All page components
+**How:** Define the scale as CSS custom properties. Mobile base sizes: h1=`text-3xl`, h2=`text-2xl`, h3=`text-xl`, body=`text-base`/`text-lg`. Desktop scales up with `md:` and `lg:` prefixes.
+
+### ~~12. Teajia Bar — Make It Dismissible or Remove~~ DONE (pre-existing)
+**[Mobile: Critical]**
+~~**Why:** A fixed bar at the top that pushes down the nav steals precious vertical space on mobile.~~
+**File:** `components/Navigation.tsx`
+**Applied:** Already implemented — dismiss button saves to `sessionStorage`, nav adjusts position accordingly.
+
+### 13. Footer — Reduce Visual Weight on Mobile
+**[Mobile: Beneficial]**
+**Why:** The 4-column footer grid collapses into a long vertical stack on mobile, creating excessive scroll. Newsletter, status line, and bottom bar all compete for attention on a small screen.
+**File:** `components/Footer.tsx`
+**How:** On mobile: collapse footer columns into an accordion or hide secondary links behind a "More" toggle. Reduce vertical padding (`pt-12` not `pt-24` on mobile). Keep newsletter CTA compact — single line with inline button.
+
+### ~~14. Hero "Enter" Button — Enlarge Touch Target and Add Bounce~~ DONE
+**[Mobile: Critical]**
+~~**Why:** The current "Enter" button is text + a thin gradient line. The tap target is narrow (the text "Enter" plus a 1px-wide line). On mobile, a thumb-friendly target with a clear "scroll down" affordance matters more than decorative animation.~~
+**File:** `components/Hero.tsx`
+**Applied:** Added `p-4 min-w-[48px] min-h-[48px]` for touch target + `animate-hero-bounce` CSS animation on the line. Respects `prefers-reduced-motion`.
 
 ### 15. Improve the Category Tile Grid on Creations Page
-**Why:** Category tiles use identical placeholder images and a plain layout. Each category should have a distinct visual identity — different aspect ratios, overlay treatments, or compositional styles to hint at what's inside.
+**[Mobile: Beneficial]**
+**Why:** All 8 category tiles look identical — same placeholder images, same layout. On mobile's 2-column grid, visual monotony is amplified because you see 4 identical-looking tiles at once.
 **File:** `components/Creations.tsx`
-**How:** Vary tile sizes (e.g., first tile spans 2 columns), add unique subtle gradient overlays per category, use the category accent colors.
+**How:** Add unique subtle gradient overlays per category using the category accent colors. On mobile, avoid varying tile sizes (spanning 2 columns breaks the 2-col grid) — instead differentiate through color/typography. On desktop (`lg:+`), the first tile can span 2 columns.
 
 ---
 
 ## Tier 2: Layout & Spacing Polish (16–30)
 
-### 16. Standardize Section Spacing to a Rhythm System
-**Why:** Sections alternate between `py-16`, `py-20`, `py-24`, `py-28`, `py-32` with no clear system. A consistent rhythm (e.g., small=`py-16`, medium=`py-24`, large=`py-32`) creates visual harmony.
-**Files:** All page components
-
-### 17. Piece Page (PDP) — Improve Image Gallery Layout
-**Why:** The piece page likely stacks images vertically. A thumbnail strip + main image layout (or side-scrolling gallery) is more interactive and lets viewers compare details quickly.
+### 16. PiecePage Gallery — Add Swipe Hints
+**[Mobile: Critical]**
+**Why:** The piece page has swipe navigation (good), but there's no visual indicator that swiping is possible. Users may not discover the gesture. The dot indicators exist but are tiny and easy to miss.
 **File:** `components/PiecePage.tsx`
+**How:** On first visit (or first multi-image piece), show a brief "swipe" animation hint — the image shifts 20px left and bounces back over 1s. Save to `sessionStorage` so it only plays once. Make dot indicators slightly larger (`w-2.5 h-2.5` instead of `w-2 h-2`).
 
-### 18. Add Horizontal Scroll Gallery for "Selected Works" on Homepage
-**Why:** The masonry grid for featured pieces is functional but a horizontal scroll carousel (with snap points) would feel more curated and editorial — like walking through a gallery.
-**File:** `components/Home.tsx`
-
-### 19. Cart Drawer — Animate Items In/Out
-**Why:** Items appear/disappear in the cart without animation. Adding a slide + fade when items are added or removed feels much more polished.
+### 17. Cart Drawer — Add Swipe-to-Dismiss
+**[Mobile: Critical]**
+**Why:** Mobile users expect to swipe right to close a drawer. Currently only the X button and overlay click close it. This is a learned behavior from every mobile app.
 **File:** `components/CartDrawer.tsx`
+**How:** Add `touchstart`/`touchmove`/`touchend` listeners on the drawer panel. If horizontal swipe distance > 80px and velocity exceeds threshold, close the drawer with a slide-right animation. Use `touch-action: pan-y` on the drawer body to avoid conflicts with vertical scrolling.
 
-### 20. Add Micro-Interactions to Form Inputs (Inquire Page)
-**Why:** The commission form is long. Subtle micro-interactions (checkmark animations on valid fields, smooth label transitions, progress indicators) make it feel less daunting.
-**File:** `components/Inquire.tsx`
+### 18. Standardize Section Spacing to a Rhythm System
+**[Mobile: Beneficial]**
+**Why:** Sections alternate between `py-16`, `py-20`, `py-24`, `py-28`, `py-32` with no clear system. On mobile, oversized padding (`py-32` = 128px each side) creates dead space between sections.
+**Files:** All page components
+**How:** Define 3 sizes: `section-sm` = `py-10 md:py-16`, `section-md` = `py-14 md:py-24`, `section-lg` = `py-20 md:py-32`. Apply consistently. Mobile gets tighter spacing, desktop gets breathing room.
 
-### 21. Teajia Bar — Make It Less Intrusive
-**Why:** A fixed bar at the top pushing down the nav is visually distracting. Consider a subtle slide-in from the side, or integrate it into the footer instead. Many users will find a permanent top bar for an unrelated project annoying.
+### 19. Add Horizontal Scroll Gallery for "Selected Works" on Homepage
+**[Mobile: Beneficial]**
+**Why:** Masonry grids work but horizontal scroll with snap points feels native on mobile — it's the gesture users are most comfortable with (Instagram stories, app carousels). It also lets users see one piece at a time with full visual attention.
+**File:** `components/Home.tsx`
+**How:** Use `overflow-x-auto scroll-snap-type-x-mandatory` with `scroll-snap-align: center` on each card. Add `scrollbar-hide` class (already defined). Show partial next card (peek) to signal scrollability. Desktop can keep the masonry grid.
+
+### 20. Navigation Mobile Menu — Add Staggered Item Entrance
+**[Mobile: Beneficial]**
+**Why:** Mobile menu items all appear at once with `animate-fade-in`. Staggered entrance (each item slides in 50ms after the previous) feels more crafted and is one of the most visible mobile-only interactions.
 **File:** `components/Navigation.tsx`
+**How:** Apply `animation-delay` per menu item: 0ms, 50ms, 100ms, 150ms, 200ms. Use `@keyframes slide-in-right` with a slight translateX. Total entrance: ~350ms. Respect `prefers-reduced-motion`.
 
-### 22. Add a "Back to Collection" Contextual Breadcrumb on Piece Pages
-**Why:** When navigating from a collection to a piece, there's no easy way to return to the collection view. A contextual breadcrumb improves navigation flow.
-**File:** `components/PiecePage.tsx`
-
-### 23. Writings Article — Increase Prose Line Length Control
-**Why:** `max-w-3xl` on the article container is fine, but paragraphs could benefit from `max-w-[65ch]` (the ideal reading line length). Currently some lines run too wide on large screens.
-**File:** `components/Writings.tsx` (WritingArticle)
-
-### 24. Add Scroll-Linked Progress Indicator on Long Pages (Creations, Store)
-**Why:** Progress bars exist on About and Writing articles but not on the Creations or Store pages, which can also be long. Consistency would help.
-**Files:** `components/Creations.tsx`, `components/Store.tsx`
-
-### 25. Lightbox — Add Image Counter Dots or Thumbnail Strip
-**Why:** The lightbox shows "1 of 5" text but no visual thumbnail strip. Small thumbnail dots or a filmstrip at the bottom lets users jump directly to specific images.
-**File:** `components/VisualLightbox.tsx`
-
-### 26. Improve the Empty State Illustrations
-**Why:** Empty states (cart, no pieces found) use only text. A simple line illustration or the brand glyph would make empty states feel designed rather than forgotten.
-**Files:** `components/CartDrawer.tsx`, `components/Creations.tsx`
-
-### 27. Collection Cards — Add Piece Count as Visual Dots or a Mini-Grid Preview
-**Why:** Collection cards show "X Pieces" as text. A tiny 2x2 grid of thumbnail previews, or dot indicators, would communicate collection size more visually.
-**File:** `components/Creations.tsx` (CollectionCard)
-
-### 28. Add a Scroll-Snap Horizontal Gallery to the About Page's Photo Interstitials
-**Why:** The full-bleed `Interstitial` photos are static. Making them horizontally scrollable (with multiple images) would add depth to the narrative.
-**File:** `components/About.tsx`
-
-### 29. Writings Landing — Add a Featured/Hero Story with Full-Width Treatment
-**Why:** All writing categories display identically. The first story should get a dramatically larger card treatment — full-width image with overlaid text — to create hierarchy.
+### 21. Writings Cards — Make Layout More Editorially Distinct
+**[Mobile: Beneficial]**
+**Why:** Writing cards look like product cards. On mobile (single column), editorial cards should feel like a magazine feed — large image, dramatic serif title below, minimal meta.
 **File:** `components/Writings.tsx`
+**How:** On mobile: full-width image (16:9 aspect), large `text-2xl` serif title below, category as a subtle label above title. On desktop: stacked layout or side-by-side with larger image.
+
+### 22. Add Micro-Interactions to Form Inputs (Inquire Page)
+**[Mobile: Beneficial]**
+**Why:** The commission form is long on mobile where scrolling through many fields feels tedious. Subtle feedback (smooth label float, green check on valid fields) reassures users they're making progress.
+**File:** `components/Inquire.tsx`
+**How:** Float labels with CSS `::placeholder-shown` + `::focus` transitions. Add a checkmark icon that fades in when field validates. Consider a step-by-step wizard layout for mobile instead of one long scroll.
+
+### 23. Add a "Back to Collection" Contextual Breadcrumb on Piece Pages
+**[Mobile: Critical]**
+**Why:** On mobile, the back button goes to browser history which may not be the collection. Users get lost. A persistent breadcrumb like "Jewelry > Ring of Resonance" at the top of piece pages provides clear wayfinding.
+**File:** `components/PiecePage.tsx`
+**How:** Use `location.state` to pass the collection name/path when navigating to a piece. Render a breadcrumb above the gallery. Keep it compact: category name as a link, truncated if needed.
+
+### 24. Sticky Filter Bar — Add Shadow on Scroll
+**[Mobile: Beneficial]**
+**Why:** The Creations page sticky filter bar uses `backdrop-blur` but no shadow, making it hard to tell it's floating above content on mobile where the blur effect is subtle.
+**File:** `components/Creations.tsx`
+**How:** Track scroll position (reuse existing listener) and add `shadow-sm` class when scrolled past threshold. Or use `box-shadow` in a `@supports (backdrop-filter: blur(8px))` to only add shadow when blur is active.
+
+### 25. Cart Drawer — Animate Items In/Out
+**[Mobile: Beneficial]**
+**Why:** Items appear/disappear instantly. On mobile where the drawer is full-width, this feels abrupt. A slide + fade makes the cart feel polished and confirms the action visually.
+**File:** `components/CartDrawer.tsx`
+**How:** Wrap items in a height-collapsing transition. On add: slide down + fade in (200ms). On remove: slide up + fade out (150ms). Use `max-height` transition, not `height`, to avoid layout recalculation.
+
+### 26. Writings Article — Optimize Reading Line Length
+**[Mobile: Neutral]**
+**Why:** `max-w-3xl` works fine on mobile (screen width constrains it naturally). On desktop, lines run too wide. This is a desktop readability fix.
+**File:** `components/Writings.tsx` (WritingArticle)
+**How:** Add `max-w-[65ch]` on the prose container. On mobile, the viewport width already constrains to ~40-50 characters which is comfortable.
+
+### 27. Lightbox — Improve Mobile Navigation
+**[Mobile: Critical]**
+**Why:** The lightbox shows "1 of 5" text. On mobile, swipe between images should feel instant, and navigation should use swipe gestures with momentum, not arrow buttons.
+**File:** `components/VisualLightbox.tsx`
+**How:** Add touch swipe handling (same pattern as PiecePage). Replace arrow buttons with edge-tap zones (tap left 30% = prev, right 30% = next). Show dot indicators at the bottom for position awareness.
+
+### 28. Writings Landing — Add a Featured Hero Story
+**[Mobile: Beneficial]**
+**Why:** All writing entries look the same. On mobile, the first story should get a full-width hero treatment — large image with overlaid text — creating hierarchy and a strong entry point.
+**File:** `components/Writings.tsx`
+**How:** First story card: full-width image, `aspect-[16/9]`, title overlaid at bottom with gradient scrim. Subsequent stories use the standard card layout.
+
+### 29. Add Scroll-Snap Horizontal Gallery to About Page Interstitials
+**[Mobile: Beneficial]**
+**Why:** Full-bleed photos on the About page are static. On mobile, making them horizontally scrollable with snap points turns them into an engaging mini-gallery — a natural mobile gesture.
+**File:** `components/About.tsx`
+**How:** Group interstitial photos into a horizontal `scroll-snap` container with `overflow-x-auto`. Show partial peek of next image. Add dot indicators.
 
 ### 30. Consistent Border Radius Strategy
-**Why:** The site currently uses no border-radius (sharp corners) everywhere, which is intentional and elegant. However, the newsletter `rounded-full` badge in the Writings article and `rounded-full` buttons in the lightbox/footer break this language. Pick one: sharp everywhere or soft everywhere.
+**[Mobile: Neutral]**
+**Why:** Sharp corners are used everywhere (intentional and elegant), but `rounded-full` appears on newsletter badges, lightbox buttons, and footer elements, breaking the design language.
 **Files:** `components/Writings.tsx`, `components/VisualLightbox.tsx`, `components/Footer.tsx`
+**How:** Pick one: sharp everywhere (remove `rounded-full` outliers) or allow `rounded-full` only on small interactive elements (dots, badges). Recommend sharp — it's the stronger aesthetic choice.
 
 ---
 
 ## Tier 3: Interaction & Motion Polish (31–45)
 
-### 31. Button Hover States — Unify the Pattern
-**Why:** Some buttons use `border-b` underlines, others use `bg` fills, others use `border` outlines. There should be a maximum of 2 to 3 button styles (primary, secondary, ghost) applied consistently.
+### 31. Button Hover/Press States — Unify the Pattern
+**[Mobile: Beneficial]**
+**Why:** Buttons use inconsistent patterns: `border-b` underlines, `bg` fills, `border` outlines. On mobile, hover doesn't exist, so the **active/pressed** state is what matters. Unify that.
 **Files:** All components with CTAs
+**How:** Define 3 button variants: primary (filled, `active:brightness-90`), secondary (outlined, `active:bg-wood-50`), ghost (text-only, `active:underline`). Apply consistently. Add `touch-active` to all interactive buttons.
 
-### 32. Add Ripple or Press Feedback on Touch Devices
-**Why:** Mobile taps on cards and buttons get no tactile feedback. A subtle scale-down (`active:scale-[0.98]`) on press makes the interface feel responsive.
-**Files:** `components/GalleryTileCard.tsx`, `components/Navigation.tsx`, button elements globally
+### 32. Touch Press Feedback — Extend to All Interactive Elements
+**[Mobile: Critical]**
+**Why:** `touch-active` (scale 0.98 on press) exists on gallery cards but not on nav links, buttons, or other interactive elements. Mobile users need tactile feedback everywhere.
+**Files:** `components/Navigation.tsx`, button elements globally
+**How:** Add `touch-active` class to all buttons, links, and interactive elements. Consider a global rule: `@media (pointer: coarse) { button:active, a:active { transform: scale(0.98); } }`.
 
-### 33. Stagger Animation Timing — Reduce Delay for Faster Perceived Load
-**Why:** Card stagger delays go up to 700ms (13+ items). Users see a blank grid for nearly a second. Reduce max delay to ~400ms and use a faster easing.
-**File:** `src/index.css` (`.card-stagger` rules)
+### 33. Dark Mode Transition — Add Smooth Color Crossfade
+**[Mobile: Beneficial]**
+**Why:** Only `background-color` transitions on toggle. Text, borders, and cards snap instantly, creating a jarring flash.
+**Files:** `src/index.css`
+**How:** Apply a `.transitioning` class to `<html>` for 400ms on toggle: `.transitioning * { transition: color 0.3s, background-color 0.3s, border-color 0.3s; }`. Remove class after transition completes to avoid performance drag from permanent transition on every element.
 
-### 34. Add Cursor Effects for Gallery Browsing
-**Why:** Custom cursors (e.g., a "View" text cursor on hover, or directional arrows in the lightbox) are a signature luxury portfolio move. Gagosian, Pace, and David Zwirner all use them.
-**Files:** `components/GalleryTileCard.tsx`, `components/VisualLightbox.tsx`, `src/index.css`
-
-### 35. Navigation Mobile Menu — Add Staggered Item Entrance
-**Why:** Mobile menu items all appear at once with `animate-fade-in`. Staggered entrance (each item slides in 50ms after the previous) feels more crafted.
-**File:** `components/Navigation.tsx`
-
-### 36. Smooth Scroll Behavior for All Anchor Links
-**Why:** Some scroll actions use `behavior: 'smooth'` and some don't. The Writings page anchor navigation should use `scroll-behavior: smooth` on the `html` element.
+### ~~34. Smooth Scroll Behavior for All Anchor Links~~ DONE
+**[Mobile: Beneficial]**
+~~**Why:** Some scroll actions use `behavior: 'smooth'` and some don't. Inconsistent.~~
 **File:** `src/index.css`
+**Applied:** Added `html { scroll-behavior: smooth; }` wrapped in `@media (prefers-reduced-motion: no-preference)`.
 
-### 37. Add Hover "Tilt" Effect on Category Tiles
-**Why:** A subtle 3D perspective tilt on hover (CSS `perspective` + `rotateX/Y` based on mouse position) adds tactile depth to the category grid. Very on-trend for 2026.
-**File:** `components/Creations.tsx` (CreationCategoryCard)
-
-### 38. Reading Progress Bar — Make It Thicker and Add Gradient
-**Why:** The current 2px bronze bar is easy to miss. A 3px bar with a subtle gradient (bronze to gold) would be more visible without being garish.
-**File:** `components/Writings.tsx` (WritingArticle), `components/shared/ProgressBar.tsx`
-
-### 39. Cart Badge Animation — Bounce on Item Add
-**Why:** When adding to cart, the badge count changes but there's no visual feedback. A brief scale bounce animation on the nav cart icon confirms the action.
+### 35. Cart Badge Animation — Bounce on Item Add
+**[Mobile: Critical]**
+**Why:** When adding to cart on mobile, the badge count changes silently. Users need visual confirmation that the tap worked — especially important because mobile taps can feel unresponsive without feedback.
 **File:** `components/Navigation.tsx`
+**How:** On cart count change, apply a `scale(1.3)` → `scale(1)` CSS transition (200ms spring) to the badge. Use a `key` prop or CSS animation class toggle.
 
-### 40. Parallax Scroll — Add Performance Guards
-**Why:** The hero parallax uses `scrollY * 0.35` in a scroll handler that fires on every pixel. This should use `requestAnimationFrame` throttling and `will-change: transform` for buttery performance.
-**File:** `components/Hero.tsx`
+### 36. Add Custom Cursor Effects for Gallery Browsing
+**[Mobile: Neutral — Desktop only]**
+**Why:** Custom cursors (e.g., "View" text cursor on hover, directional arrows in lightbox) are a signature luxury portfolio move. Gagosian, Pace, and David Zwirner all use them. Irrelevant on touch devices but a strong desktop differentiator.
+**Files:** `components/GalleryTileCard.tsx`, `components/VisualLightbox.tsx`, `src/index.css`
+**How:** Use CSS `cursor: url(...)` or a JS-driven cursor follower. Wrap in `@media (pointer: fine)` so it only applies to mouse users.
 
-### 41. Add Entrance Animation to the Commission Section
-**Why:** The commission invitation (image + text grid) on the Home page just sits there. It should reveal as you scroll into view — image sliding from left, text from right.
+### 37. Masonry Grid — Add Responsive Column Transitions
+**[Mobile: Neutral]**
+**Why:** When resizing the browser, columns snap between 2/3/4. Mobile users don't resize their browser, so this is desktop-only polish.
+**Files:** `components/Home.tsx`, `components/Creations.tsx`
+**How:** Detect column breakpoint changes and briefly apply `opacity-0` → `opacity-1` fade. Only fires on window resize, which is desktop-only.
+
+### 38. Navigation Active-Link Indicator — Sliding Animation
+**[Mobile: Neutral — Desktop only]**
+**Why:** The active nav underline snapping between links is only visible in the desktop horizontal nav. Mobile uses a full-screen menu where the active item is highlighted differently. Good desktop polish but zero mobile impact.
+**File:** `components/Navigation.tsx`
+**How:** Use a positioned `<span>` that measures active link offset/width via `ref` and animates `left` + `width`. Only render on `lg:` breakpoint.
+
+### 39. Reading Progress Bar — Thicker and More Visible
+**[Mobile: Beneficial]**
+**Why:** The 2px bronze bar is easy to miss on mobile where it competes with the browser's own UI chrome. A 3px bar is more noticeable.
+**File:** `components/Writings.tsx`, `components/shared/ProgressBar.tsx`
+**How:** Increase from 2px to 3px. Add a subtle gradient (bronze to warm gold). Keep it at the very top of the viewport.
+
+### 40. Commission Section — Add Scroll-Triggered Reveal
+**[Mobile: Beneficial]**
+**Why:** The commission invitation on the Home page just sits there. A scroll-triggered reveal using the existing `<Reveal>` component adds life with zero performance cost.
 **File:** `components/Home.tsx`
+**How:** Wrap the commission section in `<Reveal>`. Image fades up from left, text from right. Use `threshold: 0.2` so it triggers early on mobile scroll.
 
-### 42. Sort Dropdown — Style as a Custom Dropdown Instead of Native Select
-**Why:** The native `<select>` element for sort looks jarring against the otherwise custom-designed UI. A custom dropdown with the site's typography and animation language would maintain consistency.
+### 41. Sort Dropdown — Keep Native on Mobile, Style on Desktop
+**[Mobile: Caution]**
+**Why:** The native `<select>` element looks jarring on desktop, but on mobile it triggers the **native OS picker** (iOS wheel picker, Android dropdown) which is faster and more accessible than any custom dropdown. Don't replace this on mobile.
 **File:** `components/Creations.tsx` (SortDropdown)
+**How:** On desktop (`@media (pointer: fine)`), render a custom styled dropdown with the site's typography. On mobile, keep the native `<select>` but style its resting appearance (font, color, border) to match the site.
 
-### 43. Add Keyboard Arrow Navigation Between Pieces in Gallery View
-**Why:** When browsing the gallery grid, arrow key navigation between pieces (like Google Photos) would add a power-user feature.
-**File:** `components/Creations.tsx`
+### 42. Add Hover "Tilt" Effect on Category Tiles
+**[Mobile: Neutral — Desktop only]**
+**Why:** 3D perspective tilt on hover adds tactile depth to the category grid. Mouse-dependent — ignore on touch devices.
+**File:** `components/Creations.tsx` (CreationCategoryCard)
+**How:** Track mouse position relative to card, apply `transform: perspective(800px) rotateX(Ydeg) rotateY(Xdeg)`. Wrap in `@media (pointer: fine)`. Max rotation: 3 degrees.
 
-### 44. Newsletter Success State — Animate the Checkmark
-**Why:** The success checkmark appears instantly. A draw-on animation (the checkmark SVG path drawing itself) is a small delight.
+### 43. Newsletter Success State — Animate the Checkmark
+**[Mobile: Beneficial]**
+**Why:** Small delight that confirms newsletter signup worked. The draw-on animation is lightweight CSS.
 **File:** `components/Footer.tsx`
+**How:** SVG checkmark path with `stroke-dasharray` + `stroke-dashoffset` animation. Duration: 400ms.
 
-### 45. Back-to-Top Button — Add Scroll Progress Ring
-**Why:** The back-to-top button is a plain circle. Adding a circular SVG progress ring (stroke-dashoffset tied to scroll %) around it communicates scroll position and adds visual interest.
-**File:** `components/Footer.tsx`, `components/shared/BackToTop.tsx`
+### 44. Back-to-Top Button — Add Scroll Progress Ring
+**[Mobile: Beneficial]**
+**Why:** A circular SVG progress ring communicates scroll position. On long mobile pages (Store, Creations), this helps users understand how far they've scrolled.
+**File:** `components/shared/BackToTop.tsx`
+**How:** Wrap the button in a circular SVG with `stroke-dashoffset` tied to scroll percentage. Use the existing passive scroll listener.
+
+### 45. Keyboard Arrow Navigation Between Pieces
+**[Mobile: Neutral — Desktop only]**
+**Why:** Arrow key navigation is a power-user desktop feature. Mobile has no keyboard.
+**File:** `components/Creations.tsx`
+**How:** Listen for ArrowLeft/ArrowRight on focused gallery items. Move focus and scroll into view.
 
 ---
 
 ## Tier 4: Typography & Content Refinements (46–55)
 
-### 46. Drop Cap — Adjust Size and Color for Dark Mode
-**Why:** Drop caps use `var(--color-bronze-500)` which may not have enough contrast in dark mode. Verify and adjust.
+### 46. Drop Cap — Verify Dark Mode Contrast
+**[Mobile: Beneficial]**
+**Why:** Drop caps use `var(--color-bronze-500)` which may lack contrast in dark mode. Mobile OLED screens render dark mode differently than desktop LCDs.
 **File:** `src/index.css`
+**How:** Test bronze-500 against dark mode background. If contrast ratio < 4.5:1, use `bronze-400` in dark mode.
 
-### 47. Add Optical Kerning Adjustments to Display Headings
-**Why:** Cinzel at very large sizes (`text-8xl`+) can have uneven letter spacing. `letter-spacing: -0.02em` on display headings tightens them for a more refined look.
-**Files:** Page components using display font at large sizes
-
-### 48. Blockquote Styling — Differentiate from Pull Quotes
-**Why:** Blockquotes and pull quotes use similar left-border styling. Pull quotes should be larger, centered, and potentially use a different visual treatment (oversized quotation marks, different font weight).
-**File:** `src/index.css`
-
-### 49. Price Display — Use Consistent Font Treatment
-**Why:** Prices use `font-serif` in some places and `font-label` in others. Price display should always use the same font for scanability.
+### 47. Price Display — Use Consistent Font Treatment
+**[Mobile: Beneficial]**
+**Why:** Prices use `font-serif` in some places and `font-label` in others. On mobile's smaller text sizes, inconsistency is more jarring because the viewport shows fewer elements to compare against.
 **Files:** `components/GalleryTileCard.tsx`, `components/Store.tsx`, `components/PiecePage.tsx`, `components/CartDrawer.tsx`
+**How:** Standardize to `font-label` for all prices. It's more scannable at small sizes.
+
+### 48. Blockquote vs Pull Quote — Differentiate Styling
+**[Mobile: Beneficial]**
+**Why:** Both use similar left-border styling. On mobile where text fills the width, pull quotes should interrupt the flow more dramatically to create visual breathing room.
+**File:** `src/index.css`
+**How:** Pull quotes: `text-2xl font-serif text-center` with decorative quotation mark above. Blockquotes: keep left border, slightly indented. Different treatment creates pacing in long articles.
+
+### 49. Availability Badges — Use Subtle Background Colors
+**[Mobile: Beneficial]**
+**Why:** "Ready to ship" and "Made to order" are text-only with color differences. On mobile, small colored text is hard to distinguish. A subtle background fill makes badges scannable at a glance.
+**Files:** `components/GalleryTileCard.tsx`, `components/Store.tsx`
+**How:** Add `bg-bronze-50 px-2 py-0.5` for ready-to-ship, `bg-wood-50 px-2 py-0.5` for made-to-order. No border-radius (matches sharp design language).
 
 ### 50. Add Proper Open Graph / Social Meta Images
-**Why:** When sharing links on social media, a well-designed OG image dramatically increases click-through. Each page type (piece, writing, collection) should generate appropriate meta.
+**[Mobile: Critical]**
+**Why:** Most social sharing happens from phones. When someone shares a piece or article from their phone, the OG image is the primary thing their audience sees. Bad or missing OG images mean fewer click-throughs.
 **File:** `useSeoMeta.ts`
+**How:** Generate per-page meta with Cloudinary transformations. Piece pages: use `coverImage` at 1200x630 crop. Writing pages: title card with brand styling. Fallback: site-wide default OG image.
 
-### 51. Availability Badges — Use Subtle Background Colors Instead of Just Text
-**Why:** "Ready to ship" and "Made to order" badges are text-only with color differences. A subtle background fill (e.g., `bg-green-50` for ready, `bg-wood-100` for made-to-order) makes them scannable at a glance.
-**Files:** `components/GalleryTileCard.tsx`, `components/Store.tsx`
-
-### 52. Writing Tags — Refine the Pill Styling
-**Why:** Tag pills use `bg-wood-50 rounded px-2 py-0.5` which feels cramped. Slightly more padding and consistent border treatment would polish them.
+### 51. Writing Tags — Add More Padding
+**[Mobile: Beneficial]**
+**Why:** Tag pills use `px-2 py-0.5` which feels cramped on mobile where fingers need to tap them (if they're interactive). Even if they're display-only, cramped pills look cheap.
 **File:** `components/Writings.tsx`
+**How:** Increase to `px-3 py-1`. If tags are tappable for filtering, ensure minimum 44px touch target height.
 
-### 53. Form Labels — Unify to One Pattern (Floating vs Static)
-**Why:** The newsletter uses floating labels, the commission form uses a mix. Pick one approach and apply it consistently.
+### 52. Form Labels — Unify to Floating Pattern
+**[Mobile: Beneficial]**
+**Why:** Mixed label patterns (floating vs static) create inconsistency. On mobile, floating labels save vertical space since the label lives inside the field until focused.
 **Files:** `components/Footer.tsx`, `components/Inquire.tsx`
+**How:** Use the floating label pattern everywhere. Label starts as placeholder, floats to top-left on focus/filled. Use `::placeholder-shown` pseudo-class for pure CSS implementation.
 
-### 54. "Continue the Journey" Section — Add Visual Warmth
-**Why:** The next-readings section at the end of articles feels utilitarian. Adding a subtle background color band or a decorative element would make it feel more like an invitation.
+### 53. "Continue the Journey" Section — Add Visual Warmth
+**[Mobile: Beneficial]**
+**Why:** After reading a long article on mobile, the "next stories" section feels abrupt. A warm background band signals "you've reached a new section" and invites continued exploration.
 **File:** `components/Writings.tsx`
+**How:** Add `bg-wood-50 py-12` (light mode) or `bg-wood-900/30 py-12` (dark mode) wrapper around the section.
 
-### 55. Mobile Typography — Reduce Large Heading Sizes on Small Screens
-**Why:** Some headings at `text-5xl` on mobile are still too large (e.g., Creations page h1). Audit all mobile heading sizes for comfortable reading.
-**Files:** All page components
+### 54. Optical Kerning on Display Headings
+**[Mobile: Neutral]**
+**Why:** Cinzel at very large sizes (`text-8xl`+) can have uneven letter spacing. Only relevant at desktop sizes.
+**Files:** Page components using display font at large sizes
+**How:** Add `tracking-[-0.02em]` to headings at `lg:text-7xl` and above.
+
+### 55. Empty State Design — Add Brand Glyph
+**[Mobile: Beneficial]**
+**Why:** Empty cart and "no pieces found" states use only text. On mobile, a small centered illustration or brand mark prevents the screen from feeling broken.
+**Files:** `components/CartDrawer.tsx`, `components/Creations.tsx`
+**How:** Add a simple SVG glyph (sacred geometry mark from the brand) above the empty state text. Keep it subtle — 64x64px, `opacity-30`.
 
 ---
 
-## Tier 5: Polish & Micro-Details (56–65)
+## Tier 5: Polish & Micro-Details (56–70)
 
-### 56. Image Hover Scale — Differentiate by Context
-**Why:** Everything scales at 1.03 on hover. Product cards could scale slightly more (1.05) while gallery images stay at 1.03, creating a subtle hierarchy.
-**File:** `components/ArtImage.tsx`
-
-### 57. Cart Drawer — Add "Swipe to Dismiss" on Mobile
-**Why:** Mobile users expect to swipe right to close a drawer. Currently only the X button and overlay click close it.
-**File:** `components/CartDrawer.tsx`
-
-### 58. Focus Ring Styling — Make It More Elegant
-**Why:** `ring-2 ring-bronze-500 ring-offset-2` is fine functionally but the offset creates a gap that looks unfinished. Consider `outline: 2px solid var(--color-bronze-400); outline-offset: 3px` for a cleaner look.
+### 56. Focus Ring Styling — Clean Up the Offset Gap
+**[Mobile: Neutral]**
+**Why:** `ring-offset-2` creates a visible gap between element and focus ring. Looks unpolished on keyboard navigation (primarily desktop, but also mobile accessibility switches).
 **File:** `src/index.css`
+**How:** Replace with `outline: 2px solid var(--color-bronze-400); outline-offset: 3px`. Cleaner, one rule.
 
-### 59. Add Print Stylesheet for Writing Articles
-**Why:** Readers may want to print essays. A `@media print` stylesheet that hides nav/footer and optimizes typography would be a thoughtful addition.
-**File:** `src/index.css`
-
-### 60. Sticky Filter Bar — Add Shadow on Scroll
-**Why:** The Creations page sticky filter bar uses `backdrop-blur` but no shadow, making it hard to tell it's floating. A subtle `shadow-sm` when scrolled adds depth.
-**File:** `components/Creations.tsx`
-
-### 61. Footer Copyright Year — Already Dynamic (Good), But Add a Subtle Separator Before Dark Mode Toggle
-**Why:** The bottom bar crams copyright, privacy, terms, and dark mode toggle together. A middle dot separator or increased gap between legal links and the toggle would improve readability.
-**File:** `components/Footer.tsx`
-
-### 62. Cart Drawer Duplicate Escape Handler (Bug Fix)
-**Why:** `CartDrawer.tsx` has two identical `useEffect` blocks for Escape key handling (lines 96–103 and 132–139). Remove the duplicate.
-**File:** `components/CartDrawer.tsx`
-
-### 63. Add `:focus-visible` Styles to the Budget Slider
-**Why:** The custom range slider in the Inquire form has no visible focus indicator for keyboard users.
-**File:** `src/index.css`
-
-### 64. Video Poster Image — Ensure It Matches First Frame Quality
-**Why:** If the hero video takes time to load, the poster image is the first impression. It should be a high-quality still, not a generic placeholder.
+### 57. Video Poster Image — Ensure High Quality
+**[Mobile: Critical]**
+**Why:** On mobile networks, the hero video may never load (data saver mode, slow connection, or iOS low-power mode disabling autoplay). The poster image IS the hero for many mobile users.
 **File:** `components/Hero.tsx`
+**How:** Use a high-quality, representative still from the video via Cloudinary (`f_auto,q_85,w_1200`). Test on iPhone with Low Power Mode — the poster is all users see.
 
-### 65. Add Subtle Texture or Grain to the Paper Background
-**Why:** The footer already has a noise texture (`.footer-noise`). Applying a very subtle version (opacity 0.015) to the main `bg-paper-50` would add tactile warmth that differentiates from a plain white site. Very on-trend with the "nature distilled" aesthetic.
+### 58. Add Print Stylesheet for Writing Articles
+**[Mobile: Neutral]**
+**Why:** Desktop readers may print essays. Zero mobile impact but thoughtful touch.
 **File:** `src/index.css`
+**How:** `@media print { nav, footer, .back-to-top, .progress-bar { display: none; } .prose { max-width: 100%; font-size: 12pt; } }`.
+
+### ~~59. Cart Drawer Duplicate Escape Handler (Bug Fix)~~ DONE
+**[Mobile: Beneficial]**
+~~**Why:** `CartDrawer.tsx` has two identical `useEffect` blocks for Escape key handling. Duplicate code is duplicate risk.~~
+**File:** `components/CartDrawer.tsx`
+**Applied:** Removed duplicate `useEffect` block, kept the original.
+
+### 60. Add `:focus-visible` Styles to Budget Slider
+**[Mobile: Neutral]**
+**Why:** The custom range slider has no focus indicator for keyboard/switch users.
+**File:** `src/index.css`
+**How:** Add `input[type=range]:focus-visible { outline: 2px solid var(--color-bronze-400); outline-offset: 4px; }`.
+
+### 61. Footer Bottom Bar — Add Separator Before Dark Mode Toggle
+**[Mobile: Beneficial]**
+**Why:** Copyright, privacy, terms, and dark mode toggle are crammed together. On mobile's narrow viewport, they wrap awkwardly.
+**File:** `components/Footer.tsx`
+**How:** Add a middle dot separator and `flex-wrap gap-3` to let items wrap cleanly on mobile.
+
+### 62. Image Hover Scale — Desktop-Only Differentiation
+**[Mobile: Neutral — Desktop only]**
+**Why:** Everything scales at 1.03 on hover. Hover doesn't exist on mobile.
+**File:** `components/ArtImage.tsx`
+**How:** Product cards: `hover:scale-[1.05]`. Gallery images: `hover:scale-[1.03]`. Wrap in `@media (pointer: fine)`.
+
+### 63. Add Subtle Paper Texture / Grain to Background
+**[Mobile: Caution]**
+**Why:** The footer already has a noise texture. Applying it site-wide adds warmth but beware: on mobile, CSS `background-image` noise textures increase GPU memory usage and can cause stutter during scroll on older phones.
+**File:** `src/index.css`
+**How:** Apply at `opacity: 0.012` only, and only to the `body` element (not every card/section). Use a tiny (200x200px) repeating PNG, not an inline SVG data URI (which forces re-rendering). Disable on `prefers-reduced-data` if supported.
+
+### ~~64. Add Safe Area Insets for Notched/Dynamic Island Phones~~ DONE
+**[Mobile: Critical]**
+~~**Why:** iPhones with notch or Dynamic Island need `env(safe-area-inset-*)` to prevent content from being obscured.~~
+**Files:** `src/index.css`, `index.html`
+**Applied:** Added `viewport-fit=cover` to meta tag + `.safe-top` / `.safe-bottom` CSS utility classes with `env(safe-area-inset-*)`.
+
+### ~~65. Disable Parallax on Low-End Mobile Devices~~ DONE
+**[Mobile: Critical]**
+~~**Why:** Not all phones are iPhone 15s. The parallax scroll effect in the hero fires state updates every frame. On budget Android devices, this causes visible jank and battery drain for an effect that's barely noticeable on a 6-inch screen.~~
+**File:** `components/Hero.tsx`
+**Applied:** Parallax disabled on all touch devices via `matchMedia('(pointer: coarse)')`. Combined with item #1.
+
+### ~~66. Add `touch-action: manipulation` to Interactive Elements~~ DONE
+**[Mobile: Critical]**
+~~**Why:** Mobile browsers add a 300ms tap delay to detect double-tap zoom. `touch-action: manipulation` disables double-tap zoom on specific elements while preserving pinch zoom (important for images).~~
+**File:** `src/index.css`
+**Applied:** Added global rule for `button, a, [role="button"], input, select, textarea, label`.
+
+### ~~67. Optimize Cloudinary Image Sizes for Mobile~~ DONE (pre-existing)
+**[Mobile: Critical]**
+~~**Why:** If gallery images are served at desktop resolution (1200px+) on a 375px mobile viewport, users download 3-4x more data than needed.~~
+**File:** `utils/cloudinary.ts`, `components/ArtImage.tsx`
+**Applied:** Already implemented — `ArtImage` uses `srcset()` with per-variant width breakpoints and `sizes` attributes. Browser picks appropriate size automatically.
+
+### ~~68. Prevent Body Scroll When Mobile Menu Is Open~~ DONE
+**[Mobile: Critical]**
+~~**Why:** When the mobile nav menu opens, the page behind it should not scroll. CartDrawer already does this (`document.body.style.overflow = 'hidden'`), but verify the mobile menu does too.~~
+**File:** `components/Navigation.tsx`
+**Applied:** Added `document.body.style.overflow = 'hidden'` when menu opens, restored on close/unmount.
+
+### ~~69. Add Scroll-to-Top on Route Change~~ DONE (pre-existing)
+**[Mobile: Beneficial]**
+~~**Why:** When navigating between pages on mobile, React Router preserves scroll position. Users end up in the middle of a new page.~~
+**File:** `App.tsx`
+**Applied:** Already implemented — global `useEffect` scrolls to top on every `location.pathname` change.
+
+### 70. Lazy Load Below-the-Fold Components
+**[Mobile: Beneficial]**
+**Why:** Mobile users on slower connections should see the hero and first section as fast as possible. Components like Footer, Commission section, and Writings preview can load later.
+**File:** `App.tsx` or route-level components
+**How:** Use `React.lazy()` + `Suspense` for heavy below-the-fold sections. Or simpler: ensure images below the fold have `loading="lazy"` (check that `ArtImage` sets this).
 
 ---
 
 ## Implementation Strategy
 
-These 65 improvements should be implemented in tier order:
-1. **Tier 1 (1–15):** Highest visual ROI, do these first
-2. **Tier 2 (16–30):** Layout and spacing cohesion
-3. **Tier 3 (31–45):** Interaction and motion refinement
-4. **Tier 4 (46–55):** Typography and content details
-5. **Tier 5 (56–65):** Final micro-polish
+Prioritized for **mobile-first** impact:
 
-Each item is independent and can be cherry-picked based on your priorities.
+### Phase 1: Mobile Fixes — COMPLETE
+~~Items 1, 2, 3, 14, 64, 65, 66, 67, 68~~ — All performance fixes and touch target issues applied.
+
+### Phase 2: Mobile Experience (high ROI) — PARTIALLY COMPLETE
+Items 4, 5, ~~9~~, ~~12~~, 16, 17, 32, 35, 57, ~~69~~ — Also completed: stagger timing (#9), Teajia bar (#12), scroll-to-top (#69), smooth scroll (#34), duplicate escape fix (#59).
+
+### Phase 3: Visual Polish (both platforms)
+Items 6, 7, 8, 10, 11, 15, 18, 19, 20, 21, 28, 33 — Visual upgrades that benefit everyone.
+
+### Phase 4: Desktop Enhancements
+Items 36, 37, 38, 42, 45, 62 — Desktop-only polish. Do when the mobile experience is solid.
+
+### Phase 5: Details & Refinement
+Everything else — cherry-pick based on your priorities.
 
 ## Verification
-- Run `npm run dev` and visually inspect each change across desktop (1440px+), tablet (768px), and mobile (375px)
+- Test every change on a **real phone first** (not just Chrome DevTools mobile view — it doesn't simulate touch, network, or GPU constraints)
+- Test on both iOS Safari and Android Chrome (they handle scroll, video, and animation differently)
+- Test with Low Power Mode on iOS (disables video autoplay and reduces animation)
 - Test dark mode for every change
 - Verify `prefers-reduced-motion` still disables animations
+- Run Lighthouse mobile audit — target 90+ performance score
 - Run `npm run build` to confirm no build errors
 - Test keyboard navigation after any interactive changes

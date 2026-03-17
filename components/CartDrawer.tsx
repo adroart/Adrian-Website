@@ -128,15 +128,7 @@ const CartDrawer: React.FC = () => {
     // Clear error when cart closes or items change
     useEffect(() => { setError(null); }, [isCartOpen, items.length]);
 
-    // #25 Close drawer on Escape key
-    useEffect(() => {
-        if (!isCartOpen) return;
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') closeCart();
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [isCartOpen, closeCart]);
+    // Duplicate Escape handler removed — already handled in useEffect above
 
     const handleCheckout = async () => {
         setLoading(true);
@@ -251,27 +243,27 @@ const CartDrawer: React.FC = () => {
                                                     One of one
                                                 </span>
                                             ) : (
-                                                <div className="flex items-center border border-wood-200 h-8">
+                                                <div className="flex items-center border border-wood-200 h-11">
                                                     <button
                                                         onClick={() =>
                                                             quantity === 1
                                                                 ? removeFromCart(product.id)
                                                                 : updateQuantity(product.id, -1)
                                                         }
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
+                                                        className="w-11 h-11 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
                                                         aria-label={quantity === 1 ? 'Remove piece' : 'Decrease quantity'}
                                                     >
-                                                        {quantity === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
+                                                        {quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}
                                                     </button>
                                                     <span className="w-8 text-center font-label text-xs text-wood-900 font-semibold">
                                                         {quantity}
                                                     </span>
                                                     <button
                                                         onClick={() => updateQuantity(product.id, 1)}
-                                                        className="w-8 h-8 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
+                                                        className="w-11 h-11 flex items-center justify-center hover:bg-wood-100 transition-colors text-wood-600"
                                                         aria-label="Increase quantity"
                                                     >
-                                                        <Plus size={12} />
+                                                        <Plus size={14} />
                                                     </button>
                                                 </div>
                                             )}

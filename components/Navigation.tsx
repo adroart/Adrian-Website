@@ -53,7 +53,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -62,14 +62,18 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Close mobile menu on Escape key
+  // Close mobile menu on Escape key + lock body scroll when menu open
   useEffect(() => {
     if (!isMobileMenuOpen) return;
+    document.body.style.overflow = 'hidden';
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsMobileMenuOpen(false);
     };
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isMobileMenuOpen]);
 
   const navItems: NavItem[] = [

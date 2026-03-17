@@ -52,17 +52,6 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     </span>
                 </div>
 
-                {/* Availability badge — top left */}
-                {showDetails && art.availability === 'READY_TO_SHIP' && (
-                    <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-avail-ready font-semibold">
-                        Ready to ship
-                    </div>
-                )}
-                {showDetails && art.availability === 'SOLD' && (
-                    <div className="absolute top-3 left-3 bg-wood-900/85 backdrop-blur-sm px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-paper-50 font-semibold dark-preserve">
-                        Sold
-                    </div>
-                )}
             </Link>
 
             {/* Label band — clean stacked layout */}
@@ -99,6 +88,11 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
                         {/* Status indicators */}
                         <div className="flex items-center gap-2">
+                            {art.availability === 'READY_TO_SHIP' && (
+                                <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
+                                    Ready to ship
+                                </span>
+                            )}
                             {art.availability === 'MADE_TO_ORDER' && !variants?.some(v => v.availability === 'IN_STOCK') && (
                                 <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
                                     Made to order

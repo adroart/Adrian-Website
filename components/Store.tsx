@@ -171,9 +171,6 @@ const ShopHero: React.FC<{
                     <div className="relative overflow-hidden aspect-[4/3]">
                         <ArtImage publicId={main.image} alt={main.title} variant="product" />
                         <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/10 transition-all duration-500" />
-                        <div className="absolute top-4 left-4 bg-bronze-400 text-paper-50 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.2em] font-semibold dark-preserve">
-                            Featured
-                        </div>
                     </div>
                     <div className="p-6 md:p-8">
                         <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">{main.category}</span>
@@ -292,26 +289,6 @@ const ProductCard: React.FC<{
                     className={!isAvailable ? 'opacity-60' : ''}
                 />
 
-                {/* Archived: elegant veil — not grayscale */}
-                {!isAvailable && (
-                    <div className="absolute inset-0 bg-paper-50/25 backdrop-blur-[1px] flex items-end p-4">
-                        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-700 font-semibold bg-paper-50/90 border border-wood-200 px-3 py-1.5">
-                            Private Collection
-                        </span>
-                    </div>
-                )}
-
-                {/* Availability badge — top left */}
-                {isAvailable && !product.isReadyToShip && !product.hasVariants && (
-                    <div className="absolute top-3 left-3 bg-bronze-50/95 backdrop-blur-sm border border-bronze-200 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-bronze-700 font-semibold">
-                        Crafted for You
-                    </div>
-                )}
-                {isAvailable && product.hasVariants && (
-                    <div className="absolute top-3 left-3 bg-paper-50/95 backdrop-blur-sm border border-wood-200 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-wood-600 font-semibold">
-                        Multiple Sizes
-                    </div>
-                )}
 
                 {/* Hover detail reveal — material + excerpt + View */}
                 {isAvailable && (
@@ -358,11 +335,20 @@ const ProductCard: React.FC<{
                     </p>
                 )}
 
-                <span className="block mt-1.5 font-serif text-base text-wood-600 font-medium">
-                    {product.highPrice
-                        ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
-                        : formatPrice(product.price)}
-                </span>
+                {isAvailable ? (
+                    <div className="mt-1.5 flex items-baseline justify-between gap-3">
+                        <span className="font-serif text-base text-wood-600 font-medium">
+                            {product.highPrice
+                                ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
+                                : formatPrice(product.price)}
+                        </span>
+                        <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
+                            {product.hasVariants ? 'Multiple sizes' : product.isReadyToShip ? 'Ready to ship' : 'Made to order'}
+                        </span>
+                    </div>
+                ) : (
+                    <span className="block mt-1.5 font-serif text-sm text-wood-400 italic">Private Collection</span>
+                )}
             </div>
         </div>
     );

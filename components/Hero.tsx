@@ -3,24 +3,37 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { img } from '../utils/cloudinary';
 
+// Detect touch/low-end devices — disable parallax to save battery and avoid jank
+const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     if (videoRef.current) {
         videoRef.current.playbackRate = 0.8;
     }
 
+    // Skip parallax on touch devices — barely visible on small screens, wastes battery
+    if (isTouchDevice) return;
+
     const handleScroll = () => {
-      const h = window.innerHeight || 800;
-      if (window.scrollY < h * 1.2) {
-        setScrollY(window.scrollY);
-      }
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const h = window.innerHeight || 800;
+        if (window.scrollY < h * 1.2) {
+          setScrollY(window.scrollY);
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   const videoTranslateY = scrollY * 0.35;
@@ -93,15 +106,15 @@ const Hero: React.FC = () => {
           </div>
       </div>
 
-      {/* #9 "Enter" indicator is now a clickable button */}
+      {/* #9 "Enter" indicator — enlarged touch target + gentle bounce */}
       <button
         onClick={scrollToContent}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500 cursor-pointer group/enter"
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500 cursor-pointer group/enter p-4 min-w-[48px] min-h-[48px]"
         style={{ opacity: safeOpacity * 0.6 }}
         aria-label="Scroll to content"
       >
           <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/80 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
-          <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent"></div>
+          <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent animate-hero-bounce"></div>
       </button>
     </section>
   );
