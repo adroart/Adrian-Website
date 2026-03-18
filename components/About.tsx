@@ -156,9 +156,10 @@ const About: React.FC = () => {
                     of my creations.
                   </p>
                 </div>
-                {/* #7 — margin annotation (desktop only via CSS) */}
-                <div className="margin-note" style={{ top: '130px' }}>
-                  "The feeling of being seen. The feeling of presence."
+                <div className="mt-10 border-l-2 border-bronze-400/40 pl-5">
+                  <p className="font-serif text-lg italic text-bronze-500 leading-[1.45] opacity-85">
+                    "The feeling of being seen. The feeling of presence."
+                  </p>
                 </div>
               </div>
             </Reveal>
@@ -180,9 +181,9 @@ const About: React.FC = () => {
             muted
             playsInline
             aria-hidden="true"
-            className="w-full h-full object-cover grayscale opacity-70"
+            className="absolute inset-0 min-w-[120%] min-h-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-cover grayscale opacity-70"
           >
-            <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/1659598159715_vc8cqr" type="video/mp4" />
+            <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_60,w_1280,br_1500k/1659598159715_vc8cqr" type="video/mp4" />
           </video>
         </div>
 
@@ -322,7 +323,14 @@ const About: React.FC = () => {
         </div>
 
         {/* #18 — Second photo interstitial */}
-        <Interstitial src={img('innerearth_zxtjmw', { w: 1600, h: 900 })} alt="Immersive installation space" />
+        <div className="relative overflow-hidden" style={{ height: 'clamp(320px, 55vh, 680px)' }}>
+          <img
+            src={img('innerearth_zxtjmw', { w: 1600, h: 900 })}
+            alt="Immersive installation space"
+            className="absolute inset-0 min-w-[120%] min-h-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-cover grayscale opacity-70"
+            loading="lazy"
+          />
+        </div>
 
         {/* ══ CREATION AS PRACTICE ══════════════════════════════════════════ */}
         {/* #15 — Reversed asymmetric grid: image left (narrower), text right (wider) */}
