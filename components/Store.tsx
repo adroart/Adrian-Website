@@ -111,10 +111,10 @@ const MaterialBlock: React.FC = () => (
 // ─── Shop Category Tiles ──────────────────────────────────────────────────────
 
 const SHOP_CATEGORY_DATA = [
-    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',              img: 110 },
-    { cat: 'Jewelry',              desc: 'Wearable pieces and talismans',           img: 111 },
-    { cat: 'Oracle Cards',         desc: 'Tools for reflection and guidance',       img: 112 },
-    { cat: 'Objects',              desc: 'Objects for the altar and the everyday',  img: 113 },
+    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',              image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
+    { cat: 'Jewelry',              desc: 'Wearable pieces and talismans',           image: 'adrian-website/placeholders/artwork-square-3' },
+    { cat: 'Oracle Cards',         desc: 'Tools for reflection and guidance',       image: 'adrian-website/placeholders/artwork-square-4' },
+    { cat: 'Objects',              desc: 'Objects for the altar and the everyday',  image: 'adrian-website/placeholders/artwork-square-7' },
 ] as const;
 
 const ShopCategoryTile: React.FC<{
@@ -131,7 +131,7 @@ const ShopCategoryTile: React.FC<{
     >
         <div className="overflow-hidden">
             <ArtImage
-                publicId={`adrian-website/placeholders/artwork-square-${(cat.img % 8) + 1}`}
+                publicId={cat.image}
                 variant="tile"
                 alt=""
                 aria-hidden="true"

@@ -12,8 +12,8 @@ const SubcategoryTile: React.FC<{
     desc: string;
     slug?: string;
     link?: string;
-    idx: number;
-}> = ({ label, desc, slug, link, idx }) => {
+    image: string;
+}> = ({ label, desc, slug, link, image }) => {
     const to = link ?? `/creations/multidimensional-art/${slug}`;
 
     return (
@@ -25,7 +25,7 @@ const SubcategoryTile: React.FC<{
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    publicId={`adrian-website/placeholders/artwork-square-${(idx % 8) + 1}`}
+                    publicId={image}
                     variant="tile"
                     alt=""
                     aria-hidden="true"
@@ -81,7 +81,7 @@ const MultidimensionalArt: React.FC = () => {
                                 desc={cat.desc}
                                 slug={(cat as { slug?: string }).slug}
                                 link={(cat as { link?: string }).link}
-                                idx={idx}
+                                image={(cat as { image: string }).image}
                             />
                         </div>
                     ))}

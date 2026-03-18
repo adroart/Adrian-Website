@@ -60,14 +60,14 @@ const CreationCategoryCard: React.FC<{
     desc: string;
     onClick: () => void;
     link?: string;
-    idx: number;
-}> = ({ label, desc, onClick, link, idx }) => {
+    image: string;
+}> = ({ label, desc, onClick, link, image }) => {
     const inner = (
         <>
             {/* Image */}
             <div className="overflow-hidden">
                 <ArtImage
-                    publicId={`adrian-website/placeholders/artwork-square-${(idx % 8) + 1}`}
+                    publicId={image}
                     variant="tile"
                     alt=""
                     aria-hidden="true"
@@ -318,7 +318,7 @@ const Creations: React.FC = () => {
                                 <CreationCategoryCard
                                     label={cat.label}
                                     desc={cat.desc}
-                                    idx={idx}
+                                    image={(cat as { image: string }).image}
                                     link={(cat as { link?: string }).link}
                                     onClick={() => handleCategoryChange(cat.label)}
                                 />

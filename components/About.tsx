@@ -166,14 +166,25 @@ const About: React.FC = () => {
             {/* #9 — parallax image */}
             <Reveal dir="right" delay={140}>
               <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
-                <ParallaxImg src={img('adrian-website/placeholders/portrait-1', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
+                <ParallaxImg src={img('adrian_kgcw5r', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
               </div>
             </Reveal>
           </div>
         </div>
 
-        {/* #18 — Full-bleed photo interstitial */}
-        <Interstitial src={img('adrian-website/placeholders/hero-wide-1', { w: 1600, h: 900 })} alt="Studio atmosphere" />
+        {/* #18 — Full-bleed video interstitial */}
+        <div className="relative overflow-hidden" style={{ height: 'clamp(320px, 55vh, 680px)' }}>
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            aria-hidden="true"
+            className="w-full h-full object-cover grayscale opacity-70"
+          >
+            <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/1659598159715_vc8cqr" type="video/mp4" />
+          </video>
+        </div>
 
         {/* ══ THE PATH — timeline layout ════════════════════════════════════ */}
         {/* #13 — narrow container for contrast with surrounding sections */}
@@ -284,7 +295,7 @@ const About: React.FC = () => {
 
               <Reveal dir="right" delay={160}>
                 <div className="aspect-[3/4] relative overflow-hidden bg-wood-700">
-                  <ParallaxImg src={img('adrian-website/placeholders/portrait-2', { w: 800, h: 1200 })} alt="Tea ceremony and travels" />
+                  <ParallaxImg src={img('gather_shmnqb', { w: 800, h: 1200 })} alt="Gathering and connection" />
                 </div>
               </Reveal>
             </div>
@@ -311,7 +322,7 @@ const About: React.FC = () => {
         </div>
 
         {/* #18 — Second photo interstitial */}
-        <Interstitial src={img('adrian-website/placeholders/hero-wide-2', { w: 1600, h: 900 })} alt="Immersive installation space" />
+        <Interstitial src={img('innerearth_zxtjmw', { w: 1600, h: 900 })} alt="Immersive installation space" />
 
         {/* ══ CREATION AS PRACTICE ══════════════════════════════════════════ */}
         {/* #15 — Reversed asymmetric grid: image left (narrower), text right (wider) */}
@@ -319,7 +330,7 @@ const About: React.FC = () => {
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 md:gap-20 items-center">
             <Reveal dir="left" delay={120}>
               <div className="aspect-square relative overflow-hidden bg-wood-200">
-                <ParallaxImg src={img('adrian-website/placeholders/portrait-3', { w: 800 })} alt="Creation in the studio" />
+                <ParallaxImg src={img('adriancreation_onklg1', { w: 800 })} alt="Adrian Rasmussen in the creation process" />
               </div>
             </Reveal>
             <Reveal dir="right">

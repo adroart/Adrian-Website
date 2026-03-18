@@ -57,24 +57,24 @@ export const SERIES_LIST = [
 // Top-level Creations landing tiles. Categories with a `link` navigate to their own page
 // rather than filtering the archive inline.
 export const CREATION_CATEGORIES = [
-    { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art' },
-    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works' },
-    { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans' },
-    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/creations/oracle-cards' },
-    { id: 'TABLES',  label: 'Tables',               desc: 'Functional art for gathering' },
-    { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments' },
-    { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual' },
-    { id: 'SPACES',  label: 'Spaces',               desc: 'Tea houses and environments designed for presence' },
+    { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art', image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
+    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2' },
+    { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans',                                                                                image: 'adrian-website/placeholders/artwork-square-3' },
+    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/creations/oracle-cards',         image: 'adrian-website/placeholders/artwork-square-4' },
+    { id: 'TABLES',  label: 'Tables',               desc: 'Functional art for gathering',                                                                                 image: 'adrian-website/placeholders/artwork-square-5' },
+    { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments',                                                                                       image: 'adrian-website/placeholders/artwork-square-6' },
+    { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual',                                              image: 'adrian-website/placeholders/artwork-square-7' },
+    { id: 'SPACES',  label: 'Spaces',               desc: 'Tea houses and environments designed for presence',                                                             image: 'adrian-website/placeholders/artwork-square-8' },
 ];
 
 // Subcategory tiles shown on the Multidimensional Art hub page.
 // The Illuminated Works entry links back to the shared experiential page.
 export const MULTIDIMENSIONAL_CATEGORIES = [
-    { id: 'MD-UL',    label: 'Universal Language', desc: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key.',       slug: 'universal-language' },
-    { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala' },
-    { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes' },
-    { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces' },
-    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works' },
+    { id: 'MD-UL',    label: 'Universal Language', desc: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key.',       slug: 'universal-language', image: 'adrian-website/creations/universal-language/doorways-of-the-unknown-48' },
+    { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala',            image: 'adrian-website/creations/mandala/metatron-flower-green' },
+    { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes', image: 'adrian-website/creations/light-codes/suni' },
+    { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces',   image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
+    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5' },
 ];
 
 export const LIGHT_CODE_SUBCATEGORIES = [
