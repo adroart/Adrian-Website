@@ -371,7 +371,7 @@ const Inquire: React.FC = () => {
           <img
             src={img('adrian-website/placeholders/hero-wide-2', { w: 1600, h: 900 })}
             alt="Adrian Rasmussen's studio"
-            className="w-full h-[120%] object-cover"
+            className="w-full h-[120%] object-cover brightness-[0.72] saturate-[0.2] contrast-[1.1] sepia-[0.15]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper-50" />
         </div>

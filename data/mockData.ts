@@ -126,29 +126,6 @@ const UL_SERIES_DESCRIPTION = 'There\'s a language that all of us speak, it is b
 
 export const FULL_ARCHIVE: Artwork[] = [
     {
-        id: 'LC-042',
-        title: 'Ancestral Signal',
-        category: 'Multidimensional Art',
-        series: 'Light Codes',
-        coverImage: 'adrian-website/placeholders/artwork-square-4',
-        images: ['adrian-website/placeholders/artwork-square-5'],
-        description: 'Anchoring unseen realms. Energy flowing effortlessly in a stream of consciousness.',
-        year: '2024',
-        dimensions: '18" x 36"',
-        material: 'Laser Etched Basswood',
-        finish: 'Natural',
-        subcategory: 'Frequency Foundations',
-        availability: 'MADE_TO_ORDER',
-        price: 950, // [DUMMY] — lowest size price, used for "From $X" displays
-        edition: 'Open Edition',
-        featured: true,
-        sizeVariants: [
-            { size: '18"', price: 950, stripePriceId: 'price_LC042_18_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' },  // [DUMMY]
-            { size: '24"', price: 1200, stripePriceId: 'price_LC042_24_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
-            { size: '36"', price: 1800, stripePriceId: 'price_LC042_36_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
-        ],
-    },
-    {
         id: 'JW-005',
         title: 'Resonance Pendant',
         category: 'Jewelry',
@@ -189,25 +166,6 @@ export const FULL_ARCHIVE: Artwork[] = [
         material: 'Mixed Media, Projection',
         availability: 'SOLD',
         featured: true,
-    },
-    // Signature piece — no series
-    {
-        id: 'SIG-001',
-        title: 'The Serpent',
-        category: 'Multidimensional Art',
-        coverImage: 'adrian-website/placeholders/artwork-square-3',
-        images: ['adrian-website/placeholders/artwork-square-4'],
-        description: 'A singular form. Coiled and precise, somewhere between creature and symbol.',
-        year: '2024',
-        dimensions: '18" x 24"',
-        material: 'Walnut, Brass Inlay',
-        finish: 'Natural',
-        availability: 'READY_TO_SHIP',
-        price: 3200,
-        edition: 'One of a Kind',
-        featured: true,
-        isSignaturePiece: true,
-        stripePriceId: 'price_SIG001_REPLACE_WITH_REAL_ID',
     },
     // ═══════════════════════════════════════════════════════════════
     // MIGRATED FROM WIX — 133 products
