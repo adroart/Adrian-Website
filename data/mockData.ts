@@ -126,31 +126,6 @@ const UL_SERIES_DESCRIPTION = 'There\'s a language that all of us speak, it is b
 
 export const FULL_ARCHIVE: Artwork[] = [
     {
-        id: 'UL-001',
-        title: 'Gate of Stillness',
-        category: 'Multidimensional Art',
-        series: 'Universal Language',
-        coverImage: 'adrian-website/placeholders/artwork-square-1',
-        images: ['adrian-website/placeholders/artwork-square-2', 'adrian-website/placeholders/artwork-square-3'],
-        description: 'A study in concentric resonance. The layers build inward, guiding the eye to a center that holds silence.',
-        year: '2023',
-        dimensions: '24" Diameter',
-        material: 'Birch, Acrylic, Gold Leaf',
-        finish: 'Gold Leaf',
-        availability: 'READY_TO_SHIP',
-        price: 395,   // lowest variant price for range display
-        edition: 'Edition of 10',
-        editionSize: 10,
-        editionSold: 3,
-        featured: true,
-        relatedStorySlug: 'beneath-surface-mandala',
-        sizeVariants: [
-            { size: '29 cm', price: 395, stripePriceId: 'price_UL001_29_REPLACE', availability: 'MADE_TO_ORDER' },
-            { size: '58 cm', price: 1111, stripePriceId: 'price_1T2uiNKY1VOkG4eGYcTkmWE3', availability: 'IN_STOCK', editionNumber: 4 },
-            { size: '90 cm', price: 2500, stripePriceId: 'price_UL001_90_REPLACE', availability: 'MADE_TO_ORDER' },
-        ],
-    },
-    {
         id: 'LC-042',
         title: 'Ancestral Signal',
         category: 'Multidimensional Art',
@@ -215,29 +190,6 @@ export const FULL_ARCHIVE: Artwork[] = [
         availability: 'SOLD',
         featured: true,
     },
-    {
-        id: 'UL-009',
-        title: 'Phi Density',
-        category: 'Multidimensional Art',
-        series: 'Universal Language',
-        coverImage: 'adrian-website/placeholders/artwork-square-2',
-        images: [],
-        description: 'Original airbrushed painting on a multidimensional form. The geometry is exact, the painting is organic.',
-        year: '2023',
-        dimensions: '36" Diameter',
-        material: 'Plywood, Crystals, Airbrush',
-        finish: 'Painted',
-        availability: 'MADE_TO_ORDER',
-        price: 1111, // [DUMMY] — lowest size price, used for "From $X" displays
-        edition: 'Edition of 5',
-        editionSize: 5,
-        editionSold: 3,
-        featured: true,
-        sizeVariants: [
-            { size: '58 cm', price: 1111, stripePriceId: 'price_UL009_58_REPLACE', availability: 'MADE_TO_ORDER' },
-            { size: '90 cm', price: 2500, stripePriceId: 'price_UL009_90_REPLACE', availability: 'MADE_TO_ORDER' },
-        ],
-    },
     // Signature piece — no series
     {
         id: 'SIG-001',
@@ -257,33 +209,6 @@ export const FULL_ARCHIVE: Artwork[] = [
         isSignaturePiece: true,
         stripePriceId: 'price_SIG001_REPLACE_WITH_REAL_ID',
     },
-    // Illuminated piece
-    {
-        id: 'ILLUM-001',
-        title: 'Breath of the Forest',
-        category: 'Multidimensional Art',
-        series: 'Universal Language',
-        coverImage: 'adrian-website/placeholders/artwork-square-5',
-        images: ['adrian-website/placeholders/artwork-square-6', 'adrian-website/placeholders/artwork-square-7'],
-        description: 'By day, a layered study in geometry. After dark, the piece opens. Light finds the edges. The room changes.',
-        longDescription: 'Embedded LEDs breathe at a slow rhythm, designed for spaces where presence matters. The illumination can be set to ambient or to a gentle pulse.',
-        year: '2024',
-        dimensions: '30" Diameter',
-        material: 'Birch, Acrylic, LED',
-        finish: 'Painted',
-        availability: 'MADE_TO_ORDER',
-        price: 950, // [DUMMY] — lowest size price, used for "From $X" displays
-        edition: 'Edition of 5',
-        editionSize: 5,
-        featured: true,
-        illuminated: true,
-        sizeVariants: [
-            { size: '16"', price: 950,  stripePriceId: 'price_ILLUM001_16_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
-            { size: '24"', price: 1200, stripePriceId: 'price_ILLUM001_24_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
-            { size: '30"', price: 1800, stripePriceId: 'price_ILLUM001_30_REPLACE_WITH_REAL_ID', availability: 'MADE_TO_ORDER' }, // [DUMMY]
-        ],
-    },
-
     // ═══════════════════════════════════════════════════════════════
     // MIGRATED FROM WIX — 133 products
     // Phase 2: Adrian reviews descriptions, prices, featured status

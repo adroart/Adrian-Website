@@ -291,7 +291,7 @@ const About: React.FC = () => {
 
               <Reveal dir="right" delay={160}>
                 <div className="aspect-[3/4] relative overflow-hidden bg-wood-700">
-                  <ParallaxImg src={img('gather_shmnqb', { w: 800, h: 1200 })} alt="Gathering and connection" />
+                  <ParallaxImg src={img('2023-04-11_IMG_2242_tcujw8', { w: 800, h: 1200 })} alt="Gathering and connection" />
                 </div>
               </Reveal>
             </div>
