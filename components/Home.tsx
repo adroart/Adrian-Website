@@ -70,7 +70,7 @@ const Home: React.FC = () => {
                     {/* Image side */}
                     <div className="relative h-72 sm:h-96 md:h-auto md:min-h-[520px]">
                         <img
-                            src={img('adrian-website/placeholders/artwork-square-7', { w: 900, h: 1100 })}
+                            src={img('comission_qhcdmn', { w: 900, h: 1100 })}
                             alt="Detail of a commissioned piece"
                             className="absolute inset-0 w-full h-full object-cover"
                             loading="lazy"

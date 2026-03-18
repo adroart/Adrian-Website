@@ -2611,7 +2611,7 @@ export const STORIES: Story[] = [
         subtitle: 'History, Mysteries, and the Path of Light',
         category: 'Living Knowledge',
         date: 'Winter 2024',
-        image: 'adrian-website/placeholders/story-1',
+        image: 'Ye-ming-zhu_sfkatw',
         excerpt: 'These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon\'s glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth.',
         content: [
             "I was first drawn to Ye Ming Zhu through a series of synchronicities.",

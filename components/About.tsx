@@ -156,11 +156,6 @@ const About: React.FC = () => {
                     of my creations.
                   </p>
                 </div>
-                <div className="mt-10 border-l-2 border-bronze-400/40 pl-5">
-                  <p className="font-serif text-lg italic text-bronze-500 leading-[1.45] opacity-85">
-                    "The feeling of being seen. The feeling of presence."
-                  </p>
-                </div>
               </div>
             </Reveal>
 
