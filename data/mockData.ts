@@ -2725,7 +2725,7 @@ export const STORIES: Story[] = [
         subtitle: 'From formless to form.',
         category: 'The Practice',
         date: 'Summer 2023',
-        image: 'adrian-website/placeholders/story-5',
+        image: '2023-09-29_IMG_4021_njgry2',
         excerpt: 'Creating is how I grow. My inner journey. A celebration of creation itself.',
         content: [
             "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment.",

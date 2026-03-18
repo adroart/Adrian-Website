@@ -162,7 +162,7 @@ const About: React.FC = () => {
             {/* #9 — parallax image */}
             <Reveal dir="right" delay={140}>
               <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
-                <ParallaxImg src={img('adrian_kgcw5r', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
+                <ParallaxImg src={img('path_x92l78', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
               </div>
             </Reveal>
           </div>
