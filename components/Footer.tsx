@@ -22,19 +22,28 @@ const NewsletterForm: React.FC = () => {
             const KIT_FORM_ID = import.meta.env.VITE_KIT_FORM_ID;
             const KIT_API_KEY = import.meta.env.VITE_KIT_PUBLIC_API_KEY;
 
-            const res = await fetch(
-                `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
-                {
+            // Try the proxy route first (avoids ad-blocker interference),
+            // then fall back to the direct Kit API.
+            let data: any;
+            try {
+                const proxyRes = await fetch('/api/subscribe', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                    body: JSON.stringify({
-                        api_key: KIT_API_KEY,
-                        email,
-                    }),
-                }
-            );
-
-            const data = await res.json();
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                data = await proxyRes.json();
+            } catch {
+                // Proxy unavailable — call Kit directly
+                const res = await fetch(
+                    `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                        body: JSON.stringify({ api_key: KIT_API_KEY, email }),
+                    }
+                );
+                data = await res.json();
+            }
 
             if (data.subscription) {
                 setStatus('success');
