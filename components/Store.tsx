@@ -562,7 +562,7 @@ const InspectionDrawer: React.FC<{
                             <div className="flex flex-col">
                                 <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-900 font-semibold">Crafted for You</span>
                                 <span className="text-xs text-wood-600 font-serif">
-                                    This piece is created upon your request. Every detail is attended to with care. Allow 4 to 6 weeks for your piece to arrive.
+                                    This piece is created upon your request. Every detail is attended to with care. Allow 1 to 3 weeks for your piece to arrive.
                                 </span>
                             </div>
                         </div>

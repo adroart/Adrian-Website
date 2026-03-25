@@ -6,9 +6,9 @@ import Reveal from './Reveal';
 /** Animated section tag with extending line. Uses `.tag-line` CSS class. */
 export const Tag: React.FC<{ light?: boolean; centered?: boolean; children: React.ReactNode }> = ({ light, centered, children }) => (
     <div className={`flex items-center gap-3 mb-8 ${centered ? 'justify-center' : ''}`}>
-        {centered && <span className="tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />}
+        {centered && <span className={`tag-line block h-px flex-1 max-w-[48px] ${light ? 'bg-bronze-400/45' : 'bg-bronze-600/45'}`} />}
         <span className={`font-label text-xs uppercase tracking-[0.2em] font-semibold ${light ? 'text-bronze-400' : 'text-bronze-600'}`}>{children}</span>
-        <span className="tag-line block h-px flex-1 max-w-[48px]" style={{ background: light ? 'rgba(196,170,124,0.45)' : 'rgba(138,116,78,0.45)' }} />
+        <span className={`tag-line block h-px flex-1 max-w-[48px] ${light ? 'bg-bronze-400/45' : 'bg-bronze-600/45'}`} />
     </div>
 );
 
@@ -16,7 +16,7 @@ export const Tag: React.FC<{ light?: boolean; centered?: boolean; children: Reac
 export const GlyphDivider: React.FC<{ glyph?: string }> = ({ glyph = '&' }) => (
     <Reveal dir="scale">
         <div className="flex items-center justify-center py-10 select-none overflow-hidden" aria-hidden="true">
-            <span className="font-serif leading-none font-light" style={{ fontSize: 'clamp(120px, 18vw, 200px)', color: 'rgba(167,143,107,0.09)' }}>
+            <span className="font-serif leading-none font-light text-bronze-500/[0.09]" style={{ fontSize: 'clamp(120px, 18vw, 200px)' }}>
                 {glyph}
             </span>
         </div>

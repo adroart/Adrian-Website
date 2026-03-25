@@ -16,6 +16,7 @@ Not for launch or first month. Revisit as the site matures.
 - [ ] "Notify Me" for sold-out pieces
 
 ## E-Commerce
+- [ ] Re-enable custom laser cut frame add-on (temporarily disabled, needs pricing finalized)
 - [ ] Apple Pay / Google Pay express checkout
 - [ ] Made-to-order deposit structure (50% upfront, 50% on completion)
 - [ ] Abandoned cart recovery

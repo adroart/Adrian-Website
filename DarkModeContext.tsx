@@ -15,10 +15,10 @@ export const useDarkMode = () => useContext(DarkModeContext);
 
 export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
-        if (typeof window === 'undefined') return false;
+        if (typeof window === 'undefined') return true;
         const stored = localStorage.getItem('dark-mode');
         if (stored !== null) return stored === 'true';
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return true; // Default to dark mode for new visitors
     });
 
     useEffect(() => {

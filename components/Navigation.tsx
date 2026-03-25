@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -81,7 +82,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     { path: '/writings', label: 'Writings' },
     { path: '/inquire', label: 'Inquire' },
     { path: '/about', label: 'About' },
-    { path: '/shop', label: 'Shop' },
+    ...(LAUNCH_FLAGS.shopEnabled ? [{ path: '/shop', label: 'Shop' }] : []),
   ];
 
   const handleNavClick = (path: string) => {
@@ -151,6 +152,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
           {/* Right-side controls: cart + mobile hamburger */}
           <div className="flex items-center gap-0">
+            {LAUNCH_FLAGS.shopEnabled && (
             <button
               onClick={openCart}
               className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
@@ -167,6 +169,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                 </span>
               )}
             </button>
+            )}
 
             {/* #10 Larger tap target (min 44x44px) + #21 ARIA attributes */}
             <button

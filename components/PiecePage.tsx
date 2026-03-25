@@ -5,6 +5,7 @@ import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockData';
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { LAUNCH_FLAGS } from '../launchFlags';
 import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
@@ -34,6 +35,18 @@ function getIlluminationTier(sizeStr: string): 'none' | 'medium' | 'large' | 'ma
     if (cm <= 60) return 'medium';   // 30-60 cm (12-24")
     if (cm <= 90) return 'large';    // 60-90 cm (24-36")
     return 'major';                  // 90 cm+ (36"+)
+}
+
+// Size tier for add-ons (crystals, wood frame) that scale with piece size
+function getAddOnSizeTier(sizeStr: string): 'small' | 'medium' | 'large' {
+    const match = sizeStr.match(/(\d+)/);
+    if (!match) return 'small';
+    const value = parseInt(match[1], 10);
+    const isCm = /cm/i.test(sizeStr);
+    const cm = isCm ? value : value * 2.54;
+    if (cm <= 35) return 'small';    // ~29 cm
+    if (cm <= 65) return 'medium';   // ~58 cm
+    return 'large';                  // ~90 cm+
 }
 
 // Progressive scarcity edition display per tech spec
@@ -74,7 +87,7 @@ function isEditionClosed(art: Artwork): boolean {
 // Inline SVG checkmark for custom checkbox
 const Checkmark: React.FC = () => (
     <svg width="11" height="9" viewBox="0 0 11 9" fill="none" aria-hidden="true">
-        <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M1 4.5L4 7.5L10 1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
@@ -105,7 +118,6 @@ const PiecePage: React.FC = () => {
     const [addCrystals, setAddCrystals] = useState(false);
     const [addWoodFrame, setAddWoodFrame] = useState(false);
     const [addIllumination, setAddIllumination] = useState(false);
-    const [addCustomFrame, setAddCustomFrame] = useState(false);
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
 
@@ -125,7 +137,6 @@ const PiecePage: React.FC = () => {
         setAddCrystals(false);
         setAddWoodFrame(false);
         setAddIllumination(false);
-        setAddCustomFrame(false);
         setLightboxOpen(false);
         setSeriesDescExpanded(false);
     }, [id]);
@@ -163,6 +174,15 @@ const PiecePage: React.FC = () => {
         return MADE_TO_ORDER_ADD_ONS.illumination[illuminationTier].price;
     }, [illuminationTier]);
 
+    // Add-on size tier for crystals / wood frame (small, medium, large)
+    const addOnTier = useMemo(() => {
+        if (!selectedSize) return 'small' as const;
+        return getAddOnSizeTier(selectedSize);
+    }, [selectedSize]);
+
+    const crystalsPrice = MADE_TO_ORDER_ADD_ONS.crystals[addOnTier].price;
+    const woodFramePrice = MADE_TO_ORDER_ADD_ONS.woodFrame[addOnTier].price;
+
     // Selected size data object
     const selectedSizeData = useMemo((): SizeVariant | null => {
         if (variants.length === 0 || !selectedSize) return null;
@@ -172,12 +192,11 @@ const PiecePage: React.FC = () => {
     // Live total for MTO configuration
     const mtoTotal = useMemo(() => {
         let total = selectedSizeData?.price ?? 0;
-        if (addCrystals) total += MADE_TO_ORDER_ADD_ONS.crystals.price;
-        if (addWoodFrame) total += MADE_TO_ORDER_ADD_ONS.woodFrame.price;
+        if (addCrystals) total += crystalsPrice;
+        if (addWoodFrame) total += woodFramePrice;
         if (addIllumination && illuminationTier !== 'none') total += illuminationPrice;
-        if (addCustomFrame) total += MADE_TO_ORDER_ADD_ONS.customFrame.price;
         return total;
-    }, [selectedSizeData, addCrystals, addWoodFrame, addIllumination, addCustomFrame, illuminationPrice, illuminationTier]);
+    }, [selectedSizeData, addCrystals, addWoodFrame, addIllumination, crystalsPrice, woodFramePrice, illuminationPrice, illuminationTier]);
 
     // Related pieces: same series first, then same category, excluding current
     const relatedPieces = useMemo(() => {
@@ -281,7 +300,6 @@ const PiecePage: React.FC = () => {
             addCrystals && 'with crystals',
             addWoodFrame && 'with wood frame',
             addIllumination && 'illuminated',
-            addCustomFrame && 'with custom frame',
         ].filter(Boolean) as string[];
         const displayTitle = addOnNames.length > 0
             ? `${art.title}, ${sizeDisplay}, ${addOnNames.join(', ')}`
@@ -289,12 +307,11 @@ const PiecePage: React.FC = () => {
 
         // Build add-on Stripe Price IDs for separate line items at checkout
         const addOnPriceIds: string[] = [];
-        if (addCrystals) addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.crystals.stripePriceId);
-        if (addWoodFrame) addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.woodFrame.stripePriceId);
+        if (addCrystals) addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.crystals[addOnTier].stripePriceId);
+        if (addWoodFrame) addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.woodFrame[addOnTier].stripePriceId);
         if (addIllumination && illuminationTier !== 'none') {
             addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.illumination[illuminationTier].stripePriceId);
         }
-        if (addCustomFrame) addOnPriceIds.push(MADE_TO_ORDER_ADD_ONS.customFrame.stripePriceId);
 
         // Unique cart ID per configuration so different configurations are separate items
         const configKey = [
@@ -302,7 +319,6 @@ const PiecePage: React.FC = () => {
             addCrystals ? 'xls' : '',
             addWoodFrame ? 'xwf' : '',
             addIllumination ? 'xil' : '',
-            addCustomFrame ? 'xcf' : '',
         ].join('-');
         const cartId = `${art.id}-${configKey.replace(/[^a-zA-Z0-9-]/g, '')}`;
 
@@ -691,7 +707,7 @@ const PiecePage: React.FC = () => {
                                                             }`}>
                                                                 {isInStock
                                                                     ? `In stock${sizeOption.editionNumber ? ` · #${sizeOption.editionNumber}` : ''}`
-                                                                    : 'Made to order · 4 to 6 weeks'}
+                                                                    : 'Made to order · 1 to 3 weeks'}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -722,7 +738,7 @@ const PiecePage: React.FC = () => {
                                         {/* Crystals */}
                                         <label className="flex items-start gap-3 cursor-pointer group">
                                             <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
-                                                addCrystals ? 'border-wood-900 bg-wood-900' : 'border-wood-300 group-hover:border-wood-600'
+                                                addCrystals ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                             }`}>
                                                 {addCrystals && <Checkmark />}
                                             </div>
@@ -730,7 +746,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add crystals</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.crystals.price)}
+                                                        +{formatPrice(crystalsPrice)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -745,7 +761,7 @@ const PiecePage: React.FC = () => {
                                         {/* Wood frame */}
                                         <label className="flex items-start gap-3 cursor-pointer group">
                                             <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
-                                                addWoodFrame ? 'border-wood-900 bg-wood-900' : 'border-wood-300 group-hover:border-wood-600'
+                                                addWoodFrame ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                             }`}>
                                                 {addWoodFrame && <Checkmark />}
                                             </div>
@@ -753,7 +769,7 @@ const PiecePage: React.FC = () => {
                                                 <div className="flex items-baseline justify-between gap-4">
                                                     <span className="font-serif text-lg text-wood-900">Add wood frame</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.woodFrame.price)}
+                                                        +{formatPrice(woodFramePrice)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -769,7 +785,7 @@ const PiecePage: React.FC = () => {
                                         {illuminationTier !== 'none' && (
                                             <label className="flex items-start gap-3 cursor-pointer group">
                                                 <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
-                                                    addIllumination ? 'border-wood-900 bg-wood-900' : 'border-wood-300 group-hover:border-wood-600'
+                                                    addIllumination ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                                 }`}>
                                                     {addIllumination && <Checkmark />}
                                                 </div>
@@ -793,31 +809,6 @@ const PiecePage: React.FC = () => {
                                             </label>
                                         )}
 
-                                        {/* Custom laser cut frame */}
-                                        <label className="flex items-start gap-3 cursor-pointer group">
-                                            <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
-                                                addCustomFrame ? 'border-wood-900 bg-wood-900' : 'border-wood-300 group-hover:border-wood-600'
-                                            }`}>
-                                                {addCustomFrame && <Checkmark />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-baseline justify-between gap-4">
-                                                    <span className="font-serif text-lg text-wood-900">Custom laser cut frame</span>
-                                                    <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
-                                                        +{formatPrice(MADE_TO_ORDER_ADD_ONS.customFrame.price)}
-                                                    </span>
-                                                </div>
-                                                <p className="font-serif text-sm text-wood-500 mt-1 leading-[1.7]">
-                                                    We will design this together after your order.
-                                                </p>
-                                            </div>
-                                            <input
-                                                type="checkbox"
-                                                checked={addCustomFrame}
-                                                onChange={e => setAddCustomFrame(e.target.checked)}
-                                                className="sr-only"
-                                            />
-                                        </label>
                                     </div>
 
                                     {/* See what's possible link */}
@@ -846,7 +837,7 @@ const PiecePage: React.FC = () => {
                                         ) : (
                                             <>
                                                 <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-order rounded-sm mr-1">Made to order</span>
-                                                {' · '}4 to 6 weeks
+                                                {' · '}1 to 3 weeks
                                             </>
                                         )}
                                     </div>
@@ -857,7 +848,8 @@ const PiecePage: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Add to Cart */}
+                                {/* Add to Cart / Request to Purchase */}
+                                {LAUNCH_FLAGS.shopEnabled ? (
                                 <button
                                     onClick={handleAddToCartVariant}
                                     disabled={!selectedSize}
@@ -865,6 +857,15 @@ const PiecePage: React.FC = () => {
                                 >
                                     <ShoppingBag size={16} /> Add to Cart
                                 </button>
+                                ) : (
+                                <Link
+                                    to="/inquire"
+                                    state={{ piece: art.title, pieceId: art.id }}
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
+                                >
+                                    Request to Purchase
+                                </Link>
+                                )}
                                 <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
                                     Ships from Bali
                                 </p>
@@ -883,6 +884,7 @@ const PiecePage: React.FC = () => {
                                     <span className={`inline-block px-2.5 py-1 text-xs font-label uppercase tracking-[0.2em] font-semibold rounded-sm bg-wood-100 ${availabilityColor}`}>Ready to ship</span>
                                     <span className="font-serif text-3xl text-wood-900 font-medium">{art.price != null ? formatPrice(art.price) : ''}</span>
                                 </div>
+                                {LAUNCH_FLAGS.shopEnabled ? (
                                 <button
                                     onClick={handleAddToCartRTS}
                                     className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
@@ -896,6 +898,15 @@ const PiecePage: React.FC = () => {
                                         : <><ShoppingBag size={16} /> Add to Cart</>
                                     }
                                 </button>
+                                ) : (
+                                <Link
+                                    to="/inquire"
+                                    state={{ piece: art.title, pieceId: art.id }}
+                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
+                                >
+                                    Request to Purchase
+                                </Link>
+                                )}
                                 <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
@@ -922,7 +933,7 @@ const PiecePage: React.FC = () => {
                                     Commission This Piece <ArrowRight size={14} />
                                 </Link>
                                 <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                    4 to 6 weeks production time
+                                    1 to 3 weeks production time
                                 </p>
                             </div>
 
@@ -998,7 +1009,7 @@ const PiecePage: React.FC = () => {
                         }
                     </span>
 
-                    {hasVariants ? (
+                    {LAUNCH_FLAGS.shopEnabled && hasVariants ? (
                         <button
                             onClick={handleAddToCartVariant}
                             disabled={!selectedSize}
@@ -1006,7 +1017,7 @@ const PiecePage: React.FC = () => {
                         >
                             <ShoppingBag size={14} /> Add to Cart
                         </button>
-                    ) : art.availability === 'READY_TO_SHIP' ? (
+                    ) : LAUNCH_FLAGS.shopEnabled && art.availability === 'READY_TO_SHIP' ? (
                         <button
                             onClick={handleAddToCartRTS}
                             className={`min-h-[44px] px-8 py-3 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center gap-2 ${
@@ -1021,9 +1032,9 @@ const PiecePage: React.FC = () => {
                         <Link
                             to="/inquire"
                             state={{ piece: art.title, pieceId: art.id }}
-                            className="min-h-[44px] px-8 py-3 border border-wood-900 text-wood-900 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-wood-900 hover:text-paper-50 transition-colors flex items-center"
+                            className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center"
                         >
-                            Commission
+                            {art.availability === 'SOLD' ? 'Commission' : 'Request to Purchase'}
                         </Link>
                     )}
                 </div>

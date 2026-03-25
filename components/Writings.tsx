@@ -17,10 +17,10 @@ const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
 
 // #3 Category accent colors for card top borders
 const CATEGORY_ACCENT: Record<StoryCategory, string> = {
-    'Living Knowledge': '#c4aa7c',    // bronze-400
-    'Beneath the Surface': '#736046', // wood-600
-    'The Practice': '#a39e96',        // stone-400
-    'The Path': '#8a744e',            // bronze-600
+    'Living Knowledge': 'var(--color-bronze-400)',
+    'Beneath the Surface': 'var(--color-wood-600)',
+    'The Practice': 'var(--color-stone-400)',
+    'The Path': 'var(--color-bronze-600)',
 };
 
 // Safely serialize data for embedding in <script type="application/ld+json"> tags.

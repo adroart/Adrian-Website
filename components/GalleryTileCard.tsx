@@ -34,10 +34,15 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     const highPrice = variants && variants.length > 0 ? Math.max(...variants.map(v => v.price)) : null;
     const showRange = highPrice != null && art.price != null && highPrice !== art.price;
 
+    // Split number suffix from title (e.g., "Art of Living - 32" → "Art of Living" + "32")
+    const titleMatch = art.title.match(/^(.+?)\s*-\s*(\d+)$/);
+    const displayTitle = titleMatch ? titleMatch[1] : art.title;
+    const pieceNumber = titleMatch ? titleMatch[2] : null;
+
     return (
-        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 bg-paper-100 border border-wood-200 transition-all duration-500 touch-active">
+        <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 touch-active">
             {/* Image — links to the piece */}
-            <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100">
+            <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100 border border-wood-200">
                 <ArtImage
                     publicId={art.coverImage}
                     alt={`${art.title} by Adrian Rasmussen`}
@@ -51,29 +56,35 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         View
                     </span>
                 </div>
-
             </Link>
 
-            {/* Label band — clean stacked layout */}
-            <div className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-                {/* Category / Series label */}
-                <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
-                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
-                        {subtitleOverride || art.category}
-                    </span>
-                </Link>
+            {/* Title plaque — sits between image and detail box like a gallery label */}
+            {/* Title plaque — sits between image and detail box like a gallery label */}
+            <Link to={`/creations/${art.id}`} className="block py-2 text-center">
+                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                    {displayTitle}
+                </h3>
+            </Link>
 
-                {/* Title */}
-                <Link to={`/creations/${art.id}`} className="block mt-1.5">
-                    <h3 className="font-serif text-lg sm:text-xl text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
-                        {art.title}
-                    </h3>
-                </Link>
+            {/* Detail band */}
+            <div className="bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4">
+                {/* Category / Series label + piece number */}
+                <div className="flex items-center justify-between">
+                    <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
+                        <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
+                            {subtitleOverride || art.category}
+                        </span>
+                    </Link>
+                    {pieceNumber && (
+                        <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-300 font-semibold leading-none">
+                            {pieceNumber}
+                        </span>
+                    )}
+                </div>
 
-                {/* Price + metadata row */}
+                {/* Detail mode: price + status */}
                 {showDetails && (
-                    <div className="mt-2 flex items-baseline justify-between gap-3">
-                        {/* Price */}
+                    <div className="mt-1.5">
                         {art.price != null && art.availability !== 'SOLD' && (
                             <span className="font-serif text-base text-wood-700 font-medium">
                                 {formatPrice(art.price)}
@@ -85,25 +96,19 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         {art.availability === 'SOLD' && (
                             <span className="font-serif text-sm text-wood-400 italic">Sold</span>
                         )}
-
-                        {/* Status indicators */}
-                        <div className="flex items-center gap-2">
-                            {art.availability === 'READY_TO_SHIP' && (
-                                <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
-                                    Ready to ship
-                                </span>
-                            )}
-                            {art.availability === 'MADE_TO_ORDER' && !variants?.some(v => v.availability === 'IN_STOCK') && (
-                                <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
-                                    Made to order
-                                </span>
-                            )}
-                            {variants && variants.length > 1 && (
-                                <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
-                                    {variants.length} sizes
-                                </span>
-                            )}
-                        </div>
+                        {/* Status line */}
+                        {(art.availability === 'READY_TO_SHIP' || art.availability === 'MADE_TO_ORDER' || (variants && variants.length > 1)) && (
+                            <p className="mt-1 font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold">
+                                {art.availability === 'READY_TO_SHIP' && 'Ready to ship'}
+                                {art.availability === 'MADE_TO_ORDER' && !variants?.some(v => v.availability === 'IN_STOCK') && 'Made to order'}
+                                {variants && variants.length > 1 && (
+                                    <span>
+                                        {(art.availability === 'READY_TO_SHIP' || (art.availability === 'MADE_TO_ORDER' && !variants?.some(v => v.availability === 'IN_STOCK'))) && ' · '}
+                                        {variants.length} sizes
+                                    </span>
+                                )}
+                            </p>
+                        )}
                     </div>
                 )}
 

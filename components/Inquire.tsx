@@ -365,39 +365,40 @@ const Inquire: React.FC = () => {
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
 
-      {/* ── Hero Image ─────────────────────────────────────────────── */}
-      <div className="relative h-[30vh] md:h-[40vh] overflow-hidden">
+      {/* ── Hero Image with overlaid title ─────────────────────────── */}
+      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <div ref={heroRef} className="absolute inset-0 will-change-transform">
           <img
             src={img('adrian-website/placeholders/hero-wide-2', { w: 1600, h: 900 })}
             alt="Adrian Rasmussen's studio"
-            className="w-full h-[120%] object-cover brightness-[0.72] saturate-[0.2] contrast-[1.1] sepia-[0.15]"
+            className="w-full h-[120%] object-cover brightness-[0.55] saturate-[0.15] contrast-[1.1] sepia-[0.15]"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-paper-50" />
         </div>
-      </div>
-
-      {/* ── Page Title ─────────────────────────────────────────────── */}
-      <div className="bg-paper-50 px-6 pt-10 pb-6">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="font-serif text-5xl md:text-6xl text-wood-900 mb-4 font-medium">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+          <p className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.35em] text-paper-50/70 mb-4 font-semibold" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>
+            Commissions &amp; Collaborations
+          </p>
+          <h1 className="font-title text-5xl sm:text-6xl md:text-7xl text-paper-50 font-light tracking-wide" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
             Inquire
           </h1>
-          <p className="font-serif text-xl text-wood-600 max-w-2xl leading-[1.7] font-light">
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-paper-50 to-transparent" />
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 pt-16 pb-20">
+
+        {/* Opening text — pull-quote style */}
+        <div className="mb-20 max-w-3xl mx-auto text-center">
+          <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.6] font-light mb-8">
             I take on a small number of commissions each year. Some become
             intimate pieces for personal spaces. Others become installations
             that transform environments.
           </p>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 pt-12 pb-20">
-
-        {/* Opening text */}
-        <div className="mb-16 max-w-3xl">
-          <p className="font-serif text-lg text-wood-600 leading-[1.7] mb-4">
-            I am selective. Not every project is the right project. The right
-            ones find me, and I recognize them when they do.
+          <span className="block w-12 h-px bg-bronze-400/60 mx-auto mb-8" />
+          <p className="font-serif text-lg text-wood-500 leading-[1.7] italic mb-3">
+            I am selective. Not every project is the right project.
+            The right ones find me, and I recognize them when they do.
           </p>
           <p className="font-serif text-lg text-wood-600 leading-[1.7]">
             If you are feeling a pull toward working together, trust that.
@@ -442,7 +443,7 @@ const Inquire: React.FC = () => {
                     </div>
                   </div>
                   <div className="p-6 md:p-8 flex flex-col flex-1 bg-white">
-                    <h3 className="font-serif text-2xl text-wood-900 mb-3 font-medium">
+                    <h3 className="font-title text-xl tracking-[0.08em] text-wood-900 mb-3">
                       {path.title}
                     </h3>
                     <p
@@ -476,26 +477,29 @@ const Inquire: React.FC = () => {
         <div className="flex justify-center mb-6">
           <a
             href="mailto:hello@adrianrasmussen.com"
-            className="group flex items-center gap-2 px-6 py-3 border border-wood-200 hover:border-wood-400 transition-all duration-300 bg-white"
+            className="group inline-flex items-center gap-3 px-8 py-4 transition-all duration-300"
           >
-            <span className="font-serif text-sm text-wood-500 group-hover:text-wood-800 transition-colors">
+            <span className="font-serif text-base text-wood-400 group-hover:text-wood-600 italic transition-colors">
               Just want to say hello?
             </span>
-            <span className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-500 font-semibold group-hover:text-bronze-700 transition-colors">
-              Send an email
+            <span className="w-6 h-px bg-wood-300 group-hover:bg-bronze-400 group-hover:w-8 transition-all duration-300" />
+            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500 font-semibold group-hover:text-bronze-700 transition-colors">
+              Email
             </span>
           </a>
         </div>
 
         {/* ── Testimonial (scroll-reveal) ───────────────────────────── */}
         <div ref={testimonialReveal.ref} className={testimonialReveal.cls}>
-          <div className="max-w-2xl mx-auto text-center py-8 mb-8">
-            <blockquote className="font-serif text-lg text-wood-500 italic leading-[1.8]">
-              "Previous commissions have included oracle deck illustrations,
-              hand-carved tea tables, festival stage designs, and
-              illuminated altar pieces."
+          <div className="max-w-2xl mx-auto text-center py-12 mb-8">
+            <span className="block font-serif text-4xl text-bronze-400/40 mb-4 leading-none">"</span>
+            <blockquote className="font-serif text-xl md:text-2xl text-wood-500 italic leading-[1.7] font-light">
+              Previous commissions have included oracle deck illustrations,
+              hand-carved furniture, festival stage designs, and
+              illuminated altar pieces.
             </blockquote>
-            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+            <span className="block w-8 h-px bg-wood-200 mx-auto mt-6 mb-4" />
+            <p className="font-label text-[10px] uppercase tracking-[0.3em] text-wood-400 font-semibold">
               From the Studio
             </p>
           </div>
@@ -573,8 +577,11 @@ const Inquire: React.FC = () => {
                 </div>
 
                 <div className="bg-wood-50 p-8 md:p-14 lg:p-16 border border-wood-100 border-t-0">
-                  <p className="font-serif text-xl text-wood-700 leading-[1.7] font-light mb-10">
-                    Tell me what you are imagining. We will figure out the details together.
+                  <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.5] font-light mb-4">
+                    Tell me what you are imagining.
+                  </p>
+                  <p className="font-serif text-base text-wood-400 leading-[1.7] mb-12 italic">
+                    We will figure out the details together.
                   </p>
 
                   {/* Commission type indicator (set by card selection above) */}
@@ -951,9 +958,9 @@ const Inquire: React.FC = () => {
         {/* ── "What to expect" micro-timeline (scroll-reveal) ───────── */}
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
-            <div className="mt-16 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-8">
-              <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 font-semibold text-center mb-6">
-                What happens next
+            <div className="mt-20 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-10">
+              <p className="font-title text-sm tracking-[0.15em] text-wood-600 text-center mb-8">
+                What Happens Next
               </p>
               <div className="flex items-start justify-between relative">
                 {/* Connecting line behind dots */}
@@ -982,30 +989,36 @@ const Inquire: React.FC = () => {
 
         {/* ── FAQ (scroll-reveal) ───────────────────────────────────── */}
         <div ref={faqReveal.ref} className={faqReveal.cls}>
-          <div className="mt-24 border-t border-wood-200 pt-12 max-w-3xl mx-auto">
-            <h3 className="font-serif text-3xl text-wood-900 mb-8 font-medium">Common Questions</h3>
-            <div className="space-y-8">
+          <div className="mt-28 max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 mb-12">
+              <span className="h-px flex-1 bg-wood-200" />
+              <h3 className="font-title text-lg tracking-[0.15em] text-wood-900">Common Questions</h3>
+              <span className="h-px flex-1 bg-wood-200" />
+            </div>
+            <div className="space-y-10">
               <div>
-                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
                   How long does a commission take?
                 </h4>
-                <p className="font-serif text-wood-600 leading-[1.7]">
+                <p className="font-serif text-wood-500 leading-[1.8]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
                 </p>
               </div>
+              <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-serif text-wood-600 leading-[1.7]">
+                <p className="font-serif text-wood-500 leading-[1.8]">
                   Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
+              <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-900 font-semibold mb-3">
+                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
                   What sizes are available?
                 </h4>
-                <p className="font-serif text-wood-600 leading-[1.7]">
+                <p className="font-serif text-wood-500 leading-[1.8]">
                   I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
                 </p>
               </div>

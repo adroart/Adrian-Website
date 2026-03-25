@@ -8,6 +8,7 @@ import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ const CreationCategoryCard: React.FC<{
         return (
             <Link
                 to={link}
-                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve touch-active"
+                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 touch-active"
                 aria-label={`Explore ${label}: ${desc}`}
             >
                 {inner}
@@ -107,7 +108,7 @@ const CreationCategoryCard: React.FC<{
         <button
             type="button"
             onClick={onClick}
-            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve touch-active"
+            className="group cursor-pointer text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 touch-active"
             aria-label={`Browse ${label}: ${desc}`}
         >
             {inner}
@@ -313,7 +314,7 @@ const Creations: React.FC = () => {
                         role="list"
                         aria-label="Art categories"
                     >
-                        {CREATION_CATEGORIES.map((cat, idx) => (
+                        {CREATION_CATEGORIES.filter(cat => !(cat as { hidden?: boolean }).hidden).map((cat, idx) => (
                             <div key={cat.id} role="listitem">
                                 <CreationCategoryCard
                                     label={cat.label}
@@ -336,12 +337,14 @@ const Creations: React.FC = () => {
                             <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 font-medium">Available Now</h2>
                             <p className="font-serif text-base sm:text-lg text-wood-500 italic leading-relaxed mt-1">Ready to ship from the studio.</p>
                         </div>
+                        {LAUNCH_FLAGS.shopEnabled && (
                         <Link
                             to="/shop"
                             className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
                         >
                             Visit the Shop <ArrowRight size={14} />
                         </Link>
+                        )}
                     </div>
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
                         {availableNow.map(art => (

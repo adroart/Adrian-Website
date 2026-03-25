@@ -19,7 +19,7 @@ const SubcategoryTile: React.FC<{
     return (
         <Link
             to={to}
-            className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2 dark-preserve"
+            className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
             aria-label={`Explore ${label}: ${desc}`}
         >
             {/* Image */}

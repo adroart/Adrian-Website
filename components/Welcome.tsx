@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 const Welcome: React.FC = () => {
   return (
@@ -23,12 +24,14 @@ const Welcome: React.FC = () => {
           >
             Creations
           </Link>
+          {LAUNCH_FLAGS.shopEnabled && (
           <Link
             to="/shop"
             className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"
           >
             Shop
           </Link>
+          )}
           <Link
             to="/inquire"
             className="w-full py-4 border border-stone-700 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-paper-50 hover:text-stone-950 transition-colors"

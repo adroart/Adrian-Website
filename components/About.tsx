@@ -6,6 +6,7 @@ import Reveal from './shared/Reveal';
 import ProgressBar from './shared/ProgressBar';
 import SideNav from './shared/SideNav';
 import { Tag, GlyphDivider, Interstitial, ParallaxImg } from './shared/LongformElements';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 const PERSON_SCHEMA = {
   '@context': 'https://schema.org',
@@ -30,7 +31,7 @@ const SECTIONS = [
   { id: 'about-connection',  label: 'Connection' },
   { id: 'about-team',        label: 'The Team' },
   { id: 'about-practice',    label: 'Practice' },
-  { id: 'about-meaning',     label: 'Meaning' },
+  ...(!LAUNCH_FLAGS.aboutMeaning ? [] : [{ id: 'about-meaning', label: 'Meaning' }]),
   { id: 'about-close',       label: 'Go Deeper' },
 ];
 
@@ -52,7 +53,7 @@ const About: React.FC = () => {
           top: 8px;
           bottom: 0;
           width: 1px;
-          background: linear-gradient(to bottom, rgba(196,170,124,0.5), rgba(196,170,124,0.05));
+          background: linear-gradient(to bottom, var(--color-bronze-400, rgba(196,170,124,0.5)), transparent);
         }
         .timeline-node {
           position: relative;
@@ -66,8 +67,8 @@ const About: React.FC = () => {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #ab9266;
-          box-shadow: 0 0 0 3px rgba(171,146,102,0.18);
+          background: var(--color-bronze-500);
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bronze-500) 18%, transparent);
         }
         .timeline-node:last-child { padding-bottom: 0; }
       `}</style>
@@ -121,8 +122,19 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #12 — Typographic glyph divider */}
-        <GlyphDivider glyph="&" />
+        {/* #12 — Typographic glyph divider (desktop only) */}
+        <div className="hidden md:block">
+          <GlyphDivider glyph="&" />
+        </div>
+
+        {/* Portrait photo interstitial (mobile only) — full-bleed cinematic break */}
+        <div className="md:hidden relative overflow-hidden" style={{ height: 'clamp(360px, 70vh, 560px)' }}>
+          <img
+            src={img('path_x92l78', { w: 800, h: 1200 })}
+            alt="Adrian Rasmussen portrait"
+            className="absolute inset-0 w-full h-full object-cover object-top"
+          />
+        </div>
 
         {/* ══ THE ROOT ══════════════════════════════════════════════════════ */}
         {/* #13 — wider max-w container for this section */}
@@ -159,24 +171,34 @@ const About: React.FC = () => {
               </div>
             </Reveal>
 
-            {/* #9 — parallax image */}
+            {/* #9 — parallax image (desktop only — mobile version shown above root) */}
             <Reveal dir="right" delay={140}>
-              <div className="aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
+              <div className="hidden md:block aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
                 <ParallaxImg src={img('path_x92l78', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
               </div>
             </Reveal>
           </div>
         </div>
 
-        {/* #18 — Full-bleed video interstitial */}
-        <div className="relative overflow-hidden" style={{ height: 'clamp(320px, 55vh, 680px)' }}>
+        {/* #12 — Divider before video (prevents photo-on-photo stacking on mobile) */}
+        <GlyphDivider glyph="·" />
+
+        {/* #18 — Full-bleed video interstitial (Star Dance) */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            height: 'clamp(320px, 55vh, 680px)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+          }}
+        >
           <video
             autoPlay
             loop
             muted
             playsInline
             aria-hidden="true"
-            className="absolute inset-0 min-w-[120%] min-h-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-cover grayscale opacity-70"
+            className="absolute inset-0 w-full h-full object-cover object-center grayscale opacity-70"
           >
             <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_60,w_1280,br_1500k/1659598159715_vc8cqr" type="video/mp4" />
           </video>
@@ -300,7 +322,7 @@ const About: React.FC = () => {
 
         {/* ══ THE TEAM ══════════════════════════════════════════════════════ */}
         {/* #10 — Team is its own separate, darker band — centered and intimate */}
-        <div id="about-team" className="px-6 py-24 bg-wood-900">
+        <div id="about-team" className="px-6 py-24 bg-wood-900 dark-preserve">
           <div className="max-w-xl mx-auto text-center">
             <Reveal dir="scale">
               <Tag light centered>The Team</Tag>
@@ -317,12 +339,19 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #18 — Second photo interstitial */}
-        <div className="relative overflow-hidden" style={{ height: 'clamp(320px, 55vh, 680px)' }}>
+        {/* #18 — Second photo interstitial (Earth Dance) */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            height: 'clamp(320px, 55vh, 680px)',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+          }}
+        >
           <img
             src={img('innerearth_zxtjmw', { w: 1600, h: 900 })}
             alt="Immersive installation space"
-            className="absolute inset-0 min-w-[120%] min-h-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-cover grayscale opacity-70"
+            className="absolute inset-0 w-full h-full object-cover object-center grayscale opacity-70"
             loading="lazy"
           />
         </div>
@@ -369,6 +398,8 @@ const About: React.FC = () => {
           </div>
         </Reveal>
 
+        {LAUNCH_FLAGS.aboutMeaning && (
+        <>
         {/* #12 — Typographic glyph divider */}
         <GlyphDivider glyph="*" />
 
@@ -402,6 +433,8 @@ const About: React.FC = () => {
             </Reveal>
           </div>
         </div>
+        </>
+        )}
 
         {/* ══ CLOSE / GO DEEPER ═════════════════════════════════════════════ */}
         <div id="about-close" className="px-6 py-32 text-center">
@@ -418,10 +451,10 @@ const About: React.FC = () => {
                 Explore the writings
               </Link>
               <Link
-                to="/shop"
+                to={LAUNCH_FLAGS.shopEnabled ? "/shop" : "/inquire"}
                 className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
               >
-                Acquire a piece
+                {LAUNCH_FLAGS.shopEnabled ? 'Acquire a piece' : 'Inquire about a piece'}
               </Link>
             </div>
           </Reveal>

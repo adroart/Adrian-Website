@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUp, CheckCircle, Instagram, Mail } from 'lucide-react';
 import { useDarkMode } from '../DarkModeContext';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 // Kit (ConvertKit) newsletter integration
 // Set VITE_KIT_FORM_ID and VITE_KIT_PUBLIC_API_KEY in .env.local
@@ -182,7 +183,7 @@ const Footer: React.FC = () => {
                         </div>
                         <Link to="/creations" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
                         <Link to="/writings" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
-                        <Link to="/shop" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>
+                        {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>}
                         <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
                             <span>Teajia</span>
                             <span className="block font-serif text-xs text-wood-500 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
