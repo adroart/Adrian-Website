@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, Link, useBlocker } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 
@@ -184,11 +184,6 @@ const Inquire: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  // React Router navigation blocker
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
-  );
 
   /* ── Form helpers ─────────────────────────────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -369,32 +364,6 @@ const Inquire: React.FC = () => {
 
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
-
-      {/* ── Navigation blocker modal ───────────────────────────── */}
-      {blocker.state === 'blocked' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-wood-900/50 backdrop-blur-sm">
-          <div className="bg-paper-50 border border-wood-200 p-8 max-w-sm mx-4 text-center">
-            <h3 className="font-serif text-xl text-wood-900 mb-3">Leave this page?</h3>
-            <p className="font-serif text-sm text-wood-600 leading-relaxed mb-6">
-              Your inquiry isn't sent yet. Leaving will lose what you've written.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => blocker.reset?.()}
-                className="px-6 py-2.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] font-semibold hover:bg-bronze-600 transition-colors"
-              >
-                Stay
-              </button>
-              <button
-                onClick={() => blocker.proceed?.()}
-                className="px-6 py-2.5 border border-wood-300 text-wood-600 font-label text-xs uppercase tracking-[0.15em] font-semibold hover:border-wood-500 hover:text-wood-800 transition-colors"
-              >
-                Leave
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-20">
