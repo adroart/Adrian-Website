@@ -25,6 +25,7 @@ const NewsletterForm: React.FC = () => {
             // Try the proxy route first (avoids ad-blocker interference),
             // then fall back to the direct Kit API.
             let data: any;
+            let useProxy = true;
             try {
                 const proxyRes = await fetch('/api/subscribe', {
                     method: 'POST',
@@ -32,8 +33,13 @@ const NewsletterForm: React.FC = () => {
                     body: JSON.stringify({ email }),
                 });
                 data = await proxyRes.json();
+                if (!data.subscription) useProxy = false;
             } catch {
-                // Proxy unavailable — call Kit directly
+                useProxy = false;
+            }
+
+            // Fallback: call Kit directly if proxy failed or returned no subscription
+            if (!useProxy) {
                 const res = await fetch(
                     `https://api.convertkit.com/v3/forms/${KIT_FORM_ID}/subscribe`,
                     {
