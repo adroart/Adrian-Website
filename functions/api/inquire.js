@@ -32,7 +32,7 @@ function isAllowedOrigin(origin, env) {
   return false;
 }
 
-const DEFAULT_TO = 'hello@adrianrasmussen.com';
+const DEFAULT_TO = 'technicianofthesacred@gmail.com';
 const DEFAULT_FROM = 'noreply@adrianrasmussen.com';
 
 function escapeHtml(str) {

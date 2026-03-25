@@ -380,58 +380,6 @@ html.dark body { background-color: #141210; }
   display: none;
 }
 
-/* ─── Budget Range Slider ──────────────────────────────────────────────── */
-
-.budget-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  pointer-events: none;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-.budget-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  pointer-events: all;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--color-wood-900);
-  border: 3px solid var(--color-paper-50);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  cursor: grab;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-.budget-slider::-webkit-slider-thumb:active {
-  cursor: grabbing;
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.budget-slider::-moz-range-thumb {
-  pointer-events: all;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--color-wood-900);
-  border: 3px solid var(--color-paper-50);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  cursor: grab;
-}
-.budget-slider::-moz-range-thumb:active {
-  cursor: grabbing;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.budget-slider::-webkit-slider-runnable-track {
-  height: 4px;
-  background: transparent;
-}
-.budget-slider::-moz-range-track {
-  height: 4px;
-  background: transparent;
-  border: none;
-}
-
 /* ─── Progressive Disclosure (grid row animation) ──────────────────────── */
 
 .form-reveal {
