@@ -191,32 +191,6 @@ const UL_SERIES_DESCRIPTION = 'There\'s a language that all of us speak, it is b
 // --- ARTWORK GENERATION ---
 
 export const FULL_ARCHIVE: Artwork[] = [
-    {
-        id: 'TBL-001',
-        title: 'Tea Altar Table',
-        category: 'Furniture',
-        coverImage: 'adrian-website/placeholders/artwork-square-8',
-        images: ['adrian-website/placeholders/artwork-square-1'],
-        description: 'Functional art for gathering. Designed for the tea practice explored at Teajia.',
-        year: '2022',
-        dimensions: '48" x 24" x 18"',
-        material: 'Black Walnut, Resin',
-        availability: 'SOLD',
-        featured: true,
-    },
-    {
-        id: 'INST-003',
-        title: 'The Void Structure',
-        category: 'Installations',
-        coverImage: 'adrian-website/placeholders/hero-wide-1',
-        images: [],
-        description: 'Immersive environment created for the Arise Music Festival. 150-foot stage design.',
-        year: '2019',
-        dimensions: '150ft Wide',
-        material: 'Mixed Media, Projection',
-        availability: 'SOLD',
-        featured: true,
-    },
     // ═══════════════════════════════════════════════════════════════
     // MIGRATED FROM WIX — 133 products
     // Phase 2: Adrian reviews descriptions, prices, featured status
@@ -3354,8 +3328,8 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'SIG-113',
         title: 'We Rise',
         category: 'Multidimensional Art',
-        coverImage: 'We-Rise-Lasercut-Art-2_ioi0zv',
-        images: ['We-Rise-Lasercut-Art-3_md7zo4', 'We-Rise-Lasercut-Art-4_xzdgky', 'We-Rise-Lasercut-Art-6_dugjba', 'We-Rise-Lasercut-Art-7_qugmeb', 'we-rise_uizdgs'],
+        coverImage: 'we-rise_uizdgs',
+        images: ['We-Rise-Lasercut-Art-2_ioi0zv', 'We-Rise-Lasercut-Art-3_md7zo4', 'We-Rise-Lasercut-Art-4_xzdgky', 'We-Rise-Lasercut-Art-6_dugjba', 'We-Rise-Lasercut-Art-7_qugmeb'],
         description: '',
         year: '2024',
         dimensions: '',
@@ -3568,7 +3542,7 @@ export const STORIES: Story[] = [
         subtitle: 'Twenty years of culture.',
         category: 'The Path',
         date: 'Spring 2023',
-        image: 'a_90/33B8402A-83D8-4E08-A0B6-09DF0C6DABEF_icglx7',
+        image: 'copy_of_img_9273_gbrg5b_ac4d52',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
             "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.",

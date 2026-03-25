@@ -95,7 +95,7 @@ const CreationCategoryCard: React.FC<{
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>
-                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
+                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}

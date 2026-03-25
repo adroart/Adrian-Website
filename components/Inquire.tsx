@@ -51,7 +51,7 @@ const COMMISSION_PATHS = {
     title: 'Personal Commissions',
     description:
       'Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.',
-    image: img('adrian-website/placeholders/artwork-square-3', { w: 1000, h: 1200 }),
+    image: img('Untitled_eidlbn', { w: 1400, h: 800, crop: 'fit', gravity: 'center' }),
     alt: 'Personal commission piece by Adrian Rasmussen',
     successMsg: 'Your vision for a personal piece is on its way to Bali.',
     suggestLink: '/creations',
@@ -62,7 +62,7 @@ const COMMISSION_PATHS = {
     title: 'Spatial Commissions',
     description:
       'When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.',
-    image: img('adrian-website/placeholders/hero-wide-3', { w: 1200, h: 1000 }),
+    image: img('72CAF335-30B9-412C-9FB7-6F92BA637FF8_lb9gzp', { w: 1200, h: 800, gravity: 'center' }),
     alt: 'Spatial installation by Adrian Rasmussen',
     successMsg: 'Your spatial vision is on its way to Bali.',
     suggestLink: '/creations/multidimensional-art',
@@ -365,49 +365,41 @@ const Inquire: React.FC = () => {
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
 
-      {/* ── Hero Image with overlaid title ─────────────────────────── */}
-      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden">
-        <div ref={heroRef} className="absolute inset-0 will-change-transform">
-          <img
-            src={img('adrian-website/placeholders/hero-wide-2', { w: 1600, h: 900 })}
-            alt="Adrian Rasmussen's studio"
-            className="w-full h-[120%] object-cover brightness-[0.55] saturate-[0.15] contrast-[1.1] sepia-[0.15]"
-          />
-        </div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-          <p className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.35em] text-paper-50/70 mb-4 font-semibold" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>
+      {/* ── Hero ────────────────────────────────────────────────── */}
+      <div className="relative h-[40vh] md:h-[44vh] overflow-hidden bg-paper-50">
+        <div ref={heroRef} className="absolute inset-0 will-change-transform" />
+        <div className="absolute inset-0 flex flex-col items-center justify-end text-center px-6 pb-12 md:pb-16">
+          <p className="font-label text-[10px] uppercase tracking-[0.4em] text-wood-400 mb-4 font-semibold">
             Commissions &amp; Collaborations
           </p>
-          <h1 className="font-title text-5xl sm:text-6xl md:text-7xl text-paper-50 font-light tracking-wide" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
+          <h1 className="font-title text-5xl sm:text-6xl md:text-7xl text-wood-900 font-light tracking-[0.04em]">
             Inquire
           </h1>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-paper-50 to-transparent" />
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 pt-16 pb-20">
+      <div className="max-w-5xl mx-auto px-6 pt-10 pb-20">
 
         {/* Opening text — pull-quote style */}
-        <div className="mb-20 max-w-3xl mx-auto text-center">
-          <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.6] font-light mb-8">
+        <div className="mb-16 max-w-2xl mx-auto text-center">
+          <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.65] font-light mb-6">
             I take on a small number of commissions each year. Some become
             intimate pieces for personal spaces. Others become installations
             that transform environments.
           </p>
-          <span className="block w-12 h-px bg-bronze-400/60 mx-auto mb-8" />
-          <p className="font-serif text-lg text-wood-500 leading-[1.7] italic mb-3">
+          <span className="block w-10 h-px bg-bronze-400/50 mx-auto mb-6" />
+          <p className="font-serif text-base text-wood-500 leading-[1.75] italic mb-2">
             I am selective. Not every project is the right project.
             The right ones find me, and I recognize them when they do.
           </p>
-          <p className="font-serif text-lg text-wood-600 leading-[1.7]">
+          <p className="font-serif text-base text-wood-600 leading-[1.75]">
             If you are feeling a pull toward working together, trust that.
           </p>
         </div>
 
         {/* ── Commission Path Cards (scroll-reveal) ─────────────────── */}
         <div ref={cardsReveal.ref} className={cardsReveal.cls}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {(Object.keys(COMMISSION_PATHS) as CommissionType[]).map((type) => {
               const path = COMMISSION_PATHS[type];
               const isSelected = commissionType === type;
@@ -422,13 +414,13 @@ const Inquire: React.FC = () => {
                       : 'border-wood-200 hover:border-wood-400 scale-[0.98] opacity-70 hover:opacity-90'
                   }`}
                 >
-                  <div className="relative h-[260px] sm:h-[300px] md:h-[340px] overflow-hidden bg-wood-100">
+                  <div className="relative h-[220px] sm:h-[260px] md:h-[280px] overflow-hidden bg-wood-100">
                     <img
                       src={path.image}
-                      className={`w-full h-full object-cover transition-all duration-700 ease-out ${
+                      className={`w-full h-full object-cover object-center transition-all duration-700 ease-out ${
                         isSelected
                           ? 'grayscale-0 scale-[1.02]'
-                          : 'grayscale scale-100 group-hover:grayscale-[50%] group-hover:scale-[1.01]'
+                          : 'grayscale-[30%] scale-100 group-hover:grayscale-[15%] group-hover:scale-[1.01]'
                       }`}
                       alt={path.alt}
                       loading="lazy"
@@ -438,17 +430,14 @@ const Inquire: React.FC = () => {
                         isSelected ? 'opacity-0' : 'opacity-10'
                       }`}
                     />
-                    <div className="absolute top-4 left-4 bg-paper-50/90 px-3 py-1.5 font-label text-[11px] uppercase tracking-[0.2em] font-semibold">
-                      {path.label}
-                    </div>
                   </div>
-                  <div className="p-6 md:p-8 flex flex-col flex-1 bg-white">
-                    <h3 className="font-title text-xl tracking-[0.08em] text-wood-900 mb-3">
+                  <div className="p-5 md:p-6 flex flex-col flex-1 bg-white">
+                    <h3 className="font-title text-lg tracking-[0.08em] text-wood-900 mb-2">
                       {path.title}
                     </h3>
                     <p
-                      className={`font-serif text-wood-600 leading-[1.7] mb-6 flex-1 text-base transition-all duration-500 overflow-hidden ${
-                        isSelected ? 'max-h-40 opacity-100' : 'max-h-20 opacity-60'
+                      className={`font-serif text-wood-600 leading-[1.7] mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
+                        isSelected ? 'max-h-40 opacity-100' : 'max-h-16 opacity-60'
                       }`}
                     >
                       {path.description}
@@ -474,10 +463,10 @@ const Inquire: React.FC = () => {
         </div>
 
         {/* ── General Contact ──────────────────────────────────────── */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <a
             href="mailto:hello@adrianrasmussen.com"
-            className="group inline-flex items-center gap-3 px-8 py-4 transition-all duration-300"
+            className="group inline-flex items-center gap-3 px-6 py-3 transition-all duration-300"
           >
             <span className="font-serif text-base text-wood-400 group-hover:text-wood-600 italic transition-colors">
               Just want to say hello?
@@ -491,9 +480,9 @@ const Inquire: React.FC = () => {
 
         {/* ── Testimonial (scroll-reveal) ───────────────────────────── */}
         <div ref={testimonialReveal.ref} className={testimonialReveal.cls}>
-          <div className="max-w-2xl mx-auto text-center py-12 mb-8">
-            <span className="block font-serif text-4xl text-bronze-400/40 mb-4 leading-none">"</span>
-            <blockquote className="font-serif text-xl md:text-2xl text-wood-500 italic leading-[1.7] font-light">
+          <div className="max-w-2xl mx-auto text-center py-8 mb-4">
+            <span className="block font-serif text-3xl text-bronze-400/40 mb-3 leading-none">"</span>
+            <blockquote className="font-serif text-lg md:text-xl text-wood-500 italic leading-[1.7] font-light">
               Previous commissions have included oracle deck illustrations,
               hand-carved furniture, festival stage designs, and
               illuminated altar pieces.
@@ -576,11 +565,11 @@ const Inquire: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="bg-wood-50 p-8 md:p-14 lg:p-16 border border-wood-100 border-t-0">
-                  <p className="font-serif text-2xl md:text-3xl text-wood-700 leading-[1.5] font-light mb-4">
+                <div className="bg-wood-50 p-6 md:p-10 lg:p-12 border border-wood-100 border-t-0">
+                  <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.5] font-light mb-3">
                     Tell me what you are imagining.
                   </p>
-                  <p className="font-serif text-base text-wood-400 leading-[1.7] mb-12 italic">
+                  <p className="font-serif text-sm text-wood-400 leading-[1.7] mb-10 italic">
                     We will figure out the details together.
                   </p>
 
@@ -989,36 +978,36 @@ const Inquire: React.FC = () => {
 
         {/* ── FAQ (scroll-reveal) ───────────────────────────────────── */}
         <div ref={faqReveal.ref} className={faqReveal.cls}>
-          <div className="mt-28 max-w-3xl mx-auto">
-            <div className="flex items-center gap-4 mb-12">
+          <div className="mt-20 max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 mb-10">
               <span className="h-px flex-1 bg-wood-200" />
-              <h3 className="font-title text-lg tracking-[0.15em] text-wood-900">Common Questions</h3>
+              <h3 className="font-title text-base tracking-[0.15em] text-wood-900">Common Questions</h3>
               <span className="h-px flex-1 bg-wood-200" />
             </div>
-            <div className="space-y-10">
+            <div className="space-y-8">
               <div>
-                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
+                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
                   How long does a commission take?
                 </h4>
-                <p className="font-serif text-wood-500 leading-[1.8]">
+                <p className="font-serif text-sm text-wood-500 leading-[1.8]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
+                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-serif text-wood-500 leading-[1.8]">
+                <p className="font-serif text-sm text-wood-500 leading-[1.8]">
                   Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-serif text-xl text-wood-900 mb-3 font-medium">
+                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
                   What sizes are available?
                 </h4>
-                <p className="font-serif text-wood-500 leading-[1.8]">
+                <p className="font-serif text-sm text-wood-500 leading-[1.8]">
                   I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
                 </p>
               </div>
