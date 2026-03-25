@@ -312,7 +312,7 @@ const SubcategoryPage: React.FC = () => {
                                 key={art.id}
                                 art={art}
                                 showDetails
-                                subtitleOverride={art.subcategory || art.series}
+                                subtitleOverride={art.subcategory || art.series || art.title}
                             />
                         ))}
                     </div>

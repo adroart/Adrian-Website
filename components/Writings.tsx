@@ -428,11 +428,11 @@ const Writings: React.FC = () => {
                                         <div className="flex flex-row">
                                             {/* Article thumbnail */}
                                             {story.image && (
-                                                <div className="w-24 self-stretch flex-shrink-0 md:w-2/5 md:min-h-[220px] overflow-hidden bg-wood-100">
+                                                <div className="w-24 self-stretch flex-shrink-0 md:w-2/5 md:min-h-[220px] md:max-h-[280px] overflow-hidden bg-wood-100 flex items-center">
                                                     <img
-                                                        src={img(story.image, { w: 800, h: 600 })}
+                                                        src={img(story.image, { w: 800, h: 600, gravity: 'center' })}
                                                         alt={story.title}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                                                         loading="lazy"
                                                     />
                                                 </div>

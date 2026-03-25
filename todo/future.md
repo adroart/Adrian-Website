@@ -5,6 +5,7 @@ Not for launch or first month. Revisit as the site matures.
 ---
 
 ## Features
+- [ ] Re-add featured creations gallery to homepage (was "Selected Works" masonry grid with GalleryTileCard)
 - [ ] Global site search
 - [ ] "Recently Viewed" pieces (localStorage)
 - [ ] Image comparison slider for Illuminated Works (day vs night)

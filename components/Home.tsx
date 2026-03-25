@@ -1,9 +1,8 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { FULL_ARCHIVE, CREATION_CATEGORIES, STORIES } from '../data/mockData';
+import { STORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
-import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { img } from '../utils/cloudinary';
 
@@ -12,9 +11,6 @@ import { img } from '../utils/cloudinary';
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
 const Home: React.FC = () => {
-    /* Show only pieces you've marked as featured in mockData */
-    const featuredPieces = useMemo(() => FULL_ARCHIVE.filter(a => a.featured), []);
-
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
 
@@ -32,36 +28,16 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            {/* 3.3 Browse Creations — Tile Cards + Category Chips */}
-            <section className="py-16 sm:py-20">
-                {/* Section header */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 mb-6 sm:mb-8 px-4 sm:px-6">
-                    <div>
-                        <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 mb-1 font-medium">Creations</h2>
-                        <p className="font-serif text-base sm:text-lg text-wood-600 italic leading-relaxed">Not everything here is painted. Some leave the wood as it is. Others come to life with light.</p>
-                    </div>
+            {/* Explore Creations link */}
+            <section className="py-12 sm:py-16 px-6">
+                <div className="max-w-3xl mx-auto text-center">
                     <Link
                         to="/creations"
-                        className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
+                        className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
                     >
-                        Full Archive <ArrowRight size={14} />
+                        Explore Creations <ArrowRight size={14} />
                     </Link>
                 </div>
-
-                {/* Tile card grid — featured pieces only */}
-                {featuredPieces.length > 0 ? (
-                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-6">
-                        {featuredPieces.map(art => (
-                            <GalleryTileCard key={art.id} art={art} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-16 px-6">
-                        <p className="font-serif text-xl text-wood-500 italic">
-                            Pieces coming soon.
-                        </p>
-                    </div>
-                )}
             </section>
 
             {/* 3.5 Commission Invitation */}

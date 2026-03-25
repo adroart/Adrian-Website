@@ -2,16 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
-import { CREATION_CATEGORIES } from '../data/mockData';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
-
-/** Pre-computed category → URL map */
-const CATEGORY_URL_MAP: Record<string, string> = {};
-for (const cat of CREATION_CATEGORIES) {
-    CATEGORY_URL_MAP[cat.label] = (cat as { link?: string }).link
-        ?? `/creations?category=${encodeURIComponent(cat.label)}`;
-}
 
 interface GalleryTileCardProps {
     art: Artwork;
@@ -61,20 +53,18 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             {/* Title plaque — sits between image and detail box like a gallery label */}
             {/* Title plaque — sits between image and detail box like a gallery label */}
             <Link to={`/creations/${art.id}`} className="block py-2 text-center">
-                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug">
+                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug truncate">
                     {displayTitle}
                 </h3>
             </Link>
 
-            {/* Detail band */}
-            <div className="bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4">
+            {/* Detail band — entire tag links to piece, centered like a gallery label */}
+            <Link to={`/creations/${art.id}`} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
-                <div className="flex items-center justify-between">
-                    <Link to={CATEGORY_URL_MAP[art.category] || '/creations'}>
-                        <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-500 transition-colors font-semibold leading-none">
-                            {subtitleOverride || art.category}
-                        </span>
-                    </Link>
+                <div className="flex items-center justify-center gap-2">
+                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold leading-none">
+                        {subtitleOverride || art.category}
+                    </span>
                     {pieceNumber && (
                         <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-300 font-semibold leading-none">
                             {pieceNumber}
@@ -121,7 +111,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                         )}
                     </span>
                 )}
-            </div>
+            </Link>
         </div>
     );
 };

@@ -17,21 +17,24 @@ const IlluminatedWorks: React.FC = () => {
     return (
         <article className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
-            {/* Hero — full-width image placeholder */}
-            <div className="relative w-full h-[60vh] min-h-[400px] max-h-[700px] overflow-hidden mb-0 dark-preserve">
-                {/* TODO: Replace with a real video or hero image of a piece transitioning from daylight to dark */}
-                <img
-                    src={img('adrian-website/placeholders/hero-wide-3', { w: 1800, h: 900 })}
-                    alt="An illuminated piece transitioning from daylight to dark"
-                    className="w-full h-full object-cover"
+            {/* Breadcrumb */}
+            <div className="max-w-4xl mx-auto px-6 mb-6 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
+                <span className="text-wood-300">/</span>
+                <span className="text-wood-900">Illuminated Works</span>
+            </div>
+
+            {/* Hero video */}
+            <div className="relative overflow-hidden mb-0 dark-preserve bg-stone-950 max-w-4xl mx-auto">
+                <video
+                    src="https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_960,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full block"
+                    style={{ margin: '-8% 0' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/15 to-transparent" />
-                {/* Breadcrumb */}
-                <div className="absolute top-6 left-6 md:left-12 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-paper-300 font-semibold">
-                    <Link to="/creations" className="hover:text-paper-50 transition-colors">Creations</Link>
-                    <span className="text-paper-300/50">/</span>
-                    <span className="text-paper-50">Illuminated Works</span>
-                </div>
             </div>
 
             {/* Section 1: What illumination is */}

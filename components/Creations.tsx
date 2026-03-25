@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, ArrowRight } from 'lucide-react';
+import { ArrowUpDown, ArrowRight, X } from 'lucide-react';
+import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
 import { Artwork, Collection } from '../types';
-import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS } from '../data/mockData';
+import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS, JEWELRY_GALLERY } from '../data/mockData';
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
@@ -62,20 +63,32 @@ const CreationCategoryCard: React.FC<{
     onClick: () => void;
     link?: string;
     image: string;
-}> = ({ label, desc, onClick, link, image }) => {
+    video?: string;
+}> = ({ label, desc, onClick, link, image, video }) => {
     const inner = (
         <>
-            {/* Image */}
-            <div className="overflow-hidden">
-                <ArtImage
-                    publicId={image}
-                    variant="tile"
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    width={800}
-                    height={800}
-                />
+            {/* Image or video */}
+            <div className="overflow-hidden aspect-square bg-stone-950">
+                {video ? (
+                    <video
+                        src={video}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover scale-[1.15]"
+                    />
+                ) : (
+                    <ArtImage
+                        publicId={image}
+                        variant="tile"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        width={800}
+                        height={800}
+                    />
+                )}
             </div>
 
             {/* Title — snug under the photo */}
@@ -207,6 +220,9 @@ const Creations: React.FC = () => {
     const [activeCollection, setActiveCollection] = useState<string | null>(null);
     const [sort, setSort] = useState<SortOption>('default');
 
+    // Jewelry gallery lightbox
+    const [jewelryLightbox, setJewelryLightbox] = useState<{ images: string[]; index: number } | null>(null);
+
     const gridRef = useRef<HTMLDivElement>(null);
 
     // Scroll to results grid when a collection filter is applied
@@ -320,6 +336,7 @@ const Creations: React.FC = () => {
                                     label={cat.label}
                                     desc={cat.desc}
                                     image={(cat as { image: string }).image}
+                                    video={(cat as { video?: string }).video}
                                     link={(cat as { link?: string }).link}
                                     onClick={() => handleCategoryChange(cat.label)}
                                 />
@@ -471,7 +488,70 @@ const Creations: React.FC = () => {
             {/* ── Main Masonry Grid ──────────────────────────────────────── */}
             <div className="max-w-[1800px] mx-auto px-6" ref={gridRef}>
 
-                {displayedPieces.length > 0 ? (
+                {/* Jewelry: photo gallery instead of piece cards */}
+                {filter === 'Jewelry' ? (
+                    <>
+                        {/* Inquire intro */}
+                        <div className="max-w-3xl mb-14">
+                            <p className="font-serif text-xl text-wood-600 font-light leading-[1.7]">
+                                Each piece is one of a kind, crafted with Ye Ming Zhu and precious materials. Browse the gallery and <Link to="/inquire" className="text-bronze-600 hover:text-bronze-800 underline underline-offset-2 transition-colors">reach out</Link> to learn more about what is available or to commission something personal.
+                            </p>
+                        </div>
+
+                        {/* Pendants & Jewelry */}
+                        <div className="mb-16">
+                            <div className="border-t border-wood-200 pt-10 mb-8">
+                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Pendants and Jewelry</h2>
+                                <p className="font-serif text-lg text-wood-500 font-light">Necklaces, pendants, and wearable pieces</p>
+                            </div>
+                            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
+                                {JEWELRY_GALLERY.jewelry.map((id, i) => (
+                                    <button
+                                        key={id}
+                                        onClick={() => setJewelryLightbox({ images: JEWELRY_GALLERY.jewelry, index: i })}
+                                        className="block w-full mb-3 md:mb-4 overflow-hidden group cursor-pointer break-inside-avoid"
+                                    >
+                                        <img src={img(id, { w: 600 })} alt="" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Rings */}
+                        <div className="mb-16">
+                            <div className="border-t border-wood-200 pt-10 mb-8">
+                                <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Rings</h2>
+                                <p className="font-serif text-lg text-wood-500 font-light">Ye Ming Zhu rings, each unique</p>
+                            </div>
+                            <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
+                                {JEWELRY_GALLERY.rings.map((id, i) => (
+                                    <button
+                                        key={id}
+                                        onClick={() => setJewelryLightbox({ images: JEWELRY_GALLERY.rings, index: i })}
+                                        className="block w-full mb-3 md:mb-4 overflow-hidden group cursor-pointer break-inside-avoid"
+                                    >
+                                        <img src={img(id, { w: 600 })} alt="" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Inquire CTA */}
+                        <div className="max-w-3xl mx-auto text-center pt-4 pb-8">
+                            <div className="border-t border-wood-200 pt-14">
+                                <p className="font-serif text-2xl text-wood-800 font-light leading-[1.5] mb-8">
+                                    Interested in a piece you see here?
+                                </p>
+                                <Link
+                                    to="/inquire"
+                                    className="inline-flex items-center gap-3 px-10 py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-all duration-300"
+                                >
+                                    Inquire <ArrowRight size={14} />
+                                </Link>
+                            </div>
+                        </div>
+                    </>
+                ) : displayedPieces.length > 0 ? (
                     <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-5 lg:gap-8 card-stagger">
                         {displayedPieces.map(art => (
                             <GalleryTileCard key={art.id} art={art} />
@@ -539,6 +619,36 @@ const Creations: React.FC = () => {
 
             {/* Floating back-to-top button */}
             <BackToTop />
+
+            {/* Jewelry lightbox */}
+            {jewelryLightbox && (
+                <div className="fixed inset-0 z-[100] bg-stone-950/95 flex items-center justify-center" onClick={() => setJewelryLightbox(null)}>
+                    <button onClick={() => setJewelryLightbox(null)} className="absolute top-6 right-6 text-paper-300 hover:text-paper-50 transition-colors z-10">
+                        <X size={28} />
+                    </button>
+                    <button
+                        onClick={e => { e.stopPropagation(); setJewelryLightbox(prev => prev && ({ ...prev, index: (prev.index - 1 + prev.images.length) % prev.images.length })); }}
+                        className="absolute left-4 md:left-8 text-paper-300 hover:text-paper-50 transition-colors text-4xl font-light z-10"
+                    >
+                        ‹
+                    </button>
+                    <img
+                        src={img(jewelryLightbox.images[jewelryLightbox.index], { w: 1400 })}
+                        alt=""
+                        className="max-h-[85vh] max-w-[90vw] object-contain"
+                        onClick={e => e.stopPropagation()}
+                    />
+                    <button
+                        onClick={e => { e.stopPropagation(); setJewelryLightbox(prev => prev && ({ ...prev, index: (prev.index + 1) % prev.images.length })); }}
+                        className="absolute right-4 md:right-8 text-paper-300 hover:text-paper-50 transition-colors text-4xl font-light z-10"
+                    >
+                        ›
+                    </button>
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 font-label text-xs text-paper-400 tracking-[0.2em] uppercase">
+                        {jewelryLightbox.index + 1} / {jewelryLightbox.images.length}
+                    </div>
+                </div>
+            )}
 
         </section>
     );

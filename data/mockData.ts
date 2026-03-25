@@ -81,12 +81,12 @@ export const SERIES_LIST = [
 // rather than filtering the archive inline.
 export const CREATION_CATEGORIES = [
     { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art', image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
-    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2' },
-    { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans',                                                                                image: 'adrian-website/placeholders/artwork-square-3' },
+    { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
+    { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans',                                                                                image: 'yemingzhu-jewelrt-10_e7llou' },
     { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/creations/oracle-cards',         image: 'adrian-website/placeholders/artwork-square-4', hidden: true },
     { id: 'FURNITURE', label: 'Furniture',            desc: 'Functional art for gathering',                                                                                 image: 'adrian-website/placeholders/artwork-square-5', hidden: true },
     { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments',                                                                                       image: 'adrian-website/placeholders/artwork-square-6', hidden: true },
-    { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual',                                              image: 'adrian-website/placeholders/artwork-square-7' },
+    { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual',                                              image: 'adrian-website/creations/objects/lotus-stand-brown-leaf' },
     { id: 'SPACES',  label: 'Spaces',               desc: 'Tea houses and environments designed for presence',                                                             image: 'adrian-website/placeholders/artwork-square-8', hidden: true },
 ];
 
@@ -94,10 +94,10 @@ export const CREATION_CATEGORIES = [
 // The Illuminated Works entry links back to the shared experiential page.
 export const MULTIDIMENSIONAL_CATEGORIES = [
     { id: 'MD-UL',    label: 'Universal Language', desc: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key.',       slug: 'universal-language', image: '48_ttflpq' },
-    { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala',            image: 'adrian-website/creations/mandala/metatron-flower-green' },
+    { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala',            image: 'Mandala-1_tyujra' },
     { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes', image: 'adrian-website/creations/light-codes/suni' },
     { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces',   image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
-    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5' },
+    { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
 ];
 
 export const LIGHT_CODE_SUBCATEGORIES = [
@@ -105,6 +105,49 @@ export const LIGHT_CODE_SUBCATEGORIES = [
     'Embodied Vibrations',
     'Resonant Formations',
 ];
+
+// Jewelry photo gallery — not individual pieces, just images grouped by type.
+// Visitors inquire for details rather than purchasing directly.
+export const JEWELRY_GALLERY = {
+    rings: [
+        'YeMingZhu-rings_qgm7qx',
+        'YeMingZhu-rings-2_ygqyco',
+        'YeMingZhu-rings-3_odygxj',
+        'YeMingZhu-rings-4_fptped',
+        'YeMingZhu-rings-5_oyapeb',
+        'YeMingZhu-rings-6_eicz54',
+        'YeMingZhu-rings-7_myef90',
+        'YeMingZhu-rings-8_utmquw',
+        'YeMingZhu-rings-9_kbbst9',
+        'YeMingZhu-rings-10_gqldep',
+        'YeMingZhu-rings-11_yitxox',
+        'YeMingZhu-rings-12_glpyou',
+        'YeMingZhu-rings-13_tv4fxf',
+        'YeMingZhu-rings-14_dsajcl',
+        'YeMingZhu-rings-15_ndelke',
+        'YeMingZhu-rings-16_tap3wk',
+        'YeMingZhu-rings-17_eoxc9e',
+        'YeMingZhu-rings-18_er33rs',
+        'YeMingZhu-rings-19_gvbcuw',
+        'YeMingZhu-rings-20_ejpeye',
+    ],
+    jewelry: [
+        'yemingzhu-jewelrt_mo3gjq',
+        'yemingzhu-jewelrt-2_semfc0',
+        'yemingzhu-jewelrt-3_hfk7nj',
+        'yemingzhu-jewelrt-4_acd3vq',
+        'yemingzhu-jewelrt-5_h040zx',
+        'yemingzhu-jewelrt-6_khbjvu',
+        'yemingzhu-jewelrt-7_cbse3x',
+        'yemingzhu-jewelrt-8_pqnf0c',
+        'yemingzhu-jewelrt-9_w2evod',
+        'yemingzhu-jewelrt-10_e7llou',
+        'yemingzhu-jewelrt-11_hq7ybz',
+        'yemingzhu-jewelrt-12_cm227d',
+        'yemingzhu-jewelrt-13_ikghgm',
+        'yemingzhu-jewelrt-14_gj1lzk',
+    ],
+};
 
 export const STORE_CATEGORIES = [
     'Multidimensional Art',
@@ -139,7 +182,7 @@ export const SERIES_DATA = [
         hook: 'A mandala is not something to look at. It is a place to enter. Laser-cut geometry aligned with universal ratios. Each one painted by hand. No two the same. Windows inward, to glimpse the infinite.',
         essaySlug: 'the-mandala-series',
         pieceCount: null,
-        image: 'adrian-website/creations/mandala/metatron-flower-green'
+        image: 'Mandala-1_tyujra'
     }
 ];
 
@@ -148,22 +191,6 @@ const UL_SERIES_DESCRIPTION = 'There\'s a language that all of us speak, it is b
 // --- ARTWORK GENERATION ---
 
 export const FULL_ARCHIVE: Artwork[] = [
-    {
-        id: 'JW-005',
-        title: 'Resonance Pendant',
-        category: 'Jewelry',
-        coverImage: 'adrian-website/placeholders/artwork-square-6',
-        images: ['adrian-website/placeholders/artwork-square-7'],
-        description: 'Wearable geometry. Oxidized brass that warms to the body temperature almost instantly.',
-        year: '2024',
-        dimensions: '2" Pendant',
-        material: 'Oxidized Brass',
-        availability: 'READY_TO_SHIP',
-        price: 220,
-        edition: 'Limited Run',
-        featured: false,
-        stripePriceId: 'price_JW005_REPLACE_WITH_REAL_ID',
-    },
     {
         id: 'TBL-001',
         title: 'Tea Altar Table',
@@ -1619,7 +1646,7 @@ export const FULL_ARCHIVE: Artwork[] = [
         id: 'SIG-101',
         title: 'Beyond the Matrix',
         category: 'Multidimensional Art',
-        coverImage: 'adrian-website/creations/signature-pieces/beyond-the-matrix',
+        coverImage: 'DSC04374_vviyyc',
         images: [],
         description: 'Diving into the abyss, we find our center to be the north star. With endless journey the destination is found here and now.',
         year: '2024',
@@ -2413,38 +2440,6 @@ export const FULL_ARCHIVE: Artwork[] = [
         material: 'Laser Cut Wood, Acrylic, Gemstones',
         availability: 'READY_TO_SHIP',
         price: 969,
-        featured: false,
-    },
-
-    {
-        id: 'MAN-043',
-        title: 'Dream Whisper - Purple Gold',
-        category: 'Multidimensional Art',
-        series: 'Mandala',
-        coverImage: 'adrian-website/creations/mandala/dream-whisper-purple-gold-v2',
-        images: [],
-        description: 'Mandalas are an expression of infinite awareness. All points guide us to our center and light our way home. Dream Whisper is inlaid with Rose Quartz, Carnelian and Amber, painted, stacked, glued, and born through multiple layers of laser cut wood.',
-        year: '2024',
-        dimensions: '23 Inches (58 cm)',
-        material: 'Laser Cut Wood, Acrylic, Gemstones',
-        availability: 'SOLD',
-        price: 900,
-        featured: false,
-    },
-
-    {
-        id: 'MAN-044',
-        title: 'copy of Dream Whisper - Purple Gold',
-        category: 'Multidimensional Art',
-        series: 'Mandala',
-        coverImage: 'adrian-website/creations/mandala/dream-whisper-purple-gold',
-        images: [],
-        description: 'Mandalas are an expression of infinite awareness. All points guide us to our center and light our way home. Dream Whisper is inlaid with Rose Quartz, Carnelian and Amber, painted, stacked, glued, and born through multiple layers of laser cut wood.',
-        year: '2024',
-        dimensions: '23 Inches (58 cm)',
-        material: 'Laser Cut Wood, Acrylic, Gemstones',
-        availability: 'SOLD',
-        price: 900,
         featured: false,
     },
 
@@ -3324,22 +3319,6 @@ export const FULL_ARCHIVE: Artwork[] = [
 
     // --- Uncategorized ---
     {
-        id: 'SIG-109',
-        title: 'Dream Whisper - Purple Gold',
-        category: 'Multidimensional Art',
-        coverImage: 'adrian-website/creations/uncategorized/dream-whisper-purple-gold-v3',
-        images: [],
-        description: 'Mandalas are an expression of infinite awareness. All points guide us to our center and light our way home. Dream Whisper is inlaid with Rose Quartz, Carnelian and Amber, painted, stacked, glued, and born through multiple layers of laser cut wood.',
-        year: '2024',
-        dimensions: '23 Inches (58 cm)',
-        material: 'Laser Cut Wood, Acrylic',
-        availability: 'SOLD',
-        price: 1111,
-        featured: false,
-        isSignaturePiece: true,
-    },
-
-    {
         id: 'SIG-110',
         title: 'Rise Of The Buffalo',
         category: 'Multidimensional Art',
@@ -3356,17 +3335,33 @@ export const FULL_ARCHIVE: Artwork[] = [
     },
 
     {
-        id: 'SIG-111',
-        title: 'Yantra Flower',
+        id: 'SIG-112',
+        title: 'Metamorphosis',
         category: 'Multidimensional Art',
-        coverImage: 'adrian-website/creations/uncategorized/yantra-flower',
-        images: [],
-        description: 'Mandalas are an expression of infinite awareness. All points guide us to our center and light our way home. Yantra Flower is inlaid with Obsidian and Hematite, painted, stacked, glued, and born through multiple layers of laser cut wood.',
+        coverImage: 'Metamorphosis-5_vdtgp9',
+        images: ['Metamorphosis-6_mdyfvv', 'Metamorphosis-7_epdk4g', 'Metamorphosis-8_aussae'],
+        description: '',
         year: '2024',
-        dimensions: '23 Inches (58 cm)',
+        dimensions: '',
         material: 'Laser Cut Wood, Acrylic',
         availability: 'READY_TO_SHIP',
-        price: 1111,
+        price: 9000,
+        featured: false,
+        isSignaturePiece: true,
+    },
+
+    {
+        id: 'SIG-113',
+        title: 'We Rise',
+        category: 'Multidimensional Art',
+        coverImage: 'We-Rise-Lasercut-Art-2_ioi0zv',
+        images: ['We-Rise-Lasercut-Art-3_md7zo4', 'We-Rise-Lasercut-Art-4_xzdgky', 'We-Rise-Lasercut-Art-6_dugjba', 'We-Rise-Lasercut-Art-7_qugmeb', 'we-rise_uizdgs'],
+        description: '',
+        year: '2024',
+        dimensions: '',
+        material: 'Laser Cut Wood, Acrylic',
+        availability: 'READY_TO_SHIP',
+        price: 5000,
         featured: false,
         isSignaturePiece: true,
     },
@@ -3474,7 +3469,7 @@ export const STORIES: Story[] = [
         subtitle: 'Windows Inward',
         category: 'Beneath the Surface',
         date: 'Autumn 2023',
-        image: 'adrian-website/placeholders/story-2',
+        image: 'Mandala-1_tyujra',
         excerpt: 'A mandala is not something to look at. It is a place to enter.',
         content: [
             "Most people think a mandala is a pretty pattern. A decorative circle. Something to color in for relaxation.",
@@ -3499,7 +3494,7 @@ export const STORIES: Story[] = [
         subtitle: '64 Expressions of the Cycle of Changes',
         category: 'Beneath the Surface',
         date: 'Winter 2024',
-        image: 'adrian-website/placeholders/story-3',
+        image: '48_ttflpq',
         excerpt: 'There is a language that all of us speak. It exists beyond words and concepts of the mind.',
         content: [
             "There is a language that all of us speak. It exists beyond words and concepts of the mind. These are the expressions of the elements, of our genetics, of our experience of life through this passage of time.",
@@ -3527,7 +3522,7 @@ export const STORIES: Story[] = [
         subtitle: 'Anchorings of Unseen Realms',
         category: 'Beneath the Surface',
         date: 'Spring 2024',
-        image: 'adrian-website/placeholders/story-4',
+        image: 'adrian-website/creations/light-codes/suni',
         excerpt: 'After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.',
         content: [
             "In Bali, I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
@@ -3573,7 +3568,7 @@ export const STORIES: Story[] = [
         subtitle: 'Twenty years of culture.',
         category: 'The Path',
         date: 'Spring 2023',
-        image: 'adrian-website/placeholders/story-6',
+        image: 'a_90/33B8402A-83D8-4E08-A0B6-09DF0C6DABEF_icglx7',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
             "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.",

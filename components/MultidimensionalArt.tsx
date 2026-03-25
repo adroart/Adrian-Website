@@ -13,7 +13,8 @@ const SubcategoryTile: React.FC<{
     slug?: string;
     link?: string;
     image: string;
-}> = ({ label, desc, slug, link, image }) => {
+    video?: string;
+}> = ({ label, desc, slug, link, image, video }) => {
     const to = link ?? `/creations/multidimensional-art/${slug}`;
 
     return (
@@ -22,17 +23,28 @@ const SubcategoryTile: React.FC<{
             className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500 focus-visible:ring-offset-2"
             aria-label={`Explore ${label}: ${desc}`}
         >
-            {/* Image */}
-            <div className="overflow-hidden">
-                <ArtImage
-                    publicId={image}
-                    variant="tile"
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    width={800}
-                    height={800}
-                />
+            {/* Image or video */}
+            <div className="overflow-hidden aspect-square bg-stone-950">
+                {video ? (
+                    <video
+                        src={video}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover scale-[1.15]"
+                    />
+                ) : (
+                    <ArtImage
+                        publicId={image}
+                        variant="tile"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        width={800}
+                        height={800}
+                    />
+                )}
             </div>
 
             {/* Title — snug under the photo */}
@@ -82,6 +94,7 @@ const MultidimensionalArt: React.FC = () => {
                                 slug={(cat as { slug?: string }).slug}
                                 link={(cat as { link?: string }).link}
                                 image={(cat as { image: string }).image}
+                                video={(cat as { video?: string }).video}
                             />
                         </div>
                     ))}
