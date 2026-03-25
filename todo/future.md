@@ -6,6 +6,8 @@ Not for launch or first month. Revisit as the site matures.
 
 ## Features
 - [ ] Re-add featured creations gallery to homepage (was "Selected Works" masonry grid with GalleryTileCard)
+- [ ] Re-add "Selected Works" section to Creations page (was featured pieces grid shown when no category filter active)
+- [ ] Re-add "Available Now" section to Creations page (was ready-to-ship pieces with link to Shop)
 - [ ] Global site search
 - [ ] "Recently Viewed" pieces (localStorage)
 - [ ] Image comparison slider for Illuminated Works (day vs night)

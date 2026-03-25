@@ -9,7 +9,6 @@ import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS, JEWELRY_GALLERY } from 
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
-import { LAUNCH_FLAGS } from '../launchFlags';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -244,11 +243,6 @@ const Creations: React.FC = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [setSearchParams]);
 
-    // Selected works: first 12 featured items
-    const selectedWorks = useMemo(() => FULL_ARCHIVE.filter(a => a.featured).slice(0, 12), []);
-
-    // Available now: ready-to-ship pieces for the dedicated section
-    const availableNow = useMemo(() => FULL_ARCHIVE.filter(a => a.availability === 'READY_TO_SHIP').slice(0, 8), []);
 
     // Collections for the current category
     const categoryCollections = useMemo(() => {
@@ -284,7 +278,7 @@ const Creations: React.FC = () => {
         return sortArchive(data, sort);
     }, [filter, activeCollection, showAvailableOnly, sort, categoryCollections, collectionPiecesMap]);
 
-    const displayedPieces = filter ? filteredArchive : selectedWorks;
+    const displayedPieces = filteredArchive;
     const showCollectionCards = !!filter && categoryCollections.length >= 2;
 
     // Count available pieces for the toggle label
@@ -346,31 +340,6 @@ const Creations: React.FC = () => {
                 </div>
             )}
 
-            {/* ── Available Now Section ───────────────────────────────── */}
-            {!filter && availableNow.length > 0 && (
-                <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
-                    <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
-                        <div>
-                            <h2 className="font-serif text-3xl sm:text-4xl text-wood-900 font-medium">Available Now</h2>
-                            <p className="font-serif text-base sm:text-lg text-wood-500 italic leading-relaxed mt-1">Ready to ship from the studio.</p>
-                        </div>
-                        {LAUNCH_FLAGS.shopEnabled && (
-                        <Link
-                            to="/shop"
-                            className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold whitespace-nowrap"
-                        >
-                            Visit the Shop <ArrowRight size={14} />
-                        </Link>
-                        )}
-                    </div>
-                    <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-4 lg:gap-5">
-                        {availableNow.map(art => (
-                            <GalleryTileCard key={art.id} art={art} />
-                        ))}
-                    </div>
-                </div>
-            )}
-
             {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -401,7 +370,7 @@ const Creations: React.FC = () => {
                                 )}
                             </>
                         ) : (
-                            <h2 className="font-serif text-2xl text-wood-900 font-medium">Selected Works</h2>
+                            <h2 className="font-serif text-2xl text-wood-900 font-medium">Creations</h2>
                         )}
                     </div>
 
@@ -600,21 +569,6 @@ const Creations: React.FC = () => {
                     </div>
                 )}
 
-                {/* Footer note for Selected Works view */}
-                {!filter && displayedPieces.length > 0 && (
-                    <div className="mt-20 pt-10 border-t border-wood-200 text-center">
-                        <p className="font-serif text-wood-500 italic mb-5 text-base">
-                            Viewing selected works. Choose a category above to explore the full archive.
-                        </p>
-                        <button
-                            type="button"
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:underline"
-                        >
-                            Back to categories
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* Floating back-to-top button */}

@@ -349,7 +349,7 @@ const About: React.FC = () => {
           }}
         >
           <img
-            src={img('innerearth_zxtjmw', { w: 1600, h: 900 })}
+            src={img('innerearth_zxtjmw', { w: 1600, h: 900, gravity: 'center' })}
             alt="Immersive installation space"
             className="absolute inset-0 w-full h-full object-cover object-center grayscale opacity-70"
             loading="lazy"
