@@ -22,6 +22,7 @@ import Welcome from './components/Welcome';
 import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
+import Shopping from './components/Shopping';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
@@ -38,14 +39,15 @@ const AppInner: React.FC = () => {
 
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
+  const isShopping = location.pathname === '/shopping';
   // Keep theme route-based — CSS variable remapping handles dark mode visuals.
   // GenerativeBackground reads isDarkMode separately for canvas colors.
   const theme = isHome ? 'DARK' : 'LIGHT';
 
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      <GenerativeBackground pathname={location.pathname} theme={theme} />
-      {!isWelcome && <Navigation theme={theme} />}
+      {!isShopping && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isWelcome && !isShopping && <Navigation theme={theme} />}
 
       <main id="main-content">
         <Routes>
@@ -67,11 +69,12 @@ const AppInner: React.FC = () => {
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/shopping" element={<Shopping />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
-      {!isWelcome && <Footer />}
+      {!isWelcome && !isShopping && <Footer />}
       <CartDrawer />
     </div>
   );
