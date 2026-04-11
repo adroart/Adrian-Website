@@ -22,6 +22,7 @@ interface OracleDeck {
   material: string;
   image: string;
   sampleCardImage?: string;
+  exploreLink?: string;
   practice?: {
     heading: string;
     steps: string[];
@@ -31,6 +32,21 @@ interface OracleDeck {
 }
 
 const DECKS: OracleDeck[] = [
+  {
+    id: 'universal-language',
+    name: 'Universal Language',
+    tagline: 'The sixty-four expressions of the cycle of changes, in the palm of your hand.',
+    description: [
+      'There is a language that all of us know. Elemental. Genetic. Interstellar. Patterns that navigate the experience of life through the passage of time. It existed before the I Ching, Gene Keys, or astrology gave it a name.',
+      'The Universal Language oracle carries the same artwork as the wooden sculptures, each connected to a hexagram from the I Ching and a corresponding Gene Key. Pay close attention to which ones call out to you. When one speaks, there is a reason waiting in the oracle.',
+      'Nothing needs to be understood to speak with these cards. Your presence and experience is how you commune with these frequencies and discover what they hold for you.',
+    ],
+    cardCount: '64 Cards',
+    dimensions: '3.5" x 5"',
+    material: 'Heavyweight Card Stock',
+    image: img('adrian-website/placeholders/oracle-card-3', { w: 900, h: 1100 }),
+    exploreLink: '/creations/oracle-cards/universal-language',
+  },
   {
     id: 'reflect',
     name: 'Reflect',
@@ -98,20 +114,6 @@ const DECKS: OracleDeck[] = [
         ],
       },
     },
-  },
-  {
-    id: 'universal-language',
-    name: 'Universal Language',
-    tagline: 'The sixty-four expressions of the cycle of changes, in the palm of your hand.',
-    description: [
-      'There is a language that all of us know. Elemental. Genetic. Interstellar. Patterns that navigate the experience of life through the passage of time. It existed before the I Ching, Gene Keys, or astrology gave it a name.',
-      'The Universal Language oracle carries the same artwork as the wooden sculptures, each connected to a hexagram from the I Ching and a corresponding Gene Key. Pay close attention to which ones call out to you. When one speaks, there is a reason waiting in the oracle.',
-      'Nothing needs to be understood to speak with these cards. Your presence and experience is how you commune with these frequencies and discover what they hold for you.',
-    ],
-    cardCount: '64 Cards',
-    dimensions: '3.5" x 5"',
-    material: 'Heavyweight Card Stock',
-    image: img('adrian-website/placeholders/oracle-card-3', { w: 900, h: 1100 }),
   },
   {
     id: 'light-codes-oracle',
@@ -190,6 +192,18 @@ const DeckSection: React.FC<{
               {deck.cardCount} · {deck.dimensions} · {deck.material}
             </div>
           </div>
+
+          {/* Explore all cards CTA */}
+          {deck.exploreLink && (
+            <div className="mt-8">
+              <Link
+                to={deck.exploreLink}
+                className={`inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] font-semibold border-b pb-1 transition-colors ${isDark ? 'text-bronze-400 border-bronze-400 hover:text-bronze-300 hover:border-bronze-300' : 'text-wood-900 border-wood-900 hover:text-bronze-600 hover:border-bronze-600'}`}
+              >
+                Explore all 64 cards
+              </Link>
+            </div>
+          )}
 
           {/* Practice steps (Reflect / Connect only) */}
           {deck.practice && (
@@ -313,17 +327,16 @@ const OracleCards: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
               <Reveal delay={200} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
-                  Four decks. Each one opens a different door. Reflect turns inward.
-                  Connect brings people together. Universal Language speaks through the
-                  sixty-four expressions of the cycle of changes. Light Codes carry
-                  transmissions from unseen realms.
+                  The Universal Language oracle carries sixty-four hexagrams from the I Ching,
+                  each mapped to a Gene Key and a gate in Human Design. A complete system for
+                  working with the cycle of changes through physical art.
                 </p>
               </Reveal>
               <Reveal delay={300} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
-                  The artwork comes from the same place as the sculptures and the paintings.
-                  The same geometry, the same frequencies, the same intention. Compressed
-                  into something you can hold, carry, and share.
+                  Reflect turns inward, 64 questions of light and shadow. Connect opens the
+                  space between people. Light Codes carry transmissions from unseen realms.
+                  Four decks. Each one opens a different door.
                 </p>
               </Reveal>
               <Reveal delay={400} dir="up">
@@ -374,7 +387,7 @@ const OracleCards: React.FC = () => {
         {/* ══ DECK SECTIONS ════════════════════════════════════════════════ */}
         {DECKS.map((deck, i) => (
           <React.Fragment key={deck.id}>
-            {i === 2 && (
+            {i === 1 && (
               <Interstitial
                 src={img('adrian-website/placeholders/hero-wide-1', { w: 1600, h: 900 })}
                 alt="Oracle cards in a ceremony setting"

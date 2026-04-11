@@ -282,6 +282,24 @@
     color: var(--text-secondary);
   }
 
+  /* Card image */
+  .card-image-wrap {
+    margin: 32px 0 40px;
+  }
+  .card-image-wrap img {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .card-image-wrap img {
+      max-width: 240px;
+    }
+  }
+
   /* Codon ring link */
   .ring-link {
     color: var(--accent-gold);
@@ -291,6 +309,24 @@
   }
   .ring-link:hover {
     border-color: var(--accent-gold);
+  }
+
+  /* Attribution */
+  .attribution {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 12px;
+  }
+  .attribution a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .attribution a:hover {
+    color: var(--accent-gold-dim);
+    border-color: var(--accent-gold-dim);
   }
 
   /* Responsive */
@@ -319,6 +355,21 @@
   <div class="card-number">Card 1 of 64</div>
   <h1 class="card-title">Earth's Breath</h1>
   <div class="card-subtitle">The Creative / Ch'ien</div>
+
+  <!-- Card Image -->
+  <!-- Public ID pattern: adrian-website/creations/oracle-cards/card-01 -->
+  <div class="card-image-wrap">
+    <img
+      src="https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_640,c_fit/adrian-website/creations/oracle-cards/card-01"
+      srcset="
+        https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_320,c_fit/adrian-website/creations/oracle-cards/card-01 320w,
+        https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_640,c_fit/adrian-website/creations/oracle-cards/card-01 640w
+      "
+      sizes="(max-width: 600px) 240px, 320px"
+      alt="Earth's Breath — Card 1, Universal Language Oracle"
+      width="640"
+    >
+  </div>
 
   <!-- Trigrams -->
   <div class="trigram-bar">
@@ -379,6 +430,7 @@
     <p>The Gift of Freshness is what breaks through when entropy is met honestly. This is not optimism. It is the willingness to see what is actually here rather than what was here yesterday. Freshness is perception before the mind files it into a known category. Richard Rudd calls this the beauty of melancholy, the capacity to find something alive even inside sadness.</p>
     <p>The Siddhi of Beauty is the Promethean fire. Not beauty as decoration but beauty as the fundamental nature of reality when seen without the filter of entropy. The dance of Shiva. Creation and destruction as one unified movement. From entropy to syntropy, the reversal of collapse into coherence.</p>
   </div>
+  <p class="attribution">Gene Keys text and spectrum based on the work of Richard Rudd. <a href="https://genekeys.com" target="_blank" rel="noopener">genekeys.com</a></p>
 
   <!-- Metadata -->
   <div class="meta-row">
