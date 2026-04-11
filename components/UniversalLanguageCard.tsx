@@ -1,0 +1,280 @@
+
+import React, { useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
+import { FULL_ARCHIVE } from '../data/mockData';
+import { img } from '../utils/cloudinary';
+
+/* ─── Image lookup (same map as index page) ──────────────────────────────── */
+
+const UL_IMAGE_BY_NUMBER = new Map<number, string>(
+  FULL_ARCHIVE
+    .filter(a => a.series === 'Universal Language')
+    .map(a => {
+      const num = parseInt(a.coverImage.split('_')[0], 10);
+      return [num, a.coverImage] as [number, string];
+    })
+    .filter(([num]) => !isNaN(num))
+);
+
+function cardImageUrl(number: number, size: number): string {
+  const publicId = UL_IMAGE_BY_NUMBER.get(number);
+  if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
+  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center' });
+}
+
+/* ─── Section label ──────────────────────────────────────────────────────── */
+
+const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mt-10 mb-3 first:mt-0">
+    {children}
+  </p>
+);
+
+/* ─── Main component ─────────────────────────────────────────────────────── */
+
+const UniversalLanguageCard: React.FC = () => {
+  const { number } = useParams<{ number: string }>();
+  const navigate = useNavigate();
+
+  const cardNum = parseInt(number ?? '', 10);
+  const card = CARD_BY_NUMBER.get(cardNum);
+
+  // Sorted list for prev/next
+  const sortedNums = ALL_CARDS.map(c => c.number);
+  const currentIndex = sortedNums.indexOf(cardNum);
+  const prevNum = currentIndex > 0 ? sortedNums[currentIndex - 1] : null;
+  const nextNum = currentIndex < sortedNums.length - 1 ? sortedNums[currentIndex + 1] : null;
+
+  useEffect(() => { window.scrollTo(0, 0); }, [cardNum]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && prevNum !== null) navigate(`/creations/oracle-cards/universal-language/${prevNum}`);
+      if (e.key === 'ArrowRight' && nextNum !== null) navigate(`/creations/oracle-cards/universal-language/${nextNum}`);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [prevNum, nextNum, navigate]);
+
+  if (!card) {
+    return (
+      <div className="min-h-screen bg-paper-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-serif text-xl text-wood-500 italic mb-4">Card {number} not found.</p>
+          <Link to="/creations/oracle-cards/universal-language" className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 border-b border-bronze-600/40 pb-px">
+            Back to the oracle
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const gkParagraphs = card.gene_keys.description.split('\n\n').filter(Boolean);
+  const siblings = card.codon_ring_siblings;
+
+  return (
+    <div className="min-h-screen bg-paper-50 text-wood-900">
+      <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
+
+        {/* ── Breadcrumb ───────────────────────────────────────────────── */}
+        <nav className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.25em] text-wood-400 mb-12">
+          <Link to="/creations/oracle-cards/universal-language" className="hover:text-wood-700 transition-colors">
+            Universal Language
+          </Link>
+          <span className="text-wood-300">/</span>
+          <span className="text-wood-500">{card.ring_name}</span>
+          <span className="text-wood-300">/</span>
+          <span className="text-wood-700">Card {card.number}</span>
+        </nav>
+
+        {/* ── Card header ──────────────────────────────────────────────── */}
+        <p className="font-label text-[11px] uppercase tracking-[0.3em] text-bronze-600 mb-3">
+          Card {card.number} of 64
+        </p>
+        <h1 className="font-serif text-5xl md:text-6xl text-wood-900 font-medium leading-[1.1] mb-3">
+          {card.card_name}
+        </h1>
+        <p className="font-serif text-xl italic text-wood-500 mb-10">
+          {card.iching.hexagram_name}
+        </p>
+
+        {/* ── Card image ───────────────────────────────────────────────── */}
+        <div className="mb-10 border border-wood-200">
+          <img
+            src={cardImageUrl(card.number, 720)}
+            alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
+            className="w-full aspect-square object-cover"
+            loading="eager"
+          />
+        </div>
+
+        {/* ── Trigram bar ──────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6 py-7 border-t border-b border-wood-200 mb-2">
+          {/* Upper */}
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-1">Upper</p>
+              <span className="text-4xl text-wood-700 leading-none block">{card.iching.upper_trigram.symbol}</span>
+            </div>
+            <div>
+              <p className="font-serif text-base text-wood-900 font-medium">{card.iching.upper_trigram.name}</p>
+              <p className="font-serif text-sm italic text-wood-500 leading-snug max-w-[220px]">{card.iching.upper_trigram.nature}</p>
+            </div>
+          </div>
+
+          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 sm:px-4">over</p>
+
+          {/* Lower */}
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-1">Lower</p>
+              <span className="text-4xl text-wood-700 leading-none block">{card.iching.lower_trigram.symbol}</span>
+            </div>
+            <div>
+              <p className="font-serif text-base text-wood-900 font-medium">{card.iching.lower_trigram.name}</p>
+              <p className="font-serif text-sm italic text-wood-500 leading-snug max-w-[220px]">{card.iching.lower_trigram.nature}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── I Ching ──────────────────────────────────────────────────── */}
+        <SectionLabel>I Ching</SectionLabel>
+        <div className="border-l-2 border-wood-300 pl-5 mb-2">
+          <p className="font-serif text-base italic text-wood-600 leading-[1.85]">
+            {card.iching.essence}
+          </p>
+        </div>
+
+        {/* ── Element ──────────────────────────────────────────────────── */}
+        <SectionLabel>Element</SectionLabel>
+        <p className="font-serif text-base italic text-wood-700 mb-2">{card.element}</p>
+
+        {/* ── Nature ───────────────────────────────────────────────────── */}
+        <SectionLabel>Nature</SectionLabel>
+        <p className="font-serif text-base italic text-wood-600 leading-[1.8] mb-2">{card.nature}</p>
+
+        {/* ── Gene Keys ────────────────────────────────────────────────── */}
+        <SectionLabel>Gene Keys</SectionLabel>
+
+        {/* Spectrum bar */}
+        <div className="flex border border-wood-200 mb-5 overflow-hidden">
+          <div className="flex-1 px-4 py-4 border-r border-wood-200 text-center">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-1.5">Shadow</p>
+            <p className="font-serif text-lg text-wood-600 font-medium">{card.gene_keys.shadow}</p>
+          </div>
+          <div className="flex-1 px-4 py-4 border-r border-wood-200 text-center bg-bronze-50">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-bronze-600 mb-1.5">Gift</p>
+            <p className="font-serif text-lg text-bronze-700 font-medium">{card.gene_keys.gift}</p>
+          </div>
+          <div className="flex-1 px-4 py-4 text-center">
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-1.5">Siddhi</p>
+            <p className="font-serif text-lg text-wood-500 font-medium">{card.gene_keys.siddhi}</p>
+          </div>
+        </div>
+
+        {/* Gene Keys description */}
+        <div className="space-y-4 mb-3">
+          {gkParagraphs.map((p, i) => (
+            <p key={i} className="font-serif text-base text-wood-700 leading-[1.85]">{p}</p>
+          ))}
+        </div>
+        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-400 mb-2">
+          Gene Keys text based on the work of Richard Rudd ·{' '}
+          <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="hover:text-bronze-600 transition-colors border-b border-wood-300 hover:border-bronze-600 pb-px">
+            genekeys.com
+          </a>
+        </p>
+
+        {/* ── Metadata row ─────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-6 py-7 border-t border-b border-wood-200 mt-10">
+          <div>
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-2">Codon Ring</p>
+            <p className="font-serif text-base text-wood-900">{card.ring_name}</p>
+            {siblings.length > 0 && (
+              <div className="mt-1 space-y-0.5">
+                {siblings.map(n => {
+                  const sibling = CARD_BY_NUMBER.get(n);
+                  return sibling ? (
+                    <Link
+                      key={n}
+                      to={`/creations/oracle-cards/universal-language/${n}`}
+                      className="block font-serif text-sm italic text-bronze-600 hover:text-bronze-500 transition-colors"
+                    >
+                      {n}. {sibling.card_name}
+                    </Link>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mb-2">Tarot</p>
+            <p className="font-serif text-base text-wood-900">{card.ring_tarot}</p>
+          </div>
+        </div>
+
+        {/* ── Human Design ─────────────────────────────────────────────── */}
+        <SectionLabel>Human Design</SectionLabel>
+        <p className="font-serif text-base text-wood-900 font-medium mb-2">
+          Gate {card.human_design.gate} · {card.human_design.keyword}
+        </p>
+        <p className="font-serif text-base text-wood-700 leading-[1.85] mb-2">
+          {card.human_design.description}
+        </p>
+
+        {/* ── Color Inspiration ─────────────────────────────────────────── */}
+        <SectionLabel>Color Inspiration</SectionLabel>
+        <div className="bg-wood-100 px-6 py-5 mb-2">
+          <p className="font-serif text-base italic text-wood-600 leading-[1.8]">
+            {card.color_inspiration}
+          </p>
+        </div>
+
+        {/* ── Traditional Colors ────────────────────────────────────────── */}
+        <SectionLabel>Traditional Trigram Colors</SectionLabel>
+        <p className="font-serif text-base text-wood-600 leading-[1.8]">
+          {card.traditional_colors}
+        </p>
+
+        {/* ── Prev / Next navigation ────────────────────────────────────── */}
+        <div className="flex items-center justify-between mt-16 pt-8 border-t border-wood-200">
+          {prevNum !== null ? (
+            <Link
+              to={`/creations/oracle-cards/universal-language/${prevNum}`}
+              className="group flex flex-col gap-1"
+            >
+              <span className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 transition-colors">← Previous</span>
+              <span className="font-serif text-sm text-wood-700 group-hover:text-bronze-600 transition-colors">
+                {prevNum}. {CARD_BY_NUMBER.get(prevNum)?.card_name}
+              </span>
+            </Link>
+          ) : <span />}
+
+          <Link
+            to="/creations/oracle-cards/universal-language"
+            className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 transition-colors"
+          >
+            All 64
+          </Link>
+
+          {nextNum !== null ? (
+            <Link
+              to={`/creations/oracle-cards/universal-language/${nextNum}`}
+              className="group flex flex-col gap-1 items-end"
+            >
+              <span className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 transition-colors">Next →</span>
+              <span className="font-serif text-sm text-wood-700 group-hover:text-bronze-600 transition-colors">
+                {nextNum}. {CARD_BY_NUMBER.get(nextNum)?.card_name}
+              </span>
+            </Link>
+          ) : <span />}
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default UniversalLanguageCard;

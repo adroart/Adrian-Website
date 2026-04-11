@@ -19,6 +19,7 @@ import SubcategoryPage from './components/SubcategoryPage';
 import IlluminatedWorks from './components/IlluminatedWorks';
 import OracleCards from './components/OracleCards';
 import UniversalLanguageIndex from './components/UniversalLanguageIndex';
+import UniversalLanguageCard from './components/UniversalLanguageCard';
 import Welcome from './components/Welcome';
 import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
@@ -57,6 +58,7 @@ const AppInner: React.FC = () => {
           {/* Creations — static routes must come before /:id catch-all */}
           <Route path="/creations" element={<Creations />} />
           <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+          <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCard />} />
           <Route path="/creations/oracle-cards/universal-language" element={<UniversalLanguageIndex />} />
           <Route path="/creations/oracle-cards" element={<Navigate to="/creations/oracle-cards/universal-language" replace />} />
           <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
