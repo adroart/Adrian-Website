@@ -10,6 +10,7 @@ import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
 
 // --- Helpers ---
 
@@ -123,9 +124,10 @@ const PiecePage: React.FC = () => {
 
     // Dynamic meta tags for sharing
     const ogImage = art ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${art.coverImage}` : undefined;
+    const isUL = art?.series === 'Universal Language';
     useMetaTags({
-        title: art?.title,
-        description: art ? `${art.title} by Adrian Rasmussen · ${art.category}${art.dimensions ? ` · ${art.dimensions}` : ''}` : undefined,
+        title: art ? (isUL ? ulMetaTitle(art) : art.title) : undefined,
+        description: art ? (isUL ? ulMetaDescription(art) : `${art.title} by Adrian Rasmussen · ${art.category}${art.dimensions ? ` · ${art.dimensions}` : ''}`) : undefined,
         image: ogImage,
     });
 
@@ -357,14 +359,23 @@ const PiecePage: React.FC = () => {
 
     // --- Schema markup ---
 
-    const productSchema = {
+    const artworkSchema = {
         '@context': 'https://schema.org',
-        '@type': 'Product',
+        '@type': 'VisualArtwork',
         name: art.title,
-        description: art.description,
-        image: art.coverImage,
-        brand: { '@type': 'Brand', name: 'Adrian Rasmussen' },
-        ...(art.material && { material: art.material }),
+        description: isUL ? ulMetaDescription(art) : art.description,
+        url: `https://adrianrasmussen.com/creations/${art.id}`,
+        image: `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_1200,c_fill,g_auto/${art.coverImage}`,
+        creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
+        ...(art.year && { dateCreated: art.year }),
+        ...(art.material && { artMedium: art.material }),
+        ...(art.series && seriesSlug && {
+            isPartOf: {
+                '@type': 'Collection',
+                name: `${art.series} Series`,
+                url: `https://adrianrasmussen.com/creations/multidimensional-art/${seriesSlug}`,
+            },
+        }),
         ...(art.price && {
             offers: {
                 '@type': 'Offer',
@@ -373,6 +384,7 @@ const PiecePage: React.FC = () => {
                 availability: art.availability === 'SOLD'
                     ? 'https://schema.org/SoldOut'
                     : 'https://schema.org/InStock',
+                url: `https://adrianrasmussen.com/creations/${art.id}`,
             },
         }),
     };
@@ -382,7 +394,8 @@ const PiecePage: React.FC = () => {
     ];
     if (art.series && seriesSlug) {
         breadcrumbItems.push({
-            '@type': 'ListItem', position: 2, name: art.series, item: `https://adrianrasmussen.com/series/${seriesSlug}`,
+            '@type': 'ListItem', position: 2, name: art.series,
+            item: `https://adrianrasmussen.com/creations/multidimensional-art/${seriesSlug}`,
         });
         breadcrumbItems.push({
             '@type': 'ListItem', position: 3, name: art.title, item: `https://adrianrasmussen.com/creations/${art.id}`,
@@ -412,7 +425,7 @@ const PiecePage: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: safeJsonLd(productSchema) }}
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(artworkSchema) }}
             />
             <script
                 type="application/ld+json"
@@ -510,7 +523,7 @@ const PiecePage: React.FC = () => {
                         <img
                             src={cldImg(allImages[activeImageIndex], { w: 1200 })}
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
-                            alt={art.title}
+                            alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
                     </div>
 
@@ -547,7 +560,7 @@ const PiecePage: React.FC = () => {
                                     <img
                                         src={cldImg(img, { w: 150, h: 150 })}
                                         className="w-full aspect-square object-cover"
-                                        alt={`${art.title} view ${i + 1}`}
+                                        alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : `${art.title} view ${i + 1}`}
                                     />
                                 </button>
                             ))}

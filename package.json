@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:qr": "tsx scripts/generate-ul-qr.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.7.0",
@@ -20,12 +21,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^25.3.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",
+    "qrcode": "^1.5.4",
     "tailwindcss": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }

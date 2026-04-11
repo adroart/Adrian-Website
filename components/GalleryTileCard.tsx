@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Artwork } from '../types';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
+import { ulAltText, ulCardNumber } from '../utils/universalLanguage';
 
 interface GalleryTileCardProps {
     art: Artwork;
@@ -37,7 +38,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100 border border-wood-200">
                 <ArtImage
                     publicId={art.coverImage}
-                    alt={`${art.title} by Adrian Rasmussen`}
+                    alt={art.series === 'Universal Language' ? ulAltText(art, ulCardNumber(art.coverImage)) : `${art.title} by Adrian Rasmussen`}
                     variant="gallery"
                     loading="lazy"
                 />

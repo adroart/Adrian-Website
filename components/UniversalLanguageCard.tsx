@@ -4,6 +4,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
+import { useMetaTags } from '../hooks/useMetaTags';
 
 /* ─── Image lookup (same map as index page) ──────────────────────────────── */
 
@@ -48,11 +49,19 @@ const UniversalLanguageCard: React.FC = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, [cardNum]);
 
+  // Per-card meta tags
+  const cardImage = card ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${UL_IMAGE_BY_NUMBER.get(cardNum) ?? 'adrian-website/placeholders/oracle-card-3'}` : undefined;
+  useMetaTags({
+    title: card ? `${card.card_name} · Card ${cardNum} · Universal Language Oracle` : undefined,
+    description: card ? `${card.iching.hexagram_name} · ${card.gene_keys.shadow} / ${card.gene_keys.gift} / ${card.gene_keys.siddhi}. Card ${cardNum} of 64 in the Universal Language Oracle by Adrian Rasmussen.` : undefined,
+    image: cardImage,
+  });
+
   // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && prevNum !== null) navigate(`/creations/oracle-cards/universal-language/${prevNum}`);
-      if (e.key === 'ArrowRight' && nextNum !== null) navigate(`/creations/oracle-cards/universal-language/${nextNum}`);
+      if (e.key === 'ArrowLeft' && prevNum !== null) navigate(`/oracle/universal-language/${prevNum}`);
+      if (e.key === 'ArrowRight' && nextNum !== null) navigate(`/oracle/universal-language/${nextNum}`);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -63,7 +72,7 @@ const UniversalLanguageCard: React.FC = () => {
       <div className="min-h-screen bg-paper-50 flex items-center justify-center">
         <div className="text-center">
           <p className="font-serif text-xl text-wood-500 italic mb-4">Card {number} not found.</p>
-          <Link to="/creations/oracle-cards/universal-language" className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 border-b border-bronze-600/40 pb-px">
+          <Link to="/oracle/universal-language" className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 border-b border-bronze-600/40 pb-px">
             Back to the oracle
           </Link>
         </div>
@@ -80,7 +89,9 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ── Breadcrumb ───────────────────────────────────────────────── */}
         <nav className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.25em] text-wood-400 mb-12">
-          <Link to="/creations/oracle-cards/universal-language" className="hover:text-wood-700 transition-colors">
+          <Link to="/creations/oracle-cards" className="hover:text-wood-700 transition-colors">Oracle</Link>
+          <span className="text-wood-300">/</span>
+          <Link to="/oracle/universal-language" className="hover:text-wood-700 transition-colors">
             Universal Language
           </Link>
           <span className="text-wood-300">/</span>
@@ -204,7 +215,7 @@ const UniversalLanguageCard: React.FC = () => {
                   return sibling ? (
                     <Link
                       key={n}
-                      to={`/creations/oracle-cards/universal-language/${n}`}
+                      to={`/oracle/universal-language/${n}`}
                       className="block font-serif text-sm text-bronze-700 hover:text-bronze-500 transition-colors"
                     >
                       {n}. {sibling.card_name}
@@ -247,7 +258,7 @@ const UniversalLanguageCard: React.FC = () => {
         <div className="flex items-center justify-between mt-16 pt-8 border-t border-wood-200">
           {prevNum !== null ? (
             <Link
-              to={`/creations/oracle-cards/universal-language/${prevNum}`}
+              to={`/oracle/universal-language/${prevNum}`}
               className="group flex flex-col gap-1"
             >
               <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 group-hover:text-wood-800 transition-colors">← Previous</span>
@@ -258,7 +269,7 @@ const UniversalLanguageCard: React.FC = () => {
           ) : <span />}
 
           <Link
-            to="/creations/oracle-cards/universal-language"
+            to="/oracle/universal-language"
             className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-800 transition-colors"
           >
             All 64
@@ -266,7 +277,7 @@ const UniversalLanguageCard: React.FC = () => {
 
           {nextNum !== null ? (
             <Link
-              to={`/creations/oracle-cards/universal-language/${nextNum}`}
+              to={`/oracle/universal-language/${nextNum}`}
               className="group flex flex-col gap-1 items-end"
             >
               <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 group-hover:text-wood-800 transition-colors">Next →</span>

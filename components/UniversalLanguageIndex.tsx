@@ -31,13 +31,13 @@ function cardImageUrl(number: number, size: number): string {
 
 const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
   <Link
-    to={`/creations/oracle-cards/universal-language/${card.number}`}
+    to={`/oracle/universal-language/${card.number}`}
     className="group block"
   >
     <div className="relative aspect-square overflow-hidden">
       <img
         src={cardImageUrl(card.number, 320)}
-        alt={`${card.card_name} — Card ${card.number}`}
+        alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
@@ -70,7 +70,7 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
 
 const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
   <Link
-    to={`/creations/oracle-cards/universal-language/${card.number}`}
+    to={`/oracle/universal-language/${card.number}`}
     className="group flex gap-4 border border-wood-200 hover:border-bronze-500/60 transition-colors duration-300 p-4"
   >
     {/* Thumbnail */}
@@ -226,7 +226,7 @@ const UniversalLanguageIndex: React.FC = () => {
 
   const handleRandom = () => {
     const card = ALL_CARDS[Math.floor(Math.random() * ALL_CARDS.length)];
-    navigate(`/creations/oracle-cards/universal-language/${card.number}`);
+    navigate(`/oracle/universal-language/${card.number}`);
   };
 
   return (
@@ -239,7 +239,9 @@ const UniversalLanguageIndex: React.FC = () => {
         <nav className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.25em] text-wood-400 mb-12">
           <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
           <span className="text-wood-300">/</span>
-          <span className="text-wood-700">Oracle Cards</span>
+          <Link to="/creations/oracle-cards" className="hover:text-wood-700 transition-colors">Oracle</Link>
+          <span className="text-wood-300">/</span>
+          <span className="text-wood-700">Universal Language</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-end mb-10">

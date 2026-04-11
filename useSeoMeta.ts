@@ -26,6 +26,16 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     description:
       'Universal Language, Mandala, Light Codes, and Signature Pieces. Windows into the infinite.',
   },
+  '/creations/multidimensional-art/universal-language': {
+    title: 'Universal Language | Mandala Art by Adrian Rasmussen',
+    description:
+      'Sixty-four original airbrushed paintings on laser-cut wood. Each piece connected to a hexagram of the I Ching and a corresponding Gene Key. A complete mandala series by Adrian Rasmussen.',
+  },
+  '/oracle/universal-language': {
+    title: 'Universal Language Oracle | Adrian Rasmussen',
+    description:
+      'Sixty-four cards. Each carrying a hexagram of the I Ching, a Gene Key, and a gate from Human Design. A complete system for working with the cycle of changes. By Adrian Rasmussen.',
+  },
   '/writings': {
     title: 'Writings | Adrian Rasmussen',
     description:
@@ -84,7 +94,7 @@ function resolveConfig(pathname: string): SeoConfig {
     const name = SUBCATEGORY_NAMES[slug] ?? slug;
     return {
       title: `${name} | Multidimensional Art | Adrian Rasmussen`,
-      description: `Explore the ${name} series — multidimensional sculptures in layered wood and light.`,
+      description: `Explore the ${name} series — multidimensional artworks by Adrian Rasmussen.`,
     };
   }
 
@@ -113,10 +123,18 @@ function setOgUrl(url: string) {
 
 const SITE_ORIGIN = 'https://adrianrasmussen.com';
 
+function resolveCanonical(pathname: string): string {
+  // Backwards-compat: /universal-language/:number paths canonicalize to /oracle/universal-language/:number
+  if (/^\/universal-language\//.test(pathname)) {
+    return `${SITE_ORIGIN}/oracle${pathname}`;
+  }
+  return `${SITE_ORIGIN}${pathname === '/' ? '' : pathname}`;
+}
+
 export function useSeoMeta(pathname: string) {
   useEffect(() => {
     const config = resolveConfig(pathname);
-    const canonicalUrl = `${SITE_ORIGIN}${pathname === '/' ? '' : pathname}`;
+    const canonicalUrl = resolveCanonical(pathname);
 
     document.title = config.title;
     setMeta('meta[name="description"]', config.description);

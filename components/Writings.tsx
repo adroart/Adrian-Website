@@ -6,6 +6,7 @@ import { STORIES, FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
+import { useMetaTags } from '../hooks/useMetaTags';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -101,15 +102,29 @@ export const WritingArticle: React.FC = () => {
         );
     }
 
+    const storyUrl = `https://adrianrasmussen.com/writings/${story.slug}`;
+    const storyImageUrl = story.image
+        ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${story.image}`
+        : undefined;
+
+    useMetaTags({
+        title: story.title,
+        description: story.subtitle || story.excerpt,
+        image: storyImageUrl,
+    });
+
     const articleSchema = {
         '@context': 'https://schema.org',
         '@type': 'Article',
         headline: story.title,
-        author: { '@type': 'Person', name: 'Adrian Rasmussen' },
+        author: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
         datePublished: story.date,
         description: story.subtitle || story.excerpt,
-        ...(story.image && { image: story.image }),
-        publisher: { '@type': 'Person', name: 'Adrian Rasmussen' },
+        url: storyUrl,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': storyUrl },
+        ...(storyImageUrl && { image: storyImageUrl }),
+        publisher: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
+        ...(story.readMinutes && { timeRequired: `PT${story.readMinutes}M` }),
     };
 
     // Pieces linked to this story via relatedStorySlug

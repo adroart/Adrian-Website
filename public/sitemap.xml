@@ -11,7 +11,7 @@
   <!-- Category pages -->
   <url><loc>https://adrianrasmussen.com/creations/multidimensional-art</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://adrianrasmussen.com/creations/illuminated-works</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://adrianrasmussen.com/creations/oracle-cards</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://adrianrasmussen.com/oracle/universal-language</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 
   <!-- Subcategory pages -->
   <url><loc>https://adrianrasmussen.com/creations/multidimensional-art/universal-language</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>

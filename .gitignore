@@ -32,3 +32,6 @@ dist-ssr
 
 # Migration data (contains personal info)
 data/migration/
+
+# Generated QR plaque files (run npm run generate:qr to regenerate)
+scripts/output/

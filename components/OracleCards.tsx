@@ -45,7 +45,7 @@ const DECKS: OracleDeck[] = [
     dimensions: '3.5" x 5"',
     material: 'Heavyweight Card Stock',
     image: img('adrian-website/placeholders/oracle-card-3', { w: 900, h: 1100 }),
-    exploreLink: '/creations/oracle-cards/universal-language',
+    exploreLink: '/oracle/universal-language',
   },
   {
     id: 'reflect',

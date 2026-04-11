@@ -58,9 +58,14 @@ const AppInner: React.FC = () => {
           {/* Creations — static routes must come before /:id catch-all */}
           <Route path="/creations" element={<Creations />} />
           <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+          <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
+          <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
+          {/* Backwards-compat redirects — old URLs still resolve */}
+          <Route path="/universal-language/:number" element={<UniversalLanguageCard />} />
+          <Route path="/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
           <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCard />} />
-          <Route path="/creations/oracle-cards/universal-language" element={<UniversalLanguageIndex />} />
-          <Route path="/creations/oracle-cards" element={<Navigate to="/creations/oracle-cards/universal-language" replace />} />
+          <Route path="/creations/oracle-cards/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
+          <Route path="/creations/oracle-cards" element={<Navigate to="/oracle/universal-language" replace />} />
           <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
           <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
           <Route path="/creations/:id" element={<PiecePage />} />

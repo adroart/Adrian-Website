@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'Adrian Rasmussen | Resonant Artifacts';
+const DEFAULT_TITLE = 'Adrian Rasmussen | Technician of the Sacred';
 const DEFAULT_DESCRIPTION =
-  'Multi-dimensional laser cut artwork, original paintings, and sacred geometry by Adrian Rasmussen. Created between Bali and California.';
+  'Multidimensional art between Bali and California. Mandala series, layered wood, and sacred geometry by Adrian Rasmussen.';
 const DEFAULT_IMAGE =
   'https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/adrian-website/placeholders/hero-wide-1';
 
@@ -33,6 +33,7 @@ export function useMetaTags({ title, description, image }: MetaTagOptions) {
     const pageImage = image || DEFAULT_IMAGE;
 
     document.title = pageTitle;
+    setMeta('description', pageDesc);
     setMeta('og:title', pageTitle);
     setMeta('og:description', pageDesc);
     setMeta('og:image', pageImage);
@@ -42,6 +43,7 @@ export function useMetaTags({ title, description, image }: MetaTagOptions) {
 
     return () => {
       document.title = DEFAULT_TITLE;
+      setMeta('description', DEFAULT_DESCRIPTION);
       setMeta('og:title', DEFAULT_TITLE);
       setMeta('og:description', DEFAULT_DESCRIPTION);
       setMeta('og:image', DEFAULT_IMAGE);
