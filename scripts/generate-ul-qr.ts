@@ -34,7 +34,8 @@ import { slugify } from './slugify';
 const BASE_URL = 'https://adrianrasmussen.com';
 
 const URLS = {
-  oracleCard:        (n: number) => `${BASE_URL}/oracle/universal-language/${n}`,
+  // ?ref=qr triggers the entrance animation on arrival
+  oracleCard:        (n: number) => `${BASE_URL}/oracle/universal-language/${n}?ref=qr`,
   oracleDeckLanding:              `${BASE_URL}/oracle/universal-language`,
 };
 

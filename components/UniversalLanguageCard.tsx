@@ -1,19 +1,31 @@
 
-import React, { useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { OracleQREntrance } from './OracleQREntrance';
 
 /* ─── Image lookup (same map as index page) ──────────────────────────────── */
 
+const UL_PIECES = FULL_ARCHIVE.filter(a => a.series === 'Universal Language');
+
 const UL_IMAGE_BY_NUMBER = new Map<number, string>(
-  FULL_ARCHIVE
-    .filter(a => a.series === 'Universal Language')
+  UL_PIECES
     .map(a => {
       const num = parseInt(a.coverImage.split('_')[0], 10);
       return [num, a.coverImage] as [number, string];
+    })
+    .filter(([num]) => !isNaN(num))
+);
+
+// Maps card number → purchasable artwork piece
+const UL_PIECE_BY_NUMBER = new Map<number, typeof UL_PIECES[number]>(
+  UL_PIECES
+    .map(a => {
+      const num = parseInt(a.coverImage.split('_')[0], 10);
+      return [num, a] as [number, typeof UL_PIECES[number]];
     })
     .filter(([num]) => !isNaN(num))
 );
@@ -37,9 +49,19 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const UniversalLanguageCard: React.FC = () => {
   const { number } = useParams<{ number: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const cardNum = parseInt(number ?? '', 10);
   const card = CARD_BY_NUMBER.get(cardNum);
+
+  // Show entrance animation when arriving via a physical QR scan
+  const [showEntrance, setShowEntrance] = useState(() => searchParams.get('ref') === 'qr');
+
+  const handleEntranceDone = () => {
+    setShowEntrance(false);
+    // Clean the ref param from the URL so back/refresh won't retrigger it
+    setSearchParams(prev => { prev.delete('ref'); return prev; }, { replace: true });
+  };
 
   // Sorted list for prev/next
   const sortedNums = ALL_CARDS.map(c => c.number);
@@ -84,6 +106,8 @@ const UniversalLanguageCard: React.FC = () => {
   const siblings = card.codon_ring_siblings;
 
   return (
+    <>
+    {showEntrance && <OracleQREntrance card={card} onDone={handleEntranceDone} />}
     <div className="min-h-screen bg-paper-50 text-wood-900">
       <div className="max-w-3xl mx-auto px-6 pt-32 pb-24">
 
@@ -254,6 +278,41 @@ const UniversalLanguageCard: React.FC = () => {
           {card.traditional_colors}
         </p>
 
+        {/* ── Acquire the piece ─────────────────────────────────────────── */}
+        {(() => {
+          const piece = UL_PIECE_BY_NUMBER.get(card.number);
+          if (!piece) return null;
+          return (
+            <div className="mt-12 pt-8 border-t border-wood-200">
+              <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-4">
+                The original artwork
+              </p>
+              <Link
+                to={`/creations/${piece.id}`}
+                className="group flex items-center gap-4 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-16 h-16 flex-shrink-0 overflow-hidden border border-wood-200">
+                  <img
+                    src={img(piece.coverImage, { w: 128, h: 128 })}
+                    alt={piece.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div>
+                  <p className="font-serif text-base text-wood-900 font-medium group-hover:text-bronze-600 transition-colors">
+                    {piece.title}
+                  </p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 mt-0.5">
+                    {piece.availability === 'SOLD' ? 'Sold' : piece.availability === 'READY_TO_SHIP' ? 'Ready to ship' : 'Made to order'}
+                    {piece.dimensions ? ` · ${piece.dimensions}` : ''}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          );
+        })()}
+
         {/* ── Prev / Next navigation ────────────────────────────────────── */}
         <div className="flex items-center justify-between mt-16 pt-8 border-t border-wood-200">
           {prevNum !== null ? (
@@ -290,6 +349,7 @@ const UniversalLanguageCard: React.FC = () => {
 
       </div>
     </div>
+    </>
   );
 };
 
