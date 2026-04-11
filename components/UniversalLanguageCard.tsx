@@ -90,9 +90,14 @@ const UniversalLanguageCard: React.FC = () => {
         </nav>
 
         {/* ── Card header ──────────────────────────────────────────────── */}
-        <p className="font-label text-[11px] uppercase tracking-[0.3em] text-bronze-600 mb-3">
-          Card {card.number} of 64
-        </p>
+        <div className="flex items-baseline justify-between mb-3">
+          <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-700">
+            {card.number} / 64
+          </span>
+          <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600">
+            {card.ring_name}
+          </span>
+        </div>
         <h1 className="font-serif text-5xl md:text-6xl text-wood-900 font-medium leading-[1.1] mb-3">
           {card.card_name}
         </h1>

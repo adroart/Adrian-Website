@@ -34,8 +34,7 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
     to={`/creations/oracle-cards/universal-language/${card.number}`}
     className="group block"
   >
-    {/* Image */}
-    <div className="relative aspect-square overflow-hidden border border-wood-200 group-hover:border-bronze-500 transition-colors duration-300">
+    <div className="relative aspect-square overflow-hidden">
       <img
         src={cardImageUrl(card.number, 320)}
         alt={`${card.card_name} — Card ${card.number}`}
@@ -43,33 +42,26 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
         loading="lazy"
       />
 
-      {/* Hover overlay — always dark since it overlays an image */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-colors duration-300 flex flex-col justify-end p-3">
-        <div className="translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <p className="font-serif text-[13px] text-stone-100 leading-snug mb-1 line-clamp-1">
-            {card.iching.hexagram_name}
-          </p>
-          <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
-            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-stone-200">{card.gene_keys.shadow}</span>
-            <span className="text-stone-600 text-[11px]">·</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-bronze-300">{card.gene_keys.gift}</span>
-            <span className="text-stone-600 text-[11px]">·</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-stone-200">{card.gene_keys.siddhi}</span>
+      {/* Hover overlay — hexagram + number, centered */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/88 transition-colors duration-300 flex items-center justify-center">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center" style={{ gap: '0.5em', fontSize: 'clamp(22px, 3.8vw, 40px)', transform: 'translateY(8%)' }}>
+          {/* Two trigrams merged into one hexagram.
+              flex+align-items:center ensures pixel-perfect alignment; scaleX widens. */}
+          <div className="select-none text-white/90 flex flex-col items-center" style={{ lineHeight: 1, transform: 'scaleX(1.78)', transformOrigin: 'center' }}>
+            <span>{card.iching.upper_trigram.symbol}</span>
+            <span style={{ marginTop: '-0.37em' }}>{card.iching.lower_trigram.symbol}</span>
           </div>
+          {/* Number — Cinzel, strong, centered below */}
+          <span className="font-display text-white/80 select-none text-center" style={{ fontSize: '0.65em' }}>
+            {card.number}
+          </span>
         </div>
-      </div>
-
-      {/* Card number — always visible */}
-      <div className="absolute top-0 left-0 bg-black/60 px-1.5 py-1">
-        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-300">
-          {String(card.number).padStart(2, '0')}
-        </span>
       </div>
     </div>
 
-    {/* Name below */}
+    {/* Title below — number + name */}
     <p className="pt-1.5 font-serif text-sm text-wood-600 group-hover:text-bronze-600 transition-colors duration-200 leading-snug line-clamp-1">
-      {card.card_name}
+      <span className="text-bronze-600/70 mr-1">{card.number}.</span>{card.card_name}
     </p>
   </Link>
 );

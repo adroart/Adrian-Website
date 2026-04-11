@@ -23,7 +23,7 @@ const VARIANT_CLASSES: Record<ArtVariant, string> = {
     /** Natural aspect ratio — masonry / waterfall grids (GalleryTileCard) */
     gallery: 'w-full h-auto block',
     /** Forced square — category tiles, subcategory tiles */
-    tile:    'w-full aspect-square object-cover',
+    tile:    'w-full aspect-square object-cover mix-blend-multiply',
     /** Fills a fixed-height or aspect-ratio parent — product cards, story cards */
     product: 'w-full h-full object-cover',
     /** Absolutely fills parent — CollectionCard overlays, hero backgrounds */
