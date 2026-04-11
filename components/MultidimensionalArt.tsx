@@ -52,7 +52,7 @@ const SubcategoryTile: React.FC<{
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>
-                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed
+                <p className="font-serif text-sm text-wood-600 font-light mt-1 leading-relaxed
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
@@ -69,7 +69,7 @@ const MultidimensionalArt: React.FC = () => {
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
             {/* Breadcrumb */}
-            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+            <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                 <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                 <span className="text-wood-300">/</span>
                 <span className="text-wood-900">Multidimensional Art</span>

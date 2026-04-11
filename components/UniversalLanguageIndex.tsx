@@ -46,29 +46,29 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
       {/* Hover overlay — always dark since it overlays an image */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/55 transition-colors duration-300 flex flex-col justify-end p-3">
         <div className="translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <p className="font-serif text-xs italic text-stone-300 leading-tight mb-1 line-clamp-1">
+          <p className="font-serif text-[13px] text-stone-100 leading-snug mb-1 line-clamp-1">
             {card.iching.hexagram_name}
           </p>
           <div className="flex flex-wrap gap-x-1.5 gap-y-0.5">
-            <span className="font-label text-[9px] uppercase tracking-wider text-stone-400">{card.gene_keys.shadow}</span>
-            <span className="text-stone-600 text-[9px]">·</span>
-            <span className="font-label text-[9px] uppercase tracking-wider text-bronze-400">{card.gene_keys.gift}</span>
-            <span className="text-stone-600 text-[9px]">·</span>
-            <span className="font-label text-[9px] uppercase tracking-wider text-stone-400">{card.gene_keys.siddhi}</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-stone-200">{card.gene_keys.shadow}</span>
+            <span className="text-stone-600 text-[11px]">·</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-bronze-300">{card.gene_keys.gift}</span>
+            <span className="text-stone-600 text-[11px]">·</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.08em] text-stone-200">{card.gene_keys.siddhi}</span>
           </div>
         </div>
       </div>
 
       {/* Card number — always visible */}
-      <div className="absolute top-0 left-0 bg-black/40 px-1.5 py-1">
-        <span className="font-label text-[9px] uppercase tracking-[0.2em] text-bronze-400/90">
+      <div className="absolute top-0 left-0 bg-black/60 px-1.5 py-1">
+        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-300">
           {String(card.number).padStart(2, '0')}
         </span>
       </div>
     </div>
 
     {/* Name below */}
-    <p className="pt-1.5 font-serif text-xs text-wood-600 group-hover:text-bronze-600 transition-colors duration-200 leading-snug line-clamp-1">
+    <p className="pt-1.5 font-serif text-sm text-wood-600 group-hover:text-bronze-600 transition-colors duration-200 leading-snug line-clamp-1">
       {card.card_name}
     </p>
   </Link>
@@ -94,22 +94,22 @@ const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
     {/* Text */}
     <div className="min-w-0 flex-1">
       <div className="flex items-baseline gap-2 mb-0.5">
-        <span className="font-label text-[9px] uppercase tracking-[0.2em] text-bronze-600/70 flex-shrink-0">
+        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-600/70 flex-shrink-0">
           {String(card.number).padStart(2, '0')}
         </span>
         <h3 className="font-serif text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200 truncate">
           {card.card_name}
         </h3>
       </div>
-      <p className="font-serif text-xs italic text-wood-400 leading-snug mb-2 line-clamp-1">
+      <p className="font-serif text-sm text-wood-600 leading-snug mb-2 line-clamp-1">
         {card.iching.hexagram_name}
       </p>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-        <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-400">{card.gene_keys.shadow}</span>
-        <span className="text-wood-300 text-[9px]">·</span>
-        <span className="font-label text-[9px] uppercase tracking-[0.12em] text-bronze-600">{card.gene_keys.gift}</span>
-        <span className="text-wood-300 text-[9px]">·</span>
-        <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-400">{card.gene_keys.siddhi}</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.shadow}</span>
+        <span className="text-wood-300 text-[11px]">·</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-bronze-700">{card.gene_keys.gift}</span>
+        <span className="text-wood-300 text-[11px]">·</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.siddhi}</span>
       </div>
     </div>
   </Link>

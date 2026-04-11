@@ -180,7 +180,7 @@ const DeckSection: React.FC<{
 
           <div className="space-y-6">
             {deck.description.map((p, i) => (
-              <p key={i} className={`font-serif text-lg leading-[1.7] font-light ${isDark ? 'text-paper-200' : 'text-wood-700'} ${i === 0 ? 'drop-cap' : ''}`}>
+              <p key={i} className={`font-serif text-lg leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'} ${i === 0 ? 'drop-cap' : ''}`}>
                 {p}
               </p>
             ))}
@@ -188,7 +188,7 @@ const DeckSection: React.FC<{
 
           {/* Specs */}
           <div className={`mt-10 pt-6 border-t ${isDark ? 'border-wood-600' : 'border-wood-200'}`}>
-            <div className={`font-serif text-sm ${isDark ? 'text-paper-300' : 'text-wood-500'}`}>
+            <div className={`font-serif text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>
               {deck.cardCount} · {deck.dimensions} · {deck.material}
             </div>
           </div>
@@ -215,11 +215,11 @@ const DeckSection: React.FC<{
                 {deck.practice.steps.map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className={`font-serif text-lg font-light flex-shrink-0 leading-none mt-0.5 ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>{i + 1}</span>
-                    <span className={`font-serif text-base font-light leading-[1.6] ${isDark ? 'text-paper-200' : 'text-wood-700'}`}>{step}</span>
+                    <span className={`font-serif text-base leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'}`}>{step}</span>
                   </li>
                 ))}
               </ol>
-              <p className={`font-serif text-sm italic mt-6 leading-[1.7] ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>
+              <p className={`font-serif text-base mt-6 leading-[1.7] ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>
                 {deck.practice.blessing}
               </p>
               <div className="mt-6">
@@ -228,7 +228,7 @@ const DeckSection: React.FC<{
                 </span>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   {deck.practice.bringsTo.items.map((item, i) => (
-                    <span key={i} className={`font-serif text-sm font-light ${isDark ? 'text-paper-300' : 'text-wood-500'}`}>{item}</span>
+                    <span key={i} className={`font-serif text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>{item}</span>
                   ))}
                 </div>
               </div>

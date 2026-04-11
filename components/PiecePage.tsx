@@ -572,7 +572,7 @@ const PiecePage: React.FC = () => {
                             </h1>
                             <button
                                 onClick={handleShare}
-                                className="shrink-0 mt-2 flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold"
+                                className="shrink-0 mt-2 flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
                                 aria-label="Share this piece"
                             >
                                 {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
@@ -583,7 +583,7 @@ const PiecePage: React.FC = () => {
                         <div className="md:hidden space-y-2.5">
                             {metadataRows.map(row => (
                                 <div key={row.label} className="flex items-baseline justify-between gap-4">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold shrink-0">{row.label}</span>
+                                    <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 font-semibold shrink-0">{row.label}</span>
                                     <span className="font-serif text-base text-wood-700 text-right">{row.value}</span>
                                 </div>
                             ))}
@@ -599,7 +599,7 @@ const PiecePage: React.FC = () => {
                             <div className="flex items-center divide-x divide-wood-200 bg-wood-50/60 border border-wood-100 py-3">
                                 {metadataRows.map((row, i) => (
                                     <div key={row.label} className={`px-5 ${i === 0 ? 'pl-5' : ''}`}>
-                                        <span className="block font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-0.5">{row.label}</span>
+                                        <span className="block font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 font-semibold mb-0.5">{row.label}</span>
                                         <span className="block font-serif text-base text-wood-800">{row.value}</span>
                                     </div>
                                 ))}
@@ -611,7 +611,7 @@ const PiecePage: React.FC = () => {
                     </div>
 
                     <div className="border-l-2 border-bronze-400 pl-5 md:pl-6 mb-8">
-                        <div className="prose prose-stone font-serif text-wood-600 font-light leading-[1.8] text-[15px] md:text-base">
+                        <div className="prose prose-stone font-serif text-wood-700 leading-[1.8] text-base md:text-[17px] max-w-[62ch]">
                             <p>{art.description}</p>
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                         </div>
@@ -623,15 +623,15 @@ const PiecePage: React.FC = () => {
                                     className="flex items-center justify-between w-full text-left group"
                                     aria-expanded={seriesDescExpanded}
                                 >
-                                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                                    <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
                                         About the {art.series ?? 'Series'}
                                     </span>
-                                    <span className="font-label text-[11px] text-wood-400 font-semibold transition-all duration-200">
+                                    <span className="font-label text-[11px] text-wood-600 font-semibold transition-all duration-200">
                                         {seriesDescExpanded ? 'Less' : 'More'}
                                     </span>
                                 </button>
                                 {seriesDescExpanded && (
-                                    <div className="mt-4 font-serif text-wood-500 font-light leading-[1.8] text-[14px] md:text-[15px] animate-fade-in">
+                                    <div className="mt-4 font-serif text-wood-600 leading-[1.8] text-base max-w-[62ch] animate-fade-in">
                                         <p>{art.seriesDescription}</p>
                                     </div>
                                 )}
@@ -796,7 +796,7 @@ const PiecePage: React.FC = () => {
                                                             +{formatPrice(illuminationPrice)}
                                                         </span>
                                                     </div>
-                                                    <p className="font-serif text-sm text-wood-500 mt-1 leading-[1.7]">
+                                                    <p className="font-sans text-sm text-wood-700 mt-1 leading-[1.7]">
                                                         LED installation included. We will finalize the light design together after your order.
                                                     </p>
                                                 </div>
@@ -828,7 +828,7 @@ const PiecePage: React.FC = () => {
                                             {formatPrice(mtoTotal)}
                                         </span>
                                     </div>
-                                    <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold transition-all duration-300">
+                                    <div className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold transition-all duration-300">
                                         {selectedIsInStock ? (
                                             <>
                                                 <span className="inline-block px-2 py-0.5 bg-wood-100 text-avail-ready rounded-sm mr-1">In stock</span>
@@ -866,7 +866,7 @@ const PiecePage: React.FC = () => {
                                     Request to Purchase
                                 </Link>
                                 )}
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mt-4 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 mt-4 font-semibold">
                                     Ships from Bali
                                 </p>
                             </div>
@@ -907,7 +907,7 @@ const PiecePage: React.FC = () => {
                                     Request to Purchase
                                 </Link>
                                 )}
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
                                     Ships from Bali · Arrives in 2 to 3 weeks
                                 </p>
                             </div>
@@ -932,7 +932,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     Commission This Piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
                                     1 to 3 weeks production time
                                 </p>
                             </div>
@@ -945,14 +945,14 @@ const PiecePage: React.FC = () => {
                                         This piece has found its home
                                     </span>
                                     {art.price != null && (
-                                        <span className="font-label text-xs text-wood-400 font-semibold">
+                                        <span className="font-label text-xs text-wood-600 font-semibold">
                                             Originally {formatPrice(art.price)}
                                         </span>
                                     )}
                                 </div>
 
                                 {art.series && seriesLink && seriesData && (
-                                    <p className="font-serif text-sm text-wood-500 leading-[1.7]">
+                                    <p className="font-serif text-base text-wood-600 leading-[1.7]">
                                         Part of the{' '}
                                         <Link to={seriesLink} className="text-bronze-600 hover:underline">
                                             {art.series} series
@@ -968,7 +968,7 @@ const PiecePage: React.FC = () => {
                                 >
                                     Inquire about a similar piece <ArrowRight size={14} />
                                 </Link>
-                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
                                     Each piece is made by hand in Bali
                                 </p>
                             </div>
@@ -977,7 +977,7 @@ const PiecePage: React.FC = () => {
 
                     {/* Category label */}
                     <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
                             {art.category}
                         </span>
                     </div>
@@ -1089,7 +1089,7 @@ const PiecePage: React.FC = () => {
                                         {related.title}
                                     </h4>
                                     {!art.series && (
-                                        <p className="font-label text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mt-1.5 leading-none">
+                                        <p className="font-label text-[11px] md:text-[12px] uppercase tracking-[0.1em] text-wood-600 font-semibold mt-1.5 leading-none">
                                             {related.category}
                                         </p>
                                     )}

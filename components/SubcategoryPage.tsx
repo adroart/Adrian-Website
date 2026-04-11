@@ -161,7 +161,7 @@ const SubcategoryPage: React.FC = () => {
         `font-label text-xs uppercase tracking-[0.18em] font-semibold transition-all whitespace-nowrap px-4 py-2.5 border ${
             active
                 ? 'bg-wood-900 text-paper-50 border-wood-900'
-                : 'bg-transparent text-wood-500 border-wood-200 hover:border-wood-400 hover:text-wood-800'
+                : 'bg-transparent text-wood-600 border-wood-200 hover:border-wood-400 hover:text-wood-800'
         }`;
 
     return (
@@ -177,7 +177,7 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Header — more breathing room */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10 pt-12 pb-14">
-                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-8">
+                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold mb-8">
                     <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
                     <span className="text-wood-300">/</span>
                     <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
@@ -211,7 +211,7 @@ const SubcategoryPage: React.FC = () => {
             <div className="max-w-[1800px] mx-auto px-6 md:px-10 sticky top-[70px] z-30 bg-paper-50 backdrop-blur-md py-4 border-y border-wood-200/60 mb-14">
                 <div className="flex justify-between items-center gap-6">
                     <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
-                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold flex-shrink-0 tabular-nums">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold flex-shrink-0 tabular-nums">
                             {filteredPieces.length} {filteredPieces.length === 1 ? 'piece' : 'pieces'}
                         </span>
 
@@ -242,7 +242,7 @@ const SubcategoryPage: React.FC = () => {
                         {/* Size filter */}
                         {config.filters.includes('size') && sizeOptions.length > 1 && (
                             <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-1">Size</span>
+                                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Size</span>
                                 {sizeOptions.map(s => (
                                     <button
                                         key={s}
@@ -258,7 +258,7 @@ const SubcategoryPage: React.FC = () => {
                         {/* Finish filter */}
                         {config.filters.includes('finish') && finishOptions.length > 1 && (
                             <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mr-1">Finish</span>
+                                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 font-semibold mr-1">Finish</span>
                                 {finishOptions.map(f => (
                                     <button
                                         key={f}
@@ -286,7 +286,7 @@ const SubcategoryPage: React.FC = () => {
                         {hasFiltersActive && (
                             <button
                                 onClick={clearAllFilters}
-                                className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap underline underline-offset-2"
+                                className="font-label text-[12px] uppercase tracking-[0.12em] text-wood-600 hover:text-wood-700 font-semibold transition-colors whitespace-nowrap underline underline-offset-2"
                             >
                                 Clear all
                             </button>
@@ -318,7 +318,7 @@ const SubcategoryPage: React.FC = () => {
                     </div>
                 ) : (
                     <div className="text-center py-24">
-                        <p className="font-serif text-xl text-wood-500 italic">
+                        <p className="font-serif text-xl text-wood-600">
                             {showAvailableOnly
                                 ? 'No available pieces match the current filters.'
                                 : 'No pieces found.'}
@@ -357,7 +357,7 @@ const SubcategoryPage: React.FC = () => {
             {config.showCommissionInvite && config.seriesName !== 'Light Codes' && (
                 <div className="max-w-[1800px] mx-auto px-6 md:px-10 mt-32">
                     <div className="border-t border-wood-200 pt-16 text-center">
-                        <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light italic mb-8 max-w-xl mx-auto leading-[1.4]">
+                        <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light mb-8 max-w-xl mx-auto leading-[1.4]">
                             Something calling to you that does not exist yet?
                         </p>
                         <Link
@@ -382,7 +382,7 @@ const SubcategoryPage: React.FC = () => {
                             <Link
                                 key={slug}
                                 to={`/creations/multidimensional-art/${slug}`}
-                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold border-b border-transparent hover:border-wood-900 pb-1 transition-all"
+                                className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold border-b border-transparent hover:border-wood-900 pb-1 transition-all"
                             >
                                 {cfg.title}
                             </Link>

@@ -8,7 +8,7 @@ const PrivacyPolicy: React.FC = () => {
       <div className="max-w-3xl mx-auto animate-fade-in">
         <h1 className="font-serif text-5xl text-wood-900 mb-12 font-medium">Privacy Policy</h1>
 
-        <div className="prose prose-lg font-serif text-wood-700 max-w-none">
+        <div className="prose prose-lg font-serif text-wood-800 max-w-[72ch]">
           <p className="text-wood-500 text-sm mb-8">Last updated: March 2026</p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Information We Collect</h2>
@@ -54,7 +54,7 @@ const PrivacyPolicy: React.FC = () => {
         <div className="mt-16 pt-8 border-t border-wood-200">
           <Link
             to="/"
-            className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 transition-colors font-semibold"
+            className="font-label text-xs uppercase tracking-[0.1em] text-wood-500 hover:text-wood-900 transition-colors font-semibold"
           >
             &larr; Back to Home
           </Link>

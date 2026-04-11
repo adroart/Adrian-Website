@@ -85,7 +85,7 @@ const NewsletterForm: React.FC = () => {
                 className={`absolute left-0 font-serif transition-all duration-300 pointer-events-none ${
                     isActive
                         ? '-top-5 text-xs text-bronze-400'
-                        : 'top-0 text-lg text-wood-500'
+                        : 'top-0 text-lg text-wood-300'
                 }`}
             >
                 Email address
@@ -165,18 +165,18 @@ const Footer: React.FC = () => {
                         {/* #13 "Currently" status line */}
                         <div className="mt-6 flex items-center gap-2.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-bronze-400 animate-pulse-slow"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold text-wood-400">
-                                Currently — Taking commissions for Spring 2026
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] font-semibold text-wood-200">
+                                Currently, taking commissions for Spring 2026
                             </span>
                         </div>
                     </div>
 
                     {/* Newsletter — 40% on desktop, appears first on mobile */}
                     <div className="w-full md:w-[40%] order-first md:order-last">
-                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 block mb-1 font-semibold">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-200 block mb-1 font-semibold">
                             Join the Inner Circle
                         </span>
-                        <span className="font-serif text-sm text-wood-400 italic block mb-5">
+                        <span className="font-serif text-sm text-wood-200 block mb-5">
                             Studio updates, new work, and writings. Delivered when something wants to be shared.
                         </span>
                         <NewsletterForm />
@@ -194,14 +194,14 @@ const Footer: React.FC = () => {
                         {/* #5 Decorative line before column header */}
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Index</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Index</span>
                         </div>
                         <Link to="/creations" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
                         <Link to="/writings" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
                         {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>}
                         <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
                             <span>Teajia</span>
-                            <span className="block font-serif text-xs text-wood-500 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
+                            <span className="block font-serif text-xs text-wood-300 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
                         </a>
                     </div>
 
@@ -209,7 +209,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Studio</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Studio</span>
                         </div>
                         <Link to="/about" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
                         <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
@@ -219,7 +219,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Information</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Information</span>
                         </div>
                         <Link to="/privacy" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Privacy Policy</Link>
                         <Link to="/terms" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Terms</Link>
@@ -229,7 +229,7 @@ const Footer: React.FC = () => {
                     <div className="flex flex-col gap-3.5">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">Connect</span>
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Connect</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1">
                             <a href="https://www.instagram.com/adrianrasmussen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
@@ -246,7 +246,7 @@ const Footer: React.FC = () => {
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent"></div>
 
                 {/* Bottom Bar — "Designed in Ubud, Bali" removed */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-500 pt-8">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-8">
                     <div className="flex gap-6">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>

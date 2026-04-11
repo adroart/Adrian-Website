@@ -169,12 +169,12 @@ const CollectionCard: React.FC<{
                 <h4 className="font-serif text-xl md:text-2xl text-paper-50 font-medium leading-tight">
                     {collection.name}
                 </h4>
-                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-bold mt-1 block">
+                <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-bold mt-1 block">
                     {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'}
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
                 {collection.description && (
-                    <p className="hidden sm:block font-serif text-sm text-paper-200 font-light mt-1
+                    <p className="hidden sm:block font-serif text-sm text-paper-50 font-light mt-1
                                   sm:opacity-0 sm:translate-y-2
                                   sm:group-hover:opacity-100 sm:group-hover:translate-y-0
                                   transition-all duration-500 delay-75">
@@ -351,7 +351,7 @@ const Creations: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => handleCategoryChange(null)}
-                                    className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-400 hover:text-wood-900 transition-colors underline-offset-2 hover:underline flex-shrink-0 focus-visible:outline-none focus-visible:underline"
+                                    className="font-label text-xs uppercase tracking-[0.2em] font-semibold text-wood-600 hover:text-wood-900 transition-colors underline-offset-2 hover:underline flex-shrink-0 focus-visible:outline-none focus-visible:underline"
                                     aria-label="Back to all creations"
                                 >
                                     All
@@ -392,7 +392,7 @@ const Creations: React.FC = () => {
                             className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors focus-visible:outline-none focus-visible:underline ${
                                 showAvailableOnly
                                     ? 'text-bronze-600'
-                                    : 'text-wood-400 hover:text-wood-900'
+                                    : 'text-wood-600 hover:text-wood-900'
                             }`}
                         >
                             {showAvailableOnly
@@ -432,7 +432,7 @@ const Creations: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setActiveCollection(null)}
-                            className="mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 font-semibold transition-colors focus-visible:outline-none focus-visible:underline"
+                            className="mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold transition-colors focus-visible:outline-none focus-visible:underline"
                         >
                             ← Show all in {filter}
                         </button>
@@ -443,7 +443,7 @@ const Creations: React.FC = () => {
             {/* Single collection label (when exactly 1 collection exists) */}
             {filter && categoryCollections.length === 1 && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-8">
-                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                    <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
                             <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">
@@ -534,7 +534,7 @@ const Creations: React.FC = () => {
                                 ? 'No available pieces in this selection.'
                                 : 'No pieces found.'}
                         </p>
-                        <p className="font-serif text-base text-wood-400 font-light mb-8">
+                        <p className="font-serif text-base text-wood-600 font-light mb-8">
                             {showAvailableOnly
                                 ? 'More pieces are made to order. Remove the filter to see the full archive.'
                                 : 'Try a different category or remove active filters.'}
