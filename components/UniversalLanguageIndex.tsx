@@ -34,7 +34,7 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
     to={`/creations/oracle-cards/universal-language/${card.number}`}
     className="group block"
   >
-    <div className="relative aspect-[5/4] overflow-hidden">
+    <div className="relative aspect-square overflow-hidden">
       <img
         src={cardImageUrl(card.number, 320)}
         alt={`${card.card_name} — Card ${card.number}`}
@@ -42,15 +42,17 @@ const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
         loading="lazy"
       />
 
-      {/* Hover overlay — trigrams + number, centered */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/88 transition-colors duration-300 flex flex-col items-center justify-center">
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center">
-          {/* Trigrams stacked with no gap — reads as one hexagram */}
-          <div className="flex flex-col items-center leading-[0.82] select-none text-white/90" style={{ fontSize: 'clamp(28px, 5vw, 52px)' }}>
+      {/* Hover overlay — hexagram + number, centered */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/88 transition-colors duration-300 flex items-center justify-center">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center" style={{ gap: '0.5em', fontSize: 'clamp(22px, 3.8vw, 40px)', transform: 'translateY(8%)' }}>
+          {/* Two trigrams merged into one hexagram.
+              flex+align-items:center ensures pixel-perfect alignment; scaleX widens. */}
+          <div className="select-none text-white/90 flex flex-col items-center" style={{ lineHeight: 1, transform: 'scaleX(1.78)', transformOrigin: 'center' }}>
             <span>{card.iching.upper_trigram.symbol}</span>
-            <span>{card.iching.lower_trigram.symbol}</span>
+            <span style={{ marginTop: '-0.37em' }}>{card.iching.lower_trigram.symbol}</span>
           </div>
-          <span className="mt-3 font-label uppercase tracking-[0.3em] text-white/70 select-none" style={{ fontSize: 'clamp(14px, 2.5vw, 22px)' }}>
+          {/* Number — Cinzel, strong, centered below */}
+          <span className="font-display text-white/80 select-none text-center" style={{ fontSize: '0.65em' }}>
             {card.number}
           </span>
         </div>
