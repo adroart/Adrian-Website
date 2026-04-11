@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universal Language Oracle - Card 1: Earth's Breath</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #222222;
+    --bg-warm: #2a2520;
+    --text-primary: #e8e0d4;
+    --text-secondary: #a89f93;
+    --text-muted: #6b6460;
+    --accent-gold: #c5a55a;
+    --accent-gold-dim: #8a7a4a;
+    --border-subtle: #333330;
+    --border-warm: #3d3832;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card-detail {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 40px 100px;
+  }
+
+  /* Navigation breadcrumb */
+  .breadcrumb {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .breadcrumb a:hover { color: var(--accent-gold); }
+  .breadcrumb .sep { margin: 0 8px; }
+
+  /* Card number */
+  .card-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent-gold-dim);
+    margin-bottom: 12px;
+  }
+
+  /* Card title */
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  /* Hexagram subtitle */
+  .card-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+
+  /* Trigram display */
+  .trigram-bar {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 28px 0;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 40px;
+  }
+  .trigram-pair {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .trigram-symbol {
+    font-size: 36px;
+    line-height: 1;
+    color: var(--text-primary);
+    opacity: 0.85;
+  }
+  .trigram-info {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .trigram-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .trigram-name {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .trigram-nature {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .trigram-divider {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Section headers */
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-gold-dim);
+    margin-bottom: 16px;
+    margin-top: 44px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* Body text */
+  .body-text {
+    color: var(--text-secondary);
+    font-size: 17px;
+    line-height: 1.8;
+    margin-bottom: 8px;
+  }
+
+  /* I Ching essence block */
+  .iching-block {
+    border-left: 2px solid var(--border-warm);
+    padding-left: 24px;
+    margin: 20px 0 36px;
+  }
+  .iching-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  /* Gene Keys spectrum */
+  .gk-spectrum {
+    display: flex;
+    gap: 0;
+    margin: 20px 0 24px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .gk-level {
+    flex: 1;
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .gk-level:not(:last-child) {
+    border-right: 1px solid var(--border-subtle);
+  }
+  .gk-frequency {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .gk-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+  .gk-shadow .gk-word { color: #8a6b6b; }
+  .gk-gift .gk-word { color: var(--accent-gold); }
+  .gk-siddhi .gk-word { color: #7aa088; }
+
+  .gk-description {
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.85;
+  }
+  .gk-description p {
+    margin-bottom: 16px;
+  }
+  .gk-description p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Element & Nature */
+  .element-line {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .element-value {
+    color: var(--text-primary);
+    font-style: italic;
+  }
+
+  /* Metadata row */
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+    padding: 24px 0;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .meta-item {}
+  .meta-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .meta-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .meta-value .sibling {
+    color: var(--accent-gold-dim);
+    font-style: italic;
+  }
+
+  /* Human Design section */
+  .hd-gate-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  /* Color inspiration */
+  .color-block {
+    background: var(--bg-warm);
+    padding: 28px 28px;
+    border-radius: 2px;
+    margin-top: 20px;
+  }
+  .color-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+  }
+
+  /* Nature section */
+  .nature-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+  }
+
+  /* Card image */
+  .card-image-wrap {
+    margin: 32px 0 40px;
+  }
+  .card-image-wrap img {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .card-image-wrap img {
+      max-width: 240px;
+    }
+  }
+
+  /* Codon ring link */
+  .ring-link {
+    color: var(--accent-gold);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-gold-dim);
+    transition: border-color 0.3s;
+  }
+  .ring-link:hover {
+    border-color: var(--accent-gold);
+  }
+
+  /* Attribution */
+  .attribution {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 12px;
+  }
+  .attribution a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .attribution a:hover {
+    color: var(--accent-gold-dim);
+    border-color: var(--accent-gold-dim);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .card-detail { padding: 32px 20px 60px; }
+    .card-title { font-size: 36px; }
+    .trigram-bar { flex-direction: column; gap: 20px; align-items: flex-start; }
+    .meta-row { grid-template-columns: 1fr; }
+    .gk-spectrum { flex-direction: column; }
+    .gk-level:not(:last-child) { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  }
+</style>
+</head>
+<body>
+
+<div class="card-detail">
+
+  <div class="breadcrumb">
+    <a href="#">Universal Language</a>
+    <span class="sep">/</span>
+    <a href="#">Ring of Fire</a>
+    <span class="sep">/</span>
+    Card 1
+  </div>
+
+  <div class="card-number">Card 1 of 64</div>
+  <h1 class="card-title">Earth's Breath</h1>
+  <div class="card-subtitle">The Creative / Ch'ien</div>
+
+  <!-- Card Image -->
+  <!-- Public ID pattern: adrian-website/creations/oracle-cards/card-01 -->
+  <div class="card-image-wrap">
+    <img
+      src="https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_640,c_fit/adrian-website/creations/oracle-cards/card-01"
+      srcset="
+        https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_320,c_fit/adrian-website/creations/oracle-cards/card-01 320w,
+        https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_640,c_fit/adrian-website/creations/oracle-cards/card-01 640w
+      "
+      sizes="(max-width: 600px) 240px, 320px"
+      alt="Earth's Breath — Card 1, Universal Language Oracle"
+      width="640"
+    >
+  </div>
+
+  <!-- Trigrams -->
+  <div class="trigram-bar">
+    <div class="trigram-pair">
+      <div>
+        <div class="trigram-label">Upper</div>
+        <div class="trigram-symbol">&#9776;</div>
+      </div>
+      <div class="trigram-info">
+        <div class="trigram-name">Heaven (Ch'ien)</div>
+        <div class="trigram-nature">Unceasing forward movement, dynamic, enduring. Spirit power. Father.</div>
+      </div>
+    </div>
+    <div class="trigram-divider">over</div>
+    <div class="trigram-pair">
+      <div>
+        <div class="trigram-label">Lower</div>
+        <div class="trigram-symbol">&#9776;</div>
+      </div>
+      <div class="trigram-info">
+        <div class="trigram-name">Heaven (Ch'ien)</div>
+        <div class="trigram-nature">Unceasing forward movement, dynamic, enduring. Spirit power. Father.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- I Ching -->
+  <div class="section-label">I Ching</div>
+  <div class="iching-block">
+    <p class="iching-text">The Creative works sublime success, furthering through perseverance. The movement of heaven is full of power. Heaven moves persistently. The image is of the dragon. Immersed dragon, no availing of. Viewing a dragon located in the fields. Flying dragon located in heaven. Overbearing dragon possesses repenting. The season rides six dragons used to drive up to heaven. The great: in-fact energy's Spring. Thereupon primordial heaven. Energy persists, tenacious, persevering, strong, robust, dynamic, constant as the motion of heavenly bodies in their orbits.</p>
+  </div>
+
+  <!-- Element & Nature -->
+  <div class="section-label">Element</div>
+  <p class="element-line"><span class="element-value">Metal, the Transformative Moment of autumn and inward gathering</span></p>
+
+  <div class="section-label">Nature</div>
+  <p class="nature-text">The sky before dawn when the stars are still sharp. Lightning held inside a cloud. The moment the stallion lifts its head. Pure heaven, nothing earthly, nothing that has yet taken form.</p>
+
+  <!-- Gene Keys -->
+  <div class="section-label">Gene Keys</div>
+  <div class="gk-spectrum">
+    <div class="gk-level gk-shadow">
+      <div class="gk-frequency">Shadow</div>
+      <div class="gk-word">Entropy</div>
+    </div>
+    <div class="gk-level gk-gift">
+      <div class="gk-frequency">Gift</div>
+      <div class="gk-word">Freshness</div>
+    </div>
+    <div class="gk-level gk-siddhi">
+      <div class="gk-frequency">Siddhi</div>
+      <div class="gk-word">Beauty</div>
+    </div>
+  </div>
+  <div class="gk-description">
+    <p>The Shadow of Entropy is the slow collapse of vitality, the numbness that settles when life becomes repetitive. In its repressed form, this shows up as depression, a deadening. In its reactive form, it becomes frenetic energy, movement without meaning. The dilemma is numbness itself. The victim pattern is the victim of numbness.</p>
+    <p>The Gift of Freshness is what breaks through when entropy is met honestly. This is not optimism. It is the willingness to see what is actually here rather than what was here yesterday. Freshness is perception before the mind files it into a known category. Richard Rudd calls this the beauty of melancholy, the capacity to find something alive even inside sadness.</p>
+    <p>The Siddhi of Beauty is the Promethean fire. Not beauty as decoration but beauty as the fundamental nature of reality when seen without the filter of entropy. The dance of Shiva. Creation and destruction as one unified movement. From entropy to syntropy, the reversal of collapse into coherence.</p>
+  </div>
+  <p class="attribution">Gene Keys text and spectrum based on the work of Richard Rudd. <a href="https://genekeys.com" target="_blank" rel="noopener">genekeys.com</a></p>
+
+  <!-- Metadata -->
+  <div class="meta-row">
+    <div class="meta-item">
+      <div class="meta-label">Codon Ring</div>
+      <div class="meta-value">Ring of Fire</div>
+      <div class="meta-value"><span class="sibling">Shared with: 14. Ancestors Bloom</span></div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Tarot</div>
+      <div class="meta-value">XIV Temperance</div>
+    </div>
+  </div>
+
+  <!-- Human Design -->
+  <div class="section-label">Human Design</div>
+  <div class="hd-gate-number">Gate 1: Self Expression</div>
+  <p class="body-text">Gate 1 sits in the G Center, the center of identity and direction. It is the gate of creative self-expression, the individual's unique contribution that comes not from trying to be original but from allowing what is genuinely inside to move outward. It carries the frequency of the artist whose work is inseparable from who they are. The energy is magnetic and deeply personal.</p>
+
+  <!-- Color Inspiration -->
+  <div class="section-label">Color Inspiration</div>
+  <div class="color-block">
+    <p class="color-text">Deep midnight indigo as the ground. Burnished gold for the fire moving through. Violet-white where the two meet. A single thread of electric blue. Let the darkness carry weight and the light feel sudden, inevitable.</p>
+  </div>
+
+  <!-- Traditional Colors -->
+  <div class="section-label">Traditional Trigram Colors</div>
+  <p class="body-text">Deep indigo, purple-black, the metallic gleam of a sky before it opens. Heaven doubled intensifies these into something almost electric. The deep blue-violet of the firmament at its most charged.</p>
+
+</div>
+
+</body>
+</html>
