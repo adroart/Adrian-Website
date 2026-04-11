@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
@@ -58,7 +58,7 @@ const AppInner: React.FC = () => {
           <Route path="/creations" element={<Creations />} />
           <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
           <Route path="/creations/oracle-cards/universal-language" element={<UniversalLanguageIndex />} />
-          <Route path="/creations/oracle-cards" element={<OracleCards />} />
+          <Route path="/creations/oracle-cards" element={<Navigate to="/creations/oracle-cards/universal-language" replace />} />
           <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
           <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
           <Route path="/creations/:id" element={<PiecePage />} />
