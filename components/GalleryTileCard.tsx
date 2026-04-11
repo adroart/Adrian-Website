@@ -44,7 +44,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
                 {/* Hover overlay with "View" prompt */}
                 <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/15 group-focus-within:bg-wood-900/15 transition-all duration-500 flex items-center justify-center">
-                    <span className="font-label text-[11px] uppercase tracking-[0.25em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
+                    <span className="font-label text-[12px] uppercase tracking-[0.12em] text-paper-50 font-semibold opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 transition-all duration-500 bg-wood-900/50 backdrop-blur-sm px-5 py-2.5">
                         View
                     </span>
                 </div>
@@ -62,11 +62,11 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             <Link to={`/creations/${art.id}`} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
                 <div className="flex items-center justify-center gap-2">
-                    <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold leading-none">
+                    <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-400 font-semibold leading-none">
                         {subtitleOverride || art.category}
                     </span>
                     {pieceNumber && (
-                        <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-wood-300 font-semibold leading-none">
+                        <span className="font-label text-[11px] sm:text-[12px] uppercase tracking-[0.1em] text-wood-300 font-semibold leading-none">
                             {pieceNumber}
                         </span>
                     )}
@@ -84,7 +84,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                             </span>
                         )}
                         {art.availability === 'SOLD' && (
-                            <span className="font-serif text-sm text-wood-400 italic">Sold</span>
+                            <span className="font-serif text-sm text-wood-700 font-medium">Sold</span>
                         )}
                         {/* Status line */}
                         {(art.availability === 'READY_TO_SHIP' || art.availability === 'MADE_TO_ORDER' || (variants && variants.length > 1)) && (

@@ -28,7 +28,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   const isDark = theme === 'DARK' || isMobileMenuOpen;
   const textPrimary = isDark ? 'text-paper-50' : 'text-wood-900';
-  const textSecondary = isDark ? 'text-stone-400' : 'text-wood-700';
+  const textSecondary = isDark ? 'text-stone-300' : 'text-wood-700';
   const accentColor = isDark ? 'text-bronze-400' : 'text-bronze-600';
 
   const isHome = location.pathname === '/';

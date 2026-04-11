@@ -70,7 +70,7 @@ const Hero: React.FC = () => {
           </video>
           {/* Fallback background if video fails to load */}
           <div className="absolute inset-0 bg-gradient-to-br from-wood-900 via-stone-900 to-wood-800 -z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/20 to-transparent pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-950/55 to-stone-950/25 pointer-events-none"></div>
       </div>
 
       <div className="absolute inset-0 bg-wood-900/10 z-1 pointer-events-none mix-blend-multiply"></div>
@@ -83,14 +83,14 @@ const Hero: React.FC = () => {
         }}
       >
           <div className="animate-fade-in max-w-4xl">
-              <span className="font-label text-xs text-bronze-400 uppercase tracking-[0.2em] mb-4 block opacity-80">
+              <span className="font-label text-xs text-bronze-400 uppercase tracking-[0.2em] mb-4 block">
                   Resonant Artifacts
               </span>
               <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-paper-50 tracking-tight leading-[0.92] mb-8 drop-shadow-2xl font-medium">
                   Bringing the <br/>formless into form.
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
-              <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide opacity-90 drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
+              <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
                   From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>
@@ -98,7 +98,7 @@ const Hero: React.FC = () => {
               <div className="mt-8">
                   <Link
                       to="/creations"
-                      className="inline-block font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/40 hover:border-bronze-400 hover:text-bronze-300 px-6 py-3 transition-colors duration-300"
+                      className="inline-block font-label text-xs uppercase tracking-[0.2em] text-paper-50 border border-paper-50/70 hover:border-bronze-400 hover:text-bronze-300 px-6 py-3 transition-colors duration-300"
                   >
                       Explore the Work
                   </Link>
@@ -113,7 +113,7 @@ const Hero: React.FC = () => {
         style={{ opacity: safeOpacity * 0.6 }}
         aria-label="Scroll to content"
       >
-          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-100/80 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
+          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-50 ml-[0.5em] group-hover/enter:text-paper-100 transition-colors">Enter</span>
           <div className="w-px h-16 bg-gradient-to-b from-paper-100/40 to-transparent animate-hero-bounce"></div>
       </button>
     </section>

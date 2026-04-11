@@ -62,9 +62,9 @@ const IlluminatedWorks: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 dark-preserve">
                     {/* Basic Illumination */}
                     <div className="bg-wood-900 p-10 md:p-16">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Basic Illumination</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 dark:text-paper-100 font-semibold block mb-6">Basic Illumination</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Light, included.</h3>
-                        <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
+                        <p className="font-serif text-lg text-paper-300 dark:text-paper-100 font-light leading-[1.7] mb-6">
                             Standard LED strips with preset modes. The piece glows. It shifts between colors. It does what LEDs do out of the box.
                         </p>
                         <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">
@@ -73,9 +73,9 @@ const IlluminatedWorks: React.FC = () => {
                     </div>
                     {/* Curated Light */}
                     <div className="bg-stone-900 p-10 md:p-16">
-                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 font-semibold block mb-6">Curated Light</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.2em] text-paper-300 dark:text-paper-100 font-semibold block mb-6">Curated Light</span>
                         <h3 className="font-serif text-3xl text-paper-50 font-medium mb-6">Programmed by hand. Felt in the room.</h3>
-                        <p className="font-serif text-lg text-paper-300 font-light leading-[1.7] mb-6">
+                        <p className="font-serif text-lg text-paper-300 dark:text-paper-100 font-light leading-[1.7] mb-6">
                             I personally program every transition, every color palette, every mood. Smooth fades. Ambient rhythms. Light that breathes with the piece instead of competing with it.
                         </p>
                         <p className="font-serif text-base text-paper-400 font-light leading-[1.7] italic">

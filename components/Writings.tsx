@@ -129,7 +129,7 @@ export const WritingArticle: React.FC = () => {
             />
             <div className="max-w-3xl mx-auto">
                 <div className="flex justify-between items-center mb-12">
-                    <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                    <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.1em] text-wood-500 font-semibold">
                         <Link to="/writings" className="hover:text-wood-900 transition-colors">Writings</Link>
                         <span className="text-wood-300">/</span>
                         <span className="text-wood-400">{story.category}</span>
@@ -137,7 +137,7 @@ export const WritingArticle: React.FC = () => {
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                         <button
                             onClick={() => navigator.share({ title: story.title, url: window.location.href })}
-                            className="flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2"
+                            className="flex items-center gap-2 font-label text-[12px] uppercase tracking-[0.1em] text-wood-400 hover:text-wood-900 transition-colors font-semibold p-2"
                             aria-label="Share this writing"
                         >
                             <Share2 size={14} /> Share
@@ -153,7 +153,7 @@ export const WritingArticle: React.FC = () => {
                         {story.title}
                     </h1>
                     {story.subtitle && (
-                        <p className="font-serif text-xl md:text-2xl text-wood-600 italic font-light mb-6">
+                        <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light mb-6">
                             {story.subtitle}
                         </p>
                     )}
@@ -177,7 +177,7 @@ export const WritingArticle: React.FC = () => {
                 )}
 
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
-                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-800 leading-[1.85] tracking-[0.01em] mx-auto">
+                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-900 leading-[1.85] tracking-[0.01em] mx-auto max-w-[68ch]">
                     {story.content.map((p, i) => (
                         <React.Fragment key={i}>
                             {/* #15 Subtle divider every 4 paragraphs in long articles */}
@@ -188,7 +188,7 @@ export const WritingArticle: React.FC = () => {
                             )}
                             {/* #13 Pull quotes for paragraphs starting with "> " */}
                             {p.startsWith('> ') ? (
-                                <blockquote className="pull-quote my-10 text-xl md:text-2xl text-wood-600 font-serif italic leading-relaxed">
+                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif italic leading-relaxed">
                                     {p.slice(2)}
                                 </blockquote>
                             ) : (

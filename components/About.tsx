@@ -112,7 +112,7 @@ const About: React.FC = () => {
                 </p>
               </Reveal>
               <Reveal delay={360} dir="up">
-                <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[1.45] font-light italic">
+                <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.55] font-light">
                   The art is not the point. The connection between people is the point. The art holds a
                   space which all of us rest inside. It is there as a confirmation, as a feeling, as a
                   recognition.
@@ -248,7 +248,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={180}>
                 <div className="timeline-node">
-                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7] italic">
+                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7]">
                     Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
                     creating together. That's been true since 2002 and it's true now.
                   </p>
@@ -331,7 +331,7 @@ const About: React.FC = () => {
                   I don't work alone. Many have walked this path with me. Learning, discovering, creating.
                   We work hand in hand to bring these arts into form and share them with the planet.
                 </p>
-                <p className="pg-2 text-bronze-300 italic text-2xl leading-relaxed">
+                <p className="pg-2 text-bronze-200 italic text-2xl leading-relaxed">
                   A family from different origins. One mother. Earth.
                 </p>
               </div>
@@ -439,7 +439,7 @@ const About: React.FC = () => {
         {/* ══ CLOSE / GO DEEPER ═════════════════════════════════════════════ */}
         <div id="about-close" className="px-6 py-32 text-center">
           <Reveal dir="scale">
-            <p className="font-serif text-xl text-wood-500 italic mb-10 max-w-xl mx-auto leading-[1.7]">
+            <p className="font-serif text-xl text-wood-700 mb-10 max-w-xl mx-auto leading-[1.7]">
               The Writings hold more. The philosophy behind the work. The glowing crystal.
               The geometry. The path from formless to form.
             </p>

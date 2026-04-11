@@ -239,10 +239,10 @@ const Inquire: React.FC = () => {
 
   const floatLabel = (field: string) => {
     const isUp = focused[field] || form[field as keyof FormState]?.trim();
-    return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.15em] font-semibold transition-all duration-200 ${
+    return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.1em] font-semibold transition-all duration-200 ${
       isUp
-        ? 'top-0 text-[11px] text-wood-600'
-        : 'top-5 text-xs text-wood-500'
+        ? 'top-0 text-[11px] text-wood-700'
+        : 'top-5 text-xs text-wood-700'
     }`;
   };
 
@@ -460,7 +460,7 @@ const Inquire: React.FC = () => {
         {/* ── Past commission types (was fake testimonial) ──────────── */}
         <div ref={testimonialReveal.ref} className={testimonialReveal.cls}>
           <div className="max-w-2xl mx-auto text-center py-6 mb-4">
-            <p className="font-label text-xs uppercase tracking-[0.15em] text-wood-500 font-semibold mb-4">
+            <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
               Past Commissions Include
             </p>
             <p className="font-serif text-lg text-wood-600 leading-[1.7]">
@@ -497,7 +497,7 @@ const Inquire: React.FC = () => {
                     I'll be in touch within a few days.
                   </p>
                   <div className="border-t border-wood-200 pt-8 mb-8">
-                    <p className="font-label text-xs uppercase tracking-[0.15em] text-wood-500 font-semibold mb-4">
+                    <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
                       While you wait
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -518,7 +518,7 @@ const Inquire: React.FC = () => {
                   </div>
                   <button
                     onClick={handleReset}
-                    className="font-label text-xs uppercase tracking-[0.15em] text-wood-500 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
+                    className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
                   >
                     Send another message
                   </button>
@@ -536,7 +536,7 @@ const Inquire: React.FC = () => {
                       style={{ width: `${Math.round((requiredCount / 3) * 100)}%` }}
                     />
                   </div>
-                  <span className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold tabular-nums whitespace-nowrap">
+                  <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold tabular-nums whitespace-nowrap">
                     {requiredCount} of 3
                   </span>
                 </div>
@@ -545,7 +545,7 @@ const Inquire: React.FC = () => {
                   <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.5] mb-3">
                     Tell me what you are imagining.
                   </p>
-                  <p className="font-serif text-sm text-wood-500 leading-[1.7] mb-10 italic">
+                  <p className="font-serif text-base text-wood-700 leading-[1.7] mb-10 italic">
                     We will figure out the details together.
                   </p>
 
@@ -589,7 +589,7 @@ const Inquire: React.FC = () => {
                         <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('name') && (
-                        <p id="name-error" role="alert" className="font-serif text-sm text-wood-600 mt-1.5 animate-fade-in">
+                        <p id="name-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
                           {getFieldError('name')}
                         </p>
                       )}
@@ -617,7 +617,7 @@ const Inquire: React.FC = () => {
                         <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('email') && (
-                        <p id="email-error" role="alert" className="font-serif text-sm text-wood-600 mt-1.5 animate-fade-in">
+                        <p id="email-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
                           {getFieldError('email')}
                         </p>
                       )}
@@ -654,7 +654,7 @@ const Inquire: React.FC = () => {
                       />
                     </div>
                     {getFieldError('vision') && (
-                      <p id="vision-error" role="alert" className="font-serif text-sm text-wood-600 mt-2 pl-4 animate-fade-in">
+                      <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-2 pl-4 animate-fade-in">
                         {getFieldError('vision')}
                       </p>
                     )}
@@ -667,7 +667,7 @@ const Inquire: React.FC = () => {
                       <div className="w-full flex flex-col items-center gap-3 p-5 border border-wood-400 bg-white text-wood-800 mb-2">
                         <div className="flex items-start gap-3">
                           <AlertCircle size={18} className="shrink-0 mt-0.5 text-wood-600" />
-                          <p className="font-serif text-sm">{errorMsg}</p>
+                          <p className="font-sans text-sm text-red-700">{errorMsg}</p>
                         </div>
                         {mailtoFallback && (
                           <a
@@ -682,7 +682,7 @@ const Inquire: React.FC = () => {
                     <button
                       type="submit"
                       disabled={sendStatus === 'SENDING'}
-                      className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-wait"
+                      className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
                     >
                       {sendStatus === 'SENDING' ? (
                         <span className="animate-pulse">Sending...</span>
@@ -701,7 +701,7 @@ const Inquire: React.FC = () => {
                           <span className="font-label text-xs text-bronze-500 tracking-[0.15em] uppercase">Optional details</span>
                           <span className="flex-1 h-px bg-wood-100" />
                         </div>
-                        <p className="font-serif text-sm text-wood-500 text-center">
+                        <p className="font-sans text-sm text-wood-700 text-center">
                           Helps me prepare for our conversation.
                         </p>
                       </div>
@@ -728,7 +728,7 @@ const Inquire: React.FC = () => {
                             onBlur={() => handleBlur('location')}
                             className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
                           />
-                          <p className="font-serif text-xs text-wood-500 mt-1.5">City, country, or region where the piece will live.</p>
+                          <p className="font-sans text-sm text-wood-700 mt-1.5">City, country, or region where the piece will live.</p>
                         </div>
 
                         {/* Approximate Size Range */}
@@ -744,7 +744,7 @@ const Inquire: React.FC = () => {
                             onBlur={() => handleBlur('sizeRange')}
                             className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
                           />
-                          <p className="font-serif text-xs text-wood-500 mt-1.5">Wall space, table dimensions, or a general sense of scale.</p>
+                          <p className="font-sans text-sm text-wood-700 mt-1.5">Wall space, table dimensions, or a general sense of scale.</p>
                         </div>
 
                         {/* Timeline */}
@@ -797,7 +797,7 @@ const Inquire: React.FC = () => {
                           <div className="w-full flex flex-col items-center gap-3 p-5 border border-wood-400 bg-white text-wood-800 mb-2">
                             <div className="flex items-start gap-3">
                               <AlertCircle size={18} className="shrink-0 mt-0.5 text-wood-600" />
-                              <p className="font-serif text-sm">{errorMsg}</p>
+                              <p className="font-sans text-sm text-red-700">{errorMsg}</p>
                             </div>
                             {mailtoFallback && (
                               <a
@@ -812,7 +812,7 @@ const Inquire: React.FC = () => {
                         <button
                           type="submit"
                           disabled={sendStatus === 'SENDING'}
-                          className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-wait"
+                          className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
                         >
                           {sendStatus === 'SENDING' ? (
                             <span className="animate-pulse">Sending...</span>
@@ -852,7 +852,7 @@ const Inquire: React.FC = () => {
                     <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 font-semibold">
                       {item.label}
                     </p>
-                    <p className="font-serif text-xs text-wood-500 mt-1">
+                    <p className="font-sans text-sm text-wood-700 mt-1">
                       {item.sub}
                     </p>
                   </div>
@@ -907,7 +907,7 @@ const Inquire: React.FC = () => {
             href="mailto:hello@adrianrasmussen.com"
             className="group inline-flex items-center gap-3 px-6 py-3 transition-all duration-300"
           >
-            <span className="font-serif text-base text-wood-500 group-hover:text-wood-700 italic transition-colors">
+            <span className="font-serif text-base text-wood-700 group-hover:text-wood-900 italic transition-colors">
               Just want to say hello?
             </span>
             <span className="w-6 h-px bg-wood-300 group-hover:bg-bronze-400 group-hover:w-8 transition-all duration-300" />

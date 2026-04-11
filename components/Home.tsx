@@ -84,9 +84,9 @@ const Home: React.FC = () => {
                     <div className="flex justify-between items-end mb-12">
                         <div>
                             <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
-                            <p className="font-serif text-base sm:text-lg text-wood-600 italic leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
+                            <p className="font-serif text-base sm:text-lg text-wood-600 leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
                         </div>
-                        <Link to="/writings" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-500 hover:text-wood-900 font-semibold items-center gap-2">
+                        <Link to="/writings" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
                         </Link>
                     </div>
@@ -118,7 +118,7 @@ const Home: React.FC = () => {
                                     <p className="font-serif text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
                                         {story.excerpt}
                                     </p>
-                                    <span className="inline-flex items-center gap-2 mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-500 group-hover:text-bronze-600 font-semibold transition-colors">
+                                    <span className="inline-flex items-center gap-2 mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-600 group-hover:text-bronze-600 font-semibold transition-colors">
                                         Read <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
                                     </span>
                                 </div>
@@ -145,10 +145,10 @@ const Home: React.FC = () => {
                                         <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {story.title}
                                         </h3>
-                                        <p className="font-serif text-sm italic text-bronze-600/80 mb-2 leading-snug">
+                                        <p className="font-serif text-base text-bronze-600 mb-2 leading-snug">
                                             {story.subtitle}
                                         </p>
-                                        <p className="font-serif text-sm text-wood-500 leading-relaxed font-light line-clamp-2">
+                                        <p className="font-serif text-base text-wood-600 leading-relaxed font-light line-clamp-2">
                                             {story.excerpt}
                                         </p>
                                     </div>
