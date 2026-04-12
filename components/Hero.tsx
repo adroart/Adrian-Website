@@ -90,7 +90,7 @@ const Hero: React.FC = () => {
                   Bringing the <br/>formless into form.
               </h1>
               <div className="h-px w-24 bg-bronze-500/50 mb-8 md:hidden mx-auto"></div>
-              <p className="font-serif text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
+              <p className="font-sans text-lg md:text-2xl text-paper-100 font-light leading-[1.7] tracking-wide drop-shadow-lg max-w-xl border-l-0 md:border-l border-bronze-500/30 md:pl-6">
                   From intimate talismans to immersive spaces.<br/>
                   Woven from light, geometry, and intention.
               </p>

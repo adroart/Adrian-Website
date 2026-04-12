@@ -464,11 +464,20 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
 
     const effectivelyDark = theme === 'DARK' || isDarkMode;
 
+    function pageOpacity(p: string): string {
+        if (p === '/') return 'opacity-0';
+        if (p === '/creations') return 'opacity-50 md:opacity-80';
+        if (p.startsWith('/oracle')) return 'opacity-35 md:opacity-60';
+        if (p === '/writings' || p.startsWith('/writings/')) return 'opacity-55 md:opacity-90';
+        if (p === '/inquire') return 'opacity-60 md:opacity-95';
+        return 'opacity-45 md:opacity-75';
+    }
+
     return (
         <canvas
             ref={canvasRef}
             aria-hidden="true"
-            className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pathname === '/' ? 'opacity-0' : 'opacity-60 md:opacity-100'}`}
+            className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pageOpacity(pathname)}`}
             style={{ mixBlendMode: effectivelyDark ? 'screen' : 'multiply' }}
         />
     );

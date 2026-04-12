@@ -54,7 +54,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
             {/* Title plaque — sits between image and detail box like a gallery label */}
             {/* Title plaque — sits between image and detail box like a gallery label */}
             <Link to={`/creations/${art.id}`} className="block py-2 text-center">
-                <h3 className="font-serif text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug truncate">
+                <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug truncate">
                     {displayTitle}
                 </h3>
             </Link>
@@ -77,7 +77,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 {showDetails && (
                     <div className="mt-1.5">
                         {art.price != null && art.availability !== 'SOLD' && (
-                            <span className="font-serif text-base text-wood-700 font-medium">
+                            <span className="font-sans text-base text-wood-700 font-medium">
                                 {formatPrice(art.price)}
                                 {showRange && (
                                     <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>
@@ -85,7 +85,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                             </span>
                         )}
                         {art.availability === 'SOLD' && (
-                            <span className="font-serif text-sm text-wood-700 font-medium">Sold</span>
+                            <span className="font-sans text-sm text-wood-700 font-medium">Sold</span>
                         )}
                         {/* Status line */}
                         {(art.availability === 'READY_TO_SHIP' || art.availability === 'MADE_TO_ORDER' || (variants && variants.length > 1)) && (
@@ -105,7 +105,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
                 {/* Minimal price for non-detail mode */}
                 {!showDetails && art.price != null && art.availability !== 'SOLD' && (
-                    <span className="block mt-1.5 font-serif text-sm text-wood-500">
+                    <span className="block mt-1.5 font-sans text-sm text-wood-500">
                         {formatPrice(art.price)}
                         {showRange && (
                             <span className="text-wood-400 font-light"> to {formatPrice(highPrice!)}</span>

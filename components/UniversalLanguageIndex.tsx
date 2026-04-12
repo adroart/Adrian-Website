@@ -100,7 +100,7 @@ const CardThumbnail: React.FC<{
             lower={card.iching.lower_trigram.symbol}
           />
         </div>
-        <span className="font-display font-bold text-xs lg:text-sm text-stone-900 dark:text-white/90 leading-none">
+        <span className="font-label font-bold text-xs lg:text-sm text-stone-900 dark:text-white/90 leading-none">
           {card.number}
         </span>
       </div>
@@ -170,11 +170,11 @@ const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
         <span className="font-label text-[10px] uppercase tracking-[0.12em] text-bronze-600/70 flex-shrink-0">
           {String(card.number).padStart(2, '0')}
         </span>
-        <h3 className="font-serif text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200">
+        <h3 className="font-sans text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200">
           {card.card_name}
         </h3>
       </div>
-      <p className="font-serif text-sm italic text-wood-500 leading-snug mb-2">
+      <p className="font-sans text-sm text-wood-500 leading-snug mb-2">
         {card.iching.hexagram_name}
       </p>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
@@ -202,7 +202,7 @@ const RingSection: React.FC<{
         <h2 className="font-serif text-xl text-wood-900 font-medium">{ring_name}</h2>
         <span className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600/70">{tarot}</span>
       </div>
-      <p className="font-serif text-sm italic text-wood-500 max-w-xl leading-[1.65]">{description}</p>
+      <p className="font-sans text-sm text-wood-500 max-w-xl leading-[1.65]">{description}</p>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
       {cards.map(card => <RingCardTile key={card.number} card={card} />)}
@@ -219,7 +219,7 @@ const SearchBar: React.FC<{ value: string; onChange: (v: string) => void }> = ({
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder="Search by name, hexagram, keyword, or number..."
-      className="w-full bg-transparent border border-wood-300 focus:border-bronze-500 text-wood-900 placeholder-wood-400 font-serif text-sm px-4 py-2.5 outline-none transition-colors duration-200"
+      className="w-full bg-transparent border border-wood-300 focus:border-bronze-500 text-wood-900 placeholder-wood-400 font-sans text-sm px-4 py-2.5 outline-none transition-colors duration-200"
     />
     {value && (
       <button
@@ -250,13 +250,13 @@ const GridToggle: React.FC<{
         onClick={() => { onGridMode('cards'); onViewMode('grid'); }}
         className={`${btnBase} ${viewMode === 'grid' && gridMode === 'cards' ? active : inactive}`}
       >
-        All Cards
+        I Ching
       </button>
       <button
         onClick={() => { onGridMode('artwork'); onViewMode('grid'); }}
         className={`${btnBase} -ml-px ${viewMode === 'grid' && gridMode === 'artwork' ? active : inactive}`}
       >
-        All Artwork
+        Artwork
       </button>
       <button
         onClick={() => onViewMode('rings')}
@@ -272,7 +272,7 @@ const GridToggle: React.FC<{
 
 const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
   <div className="border-t border-wood-200 pt-16 text-center py-24">
-    <p className="font-serif text-xl text-wood-500 italic mb-4">No cards match that search.</p>
+    <p className="font-serif text-xl text-wood-500 mb-4">No cards match that search.</p>
     <button
       onClick={onClear}
       className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 transition-colors border-b border-bronze-600/40 pb-px"
@@ -372,11 +372,11 @@ const UniversalLanguageIndex: React.FC = () => {
               <p className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-600 mb-5">
                 Universal Language Oracle
               </p>
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-[88px] text-wood-900 font-medium leading-[0.93] mb-6">
+              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
                 Sixty-Four<br />
-                <span className="text-wood-500 font-light italic">Expressions</span>
+                <span className="text-wood-500 font-light">Expressions</span>
               </h1>
-              <p className="font-serif text-lg text-wood-600 max-w-xl leading-[1.7] font-light">
+              <p className="font-sans text-lg text-wood-600 max-w-xl leading-[1.7] font-light">
                 Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
                 Nothing needs to be understood to speak with them.
               </p>

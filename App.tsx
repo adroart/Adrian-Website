@@ -25,6 +25,7 @@ import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
 import Shopping from './components/Shopping';
+import FontPreview from './components/FontPreview';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
@@ -79,6 +80,7 @@ const AppInner: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/shopping" element={<Shopping />} />
+          <Route path="/font-preview" element={<FontPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

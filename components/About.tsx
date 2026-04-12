@@ -89,7 +89,7 @@ const About: React.FC = () => {
               <Tag>Technician of the Sacred</Tag>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="font-serif text-6xl md:text-8xl lg:text-[104px] text-wood-900 leading-[0.93] font-medium mb-16">
+              <h1 className="font-serif text-6xl md:text-8xl text-wood-900 leading-[0.93] font-medium mb-16">
                 Adrian<br />Rasmussen
               </h1>
             </Reveal>
@@ -148,22 +148,22 @@ const About: React.FC = () => {
                 <Tag>The Root</Tag>
                 {/* #3 drop cap, #17 opacity gradient, #2 varied widths, #6 spacing */}
                 <div className="space-y-8">
-                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="drop-cap pg-1 font-sans text-lg text-wood-700 leading-[1.7]">
                     In my earliest years of school, I sat with the founder of Mount Madonna who had taken
                     a vow of silence. He was from India but had decided to bring his wisdom to the West.
                     People still flew from India to see him.
                   </p>
-                  <p className="pg-2 font-serif text-lg text-wood-700 leading-[1.7] max-w-lg">
+                  <p className="pg-2 font-sans text-lg text-wood-700 leading-[1.7] max-w-lg">
                     I had the opportunity to ask questions. He would respond on a chalkboard. But the feeling
                     of sitting next to him was enough. The feeling of being seen. The feeling of presence.
                     Truth that comes through direct connection to the Divine was the only question that
                     mattered. And there was no answer. Except to sit and enjoy the Divinity.
                   </p>
-                  <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="pg-3 font-sans text-lg text-wood-700 leading-[1.7]">
                     Those years taught me the value of just being. Centered in yourself. Unconditionally
                     being there with someone.
                   </p>
-                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7] max-w-md">
+                  <p className="pg-4 font-sans text-lg text-wood-700 leading-[1.7] max-w-md">
                     This is what inspires me to create and what I wish for people to feel in the presence
                     of my creations.
                   </p>
@@ -217,7 +217,7 @@ const About: React.FC = () => {
               <Reveal dir="left" delay={60}>
                 <div className="timeline-node">
                   {/* #3 drop cap on first timeline entry */}
-                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="drop-cap pg-1 font-sans text-lg text-wood-700 leading-[1.7]">
                     I've been creating since before I can remember. Graffiti culture shaped my eye.
                     I painted thousands of one-of-a-kind hats, moved to canvas, and followed the work
                     wherever it led. Then I discovered laser cutting and everything started to come together.
@@ -228,7 +228,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={100}>
                 <div className="timeline-node">
-                  <p className="pg-2 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="pg-2 font-sans text-lg text-wood-700 leading-[1.7]">
                     My tea journey came early. My father introduced it when I was young, and it never left.
                     In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
                     guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
@@ -238,7 +238,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={140}>
                 <div className="timeline-node">
-                  <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="pg-3 font-sans text-lg text-wood-700 leading-[1.7]">
                     Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
                     several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
                     stays the same. Art is the journey, bringing the formless into form in communion with
@@ -248,7 +248,7 @@ const About: React.FC = () => {
               </Reveal>
               <Reveal dir="left" delay={180}>
                 <div className="timeline-node">
-                  <p className="pg-4 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="pg-4 font-sans text-lg text-wood-700 leading-[1.7]">
                     Wherever I go, the same thing happens. Creatives gather. Spaces get built. People start
                     creating together. That's been true since 2002 and it's true now.
                   </p>
@@ -331,7 +331,7 @@ const About: React.FC = () => {
                   I don't work alone. Many have walked this path with me. Learning, discovering, creating.
                   We work hand in hand to bring these arts into form and share them with the planet.
                 </p>
-                <p className="pg-2 text-bronze-200 italic text-2xl leading-relaxed">
+                <p className="pg-2 text-bronze-200 text-2xl leading-relaxed">
                   A family from different origins. One mother. Earth.
                 </p>
               </div>
@@ -390,7 +390,7 @@ const About: React.FC = () => {
         <Reveal dir="scale">
           <div className="px-6 py-14">
             <div className="max-w-md mx-auto border-l-2 border-r-2 border-bronze-400/25 px-8 text-center">
-              <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light leading-[1.35] italic">
+              <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light leading-[1.35]">
                 <span className="ml-[-0.4em]">"</span>By expressing what is true for me,<br />
                 perhaps others feel permission to do the same."
               </p>
@@ -417,7 +417,7 @@ const About: React.FC = () => {
                     <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat
                     there a long time. When he finally stood, he told me what had happened."
                   </blockquote>
-                  <div className="font-serif text-lg text-paper-200 leading-[1.7] max-w-2xl space-y-6">
+                  <div className="font-sans text-lg text-paper-200 leading-[1.7] max-w-2xl space-y-6">
                     <p>
                       He had been carrying suicidal feelings. An unclarity about why life was worth living.
                       But sitting in the presence of the piece, something shifted. It allowed him to go inward
@@ -425,7 +425,7 @@ const About: React.FC = () => {
                       He tapped into something that had always been there inside himself. The art was a
                       gateway. Through it, he felt connected to who he was again.
                     </p>
-                    <p className="font-serif text-xl text-bronze-400 italic">
+                    <p className="font-serif text-xl text-bronze-400">
                       He did the work. The piece just held the space.
                     </p>
                   </div>

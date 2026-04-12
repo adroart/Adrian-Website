@@ -84,7 +84,7 @@ const ProcessBlock: React.FC = () => (
     <div className="break-inside-avoid mb-6 sm:mb-8 lg:mb-10">
         <div className="bg-wood-100 border border-wood-200 p-7">
             <span className="font-label text-xs uppercase tracking-[0.1em] text-bronze-600 mb-3 block font-semibold">The Studio</span>
-            <p className="font-serif text-base text-wood-700 leading-[1.7]">
+            <p className="font-sans text-base text-wood-700 leading-[1.7]">
                 I start with silence. Before the laser is turned on, there is the intention. Often the design arrives in a flash during meditation or tea ceremony. The execution is a dance between digital precision and analog chaos.
             </p>
             <Link
@@ -101,7 +101,7 @@ const MaterialBlock: React.FC = () => (
     <div className="break-inside-avoid mb-6 sm:mb-8 lg:mb-10">
         <div className="border border-wood-200 p-7">
             <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-3 block font-semibold">On Materials</span>
-            <p className="font-serif text-base text-wood-700 leading-[1.7]">
+            <p className="font-sans text-base text-wood-700 leading-[1.7]">
                 Birch, basswood, walnut. Indonesian hardwoods selected by hand. The grain itself is part of the composition. Beneath every layer of paint and gold leaf, the wood breathes.
             </p>
         </div>
@@ -139,10 +139,10 @@ const ShopCategoryTile: React.FC<{
             />
         </div>
         <div className="text-center pt-2.5 pb-2 px-2">
-            <h3 className="font-serif text-lg md:text-xl text-wood-900 font-medium tracking-wide">
+            <h3 className="font-sans text-lg md:text-xl text-wood-900 font-medium tracking-wide">
                 {cat.cat}
             </h3>
-            <p className="font-serif text-base text-wood-700 mt-1 leading-relaxed sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500 ease-out">
+            <p className="font-sans text-base text-wood-700 mt-1 leading-relaxed sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500 ease-out">
                 {cat.desc}
             </p>
         </div>
@@ -181,7 +181,7 @@ const ShopHero: React.FC<{
                             <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold mb-3">{main.material}</p>
                         )}
                         <div className="flex items-center justify-between">
-                            <span className="font-serif text-lg text-wood-700 font-medium">
+                            <span className="font-sans text-lg text-wood-700 font-medium">
                                 {main.highPrice
                                     ? `${formatPrice(main.price)} to ${formatPrice(main.highPrice)}`
                                     : formatPrice(main.price)}
@@ -209,7 +209,7 @@ const ShopHero: React.FC<{
                             <h3 className="font-serif text-xl text-wood-900 font-medium mt-1 mb-2 leading-snug group-hover:text-bronze-700 transition-colors">
                                 {second.title}
                             </h3>
-                            <span className="font-serif text-base text-wood-700 font-medium">
+                            <span className="font-sans text-base text-wood-700 font-medium">
                                 {second.highPrice
                                     ? `${formatPrice(second.price)} to ${formatPrice(second.highPrice)}`
                                     : formatPrice(second.price)}
@@ -259,7 +259,7 @@ const ShopCollectionCard: React.FC<{
                     {isActive && <span className="text-bronze-400 ml-2">· Active</span>}
                 </span>
                 {collection.description && (
-                    <p className="hidden sm:block font-serif text-base text-paper-50 mt-1 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-500 delay-75">
+                    <p className="hidden sm:block font-sans text-base text-paper-50 mt-1 sm:opacity-0 sm:translate-y-2 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-500 delay-75">
                         {collection.description}
                     </p>
                 )}
@@ -300,7 +300,7 @@ const ProductCard: React.FC<{
                                 </p>
                             )}
                             {product.description && (
-                                <p className="font-serif text-base text-paper-50 leading-relaxed line-clamp-2">
+                                <p className="font-sans text-base text-paper-50 leading-relaxed line-clamp-2">
                                     {product.description}
                                 </p>
                             )}
@@ -337,7 +337,7 @@ const ProductCard: React.FC<{
 
                 {isAvailable ? (
                     <div className="mt-1.5 flex items-baseline justify-between gap-3">
-                        <span className="font-serif text-base text-wood-600 font-medium">
+                        <span className="font-sans text-base text-wood-600 font-medium">
                             {product.highPrice
                                 ? `${formatPrice(product.price)} to ${formatPrice(product.highPrice)}`
                                 : formatPrice(product.price)}
@@ -347,7 +347,7 @@ const ProductCard: React.FC<{
                         </span>
                     </div>
                 ) : (
-                    <span className="block mt-1.5 font-serif text-base text-wood-700">Private Collection</span>
+                    <span className="block mt-1.5 font-sans text-base text-wood-700">Private Collection</span>
                 )}
             </div>
         </div>
@@ -492,7 +492,7 @@ const InspectionDrawer: React.FC<{
                         <h1 className="text-3xl md:text-4xl font-serif text-wood-900 mb-4 leading-[1.1] font-medium">
                             {product.title}
                         </h1>
-                        <p className="font-serif text-lg text-wood-700 leading-[1.7] font-normal">
+                        <p className="font-sans text-lg text-wood-700 leading-[1.7] font-normal">
                             {product.longDescription || product.description}
                         </p>
 
@@ -513,24 +513,24 @@ const InspectionDrawer: React.FC<{
                     <div className="border-t border-b border-wood-200 py-8 mb-8 grid grid-cols-2 gap-y-8 gap-x-4">
                         <div>
                             <span className="block font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-1 font-semibold">Origin</span>
-                            <span className="font-serif text-lg text-wood-900">{product.origin || 'Studio'}</span>
+                            <span className="font-sans text-lg text-wood-900">{product.origin || 'Studio'}</span>
                         </div>
                         <div>
                             <span className="block font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-1 font-semibold">Material</span>
-                            <span className="font-serif text-lg text-wood-900">{product.material || 'N/A'}</span>
+                            <span className="font-sans text-lg text-wood-900">{product.material || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-1 font-semibold">Weight</span>
-                            <span className="font-serif text-lg text-wood-900">{product.weight || 'N/A'}</span>
+                            <span className="font-sans text-lg text-wood-900">{product.weight || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-1 font-semibold">Dimensions</span>
-                            <span className="font-serif text-lg text-wood-900">{product.dimensions || 'N/A'}</span>
+                            <span className="font-sans text-lg text-wood-900">{product.dimensions || 'N/A'}</span>
                         </div>
                         {product.edition && (
                             <div className="col-span-2">
                                 <span className="block font-label text-xs uppercase tracking-[0.1em] text-wood-700 mb-1 font-semibold">Edition</span>
-                                <span className="font-serif text-lg text-wood-900">{product.edition}</span>
+                                <span className="font-sans text-lg text-wood-900">{product.edition}</span>
                             </div>
                         )}
                     </div>
@@ -585,13 +585,13 @@ const InspectionDrawer: React.FC<{
                                             <ArtImage publicId={rp.image} alt={rp.title} variant="product" />
                                         </div>
                                         <div className="flex-1 min-w-0 py-1">
-                                            <h4 className="font-serif text-base text-wood-900 font-medium leading-snug group-hover:text-bronze-700 transition-colors truncate">
+                                            <h4 className="font-sans text-base text-wood-900 font-medium leading-snug group-hover:text-bronze-700 transition-colors truncate">
                                                 {rp.title}
                                             </h4>
                                             <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold mt-0.5 truncate">
                                                 {rp.category}
                                             </p>
-                                            <span className="font-serif text-sm text-wood-600 font-medium mt-1 block">
+                                            <span className="font-sans text-sm text-wood-600 font-medium mt-1 block">
                                                 {rp.highPrice
                                                     ? `${formatPrice(rp.price)} to ${formatPrice(rp.highPrice)}`
                                                     : formatPrice(rp.price)}
@@ -788,7 +788,7 @@ const CommissionSection: React.FC = () => (
                 <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-5 leading-snug">
                     Don't see exactly what you're looking for?
                 </h2>
-                <p className="font-serif text-lg text-wood-700 leading-[1.7] mb-8">
+                <p className="font-sans text-lg text-wood-700 leading-[1.7] mb-8">
                     Every piece here can be a starting point for something uniquely yours. A different size, a different material, or a completely new vision.
                 </p>
                 <Link

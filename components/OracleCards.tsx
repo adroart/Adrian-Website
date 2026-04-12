@@ -180,7 +180,7 @@ const DeckSection: React.FC<{
 
           <div className="space-y-6">
             {deck.description.map((p, i) => (
-              <p key={i} className={`font-serif text-lg leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'} ${i === 0 ? 'drop-cap' : ''}`}>
+              <p key={i} className={`font-sans text-lg leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'} ${i === 0 ? 'drop-cap' : ''}`}>
                 {p}
               </p>
             ))}
@@ -188,7 +188,7 @@ const DeckSection: React.FC<{
 
           {/* Specs */}
           <div className={`mt-10 pt-6 border-t ${isDark ? 'border-wood-600' : 'border-wood-200'}`}>
-            <div className={`font-serif text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>
+            <div className={`font-sans text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>
               {deck.cardCount} · {deck.dimensions} · {deck.material}
             </div>
           </div>
@@ -214,12 +214,12 @@ const DeckSection: React.FC<{
               <ol className="space-y-3">
                 {deck.practice.steps.map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <span className={`font-serif text-lg font-light flex-shrink-0 leading-none mt-0.5 ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>{i + 1}</span>
-                    <span className={`font-serif text-base leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'}`}>{step}</span>
+                    <span className={`font-sans text-lg font-light flex-shrink-0 leading-none mt-0.5 ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>{i + 1}</span>
+                    <span className={`font-sans text-base leading-[1.7] ${isDark ? 'text-paper-200 dark:text-paper-50' : 'text-wood-700'}`}>{step}</span>
                   </li>
                 ))}
               </ol>
-              <p className={`font-serif text-base mt-6 leading-[1.7] ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>
+              <p className={`font-sans text-base mt-6 leading-[1.7] ${isDark ? 'text-bronze-400' : 'text-bronze-500'}`}>
                 {deck.practice.blessing}
               </p>
               <div className="mt-6">
@@ -228,7 +228,7 @@ const DeckSection: React.FC<{
                 </span>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   {deck.practice.bringsTo.items.map((item, i) => (
-                    <span key={i} className={`font-serif text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>{item}</span>
+                    <span key={i} className={`font-sans text-base ${isDark ? 'text-paper-300 dark:text-paper-50' : 'text-wood-500'}`}>{item}</span>
                   ))}
                 </div>
               </div>
@@ -252,7 +252,7 @@ const DeckSection: React.FC<{
                       <img src={img(art.coverImage, { w: 112, h: 112 })} alt={art.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                     </div>
                     <div>
-                      <span className={`font-serif text-base group-hover:text-bronze-600 transition-colors font-medium ${isDark ? 'text-paper-100' : 'text-wood-900'}`}>
+                      <span className={`font-sans text-base group-hover:text-bronze-600 transition-colors font-medium ${isDark ? 'text-paper-100' : 'text-wood-900'}`}>
                         {art.title}
                       </span>
                       {art.price && (
@@ -318,7 +318,7 @@ const OracleCards: React.FC = () => {
             </Reveal>
 
             <Reveal delay={120}>
-              <h1 className="font-serif text-6xl md:text-8xl lg:text-[104px] text-wood-900 leading-[0.93] font-medium mb-16">
+              <h1 className="font-serif text-6xl md:text-8xl text-wood-900 leading-[0.93] font-medium mb-16">
                 Oracle<br />Cards
               </h1>
             </Reveal>
@@ -340,7 +340,7 @@ const OracleCards: React.FC = () => {
                 </p>
               </Reveal>
               <Reveal delay={400} dir="up">
-                <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[1.45] font-light italic">
+                <p className="font-serif text-xl md:text-2xl text-wood-600 leading-[1.45] font-light">
                   May each card be a light in the illumination of clarity and peace.
                 </p>
               </Reveal>
@@ -356,18 +356,18 @@ const OracleCards: React.FC = () => {
             <Reveal dir="left">
               <div className="with-margin-note">
                 <div className="space-y-8">
-                  <p className="drop-cap pg-1 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="drop-cap pg-1 font-sans text-lg text-wood-700 leading-[1.7]">
                     Every ancient culture had its oracle. Bones, shells, coins, cards, dreams.
                     The form changes. The function does not. An oracle creates a pause. A moment
                     where the noise of the day recedes and something quieter can be heard.
                   </p>
-                  <p className="pg-2 font-serif text-lg text-wood-700 leading-[1.7] max-w-lg">
+                  <p className="pg-2 font-sans text-lg text-wood-700 leading-[1.7] max-w-lg">
                     I began creating oracle decks because the artwork wanted to be held. The
                     wooden sculptures live on walls. The jewelry lives on the body. But some of
                     these patterns and frequencies wanted to be shuffled, drawn, and sat with.
                     They wanted to participate in the daily practice.
                   </p>
-                  <p className="pg-3 font-serif text-lg text-wood-700 leading-[1.7]">
+                  <p className="pg-3 font-sans text-lg text-wood-700 leading-[1.7]">
                     Two of the decks, Reflect and Connect, are designed as companions. Reflect
                     turns inward, 64 questions of light and shadow for self-inquiry. Connect
                     turns outward, 64 cards of connection and discovery for the space between
@@ -423,11 +423,11 @@ const OracleCards: React.FC = () => {
         {/* ══ CLOSE / ACQUIRE ═════════════════════════════════════════════ */}
         <div id="oracle-close" className="px-6 py-32 text-center bg-wood-100 border-t border-wood-200">
           <Reveal dir="scale">
-            <p className="font-serif text-xl text-wood-500 italic mb-4 max-w-xl mx-auto leading-[1.7]">
+            <p className="font-serif text-xl text-wood-500 mb-4 max-w-xl mx-auto leading-[1.7]">
               Each deck is printed in limited runs. When a run is complete, it may be some time
               before the next.
             </p>
-            <p className="font-serif text-lg text-wood-600 font-light mb-10 max-w-lg mx-auto leading-[1.7]">
+            <p className="font-sans text-lg text-wood-600 font-light mb-10 max-w-lg mx-auto leading-[1.7]">
               If you are interested in a custom oracle deck created for your community,
               ceremony, or personal practice, that conversation begins here.
             </p>

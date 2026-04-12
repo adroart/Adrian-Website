@@ -349,7 +349,7 @@ const Inquire: React.FC = () => {
                 ? 'border-bronze-500 bg-bronze-500'
                 : 'border-wood-300 bg-transparent group-hover:border-wood-400'
             }`} />
-            <span className={`font-serif text-base transition-colors duration-200 ${
+            <span className={`font-sans text-base transition-colors duration-200 ${
               selected ? 'text-wood-900' : 'text-wood-700 group-hover:text-wood-900'
             }`}>
               {opt.label}
@@ -372,7 +372,7 @@ const Inquire: React.FC = () => {
           <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">
             Inquire
           </h1>
-          <p className="font-serif text-lg md:text-xl text-wood-600 max-w-lg mx-auto leading-relaxed mb-10">
+          <p className="font-sans text-lg md:text-xl text-wood-600 max-w-lg mx-auto leading-relaxed mb-10">
             Commissions and collaborations.
           </p>
           <div className="max-w-2xl mx-auto">
@@ -382,11 +382,11 @@ const Inquire: React.FC = () => {
               that transform environments.
             </p>
             <span className="block w-10 h-px bg-bronze-400/50 mx-auto mb-6" />
-            <p className="font-serif text-base text-wood-600 leading-[1.75] italic mb-2">
+            <p className="font-sans text-lg text-wood-600 leading-[1.75] mb-2">
               I am selective. Not every project is the right project.
               The right ones find me, and I recognize them when they do.
             </p>
-            <p className="font-serif text-base text-wood-700 leading-[1.75]">
+            <p className="font-sans text-lg text-wood-700 leading-[1.75]">
               If you are feeling a pull toward working together, trust that.
             </p>
           </div>
@@ -427,11 +427,11 @@ const Inquire: React.FC = () => {
                     />
                   </div>
                   <div className="p-5 md:p-6 flex flex-col flex-1 bg-white">
-                    <h3 className="font-title text-lg tracking-[0.08em] text-wood-900 mb-2">
+                    <h3 className="font-label text-lg tracking-[0.08em] text-wood-900 mb-2">
                       {path.title}
                     </h3>
                     <p
-                      className={`font-serif text-wood-600 leading-[1.7] mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
+                      className={`font-sans text-wood-600 leading-[1.7] mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
                         isSelected ? 'max-h-40 opacity-100' : 'max-h-16 opacity-60'
                       }`}
                     >
@@ -463,7 +463,7 @@ const Inquire: React.FC = () => {
             <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
               Past Commissions Include
             </p>
-            <p className="font-serif text-lg text-wood-600 leading-[1.7]">
+            <p className="font-sans text-lg text-wood-600 leading-[1.7]">
               Oracle deck illustrations, hand-carved furniture, festival stage designs,
               and illuminated altar pieces.
             </p>
@@ -545,7 +545,7 @@ const Inquire: React.FC = () => {
                   <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.5] mb-3">
                     Tell me what you are imagining.
                   </p>
-                  <p className="font-serif text-base text-wood-700 leading-[1.7] mb-10 italic">
+                  <p className="font-sans text-base text-wood-700 leading-[1.7] mb-10">
                     We will figure out the details together.
                   </p>
 
@@ -579,7 +579,7 @@ const Inquire: React.FC = () => {
                         onKeyDown={(e) => handleKeyDown('name', e)}
                         autoComplete="name"
                         aria-describedby={getFieldError('name') ? 'name-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
                         required
                       />
                       <label htmlFor="field-name" className={floatLabel('name')}>
@@ -607,7 +607,7 @@ const Inquire: React.FC = () => {
                         onKeyDown={(e) => handleKeyDown('email', e)}
                         autoComplete="email"
                         aria-describedby={getFieldError('email') ? 'email-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
                         required
                       />
                       <label htmlFor="field-email" className={floatLabel('email')}>
@@ -648,7 +648,7 @@ const Inquire: React.FC = () => {
                         onFocus={() => { handleFocus('vision'); handleVisionFocus(); }}
                         onBlur={() => handleBlur('vision')}
                         aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-serif text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
+                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
                         placeholder="A piece for my meditation space, something that holds stillness..."
                         required
                       />
@@ -726,7 +726,7 @@ const Inquire: React.FC = () => {
                             onChange={handleChange}
                             onFocus={() => handleFocus('location')}
                             onBlur={() => handleBlur('location')}
-                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
+                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
                           />
                           <p className="font-sans text-sm text-wood-700 mt-1.5">City, country, or region where the piece will live.</p>
                         </div>
@@ -742,7 +742,7 @@ const Inquire: React.FC = () => {
                             onChange={handleChange}
                             onFocus={() => handleFocus('sizeRange')}
                             onBlur={() => handleBlur('sizeRange')}
-                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-serif text-lg text-wood-900 outline-none transition-colors"
+                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
                           />
                           <p className="font-sans text-sm text-wood-700 mt-1.5">Wall space, table dimensions, or a general sense of scale.</p>
                         </div>
@@ -835,7 +835,7 @@ const Inquire: React.FC = () => {
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
             <div className="mt-20 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-10">
-              <p className="font-title text-sm tracking-[0.15em] text-wood-700 text-center mb-8">
+              <p className="font-label text-sm tracking-[0.15em] text-wood-700 text-center mb-8">
                 What Happens Next
               </p>
               <div className="flex items-start justify-between relative">
@@ -867,33 +867,33 @@ const Inquire: React.FC = () => {
           <div className="mt-20 max-w-3xl mx-auto">
             <div className="flex items-center gap-4 mb-10">
               <span className="h-px flex-1 bg-wood-200" />
-              <h3 className="font-title text-base tracking-[0.15em] text-wood-900">Common Questions</h3>
+              <h3 className="font-label text-base tracking-[0.15em] text-wood-900">Common Questions</h3>
               <span className="h-px flex-1 bg-wood-200" />
             </div>
             <div className="space-y-8">
               <div>
-                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
+                <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   How long does a commission take?
                 </h4>
-                <p className="font-serif text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8]">
                   Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
+                <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   Where do pieces ship from?
                 </h4>
-                <p className="font-serif text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8]">
                   Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
               <div>
-                <h4 className="font-serif text-lg text-wood-900 mb-2 font-medium">
+                <h4 className="font-sans text-lg text-wood-900 mb-2 font-medium">
                   What sizes are available?
                 </h4>
-                <p className="font-serif text-base text-wood-600 leading-[1.8]">
+                <p className="font-sans text-base text-wood-600 leading-[1.8]">
                   I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
                 </p>
               </div>
@@ -907,7 +907,7 @@ const Inquire: React.FC = () => {
             href="mailto:hello@adrianrasmussen.com"
             className="group inline-flex items-center gap-3 px-6 py-3 transition-all duration-300"
           >
-            <span className="font-serif text-base text-wood-700 group-hover:text-wood-900 italic transition-colors">
+            <span className="font-sans text-base text-wood-700 group-hover:text-wood-900 transition-colors">
               Just want to say hello?
             </span>
             <span className="w-6 h-px bg-wood-300 group-hover:bg-bronze-400 group-hover:w-8 transition-all duration-300" />

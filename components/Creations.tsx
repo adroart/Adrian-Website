@@ -67,7 +67,7 @@ const CreationCategoryCard: React.FC<{
     const inner = (
         <>
             {/* Image or video */}
-            <div className="overflow-hidden aspect-square bg-stone-950">
+            <div className="overflow-hidden aspect-square bg-wood-100">
                 {video ? (
                     <video
                         src={video}
@@ -95,7 +95,7 @@ const CreationCategoryCard: React.FC<{
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
                 </h3>
-                <p className="font-serif text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
+                <p className="font-sans text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
                     {desc}
@@ -174,7 +174,7 @@ const CollectionCard: React.FC<{
                     {isActive && <span className="text-bronze-400 ml-2">· Active filter</span>}
                 </span>
                 {collection.description && (
-                    <p className="hidden sm:block font-serif text-sm text-paper-50 font-light mt-1
+                    <p className="hidden sm:block font-sans text-sm text-paper-50 font-light mt-1
                                   sm:opacity-0 sm:translate-y-2
                                   sm:group-hover:opacity-100 sm:group-hover:translate-y-0
                                   transition-all duration-500 delay-75">
@@ -303,16 +303,16 @@ const Creations: React.FC = () => {
                 <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
                     {/* Hero header */}
                     <div className="mb-12 border-b border-wood-200 pb-10">
-                        <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-8 font-medium tracking-tight">
+                        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 mb-8 font-medium tracking-tight">
                             Creations
                         </h1>
                         <p className="font-serif text-2xl md:text-3xl text-wood-800 max-w-4xl font-medium leading-snug mb-4">
                             I create across many forms.
                         </p>
-                        <p className="font-serif text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
+                        <p className="font-sans text-lg md:text-xl text-wood-600 max-w-4xl font-light leading-[1.7]">
                             Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
                         </p>
-                        <p className="font-serif text-base text-wood-500 max-w-4xl font-light leading-[1.7] mt-3 italic">
+                        <p className="font-sans text-base text-wood-500 max-w-4xl font-light leading-[1.7] mt-3">
                             These are not decoration. They are portals. A place to sit with. To find your center.
                             To feel an opening. Find what calls to you.
                         </p>
@@ -446,7 +446,7 @@ const Creations: React.FC = () => {
                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold">
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
-                            <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-serif text-sm italic">
+                            <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
                                 — {categoryCollections[0].description}
                             </span>
                         )}
@@ -471,7 +471,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Pendants and Jewelry</h2>
-                                <p className="font-serif text-lg text-wood-500 font-light">Necklaces, pendants, and wearable pieces</p>
+                                <p className="font-sans text-lg text-wood-500 font-light">Necklaces, pendants, and wearable pieces</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.jewelry.map((id, i) => (
@@ -490,7 +490,7 @@ const Creations: React.FC = () => {
                         <div className="mb-16">
                             <div className="border-t border-wood-200 pt-10 mb-8">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">Rings</h2>
-                                <p className="font-serif text-lg text-wood-500 font-light">Ye Ming Zhu rings, each unique</p>
+                                <p className="font-sans text-lg text-wood-500 font-light">Ye Ming Zhu rings, each unique</p>
                             </div>
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
                                 {JEWELRY_GALLERY.rings.map((id, i) => (
@@ -529,12 +529,12 @@ const Creations: React.FC = () => {
                 ) : (
                     /* ── Empty State ─────────────────────────────────────── */
                     <div className="text-center py-24 px-6">
-                        <p className="font-serif text-2xl text-wood-600 italic mb-3">
+                        <p className="font-serif text-2xl text-wood-600 mb-3">
                             {showAvailableOnly
                                 ? 'No available pieces in this selection.'
                                 : 'No pieces found.'}
                         </p>
-                        <p className="font-serif text-base text-wood-600 font-light mb-8">
+                        <p className="font-sans text-base text-wood-600 font-light mb-8">
                             {showAvailableOnly
                                 ? 'More pieces are made to order. Remove the filter to see the full archive.'
                                 : 'Try a different category or remove active filters.'}

@@ -90,7 +90,7 @@ export const WritingArticle: React.FC = () => {
             <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Writing Not Found</h1>
-                    <p className="font-serif text-lg text-wood-600 mb-8">The piece you're looking for doesn't exist or has been moved.</p>
+                    <p className="font-sans text-lg text-wood-600 mb-8">The piece you're looking for doesn't exist or has been moved.</p>
                     <Link
                         to="/writings"
                         className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
@@ -192,7 +192,7 @@ export const WritingArticle: React.FC = () => {
                 )}
 
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
-                <div className="article-prose prose prose-lg md:prose-xl font-serif text-wood-900 leading-[1.85] tracking-[0.01em] mx-auto max-w-[68ch]">
+                <div className="article-prose prose prose-lg md:prose-xl font-sans text-wood-900 leading-[1.85] tracking-[0.01em] mx-auto max-w-[68ch]">
                     {story.content.map((p, i) => (
                         <React.Fragment key={i}>
                             {/* #15 Subtle divider every 4 paragraphs in long articles */}
@@ -203,7 +203,7 @@ export const WritingArticle: React.FC = () => {
                             )}
                             {/* #13 Pull quotes for paragraphs starting with "> " */}
                             {p.startsWith('> ') ? (
-                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif italic leading-relaxed">
+                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif leading-relaxed">
                                     {p.slice(2)}
                                 </blockquote>
                             ) : (
@@ -232,7 +232,7 @@ export const WritingArticle: React.FC = () => {
                                         />
                                     </div>
                                     <div>
-                                        <h4 className="font-serif text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                        <h4 className="font-sans text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {art.title}
                                         </h4>
                                         <p className="font-label text-[11px] text-wood-500 uppercase tracking-[0.2em] mt-1 font-semibold">
@@ -256,7 +256,7 @@ export const WritingArticle: React.FC = () => {
                                 <ArrowLeft size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
                                 <div className="min-w-0">
                                     <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 block font-semibold">Previous</span>
-                                    <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{prevStory.title}</span>
+                                    <span className="font-sans text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{prevStory.title}</span>
                                 </div>
                             </Link>
                         ) : <div className="flex-1" />}
@@ -267,7 +267,7 @@ export const WritingArticle: React.FC = () => {
                             >
                                 <div className="min-w-0">
                                     <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 block font-semibold">Next</span>
-                                    <span className="font-serif text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{nextStory.title}</span>
+                                    <span className="font-sans text-wood-700 group-hover:text-bronze-700 transition-colors text-sm md:text-base truncate block">{nextStory.title}</span>
                                 </div>
                                 <ArrowRight size={14} className="flex-shrink-0 text-wood-400 group-hover:text-bronze-600 transition-colors" />
                             </Link>
@@ -295,7 +295,7 @@ export const WritingArticle: React.FC = () => {
                                     <h4 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-2">
                                         {next.title}
                                     </h4>
-                                    <p className="font-serif text-sm text-wood-600 line-clamp-2 leading-relaxed">
+                                    <p className="font-sans text-sm text-wood-600 line-clamp-2 leading-relaxed">
                                         {next.excerpt}
                                     </p>
                                 </Link>
@@ -385,7 +385,7 @@ const Writings: React.FC = () => {
                 {/* #1 Header with subtitle/epigraph */}
                 <div className="text-center mb-12">
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">Writings</h1>
-                    <p className="font-serif text-lg md:text-xl text-wood-500 font-light max-w-lg mx-auto leading-relaxed">
+                    <p className="font-sans text-lg md:text-xl text-wood-500 font-light max-w-lg mx-auto leading-relaxed">
                         Reflections on art, knowledge, and the inner life — written from experience.
                     </p>
                 </div>
@@ -423,7 +423,7 @@ const Writings: React.FC = () => {
                         >
                             <div className="mb-10 pb-6 border-b border-wood-100">
                                 <h2 className="font-serif text-3xl text-wood-900 font-medium mb-2">{cat}</h2>
-                                <p className="font-serif text-base text-wood-500 font-light leading-relaxed">
+                                <p className="font-sans text-base text-wood-500 font-light leading-relaxed">
                                     {CATEGORY_SUBTEXT[cat]}
                                 </p>
                             </div>
@@ -457,7 +457,7 @@ const Writings: React.FC = () => {
                                                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 mb-3 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                                     {story.title}
                                                 </h3>
-                                                <p className="font-serif text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
+                                                <p className="font-sans text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
                                                     {story.excerpt}
                                                 </p>
                                                 {/* Refined tag pills */}

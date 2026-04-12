@@ -21,7 +21,7 @@ const Home: React.FC = () => {
                         <span className="ml-[-0.5em]">"</span>Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment."
                     </blockquote>
                     <div className="mt-12 space-y-6 text-center">
-                        <p className="font-serif text-lg md:text-xl text-wood-600 leading-[1.7] font-light">
+                        <p className="font-sans text-lg md:text-xl text-wood-600 leading-[1.7] font-light">
                             My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
                         </p>
                     </div>
@@ -61,10 +61,10 @@ const Home: React.FC = () => {
                             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-wood-900 leading-[1.15] mb-6 font-medium">
                                 Every piece begins with a conversation
                             </h2>
-                            <p className="font-serif text-lg text-wood-600 leading-[1.7] font-light mb-4">
+                            <p className="font-sans text-lg text-wood-600 leading-[1.7] font-light mb-4">
                                 The geometry is exact. The laser is precise. But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.
                             </p>
-                            <p className="font-serif text-lg text-wood-600 leading-[1.7] font-light mb-10">
+                            <p className="font-sans text-lg text-wood-600 leading-[1.7] font-light mb-10">
                                 Whether you're drawn to a specific form or simply feel a resonance with the work, the process starts the same way. Tell me what you're feeling. We'll find the piece together.
                             </p>
                             <Link
@@ -84,7 +84,7 @@ const Home: React.FC = () => {
                     <div className="flex justify-between items-end mb-12">
                         <div>
                             <h2 className="font-serif text-4xl text-wood-900 font-medium">From the Writings</h2>
-                            <p className="font-serif text-base sm:text-lg text-wood-600 leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
+                            <p className="font-sans text-base sm:text-lg text-wood-600 leading-relaxed mt-1">Between the endless ceremony, art is our prayer.</p>
                         </div>
                         <Link to="/writings" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2">
                             Explore All <ArrowRight size={14}/>
@@ -115,7 +115,7 @@ const Home: React.FC = () => {
                                     <h3 className="font-serif text-2xl md:text-3xl text-wood-900 mb-4 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                         {story.title}
                                     </h3>
-                                    <p className="font-serif text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
+                                    <p className="font-sans text-base text-wood-600 leading-[1.7] font-light line-clamp-3">
                                         {story.excerpt}
                                     </p>
                                     <span className="inline-flex items-center gap-2 mt-5 font-label text-xs uppercase tracking-[0.2em] text-wood-600 group-hover:text-bronze-600 font-semibold transition-colors">
@@ -142,13 +142,13 @@ const Home: React.FC = () => {
                                         />
                                     </div>
                                     <div className="p-4 sm:p-5 md:p-6 flex flex-col justify-center min-w-0">
-                                        <h3 className="font-serif text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
+                                        <h3 className="font-sans text-lg sm:text-xl text-wood-900 mb-1 group-hover:text-bronze-700 transition-colors font-medium leading-snug">
                                             {story.title}
                                         </h3>
-                                        <p className="font-serif text-base text-bronze-600 mb-2 leading-snug">
+                                        <p className="font-sans text-base text-bronze-600 mb-2 leading-snug">
                                             {story.subtitle}
                                         </p>
-                                        <p className="font-serif text-base text-wood-600 leading-relaxed font-light line-clamp-2">
+                                        <p className="font-sans text-base text-wood-600 leading-relaxed font-light line-clamp-2">
                                             {story.excerpt}
                                         </p>
                                     </div>

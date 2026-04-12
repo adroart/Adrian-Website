@@ -144,7 +144,7 @@ const SubcategoryPage: React.FC = () => {
             <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Not Found</h1>
-                    <p className="font-serif text-lg text-wood-600 mb-8">This section does not exist.</p>
+                    <p className="font-sans text-lg text-wood-600 mb-8">This section does not exist.</p>
                     <Link
                         to="/creations/multidimensional-art"
                         className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
@@ -342,7 +342,7 @@ const SubcategoryPage: React.FC = () => {
                         <h3 className="font-serif text-3xl md:text-4xl mb-6 font-medium">
                             A Light Code can also be created for you.
                         </h3>
-                        <p className="font-serif text-lg text-paper-200 leading-[1.7] font-light mb-8">
+                        <p className="font-sans text-lg text-paper-200 leading-[1.7] font-light mb-8">
                             Through conversation, I receive the energy and intentions of your life, then anchor what wants to come through.
                         </p>
                         <Link

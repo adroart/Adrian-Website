@@ -67,7 +67,7 @@ const NewsletterForm: React.FC = () => {
         return (
             <div className="flex items-center gap-2 py-2">
                 <CheckCircle size={14} className="text-bronze-400 shrink-0" />
-                <span className="font-serif text-base text-wood-300">You're on the list.</span>
+                <span className="font-sans text-base text-wood-300">You're on the list.</span>
             </div>
         );
     }
@@ -97,7 +97,7 @@ const NewsletterForm: React.FC = () => {
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
                 required
-                className="bg-transparent w-full outline-none text-wood-200 font-serif text-lg"
+                className="bg-transparent w-full outline-none text-wood-200 font-sans text-lg"
             />
             <button
                 type="submit"
@@ -108,7 +108,7 @@ const NewsletterForm: React.FC = () => {
             </button>
         </form>
         {status === 'error' && (
-            <p className="font-serif text-xs text-red-400 mt-1">Something went wrong. Please try again.</p>
+            <p className="font-sans text-xs text-red-400 mt-1">Something went wrong. Please try again.</p>
         )}
         </div>
     );
@@ -176,7 +176,7 @@ const Footer: React.FC = () => {
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-200 block mb-1 font-semibold">
                             Join the Inner Circle
                         </span>
-                        <span className="font-serif text-sm text-wood-200 block mb-5">
+                        <span className="font-sans text-sm text-wood-200 block mb-5">
                             Studio updates, new work, and writings. Delivered when something wants to be shared.
                         </span>
                         <NewsletterForm />
@@ -196,12 +196,12 @@ const Footer: React.FC = () => {
                             <span className="w-6 h-px bg-bronze-400/50"></span>
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Index</span>
                         </div>
-                        <Link to="/creations" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
-                        <Link to="/writings" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
-                        {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>}
-                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
+                        <Link to="/creations" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
+                        <Link to="/writings" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
+                        {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>}
+                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
                             <span>Teajia</span>
-                            <span className="block font-serif text-xs text-wood-300 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
+                            <span className="block font-sans text-xs text-wood-300 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
                         </a>
                     </div>
 
@@ -211,8 +211,8 @@ const Footer: React.FC = () => {
                             <span className="w-6 h-px bg-bronze-400/50"></span>
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Studio</span>
                         </div>
-                        <Link to="/about" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
-                        <Link to="/inquire" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
+                        <Link to="/about" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
+                        <Link to="/inquire" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
                     </div>
 
                     {/* Column 3: Info — #7 removed dead links that had no destination */}
@@ -221,8 +221,8 @@ const Footer: React.FC = () => {
                             <span className="w-6 h-px bg-bronze-400/50"></span>
                             <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Information</span>
                         </div>
-                        <Link to="/privacy" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Privacy Policy</Link>
-                        <Link to="/terms" className="footer-link font-serif text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Terms</Link>
+                        <Link to="/privacy" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Privacy Policy</Link>
+                        <Link to="/terms" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Terms</Link>
                     </div>
 
                     {/* Column 4: Connect — #12 Icon buttons with scale hover */}

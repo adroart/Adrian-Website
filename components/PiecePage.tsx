@@ -120,6 +120,10 @@ const PiecePage: React.FC = () => {
     const [addWoodFrame, setAddWoodFrame] = useState(false);
     const [addIllumination, setAddIllumination] = useState(false);
 
+    // Sticky bottom bar visibility: hide when purchase section is in view
+    const purchaseRef = useRef<HTMLDivElement>(null);
+    const [purchaseVisible, setPurchaseVisible] = useState(false);
+
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
 
     // Dynamic meta tags for sharing
@@ -169,6 +173,18 @@ const PiecePage: React.FC = () => {
             setAddIllumination(false);
         }
     }, [illuminationTier]);
+
+    // Hide sticky bottom bar when purchase section is visible in viewport
+    useEffect(() => {
+        const el = purchaseRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => setPurchaseVisible(entry.isIntersecting),
+            { threshold: 0.1 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     // Illumination add-on price for the currently selected size tier
     const illuminationPrice = useMemo(() => {
@@ -233,7 +249,7 @@ const PiecePage: React.FC = () => {
             <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-4xl text-wood-900 mb-6 font-medium">Piece Not Found</h1>
-                    <p className="font-serif text-lg text-wood-600 mb-8">The piece you are looking for does not exist or has been moved.</p>
+                    <p className="font-sans text-lg text-wood-600 mb-8">The piece you are looking for does not exist or has been moved.</p>
                     <Link
                         to="/creations"
                         className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 pb-1"
@@ -422,7 +438,7 @@ const PiecePage: React.FC = () => {
     ].filter(Boolean) as { label: string; value: string }[];
 
     return (
-        <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
+        <section className="bg-paper-50 min-h-screen pt-24 pb-24 md:pb-32 animate-fade-in">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(artworkSchema) }}
@@ -434,7 +450,7 @@ const PiecePage: React.FC = () => {
 
             {/* Breadcrumb — Mobile: simplified (← Category), Desktop: full path */}
             {/* Mobile breadcrumb */}
-            <div className="md:hidden max-w-7xl mx-auto px-6 py-4">
+            <div className="md:hidden max-w-7xl mx-auto px-6 py-5 border-b border-wood-100">
                 <button
                     onClick={() => {
                         if (window.history.length <= 1) {
@@ -447,9 +463,9 @@ const PiecePage: React.FC = () => {
                             navigate(-1);
                         }
                     }}
-                    className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
+                    className="min-h-[44px] inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold hover:text-wood-900 transition-colors"
                 >
-                    <ArrowRight size={12} className="rotate-180" />
+                    <ArrowRight size={14} className="rotate-180" />
                     {isMultidimensional ? (art.series ?? 'Multidimensional Art') : (art.category ?? 'Creations')}
                 </button>
             </div>
@@ -499,11 +515,11 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto w-full px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
                 {/* Images */}
                 <div className="space-y-4">
                     <div
-                        className="w-full bg-wood-100 overflow-hidden cursor-zoom-in"
+                        className="relative w-full bg-wood-100 overflow-hidden cursor-zoom-in"
                         onClick={() => {
                             setLightboxIndex(activeImageIndex);
                             setLightboxOpen(true);
@@ -525,10 +541,13 @@ const PiecePage: React.FC = () => {
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
                             alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
+                        <span className="absolute bottom-3 right-3 font-label text-[10px] uppercase tracking-[0.15em] text-paper-50 bg-wood-900/50 px-2.5 py-1 pointer-events-none md:hidden">
+                            Tap to enlarge
+                        </span>
                     </div>
 
                     {allImages.length > 1 && (
-                        <div className="flex justify-center gap-2 lg:hidden">
+                        <div className="flex justify-center gap-3 py-3 lg:hidden">
                             {allImages.map((_, i) => (
                                 <button
                                     key={i}
@@ -536,8 +555,8 @@ const PiecePage: React.FC = () => {
                                     aria-label={`View image ${i + 1}`}
                                     className={`rounded-full transition-all duration-300 ${
                                         i === activeImageIndex
-                                            ? 'w-4 h-2 bg-bronze-500'
-                                            : 'w-2 h-2 bg-wood-300 hover:bg-wood-500'
+                                            ? 'w-5 h-2.5 bg-bronze-500'
+                                            : 'w-2.5 h-2.5 bg-wood-300 hover:bg-wood-500'
                                     }`}
                                 />
                             ))}
@@ -574,18 +593,18 @@ const PiecePage: React.FC = () => {
                         {art.series && (seriesLink || seriesSlug) && (
                             <Link
                                 to={seriesLink ?? `/creations/multidimensional-art/${seriesSlug}`}
-                                className="flex items-center gap-2 text-bronze-600 font-label text-xs uppercase tracking-[0.2em] font-semibold mb-4 hover:underline"
+                                className="flex items-center gap-2 text-bronze-600 font-label text-xs uppercase tracking-[0.2em] font-semibold mb-5 hover:underline py-1"
                             >
                                 {art.series} Series <ArrowUpRight size={12} />
                             </Link>
                         )}
-                        <div className="flex items-start justify-between gap-4 mb-6">
-                            <h1 className="font-serif text-4xl md:text-5xl text-wood-900 leading-[1.1] font-medium">
+                        <div className="flex items-start justify-between gap-3 mb-6">
+                            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-wood-900 leading-[1.1] font-medium">
                                 {art.title}
                             </h1>
                             <button
                                 onClick={handleShare}
-                                className="shrink-0 mt-2 flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
+                                className="shrink-0 mt-1 flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
                                 aria-label="Share this piece"
                             >
                                 {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
@@ -593,11 +612,12 @@ const PiecePage: React.FC = () => {
                         </div>
 
                         {/* Mobile: stacked labeled metadata rows */}
-                        <div className="md:hidden space-y-2.5">
+                        <div className="md:hidden bg-wood-50/40 border border-wood-100 p-4 space-y-3">
                             {metadataRows.map(row => (
-                                <div key={row.label} className="flex items-baseline justify-between gap-4">
-                                    <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 font-semibold shrink-0">{row.label}</span>
-                                    <span className="font-serif text-base text-wood-700 text-right">{row.value}</span>
+                                <div key={row.label} className="flex items-baseline gap-3">
+                                    <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-600 font-semibold shrink-0">{row.label}</span>
+                                    <span className="flex-1 border-b border-dotted border-wood-200 translate-y-[-3px]"></span>
+                                    <span className="font-sans text-base text-wood-700 text-right shrink-0">{row.value}</span>
                                 </div>
                             ))}
                             {editionText && !hasVariants && (
@@ -613,18 +633,18 @@ const PiecePage: React.FC = () => {
                                 {metadataRows.map((row, i) => (
                                     <div key={row.label} className={`px-5 ${i === 0 ? 'pl-5' : ''}`}>
                                         <span className="block font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 font-semibold mb-0.5">{row.label}</span>
-                                        <span className="block font-serif text-base text-wood-800">{row.value}</span>
+                                        <span className="block font-sans text-base text-wood-800">{row.value}</span>
                                     </div>
                                 ))}
                             </div>
                             {editionText && !hasVariants && (
-                                <p className="font-serif text-base text-bronze-600 mt-3">{editionText}</p>
+                                <p className="font-sans text-base text-bronze-600 mt-3">{editionText}</p>
                             )}
                         </div>
                     </div>
 
-                    <div className="border-l-2 border-bronze-400 pl-5 md:pl-6 mb-8">
-                        <div className="prose prose-stone font-serif text-wood-700 leading-[1.8] text-base md:text-[17px] max-w-[62ch]">
+                    <div className="border-l border-bronze-300 pl-4 md:border-l-2 md:border-bronze-400 md:pl-6 mb-8">
+                        <div className="prose prose-stone font-sans text-wood-700 leading-[1.7] md:leading-[1.8] text-base md:text-[17px] max-w-[62ch]">
                             <p>{art.description}</p>
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}
                         </div>
@@ -633,7 +653,7 @@ const PiecePage: React.FC = () => {
                             <div className="mt-6 border-t border-wood-100 pt-4">
                                 <button
                                     onClick={() => setSeriesDescExpanded(v => !v)}
-                                    className="flex items-center justify-between w-full text-left group"
+                                    className="flex items-center justify-between w-full text-left group py-2 -my-2"
                                     aria-expanded={seriesDescExpanded}
                                 >
                                     <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
@@ -644,7 +664,7 @@ const PiecePage: React.FC = () => {
                                     </span>
                                 </button>
                                 {seriesDescExpanded && (
-                                    <div className="mt-4 font-serif text-wood-600 leading-[1.8] text-base max-w-[62ch] animate-fade-in">
+                                    <div className="mt-4 font-sans text-wood-600 leading-[1.8] text-base max-w-[62ch] animate-fade-in">
                                         <p>{art.seriesDescription}</p>
                                     </div>
                                 )}
@@ -655,7 +675,7 @@ const PiecePage: React.FC = () => {
                     {art.relatedStorySlug && (
                         <Link
                             to={`/writings/${art.relatedStorySlug}`}
-                            className="flex items-center gap-3 px-4 py-3 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
+                            className="flex items-center gap-3 px-5 py-4 border border-wood-200 bg-wood-50/50 hover:bg-wood-50 hover:border-bronze-300 transition-all mb-10 group"
                         >
                             <BookOpen size={16} className="text-bronze-600 shrink-0" />
                             <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 group-hover:text-bronze-500 font-semibold">
@@ -666,7 +686,7 @@ const PiecePage: React.FC = () => {
                     )}
 
                     {/* Purchase section */}
-                    <div className="border border-wood-200 bg-wood-50 p-5 md:p-8 mt-4 md:mt-2">
+                    <div ref={purchaseRef} className="border border-wood-200 bg-wood-50 px-5 py-6 md:p-8 mt-6 md:mt-2">
 
                         {/* --- Edition closed --- */}
                         {editionClosed ? (
@@ -677,7 +697,7 @@ const PiecePage: React.FC = () => {
                                 <Link
                                     to="/inquire"
                                     state={{ piece: art.title, pieceId: art.id }}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission a similar piece <ArrowRight size={14} />
                                 </Link>
@@ -699,7 +719,7 @@ const PiecePage: React.FC = () => {
                                             return (
                                                 <label
                                                     key={sizeOption.size}
-                                                    className={`flex items-center justify-between px-4 py-3 border cursor-pointer transition-all duration-150 ${
+                                                    className={`flex items-center justify-between px-4 py-3.5 border cursor-pointer transition-all duration-150 ${
                                                         isSelected
                                                             ? 'border-wood-900 bg-wood-50'
                                                             : 'border-wood-200 hover:border-wood-400'
@@ -714,7 +734,7 @@ const PiecePage: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="font-serif text-lg text-wood-900">{sizeOption.size}</span>
+                                                            <span className="font-sans text-lg text-wood-900">{sizeOption.size}</span>
                                                             <span className={`font-label text-[10px] uppercase tracking-[0.15em] font-semibold ${
                                                                 isInStock ? 'text-avail-ready' : 'text-wood-400'
                                                             }`}>
@@ -746,18 +766,18 @@ const PiecePage: React.FC = () => {
                                     <p className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold mb-4">
                                         Add to your piece
                                     </p>
-                                    <div className="space-y-5">
+                                    <div className="space-y-6">
 
                                         {/* Crystals */}
                                         <label className="flex items-start gap-3 cursor-pointer group">
-                                            <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                                            <div className={`w-6 h-6 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
                                                 addCrystals ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                             }`}>
                                                 {addCrystals && <Checkmark />}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-baseline justify-between gap-4">
-                                                    <span className="font-serif text-lg text-wood-900">Add crystals</span>
+                                                    <span className="font-sans text-lg text-wood-900">Add crystals</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                         +{formatPrice(crystalsPrice)}
                                                     </span>
@@ -773,14 +793,14 @@ const PiecePage: React.FC = () => {
 
                                         {/* Wood frame */}
                                         <label className="flex items-start gap-3 cursor-pointer group">
-                                            <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                                            <div className={`w-6 h-6 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
                                                 addWoodFrame ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                             }`}>
                                                 {addWoodFrame && <Checkmark />}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-baseline justify-between gap-4">
-                                                    <span className="font-serif text-lg text-wood-900">Add wood frame</span>
+                                                    <span className="font-sans text-lg text-wood-900">Add wood frame</span>
                                                     <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                         +{formatPrice(woodFramePrice)}
                                                     </span>
@@ -797,14 +817,14 @@ const PiecePage: React.FC = () => {
                                         {/* Illumination — only shown when selected size supports it */}
                                         {illuminationTier !== 'none' && (
                                             <label className="flex items-start gap-3 cursor-pointer group">
-                                                <div className={`w-5 h-5 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                                                <div className={`w-6 h-6 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
                                                     addIllumination ? 'border-wood-900 bg-wood-900 text-paper-50' : 'border-wood-300 group-hover:border-wood-600'
                                                 }`}>
                                                     {addIllumination && <Checkmark />}
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-baseline justify-between gap-4">
-                                                        <span className="font-serif text-lg text-wood-900">Illuminate this piece</span>
+                                                        <span className="font-sans text-lg text-wood-900">Illuminate this piece</span>
                                                         <span className="font-label text-sm text-wood-600 font-semibold shrink-0">
                                                             +{formatPrice(illuminationPrice)}
                                                         </span>
@@ -834,7 +854,7 @@ const PiecePage: React.FC = () => {
                                 </div>
 
                                 {/* Live total with dynamic availability */}
-                                <div className="border-t border-wood-200 pt-6 pb-6">
+                                <div className="border-t border-wood-200 pt-6 pb-6 bg-wood-50/60 -mx-5 px-5 md:-mx-8 md:px-8">
                                     <div className="flex items-end justify-between mb-3">
                                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">Total</span>
                                         <span className="font-serif text-3xl text-wood-900 font-medium">
@@ -866,7 +886,7 @@ const PiecePage: React.FC = () => {
                                 <button
                                     onClick={handleAddToCartVariant}
                                     disabled={!selectedSize}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <ShoppingBag size={16} /> Add to Cart
                                 </button>
@@ -874,7 +894,7 @@ const PiecePage: React.FC = () => {
                                 <Link
                                     to="/inquire"
                                     state={{ piece: art.title, pieceId: art.id }}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
                                 >
                                     Request to Purchase
                                 </Link>
@@ -900,7 +920,7 @@ const PiecePage: React.FC = () => {
                                 {LAUNCH_FLAGS.shopEnabled ? (
                                 <button
                                     onClick={handleAddToCartRTS}
-                                    className={`w-full py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
+                                    className={`w-full min-h-[52px] py-4 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
                                         rtsAdded
                                             ? 'bg-bronze-600 text-paper-50 scale-[1.02] shadow-lg ring-2 ring-bronze-400/50'
                                             : 'bg-wood-900 text-paper-50 hover:bg-bronze-600 active:scale-[0.98]'
@@ -915,7 +935,7 @@ const PiecePage: React.FC = () => {
                                 <Link
                                     to="/inquire"
                                     state={{ piece: art.title, pieceId: art.id }}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
                                 >
                                     Request to Purchase
                                 </Link>
@@ -941,7 +961,7 @@ const PiecePage: React.FC = () => {
                                 <Link
                                     to="/inquire"
                                     state={{ piece: art.title, pieceId: art.id }}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission This Piece <ArrowRight size={14} />
                                 </Link>
@@ -965,7 +985,7 @@ const PiecePage: React.FC = () => {
                                 </div>
 
                                 {art.series && seriesLink && seriesData && (
-                                    <p className="font-serif text-base text-wood-600 leading-[1.7]">
+                                    <p className="font-sans text-base text-wood-600 leading-[1.7]">
                                         Part of the{' '}
                                         <Link to={seriesLink} className="text-bronze-600 hover:underline">
                                             {art.series} series
@@ -977,7 +997,7 @@ const PiecePage: React.FC = () => {
                                 <Link
                                     to="/inquire"
                                     state={{ piece: art.title, pieceId: art.id }}
-                                    className="w-full py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
+                                    className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Inquire about a similar piece <ArrowRight size={14} />
                                 </Link>
@@ -989,17 +1009,23 @@ const PiecePage: React.FC = () => {
                     </div>
 
                     {/* Category label */}
-                    <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-wood-200">
+                    <div className="mt-8 md:mt-8 pt-6 md:pt-8 border-t border-wood-200 flex items-center justify-between">
                         <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
                             {art.category}
                         </span>
+                        <Link
+                            to={isMultidimensional ? '/creations/multidimensional-art' : `/creations?category=${encodeURIComponent(art.category)}`}
+                            className="inline-flex items-center gap-1 font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 font-semibold hover:text-bronze-500 transition-colors"
+                        >
+                            Browse all <ArrowRight size={11} />
+                        </Link>
                     </div>
                 </div>
             </div>
 
             {/* Sticky Bottom Bar (Mobile) */}
             {(art.availability === 'SOLD' || editionClosed) ? (
-                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                <div className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)] transition-transform duration-300 ${purchaseVisible ? 'translate-y-full' : 'translate-y-0'}`}>
                     <span className="font-label text-[11px] uppercase tracking-[0.2em] text-avail-sold font-semibold">
                         This piece has found its home
                     </span>
@@ -1012,7 +1038,7 @@ const PiecePage: React.FC = () => {
                     </Link>
                 </div>
             ) : (
-                <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                <div className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-paper-50 border-t border-wood-200 px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)] transition-transform duration-300 ${purchaseVisible ? 'translate-y-full' : 'translate-y-0'}`}>
                     <span className="font-serif text-xl text-wood-900 font-medium">
                         {hasVariants
                             ? formatPrice(mtoTotal)
@@ -1055,7 +1081,7 @@ const PiecePage: React.FC = () => {
 
             {/* Related Pieces */}
             {relatedPieces.length === 0 && (
-                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-32">
+                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 md:mt-32">
                     <div className="border-t border-wood-200 pt-12 text-center">
                         <h2 className="font-serif text-2xl text-wood-700 font-medium mb-3">Explore more</h2>
                         <Link
@@ -1068,18 +1094,18 @@ const PiecePage: React.FC = () => {
                 </div>
             )}
             {relatedPieces.length > 0 && (
-                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-32">
+                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 md:mt-32">
                     <div className="border-t border-wood-200 pt-12 mb-10">
                         <h2 className="font-serif text-3xl text-wood-900 font-medium">
                             {art.series ? `More from ${art.series}` : 'Related Works'}
                         </h2>
-                        <p className="font-serif text-base text-wood-500 mt-2">
+                        <p className="font-sans text-base text-wood-500 mt-2">
                             {art.series
                                 ? `Explore other pieces in the ${art.series} series`
                                 : 'You may also be drawn to these pieces'}
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-8 md:gap-x-6 md:gap-y-10">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6 md:gap-y-10 card-stagger">
                         {relatedPieces.map((related) => (
                             <Link
                                 key={related.id}
@@ -1098,7 +1124,7 @@ const PiecePage: React.FC = () => {
                                     )}
                                 </div>
                                 <div className="mt-3 md:mt-4">
-                                    <h4 className="font-serif text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
+                                    <h4 className="font-sans text-base md:text-lg text-wood-900 group-hover:text-bronze-700 transition-colors font-medium leading-tight">
                                         {related.title}
                                     </h4>
                                     {!art.series && (
@@ -1128,7 +1154,7 @@ const PiecePage: React.FC = () => {
                             {seriesLink && art.series && (
                                 <Link
                                     to={seriesLink}
-                                    className="group flex items-center gap-3 font-serif text-lg text-wood-700 hover:text-bronze-700 transition-colors"
+                                    className="group flex items-center gap-3 font-sans text-lg text-wood-700 hover:text-bronze-700 transition-colors"
                                 >
                                     <span>View all {art.series}</span>
                                     <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
@@ -1136,7 +1162,7 @@ const PiecePage: React.FC = () => {
                             )}
                             <Link
                                 to="/creations/multidimensional-art"
-                                className="group flex items-center gap-3 font-serif text-lg text-wood-700 hover:text-bronze-700 transition-colors"
+                                className="group flex items-center gap-3 font-sans text-lg text-wood-700 hover:text-bronze-700 transition-colors"
                             >
                                 <span>Explore all Multidimensional Art</span>
                                 <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />

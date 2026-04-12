@@ -63,13 +63,7 @@ p, li, blockquote, figcaption, label {
   text-wrap: pretty;
 }
 
-/* #8 Hyphenation on body text for better mobile line-breaking */
-@media (max-width: 640px) {
-  p {
-    hyphens: auto;
-    -webkit-hyphens: auto;
-  }
-}
+/* #8 Hyphenation disabled — mid-word line breaks interrupt reading rhythm */
 
 /* #11 Blockquote styling — left border, indentation, proper spacing */
 blockquote {
@@ -146,17 +140,17 @@ blockquote {
 .card-stagger > *:nth-child(n+11) { animation-delay: 400ms; }
 
 @keyframes cardReveal {
-  0% { opacity: 0; transform: translateY(24px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; translate: 0 24px; }
+  100% { opacity: 1; translate: 0 0; }
 }
 
 @theme {
   /* Font families */
   --font-serif: "Cormorant Garamond", serif;
-  --font-sans: "Lato", sans-serif;
-  --font-mono: "Josefin Sans", sans-serif;   /* kept for backward compat */
-  --font-label: "Josefin Sans", sans-serif;  /* semantic alias — use font-label in new code */
-  --font-display: "Cinzel", serif;           /* structural titles: brand name, page headings */
+  --font-sans: "Lora", serif;
+  --font-mono: "Karla", sans-serif;          /* kept for backward compat */
+  --font-label: "Karla", sans-serif;         /* semantic alias — use font-label in new code */
+  --font-display: "Cormorant Garamond", serif; /* structural titles: brand name, page headings */
 
   /* Colors: taupe */
   --color-taupe: #453d39;

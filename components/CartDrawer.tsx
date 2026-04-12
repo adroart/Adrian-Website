@@ -223,7 +223,7 @@ const CartDrawer: React.FC = () => {
 
                                     {/* Details */}
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-serif text-base text-wood-900 leading-snug mb-1 font-medium">
+                                        <h3 className="font-sans text-base text-wood-900 leading-snug mb-1 font-medium">
                                             {product.title}
                                         </h3>
                                         <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold mb-3">
