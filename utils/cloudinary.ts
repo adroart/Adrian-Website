@@ -16,6 +16,8 @@ export interface ImgOptions {
   quality?: number | 'auto';
   /** Gravity for crop. Default: 'auto' (AI-based smart crop). */
   gravity?: 'auto' | 'center' | 'face' | 'faces';
+  /** Output format. Default: 'auto'. Use 'webp' or 'png' for images with transparency. */
+  format?: 'auto' | 'webp' | 'png' | 'jpg';
 }
 
 /**
@@ -33,7 +35,7 @@ export interface ImgOptions {
  */
 export function img(publicId: string, opts: ImgOptions = {}): string {
   const transforms: string[] = [
-    'f_auto',
+    `f_${opts.format ?? 'auto'}`,
     `q_${opts.quality ?? 'auto'}`,
   ];
 

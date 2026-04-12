@@ -24,7 +24,7 @@ const UL_IMAGE_BY_NUMBER = new Map<number, string>(
 function cardImageUrl(number: number, size: number): string {
   const publicId = UL_IMAGE_BY_NUMBER.get(number);
   if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
-  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center' });
+  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
 /* ─── Hexagram SVG renderer ─────────────────────────────────────────────── */

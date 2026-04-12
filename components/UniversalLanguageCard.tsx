@@ -34,7 +34,7 @@ const UL_PIECE_BY_NUMBER = new Map<number, typeof UL_PIECES[number]>(
 function cardImageUrl(number: number, size: number): string {
   const publicId = UL_IMAGE_BY_NUMBER.get(number);
   if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
-  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center' });
+  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
 /* ─── Section label ──────────────────────────────────────────────────────── */
@@ -142,7 +142,7 @@ const UniversalLanguageCard: React.FC = () => {
         </p>
 
         {/* ── Card image ───────────────────────────────────────────────── */}
-        <div className="mb-8 md:mb-10 border border-wood-200">
+        <div className="mb-8 md:mb-10">
           <img
             src={cardImageUrl(card.number, 720)}
             alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
