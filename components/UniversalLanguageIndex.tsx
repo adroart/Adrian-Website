@@ -20,6 +20,7 @@ const UL_IMAGE_BY_NUMBER = new Map<number, string>(
     .filter(([num]) => !isNaN(num))
 );
 
+
 function cardImageUrl(number: number, size: number): string {
   const publicId = UL_IMAGE_BY_NUMBER.get(number);
   if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
@@ -83,60 +84,61 @@ const CardThumbnail: React.FC<{
   const navigate = useNavigate();
   return (
   <div
-    className={`[perspective:600px] relative aspect-square select-none ${isFlipped ? 'z-10' : ''}`}
+    className={`[perspective:600px] relative select-none ${isFlipped ? 'z-10' : ''}`}
     onClick={() => { if (!isFlipped) onFlip(); }}
   >
     <div
-      className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
+      className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] ${
         isFlipped ? '[transform:rotateY(180deg)]' : 'cursor-pointer'
       }`}
     >
-      {/* BACK face — hexagram + number */}
-      <div className="absolute inset-0 [backface-visibility:hidden] bg-stone-950 dark:bg-paper-50 flex flex-col items-center justify-center gap-1.5">
-        <div className="w-[38%] text-white/90 dark:text-stone-900">
+      {/* BACK face — absolute, fills the front face dimensions */}
+      <div className="absolute inset-0 [backface-visibility:hidden] bg-paper-50 flex flex-col items-center justify-center gap-1.5">
+        <div className="w-[38%] text-stone-900 dark:text-white/90">
           <HexagramSVG
             upper={card.iching.upper_trigram.symbol}
             lower={card.iching.lower_trigram.symbol}
           />
         </div>
-        <span className="font-display font-bold text-xs lg:text-sm text-white/90 dark:text-stone-900 leading-none">
+        <span className="font-display font-bold text-xs lg:text-sm text-stone-900 dark:text-white/90 leading-none">
           {card.number}
         </span>
       </div>
 
-      {/* FRONT face — big dark mat, art shrinks, two clear action buttons */}
+      {/* FRONT face — in-flow, defines tile height naturally */}
       <div
-        className="absolute -inset-[1px] [backface-visibility:hidden] [transform:rotateY(180deg)] bg-wood-900 cursor-pointer"
+        className="relative w-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#e0d8cc] dark:bg-[#3b2f26] cursor-pointer"
         onClick={e => { e.stopPropagation(); onFlipBack(); }}
       >
-        {/* Art — square, uniform 14px mat on all sides */}
+        {/* Art — square image with equal 3px padding on l/r/top */}
         <div
-          className="absolute inset-3.5 overflow-hidden"
+          className="pt-[6px] px-[6px]"
           onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
         >
           <img
             src={cardImageUrl(card.number, 320)}
             alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
-            className="w-full h-full object-cover cursor-pointer"
+            className="w-full aspect-square object-cover block cursor-pointer"
             loading="lazy"
           />
         </div>
 
-        {/* Bottom strip — two labeled actions, height matches inset so art stays square */}
-        <div className="absolute bottom-0 left-0 right-0 h-3.5 flex items-center justify-between px-1.5">
+        {/* Bottom strip — two labeled actions split by a divider */}
+        <div className="h-[16px] flex items-center pt-[2px]">
           <button
-            className="font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-white/40 hover:text-white/70 font-semibold transition-colors leading-none"
+            className="flex-1 flex items-center justify-center font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-wood-700 hover:text-wood-900 font-black transition-colors leading-none"
             onClick={e => { e.stopPropagation(); onFlipBack(); }}
             aria-label="Flip back"
           >
             Back
           </button>
+          <span className="w-px h-[8px] bg-wood-400 shrink-0" />
           <button
-            className="font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-bronze-400 hover:text-bronze-300 font-semibold transition-colors leading-none"
+            className="flex-1 flex items-center justify-center font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-wood-700 hover:text-wood-900 font-black transition-colors leading-none"
             onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
             aria-label={`Read ${card.card_name}`}
           >
-            Read →
+            Read
           </button>
         </div>
       </div>
@@ -420,7 +422,7 @@ const UniversalLanguageIndex: React.FC = () => {
         {viewMode === 'grid' && (
           filteredCards.length > 0 ? (
             <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
-              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[2px]">
+              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[3px]">
                 {filteredCards.map(card => (
                   <CardThumbnail
                     key={card.number}

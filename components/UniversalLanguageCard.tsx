@@ -30,6 +30,7 @@ const UL_PIECE_BY_NUMBER = new Map<number, typeof UL_PIECES[number]>(
     .filter(([num]) => !isNaN(num))
 );
 
+
 function cardImageUrl(number: number, size: number): string {
   const publicId = UL_IMAGE_BY_NUMBER.get(number);
   if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
