@@ -106,19 +106,12 @@ const CardThumbnail: React.FC<{
 
       {/* FRONT face — big dark mat, art shrinks, two clear action buttons */}
       <div
-        className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-stone-900 cursor-pointer"
+        className="absolute -inset-[1px] [backface-visibility:hidden] [transform:rotateY(180deg)] bg-wood-900 cursor-pointer"
         onClick={e => { e.stopPropagation(); onFlipBack(); }}
       >
-        {/* Top strip — card number, tells you what you drew */}
-        <div className="absolute top-0 left-0 right-0 h-5 flex items-center justify-center pointer-events-none">
-          <span className="font-label text-[7px] uppercase tracking-[0.2em] text-stone-500 leading-none">
-            {String(card.number).padStart(2, '0')}
-          </span>
-        </div>
-
-        {/* Art — square, inset 20px all sides */}
+        {/* Art — square, uniform 14px mat on all sides */}
         <div
-          className="absolute inset-5 overflow-hidden"
+          className="absolute inset-3.5 overflow-hidden"
           onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
         >
           <img
@@ -129,17 +122,17 @@ const CardThumbnail: React.FC<{
           />
         </div>
 
-        {/* Bottom strip — two labeled actions */}
-        <div className="absolute bottom-0 left-0 right-0 h-5 flex items-center justify-between px-2">
+        {/* Bottom strip — two labeled actions, height matches inset so art stays square */}
+        <div className="absolute bottom-0 left-0 right-0 h-3.5 flex items-center justify-between px-1.5">
           <button
-            className="font-label text-[7px] uppercase tracking-[0.15em] text-stone-500 hover:text-stone-300 transition-colors leading-none"
+            className="font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-white/40 hover:text-white/70 font-semibold transition-colors leading-none"
             onClick={e => { e.stopPropagation(); onFlipBack(); }}
             aria-label="Flip back"
           >
             Back
           </button>
           <button
-            className="font-label text-[7px] uppercase tracking-[0.15em] text-bronze-500 hover:text-bronze-400 transition-colors leading-none"
+            className="font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-bronze-400 hover:text-bronze-300 font-semibold transition-colors leading-none"
             onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
             aria-label={`Read ${card.card_name}`}
           >
@@ -427,7 +420,7 @@ const UniversalLanguageIndex: React.FC = () => {
         {viewMode === 'grid' && (
           filteredCards.length > 0 ? (
             <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
-              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[5px]">
+              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[2px]">
                 {filteredCards.map(card => (
                   <CardThumbnail
                     key={card.number}

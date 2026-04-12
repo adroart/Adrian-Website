@@ -269,6 +269,70 @@ function buildIndex(cards: Array<{ number: number; filename: string; cardName: s
 </html>`;
 }
 
+// ── Card QR builder ───────────────────────────────────────────────────────────
+// 2050×2050 transparent SVG canvas, QR centred at 235×235.
+// Light modules are transparent so the QR drops cleanly onto any background.
+
+const CARD_CANVAS = 2050;
+const CARD_QR     = 235;
+const CARD_QR_X   = (CARD_CANVAS - CARD_QR) / 2;  // 907.5
+const CARD_QR_Y   = (CARD_CANVAS - CARD_QR) / 2;  // 907.5
+
+async function buildCardQR(qrUrl: string): Promise<string> {
+  const qrSvgStr = await QRCode.toString(qrUrl, {
+    type:                 'svg',
+    margin:               0,
+    errorCorrectionLevel: 'L',
+    color: { dark: INK, light: '#00000000' },
+  });
+
+  const qrEmbedded = embedQR(qrSvgStr, CARD_QR_X, CARD_QR_Y, CARD_QR);
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CARD_CANVAS} ${CARD_CANVAS}" width="${CARD_CANVAS}" height="${CARD_CANVAS}">
+  ${qrEmbedded}
+</svg>`;
+}
+
+// ── Multi-layer QR builder ────────────────────────────────────────────────────
+// Single SVG file with 64 Inkscape-compatible layers.
+// Each layer is named "01 · Earth's Breath", "02 · …", etc.
+// Layers are stacked — toggle visibility per card in Illustrator / Inkscape / Figma.
+
+async function buildMultiLayerQR(): Promise<string> {
+  const layers: string[] = [];
+
+  for (let n = 1; n <= 64; n++) {
+    const card = CARD_BY_NUMBER.get(n);
+    if (!card) continue;
+
+    const qrSvgStr = await QRCode.toString(URLS.oracleCard(n), {
+      type:                 'svg',
+      margin:               0,
+      errorCorrectionLevel: 'L',
+      color: { dark: INK, light: '#00000000' },
+    });
+
+    const qrEmbedded = embedQR(qrSvgStr, CARD_QR_X, CARD_QR_Y, CARD_QR);
+    const nn         = String(n).padStart(2, '0');
+    const label      = escXml(`${nn} · ${card.card_name}`);
+
+    layers.push(
+      `  <g inkscape:groupmode="layer" inkscape:label="${label}" id="layer-${nn}" style="display:inline">` +
+      `\n    ${qrEmbedded}\n  </g>`,
+    );
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     viewBox="0 0 ${CARD_CANVAS} ${CARD_CANVAS}" width="${CARD_CANVAS}" height="${CARD_CANVAS}">
+
+${layers.join('\n\n')}
+
+</svg>`;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -276,8 +340,10 @@ async function main() {
   const outRoot   = join(scriptDir, 'output', 'ul-qr-plaques');
   const oracleDir = join(outRoot, 'oracle');
   const mktDir    = join(outRoot, 'marketing');
+  const cardsDir  = join(outRoot, 'cards');
   mkdirSync(oracleDir, { recursive: true });
   mkdirSync(mktDir,    { recursive: true });
+  mkdirSync(cardsDir,  { recursive: true });
 
   const indexEntries: Array<{ number: number; filename: string; cardName: string }> = [];
   let count = 0;
@@ -322,9 +388,28 @@ async function main() {
 
   writeFileSync(join(outRoot, 'index.html'), buildIndex(indexEntries), 'utf8');
 
+  // Card QR layer files — 2050×2050 transparent SVG, QR centred at 235×235
+  let cardCount = 0;
+  for (let n = 1; n <= 64; n++) {
+    const card = CARD_BY_NUMBER.get(n);
+    if (!card) continue;
+
+    const svg      = await buildCardQR(URLS.oracleCard(n));
+    const nn       = String(n).padStart(2, '0');
+    const filename = `${nn}-${slugify(card.card_name)}.svg`;
+    writeFileSync(join(cardsDir, filename), svg, 'utf8');
+    cardCount++;
+  }
+
+  // Multi-layer file — all 64 QRs in one SVG, one named layer per card
+  const multiSvg = await buildMultiLayerQR();
+  writeFileSync(join(cardsDir, 'all-64-layers.svg'), multiSvg, 'utf8');
+
   console.log(`\nGenerated:`);
   console.log(`  ${count} oracle plaques  →  ${oracleDir}`);
   console.log(`  1 marketing plaque  →  ${mktDir}`);
+  console.log(`  ${cardCount} card QR layers   →  ${cardsDir}`);
+  console.log(`  1 multi-layer file   →  ${join(cardsDir, 'all-64-layers.svg')}`);
   console.log(`  Preview  →  ${join(outRoot, 'index.html')}`);
 }
 
