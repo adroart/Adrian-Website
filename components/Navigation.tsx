@@ -40,11 +40,12 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const glassDark = 'bg-stone-950/85 backdrop-blur-xl border-b border-white/10 shadow-sm';
   const glassLight = 'bg-paper-50/90 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
-  // #3 Adjust nav position based on whether Teajia bar is visible
-  const navTop = teajiaBarDismissed ? 'top-0' : 'top-8';
+  // #3 Adjust nav position based on whether Teajia bar is visible + scroll state
+  const navTop = (teajiaBarDismissed || isScrolled) ? 'top-0' : 'top-8';
 
   let navClasses = `fixed ${navTop} left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
   if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark} dark-preserve`;
+  else if (useSolid && isScrolled) navClasses += ` py-1 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
   else if (useSolid) navClasses += ` py-3 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
   else navClasses += ` py-5 ${isDark ? `${glassDark} dark-preserve` : glassLight}`;
 
@@ -101,9 +102,9 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   return (
     <>
-      {/* #3 Dismissable Teajia promo bar */}
+      {/* #3 Dismissable Teajia promo bar — absolute so it scrolls away */}
       {!teajiaBarDismissed && (
-        <div className="fixed top-0 left-0 w-full h-8 z-[101] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group backdrop-blur-sm dark-preserve">
+        <div className="absolute top-0 left-0 w-full h-8 z-[99] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group backdrop-blur-sm dark-preserve">
           <a
             href="https://www.teajia.com"
             target="_blank"
@@ -128,7 +129,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
       <nav className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
           <Link to="/" className="group flex flex-col items-start">
-            <span className={`text-2xl font-display tracking-normal leading-none transition-colors font-normal ${textPrimary} hover:${accentColor}`}>
+            <span className={`font-display tracking-normal leading-none transition-all duration-300 font-normal ${textPrimary} hover:${accentColor} ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
               Adrian Rasmussen
             </span>
           </Link>

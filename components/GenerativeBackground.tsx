@@ -468,7 +468,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         <canvas
             ref={canvasRef}
             aria-hidden="true"
-            className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pathname === '/' ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${pathname === '/' ? 'opacity-0' : 'opacity-60 md:opacity-100'}`}
             style={{ mixBlendMode: effectivelyDark ? 'screen' : 'multiply' }}
         />
     );

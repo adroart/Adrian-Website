@@ -6,10 +6,9 @@ import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 
 type ViewMode = 'grid' | 'rings';
+type GridMode = 'cards' | 'artwork';
 
 /* ─── Card image lookup ──────────────────────────────────────────────────── */
-// UL pieces in FULL_ARCHIVE have coverImages like "32_x9qxas".
-// The number before the underscore matches the oracle card number.
 
 const UL_IMAGE_BY_NUMBER = new Map<number, string>(
   FULL_ARCHIVE
@@ -27,81 +26,168 @@ function cardImageUrl(number: number, size: number): string {
   return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center' });
 }
 
-/* ─── Thumbnail tile (grid view) ─────────────────────────────────────────── */
+/* ─── Hexagram SVG renderer ─────────────────────────────────────────────── */
+// Unicode trigram chars → [top, mid, bot] solid (true) or broken (false).
+// Each trigram has 3 lines displayed top-to-bottom.
+const TRIGRAM_LINES: Record<string, readonly [boolean, boolean, boolean]> = {
+  '☰': [true,  true,  true ],  // Qian / Heaven
+  '☷': [false, false, false],  // Kun  / Earth
+  '☳': [false, false, true ],  // Zhen / Thunder
+  '☵': [false, true,  false],  // Kan  / Water
+  '☶': [true,  false, false],  // Gen  / Mountain
+  '☴': [true,  true,  false],  // Xun  / Wind
+  '☲': [true,  false, true ],  // Li   / Fire
+  '☱': [false, true,  true ],  // Dui  / Lake
+};
 
-const CardThumbnail: React.FC<{ card: OracleCard }> = ({ card }) => (
-  <Link
-    to={`/oracle/universal-language/${card.number}`}
-    className="group block"
+// Draws a full hexagram (6 lines) as SVG with precise coordinates —
+// no font metrics involved, so every card is identically centred.
+const HexagramSVG: React.FC<{ upper: string; lower: string }> = ({ upper, lower }) => {
+  const uLines = TRIGRAM_LINES[upper] ?? [true, true, true];
+  const lLines = TRIGRAM_LINES[lower] ?? [true, true, true];
+  const lines = [...uLines, ...lLines]; // 6 lines, top → bottom
+
+  // ViewBox: 40 wide, 46 tall
+  // 6 lines × 4 px + 5 gaps × 4 px = 44 px; 1 px breathing room top & bottom
+  const lineH = 4;
+  const lineGap = 4;
+  const W = 40;
+  const brokenGap = 8;
+  const halfW = (W - brokenGap) / 2; // 16
+
+  return (
+    <svg viewBox="0 0 40 46" width="100%" height="100%" aria-hidden>
+      {lines.map((solid, i) => {
+        const y = 1 + i * (lineH + lineGap);
+        return solid ? (
+          <rect key={i} x={0} y={y} width={W} height={lineH} fill="currentColor" />
+        ) : (
+          <g key={i}>
+            <rect x={0}               y={y} width={halfW} height={lineH} fill="currentColor" />
+            <rect x={halfW + brokenGap} y={y} width={halfW} height={lineH} fill="currentColor" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+/* ─── Flip card tile (grid view) ─────────────────────────────────────────── */
+
+const CardThumbnail: React.FC<{
+  card: OracleCard;
+  isFlipped: boolean;
+  onFlip: () => void;
+  onFlipBack: () => void;
+}> = ({ card, isFlipped, onFlip, onFlipBack }) => {
+  const navigate = useNavigate();
+  return (
+  <div
+    className={`[perspective:600px] relative aspect-square select-none ${isFlipped ? 'z-10' : ''}`}
+    onClick={() => { if (!isFlipped) onFlip(); }}
   >
-    <div className="relative aspect-square overflow-hidden">
-      <img
-        src={cardImageUrl(card.number, 320)}
-        alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        loading="lazy"
-      />
+    <div
+      className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
+        isFlipped ? '[transform:rotateY(180deg)]' : 'cursor-pointer'
+      }`}
+    >
+      {/* BACK face — hexagram + number */}
+      <div className="absolute inset-0 [backface-visibility:hidden] bg-stone-950 dark:bg-paper-50 flex flex-col items-center justify-center gap-1.5">
+        <div className="w-[38%] text-white/90 dark:text-stone-900">
+          <HexagramSVG
+            upper={card.iching.upper_trigram.symbol}
+            lower={card.iching.lower_trigram.symbol}
+          />
+        </div>
+        <span className="font-display font-bold text-xs lg:text-sm text-white/90 dark:text-stone-900 leading-none">
+          {card.number}
+        </span>
+      </div>
 
-      {/* Hover overlay — hexagram + number, centered */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/88 transition-colors duration-300 flex items-center justify-center">
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center" style={{ gap: '0.5em', fontSize: 'clamp(22px, 3.8vw, 40px)', transform: 'translateY(8%)' }}>
-          {/* Two trigrams merged into one hexagram.
-              flex+align-items:center ensures pixel-perfect alignment; scaleX widens. */}
-          <div className="select-none text-white/90 flex flex-col items-center" style={{ lineHeight: 1, transform: 'scaleX(1.78)', transformOrigin: 'center' }}>
-            <span>{card.iching.upper_trigram.symbol}</span>
-            <span style={{ marginTop: '-0.37em' }}>{card.iching.lower_trigram.symbol}</span>
-          </div>
-          {/* Number — Cinzel, strong, centered below */}
-          <span className="font-display text-white/80 select-none text-center" style={{ fontSize: '0.65em' }}>
-            {card.number}
+      {/* FRONT face — big dark mat, art shrinks, two clear action buttons */}
+      <div
+        className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-stone-900 cursor-pointer"
+        onClick={e => { e.stopPropagation(); onFlipBack(); }}
+      >
+        {/* Top strip — card number, tells you what you drew */}
+        <div className="absolute top-0 left-0 right-0 h-5 flex items-center justify-center pointer-events-none">
+          <span className="font-label text-[7px] uppercase tracking-[0.2em] text-stone-500 leading-none">
+            {String(card.number).padStart(2, '0')}
           </span>
+        </div>
+
+        {/* Art — square, inset 20px all sides */}
+        <div
+          className="absolute inset-5 overflow-hidden"
+          onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
+        >
+          <img
+            src={cardImageUrl(card.number, 320)}
+            alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
+            className="w-full h-full object-cover cursor-pointer"
+            loading="lazy"
+          />
+        </div>
+
+        {/* Bottom strip — two labeled actions */}
+        <div className="absolute bottom-0 left-0 right-0 h-5 flex items-center justify-between px-2">
+          <button
+            className="font-label text-[7px] uppercase tracking-[0.15em] text-stone-500 hover:text-stone-300 transition-colors leading-none"
+            onClick={e => { e.stopPropagation(); onFlipBack(); }}
+            aria-label="Flip back"
+          >
+            Back
+          </button>
+          <button
+            className="font-label text-[7px] uppercase tracking-[0.15em] text-bronze-500 hover:text-bronze-400 transition-colors leading-none"
+            onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
+            aria-label={`Read ${card.card_name}`}
+          >
+            Read →
+          </button>
         </div>
       </div>
     </div>
-
-    {/* Title below — number + name */}
-    <p className="pt-1.5 font-serif text-sm text-wood-600 group-hover:text-bronze-600 transition-colors duration-200 leading-snug line-clamp-1">
-      <span className="text-bronze-600/70 mr-1">{card.number}.</span>{card.card_name}
-    </p>
-  </Link>
-);
+  </div>
+  );
+};
 
 /* ─── Ring card tile (rings view) ────────────────────────────────────────── */
 
 const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
   <Link
     to={`/oracle/universal-language/${card.number}`}
-    className="group flex gap-4 border border-wood-200 hover:border-bronze-500/60 transition-colors duration-300 p-4"
+    className="group block"
   >
-    {/* Thumbnail */}
-    <div className="flex-shrink-0 w-14 h-14 overflow-hidden border border-wood-200 group-hover:border-bronze-400/40 transition-colors duration-300">
+    {/* Image */}
+    <div className="relative aspect-square overflow-hidden mb-3">
       <img
-        src={cardImageUrl(card.number, 112)}
-        alt=""
+        src={cardImageUrl(card.number, 400)}
+        alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
     </div>
 
-    {/* Text */}
-    <div className="min-w-0 flex-1">
-      <div className="flex items-baseline gap-2 mb-0.5">
-        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-600/70 flex-shrink-0">
+    {/* Info below image */}
+    <div className="px-0.5">
+      <div className="flex items-baseline gap-2 mb-1">
+        <span className="font-label text-[10px] uppercase tracking-[0.12em] text-bronze-600/70 flex-shrink-0">
           {String(card.number).padStart(2, '0')}
         </span>
-        <h3 className="font-serif text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200 truncate">
+        <h3 className="font-serif text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200">
           {card.card_name}
         </h3>
       </div>
-      <p className="font-serif text-sm text-wood-600 leading-snug mb-2 line-clamp-1">
+      <p className="font-serif text-sm italic text-wood-500 leading-snug mb-2">
         {card.iching.hexagram_name}
       </p>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.shadow}</span>
-        <span className="text-wood-300 text-[11px]">·</span>
-        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-bronze-700">{card.gene_keys.gift}</span>
-        <span className="text-wood-300 text-[11px]">·</span>
-        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.siddhi}</span>
+        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-wood-500">{card.gene_keys.shadow}</span>
+        <span className="text-wood-300 text-[10px]">·</span>
+        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-bronze-600">{card.gene_keys.gift}</span>
+        <span className="text-wood-300 text-[10px]">·</span>
+        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-wood-500">{card.gene_keys.siddhi}</span>
       </div>
     </div>
   </Link>
@@ -123,7 +209,7 @@ const RingSection: React.FC<{
       </div>
       <p className="font-serif text-sm italic text-wood-500 max-w-xl leading-[1.65]">{description}</p>
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
       {cards.map(card => <RingCardTile key={card.number} card={card} />)}
     </div>
   </div>
@@ -151,25 +237,41 @@ const SearchBar: React.FC<{ value: string; onChange: (v: string) => void }> = ({
   </div>
 );
 
-/* ─── View toggle ────────────────────────────────────────────────────────── */
+/* ─── Grid mode toggle ───────────────────────────────────────────────────── */
 
-const ViewToggle: React.FC<{ view: ViewMode; onChange: (v: ViewMode) => void }> = ({ view, onChange }) => (
-  <div className="flex items-center">
-    {(['grid', 'rings'] as ViewMode[]).map((v, i) => (
+const GridToggle: React.FC<{
+  gridMode: GridMode;
+  viewMode: ViewMode;
+  onGridMode: (m: GridMode) => void;
+  onViewMode: (v: ViewMode) => void;
+}> = ({ gridMode, viewMode, onGridMode, onViewMode }) => {
+  const btnBase = 'font-label text-[10px] uppercase tracking-[0.2em] px-4 py-2.5 border transition-colors duration-200';
+  const active = 'bg-wood-900 text-paper-50 border-wood-900 z-10 relative';
+  const inactive = 'text-wood-500 border-wood-300 hover:text-wood-900 hover:border-wood-500 bg-transparent';
+
+  return (
+    <div className="flex items-center">
       <button
-        key={v}
-        onClick={() => onChange(v)}
-        className={`font-label text-[10px] uppercase tracking-[0.2em] px-4 py-2.5 border transition-colors duration-200 ${i === 1 ? '-ml-px' : ''} ${
-          view === v
-            ? 'bg-wood-900 text-paper-50 border-wood-900 z-10 relative'
-            : 'text-wood-500 border-wood-300 hover:text-wood-900 hover:border-wood-500 bg-transparent'
-        }`}
+        onClick={() => { onGridMode('cards'); onViewMode('grid'); }}
+        className={`${btnBase} ${viewMode === 'grid' && gridMode === 'cards' ? active : inactive}`}
       >
-        {v === 'grid' ? 'All 64' : 'By Ring'}
+        All Cards
       </button>
-    ))}
-  </div>
-);
+      <button
+        onClick={() => { onGridMode('artwork'); onViewMode('grid'); }}
+        className={`${btnBase} -ml-px ${viewMode === 'grid' && gridMode === 'artwork' ? active : inactive}`}
+      >
+        All Artwork
+      </button>
+      <button
+        onClick={() => onViewMode('rings')}
+        className={`${btnBase} -ml-px ${viewMode === 'rings' ? active : inactive}`}
+      >
+        By Ring
+      </button>
+    </div>
+  );
+};
 
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 
@@ -189,10 +291,31 @@ const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
 
 const UniversalLanguageIndex: React.FC = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [gridMode, setGridMode] = useState<GridMode>('cards');
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  // When the global grid mode changes, sync the flipped set
+  const handleGridMode = (mode: GridMode) => {
+    setGridMode(mode);
+    if (mode === 'artwork') {
+      setFlippedCards(new Set(ALL_CARDS.map(c => c.number)));
+    } else {
+      setFlippedCards(new Set());
+    }
+  };
+
+  const flipCard = (number: number) => {
+    setFlippedCards(prev => new Set([...prev, number]));
+  };
+
+  const flipCardBack = (number: number) => {
+    setFlippedCards(prev => { const next = new Set(prev); next.delete(number); return next; });
+  };
+
 
   const matchCard = (card: OracleCard, q: string): boolean => {
     const lq = q.toLowerCase();
@@ -220,7 +343,7 @@ const UniversalLanguageIndex: React.FC = () => {
       .filter(ring => ring.cards.length > 0);
   }, [query]);
 
-  const totalShown = view === 'grid'
+  const totalShown = viewMode === 'grid'
     ? filteredCards.length
     : filteredRings.reduce((n, r) => n + r.cards.length, 0);
 
@@ -236,7 +359,7 @@ const UniversalLanguageIndex: React.FC = () => {
       <div className="px-6 pt-32 pb-12 max-w-7xl mx-auto">
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.25em] text-wood-400 mb-12">
+        <nav className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-wood-400 mb-8 sm:mb-12">
           <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
           <span className="text-wood-300">/</span>
           <Link to="/creations/oracle-cards" className="hover:text-wood-700 transition-colors">Oracle</Link>
@@ -244,31 +367,37 @@ const UniversalLanguageIndex: React.FC = () => {
           <span className="text-wood-700">Universal Language</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-end mb-10">
-          <div>
-            <p className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-600 mb-5">
-              Universal Language Oracle
-            </p>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-[88px] text-wood-900 font-medium leading-[0.93] mb-6">
-              Sixty-Four<br />
-              <span className="text-wood-500 font-light italic">Expressions</span>
-            </h1>
-            <p className="font-serif text-lg text-wood-600 max-w-xl leading-[1.7] font-light">
-              Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
-              Nothing needs to be understood to speak with them.
-            </p>
-          </div>
+        <div className="relative">
+          <div
+            aria-hidden
+            className="md:hidden absolute -inset-x-6 -inset-y-6 -z-10 bg-paper-50/75 dark:bg-stone-950/75 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_82%)]"
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-end mb-10">
+            <div>
+              <p className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-600 mb-5">
+                Universal Language Oracle
+              </p>
+              <h1 className="font-serif text-5xl md:text-7xl lg:text-[88px] text-wood-900 font-medium leading-[0.93] mb-6">
+                Sixty-Four<br />
+                <span className="text-wood-500 font-light italic">Expressions</span>
+              </h1>
+              <p className="font-serif text-lg text-wood-600 max-w-xl leading-[1.7] font-light">
+                Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
+                Nothing needs to be understood to speak with them.
+              </p>
+            </div>
 
-          <div className="flex flex-col items-start lg:items-end gap-4">
-            <button
-              onClick={handleRandom}
-              className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors duration-200 font-semibold"
-            >
-              Draw a Card
-            </button>
-            <div className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 space-y-1 text-right">
-              <div>{ALL_CARDS.length} Cards</div>
-              <div>{CODON_RINGS.length} Codon Rings</div>
+            <div className="flex flex-col items-start lg:items-end gap-4">
+              <button
+                onClick={handleRandom}
+                className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors duration-200 font-semibold"
+              >
+                Draw a Card
+              </button>
+              <div className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 space-y-1 text-right">
+                <div>{ALL_CARDS.length} Cards</div>
+                <div>{CODON_RINGS.length} Codon Rings</div>
+              </div>
             </div>
           </div>
         </div>
@@ -276,7 +405,12 @@ const UniversalLanguageIndex: React.FC = () => {
         {/* Divider */}
         <div className="border-t border-wood-200 pt-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <SearchBar value={query} onChange={setQuery} />
-          <ViewToggle view={view} onChange={setView} />
+          <GridToggle
+            gridMode={gridMode}
+            viewMode={viewMode}
+            onGridMode={handleGridMode}
+            onViewMode={setViewMode}
+          />
         </div>
 
         {query && (
@@ -290,12 +424,20 @@ const UniversalLanguageIndex: React.FC = () => {
       <div className="px-6 pb-32 max-w-7xl mx-auto">
 
         {/* Grid view */}
-        {view === 'grid' && (
+        {viewMode === 'grid' && (
           filteredCards.length > 0 ? (
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-2 sm:gap-3">
-              {filteredCards.map(card => (
-                <CardThumbnail key={card.number} card={card} />
-              ))}
+            <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
+              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[5px]">
+                {filteredCards.map(card => (
+                  <CardThumbnail
+                    key={card.number}
+                    card={card}
+                    isFlipped={flippedCards.has(card.number)}
+                    onFlip={() => flipCard(card.number)}
+                    onFlipBack={() => flipCardBack(card.number)}
+                  />
+                ))}
+              </div>
             </div>
           ) : (
             <EmptyState onClear={() => setQuery('')} />
@@ -303,7 +445,7 @@ const UniversalLanguageIndex: React.FC = () => {
         )}
 
         {/* Rings view */}
-        {view === 'rings' && (
+        {viewMode === 'rings' && (
           filteredRings.length > 0 ? (
             <div className="space-y-2">
               {filteredRings.map(ring => (

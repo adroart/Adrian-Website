@@ -94,9 +94,9 @@ export const CREATION_CATEGORIES = [
 // The Illuminated Works entry links back to the shared experiential page.
 export const MULTIDIMENSIONAL_CATEGORIES = [
     { id: 'MD-UL',    label: 'Universal Language', desc: 'Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key.',       slug: 'universal-language', image: '48_ttflpq' },
+    { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces',   image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
     { id: 'MD-MAN',   label: 'Mandala',            desc: 'Sacred geometry forms. Maps of the inner and outer cosmos.',                                           slug: 'mandala',            image: 'Mandala-1_tyujra' },
     { id: 'MD-LC',    label: 'Light Codes',        desc: 'Approximately forty works across three subcategories: Frequency Foundations, Embodied Vibrations, Resonant Formations.', slug: 'light-codes', image: 'adrian-website/creations/light-codes/suni' },
-    { id: 'MD-SIG',   label: 'Signature Pieces',   desc: 'Works outside any series. An animal. A scene. A world compressed into layers of wood and light.',      slug: 'signature-pieces',   image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
     { id: 'MD-ILLUM', label: 'Illuminated Works',  desc: 'A second door into the same destination.',                                                             link: '/creations/illuminated-works', image: 'adrian-website/placeholders/artwork-square-5', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
 ];
 

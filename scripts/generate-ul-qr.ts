@@ -29,8 +29,10 @@ import { slugify } from './slugify';
 const BASE_URL = 'https://adrianrasmussen.com';
 
 const URLS = {
-  // ?ref=qr triggers the entrance animation on arrival
-  oracleCard:        (n: number) => `${BASE_URL}/oracle/universal-language/${n}?ref=qr`,
+  // Short redirect — hosted on your domain, never depends on a third party.
+  // /qr/:number → /oracle/universal-language/:number?ref=qr (via functions/qr/[number].js)
+  // Update that one file if the destination ever changes; no reprinting needed.
+  oracleCard:        (n: number) => `${BASE_URL}/qr/${n}`,
   oracleDeckLanding:              `${BASE_URL}/oracle/universal-language`,
 };
 
@@ -184,7 +186,7 @@ async function buildPlaque(opts: PlaqueOpts): Promise<string> {
   const qrSvgStr = await QRCode.toString(qrUrl, {
     type: 'svg',
     margin: 1,
-    errorCorrectionLevel: 'H',
+    errorCorrectionLevel: 'L',
     color: { dark: INK, light: PAPER },
   });
 
