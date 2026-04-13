@@ -38,7 +38,7 @@ function cardImageUrl(number: number, size: number): string {
 /* ─── Section label ──────────────────────────────────────────────────────── */
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <p className="font-label text-[11px] uppercase tracking-[0.25em] text-bronze-600 mt-10 mb-3">
+  <p className="font-label text-[11px] uppercase tracking-[0.25em] text-bronze-600 mt-14 mb-4">
     {children}
   </p>
 );
@@ -81,7 +81,6 @@ const UniversalLanguageCard: React.FC = () => {
   const { number } = useParams<{ number: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const cardNum = parseInt(number ?? '', 10);
   const card = CARD_BY_NUMBER.get(cardNum);
@@ -100,7 +99,6 @@ const UniversalLanguageCard: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setImageLoaded(false);
   }, [cardNum]);
 
   const cardImage = card
@@ -222,11 +220,11 @@ const UniversalLanguageCard: React.FC = () => {
           </nav>
 
           {/* ── Card header ────────────────────────────────────────────── */}
-          <div className="flex items-baseline flex-wrap gap-y-1 justify-between mb-2">
-            <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-700">
-              {card.number} / 64
+          <div className="flex items-baseline justify-between mb-4">
+            <span className="font-label text-sm uppercase tracking-[0.15em] text-bronze-600">
+              Card {card.number} / 64
             </span>
-            <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600">
+            <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-500">
               {card.ring_name}
             </span>
           </div>
@@ -239,16 +237,12 @@ const UniversalLanguageCard: React.FC = () => {
 
           {/* ── Card image ─────────────────────────────────────────────── */}
           <div className="mb-10">
-            <div className="relative w-full aspect-square">
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-wood-100 animate-pulse" />
-              )}
+            <div className="w-full aspect-square">
               <img
                 src={cardImageUrl(card.number, 720)}
                 alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
                 className="w-full h-full object-cover"
                 loading="eager"
-                onLoad={() => setImageLoaded(true)}
               />
             </div>
             <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 text-center mt-3">
@@ -259,81 +253,47 @@ const UniversalLanguageCard: React.FC = () => {
           {/* ── Trigram bar ────────────────────────────────────────────── */}
           <div className="bg-paper-100/60 border-t border-b border-wood-200 mb-5 py-6 md:py-7">
 
-            {/* Mobile: 2-column side-by-side */}
-            <div className="grid grid-cols-2 md:hidden">
-              <div className="flex items-start gap-3 pr-4 border-r border-wood-200">
-                <div className="flex-shrink-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.1em] text-wood-600 mb-1">Upper</p>
-                  <span className="text-5xl text-wood-700 leading-none block">{card.iching.upper_trigram.symbol}</span>
-                </div>
-                <div>
-                  <p className="font-sans text-sm text-wood-900 font-medium leading-snug">
-                    {card.iching.upper_trigram.name}
-                  </p>
-                  <p className="font-sans text-sm text-wood-600 leading-[1.8]">
-                    {card.iching.upper_trigram.nature}
-                  </p>
-                </div>
+            <div className="grid grid-cols-2 divide-x divide-wood-200">
+              <div className="pr-6 flex flex-col items-center">
+                <span className="text-[5.5rem] text-bronze-500 leading-none block mb-2">{card.iching.upper_trigram.symbol}</span>
+                <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-3">Upper</p>
+                <p className="font-serif text-lg text-wood-900 font-medium leading-snug mb-2 text-center">
+                  {card.iching.upper_trigram.name}
+                </p>
+                <p className="font-sans text-xs text-wood-500 leading-[1.75] text-left">
+                  {card.iching.upper_trigram.nature}
+                </p>
               </div>
-              <div className="flex items-start gap-3 pl-4">
-                <div className="flex-shrink-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.1em] text-wood-600 mb-1">Lower</p>
-                  <span className="text-5xl text-wood-700 leading-none block">{card.iching.lower_trigram.symbol}</span>
-                </div>
-                <div>
-                  <p className="font-sans text-sm text-wood-900 font-medium leading-snug">
-                    {card.iching.lower_trigram.name}
-                  </p>
-                  <p className="font-sans text-sm text-wood-600 leading-[1.8]">
-                    {card.iching.lower_trigram.nature}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop: original row layout */}
-            <div className="hidden md:flex items-center gap-6 px-6">
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 mb-1">Upper</p>
-                  <span className="text-4xl text-wood-700 leading-none block">{card.iching.upper_trigram.symbol}</span>
-                </div>
-                <div>
-                  <p className="font-sans text-base text-wood-900 font-medium">{card.iching.upper_trigram.name}</p>
-                  <p className="font-sans text-sm text-wood-600 leading-[1.8]">{card.iching.upper_trigram.nature}</p>
-                </div>
-              </div>
-              <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 px-4">over</p>
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 mb-1">Lower</p>
-                  <span className="text-4xl text-wood-700 leading-none block">{card.iching.lower_trigram.symbol}</span>
-                </div>
-                <div>
-                  <p className="font-sans text-base text-wood-900 font-medium">{card.iching.lower_trigram.name}</p>
-                  <p className="font-sans text-sm text-wood-600 leading-[1.8]">{card.iching.lower_trigram.nature}</p>
-                </div>
+              <div className="pl-6 flex flex-col items-center">
+                <span className="text-[5.5rem] text-bronze-500 leading-none block mb-2">{card.iching.lower_trigram.symbol}</span>
+                <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-3">Lower</p>
+                <p className="font-serif text-lg text-wood-900 font-medium leading-snug mb-2 text-center">
+                  {card.iching.lower_trigram.name}
+                </p>
+                <p className="font-sans text-xs text-wood-500 leading-[1.75] text-left">
+                  {card.iching.lower_trigram.nature}
+                </p>
               </div>
             </div>
           </div>
 
           {/* ── I Ching ────────────────────────────────────────────────── */}
           <SectionLabel>I Ching</SectionLabel>
-          <div className="border-l-2 border-bronze-300/60 pl-4 mb-5">
-            <p className="font-sans text-base text-wood-600 leading-[1.8]">
-              {card.iching.essence}
-            </p>
-          </div>
-
-          {/* ── Element ────────────────────────────────────────────────── */}
-          <SectionLabel>Element</SectionLabel>
-          <p className="font-sans text-base text-wood-700 mb-5 pb-5 border-b border-wood-100">
-            {card.element}
+          <p className="font-sans text-base text-wood-700 leading-[1.95] mb-10">
+            {card.iching.essence}
           </p>
 
-          {/* ── Nature ─────────────────────────────────────────────────── */}
-          <SectionLabel>Nature</SectionLabel>
-          <p className="font-sans text-base text-wood-600 leading-[1.8] mb-5">{card.nature}</p>
+          {/* ── Element + Nature ───────────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-6 mb-10">
+            <div>
+              <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-2">Element</p>
+              <p className="font-sans text-sm text-wood-700 leading-[1.7]">{card.element}</p>
+            </div>
+            <div>
+              <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-2">Nature</p>
+              <p className="font-sans text-sm text-wood-600 leading-[1.7]">{card.nature}</p>
+            </div>
+          </div>
 
           {/* ── Gene Keys chapter break ─────────────────────────────────── */}
           <ChapterBreak />
@@ -359,9 +319,9 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
 
           {/* Gene Keys description */}
-          <div className="space-y-5 mb-6">
+          <div className="space-y-7 mb-8">
             {gkParagraphs.map((p, i) => (
-              <p key={i} className="font-sans text-base text-wood-700 leading-[1.85]">{p}</p>
+              <p key={i} className="font-sans text-base text-wood-700 leading-[1.95]">{p}</p>
             ))}
           </div>
           <p className="font-sans text-sm text-wood-500 pt-4 border-t border-wood-100 mb-5 leading-[1.7]">

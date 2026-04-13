@@ -8,7 +8,9 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "generate:qr": "tsx scripts/generate-ul-qr.ts"
+    "generate:qr": "tsx scripts/generate-ul-qr.ts",
+    "crop:oracle": "tsx scripts/crop-oracle-images.ts",
+    "rename:oracle": "tsx scripts/rename-oracle-images.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.7.0",
@@ -24,10 +26,12 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/sharp": "^0.32.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",
     "qrcode": "^1.5.4",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.2.2",
