@@ -43,6 +43,10 @@ const AppInner: React.FC = () => {
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
   const isShopping = location.pathname === '/shopping';
+  // Oracle card detail pages are immersive — they manage their own navigation
+  const isOracleCard = /^\/oracle\/universal-language\/\d+$/.test(location.pathname)
+    || /^\/universal-language\/\d+$/.test(location.pathname)
+    || /^\/creations\/oracle-cards\/universal-language\/\d+$/.test(location.pathname);
   // Keep theme route-based — CSS variable remapping handles dark mode visuals.
   // GenerativeBackground reads isDarkMode separately for canvas colors.
   const theme = isHome ? 'DARK' : 'LIGHT';
@@ -50,7 +54,7 @@ const AppInner: React.FC = () => {
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       {!isShopping && <GenerativeBackground pathname={location.pathname} theme={theme} />}
-      {!isWelcome && !isShopping && <Navigation theme={theme} />}
+      {!isWelcome && !isShopping && !isOracleCard && <Navigation theme={theme} />}
 
       <main id="main-content">
         <Routes>
@@ -85,7 +89,7 @@ const AppInner: React.FC = () => {
         </Routes>
       </main>
 
-      {!isWelcome && !isShopping && <Footer />}
+      {!isWelcome && !isShopping && !isOracleCard && <Footer />}
       <CartDrawer />
     </div>
   );

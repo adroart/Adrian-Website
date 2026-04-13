@@ -113,7 +113,7 @@ const CardThumbnail: React.FC<{
         {/* Art — square image with equal 3px padding on l/r/top */}
         <div
           className="pt-[6px] px-[6px]"
-          onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
+          onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } }); }}
         >
           <img
             src={cardImageUrl(card.number, 320)}
@@ -135,7 +135,7 @@ const CardThumbnail: React.FC<{
           <span className="w-px h-[8px] bg-wood-400 shrink-0" />
           <button
             className="flex-1 flex items-center justify-center font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-wood-700 hover:text-wood-900 font-black transition-colors leading-none"
-            onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`); }}
+            onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } }); }}
             aria-label={`Read ${card.card_name}`}
           >
             Read
@@ -152,6 +152,7 @@ const CardThumbnail: React.FC<{
 const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
   <Link
     to={`/oracle/universal-language/${card.number}`}
+    state={{ ritual: true }}
     className="group block"
   >
     {/* Image */}
@@ -344,7 +345,7 @@ const UniversalLanguageIndex: React.FC = () => {
 
   const handleRandom = () => {
     const card = ALL_CARDS[Math.floor(Math.random() * ALL_CARDS.length)];
-    navigate(`/oracle/universal-language/${card.number}`);
+    navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } });
   };
 
   return (

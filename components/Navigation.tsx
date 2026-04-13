@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useDarkMode } from '../DarkModeContext';
 import { LAUNCH_FLAGS } from '../launchFlags';
@@ -20,9 +20,6 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [teajiaBarDismissed, setTeajiaBarDismissed] = useState(() => {
-    try { return sessionStorage.getItem('teajia-bar-dismissed') === 'true'; } catch { return false; }
-  });
   const { totalItems, openCart } = useCart();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
@@ -40,8 +37,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const glassDark = 'bg-stone-950/85 backdrop-blur-xl border-b border-white/10 shadow-sm';
   const glassLight = 'bg-paper-50/90 backdrop-blur-md border-b border-wood-200/50 shadow-sm';
 
-  // #3 Adjust nav position based on whether Teajia bar is visible + scroll state
-  const navTop = (teajiaBarDismissed || isScrolled) ? 'top-0' : 'top-8';
+  const navTop = 'top-0';
 
   let navClasses = `fixed ${navTop} left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
   if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark} dark-preserve`;
@@ -93,39 +89,8 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     setIsMobileMenuOpen(false);
   };
 
-  const dismissTeajiaBar = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setTeajiaBarDismissed(true);
-    try { sessionStorage.setItem('teajia-bar-dismissed', 'true'); } catch {}
-  };
-
   return (
     <>
-      {/* #3 Dismissable Teajia promo bar — absolute so it scrolls away */}
-      {!teajiaBarDismissed && (
-        <div className="absolute top-0 left-0 w-full h-8 z-[99] flex items-center justify-center bg-stone-950/90 hover:bg-wood-900 transition-colors group backdrop-blur-sm dark-preserve">
-          <a
-            href="https://www.teajia.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 opacity-50 group-hover:opacity-100 transition-opacity"
-          >
-              <span className="text-[11px] font-label uppercase tracking-[0.2em] text-paper-50 group-hover:text-bronze-400 transition-colors">Teajia</span>
-              <span className="text-[11px] text-wood-600 hidden sm:inline">|</span>
-              <span className="text-[11px] font-label uppercase tracking-[0.2em] text-wood-400 hidden sm:inline">Global tea culture. Ceremony and treasures.</span>
-              <ArrowUpRight size={10} className="text-wood-500 group-hover:text-bronze-400" />
-          </a>
-          <button
-            onClick={dismissTeajiaBar}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-wood-600 hover:text-paper-50 transition-colors p-1"
-            aria-label="Dismiss banner"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
-
       <nav className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
           <Link to="/" className="group flex flex-col items-start">
