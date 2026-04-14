@@ -137,7 +137,10 @@ type GeneKeyTone = 'shadow' | 'gift' | 'siddhi';
 
 const TONE_CONFIG: Record<GeneKeyTone, {
   label:      string;
-  cardBg:     React.CSSProperties;
+  // Background uses a tailwind class with a dark: variant so the card flips
+  // in dark mode (inline hex styles don't respond to .dark, but the text
+  // tokens inside do — keeping them in sync prevents invisible text).
+  cardBg:     string;
   cardBorder: string;
   topBar:     string;
   labelColor: string;
@@ -147,8 +150,8 @@ const TONE_CONFIG: Record<GeneKeyTone, {
 }> = {
   shadow: {
     label:      'Shadow',
-    // Cool stone — grounded, heavy, the beginning
-    cardBg:     { background: '#eae8e5' },  // stone-100-ish
+    // Cool stone — grounded, heavy, the beginning. Dark: cool midnight stone.
+    cardBg:     'bg-[#eae8e5] dark:bg-[#2a2825]',
     cardBorder: 'border-stone-300/70',
     topBar:     'bg-stone-400',
     labelColor: 'text-stone-500',
@@ -158,8 +161,8 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   },
   gift: {
     label:      'Gift',
-    // Warm amber cream — transformative warmth
-    cardBg:     { background: '#faf5ee' },  // bronze-50-ish
+    // Warm amber cream — transformative warmth. Dark: deep ember.
+    cardBg:     'bg-[#faf5ee] dark:bg-[#2a231a]',
     cardBorder: 'border-bronze-300/50',
     topBar:     'bg-bronze-500',
     labelColor: 'text-bronze-600',
@@ -169,8 +172,8 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   },
   siddhi: {
     label:      'Siddhi',
-    // Warm ivory — luminous, the most open
-    cardBg:     { background: '#f8f6f2' },  // warm white
+    // Warm ivory — luminous, the most open. Dark: deep warm charcoal.
+    cardBg:     'bg-[#f8f6f2] dark:bg-[#23201d]',
     cardBorder: 'border-wood-300/50',
     topBar:     'bg-wood-400',
     labelColor: 'text-wood-500',
@@ -190,8 +193,7 @@ const GeneKeyCard: React.FC<{ tone: GeneKeyTone; level: ExpandedGeneKeyLevel; id
     // Text nodes stop propagation so users can still select and copy text.
     <div
       id={id}
-      className={`rounded-2xl border ${cfg.cardBorder} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer`}
-      style={cfg.cardBg}
+      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer`}
       onClick={() => setOpen(v => !v)}
       role="button"
       aria-expanded={open}
@@ -356,7 +358,6 @@ const UniversalLanguageCard: React.FC = () => {
   const imageAlt = `${card.card_name}, Universal Language ${card.number}. Original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
 
   const ichingHighlight = expanded?.i_ching?.reflection?.text ?? card.iching.essence;
-  const gkHighlight     = expanded?.gene_keys?.gift?.contemplation_title ?? card.gene_keys.gift;
 
   return (
     <>
@@ -365,10 +366,35 @@ const UniversalLanguageCard: React.FC = () => {
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
       {/* ── Single scrolling page — four color-blocked sections ──────────── */}
-      <div className="pb-14">
+      {/* pt-20 (80px) clears the fixed Navigation (≈72px when not scrolled, ≈40px when scrolled) so the image isn't overlapped. */}
+      <div className="pt-20 pb-14">
 
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
+
+          {/* Title block — appears ABOVE the image */}
+          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-6 pb-4">
+            <div className="card-grain bg-paper-100 border border-wood-200/50 rounded-2xl px-5 py-6 shadow-[inset_0_1px_4px_rgba(60,44,22,0.07),0_4px_16px_rgba(60,44,22,0.1)]">
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">Code {card.number}</p>
+              <h1 className="font-serif text-4xl sm:text-5xl text-wood-900 font-semibold leading-[1.15] mb-4">
+                {card.card_name}
+              </h1>
+              {/* Keywords — pill chips as tuning frequencies */}
+              {expanded?.keywords && expanded.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 border-t border-wood-200/60 pt-4">
+                  {expanded.keywords.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Image + painting link — full-bleed on mobile, contained on desktop */}
           <div className="md:max-w-2xl md:mx-auto">
             <figure
@@ -408,35 +434,7 @@ const UniversalLanguageCard: React.FC = () => {
 
           <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-4 pb-14">
 
-            {/* Island 1 — Identity */}
-            <div className="card-grain bg-paper-100 border border-wood-200/50 rounded-2xl px-5 py-6 mb-3 shadow-[inset_0_1px_4px_rgba(60,44,22,0.07),0_4px_16px_rgba(60,44,22,0.1)]">
-              <h1 className="font-serif text-4xl sm:text-5xl text-wood-900 font-semibold leading-[1.15] mb-4">
-                {card.card_name}
-              </h1>
-              {/* Shadow · Gift · Siddhi — clickable, each jumps to its gene key card */}
-              <div className="flex items-center gap-3 flex-wrap mb-5">
-                <button onClick={() => go('genekey-shadow')} className="font-sans text-sm text-stone-500 hover:text-stone-800 transition-colors text-left">{card.gene_keys.shadow}</button>
-                <span className="text-wood-300 text-xs" aria-hidden="true">·</span>
-                <button onClick={() => go('genekey-gift')} className="font-sans text-sm text-bronze-600 font-medium hover:text-bronze-500 transition-colors text-left">{card.gene_keys.gift}</button>
-                <span className="text-wood-300 text-xs" aria-hidden="true">·</span>
-                <button onClick={() => go('genekey-siddhi')} className="font-sans text-sm text-wood-600 hover:text-wood-800 transition-colors text-left">{card.gene_keys.siddhi}</button>
-              </div>
-              {/* Keywords — pill chips as tuning frequencies */}
-              {expanded?.keywords && expanded.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 border-t border-wood-200/60 pt-4">
-                  {expanded.keywords.map((kw, i) => (
-                    <span
-                      key={i}
-                      className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Island 2 — Section nav (each row jumps to its section) */}
+            {/* Island — Section nav (each row jumps to its section) */}
             <div className="rounded-2xl overflow-hidden border border-wood-200/40 mb-3 divide-y divide-wood-200/50 shadow-[0_4px_16px_rgba(60,44,22,0.09)]">
               <button onClick={() => go('iching')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-400 bg-stone-50 hover:bg-stone-100 px-5 py-4 text-left transition-colors">
                 <div className="min-w-0">
@@ -446,13 +444,41 @@ const UniversalLanguageCard: React.FC = () => {
                 </div>
                 <span className="text-stone-400 group-hover:text-stone-600 transition-colors flex-shrink-0 text-sm">→</span>
               </button>
-              <button onClick={() => go('genekeys')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-bronze-400 bg-bronze-50 hover:bg-bronze-100/60 px-5 py-4 text-left transition-colors">
-                <div className="min-w-0">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500 mb-1.5">Gene Keys</p>
-                  <p className="font-sans text-[15px] text-wood-800 leading-[1.7]">{gkHighlight}</p>
+              {/* Gene Keys — header + 3 state cells (Shadow / Gift / Siddhi)
+                  matching the section's bronze accent. Each cell jumps to its
+                  gene-key card. Header → top of Gene Keys section. */}
+              <div className="border-l-[3px] border-bronze-400 bg-bronze-50">
+                <button
+                  onClick={() => go('genekeys')}
+                  className="group w-full flex items-center justify-between gap-4 px-5 pt-4 pb-2 text-left hover:bg-bronze-100/60 transition-colors"
+                >
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500">Gene Keys</p>
+                  <span className="text-bronze-400 group-hover:text-bronze-600 transition-colors flex-shrink-0 text-sm">→</span>
+                </button>
+                <div className="grid grid-cols-3 gap-2 px-3 pb-3 pt-1">
+                  <button
+                    onClick={() => go('genekey-shadow')}
+                    className="group rounded-lg border border-stone-300/60 bg-[#eae8e5] dark:bg-[#2a2825] px-2.5 py-2.5 text-left hover:border-stone-400 transition-colors"
+                  >
+                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone-500 mb-1">Shadow</p>
+                    <p className="font-sans text-xs text-stone-800 leading-[1.4] line-clamp-2 group-hover:text-stone-900 transition-colors">{card.gene_keys.shadow}</p>
+                  </button>
+                  <button
+                    onClick={() => go('genekey-gift')}
+                    className="group rounded-lg border border-bronze-300/60 bg-[#faf5ee] dark:bg-[#2a231a] px-2.5 py-2.5 text-left hover:border-bronze-400 transition-colors"
+                  >
+                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600 mb-1">Gift</p>
+                    <p className="font-sans text-xs text-wood-800 font-medium leading-[1.4] line-clamp-2 group-hover:text-bronze-700 transition-colors">{card.gene_keys.gift}</p>
+                  </button>
+                  <button
+                    onClick={() => go('genekey-siddhi')}
+                    className="group rounded-lg border border-wood-300/60 bg-[#f8f6f2] dark:bg-[#23201d] px-2.5 py-2.5 text-left hover:border-wood-400 transition-colors"
+                  >
+                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 mb-1">Siddhi</p>
+                    <p className="font-sans text-xs text-wood-900 leading-[1.4] line-clamp-2 group-hover:text-wood-700 transition-colors">{card.gene_keys.siddhi}</p>
+                  </button>
                 </div>
-                <span className="text-bronze-400 group-hover:text-bronze-600 transition-colors flex-shrink-0 text-sm">→</span>
-              </button>
+              </div>
               {/* Human Design + Tarot — single row, divided */}
               <div className="flex border-l-[3px] border-wood-400 bg-wood-50 divide-x divide-wood-200/60">
                 <button onClick={() => go('humandesign')} className="group flex-1 flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-wood-100/60 transition-colors">
@@ -501,7 +527,9 @@ const UniversalLanguageCard: React.FC = () => {
         </section>
 
         {/* ════════════ I CHING ══════════════════════════════════════════ */}
-        <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16`}>
+        {/* dark-preserve: intentionally-dark section stays dark in dark mode
+            (without it, bg-stone-900 would remap to a light tone). */}
+        <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Island 1 — Header + Trigrams */}
@@ -658,7 +686,8 @@ const UniversalLanguageCard: React.FC = () => {
         </section>
 
         {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
-        <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16`}>
+        {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
+        <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Header */}
@@ -702,7 +731,7 @@ const UniversalLanguageCard: React.FC = () => {
               <>
                 {/* Paired Hexagram */}
                 {pairCard && (
-                  <div className={`rounded-2xl border border-wood-200 overflow-hidden ${CARD_SHADOW_LIGHT}`} style={{ background: '#fafaf8' }}>
+                  <div className={`rounded-2xl border border-wood-200 overflow-hidden bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
                     <div className="px-5 pt-5 pb-3">
                       <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Paired Hexagram</p>
                       <p className="font-sans text-sm text-wood-600 leading-[1.8] mb-3">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
@@ -719,7 +748,7 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Programming Partner */}
                 {expanded.gene_keys.programming_partner && (
-                  <div className={`rounded-2xl border border-wood-200 overflow-hidden ${CARD_SHADOW_LIGHT}`} style={{ background: '#fafaf8' }}>
+                  <div className={`rounded-2xl border border-wood-200 overflow-hidden bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
                     <div className="px-5 pt-5 pb-3">
                       <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Programming Partner</p>
                       <p className="font-sans text-sm text-wood-600 leading-[1.8] mb-3">{expanded.gene_keys.programming_partner.relationship_context}</p>
@@ -736,7 +765,7 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Codon Ring */}
                 {siblings.length > 0 && (
-                  <div className={`rounded-2xl border border-wood-200 px-5 py-5 ${CARD_SHADOW_LIGHT}`} style={{ background: '#fafaf8' }}>
+                  <div className={`rounded-2xl border border-wood-200 px-5 py-5 bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
                     <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">{expanded.gene_keys.codon_ring.name}</p>
                     <p className="font-sans text-sm text-wood-600 leading-[1.8] mb-4">{expanded.gene_keys.codon_ring.relationship_context}</p>
                     <div className="grid grid-cols-2 gap-2">
