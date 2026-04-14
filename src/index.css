@@ -60,10 +60,12 @@ h1, h2, h3, h4, h5, h6 {
   text-wrap: balance;
 }
 
-/* #6 Pretty wrap on body — eliminates orphaned words at line ends */
-p, li, blockquote, figcaption, label {
-  text-wrap: pretty;
-}
+/* #6 Body text uses the browser default greedy line-breaker so each line
+ * fills the available width. `text-wrap: pretty` was producing visible
+ * gaps on the right side of paragraphs in narrow reading columns
+ * (notably the oracle reading at max-w-2xl) because it pulls words back
+ * from earlier lines to avoid orphans. Headings still use `balance`
+ * above, which is appropriate for short titles. */
 
 /* #8 Hyphenation disabled — mid-word line breaks interrupt reading rhythm */
 
