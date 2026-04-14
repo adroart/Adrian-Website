@@ -57,6 +57,11 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Keep --nav-height in sync so sticky filter bars sit flush under the nav
+  useEffect(() => {
+    document.documentElement.style.setProperty('--nav-height', isScrolled ? '40px' : '56px');
+  }, [isScrolled]);
+
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);

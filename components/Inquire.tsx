@@ -20,7 +20,6 @@ interface FormState {
   referralOther: string;
 }
 
-/* ── Budget presets (replaces dual-range slider) ─────────────────────── */
 const BUDGET_PRESETS = [
   { label: 'Under $1,000', value: 'Under $1,000' },
   { label: '$1,000 to $3,000', value: '$1,000 to $3,000' },
@@ -31,7 +30,7 @@ const BUDGET_PRESETS = [
   { label: 'Not sure yet', value: 'Not sure yet' },
 ];
 
-const TIMELINE_OPTIONS: { label: string; value: string }[] = [
+const TIMELINE_OPTIONS = [
   { label: 'Flexible, no rush', value: 'Flexible / No rush' },
   { label: 'Within 3 months', value: 'Within 3 months' },
   { label: 'Within 6 months', value: 'Within 6 months' },
@@ -39,7 +38,7 @@ const TIMELINE_OPTIONS: { label: string; value: string }[] = [
   { label: 'Tied to a specific date', value: 'Specific date' },
 ];
 
-const REFERRAL_OPTIONS: { label: string; value: string }[] = [
+const REFERRAL_OPTIONS = [
   { label: 'Word of mouth', value: 'Word of mouth' },
   { label: 'Instagram', value: 'Instagram' },
   { label: 'Seeing a piece in person', value: 'Saw a piece in person' },
@@ -59,6 +58,9 @@ const COMMISSION_PATHS = {
     successMsg: 'Your vision for a personal piece is on its way to Bali.',
     suggestLink: '/creations',
     suggestLabel: 'Explore the Creations',
+    forText: 'For a personal piece',
+    otherType: 'spatial' as CommissionType,
+    otherLabel: 'spatial',
   },
   spatial: {
     label: 'Spatial',
@@ -70,14 +72,155 @@ const COMMISSION_PATHS = {
     successMsg: 'Your spatial vision is on its way to Bali.',
     suggestLink: '/creations/multidimensional-art',
     suggestLabel: 'See Spatial Installations',
+    forText: 'For a spatial installation',
+    otherType: 'personal' as CommissionType,
+    otherLabel: 'personal',
   },
 } as const;
 
 const EXPECT_STEPS = [
   { label: 'You inquire', sub: 'Right now' },
   { label: 'We talk', sub: 'Within days' },
-  { label: 'Creation begins', sub: 'When it\'s right' },
+  { label: 'Creation begins', sub: "When it's right" },
 ];
+
+/* ── iOS-style scroll picker ────────────────────────────────────────── */
+const ITEM_H = 44;
+const VISIBLE = 5;
+
+function ScrollPicker({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; value: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  const containerH = ITEM_H * VISIBLE;
+  const pad = ITEM_H * Math.floor(VISIBLE / 2);
+
+  const [centeredIdx, setCenteredIdx] = useState(() => {
+    const idx = options.findIndex(o => o.value === value);
+    return idx >= 0 ? idx : 0;
+  });
+
+  // Scroll to saved value on mount
+  useEffect(() => {
+    if (!listRef.current) return;
+    const idx = options.findIndex(o => o.value === value);
+    listRef.current.scrollTop = idx >= 0 ? idx * ITEM_H : 0;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Native wheel listener — fires without requiring a prior click
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    let snapTimer: ReturnType<typeof setTimeout>;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      el.scrollTop += e.deltaY;
+
+      const raw = Math.round(el.scrollTop / ITEM_H);
+      const idx = Math.max(0, Math.min(raw, options.length - 1));
+      setCenteredIdx(idx);
+
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(() => {
+        el.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
+        onChangeRef.current(options[idx].value);
+      }, 120);
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      clearTimeout(snapTimer);
+    };
+  }, [options]);
+
+  // Touch scroll — CSS snap handles momentum, we just read the result
+  const touchDebounce = useRef<ReturnType<typeof setTimeout>>();
+  const handleTouchScroll = () => {
+    if (!listRef.current) return;
+    const idx = Math.max(
+      0,
+      Math.min(Math.round(listRef.current.scrollTop / ITEM_H), options.length - 1),
+    );
+    setCenteredIdx(idx);
+    clearTimeout(touchDebounce.current);
+    touchDebounce.current = setTimeout(() => {
+      onChangeRef.current(options[idx].value);
+    }, 150);
+  };
+
+  const scrollToIndex = (i: number) => {
+    if (!listRef.current) return;
+    listRef.current.scrollTo({ top: i * ITEM_H, behavior: 'smooth' });
+    setCenteredIdx(i);
+    onChangeRef.current(options[i].value);
+  };
+
+  return (
+    <div className="relative select-none" style={{ height: containerH }}>
+      <style>{`.scroll-picker-drum::-webkit-scrollbar{display:none}`}</style>
+
+      {/* Selection band */}
+      <div
+        className="absolute inset-x-0 border-t border-b border-wood-200 pointer-events-none z-10"
+        style={{ top: pad, height: ITEM_H }}
+      />
+
+      {/* Edge fade — matches form card bg-wood-50 */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: `linear-gradient(to bottom,
+            #faf9f7 0%,
+            rgba(250,249,247,0) ${Math.round((pad / containerH) * 100)}%,
+            rgba(250,249,247,0) ${100 - Math.round((pad / containerH) * 100)}%,
+            #faf9f7 100%)`,
+        }}
+      />
+
+      {/* Drum */}
+      <div
+        ref={listRef}
+        onScroll={handleTouchScroll}
+        className="scroll-picker-drum h-full"
+        style={{
+          overflowY: 'scroll',
+          scrollSnapType: 'y mandatory',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+        } as React.CSSProperties}
+      >
+        <div style={{ height: pad }} aria-hidden="true" />
+        {options.map((opt, i) => (
+          <div
+            key={opt.value}
+            onClick={() => scrollToIndex(i)}
+            style={{ height: ITEM_H, scrollSnapAlign: 'center' }}
+            className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
+              i === centeredIdx
+                ? 'font-serif text-base text-wood-900'
+                : 'font-sans text-sm text-wood-400'
+            }`}
+          >
+            {opt.label}
+          </div>
+        ))}
+        <div style={{ height: pad }} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
 
 /* ── Scroll-reveal hook ─────────────────────────────────────────────── */
 function useReveal(delay = 0) {
@@ -90,22 +233,19 @@ function useReveal(delay = 0) {
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          if (delay) {
-            setTimeout(() => setVisible(true), delay);
-          } else {
-            setVisible(true);
-          }
+          if (delay) setTimeout(() => setVisible(true), delay);
+          else setVisible(true);
           obs.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.05 },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, [delay]);
 
   const cls = `transition-all duration-700 ease-out ${
-    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
   }`;
 
   return { ref, cls };
@@ -139,51 +279,59 @@ const Inquire: React.FC = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const visionRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const optionalRef = useRef<HTMLDivElement>(null);
+  const prevRequiredValidRef = useRef(false);
 
-  // Pre-fill vision from router state (e.g. "Inquire about a similar piece" from PiecePage)
-  const location = useLocation();
+  /* ── Pre-fill + auto-scroll when arriving from a piece page ───────── */
+  const routerLocation = useLocation();
   const [prefilled, setPrefilled] = useState(false);
+  const [pieceTitle, setPieceTitle] = useState('');
+
   useEffect(() => {
-    const piece = (location.state as { piece?: string } | null)?.piece;
+    const piece = (routerLocation.state as { piece?: string } | null)?.piece;
     if (piece) {
-      const prefill = `I'm interested in a piece similar to "${piece}".`;
-      setForm(prev => ({ ...prev, vision: prefill }));
+      const prefillText = `I'm interested in a piece similar to "${piece}".`;
+      setForm(prev => ({ ...prev, vision: prefillText }));
       setPrefilled(true);
+      setPieceTitle(piece);
       requestAnimationFrame(() => {
         if (visionRef.current) {
           visionRef.current.style.height = 'auto';
           visionRef.current.style.height = visionRef.current.scrollHeight + 'px';
         }
+        // Delay to let the page finish rendering before scrolling
+        setTimeout(() => {
+          formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 400);
       });
     }
-  }, [location.state]);
+  }, [routerLocation.state]);
 
   const handleVisionFocus = () => {
     if (prefilled) setPrefilled(false);
   };
 
-  // Scroll reveals
+  /* ── Scroll reveals ────────────────────────────────────────────────── */
   const cardsReveal = useReveal();
   const testimonialReveal = useReveal(150);
   const formReveal = useReveal();
   const timelineReveal = useReveal(100);
   const faqReveal = useReveal();
 
-  /* ── Navigation warning when form is dirty ──────────────────────── */
+  /* ── Navigation warning ────────────────────────────────────────────── */
   const visionIsDirty = form.vision !== '' && !prefilled;
   const isDirty = !submitted && (
     form.name !== '' || form.email !== '' || visionIsDirty ||
-    form.location !== '' || form.sizeRange !== '' || form.timeline !== '' || form.referral !== ''
+    form.location !== '' || form.sizeRange !== '' ||
+    form.timeline !== '' || form.referral !== ''
   );
 
-  // Browser-level warning (refresh, close tab, external link)
   useEffect(() => {
     if (!isDirty) return;
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
-
 
   /* ── Form helpers ─────────────────────────────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -193,10 +341,7 @@ const Inquire: React.FC = () => {
   const handleVisionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleChange(e);
     const el = visionRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-    }
+    if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
   };
 
   const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -211,9 +356,7 @@ const Inquire: React.FC = () => {
     return null;
   };
 
-  const handleFocus = (field: string) => {
-    setFocused(prev => ({ ...prev, [field]: true }));
-  };
+  const handleFocus = (field: string) => setFocused(prev => ({ ...prev, [field]: true }));
 
   const handleBlur = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -232,17 +375,19 @@ const Inquire: React.FC = () => {
   const fieldBorderClass = (field: string) => {
     const error = getFieldError(field);
     if (error) return 'border-wood-500';
-    if (touched[field] && form[field as keyof FormState].trim() && (field !== 'email' || isValidEmail(form.email)))
+    if (
+      touched[field] &&
+      form[field as keyof FormState].trim() &&
+      (field !== 'email' || isValidEmail(form.email))
+    )
       return 'border-bronze-400';
-    return 'border-wood-300 focus:border-bronze-500';
+    return 'border-wood-200 focus:border-wood-700';
   };
 
   const floatLabel = (field: string) => {
     const isUp = focused[field] || form[field as keyof FormState]?.trim();
     return `absolute left-0 pointer-events-none font-label uppercase tracking-[0.1em] font-semibold transition-all duration-200 ${
-      isUp
-        ? 'top-0 text-[11px] text-wood-700'
-        : 'top-5 text-xs text-wood-700'
+      isUp ? 'top-0 text-[10px] text-wood-500' : 'top-3 text-xs text-wood-500'
     }`;
   };
 
@@ -255,7 +400,7 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: prev[field] === value ? '' : value }));
   };
 
-  /* ── Required fields progress ──────────────────────────────────── */
+  /* ── Required fields ──────────────────────────────────────────────── */
   const requiredCount = [
     form.name.trim(),
     form.email.trim() && isValidEmail(form.email),
@@ -264,9 +409,21 @@ const Inquire: React.FC = () => {
 
   const requiredValid = requiredCount === 3;
 
+  /* ── Scroll optional section into view when it first opens ────────── */
+  useEffect(() => {
+    if (requiredValid && !prevRequiredValidRef.current) {
+      setTimeout(() => {
+        optionalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 400);
+    }
+    prevRequiredValidRef.current = requiredValid;
+  }, [requiredValid]);
+
   /* ── Submit ───────────────────────────────────────────────────────── */
   const buildMailtoFallback = () => {
-    const subject = encodeURIComponent(`Commission Inquiry — ${COMMISSION_PATHS[form.commissionType].label}`);
+    const subject = encodeURIComponent(
+      `Commission Inquiry — ${COMMISSION_PATHS[form.commissionType].label}`,
+    );
     const parts = [
       `Name: ${form.name}`,
       `Email: ${form.email}`,
@@ -278,22 +435,21 @@ const Inquire: React.FC = () => {
     if (form.budget) parts.push(`Budget: ${form.budget}`);
     if (form.location) parts.push(`Location: ${form.location}`);
     if (form.sizeRange) parts.push(`Approximate size: ${form.sizeRange}`);
-    if (form.timeline) parts.push(`Timeline: ${form.timeline}${form.specificDate ? ` (${form.specificDate})` : ''}`);
-    if (form.referral) parts.push(`Found via: ${form.referral}${form.referralOther ? ` — ${form.referralOther}` : ''}`);
+    if (form.timeline)
+      parts.push(`Timeline: ${form.timeline}${form.specificDate ? ` (${form.specificDate})` : ''}`);
+    if (form.referral)
+      parts.push(`Found via: ${form.referral}${form.referralOther ? ` — ${form.referralOther}` : ''}`);
     const body = encodeURIComponent(parts.join('\n'));
     return `mailto:hello@adrianrasmussen.com?subject=${subject}&body=${body}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setTouched(prev => ({ ...prev, name: true, email: true, vision: true }));
     if (!requiredValid) return;
-
     setSendStatus('SENDING');
     setErrorMsg('');
     setMailtoFallback('');
-
     try {
       const res = await fetch('/api/inquire', {
         method: 'POST',
@@ -319,13 +475,19 @@ const Inquire: React.FC = () => {
     setSendStatus('IDLE');
     setErrorMsg('');
     setMailtoFallback('');
-    setForm({ name: '', email: '', vision: '', commissionType: 'personal', budget: '', location: '', sizeRange: '', timeline: '', specificDate: '', referral: '', referralOther: '' });
+    setForm({
+      name: '', email: '', vision: '', commissionType: 'personal',
+      budget: '', location: '', sizeRange: '', timeline: '',
+      specificDate: '', referral: '', referralOther: '',
+    });
     setCommissionType('personal');
     setTouched({});
     setFocused({});
+    setPrefilled(false);
+    setPieceTitle('');
   };
 
-  /* ── Render helpers ────────────────────────────────────────────── */
+  /* ── Helpers ──────────────────────────────────────────────────────── */
   const chosenPath = COMMISSION_PATHS[commissionType];
 
   const radioList = (
@@ -344,14 +506,18 @@ const Inquire: React.FC = () => {
               selected ? '' : 'hover:bg-wood-50/50'
             }`}
           >
-            <span className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
-              selected
-                ? 'border-bronze-500 bg-bronze-500'
-                : 'border-wood-300 bg-transparent group-hover:border-wood-400'
-            }`} />
-            <span className={`font-sans text-base transition-colors duration-200 ${
-              selected ? 'text-wood-900' : 'text-wood-700 group-hover:text-wood-900'
-            }`}>
+            <span
+              className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
+                selected
+                  ? 'border-bronze-500 bg-bronze-500'
+                  : 'border-wood-300 bg-transparent group-hover:border-wood-400'
+              }`}
+            />
+            <span
+              className={`font-sans text-base transition-colors duration-200 ${
+                selected ? 'text-wood-900' : 'text-wood-700 group-hover:text-wood-900'
+              }`}
+            >
               {opt.label}
             </span>
           </button>
@@ -360,14 +526,45 @@ const Inquire: React.FC = () => {
     </div>
   );
 
+  /* Reusable submit button — used twice (above and below optional fields) */
+  const submitBtn = (
+    <button
+      type="submit"
+      disabled={sendStatus === 'SENDING'}
+      className="inline-flex items-center gap-3 px-10 py-3.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] font-semibold hover:bg-bronze-600 transition-all duration-300 disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
+    >
+      {sendStatus === 'SENDING' ? (
+        <span className="animate-pulse">Sending...</span>
+      ) : (
+        <>Start the conversation <ArrowRight size={13} /></>
+      )}
+    </button>
+  );
+
+  const errorBlock = sendStatus === 'ERROR' && (
+    <div className="flex flex-col gap-3 p-4 border border-wood-300 bg-white mb-4">
+      <div className="flex items-start gap-3">
+        <AlertCircle size={16} className="shrink-0 mt-0.5 text-wood-600" />
+        <p className="font-sans text-sm text-red-700">{errorMsg}</p>
+      </div>
+      {mailtoFallback && (
+        <a
+          href={mailtoFallback}
+          className="font-label text-xs uppercase tracking-[0.15em] font-semibold text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
+        >
+          Send via email instead
+        </a>
+      )}
+    </div>
+  );
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
-
-      {/* ── Header ─────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 pt-32 pb-20">
 
+        {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="text-center mb-16">
           <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">
             Inquire
@@ -439,7 +636,9 @@ const Inquire: React.FC = () => {
                     </p>
                     <span
                       className={`font-label text-xs uppercase tracking-[0.15em] font-semibold self-start flex items-center gap-2 transition-all duration-300 ${
-                        isSelected ? 'text-bronze-600' : 'text-wood-600 group-hover:text-wood-900'
+                        isSelected
+                          ? 'text-bronze-600'
+                          : 'text-wood-600 group-hover:text-wood-900'
                       }`}
                     >
                       {isSelected ? 'Selected' : 'Select this path'}
@@ -457,7 +656,7 @@ const Inquire: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Past commission types (was fake testimonial) ──────────── */}
+        {/* ── Past commission types ──────────────────────────────────── */}
         <div ref={testimonialReveal.ref} className={testimonialReveal.cls}>
           <div className="max-w-2xl mx-auto text-center py-6 mb-4">
             <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
@@ -470,12 +669,12 @@ const Inquire: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Form (scroll-reveal) ──────────────────────────────────── */}
+        {/* ── Form ──────────────────────────────────────────────────── */}
         <div ref={formReveal.ref} className={formReveal.cls}>
           <div ref={formRef} className="max-w-3xl mx-auto scroll-mt-28">
 
             {submitted ? (
-              /* ── Rich Success State ──────────────────────────────── */
+              /* ── Success ──────────────────────────────────────────── */
               <div className="bg-wood-50 border border-wood-100 p-8 md:p-16 text-center relative overflow-hidden">
                 <div
                   className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -518,55 +717,91 @@ const Inquire: React.FC = () => {
                   </div>
                   <button
                     onClick={handleReset}
-                    className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
+                    className="font-label text-xs uppercase tracking-[0.15em] text-wood-700 border-b border-wood-300 pb-1 hover:text-wood-900 hover:border-wood-900 transition-colors"
                   >
                     Send another message
                   </button>
                 </div>
               </div>
             ) : (
+              /* ── Form ─────────────────────────────────────────────── */
               <form onSubmit={handleSubmit}>
-                <fieldset disabled={sendStatus === 'SENDING'} className="disabled:opacity-60 disabled:pointer-events-none transition-opacity duration-300">
+                <fieldset
+                  disabled={sendStatus === 'SENDING'}
+                  className="disabled:opacity-60 disabled:pointer-events-none transition-opacity duration-300"
+                >
+                  {/* The form card */}
+                  <div className="bg-wood-50 border border-wood-100 p-10 md:p-16">
 
-                {/* ── Required Fields Progress ─────────────────────── */}
-                <div className="flex items-center gap-4 mb-1">
-                  <div className="flex-1 h-1 bg-wood-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-bronze-500 transition-all duration-500 ease-out rounded-full"
-                      style={{ width: `${Math.round((requiredCount / 3) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold tabular-nums whitespace-nowrap">
-                    {requiredCount} of 3
-                  </span>
-                </div>
+                    {/* ── Header: two paths depending on context ─────────── */}
+                    {pieceTitle ? (
+                      /* Prefilled: piece title IS the heading */
+                      <div className="mb-[6px]">
+                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mb-3">
+                          Commission inquiry
+                        </p>
+                        <p className="font-serif text-2xl md:text-3xl text-wood-900 leading-[1.25] mb-1">
+                          {pieceTitle}
+                        </p>
+                        <p className="font-sans text-sm text-wood-500">
+                          {chosenPath.forText}
+                        </p>
+                      </div>
+                    ) : (
+                      /* Normal: open-ended heading */
+                      <div className="mb-[6px]">
+                        <p className="font-serif text-2xl md:text-3xl text-wood-900 leading-[1.25] mb-1">
+                          Tell me what you are imagining.
+                        </p>
+                        <p className="font-sans text-sm text-wood-500">
+                          {chosenPath.forText}.{' '}
+                          <button
+                            type="button"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            className="text-bronze-400 hover:text-bronze-600 underline underline-offset-2 decoration-1 transition-colors"
+                          >
+                            Change
+                          </button>
+                        </p>
+                      </div>
+                    )}
 
-                <div className="bg-wood-50 p-6 md:p-10 lg:p-12 border border-wood-100 border-t-0">
-                  <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.5] mb-3">
-                    Tell me what you are imagining.
-                  </p>
-                  <p className="font-sans text-base text-wood-700 leading-[1.7] mb-10">
-                    We will figure out the details together.
-                  </p>
+                    {/* ── Vision ────────────────────────────────────────── */}
+                    <div className="mb-[6px]">
+                      {!pieceTitle && (
+                        <label
+                          htmlFor="field-vision"
+                          className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
+                        >
+                          What wants to exist?
+                        </label>
+                      )}
+                      <textarea
+                        ref={visionRef}
+                        name="vision"
+                        id="field-vision"
+                        rows={1}
+                        value={form.vision}
+                        onChange={handleVisionChange}
+                        onFocus={() => {
+                          handleFocus('vision');
+                          handleVisionFocus();
+                        }}
+                        onBlur={() => handleBlur('vision')}
+                        aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
+                        className={`w-full bg-transparent border-b-2 pb-[6px] outline-none font-sans text-base resize-none overflow-hidden transition-colors duration-300 leading-relaxed text-wood-700 ${fieldBorderClass('vision')}`}
+                        placeholder="A piece for my meditation space, something that holds stillness..."
+                        required
+                      />
+                      {getFieldError('vision') && (
+                        <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
+                          {getFieldError('vision')}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Commission type indicator */}
-                  <div className="mb-12 flex items-center gap-3">
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 border border-wood-200 bg-white">
-                      <span className="w-1.5 h-1.5 rounded-full bg-bronze-500" />
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-700 font-semibold">
-                        {COMMISSION_PATHS[commissionType].label} Commission
-                      </span>
-                    </span>
-                  </div>
-
-                  {/* ── Name + Email ──────────────────────────────── */}
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="flex-1 h-px bg-wood-100" />
-                    <span className="font-label text-xs text-wood-700 tracking-[0.15em] uppercase">Your details</span>
-                    <span className="flex-1 h-px bg-wood-100" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 mb-10">
-                    <div className="relative pt-4">
+                    {/* ── Name ──────────────────────────────────────────── */}
+                    <div className="mb-[6px] relative pt-3">
                       <input
                         ref={nameRef}
                         type="text"
@@ -579,22 +814,24 @@ const Inquire: React.FC = () => {
                         onKeyDown={(e) => handleKeyDown('name', e)}
                         autoComplete="name"
                         aria-describedby={getFieldError('name') ? 'name-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg transition-colors duration-300 ${fieldBorderClass('name')}`}
+                        className={`w-full bg-transparent border-b-2 pt-1 pb-[6px] outline-none font-sans text-base transition-colors duration-300 text-wood-900 ${fieldBorderClass('name')}`}
                         required
                       />
                       <label htmlFor="field-name" className={floatLabel('name')}>
                         Name
                       </label>
                       {touched.name && !getFieldError('name') && form.name.trim() && (
-                        <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
+                        <Check size={13} className="absolute right-0 top-6 text-bronze-400 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('name') && (
-                        <p id="name-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
+                        <p id="name-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
                           {getFieldError('name')}
                         </p>
                       )}
                     </div>
-                    <div className="relative pt-4">
+
+                    {/* ── Email ─────────────────────────────────────────── */}
+                    <div className="mb-[6px] relative pt-3">
                       <input
                         ref={emailRef}
                         type="email"
@@ -607,231 +844,184 @@ const Inquire: React.FC = () => {
                         onKeyDown={(e) => handleKeyDown('email', e)}
                         autoComplete="email"
                         aria-describedby={getFieldError('email') ? 'email-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg transition-colors duration-300 ${fieldBorderClass('email')}`}
+                        className={`w-full bg-transparent border-b-2 pt-1 pb-[6px] outline-none font-sans text-base transition-colors duration-300 text-wood-900 ${fieldBorderClass('email')}`}
                         required
                       />
                       <label htmlFor="field-email" className={floatLabel('email')}>
                         Email
                       </label>
                       {touched.email && !getFieldError('email') && form.email.trim() && isValidEmail(form.email) && (
-                        <Check size={14} className="absolute right-0 top-6 text-bronze-500 animate-fade-in" strokeWidth={2.5} />
+                        <Check size={13} className="absolute right-0 top-6 text-bronze-400 animate-fade-in" strokeWidth={2.5} />
                       )}
                       {getFieldError('email') && (
-                        <p id="email-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
+                        <p id="email-error" role="alert" className="font-sans text-sm text-red-700 mt-1 animate-fade-in">
                           {getFieldError('email')}
                         </p>
                       )}
                     </div>
-                  </div>
 
-                  {/* ── Vision ────────────────────────────────────── */}
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="flex-1 h-px bg-wood-100" />
-                    <span className="font-label text-xs text-wood-700 tracking-[0.15em] uppercase">Your vision</span>
-                    <span className="flex-1 h-px bg-wood-100" />
-                  </div>
-                  <div className="mb-8">
-                    <label
-                      htmlFor="field-vision"
-                      className="text-xs font-label uppercase tracking-[0.15em] text-wood-600 font-semibold block mb-3"
-                    >
-                      What wants to exist?
-                    </label>
-                    <div className={`transition-all duration-300 ${focused.vision ? 'border-l-2 border-l-bronze-400 pl-4' : 'border-l-2 border-l-transparent pl-4'}`}>
-                      <textarea
-                        ref={visionRef}
-                        name="vision"
-                        id="field-vision"
-                        rows={2}
-                        value={form.vision}
-                        onChange={handleVisionChange}
-                        onFocus={() => { handleFocus('vision'); handleVisionFocus(); }}
-                        onBlur={() => handleBlur('vision')}
-                        aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
-                        className={`w-full bg-transparent border-b-2 pt-2 pb-3 outline-none font-sans text-lg resize-none overflow-hidden transition-colors duration-300 leading-relaxed ${fieldBorderClass('vision')}`}
-                        placeholder="A piece for my meditation space, something that holds stillness..."
-                        required
-                      />
-                    </div>
-                    {getFieldError('vision') && (
-                      <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-2 pl-4 animate-fade-in">
-                        {getFieldError('vision')}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* ── Submit (always visible after required fields) ── */}
-                  <div className="flex flex-col items-center gap-3 pt-2 mb-4">
-                    {/* Error (directly above submit) */}
-                    {sendStatus === 'ERROR' && (
-                      <div className="w-full flex flex-col items-center gap-3 p-5 border border-wood-400 bg-white text-wood-800 mb-2">
-                        <div className="flex items-start gap-3">
-                          <AlertCircle size={18} className="shrink-0 mt-0.5 text-wood-600" />
-                          <p className="font-sans text-sm text-red-700">{errorMsg}</p>
-                        </div>
-                        {mailtoFallback && (
+                    {/* ── Submit ────────────────────────────────────────── */}
+                    <div>
+                      {errorBlock}
+                      {submitBtn}
+                      <div className="mt-4 flex flex-col gap-2">
+                        <p className="font-sans text-sm text-wood-400">
+                          Or write directly:{' '}
                           <a
-                            href={mailtoFallback}
-                            className="font-label text-xs uppercase tracking-[0.15em] font-semibold text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
+                            href="mailto:hello@adrianrasmussen.com"
+                            className="text-bronze-400 hover:text-bronze-600 transition-colors"
                           >
-                            Send via email instead
+                            hello@adrianrasmussen.com
                           </a>
+                        </p>
+                        {pieceTitle && (
+                          <button
+                            type="button"
+                            onClick={() => handleCommissionType(chosenPath.otherType)}
+                            className="text-left font-sans text-sm text-wood-400 hover:text-wood-600 transition-colors"
+                          >
+                            Switch to {chosenPath.otherLabel} commission instead
+                          </button>
                         )}
                       </div>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={sendStatus === 'SENDING'}
-                      className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
-                    >
-                      {sendStatus === 'SENDING' ? (
-                        <span className="animate-pulse">Sending...</span>
-                      ) : (
-                        <>Start the conversation <ArrowRight size={14} /></>
-                      )}
-                    </button>
-                  </div>
+                    </div>
 
-                  {/* ── Optional Fields (progressive disclosure) ── */}
-                  <div className={`form-reveal ${requiredValid ? 'is-open' : ''}`}>
-                    <div className="form-reveal-inner">
-                      <div className="border-t border-wood-200 pt-10 mb-10 mt-8">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="flex-1 h-px bg-wood-100" />
-                          <span className="font-label text-xs text-bronze-500 tracking-[0.15em] uppercase">Optional details</span>
-                          <span className="flex-1 h-px bg-wood-100" />
-                        </div>
-                        <p className="font-sans text-sm text-wood-700 text-center">
-                          Helps me prepare for our conversation.
-                        </p>
-                      </div>
-
-                      <div className="space-y-10 mb-12">
-                        {/* Budget Presets */}
-                        <div>
-                          <label className="text-xs font-label uppercase tracking-[0.15em] text-wood-600 font-semibold block mb-4">
-                            Budget Range
-                          </label>
-                          {radioList(BUDGET_PRESETS, 'budget')}
+                    {/* ── Optional Fields (appear when required fields are done) */}
+                    <div className={`form-reveal ${requiredValid ? 'is-open' : ''}`}>
+                      <div className="form-reveal-inner" ref={optionalRef}>
+                        <div className="border-t border-wood-150 pt-8 mt-8 mb-8">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="flex-1 h-px bg-wood-100" />
+                            <span className="font-label text-[11px] text-bronze-400 tracking-[0.15em] uppercase">
+                              Optional details
+                            </span>
+                            <span className="flex-1 h-px bg-wood-100" />
+                          </div>
+                          <p className="font-sans text-sm text-wood-500 text-center">
+                            Helps me prepare for our conversation.
+                          </p>
                         </div>
 
-                        {/* Location */}
-                        <div className="relative pt-5">
-                          <label htmlFor="field-location" className={floatLabel('location')}>Location</label>
-                          <input
-                            type="text"
-                            name="location"
-                            id="field-location"
-                            value={form.location}
-                            onChange={handleChange}
-                            onFocus={() => handleFocus('location')}
-                            onBlur={() => handleBlur('location')}
-                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
-                          />
-                          <p className="font-sans text-sm text-wood-700 mt-1.5">City, country, or region where the piece will live.</p>
-                        </div>
+                        <div className="space-y-10 mb-10">
 
-                        {/* Approximate Size Range */}
-                        <div className="relative pt-5">
-                          <label htmlFor="field-sizeRange" className={floatLabel('sizeRange')}>Approximate Size</label>
-                          <input
-                            type="text"
-                            name="sizeRange"
-                            id="field-sizeRange"
-                            value={form.sizeRange}
-                            onChange={handleChange}
-                            onFocus={() => handleFocus('sizeRange')}
-                            onBlur={() => handleBlur('sizeRange')}
-                            className="w-full border-b border-wood-300 focus:border-bronze-500 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
-                          />
-                          <p className="font-sans text-sm text-wood-700 mt-1.5">Wall space, table dimensions, or a general sense of scale.</p>
-                        </div>
+                          {/* Budget */}
+                          <div>
+                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
+                              Budget Range
+                            </label>
+                            <ScrollPicker
+                              options={BUDGET_PRESETS}
+                              value={form.budget}
+                              onChange={(v) => setForm(prev => ({ ...prev, budget: v }))}
+                            />
+                          </div>
 
-                        {/* Timeline */}
-                        <div>
-                          <label className="text-xs font-label uppercase tracking-[0.15em] text-wood-600 font-semibold block mb-4">
-                            Timeline
-                          </label>
-                          {radioList(TIMELINE_OPTIONS, 'timeline')}
-                          {form.timeline === 'Specific date' && (
-                            <div className="mt-4">
-                              <label htmlFor="field-specificDate" className="text-xs font-label uppercase tracking-[0.15em] text-wood-600 font-semibold block mb-2">
-                                Target date
-                              </label>
-                              <input
-                                type="date"
-                                id="field-specificDate"
-                                value={form.specificDate}
-                                min={todayStr}
-                                onChange={(e) => setForm(prev => ({ ...prev, specificDate: e.target.value }))}
-                                className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-bronze-500 transition-colors"
-                              />
-                            </div>
-                          )}
-                        </div>
+                          {/* Location */}
+                          <div className="relative pt-5">
+                            <label htmlFor="field-location" className={floatLabel('location')}>
+                              Location
+                            </label>
+                            <input
+                              type="text"
+                              name="location"
+                              id="field-location"
+                              value={form.location}
+                              onChange={handleChange}
+                              onFocus={() => handleFocus('location')}
+                              onBlur={() => handleBlur('location')}
+                              className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
+                            />
+                            <p className="font-sans text-sm text-wood-500 mt-1.5">
+                              City, country, or region where the piece will live.
+                            </p>
+                          </div>
 
-                        {/* Referral */}
-                        <div>
-                          <label className="text-xs font-label uppercase tracking-[0.15em] text-wood-600 font-semibold block mb-4">
-                            How did you find me?
-                          </label>
-                          {radioList(REFERRAL_OPTIONS, 'referral')}
-                          {form.referral === 'Other' && (
-                            <div className="mt-4">
-                              <input
-                                type="text"
-                                id="field-referralOther"
-                                value={form.referralOther}
-                                onChange={(e) => setForm(prev => ({ ...prev, referralOther: e.target.value }))}
-                                placeholder="Please share how you found me..."
-                                className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-bronze-500 transition-colors"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                          {/* Approximate Size */}
+                          <div className="relative pt-5">
+                            <label htmlFor="field-sizeRange" className={floatLabel('sizeRange')}>
+                              Approximate Size
+                            </label>
+                            <input
+                              type="text"
+                              name="sizeRange"
+                              id="field-sizeRange"
+                              value={form.sizeRange}
+                              onChange={handleChange}
+                              onFocus={() => handleFocus('sizeRange')}
+                              onBlur={() => handleBlur('sizeRange')}
+                              className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
+                            />
+                            <p className="font-sans text-sm text-wood-500 mt-1.5">
+                              Wall space, table dimensions, or a general sense of scale.
+                            </p>
+                          </div>
 
-                      {/* ── Second submit (after optional fields) ──── */}
-                      <div className="flex flex-col items-center gap-3 pt-4">
-                        {sendStatus === 'ERROR' && (
-                          <div className="w-full flex flex-col items-center gap-3 p-5 border border-wood-400 bg-white text-wood-800 mb-2">
-                            <div className="flex items-start gap-3">
-                              <AlertCircle size={18} className="shrink-0 mt-0.5 text-wood-600" />
-                              <p className="font-sans text-sm text-red-700">{errorMsg}</p>
-                            </div>
-                            {mailtoFallback && (
-                              <a
-                                href={mailtoFallback}
-                                className="font-label text-xs uppercase tracking-[0.15em] font-semibold text-bronze-600 underline underline-offset-4 decoration-1 hover:text-bronze-800 transition-colors"
-                              >
-                                Send via email instead
-                              </a>
+                          {/* Timeline */}
+                          <div>
+                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-4">
+                              Timeline
+                            </label>
+                            {radioList(TIMELINE_OPTIONS, 'timeline')}
+                            {form.timeline === 'Specific date' && (
+                              <div className="mt-4">
+                                <label
+                                  htmlFor="field-specificDate"
+                                  className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2"
+                                >
+                                  Target date
+                                </label>
+                                <input
+                                  type="date"
+                                  id="field-specificDate"
+                                  value={form.specificDate}
+                                  min={todayStr}
+                                  onChange={(e) =>
+                                    setForm(prev => ({ ...prev, specificDate: e.target.value }))
+                                  }
+                                  className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-wood-700 transition-colors"
+                                />
+                              </div>
                             )}
                           </div>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={sendStatus === 'SENDING'}
-                          className="w-full sm:w-auto flex items-center justify-center gap-3 px-14 py-5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.15em] hover:bg-bronze-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:bg-wood-200 disabled:text-wood-600 disabled:cursor-not-allowed"
-                        >
-                          {sendStatus === 'SENDING' ? (
-                            <span className="animate-pulse">Sending...</span>
-                          ) : (
-                            <>Start the conversation <ArrowRight size={14} /></>
-                          )}
-                        </button>
-                      </div>
 
+                          {/* Referral */}
+                          <div>
+                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-4">
+                              How did you find me?
+                            </label>
+                            {radioList(REFERRAL_OPTIONS, 'referral')}
+                            {form.referral === 'Other' && (
+                              <div className="mt-3 pl-7">
+                                <input
+                                  type="text"
+                                  id="field-referralOther"
+                                  value={form.referralOther}
+                                  onChange={(e) =>
+                                    setForm(prev => ({ ...prev, referralOther: e.target.value }))
+                                  }
+                                  placeholder="Tell me where..."
+                                  className="w-full border-b border-wood-200 bg-transparent py-2 font-sans text-base text-wood-900 outline-none focus:border-wood-700 transition-colors"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Second submit (after optional fields) */}
+                        <div className="pt-2">
+                          {errorBlock}
+                          {submitBtn}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </fieldset>
               </form>
             )}
           </div>
         </div>
 
-        {/* ── "What to expect" micro-timeline (scroll-reveal) ───────── */}
+        {/* ── "What to expect" micro-timeline ───────────────────────── */}
         {!submitted && (
           <div ref={timelineReveal.ref} className={timelineReveal.cls}>
             <div className="mt-20 max-w-xl mx-auto border border-wood-100 bg-wood-50 px-8 py-10">
@@ -852,9 +1042,7 @@ const Inquire: React.FC = () => {
                     <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-700 font-semibold">
                       {item.label}
                     </p>
-                    <p className="font-sans text-sm text-wood-700 mt-1">
-                      {item.sub}
-                    </p>
+                    <p className="font-sans text-sm text-wood-700 mt-1">{item.sub}</p>
                   </div>
                 ))}
               </div>
@@ -862,12 +1050,14 @@ const Inquire: React.FC = () => {
           </div>
         )}
 
-        {/* ── FAQ (scroll-reveal) ───────────────────────────────────── */}
+        {/* ── FAQ ───────────────────────────────────────────────────── */}
         <div ref={faqReveal.ref} className={faqReveal.cls}>
           <div className="mt-20 max-w-3xl mx-auto">
             <div className="flex items-center gap-4 mb-10">
               <span className="h-px flex-1 bg-wood-200" />
-              <h3 className="font-label text-base tracking-[0.15em] text-wood-900">Common Questions</h3>
+              <h3 className="font-label text-base tracking-[0.15em] text-wood-900">
+                Common Questions
+              </h3>
               <span className="h-px flex-1 bg-wood-200" />
             </div>
             <div className="space-y-8">
@@ -876,7 +1066,10 @@ const Inquire: React.FC = () => {
                   How long does a commission take?
                 </h4>
                 <p className="font-sans text-base text-wood-600 leading-[1.8]">
-                  Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
+                  Personal pieces typically take 4 to 8 weeks from our first conversation to
+                  completion. Spatial commissions and installations vary widely depending on
+                  scope, anywhere from 2 months to a year. We'll establish a timeline together
+                  once the vision is clear.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
@@ -885,7 +1078,9 @@ const Inquire: React.FC = () => {
                   Where do pieces ship from?
                 </h4>
                 <p className="font-sans text-base text-wood-600 leading-[1.8]">
-                  Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
+                  Most pieces are created in my studio in Bali and ship internationally from
+                  there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned
+                  work ships upon completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />
@@ -894,14 +1089,16 @@ const Inquire: React.FC = () => {
                   What sizes are available?
                 </h4>
                 <p className="font-sans text-base text-wood-600 leading-[1.8]">
-                  I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
+                  I work across all scales, from palm-sized talismans and jewelry to
+                  room-filling installations. For commissions, size is part of the conversation.
+                  For ready-to-ship pieces, dimensions are listed on each piece's page.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── General Contact (moved to bottom, more visible) ──────── */}
+        {/* ── General Contact ────────────────────────────────────────── */}
         <div className="mt-20 text-center">
           <a
             href="mailto:hello@adrianrasmussen.com"

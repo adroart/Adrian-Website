@@ -254,8 +254,13 @@ export const FULL_ARCHIVE: Artwork[] = [
         dimensions: '35.5 in (90 cm) square',
         material: 'Laser Cut Wood, Acrylic',
         availability: 'READY_TO_SHIP',
-        price: 3000,
+        price: 295,
         featured: false,
+        sizeVariants: [
+            { size: '29 cm', price: 295,  stripePriceId: 'price_REPLACE', availability: 'MADE_TO_ORDER' },
+            { size: '58 cm', price: 1111, stripePriceId: 'price_REPLACE', availability: 'MADE_TO_ORDER' },
+            { size: '90 cm', price: 3000, stripePriceId: 'price_REPLACE', availability: 'IN_STOCK' },
+        ],
     },
 
     {

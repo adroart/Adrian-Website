@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 50"
+     width="100mm" height="50mm">
+
+  <rect x="0" y="0" width="100" height="50" fill="white"/>
+  <rect x="1.2" y="1.2" width="97.6" height="47.6" fill="none" stroke="black" stroke-width="0.5"/>
+  <rect x="2.4" y="2.4" width="95.2" height="45.2" fill="none" stroke="black" stroke-width="0.15"/>
+
+  <text x="50" y="8" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="2.8" font-weight="bold"
+        letter-spacing="1.4" fill="black">UNIVERSAL LANGUAGE  ·  7</text>
+
+  <text x="50" y="15.5" text-anchor="middle"
+        font-family="Georgia, serif" font-size="6.5" font-style="italic"
+        fill="black">Essential Nexus</text>
+
+  <line x1="4.5" y1="19" x2="95.5" y2="19" stroke="black" stroke-width="0.35"/>
+
+  <line x1="4.5" y1="26" x2="11.25" y2="26" stroke="black" stroke-width="1.5"/>
+  <line x1="14.25" y1="26" x2="21" y2="26" stroke="black" stroke-width="1.5"/>
+  <line x1="4.5" y1="29" x2="11.25" y2="29" stroke="black" stroke-width="1.5"/>
+  <line x1="14.25" y1="29" x2="21" y2="29" stroke="black" stroke-width="1.5"/>
+  <line x1="4.5" y1="32" x2="11.25" y2="32" stroke="black" stroke-width="1.5"/>
+  <line x1="14.25" y1="32" x2="21" y2="32" stroke="black" stroke-width="1.5"/>
+  <line x1="4.5" y1="35" x2="11.25" y2="35" stroke="black" stroke-width="1.5"/>
+  <line x1="14.25" y1="35" x2="21" y2="35" stroke="black" stroke-width="1.5"/>
+  <line x1="4.5" y1="38" x2="21" y2="38" stroke="black" stroke-width="1.5"/>
+  <line x1="4.5" y1="41" x2="11.25" y2="41" stroke="black" stroke-width="1.5"/>
+  <line x1="14.25" y1="41" x2="21" y2="41" stroke="black" stroke-width="1.5"/>
+
+  <text x="95.5" y="24" text-anchor="end"
+        font-family="Arial, sans-serif" font-size="2.8" font-weight="bold"
+        letter-spacing="1" fill="black">I CHING</text>
+
+  <text x="95.5" y="30" text-anchor="end"
+        font-family="Georgia, serif" font-size="4.5"
+        fill="black">The Army</text>
+
+  <line x1="26" y1="33" x2="95.5" y2="33" stroke="black" stroke-width="0.15"/>
+
+  <text x="95.5" y="38" text-anchor="end"
+        font-family="Arial, sans-serif" font-size="2.8" font-weight="bold"
+        letter-spacing="1" fill="black">GENE KEYS</text>
+
+  <text x="95.5" y="44" text-anchor="end"
+        font-family="Georgia, serif" font-size="3.2"
+        fill="black">Division · Guidance · Virtue</text>
+
+</svg>

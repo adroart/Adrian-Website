@@ -341,7 +341,7 @@ const Creations: React.FC = () => {
             )}
 
             {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
-            <div className="max-w-[1800px] mx-auto px-6 sticky top-[70px] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
+            <div className="max-w-[1800px] mx-auto px-6 sticky top-[var(--nav-height)] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">
                 <div className="flex flex-wrap items-center justify-between gap-3">
 
                     {/* Left: title / breadcrumb */}

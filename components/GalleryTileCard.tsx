@@ -27,6 +27,8 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     const highPrice = variants && variants.length > 0 ? Math.max(...variants.map(v => v.price)) : null;
     const showRange = highPrice != null && art.price != null && highPrice !== art.price;
 
+    const isSquare = art.series === 'Universal Language' || Boolean(art.dimensions?.toLowerCase().includes('square'));
+
     // Split number suffix from title (e.g., "Art of Living - 32" → "Art of Living" + "32")
     const titleMatch = art.title.match(/^(.+?)\s*-\s*(\d+)$/);
     const displayTitle = titleMatch ? titleMatch[1] : art.title;
@@ -35,11 +37,12 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
     return (
         <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 touch-active">
             {/* Image — links to the piece */}
-            <Link to={`/creations/${art.id}`} className="block overflow-hidden relative bg-wood-100 border border-wood-200">
+            <Link to={`/creations/${art.id}`} className={`block overflow-hidden relative bg-wood-100 border border-wood-200 ${isSquare ? 'aspect-square' : ''}`}>
                 <ArtImage
                     publicId={art.coverImage}
                     alt={art.series === 'Universal Language' ? ulAltText(art, ulCardNumber(art.coverImage)) : `${art.title} by Adrian Rasmussen`}
-                    variant="gallery"
+                    variant={isSquare ? 'tile' : 'gallery'}
+                    className={isSquare ? '!object-contain' : ''}
                     loading="lazy"
                 />
 

@@ -208,7 +208,7 @@ const SubcategoryPage: React.FC = () => {
             )}
 
             {/* Filter bar — pill-style with visual grouping */}
-            <div className="max-w-[1800px] mx-auto px-6 md:px-10 sticky top-[70px] z-30 bg-paper-50 backdrop-blur-md py-4 border-y border-wood-200/60 mb-14">
+            <div className="max-w-[1800px] mx-auto px-6 md:px-10 sticky top-[var(--nav-height)] z-30 bg-paper-50 backdrop-blur-md py-4 border-y border-wood-200/60 mb-14">
                 <div className="flex justify-between items-center gap-6">
                     <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold flex-shrink-0 tabular-nums">

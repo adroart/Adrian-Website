@@ -11,6 +11,14 @@
  */
 
 export function onRequest({ params }) {
+  // Gateway — redirects to the oracle deck entrance page
+  if (params.number === 'oracle') {
+    return Response.redirect(
+      'https://adrianrasmussen.com/oracle?ref=qr',
+      302,
+    );
+  }
+
   const n = parseInt(params.number, 10);
 
   if (isNaN(n) || n < 1 || n > 64) {

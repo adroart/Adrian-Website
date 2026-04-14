@@ -20,11 +20,11 @@ import IlluminatedWorks from './components/IlluminatedWorks';
 import OracleCards from './components/OracleCards';
 import UniversalLanguageIndex from './components/UniversalLanguageIndex';
 import UniversalLanguageCard from './components/UniversalLanguageCard';
+import OracleGateway from './components/OracleGateway';
 import Welcome from './components/Welcome';
 import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
-import Shopping from './components/Shopping';
 import FontPreview from './components/FontPreview';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
@@ -42,19 +42,21 @@ const AppInner: React.FC = () => {
 
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
-  const isShopping = location.pathname === '/shopping';
-  // Oracle card detail pages are immersive — they manage their own navigation
+  // Only the /oracle gateway is fully immersive — card detail pages use the standard nav
+  const isOracleGateway = location.pathname === '/oracle';
+  // Footer is hidden on all oracle card routes (bottom nav acts as footer)
   const isOracleCard = /^\/oracle\/universal-language\/\d+$/.test(location.pathname)
     || /^\/universal-language\/\d+$/.test(location.pathname)
-    || /^\/creations\/oracle-cards\/universal-language\/\d+$/.test(location.pathname);
+    || /^\/creations\/oracle-cards\/universal-language\/\d+$/.test(location.pathname)
+    || isOracleGateway;
   // Keep theme route-based — CSS variable remapping handles dark mode visuals.
   // GenerativeBackground reads isDarkMode separately for canvas colors.
   const theme = isHome ? 'DARK' : 'LIGHT';
 
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      {!isShopping && <GenerativeBackground pathname={location.pathname} theme={theme} />}
-      {!isWelcome && !isShopping && !isOracleCard && <Navigation theme={theme} />}
+      <GenerativeBackground pathname={location.pathname} theme={theme} />
+      {!isWelcome && !isOracleGateway && <Navigation theme={theme} />}
 
       <main id="main-content">
         <Routes>
@@ -63,6 +65,8 @@ const AppInner: React.FC = () => {
           {/* Creations — static routes must come before /:id catch-all */}
           <Route path="/creations" element={<Creations />} />
           <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+          {/* Oracle gateway — QR code target */}
+          <Route path="/oracle" element={<OracleGateway />} />
           <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
           <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
           {/* Backwards-compat redirects — old URLs still resolve */}
@@ -83,13 +87,12 @@ const AppInner: React.FC = () => {
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
-          <Route path="/shopping" element={<Shopping />} />
           <Route path="/font-preview" element={<FontPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
-      {!isWelcome && !isShopping && !isOracleCard && <Footer />}
+      {!isWelcome && !isOracleCard && <Footer />}
       <CartDrawer />
     </div>
   );

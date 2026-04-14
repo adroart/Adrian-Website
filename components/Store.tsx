@@ -110,11 +110,10 @@ const MaterialBlock: React.FC = () => (
 
 // ─── Shop Category Tiles ──────────────────────────────────────────────────────
 
+// Only categories that have purchasable products in INVENTORY
 const SHOP_CATEGORY_DATA = [
-    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',              image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
-    { cat: 'Jewelry',              desc: 'Wearable pieces and talismans',           image: 'adrian-website/placeholders/artwork-square-3' },
-    { cat: 'Oracle Cards',         desc: 'Tools for reflection and guidance',       image: 'adrian-website/placeholders/artwork-square-4' },
-    { cat: 'Objects',              desc: 'Objects for the altar and the everyday',  image: 'adrian-website/placeholders/artwork-square-7' },
+    { cat: 'Multidimensional Art', desc: 'Windows into the infinite',             image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
+    { cat: 'Objects',              desc: 'Objects for the altar and the everyday', image: 'adrian-website/placeholders/artwork-square-7' },
 ] as const;
 
 const ShopCategoryTile: React.FC<{
@@ -275,18 +274,19 @@ const ProductCard: React.FC<{
     onClick: () => void;
 }> = ({ product, onClick }) => {
     const isAvailable = product.available;
+    const isSquare = Boolean(product.dimensions?.toLowerCase().includes('square'));
 
     return (
         <div
             onClick={onClick}
             className="group relative flex flex-col cursor-pointer break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500"
         >
-            <div className="relative w-full bg-wood-100 overflow-hidden transition-shadow duration-500 group-hover:shadow-lg">
+            <div className={`relative w-full bg-wood-100 overflow-hidden transition-shadow duration-500 group-hover:shadow-lg ${isSquare ? 'aspect-square' : ''}`}>
                 <ArtImage
                     publicId={product.image}
                     alt={`${product.title} by Adrian Rasmussen${product.material ? `, ${product.material}` : ''}`}
-                    variant="gallery"
-                    className={!isAvailable ? 'opacity-60' : ''}
+                    variant={isSquare ? 'tile' : 'gallery'}
+                    className={[isSquare ? '!object-contain' : '', !isAvailable ? 'opacity-60' : ''].filter(Boolean).join(' ')}
                 />
 
 
@@ -680,7 +680,7 @@ const ControlDeck: React.FC<{
     };
 
     return (
-        <div className="sticky top-[72px] z-40 bg-paper-50 backdrop-blur-md border-b border-wood-100 shadow-sm">
+        <div className="sticky top-[var(--nav-height)] z-40 bg-paper-50 backdrop-blur-md border-b border-wood-100 shadow-sm">
             <div className="max-w-[1800px] mx-auto px-6 h-14 flex items-center gap-5">
 
                 {/* Filter toggle — minimal text style */}
@@ -950,15 +950,15 @@ const Store: React.FC = () => {
                 <ShopHero products={heroProducts} onSelect={setSelectedProduct} />
             )}
 
-            {/* Category tiles — only when no filters/search */}
-            {isUnfiltered && (
+            {/* Category tiles — visible unless searching; active tile acts as a toggle */}
+            {!search.trim() && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-14">
                     <div className="mb-8 flex items-center gap-4">
                         <span className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold shrink-0">Browse by Category</span>
                         <div className="flex-1 h-px bg-wood-100" />
                     </div>
                     <div
-                        className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 card-stagger"
+                        className="grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 card-stagger"
                         role="list"
                         aria-label="Shop categories"
                     >
@@ -968,10 +968,13 @@ const Store: React.FC = () => {
                                     cat={cat}
                                     isActive={filters.includes(cat.cat)}
                                     onSelect={() => {
-                                        setFilters([cat.cat]);
-                                        setTimeout(() => {
-                                            document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }, 50);
+                                        const next = filters.includes(cat.cat) ? [] : [cat.cat];
+                                        setFilters(next);
+                                        if (next.length > 0) {
+                                            setTimeout(() => {
+                                                document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            }, 50);
+                                        }
                                     }}
                                 />
                             </div>
