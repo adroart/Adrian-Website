@@ -84,143 +84,7 @@ const EXPECT_STEPS = [
   { label: 'Creation begins', sub: "When it's right" },
 ];
 
-/* ── iOS-style scroll picker ────────────────────────────────────────── */
-const ITEM_H = 44;
-const VISIBLE = 5;
 
-function ScrollPicker({
-  options,
-  value,
-  onChange,
-}: {
-  options: { label: string; value: string }[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const listRef = useRef<HTMLDivElement>(null);
-  const onChangeRef = useRef(onChange);
-  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
-
-  const containerH = ITEM_H * VISIBLE;
-  const pad = ITEM_H * Math.floor(VISIBLE / 2);
-
-  const [centeredIdx, setCenteredIdx] = useState(() => {
-    const idx = options.findIndex(o => o.value === value);
-    return idx >= 0 ? idx : 0;
-  });
-
-  // Scroll to saved value on mount
-  useEffect(() => {
-    if (!listRef.current) return;
-    const idx = options.findIndex(o => o.value === value);
-    listRef.current.scrollTop = idx >= 0 ? idx * ITEM_H : 0;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Native wheel listener — fires without requiring a prior click
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    let snapTimer: ReturnType<typeof setTimeout>;
-
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      el.scrollTop += e.deltaY;
-
-      const raw = Math.round(el.scrollTop / ITEM_H);
-      const idx = Math.max(0, Math.min(raw, options.length - 1));
-      setCenteredIdx(idx);
-
-      clearTimeout(snapTimer);
-      snapTimer = setTimeout(() => {
-        el.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' });
-        onChangeRef.current(options[idx].value);
-      }, 120);
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      clearTimeout(snapTimer);
-    };
-  }, [options]);
-
-  // Touch scroll — CSS snap handles momentum, we just read the result
-  const touchDebounce = useRef<ReturnType<typeof setTimeout>>();
-  const handleTouchScroll = () => {
-    if (!listRef.current) return;
-    const idx = Math.max(
-      0,
-      Math.min(Math.round(listRef.current.scrollTop / ITEM_H), options.length - 1),
-    );
-    setCenteredIdx(idx);
-    clearTimeout(touchDebounce.current);
-    touchDebounce.current = setTimeout(() => {
-      onChangeRef.current(options[idx].value);
-    }, 150);
-  };
-
-  const scrollToIndex = (i: number) => {
-    if (!listRef.current) return;
-    listRef.current.scrollTo({ top: i * ITEM_H, behavior: 'smooth' });
-    setCenteredIdx(i);
-    onChangeRef.current(options[i].value);
-  };
-
-  return (
-    <div className="relative select-none" style={{ height: containerH }}>
-      <style>{`.scroll-picker-drum::-webkit-scrollbar{display:none}`}</style>
-
-      {/* Selection band */}
-      <div
-        className="absolute inset-x-0 border-t border-b border-wood-200 pointer-events-none z-10"
-        style={{ top: pad, height: ITEM_H }}
-      />
-
-      {/* Edge fade — matches form card bg-wood-50 */}
-      <div
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          background: `linear-gradient(to bottom,
-            #faf9f7 0%,
-            rgba(250,249,247,0) ${Math.round((pad / containerH) * 100)}%,
-            rgba(250,249,247,0) ${100 - Math.round((pad / containerH) * 100)}%,
-            #faf9f7 100%)`,
-        }}
-      />
-
-      {/* Drum */}
-      <div
-        ref={listRef}
-        onScroll={handleTouchScroll}
-        className="scroll-picker-drum h-full"
-        style={{
-          overflowY: 'scroll',
-          scrollSnapType: 'y mandatory',
-          scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch',
-        } as React.CSSProperties}
-      >
-        <div style={{ height: pad }} aria-hidden="true" />
-        {options.map((opt, i) => (
-          <div
-            key={opt.value}
-            onClick={() => scrollToIndex(i)}
-            style={{ height: ITEM_H, scrollSnapAlign: 'center' }}
-            className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
-              i === centeredIdx
-                ? 'font-serif text-base text-wood-900'
-                : 'font-sans text-sm text-wood-400'
-            }`}
-          >
-            {opt.label}
-          </div>
-        ))}
-        <div style={{ height: pad }} aria-hidden="true" />
-      </div>
-    </div>
-  );
-}
 
 /* ── Scroll-reveal hook ─────────────────────────────────────────────── */
 function useReveal(delay = 0) {
@@ -906,14 +770,24 @@ const Inquire: React.FC = () => {
 
                           {/* Budget */}
                           <div>
-                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
+                            <label
+                              htmlFor="field-budget"
+                              className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3"
+                            >
                               Budget Range
                             </label>
-                            <ScrollPicker
-                              options={BUDGET_PRESETS}
+                            <select
+                              id="field-budget"
+                              name="budget"
                               value={form.budget}
-                              onChange={(v) => setForm(prev => ({ ...prev, budget: v }))}
-                            />
+                              onChange={(e) => setForm(prev => ({ ...prev, budget: e.target.value }))}
+                              className="w-full bg-transparent border-b border-wood-200 py-2 font-sans text-base text-wood-900 outline-none focus:border-wood-700 transition-colors appearance-none cursor-pointer"
+                            >
+                              <option value="">Select a range</option>
+                              {BUDGET_PRESETS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
                           </div>
 
                           {/* Location */}

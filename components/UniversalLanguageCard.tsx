@@ -372,30 +372,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
 
-          {/* Title block — appears ABOVE the image */}
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-6 pb-4">
-            <div className="card-grain bg-paper-100 border border-wood-200/50 rounded-2xl px-5 py-6 shadow-[inset_0_1px_4px_rgba(60,44,22,0.07),0_4px_16px_rgba(60,44,22,0.1)]">
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">Code {card.number}</p>
-              <h1 className="font-serif text-4xl sm:text-5xl text-wood-900 font-semibold leading-[1.15] mb-4">
-                {card.card_name}
-              </h1>
-              {/* Keywords — pill chips as tuning frequencies */}
-              {expanded?.keywords && expanded.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 border-t border-wood-200/60 pt-4">
-                  {expanded.keywords.map((kw, i) => (
-                    <span
-                      key={i}
-                      className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Image + painting link — full-bleed on mobile, contained on desktop */}
+          {/* Image + info block — full-bleed on mobile, contained on desktop */}
           <div className="md:max-w-2xl md:mx-auto">
             <figure
               className="w-full aspect-square cursor-zoom-in"
@@ -406,12 +383,31 @@ const UniversalLanguageCard: React.FC = () => {
               <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
-            {/* Painting link + Share — boxed strip below image */}
-            <div className="border-t border-b border-wood-200/60 divide-y divide-wood-200/40">
+            {/* Info block — title box connected to painting link + share strip */}
+            <div className="border-t border-b border-wood-200/60">
+              {/* Title + keywords */}
+              <div className="card-grain bg-paper-100 px-5 py-6 border-b border-wood-200/40">
+                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">Code {card.number}</p>
+                <p className="font-serif text-2xl text-wood-900 font-semibold leading-[1.2] mb-4">{card.card_name}</p>
+                {/* Keywords — pill chips as tuning frequencies */}
+                {expanded?.keywords && expanded.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {expanded.keywords.map((kw, i) => (
+                      <span
+                        key={i}
+                        className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Painting link */}
               {piece && (
                 <Link
                   to={`/creations/${piece.id}`}
-                  className="group flex items-center justify-between gap-3 px-5 py-3.5 bg-paper-50 hover:bg-paper-100 transition-colors"
+                  className="group flex items-center justify-between gap-3 px-5 py-3.5 bg-paper-50 hover:bg-paper-100 transition-colors border-b border-wood-200/40"
                 >
                   <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 group-hover:text-wood-800 transition-colors">
                     View the original painting
@@ -806,17 +802,19 @@ const UniversalLanguageCard: React.FC = () => {
       {/* ── Sticky bottom nav ────────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-paper-50/95 border-t border-wood-200 backdrop-blur-sm">
         <div className="flex items-stretch h-14">
+          {/* Left icon — flush to edge */}
+          {(() => { const c = prevCardNum !== null ? CARD_BY_NUMBER.get(prevCardNum) : null; return c ? (
+            <div className="flex flex-col items-center justify-center flex-shrink-0 w-10 pl-2">
+              <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.upper_trigram.symbol}</span>
+              <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.lower_trigram.symbol}</span>
+            </div>
+          ) : <div className="w-10" />; })()}
+
           {prevCardNum !== null ? (
             <Link
               to={`/oracle/universal-language/${prevCardNum}`}
-              className="flex items-center gap-3 px-4 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+              className="flex items-center gap-3 px-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
             >
-              {(() => { const c = CARD_BY_NUMBER.get(prevCardNum); return c ? (
-                <div className="flex flex-col items-center flex-shrink-0 w-6">
-                  <span className="text-2xl font-bold text-bronze-400 block leading-none">{c.iching.upper_trigram.symbol}</span>
-                  <span className="text-2xl font-bold text-bronze-400 block leading-none">{c.iching.lower_trigram.symbol}</span>
-                </div>
-              ) : null; })()}
               <div className="min-w-0">
                 <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">← Prev</p>
                 <p className="font-sans text-xs text-wood-700 leading-tight truncate">
@@ -837,7 +835,7 @@ const UniversalLanguageCard: React.FC = () => {
           {nextCardNum !== null ? (
             <Link
               to={`/oracle/universal-language/${nextCardNum}`}
-              className="flex items-center justify-end gap-3 px-4 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+              className="flex items-center justify-end gap-3 px-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
             >
               <div className="min-w-0 text-right">
                 <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">Next →</p>
@@ -845,14 +843,16 @@ const UniversalLanguageCard: React.FC = () => {
                   {CARD_BY_NUMBER.get(nextCardNum)?.card_name}
                 </p>
               </div>
-              {(() => { const c = CARD_BY_NUMBER.get(nextCardNum); return c ? (
-                <div className="flex flex-col items-center flex-shrink-0 w-6">
-                  <span className="text-2xl font-bold text-bronze-400 block leading-none">{c.iching.upper_trigram.symbol}</span>
-                  <span className="text-2xl font-bold text-bronze-400 block leading-none">{c.iching.lower_trigram.symbol}</span>
-                </div>
-              ) : null; })()}
             </Link>
           ) : <div className="flex-1" />}
+
+          {/* Right icon — flush to edge */}
+          {(() => { const c = nextCardNum !== null ? CARD_BY_NUMBER.get(nextCardNum) : null; return c ? (
+            <div className="flex flex-col items-center justify-center flex-shrink-0 w-10 pr-2">
+              <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.upper_trigram.symbol}</span>
+              <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.lower_trigram.symbol}</span>
+            </div>
+          ) : <div className="w-10" />; })()}
         </div>
       </div>
     </>
