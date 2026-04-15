@@ -64,29 +64,6 @@ const HEBREW_CHARS: Record<string, string> = {
   Qoph: 'ק', Resh: 'ר', Shin: 'ש', Tau: 'ת',
 };
 
-/* ─── Reference strip SVG icons ─────────────────────────────────────────── */
-
-const IconHexagram = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-);
-const IconGate = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-  </svg>
-);
-const IconPath = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/>
-  </svg>
-);
-const IconBody = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>
-  </svg>
-);
-
 /* ─── Image helpers ──────────────────────────────────────────────────────── */
 
 const UL_PIECES = FULL_ARCHIVE.filter(a => a.series === 'Universal Language');
@@ -565,119 +542,105 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:max-w-2xl md:mx-auto px-2 sm:px-6 pt-8 pb-0">
-            {/* Info box */}
-            <div className="rounded-t-2xl border-x border-t border-wood-200/60 bg-paper-50 px-5 pt-5 pb-6">
-              {/* Title row — name left, number + hexagram right */}
-              <div className="flex items-end justify-between gap-4 mb-5">
-                <h1 className="font-serif text-[44px] text-wood-900 leading-[1.0] flex-1 min-w-0">{card.card_name}</h1>
-                <div className="flex items-end gap-2.5 flex-shrink-0 pb-0.5">
-                  <span className="font-serif text-xl text-wood-400 leading-none mb-0.5">{card.number}</span>
-                  {synthesis?.reference?.hexagram_symbol && (
-                    <span className="text-[46px] text-wood-700 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Keywords — flowing editorial text */}
-              {(() => {
-                const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
-                return kws.length > 0 ? (
-                  <p className="font-sans text-[12px] text-wood-500 leading-[1.9] tracking-[0.04em]">
-                    {kws.join('  ·  ')}
-                  </p>
-                ) : null;
-              })()}
+          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-10 pb-0 bg-paper-50">
+            {/* Title block — name, then tight mono cluster of number + hexagram */}
+            <h1 className="font-serif text-[44px] text-wood-900 leading-[1.0]">{card.card_name}</h1>
+            <div className="flex items-baseline gap-2 mt-3">
+              <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400">{card.number} of 64</span>
+              {synthesis?.reference?.hexagram_symbol && (
+                <>
+                  <span className="text-wood-300" aria-hidden="true">·</span>
+                  <span className="text-[20px] text-wood-600 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                </>
+              )}
             </div>
+
+            {/* Keywords — stacked editorial lines, not a single middle-dot paragraph */}
+            {(() => {
+              const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
+              return kws.length > 0 ? (
+                <ul className="mt-8 space-y-[6px]">
+                  {kws.map((k, i) => (
+                    <li key={i} className="font-serif text-[16px] text-wood-700 leading-[1.55]">{k}</li>
+                  ))}
+                </ul>
+              ) : null;
+            })()}
           </div>
 
-          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-0 pb-14">
+          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-6 pb-14 bg-paper-50">
 
-            {/* Reference strip — section-grouped metadata, each row links to its section */}
+            {/* Reference strip — hairline-divided rows, no per-row boxes or chevrons */}
             {synthesis?.reference && (
-              <div className="rounded-b-2xl overflow-hidden border-x border-b border-wood-200/60 divide-y divide-wood-200/40 shadow-[0_4px_16px_rgba(60,44,22,0.09)] mb-3">
+              <div className="border-t border-b border-wood-200/60 divide-y divide-wood-200/50 mb-3">
                 {/* I Ching — hexagram identity */}
-                <button onClick={() => go('iching')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-400 bg-stone-50/70 hover:bg-stone-100 px-5 py-5 text-left transition-colors">
-                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                    <IconHexagram />
-                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-stone-400">I Ching</span>
-                    <span className="text-stone-300" aria-hidden="true">·</span>
-                    <span className="text-[19px] text-stone-500 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                    <span className="font-sans text-[15px] text-stone-600">{card.iching.hexagram_name}</span>
-                    <span className="text-stone-300" aria-hidden="true">·</span>
-                    <span className="font-mono text-sm text-stone-400 tracking-widest">{synthesis.reference.binary}</span>
-                  </div>
-                  <span className="text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0">→</span>
+                <button onClick={() => go('iching')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">I Ching</p>
+                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                    {card.iching.hexagram_name}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="text-wood-600">{synthesis.reference.hexagram_symbol}</span>
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="font-mono text-[13px] text-wood-500 tracking-widest">{synthesis.reference.binary}</span>
+                  </p>
                 </button>
 
-                {/* Gene Keys — shadow, gift, siddhi */}
-                <button onClick={() => go('genekeys')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-bronze-400 bg-bronze-50/70 hover:bg-bronze-100 px-5 py-5 text-left transition-colors">
-                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22V12M12 12L4 7M12 12l8-5M4 7V17l8 5 8-5V7L12 2 4 7z"/></svg>
-                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-500">Gene Keys</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-stone-600">{card.gene_keys.shadow}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-bronze-600 font-medium">{card.gene_keys.gift}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-600">{card.gene_keys.siddhi}</span>
-                  </div>
-                  <span className="text-bronze-300 group-hover:text-bronze-500 transition-colors flex-shrink-0">→</span>
+                {/* Gene Keys — shadow, gift, siddhi (featured row: bronze left bar + whisper tint) */}
+                <button onClick={() => go('genekeys')} className="group w-full block text-left px-1 py-5 pl-4 -ml-0 border-l-2 border-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08]">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gene Keys</p>
+                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                    {card.gene_keys.shadow}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="text-bronze-600">{card.gene_keys.gift}</span>
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    {card.gene_keys.siddhi}
+                  </p>
                 </button>
 
-                {/* Human Design — center, circuit, harmonic */}
-                <button onClick={() => go('humandesign')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-wood-400 bg-wood-50/70 hover:bg-wood-100 px-5 py-5 text-left transition-colors">
-                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                    <IconGate />
-                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400">Human Design</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-700">{synthesis.reference.hd_center} Center</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-600">{synthesis.reference.hd_circuit}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-500">{synthesis.reference.hd_harmonic_gate}</span>
-                  </div>
-                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                {/* Human Design */}
+                <button onClick={() => go('humandesign')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Human Design</p>
+                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                    {synthesis.reference.hd_center} Center
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    {synthesis.reference.hd_circuit}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    {synthesis.reference.hd_harmonic_gate}
+                  </p>
                 </button>
 
-                {/* Tarot / Kabbalah — card, path, astrology, Hebrew */}
-                <button onClick={() => go('connections')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-wood-400 bg-wood-50/70 hover:bg-wood-100 px-5 py-5 text-left transition-colors">
-                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
-                    <IconPath />
-                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-500">Tarot</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-700">{synthesis.reference.tarot_card}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-600">{synthesis.reference.astrology}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-[15px] text-wood-600">{HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter}</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-sm text-wood-400">Path {synthesis.reference.path}</span>
-                  </div>
-                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                {/* Tarot / Kabbalah */}
+                <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Tarot</p>
+                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                    {synthesis.reference.tarot_card}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    {synthesis.reference.astrology}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    {HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter}
+                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="text-wood-500">Path {synthesis.reference.path}</span>
+                  </p>
                 </button>
 
-                {/* Body — physiology, amino acid, programming partner */}
-                <button onClick={() => go('connections')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-300 bg-paper-100/80 hover:bg-paper-100 px-5 py-5 text-left transition-colors">
-                  <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-                    <IconBody />
-                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400">Body</span>
-                    <span className="text-wood-300" aria-hidden="true">·</span>
-                    <span className="font-sans text-sm text-wood-700">{synthesis.reference.body_physiology}</span>
+                {/* Body */}
+                <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Body</p>
+                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                    {synthesis.reference.body_physiology}
                     {synthesis.reference.body_amino_acid && (
                       <>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-sans text-sm text-wood-600">{synthesis.reference.body_amino_acid}</span>
+                        <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                        {synthesis.reference.body_amino_acid}
                       </>
                     )}
                     {synthesis.reference.programming_partner && (
                       <>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-sans text-xs text-wood-400">Partner Key {synthesis.reference.programming_partner}</span>
+                        <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                        <span className="text-wood-500">Partner Key {synthesis.reference.programming_partner}</span>
                       </>
                     )}
-                  </div>
-                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                  </p>
                 </button>
               </div>
             )}
