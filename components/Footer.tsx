@@ -183,71 +183,25 @@ const Footer: React.FC = () => {
                     </div>
                 </div>
 
-                {/* #2 Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent mb-12"></div>
+                {/* Gradient divider */}
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent mb-10"></div>
 
-                {/* Navigation grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 mb-16">
+                {/* Nav links — single row */}
+                <nav className="flex flex-wrap gap-x-7 gap-y-3 mb-10">
+                    <Link to="/creations" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Creations</Link>
+                    <Link to="/writings" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Writings</Link>
+                    {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Shop</Link>}
+                    <Link to="/about" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">About</Link>
+                    <Link to="/inquire" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Commissions</Link>
+                    <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Teajia</a>
+                </nav>
 
-                    {/* Column 1: Index */}
-                    <div className="flex flex-col gap-3.5">
-                        {/* #5 Decorative line before column header */}
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Index</span>
-                        </div>
-                        <Link to="/creations" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Creations</Link>
-                        <Link to="/writings" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Writings</Link>
-                        {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Shop</Link>}
-                        <a href="https://teajia.com" target="_blank" rel="noopener noreferrer" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">
-                            <span>Teajia</span>
-                            <span className="block font-sans text-xs text-wood-300 font-light mt-0.5">Global tea culture. Ceremony and treasures.</span>
-                        </a>
-                    </div>
-
-                    {/* Column 2: Studio — #41 removed duplicate Contact (was same as Commissions) */}
-                    <div className="flex flex-col gap-3.5">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Studio</span>
-                        </div>
-                        <Link to="/about" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">About</Link>
-                        <Link to="/inquire" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Commissions</Link>
-                    </div>
-
-                    {/* Column 3: Info — #7 removed dead links that had no destination */}
-                    <div className="flex flex-col gap-3.5">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Information</span>
-                        </div>
-                        <Link to="/privacy" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Privacy Policy</Link>
-                        <Link to="/terms" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors w-fit">Terms</Link>
-                    </div>
-
-                    {/* Column 4: Connect — #12 Icon buttons with scale hover */}
-                    <div className="flex flex-col gap-3.5">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="w-6 h-px bg-bronze-400/50"></span>
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-200 font-semibold">Connect</span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1">
-                            <a href="https://www.instagram.com/adrianrasmussen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
-                                <Instagram size={18} />
-                            </a>
-                            <a href="mailto:hello@adrianrasmussen.com" aria-label="Email" className="w-10 h-10 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
-                                <Mail size={18} />
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                {/* #2 Gradient divider */}
+                {/* Gradient divider */}
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent"></div>
 
-                {/* Bottom Bar — "Designed in Ubud, Bali" removed */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-8">
-                    <div className="flex gap-6">
+                {/* Bottom bar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] font-label uppercase tracking-[0.2em] font-semibold text-wood-300 pt-6">
+                    <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2">
                         <span>© {new Date().getFullYear()} Adrian Rasmussen</span>
                         <Link to="/privacy" className="hover:text-wood-300 transition-colors">Privacy</Link>
                         <Link to="/terms" className="hover:text-wood-300 transition-colors">Terms</Link>
@@ -255,8 +209,15 @@ const Footer: React.FC = () => {
                             {isDarkMode ? 'Day Mode' : 'Night Mode'}
                         </button>
                     </div>
-                    {/* #11 Scroll-to-top */}
-                    <ScrollToTop />
+                    <div className="flex items-center gap-3">
+                        <a href="https://www.instagram.com/adrianrasmussen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <Instagram size={16} />
+                        </a>
+                        <a href="mailto:hello@adrianrasmussen.com" aria-label="Email" className="w-9 h-9 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                            <Mail size={16} />
+                        </a>
+                        <ScrollToTop />
+                    </div>
                 </div>
             </div>
         </footer>

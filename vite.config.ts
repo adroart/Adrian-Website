@@ -35,8 +35,18 @@ function mockApiPlugin(): Plugin {
 
 export default defineConfig({
   server: {
-    port: 3000,
+    port: 5173,
     host: '0.0.0.0',
+    strictPort: true,
+    hmr: {
+      host: 'localhost',
+      port: 5173,
+      protocol: 'ws',
+    },
+    watch: {
+      usePolling: true,
+      interval: 500,
+    },
   },
   plugins: [react(), mockApiPlugin()],
   resolve: {

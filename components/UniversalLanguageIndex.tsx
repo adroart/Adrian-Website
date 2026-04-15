@@ -41,15 +41,12 @@ const TRIGRAM_LINES: Record<string, readonly [boolean, boolean, boolean]> = {
   '☱': [false, true,  true ],  // Dui  / Lake
 };
 
-// Draws a full hexagram (6 lines) as SVG with precise coordinates —
-// no font metrics involved, so every card is identically centred.
+// Draws a full hexagram (6 lines) as SVG with precise coordinates.
 const HexagramSVG: React.FC<{ upper: string; lower: string }> = ({ upper, lower }) => {
   const uLines = TRIGRAM_LINES[upper] ?? [true, true, true];
   const lLines = TRIGRAM_LINES[lower] ?? [true, true, true];
   const lines = [...uLines, ...lLines]; // 6 lines, top → bottom
 
-  // ViewBox: 40 wide, 46 tall
-  // 6 lines × 4 px + 5 gaps × 4 px = 44 px; 1 px breathing room top & bottom
   const lineH = 4;
   const lineGap = 4;
   const W = 40;
@@ -64,7 +61,7 @@ const HexagramSVG: React.FC<{ upper: string; lower: string }> = ({ upper, lower 
           <rect key={i} x={0} y={y} width={W} height={lineH} fill="currentColor" />
         ) : (
           <g key={i}>
-            <rect x={0}               y={y} width={halfW} height={lineH} fill="currentColor" />
+            <rect x={0}                y={y} width={halfW} height={lineH} fill="currentColor" />
             <rect x={halfW + brokenGap} y={y} width={halfW} height={lineH} fill="currentColor" />
           </g>
         );
@@ -110,7 +107,7 @@ const CardThumbnail: React.FC<{
         className="relative w-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#e0d8cc] dark:bg-[#3b2f26] cursor-pointer"
         onClick={e => { e.stopPropagation(); onFlipBack(); }}
       >
-        {/* Art — square image with equal 3px padding on l/r/top */}
+        {/* Art — square image with equal padding on l/r/top */}
         <div
           className="pt-[6px] px-[6px]"
           onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } }); }}
@@ -219,7 +216,7 @@ const SearchBar: React.FC<{ value: string; onChange: (v: string) => void }> = ({
       type="text"
       value={value}
       onChange={e => onChange(e.target.value)}
-      placeholder="Search by name, hexagram, keyword, or number..."
+      placeholder="Search cards..."
       className="w-full bg-transparent border border-wood-300 focus:border-bronze-500 text-wood-900 placeholder-wood-400 font-sans text-sm px-4 py-2.5 outline-none transition-colors duration-200"
     />
     {value && (
@@ -250,18 +247,21 @@ const GridToggle: React.FC<{
       <button
         onClick={() => { onGridMode('cards'); onViewMode('grid'); }}
         className={`${btnBase} ${viewMode === 'grid' && gridMode === 'cards' ? active : inactive}`}
+        title="View hexagram symbols"
       >
         I Ching
       </button>
       <button
         onClick={() => { onGridMode('artwork'); onViewMode('grid'); }}
         className={`${btnBase} -ml-px ${viewMode === 'grid' && gridMode === 'artwork' ? active : inactive}`}
+        title="View the paintings"
       >
         Artwork
       </button>
       <button
         onClick={() => onViewMode('rings')}
         className={`${btnBase} -ml-px ${viewMode === 'rings' ? active : inactive}`}
+        title="Browse by Codon Ring"
       >
         By Ring
       </button>
@@ -283,6 +283,26 @@ const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
   </div>
 );
 
+/* ─── Hero card preview (desktop only) ───────────────────────────────────── */
+
+const HERO_PREVIEW_NUMBERS = [1, 8, 22, 32, 48, 64];
+
+const HeroPreview: React.FC = () => (
+  <div className="hidden lg:grid grid-cols-3 gap-1.5 w-56 xl:w-64 shrink-0 self-start mt-2">
+    {HERO_PREVIEW_NUMBERS.map(num => (
+      <div key={num} className="aspect-square overflow-hidden opacity-75">
+        <img
+          src={cardImageUrl(num, 160)}
+          alt=""
+          aria-hidden
+          className="w-full h-full object-cover"
+          loading="eager"
+        />
+      </div>
+    ))}
+  </div>
+);
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageIndex: React.FC = () => {
@@ -294,7 +314,6 @@ const UniversalLanguageIndex: React.FC = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  // When the global grid mode changes, sync the flipped set
   const handleGridMode = (mode: GridMode) => {
     setGridMode(mode);
     if (mode === 'artwork') {
@@ -311,7 +330,6 @@ const UniversalLanguageIndex: React.FC = () => {
   const flipCardBack = (number: number) => {
     setFlippedCards(prev => { const next = new Set(prev); next.delete(number); return next; });
   };
-
 
   const matchCard = (card: OracleCard, q: string): boolean => {
     const lq = q.toLowerCase();
@@ -348,17 +366,19 @@ const UniversalLanguageIndex: React.FC = () => {
     navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } });
   };
 
+  const gridInstruction = gridMode === 'cards'
+    ? 'Tap a card to reveal it, then Read to enter'
+    : 'Tap any card to enter';
+
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-32 pb-12 max-w-7xl mx-auto">
+      <div className="px-6 pt-32 pb-10 max-w-7xl mx-auto">
 
-        {/* Breadcrumb */}
+        {/* Breadcrumb — Oracle middle node removed */}
         <nav className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-wood-400 mb-8 sm:mb-12">
           <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
-          <span className="text-wood-300">/</span>
-          <Link to="/creations/oracle-cards" className="hover:text-wood-700 transition-colors">Oracle</Link>
           <span className="text-wood-300">/</span>
           <span className="text-wood-700">Universal Language</span>
         </nav>
@@ -368,8 +388,10 @@ const UniversalLanguageIndex: React.FC = () => {
             aria-hidden
             className="md:hidden absolute -inset-x-6 -inset-y-6 -z-10 bg-paper-50/75 dark:bg-stone-950/75 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_82%)]"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-end mb-10">
-            <div>
+
+          {/* Hero row: text left, card preview right */}
+          <div className="flex items-start gap-8 lg:gap-12 mb-10">
+            <div className="flex-1 min-w-0">
               <p className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-600 mb-5">
                 Universal Language Oracle
               </p>
@@ -377,29 +399,46 @@ const UniversalLanguageIndex: React.FC = () => {
                 Sixty-Four<br />
                 <span className="text-wood-500 font-light">Expressions</span>
               </h1>
-              <p className="font-sans text-lg text-wood-600 max-w-xl leading-[1.7] font-light">
+              <p className="font-sans text-lg text-wood-600 max-w-xl leading-[1.7] font-light mb-8">
                 Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
                 Nothing needs to be understood to speak with them.
               </p>
-            </div>
 
-            <div className="flex flex-col items-start lg:items-end gap-4">
-              <button
-                onClick={handleRandom}
-                className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors duration-200 font-semibold"
-              >
-                Draw a Card
-              </button>
-              <div className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 space-y-1 text-right">
-                <div>{ALL_CARDS.length} Cards</div>
-                <div>{CODON_RINGS.length} Codon Rings</div>
+              {/* Primary CTA + clickable stats */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <button
+                  onClick={handleRandom}
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors duration-200 font-semibold"
+                >
+                  Draw at Random
+                </button>
+                <div className="flex items-center gap-4 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+                  <button
+                    onClick={() => { handleGridMode('cards'); setViewMode('grid'); }}
+                    className="hover:text-wood-700 transition-colors"
+                  >
+                    {ALL_CARDS.length} Cards
+                  </button>
+                  <span className="text-wood-300">·</span>
+                  <button
+                    onClick={() => setViewMode('rings')}
+                    className="hover:text-wood-700 transition-colors"
+                  >
+                    {CODON_RINGS.length} Codon Rings
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Desktop card preview grid */}
+            <HeroPreview />
           </div>
         </div>
+      </div>
 
-        {/* Divider */}
-        <div className="border-t border-wood-200 pt-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      {/* ── Sticky search + tabs ───────────────────────────────────────────── */}
+      <div className="sticky top-0 z-20 bg-paper-50/95 backdrop-blur-sm border-b border-wood-200">
+        <div className="px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <SearchBar value={query} onChange={setQuery} />
           <GridToggle
             gridMode={gridMode}
@@ -408,11 +447,12 @@ const UniversalLanguageIndex: React.FC = () => {
             onViewMode={setViewMode}
           />
         </div>
-
         {query && (
-          <p className="mt-3 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
-            {totalShown} {totalShown === 1 ? 'card' : 'cards'} found
-          </p>
+          <div className="px-6 pb-3 max-w-7xl mx-auto">
+            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+              {totalShown} {totalShown === 1 ? 'card' : 'cards'} found
+            </p>
+          </div>
         )}
       </div>
 
@@ -422,19 +462,25 @@ const UniversalLanguageIndex: React.FC = () => {
         {/* Grid view */}
         {viewMode === 'grid' && (
           filteredCards.length > 0 ? (
-            <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
-              <div className="grid grid-cols-4 lg:grid-cols-8 gap-[3px]">
-                {filteredCards.map(card => (
-                  <CardThumbnail
-                    key={card.number}
-                    card={card}
-                    isFlipped={flippedCards.has(card.number)}
-                    onFlip={() => flipCard(card.number)}
-                    onFlipBack={() => flipCardBack(card.number)}
-                  />
-                ))}
+            <>
+              {/* First-time instruction */}
+              <p className="pt-5 pb-3 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+                {gridInstruction}
+              </p>
+              <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-[3px]">
+                  {filteredCards.map(card => (
+                    <CardThumbnail
+                      key={card.number}
+                      card={card}
+                      isFlipped={flippedCards.has(card.number)}
+                      onFlip={() => flipCard(card.number)}
+                      onFlipBack={() => flipCardBack(card.number)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <EmptyState onClear={() => setQuery('')} />
           )
@@ -472,7 +518,7 @@ const UniversalLanguageIndex: React.FC = () => {
           onClick={handleRandom}
           className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 transition-colors font-semibold border-b border-bronze-600/40 hover:border-bronze-500 pb-px"
         >
-          Draw a random card →
+          Draw at Random →
         </button>
       </div>
 

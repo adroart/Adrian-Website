@@ -721,19 +721,20 @@ const Inquire: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ── Vision / Notes ────────────────────────────────── */}
+                    {/* ── Vision (commission mode only — shown above name) ── */}
+                    {!purchaseMode && (
                     <div className="mb-[6px]">
                       <label
                         htmlFor="field-vision"
                         className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
                       >
-                        {purchaseMode ? 'Notes or questions' : (!pieceTitle ? 'What wants to exist?' : null)}
+                        {!pieceTitle ? 'What wants to exist?' : null}
                       </label>
                       <textarea
                         ref={visionRef}
                         name="vision"
                         id="field-vision"
-                        rows={purchaseMode ? 3 : 1}
+                        rows={1}
                         value={form.vision}
                         onChange={handleVisionChange}
                         onFocus={() => {
@@ -743,8 +744,8 @@ const Inquire: React.FC = () => {
                         onBlur={() => handleBlur('vision')}
                         aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pb-[6px] outline-none font-sans text-base resize-none overflow-hidden transition-colors duration-300 leading-relaxed text-wood-700 ${fieldBorderClass('vision')}`}
-                        placeholder={purchaseMode ? 'Shipping address, questions, or any special requests...' : 'A piece for my meditation space, something that holds stillness...'}
-                        required={!purchaseMode}
+                        placeholder="A piece for my meditation space, something that holds stillness..."
+                        required
                       />
                       {getFieldError('vision') && (
                         <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
@@ -752,6 +753,7 @@ const Inquire: React.FC = () => {
                         </p>
                       )}
                     </div>
+                    )}
 
                     {/* ── Name ──────────────────────────────────────────── */}
                     <div className="mb-[6px] relative pt-3">
@@ -812,6 +814,33 @@ const Inquire: React.FC = () => {
                         </p>
                       )}
                     </div>
+
+                    {/* ── Notes / Questions (purchase mode only — shown below name+email) */}
+                    {purchaseMode && (
+                    <div className="mb-[6px] pt-3">
+                      <label
+                        htmlFor="field-vision"
+                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
+                      >
+                        Notes or questions
+                      </label>
+                      <textarea
+                        ref={visionRef}
+                        name="vision"
+                        id="field-vision"
+                        rows={3}
+                        value={form.vision}
+                        onChange={handleVisionChange}
+                        onFocus={() => {
+                          handleFocus('vision');
+                          handleVisionFocus();
+                        }}
+                        onBlur={() => handleBlur('vision')}
+                        className={`w-full bg-transparent border-b-2 pb-[6px] outline-none font-sans text-base resize-none overflow-hidden transition-colors duration-300 leading-relaxed text-wood-700 ${fieldBorderClass('vision')}`}
+                        placeholder="Questions or any special requests..."
+                      />
+                    </div>
+                    )}
 
                     {/* ── Submit ────────────────────────────────────────── */}
                     <div>
@@ -910,26 +939,6 @@ const Inquire: React.FC = () => {
                             </select>
                           </div>
 
-                          {/* Location */}
-                          <div className="relative pt-5">
-                            <label htmlFor="field-location" className={floatLabel('location')}>
-                              Location
-                            </label>
-                            <input
-                              type="text"
-                              name="location"
-                              id="field-location"
-                              value={form.location}
-                              onChange={handleChange}
-                              onFocus={() => handleFocus('location')}
-                              onBlur={() => handleBlur('location')}
-                              className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
-                            />
-                            <p className="font-sans text-sm text-wood-500 mt-1.5">
-                              City, country, or region where the piece will live.
-                            </p>
-                          </div>
-
                           {/* Approximate Size */}
                           <div className="relative pt-5">
                             <label htmlFor="field-sizeRange" className={floatLabel('sizeRange')}>
@@ -998,6 +1007,26 @@ const Inquire: React.FC = () => {
                                 />
                               </div>
                             )}
+                          </div>
+
+                          {/* Location */}
+                          <div className="relative pt-5">
+                            <label htmlFor="field-location" className={floatLabel('location')}>
+                              Location
+                            </label>
+                            <input
+                              type="text"
+                              name="location"
+                              id="field-location"
+                              value={form.location}
+                              onChange={handleChange}
+                              onFocus={() => handleFocus('location')}
+                              onBlur={() => handleBlur('location')}
+                              className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
+                            />
+                            <p className="font-sans text-sm text-wood-500 mt-1.5">
+                              City, country, or region where the piece will live.
+                            </p>
                           </div>
                         </div>
 

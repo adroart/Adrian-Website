@@ -84,6 +84,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navItems: NavItem[] = [
     { path: '/creations', label: 'Creations' },
     { path: '/writings', label: 'Writings' },
+    { path: '/oracle/universal-language', label: 'Oracle' },
     { path: '/inquire', label: 'Inquire' },
     { path: '/about', label: 'About' },
     ...(LAUNCH_FLAGS.shopEnabled ? [{ path: '/shop', label: 'Shop' }] : []),

@@ -104,20 +104,22 @@ const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({
 
 const Expand: React.FC<{
   label: string;
+  subtitle?: string;
   preview: React.ReactNode;
   children: React.ReactNode;
   borderColor: string;
   labelColor: string;
   innerPx?: string;
-}> = ({ label, preview, children, borderColor, labelColor, innerPx = '' }) => {
+}> = ({ label, subtitle, preview, children, borderColor, labelColor, innerPx = '' }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className={`border-t ${borderColor} pt-4 pb-5 ${innerPx}`}>
       <button className="w-full text-left" onClick={() => setOpen(v => !v)} aria-expanded={open}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${labelColor} mb-2`}>{label}</p>
-            <div>{preview}</div>
+            <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${labelColor} mb-1`}>{label}</p>
+            {subtitle && <p className="font-sans text-[11px] italic text-stone-600 mb-2">{subtitle}</p>}
+            {!open && <div>{preview}</div>}
           </div>
           <span
             className={`text-lg ${labelColor} flex-shrink-0 transition-transform duration-200 leading-none mt-1`}
@@ -126,7 +128,7 @@ const Expand: React.FC<{
           >+</span>
         </div>
       </button>
-      {open && <div className="mt-6 space-y-4">{children}</div>}
+      {open && <div className="mt-4 space-y-4">{children}</div>}
     </div>
   );
 };
@@ -293,6 +295,7 @@ const UniversalLanguageCard: React.FC = () => {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [copied,       setCopied]       = useState(false);
+  const [shareOpen,    setShareOpen]    = useState(false);
 
   const [showQREntrance, setShowQREntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') === 'qr'
@@ -322,10 +325,17 @@ const UniversalLanguageCard: React.FC = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [prevCardNum, nextCardNum, navigate]);
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href).catch(() => {});
+  const shareUrl  = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = card ? `${card.card_name} · Code ${card.number} · Universal Language Oracle by Adrian Rasmussen` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleNativeShare = async () => {
+    try { await navigator.share({ title: shareText, url: shareUrl }); } catch {}
   };
 
   useMetaTags({
@@ -383,38 +393,144 @@ const UniversalLanguageCard: React.FC = () => {
               <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
-            {/* Painting link + Share — directly below image */}
-            <div className="border-t border-wood-200/60 divide-y divide-wood-200/40">
-              {piece && (
+            {/* Order + Share — two-up row directly below image */}
+            <div className="border-t border-wood-200/60">
+              <div className="flex divide-x divide-wood-200/40">
+                {/* Collect */}
                 <Link
-                  to={`/creations/${piece.id}`}
-                  className="group flex items-center justify-between gap-3 px-5 py-3.5 bg-paper-50 hover:bg-paper-100 transition-colors"
+                  to={piece ? `/creations/${piece.id}` : '/inquire'}
+                  className="group flex-1 flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
                 >
-                  <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 group-hover:text-wood-800 transition-colors">
-                    View the original painting
-                  </span>
-                  <span className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-500 group-hover:text-bronze-400 transition-colors flex-shrink-0">
-                    {piece.availability === 'SOLD' ? 'Sold' : piece.availability === 'READY_TO_SHIP' ? 'Available' : 'To order'} →
-                  </span>
+                  <div>
+                    <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
+                      Collect
+                    </p>
+                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mt-0.5">
+                      Original art
+                    </p>
+                  </div>
+                  {piece?.availability === 'SOLD' && (
+                    <span className="font-label text-[9px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-wood-400">
+                      Sold
+                    </span>
+                  )}
+                  {piece?.availability === 'READY_TO_SHIP' && (
+                    <span className="font-label text-[9px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-bronze-500 group-hover:text-bronze-400 transition-colors duration-200">
+                      Available
+                    </span>
+                  )}
                 </Link>
+
+                {/* Share */}
+                <button
+                  onClick={() => setShareOpen(v => !v)}
+                  className="group flex-1 flex items-center justify-end px-5 py-4 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  aria-expanded={shareOpen}
+                >
+                  <div className="text-right">
+                    <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
+                      Share
+                    </p>
+                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mt-0.5">
+                      This card
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Share sheet — expands below */}
+              {shareOpen && (
+                <div className="border-t border-wood-200/40 bg-paper-100 px-5 py-4">
+                  <div className="grid grid-cols-2 gap-2">
+
+                    {/* Copy link */}
+                    <button
+                      onClick={handleCopyLink}
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      <span className={`font-label text-[11px] uppercase tracking-[0.15em] transition-colors ${copied ? 'text-bronze-600' : 'text-wood-600'}`}>
+                        {copied ? 'Copied!' : 'Copy link'}
+                      </span>
+                    </button>
+
+                    {/* WhatsApp */}
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366] flex-shrink-0">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                      </svg>
+                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">WhatsApp</span>
+                    </a>
+
+                    {/* Telegram */}
+                    <a
+                      href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#2AABEE] flex-shrink-0">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                      </svg>
+                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Telegram</span>
+                    </a>
+
+                    {/* X / Twitter */}
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-wood-700 flex-shrink-0">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">X / Twitter</span>
+                    </a>
+
+                    {/* Email */}
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent('I wanted to share this oracle card with you:\n\n' + shareUrl)}`}
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                      </svg>
+                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
+                    </a>
+
+                    {/* Native share — only shown where supported (mobile) */}
+                    {typeof navigator !== 'undefined' && 'share' in navigator && (
+                      <button
+                        onClick={handleNativeShare}
+                        className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+                          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                        <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">More options</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
-              <button
-                onClick={handleShare}
-                className="w-full flex items-center justify-center px-5 py-3 bg-paper-50 hover:bg-paper-100 transition-colors"
-              >
-                <span className={`font-label text-[11px] uppercase tracking-[0.2em] transition-colors ${copied ? 'text-bronze-600' : 'text-wood-400 hover:text-wood-700'}`}>
-                  {copied ? 'Link copied' : 'Share this card'}
-                </span>
-              </button>
             </div>
           </div>
 
-          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-0 pb-0">
+          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-8 pb-0">
             {/* Info box — card name + code, keywords, connected directly to section nav */}
             <div className="card-grain bg-paper-100 border-x border-t border-wood-200/60 px-5 py-6">
               <div className="flex items-baseline justify-between gap-4 mb-4">
                 <h1 className="font-serif text-2xl text-wood-900 font-semibold leading-[1.2]">{card.card_name}</h1>
-                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 flex-shrink-0">Code {card.number}</span>
+                <span className="font-sans text-[17px] text-wood-800 leading-[1.7] flex-shrink-0">{card.number}</span>
               </div>
               {expanded?.keywords && expanded.keywords.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -439,7 +555,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <div className="min-w-0">
                   <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">I Ching</p>
                   <p className="font-sans text-xs text-stone-400 mb-1.5">{card.iching.hexagram_name}</p>
-                  <p className="font-sans text-[15px] text-wood-800 leading-[1.7] line-clamp-2">{ichingHighlight}</p>
+                  <p className="font-sans text-[15px] text-wood-800 leading-[1.7]">{ichingHighlight}</p>
                 </div>
                 <span className="text-stone-400 group-hover:text-stone-600 transition-colors flex-shrink-0 text-sm">→</span>
               </button>
@@ -460,21 +576,21 @@ const UniversalLanguageCard: React.FC = () => {
                     className="group rounded-lg border border-stone-300/60 bg-[#eae8e5] dark:bg-[#2a2825] px-2.5 py-2.5 text-left hover:border-stone-400 transition-colors"
                   >
                     <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone-500 mb-1">Shadow</p>
-                    <p className="font-sans text-xs text-stone-800 leading-[1.4] line-clamp-2 group-hover:text-stone-900 transition-colors">{card.gene_keys.shadow}</p>
+                    <p className="font-sans text-xs text-stone-800 leading-[1.4] group-hover:text-stone-900 transition-colors">{card.gene_keys.shadow}</p>
                   </button>
                   <button
                     onClick={() => go('genekey-gift')}
                     className="group rounded-lg border border-bronze-300/60 bg-[#faf5ee] dark:bg-[#2a231a] px-2.5 py-2.5 text-left hover:border-bronze-400 transition-colors"
                   >
                     <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600 mb-1">Gift</p>
-                    <p className="font-sans text-xs text-wood-800 font-medium leading-[1.4] line-clamp-2 group-hover:text-bronze-700 transition-colors">{card.gene_keys.gift}</p>
+                    <p className="font-sans text-xs text-wood-800 font-medium leading-[1.4] group-hover:text-bronze-700 transition-colors">{card.gene_keys.gift}</p>
                   </button>
                   <button
                     onClick={() => go('genekey-siddhi')}
                     className="group rounded-lg border border-wood-300/60 bg-[#f8f6f2] dark:bg-[#23201d] px-2.5 py-2.5 text-left hover:border-wood-400 transition-colors"
                   >
                     <p className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 mb-1">Siddhi</p>
-                    <p className="font-sans text-xs text-wood-900 leading-[1.4] line-clamp-2 group-hover:text-wood-700 transition-colors">{card.gene_keys.siddhi}</p>
+                    <p className="font-sans text-xs text-wood-900 leading-[1.4] group-hover:text-wood-700 transition-colors">{card.gene_keys.siddhi}</p>
                   </button>
                 </div>
               </div>
@@ -483,7 +599,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <button onClick={() => go('humandesign')} className="group flex-1 flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-wood-100/60 transition-colors">
                   <div className="min-w-0">
                     <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-1.5">Human Design · Gate {card.human_design.gate}</p>
-                    <p className="font-sans text-[15px] text-wood-800 leading-[1.7]">{card.human_design.keyword}</p>
+                    <p className="font-sans text-[17px] text-wood-800 leading-[1.7]">{card.human_design.keyword}</p>
                   </div>
                   <span className="text-wood-400 group-hover:text-wood-600 transition-colors flex-shrink-0 text-sm">→</span>
                 </button>
@@ -499,17 +615,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Inquire — commission a piece like this one */}
-            <button
-              onClick={() => navigate('/inquire', { state: { piece: `${card.card_name} - ${card.number}` } })}
-              className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border border-wood-200/60 bg-paper-100 hover:bg-paper-50 hover:border-wood-300 transition-all mb-3 group shadow-[0_2px_8px_rgba(60,44,22,0.06)]"
-            >
-              <div className="text-left">
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-1">Commission a piece</p>
-                <p className="font-sans text-sm text-wood-700 group-hover:text-wood-900 transition-colors">Inquire about a work inspired by this card</p>
-              </div>
-              <span className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-500 group-hover:text-bronze-400 transition-colors flex-shrink-0">Inquire →</span>
-            </button>
+
 
             {/* Island 3 — Creator voice (conditional) */}
             {expanded?.creator_voice?.personal_reading ? (
@@ -572,10 +678,9 @@ const UniversalLanguageCard: React.FC = () => {
                   label="Overview"
                   borderColor="border-stone-700/40" labelColor="text-stone-500"
                   innerPx="px-6"
-                  preview={<p className="font-sans text-sm text-stone-400 leading-[1.8] line-clamp-2">{expanded.i_ching.trigrams.overview.text}</p>}
+                  preview={<p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{expanded.i_ching.trigrams.overview.text}</p>}
                 >
-                  <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{expanded.i_ching.trigrams.overview.text}</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Outer</p>
                       <p className="font-sans text-sm text-stone-300 leading-[1.8]">{expanded.i_ching.trigrams.outer.context.text}</p>
@@ -590,17 +695,39 @@ const UniversalLanguageCard: React.FC = () => {
                   </p>
                 </Expand>
                 <Expand
-                  label="Image of the Situation"
+                  label="The Judgment"
+                  subtitle="the oracle's ruling on this moment"
                   borderColor="border-stone-700/40" labelColor="text-stone-500"
                   innerPx="px-6"
-                  preview={<p className="font-sans text-sm text-stone-400 leading-[1.8] line-clamp-2">{expanded.i_ching.image_of_the_situation.text.split('\n')[0]}</p>}
+                  preview={(() => {
+                    const lines = expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean);
+                    const headline = lines[0];
+                    const stages = lines[1]?.replace(/\.$/, '').split(',').map(s => s.trim()).filter(Boolean) ?? [];
+                    const fom = expanded.i_ching.image_of_the_situation.fields_of_meaning ?? '';
+                    const timeCycleSentences = fom.split('. ').filter(s => s.includes('Time Cycle') || s.includes('four stages'));
+                    const timeCycleText = timeCycleSentences.join('. ').replace(/\.?$/, '.');
+                    return (
+                      <div className="space-y-5">
+                        <p className="font-serif text-2xl text-stone-100 leading-[1.6]">{headline}</p>
+                        {stages.length > 0 && (
+                          <div>
+                            <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone-600 mb-2">The four stages of the time cycle</p>
+                            <div className="flex gap-3 flex-wrap">
+                              {stages.map((s, i) => (
+                                <span key={i} className="font-serif text-base text-stone-300 border border-stone-700/50 rounded px-3 py-1">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {timeCycleText && (
+                          <p className="font-sans text-[13px] text-stone-400 leading-[1.8]">{timeCycleText}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 >
-                  <blockquote className="pl-1">
-                    {expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean).map((line, i) => (
-                      <p key={i} className="font-serif text-xl text-stone-100 leading-[1.8]">{line}</p>
-                    ))}
-                  </blockquote>
-                  <div className="space-y-2 mt-5">
+                  <p className="font-sans text-[13px] text-stone-500 leading-[1.8] mb-5">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                  <div className="space-y-2 border-t border-stone-700/30 pt-4">
                     {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
                       <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.9]">{line}</p>
                     ))}
