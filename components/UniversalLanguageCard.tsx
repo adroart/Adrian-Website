@@ -565,7 +565,7 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-8 pb-0">
+          <div className="md:max-w-2xl md:mx-auto px-2 sm:px-6 pt-8 pb-0">
             {/* Info box */}
             <div className="rounded-t-2xl border-x border-t border-wood-200/60 bg-paper-50 px-5 pt-5 pb-6">
               {/* Title row — name left, number + hexagram right */}
@@ -591,7 +591,7 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-0 pb-14">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-0 pb-14">
 
             {/* Reference strip — section-grouped metadata, each row links to its section */}
             {synthesis?.reference && (
@@ -703,7 +703,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* dark-preserve: intentionally-dark section stays dark in dark mode
             (without it, bg-stone-900 would remap to a light tone). */}
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Island 1 — Header + Trigrams */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -872,7 +872,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Island 1 — Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
@@ -941,7 +941,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
         {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Header */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -1001,7 +1001,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
         <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {expanded ? (
               <>
@@ -1119,7 +1119,7 @@ const UniversalLanguageCard: React.FC = () => {
 
       {/* ── Sticky bottom nav ────────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-paper-50/95 border-t border-wood-200 backdrop-blur-sm">
-        <div className="flex items-stretch h-14">
+        <div className="flex items-stretch h-11">
 
           {/* Prev — icon inside the link */}
           {prevCardNum !== null ? (() => {
@@ -1128,17 +1128,17 @@ const UniversalLanguageCard: React.FC = () => {
               <Link
                 to={`/oracle/universal-language/${prevCardNum}`}
                 state={{ ritual: true }}
-                className="flex items-center gap-3 pl-3 pr-4 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+                className="flex items-center gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 {c && (
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)'}}>{c.iching.lower_trigram.symbol}</span>
+                    <span className="text-[14px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-[14px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">← Prev</p>
-                  <p className="font-sans text-xs text-wood-700 leading-tight truncate">{c?.card_name}</p>
+                  <p className="font-label text-[8px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Prev</p>
+                  <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
               </Link>
             );
@@ -1146,10 +1146,10 @@ const UniversalLanguageCard: React.FC = () => {
 
           <Link
             to="/oracle/universal-language"
-            className="flex flex-col items-center justify-center px-5 border-x border-wood-200 flex-shrink-0 hover:bg-wood-50 transition-colors"
+            className="flex flex-col items-center justify-center px-3.5 border-x border-wood-200 flex-shrink-0 hover:bg-wood-50 transition-colors"
           >
-            <span className="font-serif text-[22px] font-semibold text-wood-700 leading-none">{card.number}</span>
-            <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mt-1">All 64</span>
+            <span className="font-serif text-[17px] font-semibold text-wood-700 leading-none">{card.number}</span>
+            <span className="font-label text-[8px] uppercase tracking-[0.16em] text-wood-400 mt-[3px]">All 64</span>
           </Link>
 
           {/* Next — icon inside the link */}
@@ -1159,16 +1159,16 @@ const UniversalLanguageCard: React.FC = () => {
               <Link
                 to={`/oracle/universal-language/${nextCardNum}`}
                 state={{ ritual: true }}
-                className="flex items-center justify-end gap-3 pl-4 pr-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+                className="flex items-center justify-end gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 <div className="min-w-0 text-right">
-                  <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">Next →</p>
-                  <p className="font-sans text-xs text-wood-700 leading-tight truncate">{c?.card_name}</p>
+                  <p className="font-label text-[8px] uppercase tracking-[0.14em] text-wood-400 leading-none">Next →</p>
+                  <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)'}}>{c.iching.lower_trigram.symbol}</span>
+                    <span className="text-[14px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-[14px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
                   </div>
                 )}
               </Link>
