@@ -56,6 +56,7 @@ export interface CardSynthesis {
   number: number;
   card_name: string;
   ring_name: string;
+  keywords?: string[];
   reference?: SynthesisReference;
   synthesis: {
     iching: SynthesisIching;

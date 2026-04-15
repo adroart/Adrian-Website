@@ -572,9 +572,9 @@ const UniversalLanguageCard: React.FC = () => {
                 <h1 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.15]">{card.card_name}</h1>
                 <span className="font-serif text-xl text-wood-400 flex-shrink-0 leading-[1.3] mt-0.5">{card.number}</span>
               </div>
-              {expanded?.keywords && expanded.keywords.length > 0 && (
+              {(synthesis?.keywords ?? expanded?.keywords ?? []).length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {expanded.keywords.map((kw, i) => (
+                  {(synthesis?.keywords ?? expanded?.keywords ?? []).map((kw, i) => (
                     <span
                       key={i}
                       className="font-sans text-xs text-wood-600 bg-wood-50 border border-wood-200 rounded-full px-3 py-1 leading-none tracking-wide"
