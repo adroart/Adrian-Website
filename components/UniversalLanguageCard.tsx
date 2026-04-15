@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
+import { getSynthesis } from '../data/synthesisData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -47,6 +48,44 @@ const CARD_SHADOW      = 'shadow-[0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba
 const CARD_SHADOW_DEEP = 'shadow-[0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.7)]';
 // Light-section card shadows (Gene Keys) — warm paper drop shadow
 const CARD_SHADOW_LIGHT = 'shadow-[0_4px_16px_rgba(60,44,22,0.1),0_1px_3px_rgba(60,44,22,0.06)]';
+
+/* ─── Reference bar lookups ──────────────────────────────────────────────── */
+
+const ASTRO_SYMBOLS: Record<string, string> = {
+  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋',
+  Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏',
+  Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
+};
+
+const HEBREW_CHARS: Record<string, string> = {
+  Aleph: 'א', Beth: 'ב', Gimel: 'ג', Daleth: 'ד', He: 'ה', Vau: 'ו',
+  Zayin: 'ז', Cheth: 'ח', Teth: 'ט', Yod: 'י', Kaph: 'כ', Lamed: 'ל',
+  Mem: 'מ', Nun: 'נ', Samech: 'ס', Ayin: 'ע', Pe: 'פ', Tzaddi: 'צ',
+  Qoph: 'ק', Resh: 'ר', Shin: 'ש', Tau: 'ת',
+};
+
+/* ─── Reference strip SVG icons ─────────────────────────────────────────── */
+
+const IconHexagram = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </svg>
+);
+const IconGate = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+const IconPath = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/>
+  </svg>
+);
+const IconBody = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>
+  </svg>
+);
 
 /* ─── Image helpers ──────────────────────────────────────────────────────── */
 
@@ -290,8 +329,9 @@ const UniversalLanguageCard: React.FC = () => {
   const location   = useLocation();
 
   const cardNum  = parseInt(number ?? '', 10);
-  const card     = CARD_BY_NUMBER.get(cardNum);
-  const expanded = getExpandedCard(cardNum);
+  const card      = CARD_BY_NUMBER.get(cardNum);
+  const expanded  = getExpandedCard(cardNum);
+  const synthesis = getSynthesis(cardNum);
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [copied,       setCopied]       = useState(false);
@@ -526,18 +566,18 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-8 pb-0">
-            {/* Info box — card name + code, keywords, connected directly to section nav */}
-            <div className="card-grain bg-paper-100 border-x border-t border-wood-200/60 px-5 py-6">
-              <div className="flex items-baseline justify-between gap-4 mb-4">
-                <h1 className="font-serif text-2xl text-wood-900 font-semibold leading-[1.2]">{card.card_name}</h1>
-                <span className="font-sans text-[17px] text-wood-800 leading-[1.7] flex-shrink-0">{card.number}</span>
+            {/* Info box */}
+            <div className="rounded-t-2xl border-x border-t border-wood-200/60 bg-paper-50 px-5 pt-6 pb-5">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.15]">{card.card_name}</h1>
+                <span className="font-serif text-xl text-wood-400 flex-shrink-0 leading-[1.3] mt-0.5">{card.number}</span>
               </div>
               {expanded?.keywords && expanded.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {expanded.keywords.map((kw, i) => (
                     <span
                       key={i}
-                      className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
+                      className="font-sans text-xs text-wood-600 bg-wood-50 border border-wood-200 rounded-full px-3 py-1 leading-none tracking-wide"
                     >
                       {kw}
                     </span>
@@ -549,71 +589,95 @@ const UniversalLanguageCard: React.FC = () => {
 
           <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-0 pb-14">
 
-            {/* Island — Section nav, connected flush below the info box */}
-            <div className="rounded-b-2xl overflow-hidden border border-wood-200/40 mb-3 divide-y divide-wood-200/50 shadow-[0_4px_16px_rgba(60,44,22,0.09)]">
-              <button onClick={() => go('iching')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-400 bg-stone-50 hover:bg-stone-100 px-5 py-4 text-left transition-colors">
-                <div className="min-w-0">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">I Ching</p>
-                  <p className="font-sans text-xs text-stone-400 mb-1.5">{card.iching.hexagram_name}</p>
-                  <p className="font-sans text-[15px] text-wood-800 leading-[1.7]">{ichingHighlight}</p>
-                </div>
-                <span className="text-stone-400 group-hover:text-stone-600 transition-colors flex-shrink-0 text-sm">→</span>
-              </button>
-              {/* Gene Keys — header + 3 state cells (Shadow / Gift / Siddhi)
-                  matching the section's bronze accent. Each cell jumps to its
-                  gene-key card. Header → top of Gene Keys section. */}
-              <div className="border-l-[3px] border-bronze-400 bg-bronze-50">
-                <button
-                  onClick={() => go('genekeys')}
-                  className="group w-full flex items-center justify-between gap-4 px-5 pt-4 pb-2 text-left hover:bg-bronze-100/60 transition-colors"
-                >
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500">Gene Keys</p>
-                  <span className="text-bronze-400 group-hover:text-bronze-600 transition-colors flex-shrink-0 text-sm">→</span>
-                </button>
-                <div className="grid grid-cols-3 gap-2 px-3 pb-3 pt-1">
-                  <button
-                    onClick={() => go('genekey-shadow')}
-                    className="group rounded-lg border border-stone-300/60 bg-[#eae8e5] dark:bg-[#2a2825] px-2.5 py-2.5 text-left hover:border-stone-400 transition-colors"
-                  >
-                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone-500 mb-1">Shadow</p>
-                    <p className="font-sans text-xs text-stone-800 leading-[1.4] group-hover:text-stone-900 transition-colors">{card.gene_keys.shadow}</p>
-                  </button>
-                  <button
-                    onClick={() => go('genekey-gift')}
-                    className="group rounded-lg border border-bronze-300/60 bg-[#faf5ee] dark:bg-[#2a231a] px-2.5 py-2.5 text-left hover:border-bronze-400 transition-colors"
-                  >
-                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600 mb-1">Gift</p>
-                    <p className="font-sans text-xs text-wood-800 font-medium leading-[1.4] group-hover:text-bronze-700 transition-colors">{card.gene_keys.gift}</p>
-                  </button>
-                  <button
-                    onClick={() => go('genekey-siddhi')}
-                    className="group rounded-lg border border-wood-300/60 bg-[#f8f6f2] dark:bg-[#23201d] px-2.5 py-2.5 text-left hover:border-wood-400 transition-colors"
-                  >
-                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 mb-1">Siddhi</p>
-                    <p className="font-sans text-xs text-wood-900 leading-[1.4] group-hover:text-wood-700 transition-colors">{card.gene_keys.siddhi}</p>
-                  </button>
-                </div>
-              </div>
-              {/* Human Design + Tarot — single row, divided */}
-              <div className="flex border-l-[3px] border-wood-400 bg-wood-50 divide-x divide-wood-200/60">
-                <button onClick={() => go('humandesign')} className="group flex-1 flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-wood-100/60 transition-colors">
-                  <div className="min-w-0">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-1.5">Human Design · Gate {card.human_design.gate}</p>
-                    <p className="font-sans text-[17px] text-wood-800 leading-[1.7]">{card.human_design.keyword}</p>
+            {/* Reference strip — section-grouped metadata, each row links to its section */}
+            {synthesis?.reference && (
+              <div className="rounded-b-2xl overflow-hidden border-x border-b border-wood-200/60 divide-y divide-wood-200/40 shadow-[0_4px_16px_rgba(60,44,22,0.09)] mb-3">
+                {/* I Ching — hexagram identity */}
+                <button onClick={() => go('iching')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-400 bg-stone-50/70 hover:bg-stone-100 px-5 py-5 text-left transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <IconHexagram />
+                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-stone-400">I Ching</span>
+                    <span className="text-stone-300" aria-hidden="true">·</span>
+                    <span className="text-[19px] text-stone-500 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                    <span className="font-sans text-[15px] text-stone-600">{card.iching.hexagram_name}</span>
+                    <span className="text-stone-300" aria-hidden="true">·</span>
+                    <span className="font-mono text-sm text-stone-400 tracking-widest">{synthesis.reference.binary}</span>
                   </div>
-                  <span className="text-wood-400 group-hover:text-wood-600 transition-colors flex-shrink-0 text-sm">→</span>
+                  <span className="text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0">→</span>
                 </button>
-                {card.ring_tarot && (
-                  <button onClick={() => go('connections')} className="group flex-1 flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-wood-100/60 transition-colors">
-                    <div className="min-w-0">
-                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-1.5">Tarot · {card.ring_name}</p>
-                      <p className="font-sans text-[15px] text-wood-800 leading-[1.7]">{card.ring_tarot}</p>
-                    </div>
-                    <span className="text-wood-300 group-hover:text-wood-600 transition-colors flex-shrink-0 text-sm">→</span>
-                  </button>
-                )}
+
+                {/* Gene Keys — shadow, gift, siddhi */}
+                <button onClick={() => go('genekeys')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-bronze-400 bg-bronze-50/70 hover:bg-bronze-100 px-5 py-5 text-left transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22V12M12 12L4 7M12 12l8-5M4 7V17l8 5 8-5V7L12 2 4 7z"/></svg>
+                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-500">Gene Keys</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-stone-600">{card.gene_keys.shadow}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-bronze-600 font-medium">{card.gene_keys.gift}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-600">{card.gene_keys.siddhi}</span>
+                  </div>
+                  <span className="text-bronze-300 group-hover:text-bronze-500 transition-colors flex-shrink-0">→</span>
+                </button>
+
+                {/* Human Design — center, circuit, harmonic */}
+                <button onClick={() => go('humandesign')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-wood-400 bg-wood-50/70 hover:bg-wood-100 px-5 py-5 text-left transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <IconGate />
+                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400">Human Design</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-700">{synthesis.reference.hd_center} Center</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-600">{synthesis.reference.hd_circuit}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-500">{synthesis.reference.hd_harmonic_gate}</span>
+                  </div>
+                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                </button>
+
+                {/* Tarot / Kabbalah — card, path, astrology, Hebrew */}
+                <button onClick={() => go('connections')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-wood-400 bg-wood-50/70 hover:bg-wood-100 px-5 py-5 text-left transition-colors">
+                  <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                    <IconPath />
+                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-500">Tarot</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-700">{synthesis.reference.tarot_card}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-600">{synthesis.reference.astrology}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-[15px] text-wood-600">{HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter}</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-sm text-wood-400">Path {synthesis.reference.path}</span>
+                  </div>
+                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                </button>
+
+                {/* Body — physiology, amino acid, programming partner */}
+                <button onClick={() => go('connections')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-300 bg-paper-100/80 hover:bg-paper-100 px-5 py-5 text-left transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+                    <IconBody />
+                    <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-400">Body</span>
+                    <span className="text-wood-300" aria-hidden="true">·</span>
+                    <span className="font-sans text-sm text-wood-700">{synthesis.reference.body_physiology}</span>
+                    {synthesis.reference.body_amino_acid && (
+                      <>
+                        <span className="text-wood-300" aria-hidden="true">·</span>
+                        <span className="font-sans text-sm text-wood-600">{synthesis.reference.body_amino_acid}</span>
+                      </>
+                    )}
+                    {synthesis.reference.programming_partner && (
+                      <>
+                        <span className="text-wood-300" aria-hidden="true">·</span>
+                        <span className="font-sans text-xs text-wood-400">Partner Key {synthesis.reference.programming_partner}</span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-wood-300 group-hover:text-wood-500 transition-colors flex-shrink-0">→</span>
+                </button>
               </div>
-            </div>
+            )}
+
 
 
 
@@ -671,8 +735,41 @@ const UniversalLanguageCard: React.FC = () => {
               })()}
             </div>
 
-            {/* Island 2 — Wisdom group (all three Expands in one card) */}
-            {expanded && (
+            {/* Island 2 — Synthesis reading (trigram combination + prose) */}
+            {synthesis && (
+              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 space-y-5 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
+                <p className="font-sans text-[15px] text-stone-300 leading-[1.9] italic">{synthesis.synthesis.iching.trigram_combination}</p>
+                <div className="border-t border-stone-700/40 pt-5 space-y-4">
+                  {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
+                    <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
+                  ))}
+                </div>
+                {(synthesis.synthesis.iching.judgement_lines.length > 0 || synthesis.synthesis.iching.image_lines.length > 0) && (
+                  <div className="border-t border-stone-700/40 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {synthesis.synthesis.iching.judgement_lines.length > 0 && (
+                      <div>
+                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Judgement</p>
+                        {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
+                          <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
+                        ))}
+                      </div>
+                    )}
+                    {synthesis.synthesis.iching.image_lines.length > 0 && (
+                      <div>
+                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Image</p>
+                        {synthesis.synthesis.iching.image_lines.map((line, i) => (
+                          <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Island 3 — Wisdom group (only when no synthesis) */}
+            {!synthesis && expanded && (
               <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
                 <Expand
                   label="Overview"
@@ -746,8 +843,8 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            {/* Island 3 — Reflection (always visible, bronze accent) */}
-            {expanded && (
+            {/* Island 4 — Reflection (only when no synthesis) */}
+            {!synthesis && expanded && (
               <div className={`rounded-2xl border border-bronze-800/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(30, 22, 12, 0.75)' }}>
                 {/* Bronze accent bar */}
                 <div className="h-[3px] w-full bg-bronze-400" />
@@ -788,13 +885,39 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Islands 2–4 — Shadow, Gift, Siddhi */}
-            {expanded ? (
+            {/* Islands 2–4 — synthesis readings, GeneKeyCards, or fallback description */}
+            {synthesis ? (
+              <>
+                <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-6 ${CARD_SHADOW_LIGHT}`}>
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500">Reading</p>
+                  {[
+                    { label: 'Shadow', color: 'text-stone-500', text: synthesis.synthesis.gene_keys.shadow },
+                    { label: 'Repressive', color: 'text-stone-400', text: synthesis.synthesis.gene_keys.repressive },
+                    { label: 'Reactive', color: 'text-stone-400', text: synthesis.synthesis.gene_keys.reactive },
+                    { label: 'Gift', color: 'text-bronze-600', text: synthesis.synthesis.gene_keys.gift },
+                    { label: 'Siddhi', color: 'text-wood-600', text: synthesis.synthesis.gene_keys.siddhi },
+                    { label: 'Programming Partner', color: 'text-wood-400', text: synthesis.synthesis.gene_keys.programming_partner },
+                  ].map(({ label, color, text }) => (
+                    <div key={label} className="border-t border-wood-100 pt-5 first:border-0 first:pt-0">
+                      <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${color} mb-3`}>{label}</p>
+                      <div className="space-y-4">
+                        {text.split('\n\n').filter(Boolean).map((p, i) => (
+                          <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.8] italic">
+                  Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
+                  <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-wood-600 transition-colors">genekeys.com</a>
+                </p>
+              </>
+            ) : expanded ? (
               <>
                 <GeneKeyCard tone="shadow" level={expanded.gene_keys.shadow} id="genekey-shadow" />
                 <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift" />
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
-
                 <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.8] italic">
                   Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
                   <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-wood-600 transition-colors">genekeys.com</a>
@@ -822,15 +945,38 @@ const UniversalLanguageCard: React.FC = () => {
               <h2 className="font-serif text-3xl text-stone-100 font-semibold leading-[1.2] mb-1">{card.human_design.keyword}</h2>
             </div>
 
-            {/* Description */}
-            <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-              <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.human_design.description}</p>
-              {card.traditional_colors && (
-                <p className="font-sans text-sm text-stone-400 leading-[1.8] mt-5 pt-5 border-t border-stone-700/50">
-                  {card.traditional_colors}
-                </p>
-              )}
-            </div>
+            {/* Description (only when no synthesis) */}
+            {!synthesis && (
+              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.human_design.description}</p>
+                {card.traditional_colors && (
+                  <p className="font-sans text-sm text-stone-400 leading-[1.8] mt-5 pt-5 border-t border-stone-700/50">
+                    {card.traditional_colors}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Synthesis HD reading */}
+            {synthesis && (
+              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 space-y-5 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
+                {[
+                  { label: 'The Gate', text: synthesis.synthesis.human_design.gate },
+                  { label: 'The Channel', text: synthesis.synthesis.human_design.channel },
+                  { label: 'The Circuit', text: synthesis.synthesis.human_design.circuit },
+                ].map(({ label, text }) => (
+                  <div key={label} className="border-t border-stone-700/40 pt-5 first:border-0 first:pt-0">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">{label}</p>
+                    <div className="space-y-4">
+                      {text.split('\n\n').filter(Boolean).map((p, i) => (
+                        <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Tarot — codon ring connection */}
             {card.ring_tarot && (
@@ -920,6 +1066,44 @@ const UniversalLanguageCard: React.FC = () => {
             ) : (
               <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
                 <p className="font-sans text-sm text-wood-500 leading-[1.8]">Connection data will be available soon.</p>
+              </div>
+            )}
+
+            {/* Tarot resonance */}
+            {synthesis && (
+              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-5 ${CARD_SHADOW_LIGHT}`}>
+                <div>
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-2">Tarot · {card.ring_name}</p>
+                  <p className="font-sans text-sm text-wood-600 leading-[1.8]">{synthesis.synthesis.tarot.ring_role}</p>
+                </div>
+                <div className="border-t border-wood-100 pt-5 space-y-4">
+                  {synthesis.synthesis.tarot.tarot_resonance.split('\n\n').filter(Boolean).map((p, i) => (
+                    <p key={i} className="font-serif text-[17px] text-wood-800 leading-[1.9]">{p}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Body */}
+            {synthesis && (
+              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-5 ${CARD_SHADOW_LIGHT}`}>
+                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400">Body</p>
+                <div>
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-3">Physiology</p>
+                  <div className="space-y-4">
+                    {synthesis.synthesis.body.physiology.split('\n\n').filter(Boolean).map((p, i) => (
+                      <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
+                    ))}
+                  </div>
+                </div>
+                <div className="border-t border-wood-100 pt-5">
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-3">Amino Acid</p>
+                  <div className="space-y-4">
+                    {synthesis.synthesis.body.amino_acid.split('\n\n').filter(Boolean).map((p, i) => (
+                      <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
