@@ -44,7 +44,41 @@ function escapeHtml(str) {
 }
 
 function buildEmailHtml(data) {
-  const { name, email, commissionType, vision, budget, timeline, referral } = data;
+  const { name, email, commissionType, vision, budget, timeline, referral,
+          inquiryType, pieceTitle, purchaseSize, purchaseAddOns, purchaseAvailability, purchasePrice } = data;
+
+  const isPurchase = inquiryType === 'purchase';
+
+  if (isPurchase) {
+    const rows = [
+      ['Name', name],
+      ['Email', email],
+      ['Piece', pieceTitle || '—'],
+    ];
+    if (purchaseSize) rows.push(['Size', purchaseSize]);
+    if (purchaseAddOns && purchaseAddOns.length) rows.push(['Add-ons', purchaseAddOns.join(', ')]);
+    if (purchaseAvailability) rows.push(['Availability', purchaseAvailability]);
+    if (purchasePrice) rows.push(['Price', purchasePrice]);
+
+    const tableRows = rows
+      .map(
+        ([label, value]) =>
+          `<tr><td style="padding:8px 12px;font-weight:600;color:#5c4a3a;white-space:nowrap;vertical-align:top">${escapeHtml(label)}</td><td style="padding:8px 12px;color:#3d3024">${escapeHtml(value)}</td></tr>`
+      )
+      .join('');
+
+    return `
+<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#3d3024">
+  <h2 style="font-size:22px;font-weight:400;margin-bottom:24px">New Purchase Request</h2>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+    ${tableRows}
+  </table>
+  ${vision ? `<div style="border-top:1px solid #d4c8b8;padding-top:20px">
+    <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:0.15em;color:#5c4a3a;margin-bottom:12px">Notes</h3>
+    <p style="line-height:1.7;white-space:pre-wrap">${escapeHtml(vision)}</p>
+  </div>` : ''}
+</div>`.trim();
+  }
 
   const rows = [
     ['Name', name],
@@ -104,8 +138,9 @@ export async function onRequestPost(context) {
   }
 
   // Validate required fields
-  const { name, email, vision, commissionType } = body;
-  if (!name || !email || !vision || !commissionType) {
+  const { name, email, vision, commissionType, inquiryType } = body;
+  const isPurchase = inquiryType === 'purchase';
+  if (!name || !email || (!isPurchase && (!vision || !commissionType))) {
     return new Response(
       JSON.stringify({ error: 'Please fill in all required fields.' }),
       { status: 400, headers: corsHeaders }
@@ -133,7 +168,9 @@ export async function onRequestPost(context) {
       from: `Adrian Rasmussen Art <${fromEmail}>`,
       to: [toEmail],
       reply_to: email,
-      subject: `Commission Inquiry from ${name} (${commissionType})`,
+      subject: isPurchase
+        ? `Purchase Request from ${name} — ${body.pieceTitle || 'Piece'}`
+        : `Commission Inquiry from ${name} (${commissionType})`,
       html: buildEmailHtml(body),
     }),
   });

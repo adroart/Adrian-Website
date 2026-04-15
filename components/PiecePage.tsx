@@ -893,7 +893,19 @@ const PiecePage: React.FC = () => {
                                 ) : (
                                 <Link
                                     to="/inquire"
-                                    state={{ piece: art.title, pieceId: art.id }}
+                                    state={{
+                                        piece: art.title,
+                                        pieceId: art.id,
+                                        mode: 'purchase',
+                                        price: formatPrice(mtoTotal),
+                                        size: selectedSize,
+                                        addOns: [
+                                            ...(addCrystals ? [`Crystals (+${formatPrice(crystalsPrice)})`] : []),
+                                            ...(addWoodFrame ? [`Wood frame (+${formatPrice(woodFramePrice)})`] : []),
+                                            ...(addIllumination ? [`Illumination (+${formatPrice(illuminationPrice)})`] : []),
+                                        ],
+                                        availability: selectedIsInStock ? 'Ready to ship' : 'Made to order',
+                                    }}
                                     className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
                                 >
                                     Request to Purchase
@@ -934,7 +946,13 @@ const PiecePage: React.FC = () => {
                                 ) : (
                                 <Link
                                     to="/inquire"
-                                    state={{ piece: art.title, pieceId: art.id }}
+                                    state={{
+                                        piece: art.title,
+                                        pieceId: art.id,
+                                        mode: 'purchase',
+                                        price: art.price != null ? formatPrice(art.price) : '',
+                                        availability: 'Ready to ship',
+                                    }}
                                     className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3"
                                 >
                                     Request to Purchase
@@ -960,7 +978,13 @@ const PiecePage: React.FC = () => {
                                 </div>
                                 <Link
                                     to="/inquire"
-                                    state={{ piece: art.title, pieceId: art.id }}
+                                    state={{
+                                        piece: art.title,
+                                        pieceId: art.id,
+                                        mode: 'purchase',
+                                        price: art.price != null ? `From ${formatPrice(art.price)}` : '',
+                                        availability: 'Made to order',
+                                    }}
                                     className="w-full min-h-[52px] py-4 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center justify-center gap-3"
                                 >
                                     Commission This Piece <ArrowRight size={14} />
@@ -1070,7 +1094,24 @@ const PiecePage: React.FC = () => {
                     ) : (
                         <Link
                             to="/inquire"
-                            state={{ piece: art.title, pieceId: art.id }}
+                            state={art.availability === 'SOLD'
+                                ? { piece: art.title, pieceId: art.id }
+                                : {
+                                    piece: art.title,
+                                    pieceId: art.id,
+                                    mode: 'purchase',
+                                    price: hasVariants ? formatPrice(mtoTotal) : (art.price != null ? formatPrice(art.price) : ''),
+                                    size: hasVariants ? selectedSize : undefined,
+                                    addOns: hasVariants ? [
+                                        ...(addCrystals ? [`Crystals (+${formatPrice(crystalsPrice)})`] : []),
+                                        ...(addWoodFrame ? [`Wood frame (+${formatPrice(woodFramePrice)})`] : []),
+                                        ...(addIllumination ? [`Illumination (+${formatPrice(illuminationPrice)})`] : []),
+                                    ] : [],
+                                    availability: hasVariants
+                                        ? (selectedIsInStock ? 'Ready to ship' : 'Made to order')
+                                        : (art.availability === 'READY_TO_SHIP' ? 'Ready to ship' : 'Made to order'),
+                                }
+                            }
                             className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center"
                         >
                             {art.availability === 'SOLD' ? 'Commission' : 'Request to Purchase'}

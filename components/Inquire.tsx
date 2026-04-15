@@ -3,6 +3,9 @@ import { useLocation, Link } from 'react-router-dom';
 import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 
+// Update this with your actual WhatsApp number (international format, no + or spaces, e.g. 6281234567890)
+const WHATSAPP_NUMBER = ''; // TODO: add your number here
+
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';
 
@@ -151,12 +154,33 @@ const Inquire: React.FC = () => {
   const [prefilled, setPrefilled] = useState(false);
   const [pieceTitle, setPieceTitle] = useState('');
 
+  const routerState = routerLocation.state as {
+    piece?: string;
+    pieceId?: string;
+    mode?: 'purchase';
+    price?: string;
+    size?: string;
+    addOns?: string[];
+    availability?: string;
+  } | null;
+
+  const purchaseMode = routerState?.mode === 'purchase';
+  const purchasePrice = routerState?.price ?? '';
+  const purchaseSize = routerState?.size ?? '';
+  const purchaseAddOns = routerState?.addOns ?? [];
+  const purchaseAvailability = routerState?.availability ?? '';
+
   useEffect(() => {
-    const piece = (routerLocation.state as { piece?: string } | null)?.piece;
+    const piece = routerState?.piece;
     if (piece) {
-      const prefillText = `I'm interested in a piece similar to "${piece}".`;
+      let prefillText: string;
+      if (routerState?.mode === 'purchase') {
+        prefillText = ''; // Notes field stays empty; purchase details shown in the summary card
+      } else {
+        prefillText = `I'm interested in a piece similar to "${piece}".`;
+      }
       setForm(prev => ({ ...prev, vision: prefillText }));
-      setPrefilled(true);
+      setPrefilled(routerState?.mode !== 'purchase');
       setPieceTitle(piece);
       requestAnimationFrame(() => {
         if (visionRef.current) {
@@ -169,6 +193,7 @@ const Inquire: React.FC = () => {
         }, 400);
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerLocation.state]);
 
   const handleVisionFocus = () => {
@@ -216,7 +241,7 @@ const Inquire: React.FC = () => {
     if (field === 'name' && !value.trim()) return 'Please enter your name';
     if (field === 'email' && !value.trim()) return 'Please enter your email';
     if (field === 'email' && !isValidEmail(value)) return 'Please enter a valid email';
-    if (field === 'vision' && !value.trim()) return 'Please share your vision';
+    if (field === 'vision' && !purchaseMode && !value.trim()) return 'Please share your vision';
     return null;
   };
 
@@ -268,7 +293,7 @@ const Inquire: React.FC = () => {
   const requiredCount = [
     form.name.trim(),
     form.email.trim() && isValidEmail(form.email),
-    form.vision.trim(),
+    purchaseMode || form.vision.trim(),
   ].filter(Boolean).length;
 
   const requiredValid = requiredCount === 3;
@@ -285,17 +310,29 @@ const Inquire: React.FC = () => {
 
   /* ── Submit ───────────────────────────────────────────────────────── */
   const buildMailtoFallback = () => {
-    const subject = encodeURIComponent(
-      `Commission Inquiry — ${COMMISSION_PATHS[form.commissionType].label}`,
-    );
-    const parts = [
-      `Name: ${form.name}`,
-      `Email: ${form.email}`,
-      '',
-      `Commission type: ${form.commissionType}`,
-      '',
-      `Vision: ${form.vision}`,
-    ];
+    const subject = purchaseMode
+      ? encodeURIComponent(`Purchase Request — ${pieceTitle}`)
+      : encodeURIComponent(`Commission Inquiry — ${COMMISSION_PATHS[form.commissionType].label}`);
+    const parts = purchaseMode
+      ? [
+          `Name: ${form.name}`,
+          `Email: ${form.email}`,
+          '',
+          `Piece: ${pieceTitle}`,
+          ...(purchaseSize ? [`Size: ${purchaseSize}`] : []),
+          ...(purchaseAddOns.length ? [`Add-ons: ${purchaseAddOns.join(', ')}`] : []),
+          ...(purchaseAvailability ? [`Availability: ${purchaseAvailability}`] : []),
+          ...(purchasePrice ? [`Price: ${purchasePrice}`] : []),
+          ...(form.vision ? ['', `Notes: ${form.vision}`] : []),
+        ]
+      : [
+          `Name: ${form.name}`,
+          `Email: ${form.email}`,
+          '',
+          `Commission type: ${form.commissionType}`,
+          '',
+          `Vision: ${form.vision}`,
+        ];
     if (form.budget) parts.push(`Budget: ${form.budget}`);
     if (form.location) parts.push(`Location: ${form.location}`);
     if (form.sizeRange) parts.push(`Approximate size: ${form.sizeRange}`);
@@ -309,7 +346,7 @@ const Inquire: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched(prev => ({ ...prev, name: true, email: true, vision: true }));
+    setTouched(prev => ({ ...prev, name: true, email: true, ...(!purchaseMode && { vision: true }) }));
     if (!requiredValid) return;
     setSendStatus('SENDING');
     setErrorMsg('');
@@ -318,7 +355,18 @@ const Inquire: React.FC = () => {
       const res = await fetch('/api/inquire', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(purchaseMode
+          ? {
+              ...form,
+              inquiryType: 'purchase',
+              pieceTitle,
+              purchaseSize,
+              purchaseAddOns,
+              purchaseAvailability,
+              purchasePrice,
+            }
+          : form
+        ),
       });
       if (res.ok) {
         setSubmitted(true);
@@ -399,6 +447,8 @@ const Inquire: React.FC = () => {
     >
       {sendStatus === 'SENDING' ? (
         <span className="animate-pulse">Sending...</span>
+      ) : purchaseMode ? (
+        <>Send purchase request <ArrowRight size={13} /></>
       ) : (
         <>Start the conversation <ArrowRight size={13} /></>
       )}
@@ -453,7 +503,8 @@ const Inquire: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Commission Path Cards (scroll-reveal) ─────────────────── */}
+        {/* ── Commission Path Cards + Testimonials (commission mode only) */}
+        {!purchaseMode && (<>
         <div ref={cardsReveal.ref} className={cardsReveal.cls}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {(Object.keys(COMMISSION_PATHS) as CommissionType[]).map((type) => {
@@ -532,6 +583,7 @@ const Inquire: React.FC = () => {
             </p>
           </div>
         </div>
+        </>)}
 
         {/* ── Form ──────────────────────────────────────────────────── */}
         <div ref={formReveal.ref} className={formReveal.cls}>
@@ -551,13 +603,19 @@ const Inquire: React.FC = () => {
                     <CheckCircle className="text-bronze-600" size={32} strokeWidth={1.5} />
                   </div>
                   <h4 className="font-serif text-3xl text-wood-900 mb-4 font-medium">
-                    The conversation has begun.
+                    {purchaseMode ? 'Purchase request received.' : 'The conversation has begun.'}
                   </h4>
                   <p className="font-serif text-xl text-wood-700 leading-[1.7] mb-2">
-                    {chosenPath.successMsg}
+                    {purchaseMode
+                      ? `Your request for "${pieceTitle}" is on its way to Bali.`
+                      : chosenPath.successMsg
+                    }
                   </p>
                   <p className="font-serif text-wood-600 leading-[1.7] mb-10">
-                    I'll be in touch within a few days.
+                    {purchaseMode
+                      ? 'I will confirm the details and follow up with next steps within a couple of days.'
+                      : "I'll be in touch within a few days."
+                    }
                   </p>
                   <div className="border-t border-wood-200 pt-8 mb-8">
                     <p className="font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold mb-4">
@@ -597,9 +655,42 @@ const Inquire: React.FC = () => {
                   {/* The form card */}
                   <div className="bg-wood-50 border border-wood-100 p-10 md:p-16">
 
-                    {/* ── Header: two paths depending on context ─────────── */}
-                    {pieceTitle ? (
-                      /* Prefilled: piece title IS the heading */
+                    {/* ── Header: purchase, prefilled commission, or open ─── */}
+                    {purchaseMode && pieceTitle ? (
+                      /* Purchase mode: piece summary card */
+                      <div className="mb-8">
+                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mb-4">
+                          Purchase request
+                        </p>
+                        <div className="border border-wood-200 bg-white p-5 mb-2 space-y-2">
+                          <p className="font-serif text-xl text-wood-900 leading-[1.3]">{pieceTitle}</p>
+                          {purchaseSize && (
+                            <p className="font-sans text-sm text-wood-600">
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Size</span>
+                              {purchaseSize}
+                            </p>
+                          )}
+                          {purchaseAddOns.length > 0 && (
+                            <p className="font-sans text-sm text-wood-600">
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Add-ons</span>
+                              {purchaseAddOns.join(', ')}
+                            </p>
+                          )}
+                          {purchaseAvailability && (
+                            <p className="font-sans text-sm text-wood-600">
+                              <span className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-400 font-semibold mr-2">Availability</span>
+                              {purchaseAvailability}
+                            </p>
+                          )}
+                          {purchasePrice && (
+                            <p className="font-serif text-2xl text-wood-900 font-medium pt-1">
+                              {purchasePrice}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : pieceTitle ? (
+                      /* Prefilled commission: piece title IS the heading */
                       <div className="mb-[6px]">
                         <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mb-3">
                           Commission inquiry
@@ -630,21 +721,19 @@ const Inquire: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ── Vision ────────────────────────────────────────── */}
+                    {/* ── Vision / Notes ────────────────────────────────── */}
                     <div className="mb-[6px]">
-                      {!pieceTitle && (
-                        <label
-                          htmlFor="field-vision"
-                          className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
-                        >
-                          What wants to exist?
-                        </label>
-                      )}
+                      <label
+                        htmlFor="field-vision"
+                        className="block font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold mb-2"
+                      >
+                        {purchaseMode ? 'Notes or questions' : (!pieceTitle ? 'What wants to exist?' : null)}
+                      </label>
                       <textarea
                         ref={visionRef}
                         name="vision"
                         id="field-vision"
-                        rows={1}
+                        rows={purchaseMode ? 3 : 1}
                         value={form.vision}
                         onChange={handleVisionChange}
                         onFocus={() => {
@@ -654,8 +743,8 @@ const Inquire: React.FC = () => {
                         onBlur={() => handleBlur('vision')}
                         aria-describedby={getFieldError('vision') ? 'vision-error' : undefined}
                         className={`w-full bg-transparent border-b-2 pb-[6px] outline-none font-sans text-base resize-none overflow-hidden transition-colors duration-300 leading-relaxed text-wood-700 ${fieldBorderClass('vision')}`}
-                        placeholder="A piece for my meditation space, something that holds stillness..."
-                        required
+                        placeholder={purchaseMode ? 'Shipping address, questions, or any special requests...' : 'A piece for my meditation space, something that holds stillness...'}
+                        required={!purchaseMode}
                       />
                       {getFieldError('vision') && (
                         <p id="vision-error" role="alert" className="font-sans text-sm text-red-700 mt-1.5 animate-fade-in">
@@ -729,29 +818,60 @@ const Inquire: React.FC = () => {
                       {errorBlock}
                       {submitBtn}
                       <div className="mt-4 flex flex-col gap-2">
-                        <p className="font-sans text-sm text-wood-400">
-                          Or write directly:{' '}
-                          <a
-                            href="mailto:hello@adrianrasmussen.com"
-                            className="text-bronze-400 hover:text-bronze-600 transition-colors"
-                          >
-                            hello@adrianrasmussen.com
-                          </a>
-                        </p>
-                        {pieceTitle && (
-                          <button
-                            type="button"
-                            onClick={() => handleCommissionType(chosenPath.otherType)}
-                            className="text-left font-sans text-sm text-wood-400 hover:text-wood-600 transition-colors"
-                          >
-                            Switch to {chosenPath.otherLabel} commission instead
-                          </button>
+                        {purchaseMode ? (
+                          <div className="flex flex-col gap-1.5">
+                            <p className="font-sans text-sm text-wood-400">
+                              Or reach out directly:
+                            </p>
+                            <p className="font-sans text-sm text-wood-400">
+                              <a
+                                href="mailto:hello@adrianrasmussen.com"
+                                className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                              >
+                                hello@adrianrasmussen.com
+                              </a>
+                              {WHATSAPP_NUMBER && (
+                                <>
+                                  {' · '}
+                                  <a
+                                    href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                                  >
+                                    WhatsApp
+                                  </a>
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-sans text-sm text-wood-400">
+                              Or write directly:{' '}
+                              <a
+                                href="mailto:hello@adrianrasmussen.com"
+                                className="text-bronze-400 hover:text-bronze-600 transition-colors"
+                              >
+                                hello@adrianrasmussen.com
+                              </a>
+                            </p>
+                            {pieceTitle && (
+                              <button
+                                type="button"
+                                onClick={() => handleCommissionType(chosenPath.otherType)}
+                                className="text-left font-sans text-sm text-wood-400 hover:text-wood-600 transition-colors"
+                              >
+                                Switch to {chosenPath.otherLabel} commission instead
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
 
-                    {/* ── Optional Fields (appear when required fields are done) */}
-                    <div className={`form-reveal ${requiredValid ? 'is-open' : ''}`}>
+                    {/* ── Optional Fields (commission mode only) ────────── */}
+                    {!purchaseMode && <div className={`form-reveal ${requiredValid ? 'is-open' : ''}`}>
                       <div className="form-reveal-inner" ref={optionalRef}>
                         <div className="border-t border-wood-150 pt-8 mt-8 mb-8">
                           <div className="flex items-center gap-3 mb-2">
@@ -887,7 +1007,7 @@ const Inquire: React.FC = () => {
                           {submitBtn}
                         </div>
                       </div>
-                    </div>
+                    </div>}
                   </div>
                 </fieldset>
               </form>

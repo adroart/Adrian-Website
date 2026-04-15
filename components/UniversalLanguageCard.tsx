@@ -372,7 +372,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
 
-          {/* Image + info block — full-bleed on mobile, contained on desktop */}
+          {/* Image — full-bleed on mobile, contained on desktop */}
           <div className="md:max-w-2xl md:mx-auto">
             <figure
               className="w-full aspect-square cursor-zoom-in"
@@ -383,31 +383,12 @@ const UniversalLanguageCard: React.FC = () => {
               <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
-            {/* Info block — title box connected to painting link + share strip */}
-            <div className="border-t border-b border-wood-200/60">
-              {/* Title + keywords */}
-              <div className="card-grain bg-paper-100 px-5 py-6 border-b border-wood-200/40">
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">Code {card.number}</p>
-                <p className="font-serif text-2xl text-wood-900 font-semibold leading-[1.2] mb-4">{card.card_name}</p>
-                {/* Keywords — pill chips as tuning frequencies */}
-                {expanded?.keywords && expanded.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {expanded.keywords.map((kw, i) => (
-                      <span
-                        key={i}
-                        className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
-                      >
-                        {kw}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Painting link */}
+            {/* Painting link + Share — directly below image */}
+            <div className="border-t border-wood-200/60 divide-y divide-wood-200/40">
               {piece && (
                 <Link
                   to={`/creations/${piece.id}`}
-                  className="group flex items-center justify-between gap-3 px-5 py-3.5 bg-paper-50 hover:bg-paper-100 transition-colors border-b border-wood-200/40"
+                  className="group flex items-center justify-between gap-3 px-5 py-3.5 bg-paper-50 hover:bg-paper-100 transition-colors"
                 >
                   <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 group-hover:text-wood-800 transition-colors">
                     View the original painting
@@ -428,10 +409,32 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-4 pb-14">
+          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-0 pb-0">
+            {/* Info box — card name + code, keywords, connected directly to section nav */}
+            <div className="card-grain bg-paper-100 border-x border-t border-wood-200/60 px-5 py-6">
+              <div className="flex items-baseline justify-between gap-4 mb-4">
+                <h1 className="font-serif text-2xl text-wood-900 font-semibold leading-[1.2]">{card.card_name}</h1>
+                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 flex-shrink-0">Code {card.number}</span>
+              </div>
+              {expanded?.keywords && expanded.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {expanded.keywords.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="font-sans text-xs text-wood-600 bg-paper-50 border border-wood-200/80 rounded-full px-3 py-1 leading-none"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-            {/* Island — Section nav (each row jumps to its section) */}
-            <div className="rounded-2xl overflow-hidden border border-wood-200/40 mb-3 divide-y divide-wood-200/50 shadow-[0_4px_16px_rgba(60,44,22,0.09)]">
+          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-0 pb-14">
+
+            {/* Island — Section nav, connected flush below the info box */}
+            <div className="rounded-b-2xl overflow-hidden border border-wood-200/40 mb-3 divide-y divide-wood-200/50 shadow-[0_4px_16px_rgba(60,44,22,0.09)]">
               <button onClick={() => go('iching')} className="group w-full flex items-center justify-between gap-4 border-l-[3px] border-stone-400 bg-stone-50 hover:bg-stone-100 px-5 py-4 text-left transition-colors">
                 <div className="min-w-0">
                   <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">I Ching</p>
