@@ -567,23 +567,27 @@ const UniversalLanguageCard: React.FC = () => {
 
           <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-8 pb-0">
             {/* Info box */}
-            <div className="rounded-t-2xl border-x border-t border-wood-200/60 bg-paper-50 px-5 pt-6 pb-5">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <h1 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.15]">{card.card_name}</h1>
-                <span className="font-serif text-xl text-wood-400 flex-shrink-0 leading-[1.3] mt-0.5">{card.number}</span>
-              </div>
-              {(synthesis?.keywords ?? expanded?.keywords ?? []).length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {(synthesis?.keywords ?? expanded?.keywords ?? []).map((kw, i) => (
-                    <span
-                      key={i}
-                      className="font-sans text-xs text-wood-600 bg-wood-50 border border-wood-200 rounded-full px-3 py-1 leading-none tracking-wide"
-                    >
-                      {kw}
-                    </span>
-                  ))}
+            <div className="rounded-t-2xl border-x border-t border-wood-200/60 bg-paper-50 px-5 pt-5 pb-6">
+              {/* Title row — name left, number + hexagram right */}
+              <div className="flex items-end justify-between gap-4 mb-5">
+                <h1 className="font-serif text-[44px] text-wood-900 leading-[1.0] flex-1 min-w-0">{card.card_name}</h1>
+                <div className="flex items-end gap-2.5 flex-shrink-0 pb-0.5">
+                  <span className="font-serif text-xl text-wood-400 leading-none mb-0.5">{card.number}</span>
+                  {synthesis?.reference?.hexagram_symbol && (
+                    <span className="text-[46px] text-wood-700 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Keywords — flowing editorial text */}
+              {(() => {
+                const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
+                return kws.length > 0 ? (
+                  <p className="font-sans text-[12px] text-wood-500 leading-[1.9] tracking-[0.04em]">
+                    {kws.join('  ·  ')}
+                  </p>
+                ) : null;
+              })()}
             </div>
           </div>
 
@@ -1116,57 +1120,61 @@ const UniversalLanguageCard: React.FC = () => {
       {/* ── Sticky bottom nav ────────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-paper-50/95 border-t border-wood-200 backdrop-blur-sm">
         <div className="flex items-stretch h-14">
-          {/* Left icon — flush to edge */}
-          {(() => { const c = prevCardNum !== null ? CARD_BY_NUMBER.get(prevCardNum) : null; return c ? (
-            <div className="flex flex-col items-center justify-center flex-shrink-0 w-10 pl-2">
-              <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.upper_trigram.symbol}</span>
-              <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.lower_trigram.symbol}</span>
-            </div>
-          ) : <div className="w-10" />; })()}
 
-          {prevCardNum !== null ? (
-            <Link
-              to={`/oracle/universal-language/${prevCardNum}`}
-              className="flex items-center gap-3 px-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">← Prev</p>
-                <p className="font-sans text-xs text-wood-700 leading-tight truncate">
-                  {CARD_BY_NUMBER.get(prevCardNum)?.card_name}
-                </p>
-              </div>
-            </Link>
-          ) : <div className="flex-1" />}
+          {/* Prev — icon inside the link */}
+          {prevCardNum !== null ? (() => {
+            const c = CARD_BY_NUMBER.get(prevCardNum);
+            return (
+              <Link
+                to={`/oracle/universal-language/${prevCardNum}`}
+                state={{ ritual: true }}
+                className="flex items-center gap-3 pl-3 pr-4 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+              >
+                {c && (
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)'}}>{c.iching.lower_trigram.symbol}</span>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">← Prev</p>
+                  <p className="font-sans text-xs text-wood-700 leading-tight truncate">{c?.card_name}</p>
+                </div>
+              </Link>
+            );
+          })() : <div className="flex-1" />}
 
           <Link
             to="/oracle/universal-language"
             className="flex flex-col items-center justify-center px-5 border-x border-wood-200 flex-shrink-0 hover:bg-wood-50 transition-colors"
           >
-            <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500">{card.number}</span>
-            <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-300 mt-0.5">All 64</span>
+            <span className="font-serif text-[22px] font-semibold text-wood-700 leading-none">{card.number}</span>
+            <span className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 mt-1">All 64</span>
           </Link>
 
-          {nextCardNum !== null ? (
-            <Link
-              to={`/oracle/universal-language/${nextCardNum}`}
-              className="flex items-center justify-end gap-3 px-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
-            >
-              <div className="min-w-0 text-right">
-                <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">Next →</p>
-                <p className="font-sans text-xs text-wood-700 leading-tight truncate">
-                  {CARD_BY_NUMBER.get(nextCardNum)?.card_name}
-                </p>
-              </div>
-            </Link>
-          ) : <div className="flex-1" />}
+          {/* Next — icon inside the link */}
+          {nextCardNum !== null ? (() => {
+            const c = CARD_BY_NUMBER.get(nextCardNum);
+            return (
+              <Link
+                to={`/oracle/universal-language/${nextCardNum}`}
+                state={{ ritual: true }}
+                className="flex items-center justify-end gap-3 pl-4 pr-3 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
+              >
+                <div className="min-w-0 text-right">
+                  <p className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-500">Next →</p>
+                  <p className="font-sans text-xs text-wood-700 leading-tight truncate">{c?.card_name}</p>
+                </div>
+                {c && (
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)'}}>{c.iching.lower_trigram.symbol}</span>
+                  </div>
+                )}
+              </Link>
+            );
+          })() : <div className="flex-1" />}
 
-          {/* Right icon — flush to edge */}
-          {(() => { const c = nextCardNum !== null ? CARD_BY_NUMBER.get(nextCardNum) : null; return c ? (
-            <div className="flex flex-col items-center justify-center flex-shrink-0 w-10 pr-2">
-              <span className="text-2xl font-bold text-bronze-400 block leading-none" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.upper_trigram.symbol}</span>
-              <span className="text-2xl font-bold text-bronze-400 block leading-none -mt-2" style={{transform:'scaleX(1.6)', display:'block'}}>{c.iching.lower_trigram.symbol}</span>
-            </div>
-          ) : <div className="w-10" />; })()}
         </div>
       </div>
     </>
