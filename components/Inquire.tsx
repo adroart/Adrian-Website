@@ -375,9 +375,9 @@ const Inquire: React.FC = () => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || 'Submission failed.');
       }
-    } catch {
+    } catch (err) {
       setSendStatus('ERROR');
-      setErrorMsg('Something went wrong sending your inquiry.');
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong sending your inquiry.');
       setMailtoFallback(buildMailtoFallback());
     }
   };
