@@ -591,7 +591,7 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto px-1 sm:px-3 pt-0 pb-14">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-0 pb-14">
 
             {/* Reference strip — section-grouped metadata, each row links to its section */}
             {synthesis?.reference && (
@@ -703,7 +703,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* dark-preserve: intentionally-dark section stays dark in dark mode
             (without it, bg-stone-900 would remap to a light tone). */}
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-1 sm:px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Island 1 — Header + Trigrams */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -872,7 +872,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-1 sm:px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Island 1 — Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
@@ -941,7 +941,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
         {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-1 sm:px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {/* Header */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -1001,7 +1001,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
         <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-1 sm:px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
             {expanded ? (
               <>
