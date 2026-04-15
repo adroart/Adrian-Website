@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useContext, createContext, useCallback } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
@@ -139,9 +139,229 @@ const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({
   );
 };
 
-/* ─── Collapsible section ────────────────────────────────────────────────── */
+/* ─── Reduced motion hook ────────────────────────────────────────────────── */
+
+function usePrefersReducedMotion(): boolean {
+  const [prm, setPrm] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const m = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (e: MediaQueryListEvent) => setPrm(e.matches);
+    m.addEventListener('change', handler);
+    return () => m.removeEventListener('change', handler);
+  }, []);
+  return prm;
+}
+
+/* ─── Expand context — page-wide accordion registry ───────────────────────── */
+/* Tracks every Expand / GeneKeyCard on the page so that:
+   · section-level Expand-all / Collapse-all controls can drive them in concert
+   · deep-links (?open=…  or #id) can force a specific block open + scroll to it
+   · the reference strip can open-and-scroll a closed target
+   · reader's section mode persists in sessionStorage across prev/next card nav.      */
+
+type SectionKey = 'iching' | 'genekeys' | 'humandesign' | 'connections';
+
+interface ExpandRegistration {
+  id: string;
+  section: SectionKey;
+  defaultOpen: boolean;
+  lock?: boolean; // ignored by setSectionMode (used for Reflection)
+}
+
+interface ExpandContextValue {
+  isOpen: (id: string, section: SectionKey, defaultOpen: boolean) => boolean;
+  toggle: (id: string) => void;
+  setOpen: (id: string, open: boolean) => void;
+  setSectionMode: (section: SectionKey, mode: 'open' | 'closed') => void;
+  sectionMode: Partial<Record<SectionKey, 'open' | 'closed'>>;
+  register: (reg: ExpandRegistration) => () => void;
+  reducedMotion: boolean;
+}
+
+const ExpandContext = createContext<ExpandContextValue | null>(null);
+
+function useExpand(): ExpandContextValue {
+  const ctx = useContext(ExpandContext);
+  if (!ctx) throw new Error('Expand components must be used inside ExpandProvider');
+  return ctx;
+}
+
+const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }> = ({ storageKey, children }) => {
+  const reducedMotion = usePrefersReducedMotion();
+  const registry = useRef(new Map<string, ExpandRegistration>());
+
+  const readMode = useCallback((): Partial<Record<SectionKey, 'open' | 'closed'>> => {
+    if (typeof window === 'undefined') return {};
+    try {
+      const raw = window.sessionStorage.getItem(storageKey + ':mode');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  }, [storageKey]);
+
+  const [sectionMode, setSectionModeState] = useState<Partial<Record<SectionKey, 'open' | 'closed'>>>(() => readMode());
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+
+  // When the card changes, clear per-id overrides but rehydrate the persisted section mode.
+  useEffect(() => {
+    setOverrides({});
+    setSectionModeState(readMode());
+  }, [storageKey, readMode]);
+
+  const persistMode = (next: Partial<Record<SectionKey, 'open' | 'closed'>>) => {
+    try { window.sessionStorage.setItem(storageKey + ':mode', JSON.stringify(next)); } catch {}
+  };
+
+  const isOpen = useCallback((id: string, section: SectionKey, defaultOpen: boolean): boolean => {
+    if (id in overrides) return overrides[id];
+    const mode = sectionMode[section];
+    if (mode === 'open') return true;
+    if (mode === 'closed') {
+      // Locked items (Reflection) stay open even under Collapse-all.
+      const reg = registry.current.get(id);
+      if (reg?.lock) return true;
+      return false;
+    }
+    return defaultOpen;
+  }, [overrides, sectionMode]);
+
+  const setOpen = useCallback((id: string, open: boolean) => {
+    setOverrides(o => ({ ...o, [id]: open }));
+  }, []);
+
+  const toggle = useCallback((id: string) => {
+    setOverrides(o => {
+      const reg = registry.current.get(id);
+      const section = reg?.section ?? 'iching';
+      const current = (id in o)
+        ? o[id]
+        : sectionMode[section] === 'open' ? true
+        : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
+        : reg?.defaultOpen ?? false;
+      return { ...o, [id]: !current };
+    });
+  }, [sectionMode]);
+
+  const setSectionMode = useCallback((section: SectionKey, mode: 'open' | 'closed') => {
+    setSectionModeState(prev => {
+      const next = { ...prev, [section]: mode };
+      persistMode(next);
+      return next;
+    });
+    // Clear per-id overrides within that section so the mode takes hold uniformly.
+    setOverrides(o => {
+      const next = { ...o };
+      registry.current.forEach(reg => { if (reg.section === section) delete next[reg.id]; });
+      return next;
+    });
+  }, []);
+
+  const register = useCallback((reg: ExpandRegistration) => {
+    registry.current.set(reg.id, reg);
+    return () => { registry.current.delete(reg.id); };
+  }, []);
+
+  const value: ExpandContextValue = {
+    isOpen, toggle, setOpen, setSectionMode, sectionMode, register, reducedMotion,
+  };
+  return <ExpandContext.Provider value={value}>{children}</ExpandContext.Provider>;
+};
+
+/* ─── Sticky mobile section label — shows the current section name as the
+       reader scrolls, so when accordions push content down they still know
+       where they are in the four-part architecture. Mobile only.          */
+
+const SECTION_LABELS: Record<Exclude<Screen, 'field'>, string> = {
+  iching:      'I Ching',
+  genekeys:    'Gene Keys',
+  humandesign: 'Human Design',
+  connections: 'Connections',
+};
+
+function useCurrentSection(): Exclude<Screen, 'field'> | null {
+  const [current, setCurrent] = useState<Exclude<Screen, 'field'> | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
+    const ids: Exclude<Screen, 'field'>[] = ['iching', 'genekeys', 'humandesign', 'connections'];
+    const visibility = new Map<string, number>();
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => visibility.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
+      // Pick the most-visible section; clear if none are visible.
+      let bestId: string | null = null;
+      let bestVal = 0;
+      visibility.forEach((v, id) => { if (v > bestVal) { bestVal = v; bestId = id; } });
+      setCurrent(bestVal > 0 ? (bestId as Exclude<Screen, 'field'>) : null);
+    }, { rootMargin: '-80px 0px -55% 0px', threshold: [0, 0.15, 0.5, 1] });
+    ids.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
+    return () => io.disconnect();
+  }, []);
+  return current;
+}
+
+const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }> = ({ cardNumber, hexName }) => {
+  const current = useCurrentSection();
+  if (!current) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className="md:hidden fixed top-[72px] left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-wood-200/50 dark:border-stone-700/50 pointer-events-none"
+    >
+      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 dark:text-stone-400">
+        {SECTION_LABELS[current]} · Code {cardNumber} · {hexName}
+      </span>
+    </div>
+  );
+};
+
+/* ─── Bridge — expose the Expand context up to the parent component so the
+       main component (which hosts the Provider) can drive it without being
+       split into an inner sub-component. Mounts null, only sets a ref.  ─── */
+
+const ExpandBridge: React.FC<{ bind: (ctx: ExpandContextValue) => void }> = ({ bind }) => {
+  const ctx = useExpand();
+  useEffect(() => { bind(ctx); }, [bind, ctx]);
+  return null;
+};
+
+/* ─── Section-level Expand-all / Collapse-all control ─────────────────────── */
+
+const SectionControl: React.FC<{
+  section: SectionKey;
+  labelColor: string;
+  dividerColor: string;
+}> = ({ section, labelColor, dividerColor }) => {
+  const { sectionMode, setSectionMode } = useExpand();
+  const current = sectionMode[section];
+  return (
+    <div className={`flex items-center justify-end gap-3 px-1 pb-2 text-[10px] uppercase tracking-[0.2em] font-label ${labelColor}`}>
+      <button
+        onClick={() => setSectionMode(section, 'open')}
+        className={`min-h-[32px] px-1 hover:opacity-80 transition-opacity ${current === 'open' ? 'underline underline-offset-4' : ''}`}
+        aria-pressed={current === 'open'}
+      >Expand all</button>
+      <span className={dividerColor} aria-hidden="true">·</span>
+      <button
+        onClick={() => setSectionMode(section, 'closed')}
+        className={`min-h-[32px] px-1 hover:opacity-80 transition-opacity ${current === 'closed' ? 'underline underline-offset-4' : ''}`}
+        aria-pressed={current === 'closed'}
+      >Collapse</button>
+    </div>
+  );
+};
+
+/* ─── Collapsible section primitive ───────────────────────────────────────── */
+/* Registers itself with the ExpandProvider by `id` so section-mode +
+   deep-links can drive it. Preview text fades to transparent via a mask so it
+   never looks truncated; chevron is a + rotating 45° to match GeneKeyCard.   */
 
 const Expand: React.FC<{
+  id: string;
+  section: SectionKey;
+  defaultOpen?: boolean;
+  lock?: boolean;
   label: string;
   subtitle?: string;
   preview: React.ReactNode;
@@ -149,25 +369,50 @@ const Expand: React.FC<{
   borderColor: string;
   labelColor: string;
   innerPx?: string;
-}> = ({ label, subtitle, preview, children, borderColor, labelColor, innerPx = '' }) => {
-  const [open, setOpen] = useState(false);
+  previewMask?: 'light' | 'dark' | 'none';
+}> = ({ id, section, defaultOpen = false, lock = false, label, subtitle, preview, children, borderColor, labelColor, innerPx = '', previewMask = 'none' }) => {
+  const ctx = useExpand();
+  const open = ctx.isOpen(id, section, defaultOpen);
+
+  useEffect(() => ctx.register({ id, section, defaultOpen, lock }), [ctx, id, section, defaultOpen, lock]);
+
+  const maskStyle = !open && previewMask !== 'none'
+    ? {
+        WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+        maskImage:       'linear-gradient(to bottom, black 55%, transparent 100%)',
+      }
+    : undefined;
+
   return (
-    <div className={`border-t ${borderColor} pt-4 pb-5 ${innerPx}`}>
-      <button className="w-full text-left" onClick={() => setOpen(v => !v)} aria-expanded={open}>
+    <div id={id} className={`border-t ${borderColor} pt-4 pb-5 ${innerPx} scroll-mt-24`}>
+      <button
+        type="button"
+        onClick={() => ctx.toggle(id)}
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        className="w-full text-left min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze-400 rounded-sm"
+      >
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${labelColor} mb-1`}>{label}</p>
             {subtitle && <p className="font-sans text-[11px] italic text-stone-600 mb-2">{subtitle}</p>}
-            {!open && <div>{preview}</div>}
+            {!open && (
+              <div
+                className={previewMask !== 'none' ? 'max-h-[5.2em] overflow-hidden' : ''}
+                style={maskStyle}
+              >{preview}</div>
+            )}
           </div>
           <span
-            className={`text-lg ${labelColor} flex-shrink-0 transition-transform duration-200 leading-none mt-1`}
+            className={`text-lg ${labelColor} flex-shrink-0 leading-none mt-1 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
             style={{ transform: open ? 'rotate(45deg)' : 'none' }}
             aria-hidden="true"
           >+</span>
         </div>
       </button>
-      {open && <div className="mt-4 space-y-4">{children}</div>}
+      {open && (
+        <div id={`${id}-panel`} className="mt-4 space-y-4">{children}</div>
+      )}
     </div>
   );
 };
@@ -224,8 +469,17 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   },
 };
 
-const GeneKeyCard: React.FC<{ tone: GeneKeyTone; level: ExpandedGeneKeyLevel; id?: string }> = ({ tone, level, id }) => {
-  const [open, setOpen] = useState(false);
+const GeneKeyCard: React.FC<{
+  tone: GeneKeyTone;
+  level: ExpandedGeneKeyLevel;
+  id: string;
+  section?: SectionKey;
+  defaultOpen?: boolean;
+}> = ({ tone, level, id, section = 'genekeys', defaultOpen = false }) => {
+  const ctx = useExpand();
+  const open = ctx.isOpen(id, section, defaultOpen);
+  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+
   const cfg = TONE_CONFIG[tone];
   const paragraphs = (open ? level.expanded.text : level.collapsed.text).split('\n\n').filter(Boolean);
 
@@ -234,12 +488,12 @@ const GeneKeyCard: React.FC<{ tone: GeneKeyTone; level: ExpandedGeneKeyLevel; id
     // Text nodes stop propagation so users can still select and copy text.
     <div
       id={id}
-      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer`}
-      onClick={() => setOpen(v => !v)}
+      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer scroll-mt-24`}
+      onClick={() => ctx.toggle(id)}
       role="button"
       aria-expanded={open}
       tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(v => !v); } }}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
     >
       {/* Tone accent bar — 3px colored rule at card top */}
       <div className={`h-[3px] w-full ${cfg.topBar}`} />
@@ -250,9 +504,11 @@ const GeneKeyCard: React.FC<{ tone: GeneKeyTone; level: ExpandedGeneKeyLevel; id
             <span className={`font-label text-[11px] uppercase tracking-[0.2em] flex-shrink-0 ${cfg.labelColor}`}>{cfg.label}</span>
             <span className={`font-sans text-xl font-medium ${cfg.nameColor}`}>{level.name}</span>
           </div>
-          <span className={`font-label text-[11px] flex-shrink-0 ${cfg.moreColor}`} aria-hidden="true">
-            {open ? '−' : '+'}
-          </span>
+          <span
+            className={`text-lg flex-shrink-0 leading-none ${cfg.moreColor} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
         </div>
         {/* Contemplation title — non-text, stays clickable */}
         <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.moreColor} mb-5`}>{level.contemplation_title}</p>
@@ -285,6 +541,81 @@ const GeneKeyCard: React.FC<{ tone: GeneKeyTone; level: ExpandedGeneKeyLevel; id
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Synthesis tone card — same tone palette as GeneKeyCard, simpler data.
+       Used for synthesis rows where we have plain strings, not expanded levels. */
+
+const SynthesisToneCard: React.FC<{
+  tone: GeneKeyTone;
+  id: string;
+  name: string;
+  text: string;
+  extras?: { label: string; text: string }[];
+  defaultOpen?: boolean;
+}> = ({ tone, id, name, text, extras = [], defaultOpen = false }) => {
+  const ctx = useExpand();
+  const open = ctx.isOpen(id, 'genekeys', defaultOpen);
+  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
+  const cfg = TONE_CONFIG[tone];
+  const paragraphs = text.split('\n\n').filter(Boolean);
+  const previewPara = paragraphs[0] ?? '';
+
+  return (
+    <div
+      id={id}
+      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer scroll-mt-24`}
+      onClick={() => ctx.toggle(id)}
+      role="button"
+      aria-expanded={open}
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+    >
+      <div className={`h-[3px] w-full ${cfg.topBar}`} />
+      <div className="px-6 py-6">
+        <div className="flex items-baseline justify-between gap-4 mb-3">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <span className={`font-label text-[11px] uppercase tracking-[0.2em] flex-shrink-0 ${cfg.labelColor}`}>{cfg.label}</span>
+            <span className={`font-sans text-xl font-medium ${cfg.nameColor}`}>{name}</span>
+          </div>
+          <span
+            className={`text-lg flex-shrink-0 leading-none ${cfg.moreColor} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
+        </div>
+        <div className="space-y-4" onClick={e => e.stopPropagation()}>
+          {open ? (
+            <>
+              {paragraphs.map((p, i) => (
+                <p key={i} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text`}>{p}</p>
+              ))}
+              {extras.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5 pt-5 border-t border-stone-300/60">
+                  {extras.map((ex, i) => (
+                    <div key={i} className="border-l border-stone-300 pl-3">
+                      <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.labelColor} mb-1`}>{ex.label}</p>
+                      {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                        <p key={j} className={`font-sans text-sm ${cfg.bodyColor} leading-[1.8] select-text cursor-text ${j > 0 ? 'mt-3' : ''}`}>{p}</p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <p
+              className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text max-h-[5.2em] overflow-hidden`}
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+                maskImage:       'linear-gradient(to bottom, black 55%, transparent 100%)',
+              }}
+            >{previewPara}</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -344,7 +675,19 @@ const UniversalLanguageCard: React.FC = () => {
     () => (location.state as { ritual?: boolean } | null)?.ritual === true
   );
 
-  const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Bridge — lets `go()` and the deep-link effect reach into the Expand
+  // registry below the Provider without splitting this component in two.
+  const expandRef = useRef<ExpandContextValue | null>(null);
+
+  const go = (id: string) => {
+    // If the target is a registered Expand/GeneKeyCard, make sure it's open
+    // before scrolling so readers don't land on a closed accordion.
+    expandRef.current?.setOpen(id, true);
+    // A tiny rAF gives React time to render the open state before scroll.
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const sortedNums  = ALL_CARDS.map(c => c.number);
   const currentIdx  = sortedNums.indexOf(cardNum);
@@ -364,6 +707,24 @@ const UniversalLanguageCard: React.FC = () => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [prevCardNum, nextCardNum, navigate]);
+
+  // Deep-link: ?open=<id> or #<id> opens that specific Expand and scrolls to it.
+  // Run after a short delay so child Expand components have registered themselves.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params   = new URLSearchParams(window.location.search);
+    const fromQs   = params.get('open');
+    const fromHash = window.location.hash.replace(/^#/, '') || null;
+    const targetId = fromQs || fromHash;
+    if (!targetId) return;
+    const t = setTimeout(() => {
+      expandRef.current?.setOpen(targetId, true);
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }, 280);
+    return () => clearTimeout(t);
+  }, [cardNum]);
 
   const shareUrl  = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = card ? `${card.card_name} · Code ${card.number} · Universal Language Oracle by Adrian Rasmussen` : '';
@@ -410,7 +771,9 @@ const UniversalLanguageCard: React.FC = () => {
   const ichingHighlight = expanded?.i_ching?.reflection?.text ?? card.iching.essence;
 
   return (
-    <>
+    <ExpandProvider storageKey={`ul-card-${cardNum}`}>
+      <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
+      <StickyMobileSectionLabel cardNumber={card.number} hexName={card.iching.hexagram_name} />
       {showQREntrance    && <OracleQREntrance   card={card} onDone={() => setShowQREntrance(false)} />}
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
@@ -705,6 +1068,9 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
+            {/* Section-level expand / collapse control */}
+            <SectionControl section="iching" labelColor="text-stone-500" dividerColor="text-stone-700" />
+
             {/* Island 1 — Header + Trigrams */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
               <div className="mb-6">
@@ -739,35 +1105,75 @@ const UniversalLanguageCard: React.FC = () => {
               })()}
             </div>
 
-            {/* Island 2 — Synthesis reading (trigram combination + prose) */}
+            {/* Island 2 — Synthesis reading (trigram combination + prose + classical text)
+                The trigram combination sits as the always-visible headline.
+                The multi-paragraph reading opens by default (primary).
+                The classical Judgement + Image text starts collapsed (reference). */}
             {synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 space-y-5 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
-                <p className="font-sans text-[15px] text-stone-300 leading-[1.9] italic">{synthesis.synthesis.iching.trigram_combination}</p>
-                <div className="border-t border-stone-700/40 pt-5 space-y-4">
+              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                {/* Headline — always visible */}
+                <div className="px-6 pt-6 pb-2">
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Reading</p>
+                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9] italic">{synthesis.synthesis.iching.trigram_combination}</p>
+                </div>
+
+                {/* The reading — primary content, open by default */}
+                <Expand
+                  id="iching-reading"
+                  section="iching"
+                  defaultOpen
+                  label="The reading"
+                  borderColor="border-stone-700/40"
+                  labelColor="text-stone-500"
+                  innerPx="px-6"
+                  previewMask="dark"
+                  preview={(() => {
+                    const first = synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? '';
+                    return <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{first}</p>;
+                  })()}
+                >
                   {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
                     <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
                   ))}
-                </div>
+                </Expand>
+
+                {/* Classical Judgement + Image — reference, collapsed by default */}
                 {(synthesis.synthesis.iching.judgement_lines.length > 0 || synthesis.synthesis.iching.image_lines.length > 0) && (
-                  <div className="border-t border-stone-700/40 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {synthesis.synthesis.iching.judgement_lines.length > 0 && (
-                      <div>
-                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Judgement</p>
-                        {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
-                          <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
-                        ))}
-                      </div>
-                    )}
-                    {synthesis.synthesis.iching.image_lines.length > 0 && (
-                      <div>
-                        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Image</p>
-                        {synthesis.synthesis.iching.image_lines.map((line, i) => (
-                          <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <Expand
+                    id="iching-classical"
+                    section="iching"
+                    label="The classical text"
+                    subtitle="Wilhelm translation"
+                    borderColor="border-stone-700/40"
+                    labelColor="text-stone-500"
+                    innerPx="px-6"
+                    previewMask="dark"
+                    preview={(() => {
+                      const firstLine = synthesis.synthesis.iching.judgement_lines[0]
+                        ?? synthesis.synthesis.iching.image_lines[0]
+                        ?? '';
+                      return <p className="font-serif text-[14px] text-stone-400 leading-[1.8]">{firstLine}</p>;
+                    })()}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {synthesis.synthesis.iching.judgement_lines.length > 0 && (
+                        <div>
+                          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Judgement</p>
+                          {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
+                            <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
+                          ))}
+                        </div>
+                      )}
+                      {synthesis.synthesis.iching.image_lines.length > 0 && (
+                        <div>
+                          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Image</p>
+                          {synthesis.synthesis.iching.image_lines.map((line, i) => (
+                            <p key={i} className="font-serif text-[15px] text-stone-300 leading-[1.9]">{line}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Expand>
                 )}
               </div>
             )}
@@ -776,9 +1182,13 @@ const UniversalLanguageCard: React.FC = () => {
             {!synthesis && expanded && (
               <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
                 <Expand
+                  id="iching-overview"
+                  section="iching"
+                  defaultOpen
                   label="Overview"
                   borderColor="border-stone-700/40" labelColor="text-stone-500"
                   innerPx="px-6"
+                  previewMask="dark"
                   preview={<p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{expanded.i_ching.trigrams.overview.text}</p>}
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -796,10 +1206,13 @@ const UniversalLanguageCard: React.FC = () => {
                   </p>
                 </Expand>
                 <Expand
+                  id="iching-judgment"
+                  section="iching"
                   label="The Judgment"
                   subtitle="the oracle's ruling on this moment"
                   borderColor="border-stone-700/40" labelColor="text-stone-500"
                   innerPx="px-6"
+                  previewMask="dark"
                   preview={(() => {
                     const lines = expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean);
                     const headline = lines[0];
@@ -835,9 +1248,12 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 </Expand>
                 <Expand
+                  id="iching-patterns"
+                  section="iching"
                   label="Patterns of Wisdom"
                   borderColor="border-stone-700/40" labelColor="text-stone-500"
                   innerPx="px-6"
+                  previewMask="dark"
                   preview={<p className="font-sans text-sm text-stone-400 leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>}
                 >
                   <p className="font-sans text-[15px] text-stone-200 mb-1">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
@@ -874,6 +1290,9 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
           <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
+            {/* Section-level expand / collapse control */}
+            <SectionControl section="genekeys" labelColor="text-wood-500" dividerColor="text-wood-300" />
+
             {/* Island 1 — Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
               <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">
@@ -889,29 +1308,37 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Islands 2–4 — synthesis readings, GeneKeyCards, or fallback description */}
+            {/* Islands 2–4 — three tone cards (Shadow / Gift / Siddhi).
+                Gift opens by default as the primary reading; Repressive, Reactive
+                and Programming Partner are tucked inside their parent tone. */}
             {synthesis ? (
               <>
-                <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-6 ${CARD_SHADOW_LIGHT}`}>
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500">Reading</p>
-                  {[
-                    { label: 'Shadow', color: 'text-stone-500', text: synthesis.synthesis.gene_keys.shadow },
-                    { label: 'Repressive', color: 'text-stone-400', text: synthesis.synthesis.gene_keys.repressive },
-                    { label: 'Reactive', color: 'text-stone-400', text: synthesis.synthesis.gene_keys.reactive },
-                    { label: 'Gift', color: 'text-bronze-600', text: synthesis.synthesis.gene_keys.gift },
-                    { label: 'Siddhi', color: 'text-wood-600', text: synthesis.synthesis.gene_keys.siddhi },
-                    { label: 'Programming Partner', color: 'text-wood-400', text: synthesis.synthesis.gene_keys.programming_partner },
-                  ].map(({ label, color, text }) => (
-                    <div key={label} className="border-t border-wood-100 pt-5 first:border-0 first:pt-0">
-                      <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${color} mb-3`}>{label}</p>
-                      <div className="space-y-4">
-                        {text.split('\n\n').filter(Boolean).map((p, i) => (
-                          <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <SynthesisToneCard
+                  tone="shadow"
+                  id="genekey-shadow"
+                  name={card.gene_keys.shadow}
+                  text={synthesis.synthesis.gene_keys.shadow}
+                  extras={[
+                    { label: 'Repressive', text: synthesis.synthesis.gene_keys.repressive },
+                    { label: 'Reactive',   text: synthesis.synthesis.gene_keys.reactive   },
+                  ]}
+                />
+                <SynthesisToneCard
+                  tone="gift"
+                  id="genekey-gift"
+                  name={card.gene_keys.gift}
+                  text={synthesis.synthesis.gene_keys.gift}
+                  extras={[
+                    { label: 'Programming Partner', text: synthesis.synthesis.gene_keys.programming_partner },
+                  ]}
+                  defaultOpen
+                />
+                <SynthesisToneCard
+                  tone="siddhi"
+                  id="genekey-siddhi"
+                  name={card.gene_keys.siddhi}
+                  text={synthesis.synthesis.gene_keys.siddhi}
+                />
                 <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.8] italic">
                   Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
                   <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-wood-600 transition-colors">genekeys.com</a>
@@ -920,7 +1347,7 @@ const UniversalLanguageCard: React.FC = () => {
             ) : expanded ? (
               <>
                 <GeneKeyCard tone="shadow" level={expanded.gene_keys.shadow} id="genekey-shadow" />
-                <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift" />
+                <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift"   defaultOpen />
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
                 <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.8] italic">
                   Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
@@ -943,42 +1370,72 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
 
+            {/* Section-level expand / collapse control */}
+            <SectionControl section="humandesign" labelColor="text-stone-500" dividerColor="text-stone-700" />
+
             {/* Header */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
               <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">Human Design · Gate {card.human_design.gate}</p>
               <h2 className="font-serif text-3xl text-stone-100 font-semibold leading-[1.2] mb-1">{card.human_design.keyword}</h2>
             </div>
 
-            {/* Description (only when no synthesis) */}
+            {/* Description (only when no synthesis) — first ~40 words visible, rest behind Read more */}
             {!synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.human_design.description}</p>
-                {card.traditional_colors && (
-                  <p className="font-sans text-sm text-stone-400 leading-[1.8] mt-5 pt-5 border-t border-stone-700/50">
-                    {card.traditional_colors}
-                  </p>
-                )}
+              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                <Expand
+                  id="hd-description"
+                  section="humandesign"
+                  defaultOpen
+                  label="Description"
+                  borderColor="border-stone-700/40"
+                  labelColor="text-stone-500"
+                  innerPx="px-6"
+                  previewMask="dark"
+                  preview={<p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{card.human_design.description}</p>}
+                >
+                  <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.human_design.description}</p>
+                  {card.traditional_colors && (
+                    <p className="font-sans text-sm text-stone-400 leading-[1.8] mt-5 pt-5 border-t border-stone-700/50">
+                      {card.traditional_colors}
+                    </p>
+                  )}
+                </Expand>
               </div>
             )}
 
-            {/* Synthesis HD reading */}
+            {/* Synthesis HD reading — three accordions (Gate / Channel / Circuit).
+                Gate opens by default as the primary reading. */}
             {synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 space-y-5 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
+              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
+                <div className="px-6 pt-6 pb-1">
+                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
+                </div>
                 {[
-                  { label: 'The Gate', text: synthesis.synthesis.human_design.gate },
-                  { label: 'The Channel', text: synthesis.synthesis.human_design.channel },
-                  { label: 'The Circuit', text: synthesis.synthesis.human_design.circuit },
-                ].map(({ label, text }) => (
-                  <div key={label} className="border-t border-stone-700/40 pt-5 first:border-0 first:pt-0">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">{label}</p>
-                    <div className="space-y-4">
-                      {text.split('\n\n').filter(Boolean).map((p, i) => (
+                  { id: 'hd-gate',    label: 'The Gate',    text: synthesis.synthesis.human_design.gate,    defaultOpen: true  },
+                  { id: 'hd-channel', label: 'The Channel', text: synthesis.synthesis.human_design.channel, defaultOpen: false },
+                  { id: 'hd-circuit', label: 'The Circuit', text: synthesis.synthesis.human_design.circuit, defaultOpen: false },
+                ].map(({ id, label, text, defaultOpen }) => {
+                  const paras = text.split('\n\n').filter(Boolean);
+                  const first = paras[0] ?? '';
+                  return (
+                    <Expand
+                      key={id}
+                      id={id}
+                      section="humandesign"
+                      defaultOpen={defaultOpen}
+                      label={label}
+                      borderColor="border-stone-700/40"
+                      labelColor="text-stone-500"
+                      innerPx="px-6"
+                      previewMask="dark"
+                      preview={<p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{first}</p>}
+                    >
+                      {paras.map((p, i) => (
                         <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
                       ))}
-                    </div>
-                  </div>
-                ))}
+                    </Expand>
+                  );
+                })}
               </div>
             )}
 
@@ -1177,7 +1634,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         </div>
       </div>
-    </>
+    </ExpandProvider>
   );
 };
 
