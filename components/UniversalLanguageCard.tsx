@@ -905,7 +905,7 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-10 pb-0 bg-paper-50">
+          <div className="md:max-w-2xl md:mx-auto px-3 pt-10 pb-0 bg-paper-50">
             {/* Title block — name left, number + hexagram pushed right */}
             <div className="flex items-start justify-between gap-4">
               <h1 className="font-serif text-[52px] text-wood-900 leading-[1.0]">{card.card_name}</h1>
