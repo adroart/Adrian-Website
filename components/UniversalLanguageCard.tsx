@@ -932,7 +932,7 @@ const UniversalLanguageCard: React.FC = () => {
             })()}
           </div>
 
-          <div className="max-w-2xl mx-auto px-5 sm:px-6 pt-6 pb-14 bg-paper-50">
+          <div className="max-w-2xl mx-auto px-3 pt-6 pb-14 bg-paper-50">
 
             {/* Reference strip — hairline-divided rows, no per-row boxes or chevrons */}
             {synthesis?.reference && (
@@ -1030,7 +1030,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* dark-preserve: intentionally-dark section stays dark in dark mode
             (without it, bg-stone-900 would remap to a light tone). */}
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
             {/* Section-level expand / collapse control */}
             <SectionControl section="iching" labelColor="text-stone-500" dividerColor="text-stone-700" />
@@ -1252,7 +1252,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
             {/* Section-level expand / collapse control */}
             <SectionControl section="genekeys" labelColor="text-wood-500" dividerColor="text-wood-300" />
@@ -1332,7 +1332,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
         {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
             {/* Section-level expand / collapse control */}
             <SectionControl section="humandesign" labelColor="text-stone-500" dividerColor="text-stone-700" />
@@ -1422,7 +1422,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
         <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-2 sm:px-6 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
             {expanded ? (
               <>
