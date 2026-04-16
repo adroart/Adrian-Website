@@ -284,9 +284,10 @@ const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }
   return (
     <div
       aria-hidden="true"
-      className="md:hidden fixed top-[72px] left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-wood-200/50 dark:border-stone-700/50 pointer-events-none"
+      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 backdrop-blur-sm border-b border-wood-200/50 pointer-events-none"
+      style={{ top: 'var(--nav-height, 56px)' }}
     >
-      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 dark:text-stone-400">
+      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500">
         {SECTION_LABELS[current]} · Code {cardNumber} · {hexName}
       </span>
     </div>

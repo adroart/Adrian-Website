@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useCart } from '../CartContext';
@@ -20,6 +20,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
   const { totalItems, openCart } = useCart();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
@@ -57,10 +58,20 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Keep --nav-height in sync so sticky filter bars sit flush under the nav
+  // Keep --nav-height in sync with the nav's actual rendered height so sticky
+  // filter bars and section labels sit flush under the nav with no visible gap.
   useEffect(() => {
-    document.documentElement.style.setProperty('--nav-height', isScrolled ? '40px' : '56px');
-  }, [isScrolled]);
+    const el = navRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty('--nav-height', `${el.offsetHeight}px`);
+    };
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isScrolled, isMobileMenuOpen]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -97,7 +108,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
   return (
     <>
-      <nav className={navClasses}>
+      <nav ref={navRef} className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
           <Link to="/" className="group flex flex-col items-start">
             <span className={`font-display tracking-normal leading-none transition-all duration-300 font-normal ${textPrimary} hover:${accentColor} ${isScrolled ? 'text-lg' : 'text-2xl'}`}>

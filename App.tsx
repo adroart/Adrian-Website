@@ -49,9 +49,10 @@ const AppInner: React.FC = () => {
     || /^\/universal-language\/\d+$/.test(location.pathname)
     || /^\/creations\/oracle-cards\/universal-language\/\d+$/.test(location.pathname)
     || isOracleGateway;
-  // Keep theme route-based — CSS variable remapping handles dark mode visuals.
+  // Theme follows the user's dark-mode preference so the nav explicitly matches.
+  // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
-  const theme = isHome ? 'DARK' : 'LIGHT';
+  const theme = (isHome || isDarkMode) ? 'DARK' : 'LIGHT';
 
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
