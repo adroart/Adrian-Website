@@ -210,7 +210,7 @@ const Footer: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex items-center gap-3">
-                        <a href="https://www.instagram.com/adrianrasmussen" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
+                        <a href="https://www.instagram.com/technicianofthesacred" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">
                             <Instagram size={16} />
                         </a>
                         <a href="mailto:hello@adrianrasmussen.com" aria-label="Email" className="w-9 h-9 rounded-full border border-wood-600 flex items-center justify-center text-wood-300 hover:text-bronze-400 hover:border-bronze-400 hover:scale-110 transition-all duration-300">

@@ -906,27 +906,28 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-5 sm:px-6 pt-10 pb-0 bg-paper-50">
-            {/* Title block — name, then tight mono cluster of number + hexagram */}
-            <h1 className="font-serif text-[44px] text-wood-900 leading-[1.0]">{card.card_name}</h1>
-            <div className="flex items-baseline gap-2 mt-3">
-              <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400">{card.number} of 64</span>
-              {synthesis?.reference?.hexagram_symbol && (
-                <>
-                  <span className="text-wood-300" aria-hidden="true">·</span>
-                  <span className="text-[20px] text-wood-600 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                </>
-              )}
+            {/* Title block — name left, number + hexagram pushed right */}
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="font-serif text-[52px] text-wood-900 leading-[1.0]">{card.card_name}</h1>
+              <div className="flex flex-col items-end gap-1 shrink-0 pt-1">
+                <span className="font-display text-[38px] font-normal text-wood-400 leading-none tracking-tight">{String(card.number).padStart(2, '0')}</span>
+                {synthesis?.reference?.hexagram_symbol && (
+                  <span className="text-[36px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                )}
+              </div>
             </div>
 
-            {/* Keywords — stacked editorial lines, not a single middle-dot paragraph */}
+            {/* Keywords — horizontal chips */}
             {(() => {
               const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
               return kws.length > 0 ? (
-                <ul className="mt-8 space-y-[6px]">
+                <div className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
                   {kws.map((k, i) => (
-                    <li key={i} className="font-serif text-[16px] text-wood-700 leading-[1.55]">{k}</li>
+                    <span key={i} className="font-serif text-[13px] text-wood-600 border border-wood-200 px-2.5 py-[3px] leading-none">
+                      {k}
+                    </span>
                   ))}
-                </ul>
+                </div>
               ) : null;
             })()}
           </div>

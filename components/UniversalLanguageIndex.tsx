@@ -468,7 +468,7 @@ const UniversalLanguageIndex: React.FC = () => {
                 {gridInstruction}
               </p>
               <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-[3px]">
+                <div className="grid grid-cols-4 lg:grid-cols-8 gap-[3px]">
                   {filteredCards.map(card => (
                     <CardThumbnail
                       key={card.number}
