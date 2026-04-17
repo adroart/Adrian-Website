@@ -1,10 +1,10 @@
 /**
  * Post-build script: generates 64 static HTML files — one per Universal Language card.
  *
- * Cloudflare Pages serves static assets with the highest priority (before _redirects
- * and Functions). By creating dist/oracle/universal-language/{n}/index.html for every
- * card, WhatsApp's scraper receives card-specific og:image / og:title tags on the
- * very first byte — no JavaScript needed.
+ * Cloudflare Pages' HTML extension stripping serves dist/oracle/universal-language/43.html
+ * for the URL /oracle/universal-language/43. Static file matching happens before _redirects
+ * rules, so the catch-all /* /index.html 200 never intercepts card URLs and WhatsApp's
+ * scraper receives the correct og:image on the first byte — no JavaScript needed.
  *
  * Run after `vite build` (see `build` script in package.json).
  */
@@ -215,9 +215,13 @@ for (let num = 1; num <= 64; num++) {
     );
   }
 
-  const dir = join(DIST, 'oracle', 'universal-language', String(num));
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'index.html'), html, 'utf-8');
+  // Write as a flat .html file, not a directory.
+  // Cloudflare Pages' "HTML extension stripping" serves oracle/universal-language/43.html
+  // for the URL /oracle/universal-language/43 — and this is matched BEFORE _redirects rules,
+  // so the correct card image reaches WhatsApp's scraper.
+  const ulDir = join(DIST, 'oracle', 'universal-language');
+  mkdirSync(ulDir, { recursive: true });
+  writeFileSync(join(ulDir, `${num}.html`), html, 'utf-8');
   count++;
 }
 
