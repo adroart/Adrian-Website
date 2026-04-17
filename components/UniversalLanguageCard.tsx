@@ -950,7 +950,7 @@ const UniversalLanguageCard: React.FC = () => {
             {synthesis?.essence && (
               <div className="mt-8 mb-2">
                 {synthesis.essence.split('\n\n').filter(Boolean).map((p, i) => (
-                  <p key={i} className={`font-serif text-[18px] text-wood-700 leading-[1.85]${i > 0 ? ' mt-4' : ''}`}>{p}</p>
+                  <p key={i} className={`font-serif text-[18px] text-wood-700 leading-[1.85]${i > 0 ? ' mt-7' : ''}`}>{p}</p>
                 ))}
               </div>
             )}
