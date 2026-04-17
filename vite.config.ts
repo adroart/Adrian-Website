@@ -35,12 +35,12 @@ function mockApiPlugin(): Plugin {
 
 export default defineConfig({
   server: {
-    port: 5175,
+    port: 8888,
     host: '0.0.0.0',
     strictPort: true,
     hmr: {
       host: 'localhost',
-      port: 5175,
+      port: 8888,
       protocol: 'ws',
     },
     watch: {

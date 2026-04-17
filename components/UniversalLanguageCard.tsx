@@ -603,23 +603,13 @@ const SynthesisToneCard: React.FC<{
 
 const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
   const paras = essence.split('\n\n').filter(Boolean);
-  const [open, setOpen] = useState(false);
   return (
-    <div className="mt-6">
-      <p className="font-serif text-[16px] text-wood-700 leading-[1.9] max-w-prose">{paras[0]}</p>
-      {paras.length > 1 && (
-        <>
-          {open && (
-            <p className="font-serif text-[16px] text-wood-700 leading-[1.9] max-w-prose mt-6">{paras[1]}</p>
-          )}
-          <button
-            onClick={() => setOpen(v => !v)}
-            className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.2em] text-bronze-500 hover:text-bronze-600 transition-colors"
-          >
-            {open ? 'Less' : 'More ↓'}
-          </button>
-        </>
-      )}
+    <div className="mt-6 rounded-xl border border-wood-200/70 bg-paper-100 shadow-[0_2px_12px_rgba(60,44,22,0.06)] px-6 py-7">
+      <div className="space-y-5">
+        {paras.map((p, i) => (
+          <p key={i} className="font-sans text-[17px] text-wood-800 leading-[1.9]">{p}</p>
+        ))}
+      </div>
     </div>
   );
 };
@@ -958,15 +948,15 @@ const UniversalLanguageCard: React.FC = () => {
                 {(() => {
                   const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
                   return kws.length > 0 ? (
-                    <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2">
                       {kws.map((k, i) => (
                         <button
                           key={i}
                           onClick={() => go('genekeys')}
-                          className={`font-serif text-[12px] px-3 py-1 leading-none transition-colors cursor-pointer border ${
+                          className={`font-serif text-[14px] px-3 py-1 leading-none transition-colors cursor-pointer border ${
                             i === kws.length - 1
                               ? 'bg-bronze-500/10 border-bronze-400 text-bronze-700 hover:bg-bronze-500/20'
-                              : 'text-wood-500 border-wood-200/80 hover:border-bronze-300 hover:text-bronze-600'
+                              : 'text-wood-500 border-transparent hover:text-bronze-600'
                           }`}
                         >
                           {k}
@@ -979,7 +969,7 @@ const UniversalLanguageCard: React.FC = () => {
             </div>{/* end card container */}
           </div>
 
-          <div className="max-w-2xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
+          <div className="max-w-3xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
 
             {synthesis?.essence && (
               <EssenceBlock essence={synthesis.essence} />
@@ -1002,74 +992,66 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Reference strip */}
             {synthesis?.reference && (
               <div className="mt-6 rounded-xl border border-wood-200/70 divide-y divide-wood-200/50 shadow-[0_2px_12px_rgba(60,44,22,0.06)] overflow-hidden mb-3">
-                {/* I Ching — hexagram identity */}
-                <button onClick={() => go('iching')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
-                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">I Ching</p>
-                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
-                    {card.iching.hexagram_name}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                    <span className="text-wood-600">{synthesis.reference.hexagram_symbol}</span>
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                    <span className="font-mono text-[13px] text-wood-500 tracking-widest">{synthesis.reference.binary}</span>
+                {/* I Ching */}
+                <button onClick={() => go('iching')} className="group w-full block text-left px-5 py-5 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">I Ching</p>
+                  <p className="font-sans text-[18px] font-medium text-wood-800 leading-snug mb-1.5">{card.iching.hexagram_name}</p>
+                  <p className="font-label text-[11px] text-wood-400 tracking-wide">
+                    {synthesis.reference.hexagram_symbol}
+                    <span className="mx-2 text-wood-200">·</span>
+                    <span className="font-mono tracking-widest">{synthesis.reference.binary}</span>
                   </p>
                 </button>
 
-                {/* Gene Keys — shadow, gift, siddhi (featured row: bronze left bar + whisper tint) */}
-                <button onClick={() => go('genekeys')} className="group w-full block text-left px-4 py-4 pl-4 border-l-2 border-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08]">
-                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-bronze-500 mb-1">Gene Keys · <span className="text-bronze-400">Gift</span></p>
-                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
-                    {card.gene_keys.shadow}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                    <span className="text-bronze-600">{card.gene_keys.gift}</span>
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                    {card.gene_keys.siddhi}
-                  </p>
+                {/* Gene Keys */}
+                <button onClick={() => go('genekeys')} className="group w-full block text-left px-5 py-5 border-l-2 border-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08]">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-500 mb-2">Gene Keys</p>
+                  <div className="flex items-baseline gap-3 flex-wrap mb-1.5">
+                    <span className="font-sans text-[15px] text-wood-500">{card.gene_keys.shadow}</span>
+                    <span className="text-wood-300 text-xs">→</span>
+                    <span className="font-sans text-[20px] font-semibold text-bronze-600 leading-none">{card.gene_keys.gift}</span>
+                    <span className="text-wood-300 text-xs">→</span>
+                    <span className="font-sans text-[15px] text-wood-500">{card.gene_keys.siddhi}</span>
+                  </div>
+                  <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-400/60">Shadow · Gift · Siddhi</p>
                 </button>
 
                 {/* Human Design */}
-                <button onClick={() => go('humandesign')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
-                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Human Design</p>
-                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
-                    {synthesis.reference.hd_center} Center
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                <button onClick={() => go('humandesign')} className="group w-full block text-left px-5 py-5 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Human Design</p>
+                  <p className="font-sans text-[18px] font-medium text-wood-800 leading-snug mb-1.5">{synthesis.reference.hd_center} Center</p>
+                  <p className="font-label text-[11px] text-wood-400 tracking-wide">
                     {synthesis.reference.hd_circuit}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="mx-2 text-wood-200">·</span>
                     {synthesis.reference.hd_harmonic_gate}
                   </p>
                 </button>
 
-                {/* Tarot / Kabbalah */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
-                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Tarot</p>
-                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1">
-                    {synthesis.reference.tarot_card}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                {/* Tarot */}
+                <button onClick={() => go('connections')} className="group w-full block text-left px-5 py-5 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Tarot</p>
+                  <p className="font-sans text-[18px] font-medium text-wood-800 leading-snug mb-1.5">{synthesis.reference.tarot_card}</p>
+                  <p className="font-label text-[11px] text-wood-400 tracking-wide">
                     {synthesis.reference.astrology}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
+                    <span className="mx-2 text-wood-200">·</span>
                     {HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter}
-                    <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                    <span className="text-wood-500">Path {synthesis.reference.path}</span>
+                    <span className="mx-2 text-wood-200">·</span>
+                    Path {synthesis.reference.path}
                   </p>
                 </button>
 
                 {/* Body */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
-                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Body</p>
-                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1">
-                    {synthesis.reference.body_physiology}
-                    {synthesis.reference.body_amino_acid && (
-                      <>
-                        <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                        {synthesis.reference.body_amino_acid}
-                      </>
-                    )}
-                    {synthesis.reference.programming_partner && (
-                      <>
-                        <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
-                        <span className="text-wood-500">Partner Key {synthesis.reference.programming_partner}</span>
-                      </>
-                    )}
-                  </p>
+                <button onClick={() => go('connections')} className="group w-full block text-left px-5 py-5 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Body</p>
+                  <p className="font-sans text-[18px] font-medium text-wood-800 leading-snug mb-1.5">{synthesis.reference.body_physiology}</p>
+                  {(synthesis.reference.body_amino_acid || synthesis.reference.programming_partner) && (
+                    <p className="font-label text-[11px] text-wood-400 tracking-wide">
+                      {synthesis.reference.body_amino_acid}
+                      {synthesis.reference.programming_partner && (
+                        <>{synthesis.reference.body_amino_acid && <span className="mx-2 text-wood-200">·</span>}Partner Key {synthesis.reference.programming_partner}</>
+                      )}
+                    </p>
+                  )}
                 </button>
               </div>
             )}

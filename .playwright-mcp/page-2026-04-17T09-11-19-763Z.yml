@@ -1,0 +1,272 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e11] [cursor=pointer]:
+            - /url: /writings
+            - text: Writings
+          - link "Oracle" [ref=e12] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - text: Oracle
+          - link "Inquire" [ref=e14] [cursor=pointer]:
+            - /url: /inquire
+            - text: Inquire
+          - link "About" [ref=e15] [cursor=pointer]:
+            - /url: /about
+            - text: About
+        - button "Switch to light mode" [ref=e17]:
+          - img [ref=e18]
+    - main [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - button "Enlarge image" [ref=e28]:
+              - img "Veils of Knowledge, Universal Language 4. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e29]
+            - generic [ref=e31]:
+              - link "Collect Original art" [ref=e32] [cursor=pointer]:
+                - /url: /creations/UL-121
+                - generic [ref=e33]:
+                  - paragraph [ref=e34]: Collect
+                  - paragraph [ref=e35]: Original art
+              - button "Share This card" [ref=e36]:
+                - generic [ref=e37]:
+                  - paragraph [ref=e38]: Share
+                  - paragraph [ref=e39]: This card
+          - generic [ref=e43]:
+            - generic [ref=e44]:
+              - heading "Veils of Knowledge" [level=1] [ref=e45]
+              - generic [ref=e46]:
+                - generic [ref=e47]: Card
+                - generic [ref=e48]: "04"
+                - generic [ref=e49]: ䷃
+            - generic [ref=e50]:
+              - button "Premature Certainty" [ref=e51] [cursor=pointer]
+              - button "Holding the Question" [ref=e52] [cursor=pointer]
+              - button "Understanding" [ref=e53] [cursor=pointer]
+              - button "Discrimination" [ref=e54] [cursor=pointer]
+              - button "Veiled Knowing" [ref=e55] [cursor=pointer]
+              - button "The Unseeing Mind" [ref=e56] [cursor=pointer]
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - paragraph [ref=e59]: "This energy is the mind pressing toward resolution. It carries a genuine capacity for pattern recognition, the ability to arrange what it perceives into frameworks that communicate something real. But there is a particular danger built into its power: the mind that is good at finding answers will sometimes find an answer before the question has finished forming, and then mistake that partial conclusion for the whole. The veil here is not ignorance. It is the false security of a half-formed understanding that has stopped too soon."
+              - button "More ↓" [ref=e60]
+            - generic [ref=e61]:
+              - paragraph [ref=e62]: Reading Depth
+              - generic [ref=e63]:
+                - button "Surface" [ref=e64]
+                - button "Deep" [ref=e65]
+            - generic [ref=e66]:
+              - button "I Ching Youthful Folly (Meng)䷃010001" [ref=e67]:
+                - paragraph [ref=e68]: I Ching
+                - paragraph [ref=e69]: Youthful Folly (Meng)·䷃·010001
+              - button "Gene Keys · Gift IntoleranceUnderstandingForgiveness" [ref=e70]:
+                - paragraph [ref=e71]: Gene Keys · Gift
+                - paragraph [ref=e72]: Intolerance·Understanding·Forgiveness
+              - 'button "Human Design Ajna CenterUnderstanding63: After Completion" [ref=e73]':
+                - paragraph [ref=e74]: Human Design
+                - paragraph [ref=e75]: "Ajna Center·Understanding·63: After Completion"
+              - button "Tarot VI — The LoversGemini ZainPath 17" [ref=e76]:
+                - paragraph [ref=e77]: Tarot
+                - paragraph [ref=e78]:
+                  - text: VI — The Lovers·Gemini· Zain·
+                  - generic [ref=e79]: Path 17
+              - button "Body NeocortexValinePartner Key 49" [ref=e80]:
+                - paragraph [ref=e81]: Body
+                - paragraph [ref=e82]:
+                  - text: Neocortex·Valine·
+                  - generic [ref=e83]: Partner Key 49
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - button "Expand all" [ref=e87]
+            - generic [ref=e88]: ·
+            - button "Collapse" [ref=e89]
+          - paragraph [ref=e90]: The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - paragraph [ref=e93]: Hexagram 4
+              - heading "Youthful Folly (Meng)" [level=2] [ref=e94]
+              - paragraph [ref=e95]: Veils of Knowledge
+            - generic [ref=e96]:
+              - generic [ref=e97]:
+                - generic [ref=e98]:
+                  - generic [ref=e99]: ☶
+                  - paragraph [ref=e100]: Mountain (Ken)
+                - paragraph [ref=e101]: Limit, frontier, stillness. Solid, steady, unshakable. Three peaks, a mountain range. The youngest son.
+              - generic [ref=e102]:
+                - generic [ref=e103]:
+                  - generic [ref=e104]: ☵
+                  - paragraph [ref=e105]: Water (K'an)
+                - paragraph [ref=e106]: Precipice, dangerous place. Stream, flowing water, river. Venture and fall. The middle son.
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - paragraph [ref=e109]: Reading
+              - paragraph [ref=e110]: Mountain stands above, Water moves below. The upper trigram holds still, sets a limit, defines the frontier. The lower trigram flows and ventures, seeking its path through whatever terrain it finds. Together they describe the moment when something young and unformed meets something solid and patient. The spring does not know where it is going. The mountain does not explain. What emerges from this pairing is the dynamic between genuine teaching and genuine learning.
+            - generic [ref=e111]:
+              - button "The reading the oracle's reading for this configuration" [expanded] [ref=e112]:
+                - generic [ref=e113]:
+                  - generic [ref=e114]:
+                    - paragraph [ref=e115]: The reading
+                    - paragraph [ref=e116]: the oracle's reading for this configuration
+                  - generic [ref=e117]: +
+              - generic [ref=e118]:
+                - paragraph [ref=e119]: "This hexagram is called Youthful Folly. The situation is one of inexperience meeting wisdom, and the oracle is specific about the terms: it is not the teacher who seeks the student. The student seeks the teacher. When someone comes with a sincere question, once, the oracle answers. When someone asks again and again out of impatience or testing, the oracle goes silent. Not as punishment, but because real understanding cannot be forced."
+                - paragraph [ref=e120]: "The image is a spring welling up at the foot of a mountain. The spring does not plan its course. It simply emerges and finds its way. This is what genuine learning looks like from the inside: not acquisition of facts but the slow welling up of something that was always there, finding its way through the stone. The mountain does not instruct the spring. It simply exists in its completeness, and the spring moves in response."
+                - paragraph [ref=e121]: What this Key points to is the danger of premature certainty. The folly here is not stupidity. It is the specific folly of needing an answer before the question has finished forming. When the mind insists on resolution, it grasps the nearest available explanation and stops there. The veil of knowledge is not ignorance. It is the false security of a half-formed understanding that has been mistaken for the whole.
+                - paragraph [ref=e122]: The oracle counsels modesty. Acknowledge what you do not know. Ask once, with sincerity, and then wait. The spring that pushes through stone does so by persisting in its nature, not by forcing. Character is built by thoroughness in small things, not by racing toward conclusions.
+            - button "The classical text Wilhelm translation Youthful Folly has success." [ref=e124]:
+              - generic [ref=e125]:
+                - generic [ref=e126]:
+                  - paragraph [ref=e127]: The classical text
+                  - paragraph [ref=e128]: Wilhelm translation
+                  - paragraph [ref=e130]: Youthful Folly has success.
+                - generic [ref=e131]: +
+          - paragraph [ref=e133]: "Enveloping. Growing. In no way me seeking the youthful enveloper. The youthful enveloper seeking me. The initial oracle informing. Twice, thrice: obscuring. Obscuring, by consequence not informing. Harvesting Trial. Below the mountain emerges springwater. Enveloping. A jun zi uses decisive movement to nurture actualizing-dao. The situation is characterized by the confusion and immaturity of a beginner, the veils that must be penetrated to reach understanding."
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - button "Expand all" [ref=e137]
+            - generic [ref=e138]: ·
+            - button "Collapse" [ref=e139]
+          - paragraph [ref=e140]: A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression — rare, but real.
+          - generic [ref=e141]:
+            - paragraph [ref=e142]: Gene Key 4 · Gate 4
+            - heading "Veils of Knowledge" [level=2] [ref=e143]
+            - generic [ref=e144]:
+              - generic [ref=e145]: Intolerance
+              - generic [ref=e146]: ·
+              - generic [ref=e147]: Understanding
+              - generic [ref=e148]: ·
+              - generic [ref=e149]: Forgiveness
+          - button "Shadow Intolerance This shadow is Intolerance, rooted in a specific misuse of the mind. The 4th Gene Key carries the capacity for logic, for reading patterns and building frameworks. At the shadow frequency, that capacity is hijacked by emotional reaction. When a person is governed by their emotional state, they use logic to justify whatever they already feel rather than to examine it honestly." [ref=e150] [cursor=pointer]:
+            - generic [ref=e152]:
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - generic [ref=e155]: Shadow
+                  - generic [ref=e156]: Intolerance
+                - generic [ref=e157]: +
+              - paragraph [ref=e159]: This shadow is Intolerance, rooted in a specific misuse of the mind. The 4th Gene Key carries the capacity for logic, for reading patterns and building frameworks. At the shadow frequency, that capacity is hijacked by emotional reaction. When a person is governed by their emotional state, they use logic to justify whatever they already feel rather than to examine it honestly.
+          - button "Gift Understanding The Gift of Understanding arrives when the mind finally exhausts itself. Understanding has nothing to do with knowledge. Knowledge is what the mind accumulates hoping to reach peace. Understanding is what floods the whole body when the mind stops trying to decide everything." [ref=e160] [cursor=pointer]:
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - generic [ref=e165]: Gift
+                  - generic [ref=e166]: Understanding
+                - generic [ref=e167]: +
+              - paragraph [ref=e169]: The Gift of Understanding arrives when the mind finally exhausts itself. Understanding has nothing to do with knowledge. Knowledge is what the mind accumulates hoping to reach peace. Understanding is what floods the whole body when the mind stops trying to decide everything.
+          - button "Siddhi Forgiveness The Siddhi of Forgiveness is merciless forgiveness. Not the soft kind that makes allowances, but the kind that sees everything clearly and forgives anyway. It is a force that moves backwards through time, dissolving blocks that have been frozen in ancestral bloodlines for generations." [ref=e170] [cursor=pointer]:
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - generic [ref=e174]:
+                  - generic [ref=e175]: Siddhi
+                  - generic [ref=e176]: Forgiveness
+                - generic [ref=e177]: +
+              - paragraph [ref=e179]: The Siddhi of Forgiveness is merciless forgiveness. Not the soft kind that makes allowances, but the kind that sees everything clearly and forgives anyway. It is a force that moves backwards through time, dissolving blocks that have been frozen in ancestral bloodlines for generations.
+          - paragraph [ref=e180]:
+            - text: Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at
+            - link "genekeys.com" [ref=e181] [cursor=pointer]:
+              - /url: https://genekeys.com
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - button "Expand all" [ref=e185]
+            - generic [ref=e186]: ·
+            - button "Collapse" [ref=e187]
+          - paragraph [ref=e188]: Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+          - generic [ref=e189]:
+            - paragraph [ref=e190]: Human Design · Gate 4
+            - heading "Formulization" [level=2] [ref=e191]
+          - generic [ref=e192]:
+            - paragraph [ref=e194]: Reading
+            - generic [ref=e195]:
+              - button "The Gate the specific quality this gate carries" [expanded] [ref=e196]:
+                - generic [ref=e197]:
+                  - generic [ref=e198]:
+                    - paragraph [ref=e199]: The Gate
+                    - paragraph [ref=e200]: the specific quality this gate carries
+                  - generic [ref=e201]: +
+              - generic [ref=e202]:
+                - paragraph [ref=e203]: "Gate 4 sits in the Ajna Center, the center of conceptualization and mental processing. Its keyword is Formulization. This is the gate of mental pressure: the drive to find the formula, the logical pattern, the framework that makes sense of experience. At its natural frequency it is a genuine gift, the ability to see patterns and arrange them into forms that communicate something true."
+                - paragraph [ref=e204]: The pressure to formulate is built in. The question is whether that pressure is allowed to drive decisions, or whether it is recognized as mental activity that needs a body and a strategy behind it.
+            - button "The Channel how this gate connects to another center Gate 4 forms the 63-4 channel with Gate 63 (After Completion, sitting in the Head Center). This channel is called Logic, described as a design of mental ease mixed with doubt. Gate 63 provides the pressure of doubt, the question that has not been resolved. Gate 4 provides the mental drive to formulate an answer. Together they produce a mind that is always working, always cycling through patterns, always pressing toward resolution." [ref=e206]:
+              - generic [ref=e207]:
+                - generic [ref=e208]:
+                  - paragraph [ref=e209]: The Channel
+                  - paragraph [ref=e210]: how this gate connects to another center
+                  - paragraph [ref=e212]: Gate 4 forms the 63-4 channel with Gate 63 (After Completion, sitting in the Head Center). This channel is called Logic, described as a design of mental ease mixed with doubt. Gate 63 provides the pressure of doubt, the question that has not been resolved. Gate 4 provides the mental drive to formulate an answer. Together they produce a mind that is always working, always cycling through patterns, always pressing toward resolution.
+                - generic [ref=e213]: +
+            - 'button "The Circuit the larger circuit and collective this belongs to Gate 4 operates in the Understanding circuit, also called the Logic circuit. This circuit governs the processing and communication of patterns that can be verified and proven over time. Its function is collective: the insights that arise here are not meant only for the individual. They are meant to be shared and tested." [ref=e215]':
+              - generic [ref=e216]:
+                - generic [ref=e217]:
+                  - paragraph [ref=e218]: The Circuit
+                  - paragraph [ref=e219]: the larger circuit and collective this belongs to
+                  - paragraph [ref=e221]: "Gate 4 operates in the Understanding circuit, also called the Logic circuit. This circuit governs the processing and communication of patterns that can be verified and proven over time. Its function is collective: the insights that arise here are not meant only for the individual. They are meant to be shared and tested."
+                - generic [ref=e222]: +
+          - generic [ref=e225]:
+            - paragraph [ref=e226]: Ring of Union
+            - paragraph [ref=e227]: 6 - The Lovers
+            - paragraph [ref=e228]: Four cards woven by the principle of coming together. The folly of youth finding understanding, the discipline of virtue, the leap into the void, and the dissolution that makes intimacy possible.
+        - generic [ref=e230]:
+          - paragraph [ref=e232]: Connection data will be available soon.
+          - generic [ref=e233]:
+            - generic [ref=e234]:
+              - paragraph [ref=e235]: Tarot · Ring of Union
+              - paragraph [ref=e236]: "Key 4 holds the face of inexperience in The Lovers. The Ring of Union carries four expressions of what it means for things to come together: the folly that precedes understanding, the guidance of virtue, the full commitment of the leap, and the transparency that makes intimacy possible. Key 4 holds the beginning of that arc, the moment before the choice is made, when the young mind is still covered by its own veils and learning has not yet taken root."
+            - generic [ref=e237]:
+              - paragraph [ref=e238]: The Lovers card is about a choice, but not the choice between two people or two paths. It is the deeper choice between two ways of knowing. One way grasps for certainty because uncertainty feels like danger. The other way is willing to stand in the question and let understanding arrive on its own terms.
+              - paragraph [ref=e239]: The sword of discrimination cuts cleanly. Not cruelly, but without sentiment. It separates what you actually know from what you think you know, what is genuine from what is borrowed. The blade does not punish the inexperienced mind for being young. It simply makes the distinction visible.
+              - paragraph [ref=e240]: Gemini governs this Arcana, the sign of two. The twin nature here is not good and evil or high and low. It is the gap between the question and the answer, between the student and the teacher, between the spring and the sea. Both poles are necessary. Neither can be collapsed into the other without something being lost.
+              - paragraph [ref=e241]: The Key called Veils of Knowledge sits at this threshold. The veil is not the enemy. It is part of the process. The spring cannot skip the stone. It finds its way through by persisting in its nature, not by force.
+          - generic [ref=e242]:
+            - paragraph [ref=e243]: Body
+            - generic [ref=e244]:
+              - paragraph [ref=e245]: Physiology
+              - generic [ref=e246]:
+                - paragraph [ref=e247]: Gate 4 and the 4th Gene Key are associated with the neocortex, the most recently evolved region of the brain. The neocortex handles reasoning, language, pattern recognition, and the construction of logical frameworks. It is the biological seat of the mental activity that defines this Key.
+                - paragraph [ref=e248]: "The shadow of Intolerance connects directly to the neocortex's capacity to build elaborate logical structures that serve emotional reactivity rather than genuine understanding. The gift and siddhi represent a shift in how this same neural hardware operates: from closed, defensive reasoning to open pattern recognition that serves the whole."
+            - generic [ref=e249]:
+              - paragraph [ref=e250]: Amino Acid
+              - generic [ref=e251]:
+                - paragraph [ref=e252]: Valine is one of the essential branched-chain amino acids, meaning the body cannot produce it and must obtain it through food. It plays a central role in muscle repair and energy regulation, particularly during periods of physical stress. In the nervous system, valine contributes to the myelin sheath that insulates nerve fibers and supports the speed of signal transmission.
+                - paragraph [ref=e253]: "The fact that it must come from outside the body mirrors this Key's teaching: genuine understanding cannot be generated internally through will or analysis alone. It requires something that arrives from beyond the thinking mind."
+      - generic [ref=e255]:
+        - link "☵ ☳ ← Prev Messengers of the Infinite" [ref=e256] [cursor=pointer]:
+          - /url: /oracle/universal-language/3
+          - generic [ref=e257]:
+            - generic [ref=e258]: ☵
+            - generic [ref=e259]: ☳
+          - generic [ref=e260]:
+            - paragraph [ref=e261]: ← Prev
+            - paragraph [ref=e262]: Messengers of the Infinite
+        - link "4 All 64" [ref=e263] [cursor=pointer]:
+          - /url: /oracle/universal-language
+          - generic [ref=e264]: "4"
+          - generic [ref=e265]: All 64
+        - link "Next → The Space Between Time ☵ ☰" [ref=e266] [cursor=pointer]:
+          - /url: /oracle/universal-language/5
+          - generic [ref=e267]:
+            - paragraph [ref=e268]: Next →
+            - paragraph [ref=e269]: The Space Between Time
+          - generic [ref=e270]:
+            - generic [ref=e271]: ☵
+            - generic [ref=e272]: ☰
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
