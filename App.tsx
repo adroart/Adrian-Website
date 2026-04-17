@@ -26,6 +26,7 @@ import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
 import FontPreview from './components/FontPreview';
+import AdminMusicUpload from './components/AdminMusicUpload';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
@@ -89,6 +90,7 @@ const AppInner: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/font-preview" element={<FontPreview />} />
+          <Route path="/admin/music" element={<AdminMusicUpload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

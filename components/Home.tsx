@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { STORIES } from '../data/mockData';
+import { STORIES } from '../data/generatedStories';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
 import { img } from '../utils/cloudinary';

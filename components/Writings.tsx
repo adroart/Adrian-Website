@@ -1,8 +1,9 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Story, StoryCategory } from '../types';
-import { STORIES, FULL_ARCHIVE } from '../data/mockData';
+import { Story, StoryCategory, AudioTrack } from '../types';
+import { STORIES } from '../data/generatedStories';
+import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
@@ -31,6 +32,96 @@ function safeJsonLd(data: unknown): string {
         .replace(/>/g, '\\u003e')
         .replace(/&/g, '\\u0026');
 }
+
+// --- Audio Track Player ---
+const AudioPlayer: React.FC<{ track: AudioTrack; index: number }> = ({ track, index }) => {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [playing, setPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+    const toggle = () => {
+        const el = audioRef.current;
+        if (!el) return;
+        if (playing) {
+            el.pause();
+        } else {
+            el.play();
+        }
+        setPlaying(!playing);
+    };
+
+    const handleTimeUpdate = () => {
+        const el = audioRef.current;
+        if (!el || !el.duration) return;
+        setProgress((el.currentTime / el.duration) * 100);
+    };
+
+    const handleEnded = () => {
+        setPlaying(false);
+        setProgress(0);
+    };
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        const el = audioRef.current;
+        if (!el || !el.duration) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const ratio = (e.clientX - rect.left) / rect.width;
+        el.currentTime = ratio * el.duration;
+    };
+
+    return (
+        <div className="flex items-center gap-4 py-4 border-b border-wood-100 last:border-0">
+            <audio
+                ref={audioRef}
+                src={track.url}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                preload="none"
+            />
+            <button
+                onClick={toggle}
+                aria-label={playing ? 'Pause' : 'Play'}
+                className="w-9 h-9 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
+            >
+                {playing ? (
+                    <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor">
+                        <rect x="0" y="0" width="4" height="14" rx="1" />
+                        <rect x="8" y="0" width="4" height="14" rx="1" />
+                    </svg>
+                ) : (
+                    <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor">
+                        <path d="M1 1l10 6-10 6V1z" />
+                    </svg>
+                )}
+            </button>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                    <span className="font-sans text-sm text-wood-800 truncate font-medium">{track.title}</span>
+                    {track.duration && (
+                        <span className="font-label text-[11px] text-wood-400 flex-shrink-0 font-semibold">{track.duration}</span>
+                    )}
+                </div>
+                <div
+                    className="h-[2px] bg-wood-100 rounded cursor-pointer relative"
+                    onClick={handleSeek}
+                >
+                    <div
+                        className="h-full bg-bronze-400 rounded transition-[width] duration-100"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+            </div>
+            <a
+                href={track.url}
+                download
+                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-600 transition-colors font-semibold flex-shrink-0"
+                aria-label={`Download ${track.title}`}
+            >
+                ↓
+            </a>
+        </div>
+    );
+};
 
 // --- Individual Article View ---
 export const WritingArticle: React.FC = () => {
@@ -188,6 +279,18 @@ export const WritingArticle: React.FC = () => {
                             alt={`${story.title} by Adrian Rasmussen`}
                             loading="lazy"
                         />
+                    </div>
+                )}
+
+                {/* Audio tracks */}
+                {story.tracks && story.tracks.length > 0 && (
+                    <div className="mb-16 border border-wood-200 bg-white px-6 py-2">
+                        <div className="flex items-center gap-3 pt-4 pb-2 mb-2 border-b border-wood-100">
+                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">Listen</span>
+                        </div>
+                        {story.tracks.map((track, i) => (
+                            <AudioPlayer key={i} track={track} index={i} />
+                        ))}
                     </div>
                 )}
 
@@ -392,7 +495,8 @@ const Writings: React.FC = () => {
 
                 {/* #5 Sticky anchor navigation + #6 Active highlighting + #16 Better touch targets */}
                 <nav
-                    className="sticky top-20 z-10 bg-paper-50 backdrop-blur-sm flex flex-wrap justify-center gap-3 md:gap-10 border-b border-wood-200 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    className="sticky z-10 bg-stone-950/95 backdrop-blur-xl flex flex-wrap justify-center gap-3 md:gap-10 border-b border-stone-800 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    style={{ top: 'var(--nav-height)' }}
                     aria-label="Writing sections"
                 >
                     {categories.map(cat => (
@@ -401,8 +505,8 @@ const Writings: React.FC = () => {
                             href={`#${categorySlug(cat)}`}
                             className={`font-label text-xs uppercase tracking-[0.2em] font-semibold transition-colors py-2 px-3 md:px-1 ${
                                 activeCategory === categorySlug(cat)
-                                    ? 'text-wood-900 border-b-2 border-bronze-400'
-                                    : 'text-wood-400 hover:text-wood-900'
+                                    ? 'text-paper-50 border-b-2 border-bronze-400'
+                                    : 'text-stone-400 hover:text-paper-50'
                             }`}
                         >
                             {cat}

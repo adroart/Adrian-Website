@@ -4,13 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build && tsx scripts/generate-og-pages.ts",
+    "dev": "tsx scripts/generate-stories.ts && vite",
+    "build": "tsx scripts/generate-stories.ts && vite build && tsx scripts/generate-og-pages.ts",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "generate:stories": "tsx scripts/generate-stories.ts",
     "generate:qr": "tsx scripts/generate-ul-qr.ts",
     "crop:oracle": "tsx scripts/crop-oracle-images.ts",
-    "rename:oracle": "tsx scripts/rename-oracle-images.ts"
+    "rename:oracle": "tsx scripts/rename-oracle-images.ts",
+    "tina:dev": "tinacms dev -c 'vite --port 8888'",
+    "tina:build": "tinacms build"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.7.0",
@@ -18,7 +21,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.0",
-    "stripe": "^20.3.1"
+    "stripe": "^20.3.1",
+    "tinacms": "^3.7.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",

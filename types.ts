@@ -92,6 +92,12 @@ export interface Product {
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';
 
+export interface AudioTrack {
+  title: string;
+  url: string;
+  duration?: string;
+}
+
 export interface Story {
   id: string;
   slug: string;
@@ -104,6 +110,7 @@ export interface Story {
   image?: string;
   readMinutes: number;
   tags: string[];
+  tracks?: AudioTrack[];
 
   isFeatured?: boolean;
   relatedArtifactId?: string;
