@@ -807,17 +807,17 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Collect
                     </p>
-                    <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
+                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
                       Original art
                     </p>
                   </div>
                   {piece?.availability === 'SOLD' && (
-                    <span className="font-label text-[9px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-wood-400">
+                    <span className="font-label text-[10px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-wood-400">
                       Sold
                     </span>
                   )}
                   {piece?.availability === 'READY_TO_SHIP' && (
-                    <span className="font-label text-[9px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-bronze-500 group-hover:text-bronze-400 transition-colors duration-200">
+                    <span className="font-label text-[10px] uppercase tracking-[0.2em] ml-auto flex-shrink-0 text-bronze-500 group-hover:text-bronze-400 transition-colors duration-200">
                       Available
                     </span>
                   )}
@@ -833,7 +833,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Share
                     </p>
-                    <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
+                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
                       This card
                     </p>
                   </div>
@@ -936,7 +936,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <div className="flex items-start justify-between gap-4">
                   <h1 className="font-serif text-[48px] text-wood-900 leading-[1.0] tracking-[-0.01em]">{card.card_name}</h1>
                   <div className="flex flex-col items-end gap-0.5 shrink-0 pt-1">
-                    <span className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-300">Card</span>
+                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-300">Key</span>
                     <span className="font-display text-[36px] font-normal text-wood-400 leading-none tracking-tight">{String(card.number).padStart(2, '0')}</span>
                     {synthesis?.reference?.hexagram_symbol && (
                       <span className="text-[32px] text-wood-400 leading-none mt-1">{synthesis.reference.hexagram_symbol}</span>
@@ -944,25 +944,18 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Keywords — horizontal chips */}
+                {/* Keywords — dot-separated subtitle */}
                 {(() => {
                   const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
                   return kws.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-2">
-                      {kws.map((k, i) => (
-                        <button
-                          key={i}
-                          onClick={() => go('genekeys')}
-                          className={`font-serif text-[14px] px-3 py-1 leading-none transition-colors cursor-pointer border ${
-                            i === kws.length - 1
-                              ? 'bg-bronze-500/10 border-bronze-400 text-bronze-700 hover:bg-bronze-500/20'
-                              : 'text-wood-500 border-transparent hover:text-bronze-600'
-                          }`}
-                        >
-                          {k}
-                        </button>
-                      ))}
-                    </div>
+                    <button
+                      onClick={() => go('genekeys')}
+                      className="mt-2 block text-left w-full cursor-pointer group"
+                    >
+                      <p className="font-serif text-[18px] leading-snug text-wood-400 dark:text-wood-500 group-hover:text-bronze-600 transition-colors">
+                        {kws.join(' · ')}
+                      </p>
+                    </button>
                   ) : null;
                 })()}
               </div>{/* end card inner px */}
@@ -976,7 +969,7 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
           <div className="mt-8 mb-1 pt-5 border-t border-wood-200/50">
-            <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mb-2">Reading Depth</p>
+            <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mb-2">Reading Depth</p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleDepthToggle('surface')}
@@ -1613,12 +1606,12 @@ const UniversalLanguageCard: React.FC = () => {
               >
                 {c && (
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-[14px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-[14px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
+                    <span className="text-[20px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-[20px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-label text-[8px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Prev</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Prev</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
               </Link>
@@ -1630,7 +1623,7 @@ const UniversalLanguageCard: React.FC = () => {
             className="flex flex-col items-center justify-center px-3.5 border-x border-wood-200 flex-shrink-0 hover:bg-wood-50 transition-colors"
           >
             <span className="font-serif text-[17px] font-semibold text-wood-700 leading-none">{card.number}</span>
-            <span className="font-label text-[8px] uppercase tracking-[0.16em] text-wood-400 mt-[3px]">All 64</span>
+            <span className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-400 mt-[3px]">All 64</span>
           </Link>
 
           {/* Next — icon inside the link */}
@@ -1643,13 +1636,13 @@ const UniversalLanguageCard: React.FC = () => {
                 className="flex items-center justify-end gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 <div className="min-w-0 text-right">
-                  <p className="font-label text-[8px] uppercase tracking-[0.14em] text-wood-400 leading-none">Next →</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Next →</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-[14px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-[14px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
+                    <span className="text-[20px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
+                    <span className="text-[20px] text-bronze-400 block leading-none -mt-[3px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
                   </div>
                 )}
               </Link>
