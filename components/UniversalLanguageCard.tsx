@@ -605,18 +605,18 @@ const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
   const paras = essence.split('\n\n').filter(Boolean);
   const [open, setOpen] = useState(false);
   return (
-    <div className="mt-8 mb-2">
-      <p className="font-serif text-[18px] text-wood-700 leading-[1.85]">{paras[0]}</p>
+    <div className="mt-6">
+      <p className="font-serif text-[16px] text-wood-700 leading-[1.9] max-w-prose">{paras[0]}</p>
       {paras.length > 1 && (
         <>
           {open && (
-            <p className="font-serif text-[18px] text-wood-700 leading-[1.85] mt-7">{paras[1]}</p>
+            <p className="font-serif text-[16px] text-wood-700 leading-[1.9] max-w-prose mt-6">{paras[1]}</p>
           )}
           <button
             onClick={() => setOpen(v => !v)}
-            className="mt-5 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-600 transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 font-label text-[10px] uppercase tracking-[0.2em] text-bronze-500 hover:text-bronze-600 transition-colors"
           >
-            {open ? 'Less' : 'More'}
+            {open ? 'Less' : 'More ↓'}
           </button>
         </>
       )}
@@ -806,18 +806,18 @@ const UniversalLanguageCard: React.FC = () => {
             </figure>
 
             {/* Order + Share — two-up row directly below image */}
-            <div className="border-t border-wood-200/60">
+            <div className="border-t border-b border-wood-200/60">
               <div className="flex divide-x divide-wood-200/40">
                 {/* Collect */}
                 <Link
                   to={piece ? `/creations/${piece.id}` : '/inquire'}
-                  className="group flex-1 flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-between gap-4 px-5 py-5 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
                 >
                   <div>
                     <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Collect
                     </p>
-                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mt-0.5">
+                    <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
                       Original art
                     </p>
                   </div>
@@ -836,14 +836,14 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Share */}
                 <button
                   onClick={() => setShareOpen(v => !v)}
-                  className="group flex-1 flex items-center justify-end px-5 py-4 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-end px-5 py-5 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
                   aria-expanded={shareOpen}
                 >
                   <div className="text-right">
                     <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Share
                     </p>
-                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-400 mt-0.5">
+                    <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
                       This card
                     </p>
                   </div>
@@ -937,64 +937,75 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          <div className="md:max-w-2xl md:mx-auto px-3 pt-10 pb-0 bg-paper-50">
-            {/* Title block — name left, number + hexagram pushed right */}
-            <div className="flex items-start justify-between gap-4">
-              <h1 className="font-serif text-[52px] text-wood-900 leading-[1.0]">{card.card_name}</h1>
-              <div className="flex flex-col items-end gap-1 shrink-0 pt-1">
-                <span className="font-display text-[38px] font-normal text-wood-400 leading-none tracking-tight">{String(card.number).padStart(2, '0')}</span>
-                {synthesis?.reference?.hexagram_symbol && (
-                  <span className="text-[36px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Keywords — horizontal chips */}
-            {(() => {
-              const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
-              return kws.length > 0 ? (
-                <div className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
-                  {kws.map((k, i) => (
-                    <button
-                      key={i}
-                      onClick={() => go('genekeys')}
-                      className="font-serif text-[13px] text-wood-600 border border-wood-200 px-2.5 py-[3px] leading-none hover:border-bronze-400 hover:text-bronze-600 transition-colors cursor-pointer"
-                    >
-                      {k}
-                    </button>
-                  ))}
+          <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
+            {/* Title block — card container */}
+            <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden">
+              {/* Bronze accent top bar */}
+              <div className="h-[3px] w-full bg-bronze-400" />
+              <div className="px-6 pt-6 pb-5">
+                <div className="flex items-start justify-between gap-4">
+                  <h1 className="font-serif text-[48px] text-wood-900 leading-[1.0] tracking-[-0.01em]">{card.card_name}</h1>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0 pt-1">
+                    <span className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-300">Card</span>
+                    <span className="font-display text-[36px] font-normal text-wood-400 leading-none tracking-tight">{String(card.number).padStart(2, '0')}</span>
+                    {synthesis?.reference?.hexagram_symbol && (
+                      <span className="text-[32px] text-wood-400 leading-none mt-1">{synthesis.reference.hexagram_symbol}</span>
+                    )}
+                  </div>
                 </div>
-              ) : null;
-            })()}
+
+                {/* Keywords — horizontal chips */}
+                {(() => {
+                  const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
+                  return kws.length > 0 ? (
+                    <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2">
+                      {kws.map((k, i) => (
+                        <button
+                          key={i}
+                          onClick={() => go('genekeys')}
+                          className={`font-serif text-[12px] px-3 py-1 leading-none transition-colors cursor-pointer border ${
+                            i === kws.length - 1
+                              ? 'bg-bronze-500/10 border-bronze-400 text-bronze-700 hover:bg-bronze-500/20'
+                              : 'text-wood-500 border-wood-200/80 hover:border-bronze-300 hover:text-bronze-600'
+                          }`}
+                        >
+                          {k}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+              </div>{/* end card inner px */}
+            </div>{/* end card container */}
           </div>
 
-          <div className="max-w-2xl mx-auto px-3 pt-6 pb-14 bg-paper-50">
+          <div className="max-w-2xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
 
             {synthesis?.essence && (
               <EssenceBlock essence={synthesis.essence} />
             )}
 
-            <div className="flex items-center gap-3 mt-6 mb-1">
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">Reading depth</span>
-              <span className="text-wood-300" aria-hidden="true">·</span>
+          <div className="mt-8 mb-1 pt-5 border-t border-wood-200/50">
+            <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 mb-2">Reading Depth</p>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => handleDepthToggle('surface')}
-                className={`font-label text-[10px] uppercase tracking-[0.2em] transition-colors ${deepMode === false ? 'text-wood-700 underline underline-offset-4' : 'text-wood-400 hover:text-wood-600'}`}
+                className={`font-label text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 border transition-colors ${deepMode === false ? 'bg-wood-800 border-wood-800 text-paper-50' : 'border-wood-200 text-wood-500 hover:border-wood-400 hover:text-wood-700'}`}
               >Surface</button>
-              <span className="text-wood-300" aria-hidden="true">·</span>
               <button
                 onClick={() => handleDepthToggle('deep')}
-                className={`font-label text-[10px] uppercase tracking-[0.2em] transition-colors ${deepMode === true ? 'text-wood-700 underline underline-offset-4' : 'text-wood-400 hover:text-wood-600'}`}
+                className={`font-label text-[10px] uppercase tracking-[0.18em] px-3 py-1.5 border transition-colors ${deepMode === true ? 'bg-bronze-500 border-bronze-500 text-white' : 'border-wood-200 text-wood-500 hover:border-bronze-300 hover:text-bronze-600'}`}
               >Deep</button>
             </div>
+          </div>
 
-            {/* Reference strip — hairline-divided rows, no per-row boxes or chevrons */}
+            {/* Reference strip */}
             {synthesis?.reference && (
-              <div className="border-t border-b border-wood-200/60 divide-y divide-wood-200/50 mb-3">
+              <div className="mt-6 rounded-xl border border-wood-200/70 divide-y divide-wood-200/50 shadow-[0_2px_12px_rgba(60,44,22,0.06)] overflow-hidden mb-3">
                 {/* I Ching — hexagram identity */}
-                <button onClick={() => go('iching')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">I Ching</p>
-                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                <button onClick={() => go('iching')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">I Ching</p>
+                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
                     {card.iching.hexagram_name}
                     <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
                     <span className="text-wood-600">{synthesis.reference.hexagram_symbol}</span>
@@ -1004,9 +1015,9 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
 
                 {/* Gene Keys — shadow, gift, siddhi (featured row: bronze left bar + whisper tint) */}
-                <button onClick={() => go('genekeys')} className="group w-full block text-left px-1 py-5 pl-4 -ml-0 border-l-2 border-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08]">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gene Keys</p>
-                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                <button onClick={() => go('genekeys')} className="group w-full block text-left px-4 py-4 pl-4 border-l-2 border-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08]">
+                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-bronze-500 mb-1">Gene Keys · <span className="text-bronze-400">Gift</span></p>
+                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
                     {card.gene_keys.shadow}
                     <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
                     <span className="text-bronze-600">{card.gene_keys.gift}</span>
@@ -1016,9 +1027,9 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
 
                 {/* Human Design */}
-                <button onClick={() => go('humandesign')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Human Design</p>
-                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                <button onClick={() => go('humandesign')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Human Design</p>
+                  <p className="font-serif text-[15px] text-wood-800 leading-[1.5] mt-1">
                     {synthesis.reference.hd_center} Center
                     <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
                     {synthesis.reference.hd_circuit}
@@ -1028,9 +1039,9 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
 
                 {/* Tarot / Kabbalah */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-300 group-hover:text-wood-500 transition-colors">Tarot</p>
-                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5">
+                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Tarot</p>
+                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1">
                     {synthesis.reference.tarot_card}
                     <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
                     {synthesis.reference.astrology}
@@ -1042,9 +1053,9 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
 
                 {/* Body */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-300 group-hover:text-wood-500 transition-colors">Body</p>
-                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5">
+                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 bg-paper-50 transition-colors hover:bg-paper-100">
+                  <p className="font-label text-[9px] uppercase tracking-[0.25em] text-wood-300 group-hover:text-wood-500 mb-1 transition-colors">Body</p>
+                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1">
                     {synthesis.reference.body_physiology}
                     {synthesis.reference.body_amino_acid && (
                       <>

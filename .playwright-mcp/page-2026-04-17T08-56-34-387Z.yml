@@ -1,0 +1,144 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]: Light Weaver
+    - navigation [ref=e4]:
+      - button "Layout" [ref=e5] [cursor=pointer]
+      - button "Pattern" [ref=e6] [cursor=pointer]
+      - button "Export" [ref=e7] [cursor=pointer]
+      - button "Flash" [ref=e8] [cursor=pointer]
+    - generic [ref=e9]:
+      - button "Import" [ref=e10] [cursor=pointer]
+      - generic [ref=e11]:
+        - button "Save" [ref=e12] [cursor=pointer]
+        - button "Load" [ref=e13] [cursor=pointer]
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - button "Select" [ref=e17] [cursor=pointer]:
+          - img [ref=e18]
+          - text: Select
+        - button "Delete" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - text: Delete
+        - button "Clear all" [ref=e24] [cursor=pointer]
+        - button "Hide LEDs" [ref=e25] [cursor=pointer]
+        - button "◉ Dots" [ref=e26] [cursor=pointer]
+        - button "⬡ Coverage" [ref=e27] [cursor=pointer]
+        - generic "Artwork background opacity (how bright the reference art shows through)" [ref=e29]:
+          - text: Art
+          - slider "Art 50%" [ref=e30]: "50"
+          - generic [ref=e31]: 50%
+        - generic "LED dot size in the preview" [ref=e32]:
+          - text: Dot
+          - slider "Dot 4" [ref=e33]: "4"
+          - generic [ref=e34]: "4"
+        - button "▶ Play" [ref=e36] [cursor=pointer]
+        - button "■ Stop" [disabled] [ref=e37]
+      - generic [ref=e38]:
+        - img [ref=e39]
+        - generic [ref=e40]:
+          - button "+" [ref=e41] [cursor=pointer]
+          - generic [ref=e42]: 100%
+          - button "−" [ref=e43] [cursor=pointer]
+          - button "1:1" [ref=e44] [cursor=pointer]
+        - generic: 296mm × 358mm
+        - generic [ref=e46]:
+          - paragraph [ref=e47]: No LED map loaded — drop your file or pick a template
+          - generic [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+            - paragraph [ref=e52]:
+              - text: Drop
+              - strong [ref=e53]: .svg
+              - text: or
+              - strong [ref=e54]: .ai
+              - text: file here
+              - generic [ref=e55]:
+                - text: or
+                - button "browse to import" [ref=e56]
+          - generic [ref=e58]: or start with a template
+          - generic [ref=e59]:
+            - button "Strip" [ref=e60] [cursor=pointer]:
+              - img [ref=e61]
+              - generic [ref=e62]: Strip
+            - button "Circle" [ref=e63] [cursor=pointer]:
+              - img [ref=e64]
+              - generic [ref=e66]: Circle
+            - button "Grid" [ref=e67] [cursor=pointer]:
+              - img [ref=e68]
+              - generic [ref=e69]: Grid
+            - button "Rings" [ref=e70] [cursor=pointer]:
+              - img [ref=e71]
+              - generic [ref=e75]: Rings
+            - button "Spiral" [ref=e76] [cursor=pointer]:
+              - img [ref=e77]
+              - generic [ref=e79]: Spiral
+          - generic [ref=e80]:
+            - generic [ref=e81]: LEDs
+            - slider "LEDs 144" [ref=e82]: "144"
+            - generic [ref=e83]: "144"
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]: Selected Paths
+          - generic [ref=e89]: Shift+click to add more
+          - button "✕" [ref=e90] [cursor=pointer]
+        - list
+        - generic [ref=e91]:
+          - textbox "Strip name…" [ref=e92]
+          - button "+ Add as Strip" [ref=e93] [cursor=pointer]
+      - generic [ref=e94]:
+        - generic "LED strip type used across this project" [ref=e95]:
+          - text: Strip
+          - combobox "Strip" [ref=e96]:
+            - option "WS2812B" [selected]
+            - option "SK6812 RGBW"
+            - option "APA102 / SK9822"
+            - option "WS2811 (pixel)"
+            - option "NeoPixel Ring"
+            - option "Custom density"
+        - generic "Default LED density — sets pitch automatically" [ref=e97]:
+          - text: Density
+          - combobox "Density" [ref=e98]:
+            - option "30 /m"
+            - option "60 /m" [selected]
+            - option "96 /m"
+            - option "144 /m"
+        - generic "Physical LED pitch in mm — controls auto LED count from path length" [ref=e99]:
+          - text: Pitch
+          - spinbutton "Pitch mm" [ref=e100]: "16.6"
+          - text: mm
+        - generic "SVG units per mm. Illustrator=2.8346, Inkscape=3.7795" [ref=e101]:
+          - text: Scale
+          - spinbutton "Scale px/mm" [ref=e102]: "2.8346"
+          - text: px/mm
+      - generic [ref=e103]:
+        - combobox "Saved scenes" [ref=e104]:
+          - option "— no scene —" [selected]
+        - button "Save" [ref=e105] [cursor=pointer]
+        - button "✕" [ref=e106] [cursor=pointer]
+      - generic [ref=e107]:
+        - generic [ref=e108]: Crossfade
+        - slider "Crossfade" [ref=e109]: "1000"
+        - generic [ref=e110]: 1.0s
+      - generic [ref=e111]:
+        - generic [ref=e112]: 0 sections
+        - generic [ref=e113]:
+          - text: "Total:"
+          - strong [ref=e114]: "0"
+          - text: LEDs
+        - button "+ Group" [ref=e115] [cursor=pointer]
+      - searchbox "Filter sections" [ref=e116]
+      - list
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - generic [ref=e119]: Layers
+          - generic [ref=e120]:
+            - button "⊞ Group" [ref=e121] [cursor=pointer]
+            - button "● All" [ref=e122] [cursor=pointer]
+        - list [ref=e123]
+      - group [ref=e124]:
+        - generic "Shortcuts & tips" [ref=e125]
+  - contentinfo [ref=e126]:
+    - generic [ref=e127]: "FPS: —"
+    - generic [ref=e128]: "Tool: select"
+    - generic [ref=e129]: —
