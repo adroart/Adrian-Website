@@ -601,6 +601,29 @@ const SynthesisToneCard: React.FC<{
 
 /* ─── Card link ──────────────────────────────────────────────────────────── */
 
+const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
+  const paras = essence.split('\n\n').filter(Boolean);
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-8 mb-2">
+      <p className="font-serif text-[18px] text-wood-700 leading-[1.85]">{paras[0]}</p>
+      {paras.length > 1 && (
+        <>
+          {open && (
+            <p className="font-serif text-[18px] text-wood-700 leading-[1.85] mt-7">{paras[1]}</p>
+          )}
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="mt-5 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-600 transition-colors"
+          >
+            {open ? 'Less' : 'More'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
 const CardLink: React.FC<{
   number: number;
   label?: string;
@@ -948,11 +971,7 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="max-w-2xl mx-auto px-3 pt-6 pb-14 bg-paper-50">
 
             {synthesis?.essence && (
-              <div className="mt-8 mb-2">
-                {synthesis.essence.split('\n\n').filter(Boolean).map((p, i) => (
-                  <p key={i} className={`font-serif text-[18px] text-wood-700 leading-[1.85]${i > 0 ? ' mt-7' : ''}`}>{p}</p>
-                ))}
-              </div>
+              <EssenceBlock essence={synthesis.essence} />
             )}
 
             <div className="flex items-center gap-3 mt-6 mb-1">
