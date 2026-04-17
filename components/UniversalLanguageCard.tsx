@@ -284,10 +284,10 @@ const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }
   return (
     <div
       aria-hidden="true"
-      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 backdrop-blur-sm border-b border-wood-200/50 pointer-events-none"
+      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-stone-950/95 backdrop-blur-sm border-b border-stone-800/60 pointer-events-none"
       style={{ top: 'var(--nav-height, 56px)' }}
     >
-      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500">
+      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-400">
         {SECTION_LABELS[current]} · Code {cardNumber} · {hexName}
       </span>
     </div>
@@ -652,6 +652,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [showIndexEntrance, setShowIndexEntrance] = useState(
     () => (location.state as { ritual?: boolean } | null)?.ritual === true
   );
+  const [deepMode, setDeepMode] = useState<boolean | null>(null);
 
   // Bridge — lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
@@ -665,6 +666,13 @@ const UniversalLanguageCard: React.FC = () => {
     requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  };
+
+  const handleDepthToggle = (mode: 'surface' | 'deep') => {
+    const sections: SectionKey[] = ['iching', 'genekeys', 'humandesign', 'connections'];
+    const expandMode = mode === 'deep' ? 'open' : 'closed';
+    sections.forEach(s => expandRef.current?.setSectionMode(s, expandMode));
+    setDeepMode(mode === 'deep');
   };
 
   const sortedNums  = ALL_CARDS.map(c => c.number);
@@ -924,9 +932,13 @@ const UniversalLanguageCard: React.FC = () => {
               return kws.length > 0 ? (
                 <div className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
                   {kws.map((k, i) => (
-                    <span key={i} className="font-serif text-[13px] text-wood-600 border border-wood-200 px-2.5 py-[3px] leading-none">
+                    <button
+                      key={i}
+                      onClick={() => go('genekeys')}
+                      className="font-serif text-[13px] text-wood-600 border border-wood-200 px-2.5 py-[3px] leading-none hover:border-bronze-400 hover:text-bronze-600 transition-colors cursor-pointer"
+                    >
                       {k}
-                    </span>
+                    </button>
                   ))}
                 </div>
               ) : null;
@@ -934,6 +946,28 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
 
           <div className="max-w-2xl mx-auto px-3 pt-6 pb-14 bg-paper-50">
+
+            {synthesis?.essence && (
+              <div className="mt-8 mb-2">
+                {synthesis.essence.split('\n\n').filter(Boolean).map((p, i) => (
+                  <p key={i} className={`font-serif text-[18px] text-wood-700 leading-[1.85]${i > 0 ? ' mt-4' : ''}`}>{p}</p>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 mt-6 mb-1">
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">Reading depth</span>
+              <span className="text-wood-300" aria-hidden="true">·</span>
+              <button
+                onClick={() => handleDepthToggle('surface')}
+                className={`font-label text-[10px] uppercase tracking-[0.2em] transition-colors ${deepMode === false ? 'text-wood-700 underline underline-offset-4' : 'text-wood-400 hover:text-wood-600'}`}
+              >Surface</button>
+              <span className="text-wood-300" aria-hidden="true">·</span>
+              <button
+                onClick={() => handleDepthToggle('deep')}
+                className={`font-label text-[10px] uppercase tracking-[0.2em] transition-colors ${deepMode === true ? 'text-wood-700 underline underline-offset-4' : 'text-wood-400 hover:text-wood-600'}`}
+              >Deep</button>
+            </div>
 
             {/* Reference strip — hairline-divided rows, no per-row boxes or chevrons */}
             {synthesis?.reference && (
@@ -976,8 +1010,8 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Tarot / Kabbalah */}
                 <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Tarot</p>
-                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-300 group-hover:text-wood-500 transition-colors">Tarot</p>
+                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5">
                     {synthesis.reference.tarot_card}
                     <span className="text-wood-300 mx-2" aria-hidden="true">·</span>
                     {synthesis.reference.astrology}
@@ -990,8 +1024,8 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Body */}
                 <button onClick={() => go('connections')} className="group w-full block text-left px-1 py-5 transition-colors hover:bg-wood-50/60">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-wood-500 transition-colors">Body</p>
-                  <p className="font-serif text-[16px] text-wood-800 leading-[1.5] mt-1.5">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-300 group-hover:text-wood-500 transition-colors">Body</p>
+                  <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5">
                     {synthesis.reference.body_physiology}
                     {synthesis.reference.body_amino_acid && (
                       <>
@@ -1035,6 +1069,10 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Section-level expand / collapse control */}
             <SectionControl section="iching" labelColor="text-stone-500" dividerColor="text-stone-700" />
+
+            <p className="font-sans text-[13px] text-stone-500 leading-[1.8] px-1">
+              The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+            </p>
 
             {/* Island 1 — Header + Trigrams */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -1088,6 +1126,7 @@ const UniversalLanguageCard: React.FC = () => {
                   section="iching"
                   defaultOpen
                   label="The reading"
+                  subtitle="the oracle's reading for this configuration"
                   borderColor="border-stone-700/40"
                   labelColor="text-stone-500"
                   innerPx="px-6"
@@ -1258,6 +1297,10 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Section-level expand / collapse control */}
             <SectionControl section="genekeys" labelColor="text-wood-500" dividerColor="text-wood-300" />
 
+            <p className="font-sans text-[13px] text-wood-400 leading-[1.8] px-1">
+              A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression — rare, but real.
+            </p>
+
             {/* Island 1 — Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
               <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">
@@ -1296,7 +1339,6 @@ const UniversalLanguageCard: React.FC = () => {
                   extras={[
                     { label: 'Programming Partner', text: synthesis.synthesis.gene_keys.programming_partner },
                   ]}
-                  defaultOpen
                 />
                 <SynthesisToneCard
                   tone="siddhi"
@@ -1312,7 +1354,7 @@ const UniversalLanguageCard: React.FC = () => {
             ) : expanded ? (
               <>
                 <GeneKeyCard tone="shadow" level={expanded.gene_keys.shadow} id="genekey-shadow" />
-                <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift"   defaultOpen />
+                <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift" />
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
                 <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.8] italic">
                   Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
@@ -1337,6 +1379,10 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Section-level expand / collapse control */}
             <SectionControl section="humandesign" labelColor="text-stone-500" dividerColor="text-stone-700" />
+
+            <p className="font-sans text-[13px] text-stone-500 leading-[1.8] px-1">
+              Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+            </p>
 
             {/* Header */}
             <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
@@ -1376,10 +1422,10 @@ const UniversalLanguageCard: React.FC = () => {
                   <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
                 </div>
                 {[
-                  { id: 'hd-gate',    label: 'The Gate',    text: synthesis.synthesis.human_design.gate,    defaultOpen: true  },
-                  { id: 'hd-channel', label: 'The Channel', text: synthesis.synthesis.human_design.channel, defaultOpen: false },
-                  { id: 'hd-circuit', label: 'The Circuit', text: synthesis.synthesis.human_design.circuit, defaultOpen: false },
-                ].map(({ id, label, text, defaultOpen }) => {
+                  { id: 'hd-gate',    label: 'The Gate',    subtitle: 'the specific quality this gate carries',        text: synthesis.synthesis.human_design.gate,    defaultOpen: true  },
+                  { id: 'hd-channel', label: 'The Channel', subtitle: 'how this gate connects to another center',      text: synthesis.synthesis.human_design.channel, defaultOpen: false },
+                  { id: 'hd-circuit', label: 'The Circuit', subtitle: 'the larger circuit and collective this belongs to', text: synthesis.synthesis.human_design.circuit, defaultOpen: false },
+                ].map(({ id, label, subtitle, text, defaultOpen }) => {
                   const paras = text.split('\n\n').filter(Boolean);
                   const first = paras[0] ?? '';
                   return (
@@ -1389,6 +1435,7 @@ const UniversalLanguageCard: React.FC = () => {
                       section="humandesign"
                       defaultOpen={defaultOpen}
                       label={label}
+                      subtitle={subtitle}
                       borderColor="border-stone-700/40"
                       labelColor="text-stone-500"
                       innerPx="px-6"
