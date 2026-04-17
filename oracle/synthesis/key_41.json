@@ -5,9 +5,9 @@
   "reference": {
     "binary": "110001",
     "hexagram_symbol": "䷨",
-    "tarot_card": "0 — The Fool",
+    "tarot_card": "0, The Fool",
     "hebrew_letter": "Aleph",
-    "hebrew_meaning": "The Ox — primal breath, the beginningless beginning",
+    "hebrew_meaning": "The Ox, primal breath, the beginningless beginning",
     "path": "11",
     "path_connects": "Kether to Chokmah",
     "astrology": "Air",
@@ -24,7 +24,7 @@
   "synthesis": {
     "iching": {
       "trigram_combination": "Stillness governing openness. The lake at the foot of the mountain gives its moisture upward as mist. What is below offers itself to what is above, not in loss but in natural generosity.",
-      "reading": "At the foot of the mountain, a lake gives its water upward as mist. What is below is offered to what is above. This is not loss. This is the natural direction of things in this season.\n\nSomething is asking to be released. Not abandoned, but offered. There is a difference between letting go in defeat and letting go with sincerity. One closes. The other opens.\n\nDo not linger on what has already come to its conclusion. Taking time in the mountains, at a lake, or by the sea will replenish what the everyday has taken. The sage tames anger and desire not by suppressing them but by recognizing the season.\n\nTwo small bowls are enough for the sacrifice. You do not need to give everything. You need to give honestly.",
+      "reading": "At the foot of the mountain, a lake gives its water upward as mist. What is below is offered to what is above. This is not loss. This is the natural direction of things in this season.\n\nSomething is asking to be released. Not abandoned, but offered. There is a difference between letting go in defeat and letting go with sincerity. One closes. The other opens.\n\nWhat has already come to its conclusion asks not to be lingered over. Time taken in the mountains, at a lake, or by the sea replenishes what the everyday has taken. The sage tames anger and desire not by suppressing them but by recognizing the season.\n\nTwo small bowls are enough for the sacrifice. Not everything must be given. What is given must be honest.",
       "judgement_lines": [
         "Decrease combined with sincerity",
         "Brings about supreme good fortune",
@@ -58,8 +58,8 @@
       "circuit": "This energy belongs to the Sensing circuit, the collective wave. What is initiated here is not only personal. It is felt on behalf of something larger."
     },
     "body": {
-      "physiology": "The adrenal glands are the body's pressure organ. They carry the biological weight of the drive to begin, to evolve, to move toward something new. For Key 41, which holds the prime evolutionary pressure in the entire system, the adrenals are the physical site where that pressure lives.\n\nThe urgency felt in the body before something new starts is chemistry, and this is where it originates.",
-      "amino_acid": "Methionine initiates every protein built in the human body. The genetic instruction ATG, the start codon, always codes for methionine. No other amino acid does this. What is worth sitting with is that methionine is essential: the body cannot produce it from within. It must arrive from food, from outside. The molecule that starts everything cannot be self-generated.\n\nThe body enacts the teaching at the cellular level, always beginning, and always by receiving."
+      "physiology": "Key 41 holds the prime evolutionary pressure in the entire system, the drive to begin, to evolve, to move toward something new. That pressure lives somewhere in the body, and the adrenals are where it lives.\n\nThe adrenal glands are the body's pressure organ. They carry the biological weight of that drive to begin. The urgency felt in the body before something new starts is chemistry, and this is where it originates.",
+      "amino_acid": "The molecule that starts everything cannot be self-generated. It must arrive from outside, from food, from what the body receives. The body enacts the teaching at the cellular level, always beginning, and always by receiving.\n\nMethionine initiates every protein built in the human body. The genetic instruction ATG, the start codon, always codes for methionine. No other amino acid does this. Methionine is also essential, which means the body cannot produce it from within."
     }
   },
   "keywords": [
