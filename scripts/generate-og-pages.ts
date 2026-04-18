@@ -14,7 +14,7 @@ import { join } from 'path';
 
 const DIST      = join(process.cwd(), 'dist');
 const CLOUDINARY = 'https://res.cloudinary.com/dobbosnda/image/upload';
-const OG_CROP   = 'f_auto,q_auto,w_1200,h_1200,c_fill,g_center';
+const OG_CROP   = 'f_auto,q_auto,w_300,h_300,c_fill,g_center';
 const SITE_URL  = 'https://www.adrianrasmussen.com';
 
 /* ─── Card data (mirrors functions/oracle/universal-language/[number].js) ─── */
