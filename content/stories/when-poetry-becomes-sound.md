@@ -11,6 +11,31 @@ tags:
   - AI
 isFeatured: false
 order: 5
+tracks:
+  - title: "Death's Knocking at Your Door"
+    url: "https://audio.adrianrasmussen.com/deaths-knocking-at-your-door-remastered.mp3"
+lyrics:
+  - |
+    Death's knocking at your door he's caught you praying
+    You want to stand up and live your life, but keeps on saying
+    I came for you, destroyer of the U, it's the I
+    You need to die, death is here so that you can live.
+  - |
+    My cup shatters in my hand I hang on.
+    Blood drops from my hand eternal sacrifice.
+    I feel the pain in the palm, I'm so alive.
+    Teardrops on to the ground, I feel your love.
+  - "Can you hold me? All of me? Take me, break me. I'm just a fool."
+  - |
+    Singing songs of unwritten words.
+    Can you feel it? I am yours. Devotion to no one, I give my life up to the one.
+  - |
+    I keep on looking and become really good looking.
+    I keep on loving but I can't get no love.
+    I keep on trying, but I don't need to try.
+    So I keep on dying and never forget to fly.
+  - "Scars in my hand from where I grabbed too tight memories of the past, but in the presence I unite."
+  - "Beyond the negative and the positive we're something else. I do this for all the lovers you can't help but be yourself."
 ---
 
 I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Words that were never meant to be seen by many, just felt by me as a way of moving something through.

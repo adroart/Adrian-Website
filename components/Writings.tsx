@@ -33,20 +33,19 @@ function safeJsonLd(data: unknown): string {
         .replace(/&/g, '\\u0026');
 }
 
-// --- Audio Track Player ---
-const AudioPlayer: React.FC<{ track: AudioTrack; index: number }> = ({ track, index }) => {
+// --- Music Section: player + optional lyrics ---
+const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[] }> = ({ track, lyrics }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [playing, setPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [timeLabel, setTimeLabel] = useState('0:00');
+
+    const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
     const toggle = () => {
         const el = audioRef.current;
         if (!el) return;
-        if (playing) {
-            el.pause();
-        } else {
-            el.play();
-        }
+        playing ? el.pause() : el.play();
         setPlaying(!playing);
     };
 
@@ -54,71 +53,74 @@ const AudioPlayer: React.FC<{ track: AudioTrack; index: number }> = ({ track, in
         const el = audioRef.current;
         if (!el || !el.duration) return;
         setProgress((el.currentTime / el.duration) * 100);
+        setTimeLabel(fmt(el.currentTime));
     };
 
-    const handleEnded = () => {
-        setPlaying(false);
-        setProgress(0);
-    };
+    const handleEnded = () => { setPlaying(false); setProgress(0); setTimeLabel('0:00'); };
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
         const el = audioRef.current;
         if (!el || !el.duration) return;
         const rect = e.currentTarget.getBoundingClientRect();
-        const ratio = (e.clientX - rect.left) / rect.width;
-        el.currentTime = ratio * el.duration;
+        el.currentTime = ((e.clientX - rect.left) / rect.width) * el.duration;
     };
 
     return (
-        <div className="flex items-center gap-4 py-4 border-b border-wood-100 last:border-0">
-            <audio
-                ref={audioRef}
-                src={track.url}
-                onTimeUpdate={handleTimeUpdate}
-                onEnded={handleEnded}
-                preload="none"
-            />
-            <button
-                onClick={toggle}
-                aria-label={playing ? 'Pause' : 'Play'}
-                className="w-9 h-9 flex-shrink-0 rounded-full border border-bronze-300 flex items-center justify-center text-bronze-600 hover:bg-bronze-50 transition-colors"
-            >
-                {playing ? (
-                    <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor">
-                        <rect x="0" y="0" width="4" height="14" rx="1" />
-                        <rect x="8" y="0" width="4" height="14" rx="1" />
-                    </svg>
-                ) : (
-                    <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor">
-                        <path d="M1 1l10 6-10 6V1z" />
-                    </svg>
-                )}
-            </button>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-baseline justify-between gap-2 mb-1.5">
-                    <span className="font-sans text-sm text-wood-800 truncate font-medium">{track.title}</span>
-                    {track.duration && (
-                        <span className="font-label text-[11px] text-wood-400 flex-shrink-0 font-semibold">{track.duration}</span>
-                    )}
-                </div>
-                <div
-                    className="h-[2px] bg-wood-100 rounded cursor-pointer relative"
-                    onClick={handleSeek}
-                >
-                    <div
-                        className="h-full bg-bronze-400 rounded transition-[width] duration-100"
-                        style={{ width: `${progress}%` }}
-                    />
+        <div className="mb-16 border border-wood-200 bg-white">
+            <audio ref={audioRef} src={track.url} onTimeUpdate={handleTimeUpdate} onEnded={handleEnded} preload="none" />
+
+            {/* Player */}
+            <div className="px-8 pt-8 pb-8">
+                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-5">Listen</p>
+                <p className="font-serif text-2xl text-wood-900 font-medium leading-snug mb-8">{track.title}</p>
+                <div className="flex items-center gap-5">
+                    <button
+                        onClick={toggle}
+                        aria-label={playing ? 'Pause' : 'Play'}
+                        className="w-14 h-14 flex-shrink-0 rounded-full bg-wood-900 text-paper-50 flex items-center justify-center hover:bg-bronze-700 transition-colors"
+                    >
+                        {playing ? (
+                            <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor">
+                                <rect x="0" y="0" width="5" height="16" rx="1" />
+                                <rect x="9" y="0" width="5" height="16" rx="1" />
+                            </svg>
+                        ) : (
+                            <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor">
+                                <path d="M2 1l11 7-11 7V1z" />
+                            </svg>
+                        )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                        <div className="h-[3px] bg-wood-100 rounded cursor-pointer relative mb-2" onClick={handleSeek}>
+                            <div className="h-full bg-bronze-400 rounded transition-[width] duration-100" style={{ width: `${progress}%` }} />
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="font-label text-[11px] text-wood-400 font-semibold">{timeLabel}</span>
+                            {track.duration && <span className="font-label text-[11px] text-wood-400 font-semibold">{track.duration}</span>}
+                        </div>
+                    </div>
+                    <a
+                        href={track.url}
+                        download
+                        className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-600 transition-colors font-semibold flex-shrink-0"
+                        aria-label={`Download ${track.title}`}
+                    >
+                        ↓ Download
+                    </a>
                 </div>
             </div>
-            <a
-                href={track.url}
-                download
-                className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 hover:text-bronze-600 transition-colors font-semibold flex-shrink-0"
-                aria-label={`Download ${track.title}`}
-            >
-                ↓
-            </a>
+
+            {/* Lyrics */}
+            {lyrics && lyrics.length > 0 && (
+                <div className="border-t border-wood-100 px-8 pt-8 pb-10 space-y-5">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-2">Lyrics</p>
+                    {lyrics.map((stanza, i) => (
+                        <p key={i} className="font-serif text-[1.0625rem] text-wood-700 leading-[1.85] whitespace-pre-line">
+                            {stanza}
+                        </p>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -282,18 +284,6 @@ export const WritingArticle: React.FC = () => {
                     </div>
                 )}
 
-                {/* Audio tracks */}
-                {story.tracks && story.tracks.length > 0 && (
-                    <div className="mb-16 border border-wood-200 bg-white px-6 py-2">
-                        <div className="flex items-center gap-3 pt-4 pb-2 mb-2 border-b border-wood-100">
-                            <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold">Listen</span>
-                        </div>
-                        {story.tracks.map((track, i) => (
-                            <AudioPlayer key={i} track={track} index={i} />
-                        ))}
-                    </div>
-                )}
-
                 {/* #10 Drop cap via .article-prose + #13 Pull quotes + #15 Section dividers + #19 Responsive prose */}
                 <div className="article-prose prose prose-lg md:prose-xl font-sans text-wood-900 leading-[1.85] tracking-[0.01em] mx-auto max-w-[68ch]">
                     {story.content.map((p, i) => (
@@ -315,6 +305,11 @@ export const WritingArticle: React.FC = () => {
                         </React.Fragment>
                     ))}
                 </div>
+
+                {/* Music: player + lyrics combined — after the story */}
+                {story.tracks && story.tracks.length > 0 && story.tracks.map((track, i) => (
+                    <MusicSection key={i} track={track} lyrics={i === 0 ? story.lyrics : undefined} />
+                ))}
 
                 {/* Related Creations — bidirectional link back to pieces */}
                 {relatedArtworks.length > 0 && (

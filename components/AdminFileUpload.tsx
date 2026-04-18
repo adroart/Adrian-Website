@@ -8,7 +8,7 @@ interface UploadedFile {
   uploaded: string;
 }
 
-const PUBLIC_BASE = 'https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev';
+const PUBLIC_BASE = 'https://audio.adrianrasmussen.com';
 
 function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;

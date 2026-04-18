@@ -17656,7 +17656,7 @@ var COOKIE_NAME5;
 var init_upload_music = __esm({
   "api/upload-music.js"() {
     init_functionsRoutes_0_09056668851917404();
-    PUBLIC_BASE = "https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev";
+    PUBLIC_BASE = "https://audio.adrianrasmussen.com";
     COOKIE_NAME5 = "admin_session";
     __name2(getCookie3, "getCookie");
     __name2(isAuthed, "isAuthed");

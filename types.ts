@@ -111,6 +111,7 @@ export interface Story {
   readMinutes: number;
   tags: string[];
   tracks?: AudioTrack[];
+  lyrics?: string[];
 
   isFeatured?: boolean;
   relatedArtifactId?: string;

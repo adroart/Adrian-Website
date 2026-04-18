@@ -16936,7 +16936,7 @@ var PUBLIC_BASE, COOKIE_NAME5;
 var init_upload_music = __esm({
   "api/upload-music.js"() {
     init_functionsRoutes_0_28783045294533727();
-    PUBLIC_BASE = "https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev";
+    PUBLIC_BASE = "https://audio.adrianrasmussen.com";
     COOKIE_NAME5 = "admin_session";
     __name(getCookie3, "getCookie");
     __name(isAuthed, "isAuthed");
@@ -17120,10 +17120,10 @@ var init_functionsRoutes_0_28783045294533727 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-eA3xWg/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-U5n0QN/middleware-loader.entry.ts
 init_functionsRoutes_0_28783045294533727();
 
-// ../.wrangler/tmp/bundle-eA3xWg/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-U5n0QN/middleware-insertion-facade.js
 init_functionsRoutes_0_28783045294533727();
 
 // ../../../../../../.nvm/versions/node/v22.20.0/lib/node_modules/wrangler/templates/pages-template-worker.ts
@@ -17619,7 +17619,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-eA3xWg/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-U5n0QN/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -17652,7 +17652,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-eA3xWg/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-U5n0QN/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

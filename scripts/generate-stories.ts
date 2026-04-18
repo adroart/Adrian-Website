@@ -53,6 +53,7 @@ const stories = files.map(file => {
     isFeatured: (fm.isFeatured ?? false) as boolean,
     relatedArtifactId: fm.relatedArtifactId as string | undefined,
     tracks: fm.tracks as { title: string; url: string; duration?: string }[] | undefined,
+    lyrics: fm.lyrics as string[] | undefined,
     _order: (fm.order ?? 999) as number,
   }
 })

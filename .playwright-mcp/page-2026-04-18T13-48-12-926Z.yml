@@ -1,0 +1,163 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e11] [cursor=pointer]:
+            - /url: /writings
+            - text: Writings
+          - link "Oracle" [ref=e13] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - text: Oracle
+          - link "Inquire" [ref=e14] [cursor=pointer]:
+            - /url: /inquire
+            - text: Inquire
+          - link "About" [ref=e15] [cursor=pointer]:
+            - /url: /about
+            - text: About
+        - button "Switch to light mode" [ref=e17]:
+          - img [ref=e18]
+    - main [ref=e24]:
+      - article [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - link "Writings" [ref=e29] [cursor=pointer]:
+                - /url: /writings
+              - generic [ref=e30]: /
+              - generic [ref=e31]: The Practice
+            - button "Share this writing" [ref=e32]:
+              - img [ref=e33]
+              - text: Share
+          - generic [ref=e39]:
+            - generic [ref=e40]: The Practice
+            - heading "Death's Knocking at Your Door" [level=1] [ref=e41]
+            - paragraph [ref=e42]: A poem, given voice
+            - generic [ref=e43]:
+              - generic [ref=e44]: Spring 2026
+              - generic [ref=e45]: ·
+              - generic [ref=e46]: 3 min read
+          - generic [ref=e47]:
+            - generic [ref=e49]: Listen
+            - generic [ref=e50]:
+              - button "Play" [ref=e51]:
+                - img [ref=e52]
+              - generic [ref=e56]: Death's Knocking at Your Door
+              - link "Download Death's Knocking at Your Door" [ref=e58] [cursor=pointer]:
+                - /url: https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev/deaths-knocking-at-your-door-remastered.mp3
+                - text: ↓
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: For many years I have played with poetry. It never had a place. These were words held in notebooks, in the margins of days, shared only face to face when the moment warranted.
+            - paragraph [ref=e61]: Recently I have discovered ways of listening to these lyrical musings. Ways of reinforcing them, recreating them, enjoying the gift of the poems back to me.
+            - paragraph [ref=e62]: Here is one of them. Let the words land first. Then let the music do what words cannot.
+            - blockquote [ref=e63]: Death's knocking at your door he's caught you praying You want to stand up and live your life, but keeps on saying. I came for you, destroyer of the U, it's the I You need to die, death is here so that you can live.
+            - generic [ref=e65]: ···
+            - blockquote [ref=e66]: My cup shatters in my hand I hang on. Blood drops from my hand eternal sacrifice. I feel the pain in the palm, I'm so alive. Teardrops on to the ground, I feel your love.
+            - blockquote [ref=e67]: Can you hold me? All of me? Take me, break me. I'm just a fool.
+            - blockquote [ref=e68]: Singing songs of unwritten words. Can you feel it? I am yours. Devotion to no one, I give my life up to the one.
+            - blockquote [ref=e69]: I keep on looking and become really good looking. I keep on loving but I can't get no love. I keep on trying, but I don't need to try. So I keep on dying and never forget to fly.
+            - generic [ref=e71]: ···
+            - blockquote [ref=e72]: Scars in my hand from where I grabbed too tight memories of the past, but in the presence I unite.
+            - blockquote [ref=e73]: Beyond the negative and the positive we're something else. I do this for all the lovers you can't help but be yourself.
+          - generic [ref=e75]:
+            - link "Previous When Poetry Becomes Sound" [ref=e76] [cursor=pointer]:
+              - /url: /writings/when-poetry-becomes-sound
+              - img [ref=e77]
+              - generic [ref=e79]:
+                - generic [ref=e80]: Previous
+                - generic [ref=e81]: When Poetry Becomes Sound
+            - link "Next How I Create" [ref=e82] [cursor=pointer]:
+              - /url: /writings/the-practice-creation
+              - generic [ref=e83]:
+                - generic [ref=e84]: Next
+                - generic [ref=e85]: How I Create
+              - img [ref=e86]
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - img [ref=e90]
+              - heading "Continue the Journey" [level=3] [ref=e93]
+            - generic [ref=e94]:
+              - link "The Practice When Poetry Becomes Sound I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound." [ref=e95] [cursor=pointer]:
+                - /url: /writings/when-poetry-becomes-sound
+                - generic [ref=e96]: The Practice
+                - heading "When Poetry Becomes Sound" [level=4] [ref=e97]
+                - paragraph [ref=e98]: I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound.
+              - link "The Practice How I Create Creating is how I grow. My inner journey. A celebration of creation itself." [ref=e99] [cursor=pointer]:
+                - /url: /writings/the-practice-creation
+                - generic [ref=e100]: The Practice
+                - heading "How I Create" [level=4] [ref=e101]
+                - paragraph [ref=e102]: Creating is how I grow. My inner journey. A celebration of creation itself.
+          - button "Return to Top" [ref=e104]:
+            - img [ref=e105]
+            - text: Return to Top
+          - link "Edit story" [ref=e108] [cursor=pointer]:
+            - /url: /keystatic/collections/stories/deaths-knocking-at-your-door
+        - button "Back to top":
+          - img
+    - contentinfo [ref=e109]:
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e114]
+            - paragraph [ref=e115]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e118]: Currently, taking commissions for Spring 2026
+          - generic [ref=e119]:
+            - generic [ref=e120]: Join the Inner Circle
+            - generic [ref=e121]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e123]:
+              - generic: Email address
+              - textbox [ref=e124]
+              - button [ref=e125]:
+                - img [ref=e126]
+        - navigation [ref=e129]:
+          - link "Creations" [ref=e130] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e131] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e132] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e133] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e134] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - generic [ref=e138]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e139] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e140] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e141]
+          - generic [ref=e142]:
+            - link "Instagram" [ref=e143] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e144]
+            - link "Email" [ref=e147] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e148]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

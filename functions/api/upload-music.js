@@ -7,7 +7,7 @@
  * R2 binding: MUSIC_BUCKET → adrian-music bucket
  */
 
-const PUBLIC_BASE = 'https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev';
+const PUBLIC_BASE = 'https://audio.adrianrasmussen.com';
 const COOKIE_NAME = 'admin_session';
 
 function getCookie(request, name) {

@@ -806,20 +806,27 @@ const CardLink: React.FC<{
 
 const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onClick }) => {
   const spanRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const [sameLine, setSameLine] = useState<boolean[]>([]);
+  const containerRef = useRef<HTMLButtonElement | null>(null);
+  // Default all dots visible — hidden after first measurement where needed
+  const [sameLine, setSameLine] = useState<boolean[]>(() => kws.map(() => true));
+
+  const measure = useCallback(() => {
+    const els = spanRefs.current;
+    if (els.length < kws.length) return;
+    const tops = els.map(el => el?.getBoundingClientRect().top ?? -1);
+    setSameLine(tops.map((top, i) => i < tops.length - 1 && Math.abs(top - tops[i + 1]) < 2));
+  }, [kws]);
 
   useEffect(() => {
-    const measure = () => {
-      const tops = spanRefs.current.map(el => el?.offsetTop ?? -1);
-      setSameLine(tops.map((top, i) => i < tops.length - 1 && top === tops[i + 1]));
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [kws]);
+    const ro = new ResizeObserver(() => requestAnimationFrame(measure));
+    if (containerRef.current) ro.observe(containerRef.current);
+    requestAnimationFrame(measure);
+    return () => ro.disconnect();
+  }, [measure]);
 
   return (
     <button
+      ref={containerRef}
       onClick={onClick}
       className="mt-2 flex flex-wrap items-baseline justify-center gap-y-0 text-center cursor-pointer group"
     >
@@ -831,8 +838,12 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
           >
             {k}
           </span>
-          {sameLine[i] && (
-            <span className="text-bronze-400/60 mx-1.5 font-serif text-xl leading-snug group-hover:text-bronze-600 transition-colors select-none">·</span>
+          {i < kws.length - 1 && (
+            <span
+              className="font-serif text-xl leading-snug group-hover:text-bronze-600 transition-colors select-none"
+              style={{ color: sameLine[i] ? undefined : 'transparent', marginLeft: '0.375rem', marginRight: '0.375rem' }}
+              aria-hidden="true"
+            >·</span>
           )}
         </React.Fragment>
       ))}
@@ -1198,75 +1209,97 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Reference strip */}
             {synthesis?.reference && (
-              <div className="mt-6 mb-3">
-                {/* Top row: 2 columns */}
-                <div className="grid grid-cols-2 gap-2 mb-2">
+              <div className="mt-8 mb-4 space-y-2">
+                {/* Top row: I Ching + Gene Keys */}
+                <div className="grid grid-cols-2 gap-2">
                   {/* I Ching */}
-                  <button onClick={() => go('iching')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200/70 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">I Ching</p>
-                    <p className="font-sans text-[17px] font-medium text-wood-800 leading-snug mb-2">{card.iching.hexagram_name}</p>
-                    <p className="font-label text-[12px] text-wood-400 tracking-wide">
-                      {synthesis.reference.hexagram_symbol}
-                      <span className="mx-1.5 text-wood-200">·</span>
-                      <span className="font-mono">{synthesis.reference.binary}</span>
-                    </p>
+                  <button onClick={() => go('iching')} className="group block text-left px-4 py-4 rounded-xl border border-stone-200 border-l-[3px] border-l-stone-400 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-stone-400">I Ching</p>
+                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                    </div>
+                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{card.iching.hexagram_name}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[16px] leading-none text-stone-400">{synthesis.reference.hexagram_symbol}</span>
+                      <span className="font-mono text-[11px] text-stone-400 tracking-[0.12em]">{synthesis.reference.binary}</span>
+                    </div>
                   </button>
 
                   {/* Gene Keys */}
                   <button onClick={() => go('genekeys')} className="group block text-left px-4 py-4 rounded-xl border border-bronze-300/50 border-l-[3px] border-l-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08] shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500 mb-2">Gene Keys</p>
-                    <div className="mb-1.5">
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className="font-sans text-[13px] text-wood-400">{card.gene_keys.shadow}</span>
-                        <span className="text-wood-300 text-[11px]">→</span>
-                        <span className="font-sans text-[17px] font-semibold text-bronze-600 leading-none">{card.gene_keys.gift}</span>
-                        <span className="text-wood-300 text-[11px]">→</span>
-                        <span className="font-sans text-[13px] text-wood-400">{card.gene_keys.siddhi}</span>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-500">Gene Keys</p>
+                      <span className="text-bronze-200 text-[11px] group-hover:text-bronze-400 transition-colors">→</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Shadow</span>
+                        <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.shadow}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-bronze-400 w-9 shrink-0">Gift</span>
+                        <span className="font-serif text-[18px] text-bronze-700 leading-none font-medium">{card.gene_keys.gift}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Siddhi</span>
+                        <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.siddhi}</span>
                       </div>
                     </div>
-                    <p className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-400/70">Shadow · Gift · Siddhi</p>
                   </button>
                 </div>
 
-                {/* Middle row: 2 columns */}
-                <div className="grid grid-cols-2 gap-2 mb-2">
+                {/* Middle row: Human Design + Tarot */}
+                <div className="grid grid-cols-2 gap-2">
                   {/* Human Design */}
-                  <button onClick={() => go('humandesign')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200/70 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Human Design</p>
-                    <p className="font-sans text-[17px] font-medium text-wood-800 leading-snug mb-2">{synthesis.reference.hd_center} Center</p>
-                    <p className="font-label text-[12px] text-wood-400 tracking-wide">
-                      {synthesis.reference.hd_circuit}
-                      <span className="mx-1.5 text-wood-200">·</span>
-                      {synthesis.reference.hd_harmonic_gate}
-                    </p>
+                  <button onClick={() => go('humandesign')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-500 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Human Design</p>
+                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                    </div>
+                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{synthesis.reference.hd_center} Center</p>
+                    <div className="space-y-0.5">
+                      <p className="font-label text-[11px] text-wood-400">{synthesis.reference.hd_circuit}</p>
+                      <p className="font-label text-[11px] text-wood-400">{synthesis.reference.hd_harmonic_gate}</p>
+                    </div>
                   </button>
 
                   {/* Tarot */}
-                  <button onClick={() => go('connections')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200/70 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Tarot</p>
-                    <p className="font-sans text-[17px] font-medium text-wood-800 leading-snug mb-2">{synthesis.reference.tarot_card}</p>
-                    <p className="font-label text-[12px] text-wood-400 tracking-wide">
-                      {synthesis.reference.astrology}
-                      <span className="mx-1.5 text-wood-200">·</span>
-                      {HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter}
-                      <span className="mx-1.5 text-wood-200">·</span>
-                      Path {synthesis.reference.path}
-                    </p>
+                  <button onClick={() => go('connections')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-700 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Tarot</p>
+                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                    </div>
+                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{synthesis.reference.tarot_card}</p>
+                    <div className="space-y-0.5">
+                      <p className="font-label text-[11px] text-wood-400">
+                        {ASTRO_SYMBOLS[synthesis.reference.astrology] ?? ''} {synthesis.reference.astrology}
+                      </p>
+                      <p className="font-label text-[11px] text-wood-400">
+                        {HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter} · Path {synthesis.reference.path}
+                      </p>
+                    </div>
                   </button>
                 </div>
 
                 {/* Bottom row: Body full width */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 rounded-xl border border-wood-200/70 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-wood-600 mb-2 transition-colors">Body</p>
-                  <div className="flex items-baseline gap-4 flex-wrap">
-                    <p className="font-sans text-[17px] font-medium text-wood-800 leading-snug">{synthesis.reference.body_physiology}</p>
-                    {(synthesis.reference.body_amino_acid || synthesis.reference.programming_partner) && (
-                      <p className="font-label text-[12px] text-wood-400 tracking-wide">
-                        {synthesis.reference.body_amino_acid}
-                        {synthesis.reference.programming_partner && (
-                          <>{synthesis.reference.body_amino_acid && <span className="mx-1.5 text-wood-200">·</span>}Partner Key {synthesis.reference.programming_partner}</>
-                        )}
-                      </p>
+                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-300 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Body</p>
+                    <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                  </div>
+                  <div className="flex items-baseline gap-6 flex-wrap">
+                    <p className="font-serif text-[18px] text-wood-900 leading-none">{synthesis.reference.body_physiology}</p>
+                    {synthesis.reference.body_amino_acid && (
+                      <div>
+                        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 mb-0.5">Amino Acid</p>
+                        <p className="font-label text-[12px] text-wood-500">{synthesis.reference.body_amino_acid}</p>
+                      </div>
+                    )}
+                    {synthesis.reference.programming_partner && (
+                      <div>
+                        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 mb-0.5">Partner Key</p>
+                        <p className="font-label text-[12px] text-wood-500">{synthesis.reference.programming_partner}</p>
+                      </div>
                     )}
                   </div>
                 </button>
