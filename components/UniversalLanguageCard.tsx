@@ -777,26 +777,35 @@ const UniversalLanguageCard: React.FC = () => {
   const shareUrl  = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = card ? `${card.card_name} · Code ${card.number} · Universal Language Oracle by Adrian Rasmussen` : '';
 
+  // Pre-fetch the story image as soon as the share sheet opens so tapping
+  // Instagram is instant — no visible loading delay.
+  const storyFileRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (!shareOpen || !card) return;
+    const url = storyImageUrl(card.number);
+    if (!url || storyFileRef.current) return;
+    fetch(url)
+      .then(r => r.blob())
+      .then(blob => {
+        storyFileRef.current = new File([blob], `universal-language-code-${card.number}.jpg`, { type: 'image/jpeg' });
+      })
+      .catch(() => {});
+  }, [shareOpen, card]);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleNativeShare = async () => {
-    try {
-      const storyUrl = storyImageUrl(card?.number ?? 0);
-      if (storyUrl && 'canShare' in navigator) {
-        const res  = await fetch(storyUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `universal-language-code-${card?.number ?? 0}.jpg`, { type: 'image/jpeg' });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: shareText, url: shareUrl, files: [file] });
-          return;
-        }
-      }
-      await navigator.share({ title: shareText, url: shareUrl });
-    } catch {}
+  const handleInstagramShare = async () => {
+    const file = storyFileRef.current;
+    if (file && 'canShare' in navigator && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: shareText, url: shareUrl }); } catch {}
+    } else {
+      // Desktop or unsupported — fall back to download
+      handleStoryDownload();
+    }
   };
 
   const handleStoryDownload = async () => {
@@ -804,8 +813,7 @@ const UniversalLanguageCard: React.FC = () => {
     if (!url) return;
     setStoryLoading(true);
     try {
-      const res       = await fetch(url);
-      const blob      = await res.blob();
+      const blob      = storyFileRef.current ?? await fetch(url).then(r => r.blob());
       const objectUrl = URL.createObjectURL(blob);
       const a         = document.createElement('a');
       a.href          = objectUrl;
@@ -999,33 +1007,20 @@ const UniversalLanguageCard: React.FC = () => {
                       <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
                     </a>
 
-                    {/* Save for Story — 9:16 portrait download */}
+                    {/* Instagram Stories — opens native share sheet with image on mobile,
+                        falls back to download on desktop */}
                     <button
-                      onClick={handleStoryDownload}
+                      onClick={handleInstagramShare}
                       disabled={storyLoading}
                       className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left disabled:opacity-50"
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
-                        <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 10v6m-3-3 3 3 3-3"/>
+                        <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
                       </svg>
                       <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">
-                        {storyLoading ? 'Saving...' : 'Save for Story'}
+                        {storyLoading ? 'Saving...' : 'Instagram Story'}
                       </span>
                     </button>
-
-                    {/* Native share — only shown where supported (mobile) */}
-                    {typeof navigator !== 'undefined' && 'share' in navigator && (
-                      <button
-                        onClick={handleNativeShare}
-                        className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left"
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
-                          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                        <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Share to app</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
