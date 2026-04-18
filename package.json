@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx scripts/generate-stories.ts && vite --port 8888",
     "dev:full": "tsx scripts/generate-stories.ts && npm run build && wrangler pages dev dist --port 8888 --ip 127.0.0.1",
-    "build": "tsx scripts/generate-stories.ts && vite build && tsx scripts/generate-og-pages.ts",
+    "build": "tsx scripts/generate-stories.ts; vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "generate:stories": "tsx scripts/generate-stories.ts",

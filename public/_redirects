@@ -52,6 +52,14 @@
 /shop/mandalas-layered/*        /shop                           301
 
 # ============================================================
+# Oracle card OG pages — must be BEFORE the SPA catch-all.
+# Rewrites /oracle/universal-language/43 → the pre-rendered
+# 43.html file that has card-specific og:image / og:title tags.
+# WhatsApp's scraper sees the correct card image without JS.
+# ============================================================
+/oracle/universal-language/:number /oracle/universal-language/:number.html 200
+
+# ============================================================
 # SPA catch-all (must be LAST)
 # ============================================================
 /* /index.html 200
