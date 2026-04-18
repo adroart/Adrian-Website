@@ -10,7 +10,7 @@
  */
 
 const CLOUDINARY = 'https://res.cloudinary.com/dobbosnda/image/upload';
-const OG_CROP    = 'f_auto,q_auto,w_1200,h_630,c_fill,g_auto';
+const OG_CROP    = 'f_auto,q_auto,w_1200,h_1200,c_fill,g_center';
 const SITE_URL   = 'https://www.adrianrasmussen.com';
 
 /* ─── Card name lookup (1–64) ────────────────────────────────────────────── */
@@ -187,7 +187,9 @@ export async function onRequest(context) {
     .replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image}"`)
     .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`)
     .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`)
-    .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image}"`);
+    .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image}"`)
+    .replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`)
+    .replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`);
 
   return new Response(html, {
     headers: { 'content-type': 'text/html;charset=UTF-8' },
