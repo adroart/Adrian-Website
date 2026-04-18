@@ -108,50 +108,33 @@ var init_verify = __esm({
 });
 
 // oracle/universal-language/[number].js
-function buildIndexRequest(request) {
-  const url2 = new URL(request.url);
-  url2.pathname = "/index.html";
-  url2.search = "";
-  return new Request(url2.toString(), { method: "GET", headers: request.headers });
-}
-async function fetchSpaShell(env, request) {
-  return env.ASSETS.fetch(buildIndexRequest(request));
-}
 async function onRequest(context) {
   const { params, env, request } = context;
-  try {
-    const num = parseInt(params.number, 10);
-    const cardName = CARD_NAMES[num];
-    const imageId = CARD_IMAGES[num];
-    if (!cardName || !imageId) {
-      return fetchSpaShell(env, request);
-    }
-    const pageUrl = `${SITE_URL}/oracle/universal-language/${num}`;
-    const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle | Adrian Rasmussen`;
-    const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
-    const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-    const response = await fetchSpaShell(env, request);
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("text/html")) {
-      return response;
-    }
-    return new HTMLRewriter().on("title", new TitleRewriter(title)).on('meta[property="og:title"]', new MetaRewriter(title)).on('meta[property="og:description"]', new MetaRewriter(description)).on('meta[property="og:image"]', new MetaRewriter(image3)).on('meta[property="og:url"]', new MetaRewriter(pageUrl)).on('meta[name="twitter:title"]', new MetaRewriter(title)).on('meta[name="twitter:description"]', new MetaRewriter(description)).on('meta[name="twitter:image"]', new MetaRewriter(image3)).transform(response);
-  } catch (err) {
-    console.error("OG rewrite failed for /oracle/universal-language:", err);
-    try {
-      return await fetchSpaShell(env, request);
-    } catch {
-      return new Response("Service temporarily unavailable", { status: 503 });
-    }
+  const num = parseInt(params.number, 10);
+  const cardName = CARD_NAMES[num];
+  const imageId = CARD_IMAGES[num];
+  const indexUrl = new URL(request.url);
+  indexUrl.pathname = "/index.html";
+  indexUrl.search = "";
+  const shell = await env.ASSETS.fetch(new Request(indexUrl.toString(), { method: "GET" }));
+  let html = await shell.text();
+  if (!cardName || !imageId || isNaN(num)) {
+    return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
   }
+  const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle | Adrian Rasmussen`;
+  const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`);
+  return new Response(html, {
+    headers: { "content-type": "text/html;charset=UTF-8" }
+  });
 }
-var CLOUDINARY, OG_CROP, SITE_URL, CARD_NAMES, CARD_IMAGES, MetaRewriter, TitleRewriter;
+var CLOUDINARY, OG_CROP, CARD_NAMES, CARD_IMAGES;
 var init_number = __esm({
   "oracle/universal-language/[number].js"() {
     init_functionsRoutes_0_8492478567511592();
     CLOUDINARY = "https://res.cloudinary.com/dobbosnda/image/upload";
     OG_CROP = "f_auto,q_auto,w_1200,h_630,c_fill,g_auto";
-    SITE_URL = "https://www.adrianrasmussen.com";
     CARD_NAMES = {
       1: "Earth's Breath",
       2: "Beyond the Shell",
@@ -284,30 +267,6 @@ var init_number = __esm({
       63: "63_ns8e6p",
       64: "64_lgyp8t"
     };
-    MetaRewriter = class {
-      static {
-        __name(this, "MetaRewriter");
-      }
-      constructor(value) {
-        this.value = value;
-      }
-      element(el) {
-        el.setAttribute("content", this.value);
-      }
-    };
-    TitleRewriter = class {
-      static {
-        __name(this, "TitleRewriter");
-      }
-      constructor(text3) {
-        this.text = text3;
-      }
-      element(el) {
-        el.setInnerContent(this.text);
-      }
-    };
-    __name(buildIndexRequest, "buildIndexRequest");
-    __name(fetchSpaShell, "fetchSpaShell");
     __name(onRequest, "onRequest");
   }
 });
@@ -17149,10 +17108,10 @@ var init_functionsRoutes_0_8492478567511592 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-WDxfYS/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-Dr6e9s/middleware-loader.entry.ts
 init_functionsRoutes_0_8492478567511592();
 
-// ../.wrangler/tmp/bundle-WDxfYS/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-Dr6e9s/middleware-insertion-facade.js
 init_functionsRoutes_0_8492478567511592();
 
 // ../../../../../../.nvm/versions/node/v22.20.0/lib/node_modules/wrangler/templates/pages-template-worker.ts
@@ -17648,7 +17607,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-WDxfYS/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-Dr6e9s/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -17681,7 +17640,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-WDxfYS/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-Dr6e9s/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

@@ -109,59 +109,37 @@ var init_verify = __esm({
     __name2(onRequestGet, "onRequestGet");
   }
 });
-function buildIndexRequest(request) {
-  const url2 = new URL(request.url);
-  url2.pathname = "/index.html";
-  url2.search = "";
-  return new Request(url2.toString(), { method: "GET", headers: request.headers });
-}
-__name(buildIndexRequest, "buildIndexRequest");
-async function fetchSpaShell(env, request) {
-  return env.ASSETS.fetch(buildIndexRequest(request));
-}
-__name(fetchSpaShell, "fetchSpaShell");
 async function onRequest(context) {
   const { params, env, request } = context;
-  try {
-    const num = parseInt(params.number, 10);
-    const cardName = CARD_NAMES[num];
-    const imageId = CARD_IMAGES[num];
-    if (!cardName || !imageId) {
-      return fetchSpaShell(env, request);
-    }
-    const pageUrl = `${SITE_URL}/oracle/universal-language/${num}`;
-    const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle | Adrian Rasmussen`;
-    const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
-    const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-    const response = await fetchSpaShell(env, request);
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("text/html")) {
-      return response;
-    }
-    return new HTMLRewriter().on("title", new TitleRewriter(title)).on('meta[property="og:title"]', new MetaRewriter(title)).on('meta[property="og:description"]', new MetaRewriter(description)).on('meta[property="og:image"]', new MetaRewriter(image3)).on('meta[property="og:url"]', new MetaRewriter(pageUrl)).on('meta[name="twitter:title"]', new MetaRewriter(title)).on('meta[name="twitter:description"]', new MetaRewriter(description)).on('meta[name="twitter:image"]', new MetaRewriter(image3)).transform(response);
-  } catch (err) {
-    console.error("OG rewrite failed for /oracle/universal-language:", err);
-    try {
-      return await fetchSpaShell(env, request);
-    } catch {
-      return new Response("Service temporarily unavailable", { status: 503 });
-    }
+  const num = parseInt(params.number, 10);
+  const cardName = CARD_NAMES[num];
+  const imageId = CARD_IMAGES[num];
+  const indexUrl = new URL(request.url);
+  indexUrl.pathname = "/index.html";
+  indexUrl.search = "";
+  const shell = await env.ASSETS.fetch(new Request(indexUrl.toString(), { method: "GET" }));
+  let html = await shell.text();
+  if (!cardName || !imageId || isNaN(num)) {
+    return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
   }
+  const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle | Adrian Rasmussen`;
+  const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`);
+  return new Response(html, {
+    headers: { "content-type": "text/html;charset=UTF-8" }
+  });
 }
 __name(onRequest, "onRequest");
 var CLOUDINARY;
 var OG_CROP;
-var SITE_URL;
 var CARD_NAMES;
 var CARD_IMAGES;
-var MetaRewriter;
-var TitleRewriter;
 var init_number = __esm({
   "oracle/universal-language/[number].js"() {
     init_functionsRoutes_0_28783045294533727();
     CLOUDINARY = "https://res.cloudinary.com/dobbosnda/image/upload";
     OG_CROP = "f_auto,q_auto,w_1200,h_630,c_fill,g_auto";
-    SITE_URL = "https://www.adrianrasmussen.com";
     CARD_NAMES = {
       1: "Earth's Breath",
       2: "Beyond the Shell",
@@ -294,36 +272,6 @@ var init_number = __esm({
       63: "63_ns8e6p",
       64: "64_lgyp8t"
     };
-    MetaRewriter = class {
-      static {
-        __name(this, "MetaRewriter");
-      }
-      static {
-        __name2(this, "MetaRewriter");
-      }
-      constructor(value) {
-        this.value = value;
-      }
-      element(el) {
-        el.setAttribute("content", this.value);
-      }
-    };
-    TitleRewriter = class {
-      static {
-        __name(this, "TitleRewriter");
-      }
-      static {
-        __name2(this, "TitleRewriter");
-      }
-      constructor(text3) {
-        this.text = text3;
-      }
-      element(el) {
-        el.setInnerContent(this.text);
-      }
-    };
-    __name2(buildIndexRequest, "buildIndexRequest");
-    __name2(fetchSpaShell, "fetchSpaShell");
     __name2(onRequest, "onRequest");
   }
 });
