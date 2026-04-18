@@ -48,9 +48,9 @@ Never conflate them. Never use "oracle" in alt text or meta for art-series route
 ## SEO rules (enforced — do not override)
 - Never use "wall art" anywhere on the site
 - Never use "oracle" in SEO for art-series pages (`/creations/multidimensional-art/*`)
-- UL alt text: `[Piece Name], Universal Language [Number]. Original airbrushed painting on laser-cut wood by Adrian Rasmussen.`
+- UL alt text: `[Piece Name], Universal Language [Number]. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`
 - UL Cloudinary filename: `universal-language-[number]-[piece-name-slug]`
-- UL pieces are airbrushed paintings on laser-cut wood, NOT sculptures
+- UL pieces are multi-dimensional wooden sculptures — use that term in marketing and oracle contexts
 
 ## Deploy
 Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Claude tasks, Adrian tasks, and future items.

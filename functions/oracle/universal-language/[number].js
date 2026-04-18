@@ -176,7 +176,7 @@ export async function onRequest(context) {
   }
 
   const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
-  const description = `An original airbrushed painting on laser-cut wood by Adrian Rasmussen. Open the reading and receive what it holds.`;
+  const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
   const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
 
   // Simple string replacement — works regardless of streaming or encoding quirks.
