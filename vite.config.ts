@@ -105,7 +105,7 @@ function generateOgPagesPlugin(): Plugin {
         if (!cardName || !imageId) continue;
 
         const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
-        const description = `A reading from the Universal Language Oracle has been shared with you. Enter Code ${num} and receive what it holds.`;
+        const description = `A reading from the Universal Language Oracle. Enter Code ${num} and receive what it holds.`;
         const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
         const url         = `${SITE_URL}/oracle/universal-language/${num}`;
 
