@@ -45,8 +45,12 @@ const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[] }> = ({ trac
     const toggle = () => {
         const el = audioRef.current;
         if (!el) return;
-        playing ? el.pause() : el.play();
-        setPlaying(!playing);
+        if (playing) {
+            el.pause();
+            setPlaying(false);
+        } else {
+            el.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        }
     };
 
     const handleTimeUpdate = () => {
