@@ -175,8 +175,8 @@ export async function onRequest(context) {
     return new Response(html, { headers: { 'content-type': 'text/html;charset=UTF-8' } });
   }
 
-  const title       = `${cardName} · Code ${num} · Universal Language Oracle | Adrian Rasmussen`;
-  const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
+  const description = `An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
   const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
 
   // Simple string replacement — works regardless of streaming or encoding quirks.
