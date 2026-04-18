@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx scripts/generate-stories.ts && vite",
+    "dev": "tsx scripts/generate-stories.ts && vite --port 8888",
+    "dev:full": "tsx scripts/generate-stories.ts && npm run build && wrangler pages dev dist --port 8888 --ip 127.0.0.1",
     "build": "tsx scripts/generate-stories.ts && vite build && tsx scripts/generate-og-pages.ts",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
@@ -12,17 +13,16 @@
     "generate:qr": "tsx scripts/generate-ul-qr.ts",
     "crop:oracle": "tsx scripts/crop-oracle-images.ts",
     "rename:oracle": "tsx scripts/rename-oracle-images.ts",
-    "tina:dev": "tinacms dev -c 'vite --port 8888'",
-    "tina:build": "tinacms build"
+    "keystatic:dev": "vite --port 8888"
   },
   "dependencies": {
+    "@keystatic/core": "^0.5.50",
     "@stripe/stripe-js": "^8.7.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.0",
-    "stripe": "^20.3.1",
-    "tinacms": "^3.7.2"
+    "stripe": "^20.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
@@ -33,6 +33,8 @@
     "@types/sharp": "^0.32.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.24",
+    "concurrently": "^9.2.1",
+    "gray-matter": "^4.0.3",
     "postcss": "^8.5.6",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5",

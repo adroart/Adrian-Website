@@ -1,6 +1,8 @@
 
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Keystatic } from '@keystatic/core/ui';
+import keystaticConfig from './keystatic.config';
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
@@ -26,13 +28,18 @@ import NotFound from './components/NotFound';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
 import FontPreview from './components/FontPreview';
-import AdminMusicUpload from './components/AdminMusicUpload';
+import AdminFileUpload from './components/AdminFileUpload';
+import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
   const { isDarkMode } = useDarkMode();
+
+  if (location.pathname.startsWith('/keystatic')) {
+    return <Keystatic config={keystaticConfig} />;
+  }
 
   useSeoMeta(location.pathname);
 
@@ -90,7 +97,8 @@ const AppInner: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/font-preview" element={<FontPreview />} />
-          <Route path="/admin/music" element={<AdminMusicUpload />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/files" element={<AdminFileUpload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -20,7 +20,7 @@ const PUBLIC_BASE = 'https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev';
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
   'https://www.adrianrasmussen.com',
-  'https://adrian-rasmussen-art.pages.dev',
+  'https://adrian-website.pages.dev',
   'http://localhost:8888',
   'http://localhost:5173',
 ];

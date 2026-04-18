@@ -416,6 +416,16 @@ export const WritingArticle: React.FC = () => {
                         <ArrowUp size={14} /> Return to Top
                     </button>
                 </div>
+
+                {/* Admin edit shortcut — links directly into Keystatic editor */}
+                <div className="mt-6 text-center">
+                    <a
+                        href={`/keystatic/collections/stories/${slug}`}
+                        className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-300 hover:text-bronze-500 transition-colors font-semibold"
+                    >
+                        Edit story
+                    </a>
+                </div>
             </div>
 
             {/* #14 Floating back to top button */}

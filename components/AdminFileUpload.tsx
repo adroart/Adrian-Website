@@ -7,7 +7,7 @@ interface UploadedFile {
   uploaded: string;
 }
 
-const AdminMusicUpload: React.FC = () => {
+const AdminFileUpload: React.FC = () => {
   const [secret, setSecret] = useState('');
   const [authed, setAuthed] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -100,7 +100,7 @@ const AdminMusicUpload: React.FC = () => {
     return (
       <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6 flex items-center justify-center">
         <div className="w-full max-w-sm">
-          <h1 className="font-serif text-3xl text-wood-900 font-medium mb-2 text-center">Music Upload</h1>
+          <h1 className="font-serif text-3xl text-wood-900 font-medium mb-2 text-center">File Upload</h1>
           <p className="font-sans text-sm text-wood-500 text-center mb-10">Admin access only.</p>
           <div className="space-y-4">
             <input
@@ -128,7 +128,7 @@ const AdminMusicUpload: React.FC = () => {
   return (
     <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6">
       <div className="max-w-2xl mx-auto">
-        <h1 className="font-serif text-4xl text-wood-900 font-medium mb-2">Music Upload</h1>
+        <h1 className="font-serif text-4xl text-wood-900 font-medium mb-2">File Upload</h1>
         <p className="font-sans text-sm text-wood-500 mb-12">Files upload to the <span className="font-medium text-wood-700">adrian-music</span> R2 bucket.</p>
 
         {/* Upload form */}
@@ -207,4 +207,4 @@ const AdminMusicUpload: React.FC = () => {
   );
 };
 
-export default AdminMusicUpload;
+export default AdminFileUpload;

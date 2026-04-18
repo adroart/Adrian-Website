@@ -36,9 +36,5 @@ data/migration/
 # Generated QR plaque files (run npm run generate:qr to regenerate)
 scripts/output/
 
-# TinaCMS generated files (rebuilt on deploy)
-tina/__generated__/
-public/admin/
-
 # Generated stories (rebuilt from content/stories/*.md on every build)
 data/generatedStories.ts
