@@ -189,7 +189,8 @@ export async function onRequest(context) {
     .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`)
     .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image}"`)
     .replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`)
-    .replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`);
+    .replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`)
+    .replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
 
   return new Response(html, {
     headers: { 'content-type': 'text/html;charset=UTF-8' },
