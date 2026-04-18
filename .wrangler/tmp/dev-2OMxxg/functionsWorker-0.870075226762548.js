@@ -31,6 +31,84 @@ var __toESM = /* @__PURE__ */ __name((mod, isNodeMode, target) => (target = mod 
   isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
   mod
 )), "__toESM");
+function cookieHeader(value, isSecure) {
+  const base = `${COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000`;
+  return isSecure ? `${base}; Secure` : base;
+}
+__name(cookieHeader, "cookieHeader");
+async function onRequestPost({ request, env }) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  if (!body.password || body.password !== env.UPLOAD_SECRET) {
+    return new Response(JSON.stringify({ ok: false }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const isSecure = new URL(request.url).protocol === "https:";
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Set-Cookie": cookieHeader(env.UPLOAD_SECRET, isSecure)
+    }
+  });
+}
+__name(onRequestPost, "onRequestPost");
+var COOKIE_NAME;
+var init_login = __esm({
+  "api/admin/login.js"() {
+    init_functionsRoutes_0_07713168102845569();
+    COOKIE_NAME = "admin_session";
+    __name2(cookieHeader, "cookieHeader");
+    __name2(onRequestPost, "onRequestPost");
+  }
+});
+async function onRequestPost2({ request }) {
+  const isSecure = new URL(request.url).protocol === "https:";
+  const cookie2 = `${COOKIE_NAME2}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${isSecure ? "; Secure" : ""}`;
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json", "Set-Cookie": cookie2 }
+  });
+}
+__name(onRequestPost2, "onRequestPost2");
+var COOKIE_NAME2;
+var init_logout = __esm({
+  "api/admin/logout.js"() {
+    init_functionsRoutes_0_07713168102845569();
+    COOKIE_NAME2 = "admin_session";
+    __name2(onRequestPost2, "onRequestPost");
+  }
+});
+function getCookie(request, name) {
+  const header = request.headers.get("Cookie") || "";
+  const match2 = header.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
+  return match2 ? match2.slice(name.length + 1) : null;
+}
+__name(getCookie, "getCookie");
+async function onRequestGet({ request, env }) {
+  const session = getCookie(request, COOKIE_NAME3);
+  const ok = session === env.UPLOAD_SECRET;
+  return new Response(JSON.stringify({ ok }), {
+    status: ok ? 200 : 401,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+__name(onRequestGet, "onRequestGet");
+var COOKIE_NAME3;
+var init_verify = __esm({
+  "api/admin/verify.js"() {
+    init_functionsRoutes_0_07713168102845569();
+    COOKIE_NAME3 = "admin_session";
+    __name2(getCookie, "getCookie");
+    __name2(onRequestGet, "onRequestGet");
+  }
+});
 function buildIndexRequest(request) {
   const url2 = new URL(request.url);
   url2.pathname = "/index.html";
@@ -17066,11 +17144,11 @@ function isAllowedOrigin(origin, env) {
   return false;
 }
 __name(isAllowedOrigin, "isAllowedOrigin");
-async function onRequestPost(context) {
+async function onRequestPost3(context) {
   const { request, env } = context;
   const requestOrigin = request.headers.get("origin") || "";
   const origin = isAllowedOrigin(requestOrigin, env) ? requestOrigin : ALLOWED_ORIGINS[0];
-  const corsHeaders2 = {
+  const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": origin
   };
@@ -17080,39 +17158,39 @@ async function onRequestPost(context) {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
       status: 400,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   if (!env.STRIPE_SECRET_KEY) {
     return new Response(JSON.stringify({ error: "Payment system is not configured. Please contact the studio." }), {
       status: 503,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   const { items } = body;
   if (!Array.isArray(items) || items.length === 0) {
     return new Response(JSON.stringify({ error: "items must be a non-empty array" }), {
       status: 400,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   if (items.length > MAX_ITEMS) {
     return new Response(JSON.stringify({ error: `Too many items. Maximum is ${MAX_ITEMS}.` }), {
       status: 400,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   for (const item2 of items) {
     if (typeof item2.stripePriceId !== "string" || !item2.stripePriceId.startsWith("price_")) {
       return new Response(
         JSON.stringify({ error: "One or more items have an invalid price identifier." }),
-        { status: 400, headers: corsHeaders2 }
+        { status: 400, headers: corsHeaders }
       );
     }
     if (!Number.isInteger(item2.quantity) || item2.quantity < 1 || item2.quantity > MAX_QUANTITY_PER_ITEM) {
       return new Response(
         JSON.stringify({ error: `Quantity must be between 1 and ${MAX_QUANTITY_PER_ITEM}.` }),
-        { status: 400, headers: corsHeaders2 }
+        { status: 400, headers: corsHeaders }
       );
     }
   }
@@ -17150,15 +17228,15 @@ async function onRequestPost(context) {
     console.error("Stripe error:", JSON.stringify(session));
     return new Response(
       JSON.stringify({ error: "Payment session could not be created. Please try again or contact the studio." }),
-      { status: 502, headers: corsHeaders2 }
+      { status: 502, headers: corsHeaders }
     );
   }
   return new Response(JSON.stringify({ url: session.url }), {
     status: 200,
-    headers: corsHeaders2
+    headers: corsHeaders
   });
 }
-__name(onRequestPost, "onRequestPost");
+__name(onRequestPost3, "onRequestPost3");
 async function onRequestOptions(context) {
   const requestOrigin = context.request.headers.get("origin") || "";
   const origin = isAllowedOrigin(requestOrigin, context.env) ? requestOrigin : ALLOWED_ORIGINS[0];
@@ -17223,8 +17301,44 @@ var init_checkout = __esm({
     __name2(isAllowedOrigin, "isAllowedOrigin");
     MAX_ITEMS = 20;
     MAX_QUANTITY_PER_ITEM = 10;
-    __name2(onRequestPost, "onRequestPost");
+    __name2(onRequestPost3, "onRequestPost");
     __name2(onRequestOptions, "onRequestOptions");
+  }
+});
+function getCookie2(request, name) {
+  const header = request.headers.get("Cookie") || "";
+  const match2 = header.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
+  return match2 ? match2.slice(name.length + 1) : null;
+}
+__name(getCookie2, "getCookie2");
+async function onRequestDelete({ request, env }) {
+  if (getCookie2(request, COOKIE_NAME4) !== env.UPLOAD_SECRET) {
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const key = new URL(request.url).searchParams.get("key");
+  if (!key) {
+    return new Response(JSON.stringify({ ok: false, error: "Missing key" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  await env.MUSIC_BUCKET.delete(key);
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+__name(onRequestDelete, "onRequestDelete");
+var COOKIE_NAME4;
+var init_delete_file = __esm({
+  "api/delete-file.js"() {
+    init_functionsRoutes_0_07713168102845569();
+    COOKIE_NAME4 = "admin_session";
+    __name2(getCookie2, "getCookie");
+    __name2(onRequestDelete, "onRequestDelete");
   }
 });
 function isAllowedOrigin2(origin, env) {
@@ -17311,11 +17425,11 @@ function buildEmailHtml(data) {
 </div>`.trim();
 }
 __name(buildEmailHtml, "buildEmailHtml");
-async function onRequestPost2(context) {
+async function onRequestPost4(context) {
   const { request, env } = context;
   const requestOrigin = request.headers.get("origin") || "";
   const origin = isAllowedOrigin2(requestOrigin, env) ? requestOrigin : ALLOWED_ORIGINS2[0];
-  const corsHeaders2 = {
+  const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": origin
   };
@@ -17325,13 +17439,13 @@ async function onRequestPost2(context) {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
       status: 400,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   if (!env.RESEND_API_KEY) {
     return new Response(
       JSON.stringify({ error: "Email service is not configured. Please contact the studio directly." }),
-      { status: 503, headers: corsHeaders2 }
+      { status: 503, headers: corsHeaders }
     );
   }
   const { name, email, vision, commissionType, inquiryType } = body;
@@ -17339,13 +17453,13 @@ async function onRequestPost2(context) {
   if (!name || !email || !isPurchase && (!vision || !commissionType)) {
     return new Response(
       JSON.stringify({ error: "Please fill in all required fields." }),
-      { status: 400, headers: corsHeaders2 }
+      { status: 400, headers: corsHeaders }
     );
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return new Response(
       JSON.stringify({ error: "Please provide a valid email address." }),
-      { status: 400, headers: corsHeaders2 }
+      { status: 400, headers: corsHeaders }
     );
   }
   const toEmail = env.INQUIRY_TO_EMAIL || DEFAULT_TO;
@@ -17369,15 +17483,15 @@ async function onRequestPost2(context) {
     console.error("Resend error:", JSON.stringify(err));
     return new Response(
       JSON.stringify({ error: "Your message could not be sent. Please try again or contact the studio directly." }),
-      { status: 502, headers: corsHeaders2 }
+      { status: 502, headers: corsHeaders }
     );
   }
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
-    headers: corsHeaders2
+    headers: corsHeaders
   });
 }
-__name(onRequestPost2, "onRequestPost2");
+__name(onRequestPost4, "onRequestPost4");
 async function onRequestOptions2(context) {
   const requestOrigin = context.request.headers.get("origin") || "";
   const origin = isAllowedOrigin2(requestOrigin, context.env) ? requestOrigin : ALLOWED_ORIGINS2[0];
@@ -17407,7 +17521,7 @@ var init_inquire = __esm({
     DEFAULT_FROM = "noreply@adrianrasmussen.com";
     __name2(escapeHtml2, "escapeHtml");
     __name2(buildEmailHtml, "buildEmailHtml");
-    __name2(onRequestPost2, "onRequestPost");
+    __name2(onRequestPost4, "onRequestPost");
     __name2(onRequestOptions2, "onRequestOptions");
   }
 });
@@ -17430,11 +17544,11 @@ function isAllowedOrigin3(origin, env) {
   return false;
 }
 __name(isAllowedOrigin3, "isAllowedOrigin3");
-async function onRequestPost3(context) {
+async function onRequestPost5(context) {
   const { request, env } = context;
   const requestOrigin = request.headers.get("origin") || "";
   const origin = isAllowedOrigin3(requestOrigin, env) ? requestOrigin : ALLOWED_ORIGINS3[0];
-  const corsHeaders2 = {
+  const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": origin
   };
@@ -17444,7 +17558,7 @@ async function onRequestPost3(context) {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
       status: 400,
-      headers: corsHeaders2
+      headers: corsHeaders
     });
   }
   const formId = env.KIT_FORM_ID;
@@ -17452,14 +17566,14 @@ async function onRequestPost3(context) {
   if (!formId || !apiKey) {
     return new Response(
       JSON.stringify({ error: "Newsletter service is not configured." }),
-      { status: 503, headers: corsHeaders2 }
+      { status: 503, headers: corsHeaders }
     );
   }
   const { email } = body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return new Response(
       JSON.stringify({ error: "Please provide a valid email address." }),
-      { status: 400, headers: corsHeaders2 }
+      { status: 400, headers: corsHeaders }
     );
   }
   const kitRes = await fetch(
@@ -17475,15 +17589,15 @@ async function onRequestPost3(context) {
     console.error("Kit error:", JSON.stringify(data));
     return new Response(
       JSON.stringify({ error: "Subscription failed. Please try again." }),
-      { status: 502, headers: corsHeaders2 }
+      { status: 502, headers: corsHeaders }
     );
   }
   return new Response(JSON.stringify({ subscription: data.subscription }), {
     status: 200,
-    headers: corsHeaders2
+    headers: corsHeaders
   });
 }
-__name(onRequestPost3, "onRequestPost3");
+__name(onRequestPost5, "onRequestPost5");
 async function onRequestOptions3(context) {
   const requestOrigin = context.request.headers.get("origin") || "";
   const origin = isAllowedOrigin3(requestOrigin, context.env) ? requestOrigin : ALLOWED_ORIGINS3[0];
@@ -17507,57 +17621,62 @@ var init_subscribe = __esm({
       "https://adrian-rasmussen-art.pages.dev"
     ];
     __name2(isAllowedOrigin3, "isAllowedOrigin");
-    __name2(onRequestPost3, "onRequestPost");
+    __name2(onRequestPost5, "onRequestPost");
     __name2(onRequestOptions3, "onRequestOptions");
   }
 });
-function corsHeaders(origin) {
-  const allowed = ALLOWED_ORIGINS4.includes(origin) ? origin : ALLOWED_ORIGINS4[0];
-  return {
-    "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  };
+function getCookie3(request, name) {
+  const header = request.headers.get("Cookie") || "";
+  const match2 = header.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
+  return match2 ? match2.slice(name.length + 1) : null;
 }
-__name(corsHeaders, "corsHeaders");
-async function onRequestOptions4({ request }) {
-  return new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin") || "") });
+__name(getCookie3, "getCookie3");
+function isAuthed(request, env) {
+  return getCookie3(request, COOKIE_NAME5) === env.UPLOAD_SECRET;
 }
-__name(onRequestOptions4, "onRequestOptions4");
-async function onRequestPost4({ request, env }) {
-  const origin = request.headers.get("Origin") || "";
-  const headers = { "Content-Type": "application/json", ...corsHeaders(origin) };
+__name(isAuthed, "isAuthed");
+async function onRequestPost6({ request, env }) {
+  if (!isAuthed(request, env)) {
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   let formData;
   try {
     formData = await request.formData();
   } catch {
-    return new Response(JSON.stringify({ ok: false, error: "Invalid form data" }), { status: 400, headers });
-  }
-  const secret = formData.get("secret");
-  if (!secret || secret !== env.UPLOAD_SECRET) {
-    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers });
+    return new Response(JSON.stringify({ ok: false, error: "Invalid form data" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
   }
   const file2 = formData.get("file");
   const filename = formData.get("filename");
   if (!file2 || !filename) {
-    return new Response(JSON.stringify({ ok: false, error: "Missing file or filename" }), { status: 400, headers });
+    return new Response(JSON.stringify({ ok: false, error: "Missing file or filename" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
   }
   const safeFilename = filename.toString().replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
-  const contentType = file2.type || "audio/mpeg";
   const buffer = await file2.arrayBuffer();
   await env.MUSIC_BUCKET.put(safeFilename, buffer, {
-    httpMetadata: { contentType }
+    httpMetadata: { contentType: file2.type || "audio/mpeg" }
   });
   const url2 = `${PUBLIC_BASE}/${safeFilename}`;
-  return new Response(JSON.stringify({ ok: true, url: url2 }), { status: 200, headers });
+  return new Response(JSON.stringify({ ok: true, url: url2 }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
 }
-__name(onRequestPost4, "onRequestPost4");
-async function onRequestGet({ request, env }) {
-  const origin = request.headers.get("Origin") || "";
-  const headers = { "Content-Type": "application/json", ...corsHeaders(origin) };
-  const secret = new URL(request.url).searchParams.get("secret");
-  if (!secret || secret !== env.UPLOAD_SECRET) {
-    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers });
+__name(onRequestPost6, "onRequestPost6");
+async function onRequestGet2({ request, env }) {
+  if (!isAuthed(request, env)) {
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
   }
   const listed = await env.MUSIC_BUCKET.list();
   const files = listed.objects.map((obj) => ({
@@ -17566,26 +17685,23 @@ async function onRequestGet({ request, env }) {
     size: obj.size,
     uploaded: obj.uploaded
   }));
-  return new Response(JSON.stringify({ ok: true, files }), { status: 200, headers });
+  return new Response(JSON.stringify({ ok: true, files }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
 }
-__name(onRequestGet, "onRequestGet");
+__name(onRequestGet2, "onRequestGet2");
 var PUBLIC_BASE;
-var ALLOWED_ORIGINS4;
+var COOKIE_NAME5;
 var init_upload_music = __esm({
   "api/upload-music.js"() {
     init_functionsRoutes_0_07713168102845569();
     PUBLIC_BASE = "https://pub-c319a4177bc349d7879bd19145ffa2cb.r2.dev";
-    ALLOWED_ORIGINS4 = [
-      "https://adrianrasmussen.com",
-      "https://www.adrianrasmussen.com",
-      "https://adrian-website.pages.dev",
-      "http://localhost:8888",
-      "http://localhost:5173"
-    ];
-    __name2(corsHeaders, "corsHeaders");
-    __name2(onRequestOptions4, "onRequestOptions");
-    __name2(onRequestPost4, "onRequestPost");
-    __name2(onRequestGet, "onRequestGet");
+    COOKIE_NAME5 = "admin_session";
+    __name2(getCookie3, "getCookie");
+    __name2(isAuthed, "isAuthed");
+    __name2(onRequestPost6, "onRequestPost");
+    __name2(onRequestGet2, "onRequestGet");
   }
 });
 function onRequest3() {
@@ -17627,20 +17743,44 @@ var init_number2 = __esm({
 var routes;
 var init_functionsRoutes_0_07713168102845569 = __esm({
   "../.wrangler/tmp/pages-GMes0A/functionsRoutes-0.07713168102845569.mjs"() {
+    init_login();
+    init_logout();
+    init_verify();
     init_number();
     init_params();
     init_checkout();
     init_checkout();
+    init_delete_file();
     init_inquire();
     init_inquire();
     init_subscribe();
     init_subscribe();
-    init_upload_music();
     init_upload_music();
     init_upload_music();
     init_oracle();
     init_number2();
     routes = [
+      {
+        routePath: "/api/admin/login",
+        mountPath: "/api/admin",
+        method: "POST",
+        middlewares: [],
+        modules: [onRequestPost]
+      },
+      {
+        routePath: "/api/admin/logout",
+        mountPath: "/api/admin",
+        method: "POST",
+        middlewares: [],
+        modules: [onRequestPost2]
+      },
+      {
+        routePath: "/api/admin/verify",
+        mountPath: "/api/admin",
+        method: "GET",
+        middlewares: [],
+        modules: [onRequestGet]
+      },
       {
         routePath: "/oracle/universal-language/:number",
         mountPath: "/oracle/universal-language",
@@ -17667,7 +17807,14 @@ var init_functionsRoutes_0_07713168102845569 = __esm({
         mountPath: "/api",
         method: "POST",
         middlewares: [],
-        modules: [onRequestPost]
+        modules: [onRequestPost3]
+      },
+      {
+        routePath: "/api/delete-file",
+        mountPath: "/api",
+        method: "DELETE",
+        middlewares: [],
+        modules: [onRequestDelete]
       },
       {
         routePath: "/api/inquire",
@@ -17681,7 +17828,7 @@ var init_functionsRoutes_0_07713168102845569 = __esm({
         mountPath: "/api",
         method: "POST",
         middlewares: [],
-        modules: [onRequestPost2]
+        modules: [onRequestPost4]
       },
       {
         routePath: "/api/subscribe",
@@ -17695,28 +17842,21 @@ var init_functionsRoutes_0_07713168102845569 = __esm({
         mountPath: "/api",
         method: "POST",
         middlewares: [],
-        modules: [onRequestPost3]
+        modules: [onRequestPost5]
       },
       {
         routePath: "/api/upload-music",
         mountPath: "/api",
         method: "GET",
         middlewares: [],
-        modules: [onRequestGet]
-      },
-      {
-        routePath: "/api/upload-music",
-        mountPath: "/api",
-        method: "OPTIONS",
-        middlewares: [],
-        modules: [onRequestOptions4]
+        modules: [onRequestGet2]
       },
       {
         routePath: "/api/upload-music",
         mountPath: "/api",
         method: "POST",
         middlewares: [],
-        modules: [onRequestPost4]
+        modules: [onRequestPost6]
       },
       {
         routePath: "/qr/oracle",

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { Keystatic } from '@keystatic/core/ui';
 import keystaticConfig from './keystatic.config';
 import { useSeoMeta } from './useSeoMeta';
@@ -29,6 +29,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import Terms from './components/Terms';
 import FontPreview from './components/FontPreview';
 import AdminFileUpload from './components/AdminFileUpload';
+import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import GenerativeBackground from './components/GenerativeBackground';
@@ -38,7 +39,18 @@ const AppInner: React.FC = () => {
   const { isDarkMode } = useDarkMode();
 
   if (location.pathname.startsWith('/keystatic')) {
-    return <Keystatic config={keystaticConfig} />;
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-shrink-0 border-b border-wood-200 bg-white px-6 py-3 flex items-center justify-between z-50">
+          <Link to="/admin" className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold flex items-center gap-1.5">
+            ← Admin
+          </Link>
+        </div>
+        <div className="flex-1">
+          <Keystatic config={keystaticConfig} />
+        </div>
+      </div>
+    );
   }
 
   useSeoMeta(location.pathname);
@@ -50,6 +62,7 @@ const AppInner: React.FC = () => {
 
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
+  const isAdmin = location.pathname.startsWith('/admin');
   // Only the /oracle gateway is fully immersive — card detail pages use the standard nav
   const isOracleGateway = location.pathname === '/oracle';
   // Footer is hidden on all oracle card routes (bottom nav acts as footer)
@@ -65,7 +78,7 @@ const AppInner: React.FC = () => {
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       <GenerativeBackground pathname={location.pathname} theme={theme} />
-      {!isWelcome && !isOracleGateway && <Navigation theme={theme} />}
+      {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}
 
       <main id="main-content">
         <Routes>
@@ -97,13 +110,14 @@ const AppInner: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/font-preview" element={<FontPreview />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/files" element={<AdminFileUpload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
-      {!isWelcome && !isOracleCard && <Footer />}
+      {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
       <CartDrawer />
     </div>
   );
