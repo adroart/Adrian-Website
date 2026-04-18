@@ -92,6 +92,15 @@ function cardImageUrl(number: number, size: number): string {
   return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
+const CLOUDINARY_BASE = 'https://res.cloudinary.com/dobbosnda/image/upload';
+
+function storyImageUrl(number: number): string {
+  const publicId = UL_IMAGE_BY_NUMBER.get(number);
+  if (!publicId) return '';
+  // 9:16 portrait — card art centered and padded on dark background, ready for Stories
+  return `${CLOUDINARY_BASE}/f_jpg,q_auto,w_1080,h_1920,c_pad,g_center,b_rgb:262321/${publicId}`;
+}
+
 /* ─── Lightbox ───────────────────────────────────────────────────────────── */
 
 const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
@@ -703,9 +712,10 @@ const UniversalLanguageCard: React.FC = () => {
   const expanded  = getExpandedCard(cardNum);
   const synthesis = getSynthesis(cardNum);
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [copied,       setCopied]       = useState(false);
-  const [shareOpen,    setShareOpen]    = useState(false);
+  const [lightboxOpen,   setLightboxOpen]   = useState(false);
+  const [copied,         setCopied]         = useState(false);
+  const [shareOpen,      setShareOpen]      = useState(false);
+  const [storyLoading,   setStoryLoading]   = useState(false);
 
   const [showQREntrance, setShowQREntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') === 'qr'
@@ -774,7 +784,41 @@ const UniversalLanguageCard: React.FC = () => {
   };
 
   const handleNativeShare = async () => {
-    try { await navigator.share({ title: shareText, url: shareUrl }); } catch {}
+    try {
+      const storyUrl = storyImageUrl(card?.number ?? 0);
+      if (storyUrl && 'canShare' in navigator) {
+        const res  = await fetch(storyUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `universal-language-code-${card?.number ?? 0}.jpg`, { type: 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: shareText, url: shareUrl, files: [file] });
+          return;
+        }
+      }
+      await navigator.share({ title: shareText, url: shareUrl });
+    } catch {}
+  };
+
+  const handleStoryDownload = async () => {
+    const url = storyImageUrl(card?.number ?? 0);
+    if (!url) return;
+    setStoryLoading(true);
+    try {
+      const res       = await fetch(url);
+      const blob      = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a         = document.createElement('a');
+      a.href          = objectUrl;
+      a.download      = `universal-language-code-${card?.number ?? 0}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, '_blank');
+    } finally {
+      setStoryLoading(false);
+    }
   };
 
   useMetaTags({
@@ -862,6 +906,14 @@ const UniversalLanguageCard: React.FC = () => {
                   )}
                 </Link>
 
+                {/* Card number + hexagram symbol */}
+                <div className="flex items-center justify-center gap-2 px-4 py-5 bg-paper-50">
+                  <span className="font-display text-[28px] text-wood-500 leading-none">{String(cardNum).padStart(2, '0')}</span>
+                  {synthesis?.reference?.hexagram_symbol && (
+                    <span className="text-[28px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                  )}
+                </div>
+
                 {/* Share */}
                 <button
                   onClick={() => setShareOpen(v => !v)}
@@ -947,6 +999,20 @@ const UniversalLanguageCard: React.FC = () => {
                       <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
                     </a>
 
+                    {/* Save for Story — 9:16 portrait download */}
+                    <button
+                      onClick={handleStoryDownload}
+                      disabled={storyLoading}
+                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left disabled:opacity-50"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+                        <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 10v6m-3-3 3 3 3-3"/>
+                      </svg>
+                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">
+                        {storyLoading ? 'Saving...' : 'Save for Story'}
+                      </span>
+                    </button>
+
                     {/* Native share — only shown where supported (mobile) */}
                     {typeof navigator !== 'undefined' && 'share' in navigator && (
                       <button
@@ -957,7 +1023,7 @@ const UniversalLanguageCard: React.FC = () => {
                           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                         </svg>
-                        <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">More options</span>
+                        <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Share to app</span>
                       </button>
                     )}
                   </div>
@@ -972,15 +1038,9 @@ const UniversalLanguageCard: React.FC = () => {
               {/* Bronze accent top bar */}
               <div className="h-[3px] w-full bg-bronze-400" />
               <div className="px-6 pt-6 pb-5">
-                {/* Title row: name left, symbol + number right — all baseline-aligned */}
+                {/* Title row */}
                 <div className="flex items-baseline justify-between gap-3">
                   <h1 className="font-serif text-[48px] text-wood-900 leading-[1.0] tracking-[-0.01em]">{card.card_name}</h1>
-                  <div className="flex items-baseline gap-3 shrink-0">
-                    <span className="font-display text-[48px] font-normal text-wood-400 leading-none tracking-tight">{String(card.number).padStart(2, '0')}</span>
-                    {synthesis?.reference?.hexagram_symbol && (
-                      <span className="text-[44px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                    )}
-                  </div>
                 </div>
                 {/* Keywords subtitle */}
                 {(() => {
