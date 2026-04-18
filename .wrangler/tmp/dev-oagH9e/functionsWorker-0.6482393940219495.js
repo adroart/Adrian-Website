@@ -122,10 +122,10 @@ async function onRequest(context) {
   if (!cardName || !imageId || isNaN(num)) {
     return new Response(html, { headers: { "content-type": "text/html;charset=UTF-8" } });
   }
-  const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle | Adrian Rasmussen`;
-  const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle`;
+  const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
   const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`);
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
   return new Response(html, {
     headers: { "content-type": "text/html;charset=UTF-8" }
   });
