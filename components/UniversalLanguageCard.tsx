@@ -94,11 +94,113 @@ function cardImageUrl(number: number, size: number): string {
 
 const CLOUDINARY_BASE = 'https://res.cloudinary.com/dobbosnda/image/upload';
 
-function storyImageUrl(number: number): string {
+function fitText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxSize: number,
+  minSize: number,
+  makeFont: (size: number) => string,
+): void {
+  let size = maxSize;
+  ctx.font = makeFont(size);
+  while (ctx.measureText(text).width > maxWidth && size > minSize) {
+    size -= 4;
+    ctx.font = makeFont(size);
+  }
+}
+
+async function generateStoryBlob(
+  number: number,
+  cardName: string,
+  keywords: string,
+): Promise<Blob> {
   const publicId = UL_IMAGE_BY_NUMBER.get(number);
-  if (!publicId) return '';
-  // 9:16 portrait — card art centered and padded on dark background, ready for Stories
-  return `${CLOUDINARY_BASE}/f_jpg,q_auto,w_1080,h_1920,c_pad,g_center,b_rgb:262321/${publicId}`;
+  if (!publicId) throw new Error('no image for card ' + number);
+
+  // Load fonts explicitly before drawing so Canvas picks them up reliably
+  await Promise.all([
+    document.fonts.load('400 88px "Cormorant Garamond"'),
+    document.fonts.load('italic 400 32px "Cormorant Garamond"'),
+    document.fonts.load('300 32px "Karla"'),
+    document.fonts.load('400 32px "Karla"'),
+  ]).catch(() => {});
+
+  // Load card image with CORS so Canvas can read pixels
+  const imgUrl = `${CLOUDINARY_BASE}/f_jpg,q_auto,w_1080,h_1080,c_fill,g_center/${publicId}`;
+  const cardImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.crossOrigin = 'anonymous';
+    i.onload  = () => resolve(i);
+    i.onerror = reject;
+    i.src = imgUrl;
+  });
+
+  const W = 1080, H = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+
+  // Dark background
+  ctx.fillStyle = '#262321';
+  ctx.fillRect(0, 0, W, H);
+
+  // Card image — sits 80px from top
+  ctx.drawImage(cardImg, 0, 80, W, W);
+
+  // Gradient fade: image blends into background
+  const grad = ctx.createLinearGradient(0, 940, 0, 1180);
+  grad.addColorStop(0, 'rgba(38,35,33,0)');
+  grad.addColorStop(1, 'rgba(38,35,33,1)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 940, W, 240);
+
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  const cx = W / 2;
+
+  // "UNIVERSAL LANGUAGE ORACLE" label
+  ctx.fillStyle = '#8b7355';
+  ctx.font = '300 26px "Karla", sans-serif';
+  ctx.fillText('UNIVERSAL LANGUAGE ORACLE', cx, 1230);
+
+  // Card name — scale down for long names
+  ctx.fillStyle = '#f5f0e8';
+  fitText(ctx, cardName, 960, 88, 52, s => `400 ${s}px "Cormorant Garamond", serif`);
+  ctx.fillText(cardName, cx, 1335);
+
+  // Code label
+  ctx.fillStyle = '#524330';
+  ctx.font = '300 30px "Karla", sans-serif';
+  ctx.fillText(`Code ${String(number).padStart(2, '0')}`, cx, 1410);
+
+  // Keywords: shadow · gift · siddhi
+  ctx.fillStyle = '#b0966b';
+  fitText(ctx, keywords, 900, 34, 24, s => `400 ${s}px "Karla", sans-serif`);
+  ctx.fillText(keywords, cx, 1490);
+
+  // Thin rule
+  ctx.strokeStyle = '#3d3530';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(380, 1555);
+  ctx.lineTo(700, 1555);
+  ctx.stroke();
+
+  // Reading invitation
+  ctx.fillStyle = '#524330';
+  ctx.font = 'italic 400 30px "Cormorant Garamond", serif';
+  ctx.fillText('Open the reading and receive what it holds.', cx, 1620);
+
+  // URL
+  ctx.fillStyle = '#3d3530';
+  ctx.font = '300 24px "Karla", sans-serif';
+  ctx.fillText('adrianrasmussen.com/oracle', cx, 1680);
+
+  return new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.92)
+  );
 }
 
 /* ─── Lightbox ───────────────────────────────────────────────────────────── */
@@ -700,6 +802,44 @@ const CardLink: React.FC<{
   );
 };
 
+/* ─── Keyword row — dots only between words on the same visual line ──────── */
+
+const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onClick }) => {
+  const spanRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [sameLine, setSameLine] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    const measure = () => {
+      const tops = spanRefs.current.map(el => el?.offsetTop ?? -1);
+      setSameLine(tops.map((top, i) => i < tops.length - 1 && top === tops[i + 1]));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [kws]);
+
+  return (
+    <button
+      onClick={onClick}
+      className="mt-2 flex flex-wrap items-baseline justify-center gap-y-0 text-center cursor-pointer group"
+    >
+      {kws.map((k, i) => (
+        <React.Fragment key={i}>
+          <span
+            ref={el => { spanRefs.current[i] = el; }}
+            className="whitespace-nowrap font-serif text-xl leading-snug text-wood-400 dark:text-wood-500 group-hover:text-bronze-600 transition-colors"
+          >
+            {k}
+          </span>
+          {sameLine[i] && (
+            <span className="text-bronze-400/60 mx-1.5 font-serif text-xl leading-snug group-hover:text-bronze-600 transition-colors select-none">·</span>
+          )}
+        </React.Fragment>
+      ))}
+    </button>
+  );
+};
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageCard: React.FC = () => {
@@ -777,15 +917,14 @@ const UniversalLanguageCard: React.FC = () => {
   const shareUrl  = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = card ? `${card.card_name} · Code ${card.number} · Universal Language Oracle by Adrian Rasmussen` : '';
 
-  // Pre-fetch the story image as soon as the share sheet opens so tapping
+  // Pre-generate the story image as soon as the share sheet opens so tapping
   // Instagram is instant — no visible loading delay.
   const storyFileRef = useRef<File | null>(null);
   useEffect(() => {
     if (!shareOpen || !card) return;
-    const url = storyImageUrl(card.number);
-    if (!url || storyFileRef.current) return;
-    fetch(url)
-      .then(r => r.blob())
+    if (storyFileRef.current) return;
+    const keywords = `${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`;
+    generateStoryBlob(card.number, card.card_name, keywords)
       .then(blob => {
         storyFileRef.current = new File([blob], `universal-language-code-${card.number}.jpg`, { type: 'image/jpeg' });
       })
@@ -809,21 +948,21 @@ const UniversalLanguageCard: React.FC = () => {
   };
 
   const handleStoryDownload = async () => {
-    const url = storyImageUrl(card?.number ?? 0);
-    if (!url) return;
+    if (!card) return;
     setStoryLoading(true);
     try {
-      const blob      = storyFileRef.current ?? await fetch(url).then(r => r.blob());
+      const keywords = `${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`;
+      const blob      = storyFileRef.current ?? await generateStoryBlob(card.number, card.card_name, keywords);
       const objectUrl = URL.createObjectURL(blob);
       const a         = document.createElement('a');
       a.href          = objectUrl;
-      a.download      = `universal-language-code-${card?.number ?? 0}.jpg`;
+      a.download      = `universal-language-code-${card.number}.jpg`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(objectUrl);
     } catch {
-      window.open(url, '_blank');
+      // ignore — nothing to fall back to without a URL
     } finally {
       setStoryLoading(false);
     }
@@ -889,17 +1028,17 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Order + Share — two-up row directly below image */}
             <div className="border-t border-b border-wood-200/60">
               <div className="flex divide-x divide-wood-200/40">
-                {/* Collect */}
+                {/* Acquire */}
                 <Link
                   to={piece ? `/creations/${piece.id}` : '/inquire'}
-                  className="group flex-1 flex items-center justify-between gap-4 px-5 py-5 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
                 >
                   <div>
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
-                      Collect
+                      Acquire
                     </p>
                     <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
-                      Original art
+                      Physical piece
                     </p>
                   </div>
                   {piece?.availability === 'SOLD' && (
@@ -914,18 +1053,17 @@ const UniversalLanguageCard: React.FC = () => {
                   )}
                 </Link>
 
-                {/* Card number + hexagram symbol */}
-                <div className="flex items-center justify-center gap-2 px-4 py-5 bg-paper-50">
-                  <span className="font-display text-[28px] text-wood-500 leading-none">{String(cardNum).padStart(2, '0')}</span>
-                  {synthesis?.reference?.hexagram_symbol && (
+                {/* Hexagram symbol */}
+                {synthesis?.reference?.hexagram_symbol && (
+                  <div className="flex items-center justify-center px-4 py-3 bg-paper-50">
                     <span className="text-[28px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Share */}
                 <button
                   onClick={() => setShareOpen(v => !v)}
-                  className="group flex-1 flex items-center justify-end px-5 py-5 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-end px-4 py-3 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
                   aria-expanded={shareOpen}
                 >
                   <div className="text-right">
@@ -1034,8 +1172,8 @@ const UniversalLanguageCard: React.FC = () => {
               <div className="h-[3px] w-full bg-bronze-400" />
               <div className="px-6 pt-6 pb-5">
                 {/* Title row */}
-                <div className="flex items-baseline justify-between gap-3">
-                  <h1 className="font-serif text-[48px] text-wood-900 leading-[1.0] tracking-[-0.01em]">{card.card_name}</h1>
+                <div className="text-center">
+                  <h1 className="font-serif text-[32px] text-wood-900 leading-[1.1] tracking-[-0.01em] whitespace-nowrap">{card.card_name}</h1>
                 </div>
                 {/* Keywords subtitle */}
                 {(() => {
@@ -1043,16 +1181,7 @@ const UniversalLanguageCard: React.FC = () => {
                   return kws.length > 0 ? (
                     <>
                       <div className="mt-3 h-px bg-wood-400/30" />
-                      <button
-                        onClick={() => go('genekeys')}
-                        className="mt-2 flex flex-wrap items-baseline gap-y-0 text-left cursor-pointer group"
-                      >
-                        {kws.map((k, i) => (
-                          <span key={i} className="whitespace-nowrap font-serif text-xl leading-snug text-wood-400 dark:text-wood-500 group-hover:text-bronze-600 transition-colors">
-                            {k}{i < kws.length - 1 && <span className="text-bronze-400/60 mx-1.5">·</span>}
-                          </span>
-                        ))}
-                      </button>
+                      <KeywordRow kws={kws} onClick={() => go('genekeys')} />
                     </>
                   ) : null;
                 })()}
