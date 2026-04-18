@@ -465,10 +465,11 @@ const GeneKeyCard: React.FC<{
         </div>
         {/* Contemplation title — non-text, stays clickable */}
         <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.moreColor} mb-5`}>{level.contemplation_title}</p>
-        {/* Text content — stops propagation so selection/copy still works */}
-        <div className="space-y-4 mb-3" onClick={e => e.stopPropagation()}>
+        {/* Text content — stop propagation only when open so expanded text stays selectable;
+            when collapsed, clicks fall through to the card toggle. */}
+        <div className="space-y-4 mb-3" onClick={open ? e => e.stopPropagation() : undefined}>
           {paragraphs.map((p, i) => (
-            <p key={i} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text`}>{p}</p>
+            <p key={i} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] ${open ? 'select-text cursor-text' : ''}`}>{p}</p>
           ))}
         </div>
         {tone === 'shadow' && open && (level.repressive_nature || level.reactive_nature) && (
@@ -540,7 +541,7 @@ const SynthesisToneCard: React.FC<{
             aria-hidden="true"
           >+</span>
         </div>
-        <div className="space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="space-y-4" onClick={open ? e => e.stopPropagation() : undefined}>
           {open ? (
             <>
               {paragraphs.map((p, i) => (
@@ -561,7 +562,7 @@ const SynthesisToneCard: React.FC<{
             </>
           ) : (
             <p
-              className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text max-h-[8.6em] overflow-hidden`}
+              className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] max-h-[8.6em] overflow-hidden`}
               style={{
                 WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
                 maskImage:       'linear-gradient(to bottom, black 55%, transparent 100%)',
@@ -623,7 +624,7 @@ const ExpandCard: React.FC<{
             aria-hidden="true"
           >+</span>
         </div>
-        <div onClick={e => e.stopPropagation()}>
+        <div onClick={open ? e => e.stopPropagation() : undefined}>
           {open ? (
             <div className="space-y-4">
               {paragraphs.map((p, i) => (
