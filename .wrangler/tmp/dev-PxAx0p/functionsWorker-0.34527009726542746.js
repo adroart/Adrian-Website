@@ -125,7 +125,7 @@ async function onRequest(context) {
   const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle`;
   const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
   const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
   return new Response(html, {
     headers: { "content-type": "text/html;charset=UTF-8" }
   });
@@ -139,7 +139,7 @@ var init_number = __esm({
   "oracle/universal-language/[number].js"() {
     init_functionsRoutes_0_28783045294533727();
     CLOUDINARY = "https://res.cloudinary.com/dobbosnda/image/upload";
-    OG_CROP = "f_auto,q_auto,w_1200,h_1200,c_fill,g_center";
+    OG_CROP = "f_auto,q_auto,w_300,h_300,c_fill,g_center";
     CARD_NAMES = {
       1: "Earth's Breath",
       2: "Beyond the Shell",

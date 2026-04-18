@@ -124,7 +124,7 @@ async function onRequest(context) {
   const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle`;
   const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
   const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$11200"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
   return new Response(html, {
     headers: { "content-type": "text/html;charset=UTF-8" }
   });
@@ -134,7 +134,7 @@ var init_number = __esm({
   "oracle/universal-language/[number].js"() {
     init_functionsRoutes_0_28783045294533727();
     CLOUDINARY = "https://res.cloudinary.com/dobbosnda/image/upload";
-    OG_CROP = "f_auto,q_auto,w_1200,h_1200,c_fill,g_center";
+    OG_CROP = "f_auto,q_auto,w_300,h_300,c_fill,g_center";
     CARD_NAMES = {
       1: "Earth's Breath",
       2: "Beyond the Shell",
@@ -17108,10 +17108,10 @@ var init_functionsRoutes_0_28783045294533727 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-wPagLA/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-XJneJR/middleware-loader.entry.ts
 init_functionsRoutes_0_28783045294533727();
 
-// ../.wrangler/tmp/bundle-wPagLA/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-XJneJR/middleware-insertion-facade.js
 init_functionsRoutes_0_28783045294533727();
 
 // ../../../../../../.nvm/versions/node/v22.20.0/lib/node_modules/wrangler/templates/pages-template-worker.ts
@@ -17607,7 +17607,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-wPagLA/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-XJneJR/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -17640,7 +17640,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-wPagLA/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-XJneJR/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
