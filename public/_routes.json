@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/qr/*",
+    "/oracle/universal-language/*"
+  ],
+  "exclude": []
+}
