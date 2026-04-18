@@ -153,85 +153,43 @@ const CARD_IMAGES = {
 
 /* ─── HTMLRewriter handlers ───────────────────────────────────────────────── */
 
-class MetaRewriter {
-  constructor(value) { this.value = value; }
-  element(el) { el.setAttribute('content', this.value); }
-}
-
-class TitleRewriter {
-  constructor(text) { this.text = text; }
-  element(el) { el.setInnerContent(this.text); }
-}
-
 /* ─── Handler ────────────────────────────────────────────────────────────── */
-
-/**
- * Build a Request that points at the SPA shell (`/index.html`).
- *
- * - Strips query strings (e.g. `?ref=qr` from QR scan redirects) so the
- *   ASSETS binding can resolve the asset cleanly.
- * - Forces an explicit `/index.html` path. Pages will resolve `/` to
- *   index.html for a normal browser request, but going straight to
- *   `/index.html` is more robust when fetched from inside a function.
- * - Wraps in a fresh GET Request so HTMLRewriter always receives a
- *   plain HTML response (no inherited Range headers, etc.).
- */
-function buildIndexRequest(request) {
-  const url = new URL(request.url);
-  url.pathname = '/index.html';
-  url.search = '';
-  return new Request(url.toString(), { method: 'GET', headers: request.headers });
-}
-
-async function fetchSpaShell(env, request) {
-  return env.ASSETS.fetch(buildIndexRequest(request));
-}
 
 export async function onRequest(context) {
   const { params, env, request } = context;
 
-  try {
-    const num = parseInt(params.number, 10);
-    const cardName = CARD_NAMES[num];
-    const imageId  = CARD_IMAGES[num];
+  const num      = parseInt(params.number, 10);
+  const cardName = CARD_NAMES[num];
+  const imageId  = CARD_IMAGES[num];
 
-    // Unknown card number — pass through to SPA as-is
-    if (!cardName || !imageId) {
-      return fetchSpaShell(env, request);
-    }
+  // Fetch index.html with a clean request — no caller headers that could
+  // trigger compression or range responses that break string replacement.
+  const indexUrl = new URL(request.url);
+  indexUrl.pathname = '/index.html';
+  indexUrl.search   = '';
+  const shell = await env.ASSETS.fetch(new Request(indexUrl.toString(), { method: 'GET' }));
+  let html = await shell.text();
 
-    const pageUrl     = `${SITE_URL}/oracle/universal-language/${num}`;
-    const title       = `${cardName} · Code ${num} · Universal Language Oracle | Adrian Rasmussen`;
-    const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
-    const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-
-    const response = await fetchSpaShell(env, request);
-
-    // Only run HTMLRewriter on actual HTML responses; otherwise return as-is.
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) {
-      return response;
-    }
-
-    return new HTMLRewriter()
-      .on('title',                              new TitleRewriter(title))
-      .on('meta[property="og:title"]',          new MetaRewriter(title))
-      .on('meta[property="og:description"]',    new MetaRewriter(description))
-      .on('meta[property="og:image"]',          new MetaRewriter(image))
-      .on('meta[property="og:url"]',            new MetaRewriter(pageUrl))
-      .on('meta[name="twitter:title"]',         new MetaRewriter(title))
-      .on('meta[name="twitter:description"]',   new MetaRewriter(description))
-      .on('meta[name="twitter:image"]',         new MetaRewriter(image))
-      .transform(response);
-  } catch (err) {
-    // Never let a meta-rewrite failure break the page for a real visitor.
-    // Fall back to the unmodified SPA shell — link previews lose the per-card
-    // image but the user still lands on a working page.
-    console.error('OG rewrite failed for /oracle/universal-language:', err);
-    try {
-      return await fetchSpaShell(env, request);
-    } catch {
-      return new Response('Service temporarily unavailable', { status: 503 });
-    }
+  // Unknown card — return shell as-is (React handles the 404 state).
+  if (!cardName || !imageId || isNaN(num)) {
+    return new Response(html, { headers: { 'content-type': 'text/html;charset=UTF-8' } });
   }
+
+  const title       = `${cardName} · Code ${num} · Universal Language Oracle | Adrian Rasmussen`;
+  const description = `Universal Language Oracle card ${num}: ${cardName}. An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
+
+  // Simple string replacement — works regardless of streaming or encoding quirks.
+  html = html
+    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`)
+    .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`)
+    .replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image}"`)
+    .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`)
+    .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`)
+    .replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image}"`);
+
+  return new Response(html, {
+    headers: { 'content-type': 'text/html;charset=UTF-8' },
+  });
 }
