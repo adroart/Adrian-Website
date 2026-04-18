@@ -1,8 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
-import { Keystatic } from '@keystatic/core/ui';
-import keystaticConfig from './keystatic.config';
+
+const KeystaticRoute = lazy(() => import('./components/KeystaticRoute'));
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
@@ -38,6 +38,13 @@ const AppInner: React.FC = () => {
   const location = useLocation();
   const { isDarkMode } = useDarkMode();
 
+  useEffect(() => {
+    if (!location.pathname.startsWith('/keystatic')) {
+      document.querySelectorAll('style[data-emotion]').forEach(el => el.remove());
+      document.body.style.overflow = '';
+    }
+  }, [location.pathname]);
+
   if (location.pathname.startsWith('/keystatic')) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -47,7 +54,9 @@ const AppInner: React.FC = () => {
           </Link>
         </div>
         <div className="flex-1">
-          <Keystatic config={keystaticConfig} />
+          <Suspense fallback={null}>
+            <KeystaticRoute />
+          </Suspense>
         </div>
       </div>
     );
