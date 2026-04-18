@@ -167,7 +167,7 @@ for (let num = 1; num <= 64; num++) {
   if (!cardName || !imageId) continue;
 
   const title       = `${cardName} · Code ${num} · Universal Language Oracle`;
-  const description = `An original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const description = `A reading from the Universal Language Oracle has been shared with you. Enter Code ${num} and receive what it holds.`;
   const image       = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
   const url         = `${SITE_URL}/oracle/universal-language/${num}`;
 
