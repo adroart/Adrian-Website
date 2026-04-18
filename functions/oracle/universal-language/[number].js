@@ -182,6 +182,7 @@ export async function onRequest(context) {
   // Simple string replacement — works regardless of streaming or encoding quirks.
   html = html
     .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*"/, `$1${description}"`)
     .replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`)
     .replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`)
     .replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image}"`)

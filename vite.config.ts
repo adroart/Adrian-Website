@@ -111,6 +111,7 @@ function generateOgPagesPlugin(): Plugin {
 
         let html = template
           .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+          .replace(/(<meta name="description"\s+content=")[^"]*(")/,        `$1${description}$2`)
           .replace(/(<meta property="og:title"\s+content=")[^"]*(")/,       `$1${title}$2`)
           .replace(/(<meta property="og:description"\s+content=")[^"]*(")/,  `$1${description}$2`)
           .replace(/(<meta property="og:image"\s+content=")[^"]*(")/,        `$1${image}$2`)

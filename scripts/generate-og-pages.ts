@@ -179,6 +179,12 @@ for (let num = 1; num <= 64; num++) {
     `<title>${title}</title>`,
   );
 
+  // Base description
+  html = html.replace(
+    /(<meta name="description"\s+content=")[^"]*(")/,
+    `$1${description}$2`,
+  );
+
   // og: tags
   html = html.replace(
     /(<meta property="og:title"\s+content=")[^"]*(")/,
