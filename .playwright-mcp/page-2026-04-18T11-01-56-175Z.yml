@@ -1,0 +1,159 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e11] [cursor=pointer]:
+            - /url: /writings
+            - text: Writings
+          - link "Oracle" [ref=e12] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - text: Oracle
+          - link "Inquire" [ref=e13] [cursor=pointer]:
+            - /url: /inquire
+            - text: Inquire
+          - link "About" [ref=e14] [cursor=pointer]:
+            - /url: /about
+            - text: About
+        - button "Switch to light mode" [ref=e16]:
+          - img [ref=e17]
+    - main [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e29]:
+          - generic [ref=e30]: Resonant Artifacts
+          - heading "Bringing the formless into form." [level=1] [ref=e31]:
+            - text: Bringing the
+            - text: formless into form.
+          - paragraph [ref=e32]:
+            - text: From intimate talismans to immersive spaces.
+            - text: Woven from light, geometry, and intention.
+          - link "Explore the Work" [ref=e34] [cursor=pointer]:
+            - /url: /creations
+        - button "Scroll to content" [ref=e35] [cursor=pointer]:
+          - generic [ref=e36]: Enter
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - blockquote [ref=e41]: "\"Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment.\""
+          - paragraph [ref=e43]: My creations bring people together. They have a way of speaking directly through the heart. There is no need to understand what you are looking at. Art is the reminder. Something to feel without reading a word.
+        - link "Explore Creations" [ref=e46] [cursor=pointer]:
+          - /url: /creations
+          - text: Explore Creations
+          - img [ref=e47]
+        - generic [ref=e50]:
+          - img "Detail of a commissioned piece" [ref=e52]
+          - generic [ref=e54]:
+            - generic [ref=e55]: Commission
+            - heading "Every piece begins with a conversation" [level=2] [ref=e56]
+            - paragraph [ref=e57]: The geometry is exact. The laser is precise. But we humans embrace the splatter, the imperfect symmetry, the crystal that feels perfect but sits just slightly off.
+            - paragraph [ref=e58]: Whether you're drawn to a specific form or simply feel a resonance with the work, the process starts the same way. Tell me what you're feeling. We'll find the piece together.
+            - link "Begin a conversation" [ref=e59] [cursor=pointer]:
+              - /url: /inquire
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - heading "From the Writings" [level=2] [ref=e64]
+              - paragraph [ref=e65]: Between the endless ceremony, art is our prayer.
+            - link "Explore All" [ref=e66] [cursor=pointer]:
+              - /url: /writings
+              - text: Explore All
+              - img [ref=e67]
+          - generic [ref=e69]:
+            - 'link "Ye Ming Zhu: The Glowing Crystal Living Knowledge Ye Ming Zhu: The Glowing Crystal These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon''s glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth. Read" [ref=e70] [cursor=pointer]':
+              - /url: /writings/ye-ming-zhu
+              - 'img "Ye Ming Zhu: The Glowing Crystal" [ref=e72]'
+              - generic [ref=e73]:
+                - generic [ref=e74]: Living Knowledge
+                - 'heading "Ye Ming Zhu: The Glowing Crystal" [level=3] [ref=e75]'
+                - paragraph [ref=e76]: These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon's glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth.
+                - generic [ref=e77]:
+                  - text: Read
+                  - img [ref=e78]
+            - generic [ref=e80]:
+              - link "The Universal Language The Universal Language 64 Expressions of the Cycle of Changes There is a language that all of us speak. It exists beyond words and concepts of the mind." [ref=e81] [cursor=pointer]:
+                - /url: /writings/the-universal-language
+                - img "The Universal Language" [ref=e83]
+                - generic [ref=e84]:
+                  - heading "The Universal Language" [level=3] [ref=e85]
+                  - paragraph [ref=e86]: 64 Expressions of the Cycle of Changes
+                  - paragraph [ref=e87]: There is a language that all of us speak. It exists beyond words and concepts of the mind.
+              - link "Light Codes Light Codes Anchorings of Unseen Realms After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art." [ref=e88] [cursor=pointer]:
+                - /url: /writings/light-codes
+                - img "Light Codes" [ref=e90]
+                - generic [ref=e91]:
+                  - heading "Light Codes" [level=3] [ref=e92]
+                  - paragraph [ref=e93]: Anchorings of Unseen Realms
+                  - paragraph [ref=e94]: After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.
+              - link "When Poetry Becomes Sound When Poetry Becomes Sound Poems given voice through AI music I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound." [ref=e95] [cursor=pointer]:
+                - /url: /writings/when-poetry-becomes-sound
+                - img "When Poetry Becomes Sound" [ref=e97]
+                - generic [ref=e98]:
+                  - heading "When Poetry Becomes Sound" [level=3] [ref=e99]
+                  - paragraph [ref=e100]: Poems given voice through AI music
+                  - paragraph [ref=e101]: I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound.
+    - contentinfo [ref=e102]:
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e107]
+            - paragraph [ref=e108]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e111]: Currently, taking commissions for Spring 2026
+          - generic [ref=e112]:
+            - generic [ref=e113]: Join the Inner Circle
+            - generic [ref=e114]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e116]:
+              - generic: Email address
+              - textbox [ref=e117]
+              - button [ref=e118]:
+                - img [ref=e119]
+        - navigation [ref=e122]:
+          - link "Creations" [ref=e123] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e124] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e125] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e126] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e127] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - generic [ref=e131]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e132] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e133] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e134]
+          - generic [ref=e135]:
+            - link "Instagram" [ref=e136] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e137]
+            - link "Email" [ref=e140] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e141]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
