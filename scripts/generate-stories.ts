@@ -16,8 +16,14 @@ function bodyToContent(raw: string): string[] {
     .map(p => p.trim())
     .filter(Boolean)
     .map(p => {
-      // Normalize blockquote prefix so Writings.tsx renders it correctly
-      if (p.startsWith('>') && !p.startsWith('> ')) return '> ' + p.slice(1).trim()
+      const lines = p.split('\n')
+      // Multi-line blockquote: strip the ">" prefix from every line, rejoin with \n,
+      // then store as a single "> text" string so Writings.tsx renders it as one pull quote
+      // with whitespace-pre-line preserving the line breaks.
+      if (lines.every(l => l.startsWith('>'))) {
+        const stripped = lines.map(l => l.startsWith('> ') ? l.slice(2) : l.slice(1).trim()).join('\n')
+        return '> ' + stripped
+      }
       return p
     })
 }
@@ -46,6 +52,7 @@ const stories = files.map(file => {
     tags: (fm.tags ?? []) as string[],
     isFeatured: (fm.isFeatured ?? false) as boolean,
     relatedArtifactId: fm.relatedArtifactId as string | undefined,
+    tracks: fm.tracks as { title: string; url: string; duration?: string }[] | undefined,
     _order: (fm.order ?? 999) as number,
   }
 })

@@ -306,7 +306,7 @@ export const WritingArticle: React.FC = () => {
                             )}
                             {/* #13 Pull quotes for paragraphs starting with "> " */}
                             {p.startsWith('> ') ? (
-                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif leading-relaxed">
+                                <blockquote className="pull-quote my-10 text-2xl md:text-3xl text-wood-600 font-serif leading-relaxed whitespace-pre-line">
                                     {p.slice(2)}
                                 </blockquote>
                             ) : (
@@ -505,7 +505,7 @@ const Writings: React.FC = () => {
 
                 {/* #5 Sticky anchor navigation + #6 Active highlighting + #16 Better touch targets */}
                 <nav
-                    className="sticky z-10 bg-stone-950/95 backdrop-blur-xl flex flex-wrap justify-center gap-3 md:gap-10 border-b border-stone-800 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    className="dark-preserve sticky z-10 bg-stone-950/95 backdrop-blur-xl flex flex-wrap justify-center gap-3 md:gap-10 border-b border-stone-800 pb-6 md:pb-8 mb-24 -mx-6 px-6"
                     style={{ top: 'var(--nav-height)' }}
                     aria-label="Writing sections"
                 >

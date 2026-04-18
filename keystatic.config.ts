@@ -77,6 +77,19 @@ export default config({
           validation: { isRequired: false },
         }),
 
+        tracks: fields.array(
+          fields.object({
+            title: fields.text({ label: 'Track title' }),
+            url: fields.text({ label: 'Audio URL (R2 direct link)' }),
+            duration: fields.text({
+              label: 'Duration',
+              description: 'e.g. "4:12" — optional',
+              validation: { isRequired: false },
+            }),
+          }),
+          { label: 'Audio tracks', itemLabel: props => props.fields.title.value || 'Track' }
+        ),
+
         body: fields.document({
           label: 'Content',
           formatting: {

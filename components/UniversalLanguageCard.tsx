@@ -574,6 +574,78 @@ const SynthesisToneCard: React.FC<{
   );
 };
 
+/* ─── Generic expandable card — full-card-click, matches Gene Keys UX ────── */
+
+const ExpandCard: React.FC<{
+  id: string;
+  section: SectionKey;
+  label: string;
+  title?: string;
+  text: string;
+  variant: 'dark' | 'light';
+  accent?: string;
+  defaultOpen?: boolean;
+  footer?: React.ReactNode;
+}> = ({ id, section, label, title, text, variant, accent, defaultOpen = false, footer }) => {
+  const ctx = useExpand();
+  const open = ctx.isOpen(id, section, defaultOpen);
+  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+
+  const isDark = variant === 'dark';
+  const paragraphs = text.split('\n\n').filter(Boolean);
+  const preview = paragraphs[0] ?? '';
+
+  return (
+    <div
+      id={id}
+      className={`rounded-2xl border overflow-hidden cursor-pointer scroll-mt-24 ${
+        isDark
+          ? `border-stone-700/40 ${CARD_SHADOW}`
+          : `border-wood-200 ${CARD_SHADOW_LIGHT} bg-[#fafaf8] dark:bg-[#1d1b18]`
+      }`}
+      style={isDark ? { background: 'rgba(22, 20, 18, 0.6)' } : undefined}
+      onClick={() => ctx.toggle(id)}
+      role="button"
+      aria-expanded={open}
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+    >
+      {accent && <div className={`h-[3px] w-full ${accent}`} />}
+      <div className="px-6 py-6">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div>
+            <span className={`font-label text-[11px] uppercase tracking-[0.2em] ${isDark ? 'text-stone-500' : 'text-wood-400'}`}>{label}</span>
+            {title && <p className={`font-sans text-xl font-medium mt-0.5 ${isDark ? 'text-stone-100' : 'text-wood-900'}`}>{title}</p>}
+          </div>
+          <span
+            className={`text-lg flex-shrink-0 leading-none mt-0.5 ${isDark ? 'text-stone-500' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
+        </div>
+        <div onClick={e => e.stopPropagation()}>
+          {open ? (
+            <div className="space-y-4">
+              {paragraphs.map((p, i) => (
+                <p key={i} className={`font-sans text-[15px] leading-[1.9] select-text cursor-text ${isDark ? 'text-stone-200' : 'text-wood-700'}`}>{p}</p>
+              ))}
+              {footer}
+            </div>
+          ) : (
+            <p
+              className={`font-sans text-[15px] leading-[1.9] max-h-[8.6em] overflow-hidden ${isDark ? 'text-stone-300' : 'text-wood-600'}`}
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+                maskImage:       'linear-gradient(to bottom, black 55%, transparent 100%)',
+              }}
+            >{preview}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ─── Card link ──────────────────────────────────────────────────────────── */
 
 const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
@@ -1044,30 +1116,62 @@ const UniversalLanguageCard: React.FC = () => {
               The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
             </p>
 
-            {/* Island 1 — Synthesis reading (trigram combination + prose + classical text) */}
+            {/* Island 1 — Trigrams + short combination reading (always first) */}
+            {(() => {
+              const doubled = card.iching.upper_trigram.symbol === card.iching.lower_trigram.symbol;
+              return (
+                <div className={`rounded-2xl border border-stone-700/50 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
+                  {/* Hexagram identifier — anchors the card to this hexagram */}
+                  {synthesis?.reference?.hexagram_symbol && (
+                    <div className="px-6 pt-6 pb-0 flex items-center gap-4">
+                      <span className="text-[56px] text-bronze-400/70 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                      <div>
+                        <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">Hexagram {card.number}</p>
+                        <h2 className="font-serif text-2xl text-stone-100 font-semibold leading-[1.2]">{card.iching.hexagram_name}</h2>
+                      </div>
+                    </div>
+                  )}
+                  <div className="px-6 py-6">
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-5">Trigrams</p>
+                    <div className="space-y-6">
+                      <div className="flex items-start gap-6">
+                        <div className="text-center w-14 flex-shrink-0">
+                          <span className="text-[48px] text-bronze-400 leading-none block">{card.iching.upper_trigram.symbol}</span>
+                          <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.upper_trigram.name}</p>
+                        </div>
+                        <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.upper_trigram.nature}</p>
+                      </div>
+                      <div className="flex items-start gap-6 border-t border-stone-700/40 pt-6">
+                        <div className="text-center w-14 flex-shrink-0">
+                          <span className="text-[48px] text-bronze-500 leading-none block">{card.iching.lower_trigram.symbol}</span>
+                          <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.lower_trigram.name}</p>
+                        </div>
+                        {doubled
+                          ? <p className="font-sans text-[15px] text-stone-400 pt-2">Same as above</p>
+                          : <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.lower_trigram.nature}</p>
+                        }
+                      </div>
+                    </div>
+                    {synthesis && (
+                      <div className="mt-6 pt-5 border-t border-stone-700/40">
+                        <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Reading</p>
+                        <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">
+                          {synthesis.synthesis.iching.trigram_combination}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Island 2 — Oracle reading + classical text (below trigrams) */}
             {synthesis && (
               <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                {/* Headline — always visible */}
-                <div className="px-6 pt-6 pb-2">
-                  {/* Hexagram symbol + name as section anchor */}
-                  <div className="flex items-center gap-4 mb-4">
-                    {synthesis.reference?.hexagram_symbol && (
-                      <span className="text-[56px] text-bronze-400/70 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                    )}
-                    <div>
-                      <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">Hexagram {card.number}</p>
-                      <h2 className="font-serif text-2xl text-stone-100 font-semibold leading-[1.2]">{card.iching.hexagram_name}</h2>
-                    </div>
-                  </div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Reading</p>
-                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{synthesis.synthesis.iching.trigram_combination}</p>
-                </div>
-
-                {/* The reading — primary content, open by default */}
+                {/* The reading — collapsed by default, click label or preview to expand */}
                 <Expand
                   id="iching-reading"
                   section="iching"
-                  defaultOpen
                   label="The reading"
                   subtitle="the oracle's reading for this configuration"
                   borderColor="border-stone-700/40"
@@ -1124,35 +1228,6 @@ const UniversalLanguageCard: React.FC = () => {
                 )}
               </div>
             )}
-
-            {/* Island 2 — Trigrams (shown for all cards) */}
-            {(() => {
-              const doubled = card.iching.upper_trigram.symbol === card.iching.lower_trigram.symbol;
-              return (
-                <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-5">Trigrams</p>
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-6">
-                      <div className="text-center w-14 flex-shrink-0">
-                        <span className="text-[48px] text-bronze-400 leading-none block">{card.iching.upper_trigram.symbol}</span>
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.upper_trigram.name}</p>
-                      </div>
-                      <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.upper_trigram.nature}</p>
-                    </div>
-                    <div className="flex items-start gap-6 border-t border-stone-700/40 pt-6">
-                      <div className="text-center w-14 flex-shrink-0">
-                        <span className="text-[48px] text-bronze-500 leading-none block">{card.iching.lower_trigram.symbol}</span>
-                        <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.lower_trigram.name}</p>
-                      </div>
-                      {doubled
-                        ? <p className="font-sans text-[15px] text-stone-400 pt-2">Same as above</p>
-                        : <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.lower_trigram.nature}</p>
-                      }
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* Island 3 — Wisdom group (only when no synthesis) */}
             {!synthesis && expanded && (
@@ -1358,79 +1433,59 @@ const UniversalLanguageCard: React.FC = () => {
               <h2 className="font-serif text-3xl text-stone-100 font-semibold leading-[1.2] mb-1">{card.human_design.keyword}</h2>
             </div>
 
-            {/* Description (only when no synthesis) — first ~40 words visible, rest behind Read more */}
+            {/* Description (only when no synthesis) */}
             {!synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <Expand
-                  id="hd-description"
-                  section="humandesign"
-                  defaultOpen
-                  label="Description"
-                  borderColor="border-stone-700/40"
-                  labelColor="text-stone-500"
-                  innerPx="px-6"
-                  previewMask="dark"
-                  preview={<p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{card.human_design.description}</p>}
-                >
-                  <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.human_design.description}</p>
-                  {card.traditional_colors && (
-                    <p className="font-sans text-[15px] text-stone-400 leading-[1.9] mt-5 pt-5 border-t border-stone-700/50">
-                      {card.traditional_colors}
-                    </p>
-                  )}
-                </Expand>
-              </div>
+              <ExpandCard
+                id="hd-description"
+                section="humandesign"
+                label="Description"
+                title={card.human_design.keyword}
+                text={card.human_design.description + (card.traditional_colors ? '\n\n' + card.traditional_colors : '')}
+                variant="dark"
+              />
             )}
 
-            {/* Synthesis HD reading — three accordions (Gate / Channel / Circuit).
-                Gate opens by default as the primary reading. */}
+            {/* Synthesis HD reading — three separate cards (Gate / Channel / Circuit) */}
             {synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <div className="px-6 pt-6 pb-1">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500">Reading</p>
-                </div>
-                {[
-                  { id: 'hd-gate',    label: 'The Gate',    subtitle: 'the specific quality this gate carries',        text: synthesis.synthesis.human_design.gate,    defaultOpen: true  },
-                  { id: 'hd-channel', label: 'The Channel', subtitle: 'how this gate connects to another center',      text: synthesis.synthesis.human_design.channel, defaultOpen: false },
-                  { id: 'hd-circuit', label: 'The Circuit', subtitle: 'the larger circuit and collective this belongs to', text: synthesis.synthesis.human_design.circuit, defaultOpen: false },
-                ].map(({ id, label, subtitle, text, defaultOpen }) => {
-                  const paras = text.split('\n\n').filter(Boolean);
-                  const first = paras[0] ?? '';
-                  return (
-                    <Expand
-                      key={id}
-                      id={id}
-                      section="humandesign"
-                      defaultOpen={defaultOpen}
-                      label={label}
-                      subtitle={subtitle}
-                      borderColor="border-stone-700/40"
-                      labelColor="text-stone-500"
-                      innerPx="px-6"
-                      previewMask="dark"
-                      preview={<p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{first}</p>}
-                    >
-                      {paras.map((p, i) => (
-                        <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
-                      ))}
-                    </Expand>
-                  );
-                })}
-              </div>
+              <>
+                <ExpandCard
+                  id="hd-gate"
+                  section="humandesign"
+                  label="The Gate"
+                  title={synthesis.reference?.hd_keyword ?? card.human_design.keyword}
+                  text={synthesis.synthesis.human_design.gate}
+                  variant="dark"
+                />
+                <ExpandCard
+                  id="hd-channel"
+                  section="humandesign"
+                  label="The Channel"
+                  title={synthesis.reference?.hd_harmonic_gate ? `Gate ${card.human_design.gate} · ${synthesis.reference.hd_harmonic_gate}` : undefined}
+                  text={synthesis.synthesis.human_design.channel}
+                  variant="dark"
+                />
+                <ExpandCard
+                  id="hd-circuit"
+                  section="humandesign"
+                  label="The Circuit"
+                  title={synthesis.reference?.hd_circuit ?? undefined}
+                  text={synthesis.synthesis.human_design.circuit}
+                  variant="dark"
+                />
+              </>
             )}
 
             {/* Tarot — codon ring connection */}
             {card.ring_tarot && (
-              <div className={`rounded-2xl border border-bronze-800/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(30, 22, 12, 0.75)' }}>
-                <div className="h-[3px] w-full bg-bronze-400" />
-                <div className="px-6 py-6">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500 mb-1">{card.ring_name}</p>
-                  <p className="font-sans text-xl text-stone-100 font-medium mb-4">{card.ring_tarot}</p>
-                  {card.ring_description && (
-                    <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{card.ring_description}</p>
-                  )}
-                </div>
-              </div>
+              <ExpandCard
+                id="hd-ring-tarot"
+                section="humandesign"
+                label={card.ring_name}
+                title={card.ring_tarot}
+                text={card.ring_description ?? ''}
+                variant="dark"
+                accent="bg-bronze-400"
+              />
             )}
 
           </div>
@@ -1512,40 +1567,36 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Tarot resonance */}
             {synthesis && (
-              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-5 ${CARD_SHADOW_LIGHT}`}>
-                <div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-2">Tarot · {card.ring_name}</p>
-                  <p className="font-sans text-[15px] text-wood-600 leading-[1.9]">{synthesis.synthesis.tarot.ring_role}</p>
-                </div>
-                <div className="border-t border-wood-100 pt-5 space-y-4">
-                  {synthesis.synthesis.tarot.tarot_resonance.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
-                  ))}
-                </div>
-              </div>
+              <ExpandCard
+                id="connections-tarot"
+                section="connections"
+                label={`Tarot · ${card.ring_name}`}
+                title={synthesis.reference?.tarot_card ?? card.ring_tarot}
+                text={synthesis.synthesis.tarot.ring_role + '\n\n' + synthesis.synthesis.tarot.tarot_resonance}
+                variant="light"
+              />
             )}
 
-            {/* Body */}
+            {/* Body — physiology and amino acid as separate expandable cards */}
             {synthesis && (
-              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-5 ${CARD_SHADOW_LIGHT}`}>
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400">Body</p>
-                <div>
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-3">Physiology</p>
-                  <div className="space-y-4">
-                    {synthesis.synthesis.body.physiology.split('\n\n').filter(Boolean).map((p, i) => (
-                      <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
-                    ))}
-                  </div>
-                </div>
-                <div className="border-t border-wood-100 pt-5">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-3">Amino Acid</p>
-                  <div className="space-y-4">
-                    {synthesis.synthesis.body.amino_acid.split('\n\n').filter(Boolean).map((p, i) => (
-                      <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <>
+                <ExpandCard
+                  id="connections-physiology"
+                  section="connections"
+                  label="Body · Physiology"
+                  title={synthesis.reference?.body_physiology ?? undefined}
+                  text={synthesis.synthesis.body.physiology}
+                  variant="light"
+                />
+                <ExpandCard
+                  id="connections-amino-acid"
+                  section="connections"
+                  label="Body · Amino Acid"
+                  title={synthesis.reference?.body_amino_acid ?? undefined}
+                  text={synthesis.synthesis.body.amino_acid}
+                  variant="light"
+                />
+              </>
             )}
 
 

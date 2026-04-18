@@ -124,7 +124,7 @@ async function onRequest(context) {
   const title = `${cardName} \xB7 Code ${num} \xB7 Universal Language Oracle`;
   const description = `An original multi-dimensional wooden sculpture by Adrian Rasmussen. Open the reading and receive what it holds.`;
   const image3 = `${CLOUDINARY}/${OG_CROP}/${imageId}`;
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`).replace(/(<meta\s+name="description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+property="og:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+property="og:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*"/, `$1${title}"`).replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*"/, `$1${description}"`).replace(/(<meta\s+name="twitter:image"\s+content=")[^"]*"/, `$1${image3}"`).replace(/(<meta\s+property="og:image:width"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+property="og:image:height"\s+content=")[^"]*"/, `$1300"`).replace(/(<meta\s+name="twitter:card"\s+content=")[^"]*"/, `$1summary"`);
   return new Response(html, {
     headers: { "content-type": "text/html;charset=UTF-8" }
   });
@@ -16334,6 +16334,18 @@ var init_keystatic_config = __esm({
               label: "Related artwork ID",
               validation: { isRequired: false }
             }),
+            tracks: index.array(
+              index.object({
+                title: index.text({ label: "Track title" }),
+                url: index.text({ label: "Audio URL (R2 direct link)" }),
+                duration: index.text({
+                  label: "Duration",
+                  description: 'e.g. "4:12" \u2014 optional',
+                  validation: { isRequired: false }
+                })
+              }),
+              { label: "Audio tracks", itemLabel: /* @__PURE__ */ __name((props) => props.fields.title.value || "Track", "itemLabel") }
+            ),
             body: index.document({
               label: "Content",
               formatting: {
@@ -17108,10 +17120,10 @@ var init_functionsRoutes_0_8492478567511592 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-3MlGqj/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-m4Z3tz/middleware-loader.entry.ts
 init_functionsRoutes_0_8492478567511592();
 
-// ../.wrangler/tmp/bundle-3MlGqj/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-m4Z3tz/middleware-insertion-facade.js
 init_functionsRoutes_0_8492478567511592();
 
 // ../../../../../../.nvm/versions/node/v22.20.0/lib/node_modules/wrangler/templates/pages-template-worker.ts
@@ -17607,7 +17619,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-3MlGqj/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-m4Z3tz/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -17640,7 +17652,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-3MlGqj/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-m4Z3tz/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
