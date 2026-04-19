@@ -75,8 +75,9 @@ const OracleGateway: React.FC = () => {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes og-ring-in {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+          0%   { transform: scale(0.04); opacity: 0; }
+          18%  { opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
         }
         .og-link {
           display: block;
@@ -122,51 +123,30 @@ const OracleGateway: React.FC = () => {
             position: 'absolute',
             width:    'min(94vmin, 720px)',
             height:   'min(94vmin, 720px)',
-            cursor:   'pointer',
-            animation: 'og-ring-in 2s ease both',
+            animation: 'og-ring-in 2.8s cubic-bezier(0.16, 1, 0.3, 1) both',
           }}
-          onClick={() => navigate('/oracle/universal-language')}
-          aria-label="Enter the oracle — view all 64 cards"
-          role="button"
-          tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && navigate('/oracle/universal-language')}
+          aria-label="Ring of 64 hexagrams — tap one to enter"
         >
-          {/* Subtle guide circle */}
-          <circle
-            cx={CX}
-            cy={CY}
-            r={R}
-            fill="none"
-            stroke="rgba(139,103,69,0.12)"
-            strokeWidth="1"
-          />
+          <circle cx={CX} cy={CY} r={R} fill="none" stroke="rgba(139,103,69,0.12)" strokeWidth="1" />
 
-          {/* Orbiting hexagrams */}
-          <g style={{
-            transformOrigin: `${CX}px ${CY}px`,
-            animation: 'og-spin 96s linear infinite',
-          }}>
+          <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: 'og-spin 96s linear infinite' }}>
             {hexagrams.map(({ number, x, y, rotationDeg, lines }) => (
               <g
                 key={number}
                 transform={`translate(${x}, ${y}) rotate(${rotationDeg}) translate(${-HEX_W / 2}, ${-HEX_H / 2})`}
+                onClick={() => navigate(`/oracle/universal-language/${number}`, { state: { ritual: true } })}
+                style={{ cursor: 'pointer' }}
               >
+                {/* Enlarged invisible hit area */}
+                <rect x={-14} y={-14} width={HEX_W + 28} height={HEX_H + 28} fill="transparent" />
                 {lines.map((solid, li) => {
                   const ly = li * (LINE_H + LINE_GAP);
                   return solid ? (
-                    <rect
-                      key={li}
-                      x={0}
-                      y={ly}
-                      width={HEX_W}
-                      height={LINE_H}
-                      fill="#9b8467"
-                      opacity="0.6"
-                    />
+                    <rect key={li} x={0} y={ly} width={HEX_W} height={LINE_H} fill="#9b8467" opacity="0.6" />
                   ) : (
                     <g key={li}>
-                      <rect x={0}                    y={ly} width={HALF_W} height={LINE_H} fill="#9b8467" opacity="0.6" />
-                      <rect x={HALF_W + BROKEN_GAP}  y={ly} width={HALF_W} height={LINE_H} fill="#9b8467" opacity="0.6" />
+                      <rect x={0}                   y={ly} width={HALF_W} height={LINE_H} fill="#9b8467" opacity="0.6" />
+                      <rect x={HALF_W + BROKEN_GAP} y={ly} width={HALF_W} height={LINE_H} fill="#9b8467" opacity="0.6" />
                     </g>
                   );
                 })}

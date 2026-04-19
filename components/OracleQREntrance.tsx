@@ -32,11 +32,10 @@ function getLines(upper: string, lower: string): boolean[] {
   return [u[2], u[1], u[0], l[2], l[1], l[0]];
 }
 
-// Top-of-rect y for each line index (within a 67-unit SVG viewBox)
+// Top-of-rect y for each line index (within a 65-unit SVG viewBox)
 function lineY(i: number): number {
-  const step       = 11;  // line height 10 + gap 1
-  const trigramGap =  2;  // extra space between the two trigrams (3px total)
-  return i < 3 ? i * step : i * step + trigramGap;
+  const step = 11;  // line height 10 + gap 1
+  return i * step;
 }
 
 /* ─── Timing constants ───────────────────────────────────────────────────── */
@@ -119,8 +118,8 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
         {/* ── Hexagram SVG ─────────────────────────────────────────────── */}
         <svg
           width="80"
-          height="67"
-          viewBox="0 0 80 67"
+          height="65"
+          viewBox="0 0 80 65"
           aria-hidden="true"
           style={{ display: 'block', marginBottom: '32px' }}
         >

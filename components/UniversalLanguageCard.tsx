@@ -49,19 +49,82 @@ const CARD_SHADOW_DEEP = 'shadow-[0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgb
 // Light-section card shadows (Gene Keys) — warm paper drop shadow
 const CARD_SHADOW_LIGHT = 'shadow-[0_4px_16px_rgba(60,44,22,0.1),0_1px_3px_rgba(60,44,22,0.06)]';
 
-/* ─── Reference bar lookups ──────────────────────────────────────────────── */
 
-const ASTRO_SYMBOLS: Record<string, string> = {
-  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋',
-  Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏',
-  Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
+/* ─── Trigram / hexagram SVG — pure vector, no Unicode emoji ─────────────── */
+
+// lines = [top, middle, bottom], true = yang (solid), false = yin (broken)
+const TRIGRAM_LINES: Record<string, [boolean, boolean, boolean]> = {
+  '☰': [true,  true,  true ],  // Heaven
+  '☱': [false, true,  true ],  // Lake
+  '☲': [true,  false, true ],  // Fire
+  '☳': [false, false, true ],  // Thunder
+  '☴': [true,  true,  false],  // Wind
+  '☵': [false, true,  false],  // Water
+  '☶': [true,  false, false],  // Mountain
+  '☷': [false, false, false],  // Earth
 };
 
-const HEBREW_CHARS: Record<string, string> = {
-  Aleph: 'א', Beth: 'ב', Gimel: 'ג', Daleth: 'ד', He: 'ה', Vau: 'ו',
-  Zayin: 'ז', Cheth: 'ח', Teth: 'ט', Yod: 'י', Kaph: 'כ', Lamed: 'ל',
-  Mem: 'מ', Nun: 'נ', Samech: 'ס', Ayin: 'ע', Pe: 'פ', Tzaddi: 'צ',
-  Qoph: 'ק', Resh: 'ר', Shin: 'ש', Tau: 'ת',
+const TrigramSVG: React.FC<{
+  symbol: string;
+  color?: string;
+  width?: number;
+  height?: number;
+}> = ({ symbol, color = 'currentColor', width = 64, height = 44 }) => {
+  const lines = TRIGRAM_LINES[symbol];
+  if (!lines) return null;
+  const lh = Math.max(2, Math.round(height * 0.2));
+  const gap = Math.round(width * 0.14);
+  const hw = (width - gap) / 2;
+  const yMid = Math.round((height - lh) / 2);
+  const positions = [0, yMid, height - lh];
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none" aria-hidden="true">
+      {lines.map((solid, i) =>
+        solid ? (
+          <rect key={i} x={0} y={positions[i]} width={width} height={lh} rx={1} fill={color} />
+        ) : (
+          <React.Fragment key={i}>
+            <rect x={0}        y={positions[i]} width={hw} height={lh} rx={1} fill={color} />
+            <rect x={hw + gap} y={positions[i]} width={hw} height={lh} rx={1} fill={color} />
+          </React.Fragment>
+        )
+      )}
+    </svg>
+  );
+};
+
+// Hexagram = 6 lines with uniform spacing (upper trigram lines 1–3, lower lines 4–6)
+const HexagramSVG: React.FC<{
+  upper: string;
+  lower: string;
+  color?: string;
+  width?: number;
+}> = ({ upper, lower, color = 'currentColor', width = 64 }) => {
+  const lh      = Math.max(2, Math.round(width * 0.1));
+  const step    = Math.round(width * 0.18);
+  const totalH  = lh + step * 5;
+  const gap     = Math.round(width * 0.14);
+  const hw      = (width - gap) / 2;
+
+  const allLines = [...(TRIGRAM_LINES[upper] ?? [true, true, true]),
+                    ...(TRIGRAM_LINES[lower] ?? [true, true, true])];
+
+  return (
+    <svg width={width} height={totalH} viewBox={`0 0 ${width} ${totalH}`} fill="none" aria-hidden="true">
+      {allLines.map((solid, i) => {
+        const y = i * step;
+        return solid ? (
+          <rect key={i} x={0} y={y} width={width} height={lh} rx={1} fill={color} />
+        ) : (
+          <React.Fragment key={i}>
+            <rect x={0}        y={y} width={hw} height={lh} rx={1} fill={color} />
+            <rect x={hw + gap} y={y} width={hw} height={lh} rx={1} fill={color} />
+          </React.Fragment>
+        );
+      })}
+    </svg>
+  );
 };
 
 /* ─── Image helpers ──────────────────────────────────────────────────────── */
@@ -395,10 +458,10 @@ const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }
   return (
     <div
       aria-hidden="true"
-      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-stone-950/95 backdrop-blur-sm border-b border-stone-800/60 pointer-events-none"
+      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 dark:bg-stone-950/95 backdrop-blur-sm border-b border-wood-200/60 dark:border-stone-800/60 pointer-events-none dark-preserve"
       style={{ top: 'var(--nav-height, 56px)' }}
     >
-      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-400">
+      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 dark:text-stone-400">
         {SECTION_LABELS[current]} · Code {cardNumber} · {hexName}
       </span>
     </div>
@@ -867,6 +930,8 @@ const UniversalLanguageCard: React.FC = () => {
   const [copied,         setCopied]         = useState(false);
   const [shareOpen,      setShareOpen]      = useState(false);
   const [storyLoading,   setStoryLoading]   = useState(false);
+  const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
+  const ichingRef    = useRef<HTMLDivElement>(null);
 
   const [showQREntrance, setShowQREntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') === 'qr'
@@ -1067,7 +1132,7 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Hexagram symbol */}
                 {synthesis?.reference?.hexagram_symbol && (
                   <div className="flex items-center justify-center px-4 py-3 bg-paper-50">
-                    <span className="text-[28px] text-wood-400 leading-none">{synthesis.reference.hexagram_symbol}</span>
+                    <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={40} />
                   </div>
                 )}
 
@@ -1210,43 +1275,41 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Reference strip */}
             {synthesis?.reference && (
               <div className="mt-8 mb-4 space-y-2">
-                {/* Top row: I Ching + Gene Keys */}
-                <div className="grid grid-cols-2 gap-2">
-                  {/* I Ching */}
-                  <button onClick={() => go('iching')} className="group block text-left px-4 py-4 rounded-xl border border-stone-200 border-l-[3px] border-l-stone-400 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-stone-400">I Ching</p>
-                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
-                    </div>
-                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{card.iching.hexagram_name}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[16px] leading-none text-stone-400">{synthesis.reference.hexagram_symbol}</span>
-                      <span className="font-mono text-[11px] text-stone-400 tracking-[0.12em]">{synthesis.reference.binary}</span>
-                    </div>
-                  </button>
+                {/* I Ching — simple nav tile */}
+                <button
+                  onClick={() => go('iching')}
+                  className="group w-full flex items-center gap-3 px-4 py-4 text-left rounded-xl border border-stone-200 border-l-[3px] border-l-stone-400 bg-paper-50 hover:bg-paper-100 transition-colors shadow-[0_1px_6px_rgba(60,44,22,0.05)]"
+                >
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={28} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">I Ching</p>
+                    <p className="font-serif text-[16px] text-wood-900 leading-tight group-hover:text-bronze-600 transition-colors">{card.iching.hexagram_name}</p>
+                  </div>
+                  <span className="text-[11px] text-wood-200 group-hover:text-wood-400 transition-colors flex-shrink-0">→</span>
+                </button>
 
-                  {/* Gene Keys */}
-                  <button onClick={() => go('genekeys')} className="group block text-left px-4 py-4 rounded-xl border border-bronze-300/50 border-l-[3px] border-l-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08] shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-500">Gene Keys</p>
-                      <span className="text-bronze-200 text-[11px] group-hover:text-bronze-400 transition-colors">→</span>
+
+                {/* Gene Keys */}
+                <button onClick={() => go('genekeys')} className="group block text-left w-full px-4 py-4 rounded-xl border border-bronze-300/50 border-l-[3px] border-l-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08] shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-500">Gene Keys</p>
+                    <span className="text-bronze-200 text-[11px] group-hover:text-bronze-400 transition-colors">→</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Shadow</span>
+                      <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.shadow}</span>
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Shadow</span>
-                        <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.shadow}</span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-bronze-400 w-9 shrink-0">Gift</span>
-                        <span className="font-serif text-[18px] text-bronze-700 leading-none font-medium">{card.gene_keys.gift}</span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Siddhi</span>
-                        <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.siddhi}</span>
-                      </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-bronze-400 w-9 shrink-0">Gift</span>
+                      <span className="font-serif text-[18px] text-bronze-700 leading-none font-medium">{card.gene_keys.gift}</span>
                     </div>
-                  </button>
-                </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Siddhi</span>
+                      <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.siddhi}</span>
+                    </div>
+                  </div>
+                </button>
 
                 {/* Middle row: Human Design + Tarot */}
                 <div className="grid grid-cols-2 gap-2">
@@ -1272,10 +1335,10 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{synthesis.reference.tarot_card}</p>
                     <div className="space-y-0.5">
                       <p className="font-label text-[11px] text-wood-400">
-                        {ASTRO_SYMBOLS[synthesis.reference.astrology] ?? ''} {synthesis.reference.astrology}
+                        {synthesis.reference.astrology}
                       </p>
                       <p className="font-label text-[11px] text-wood-400">
-                        {HEBREW_CHARS[synthesis.reference.hebrew_letter] ?? ''} {synthesis.reference.hebrew_letter} · Path {synthesis.reference.path}
+                        {synthesis.reference.hebrew_letter} · Path {synthesis.reference.path}
                       </p>
                     </div>
                   </button>
@@ -1334,54 +1397,66 @@ const UniversalLanguageCard: React.FC = () => {
               The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
             </p>
 
-            {/* Island 1 — Trigrams + short combination reading (always first) */}
-            {(() => {
-              const doubled = card.iching.upper_trigram.symbol === card.iching.lower_trigram.symbol;
-              return (
-                <div className={`rounded-2xl border border-stone-700/50 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
-                  {/* Hexagram identifier — anchors the card to this hexagram */}
-                  {synthesis?.reference?.hexagram_symbol && (
-                    <div className="px-6 pt-6 pb-0 flex items-center gap-4">
-                      <span className="text-[56px] text-bronze-400/70 leading-none">{synthesis.reference.hexagram_symbol}</span>
-                      <div>
-                        <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">Hexagram {card.number}</p>
-                        <h2 className="font-serif text-2xl text-stone-100 font-semibold leading-[1.2]">{card.iching.hexagram_name}</h2>
-                      </div>
-                    </div>
-                  )}
-                  <div className="px-6 py-6">
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-5">Trigrams</p>
-                    <div className="space-y-6">
-                      <div className="flex items-start gap-6">
-                        <div className="text-center w-14 flex-shrink-0">
-                          <span className="text-[48px] text-bronze-400 leading-none block">{card.iching.upper_trigram.symbol}</span>
-                          <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.upper_trigram.name}</p>
-                        </div>
-                        <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.upper_trigram.nature}</p>
-                      </div>
-                      <div className="flex items-start gap-6 border-t border-stone-700/40 pt-6">
-                        <div className="text-center w-14 flex-shrink-0">
-                          <span className="text-[48px] text-bronze-500 leading-none block">{card.iching.lower_trigram.symbol}</span>
-                          <p className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-400 mt-1">{card.iching.lower_trigram.name}</p>
-                        </div>
-                        {doubled
-                          ? <p className="font-sans text-[15px] text-stone-400 pt-2">Same as above</p>
-                          : <p className="font-sans text-[15px] text-stone-300 leading-[1.9] pt-2">{card.iching.lower_trigram.nature}</p>
-                        }
-                      </div>
-                    </div>
-                    {synthesis && (
-                      <div className="mt-6 pt-5 border-t border-stone-700/40">
-                        <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Reading</p>
-                        <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">
-                          {synthesis.synthesis.iching.trigram_combination}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {/* Island 1 — Interactive hexagram + trigram selector */}
+            <div ref={ichingRef} className={`rounded-2xl border border-stone-700/50 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
+
+              {/* Row 1: Full hexagram */}
+              <button
+                onClick={() => setIchingOpen('hex')}
+                className={`group w-full flex items-center gap-4 px-6 py-5 text-left transition-colors border-l-[3px] ${ichingOpen === 'hex' ? 'border-l-bronze-500 bg-white/[0.04]' : 'border-l-transparent hover:bg-white/[0.03]'}`}
+              >
+                <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color={ichingOpen === 'hex' ? 'rgba(180,130,70,0.9)' : 'rgba(180,130,70,0.5)'} width={36} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-0.5">Hexagram {card.number}</p>
+                  <h2 className={`font-serif text-2xl leading-[1.2] transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-400 group-hover:text-stone-200'}`}>{card.iching.hexagram_name}</h2>
                 </div>
-              );
-            })()}
+                <span className={`text-sm transition-colors flex-shrink-0 ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-600 group-hover:text-stone-400'}`}>→</span>
+              </button>
+
+              <div className="border-t border-stone-700/50" />
+
+              {/* Row 2: Upper + Lower side by side */}
+              <div className="flex divide-x divide-stone-700/50">
+                <button
+                  onClick={() => setIchingOpen('upper')}
+                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors border-l-[3px] ${ichingOpen === 'upper' ? 'border-l-bronze-500 bg-white/[0.04]' : 'border-l-transparent hover:bg-white/[0.03]'}`}
+                >
+                  <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-600 mb-0.5">Upper</p>
+                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-200' : 'text-stone-500 group-hover:text-stone-300'}`}>{card.iching.upper_trigram.name}</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setIchingOpen('lower')}
+                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'lower' ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03]'}`}
+                >
+                  <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-600 mb-0.5">Lower</p>
+                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-200' : 'text-stone-500 group-hover:text-stone-300'}`}>{card.iching.lower_trigram.name}</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Reading zone — always visible, updates on tap */}
+              <div className="border-t border-stone-700/50 px-6 py-5">
+                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-bronze-600 mb-3">
+                  {ichingOpen === 'hex'
+                    ? `Hexagram ${card.number} · ${card.iching.hexagram_name}`
+                    : ichingOpen === 'upper'
+                    ? `Upper · ${card.iching.upper_trigram.name}`
+                    : `Lower · ${card.iching.lower_trigram.name}`}
+                </p>
+                <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">
+                  {ichingOpen === 'hex'
+                    ? (synthesis?.synthesis.iching.trigram_combination ?? card.iching.essence)
+                    : ichingOpen === 'upper'
+                    ? card.iching.upper_trigram.nature
+                    : card.iching.lower_trigram.nature}
+                </p>
+              </div>
+            </div>
 
             {/* Island 2 — Oracle reading + classical text (below trigrams) */}
             {synthesis && (
@@ -1837,9 +1912,8 @@ const UniversalLanguageCard: React.FC = () => {
                 className="flex items-center gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 {c && (
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-[20px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-[20px] text-bronze-400 block leading-none -mt-[7px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
+                  <div className="flex-shrink-0">
+                    <HexagramSVG upper={c.iching.upper_trigram.symbol} lower={c.iching.lower_trigram.symbol} color="#c9a05a" width={28} />
                   </div>
                 )}
                 <div className="min-w-0">
@@ -1872,9 +1946,8 @@ const UniversalLanguageCard: React.FC = () => {
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-[20px] text-bronze-400 block leading-none" style={{transform:'scaleX(1.5)'}}>{c.iching.upper_trigram.symbol}</span>
-                    <span className="text-[20px] text-bronze-400 block leading-none -mt-[7px]" style={{transform:'scaleX(1.5)'}}>{c.iching.lower_trigram.symbol}</span>
+                  <div className="flex-shrink-0">
+                    <HexagramSVG upper={c.iching.upper_trigram.symbol} lower={c.iching.lower_trigram.symbol} color="#c9a05a" width={28} />
                   </div>
                 )}
               </Link>

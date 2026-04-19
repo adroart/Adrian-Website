@@ -13,7 +13,10 @@
     "generate:qr": "tsx scripts/generate-ul-qr.ts",
     "crop:oracle": "tsx scripts/crop-oracle-images.ts",
     "rename:oracle": "tsx scripts/rename-oracle-images.ts",
-    "keystatic:dev": "vite --port 8888"
+    "keystatic:dev": "vite --port 8888",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "dependencies": {
     "@keystatic/core": "^0.5.50",
@@ -25,6 +28,7 @@
     "stripe": "^20.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^25.3.0",
     "@types/qrcode": "^1.5.6",

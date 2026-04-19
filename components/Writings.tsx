@@ -495,7 +495,7 @@ const Writings: React.FC = () => {
             <div className="max-w-5xl mx-auto">
 
                 {/* #1 Header with subtitle/epigraph */}
-                <div className="text-center mb-12">
+                <div className="text-center mb-8">
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">Writings</h1>
                     <p className="font-sans text-lg md:text-xl text-wood-500 font-light max-w-lg mx-auto leading-relaxed">
                         Reflections on art, knowledge, and the inner life — written from experience.
@@ -504,7 +504,7 @@ const Writings: React.FC = () => {
 
                 {/* #5 Sticky anchor navigation + #6 Active highlighting + #16 Better touch targets */}
                 <nav
-                    className="dark-preserve sticky z-10 bg-stone-950/95 backdrop-blur-xl flex flex-wrap justify-center gap-3 md:gap-10 border-b border-stone-800 pb-6 md:pb-8 mb-24 -mx-6 px-6"
+                    className="dark-preserve sticky z-10 bg-stone-950/95 backdrop-blur-xl flex flex-wrap justify-center gap-3 md:gap-10 border-b border-stone-800 pt-5 pb-5 mb-16 -mx-6 px-6"
                     style={{ top: 'var(--nav-height)' }}
                     aria-label="Writing sections"
                 >

@@ -1,0 +1,302 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e11] [cursor=pointer]:
+            - /url: /writings
+            - text: Writings
+          - link "Oracle" [ref=e12] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - text: Oracle
+          - link "Inquire" [ref=e14] [cursor=pointer]:
+            - /url: /inquire
+            - text: Inquire
+          - link "About" [ref=e15] [cursor=pointer]:
+            - /url: /about
+            - text: About
+        - button "Switch to light mode" [ref=e17]:
+          - img [ref=e18]
+    - main [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - button "Enlarge image" [ref=e28]:
+              - img "Beyond the Shell, Universal Language 2. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e29]
+            - generic [ref=e31]:
+              - link "Acquire Physical piece" [ref=e32] [cursor=pointer]:
+                - /url: /creations/UL-123
+                - generic [ref=e33]:
+                  - paragraph [ref=e34]: Acquire
+                  - paragraph [ref=e35]: Physical piece
+              - img [ref=e37]
+              - button "Share This card" [ref=e50]:
+                - generic [ref=e51]:
+                  - paragraph [ref=e52]: Share
+                  - paragraph [ref=e53]: This card
+          - generic [ref=e57]:
+            - heading "Beyond the Shell" [level=1] [ref=e59]
+            - button "Surrender Deep Listening Magnetic Stillness Inner Compass Yielding Receptive Devotion" [ref=e61] [cursor=pointer]:
+              - generic [ref=e62]: Surrender
+              - generic [ref=e63]: ·
+              - generic [ref=e64]: Deep Listening
+              - generic [ref=e65]: ·
+              - generic [ref=e66]: Magnetic Stillness
+              - generic [ref=e67]: ·
+              - generic [ref=e68]: Inner Compass
+              - generic [ref=e69]: ·
+              - generic [ref=e70]: Yielding
+              - generic [ref=e71]: ·
+              - generic [ref=e72]: Receptive Devotion
+          - generic [ref=e73]:
+            - generic [ref=e75]:
+              - paragraph [ref=e76]: This is the energy of the open field. Not emptiness as absence, but emptiness as a condition, the quality of ground that has cleared itself so completely that what moves through it can move without obstruction. It does not push. It does not initiate. It holds. Everything that tries to lead here goes astray, and everything that follows finds its way.
+              - paragraph [ref=e77]: There is a compass at the center of this energy, not the needle-and-dial kind that tells you where north is, but the kind that lives in the body and simply knows. It is not loud. It becomes audible only when the noise of agenda quiets down. When the drive to plan and direct and impose loosens its grip, something older surfaces, a felt sense of which way to move that does not need explanation. The mare does not consult a map. She finds her way.
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - button "I Ching The Receptive (K'un) →" [active] [ref=e80]:
+                  - img [ref=e81]
+                  - generic [ref=e94]:
+                    - paragraph [ref=e95]: I Ching
+                    - paragraph [ref=e96]: The Receptive (K'un)
+                  - generic [ref=e97]: →
+                - button "Outer Earth (K'un) →" [ref=e99]:
+                  - img [ref=e100]
+                  - generic [ref=e107]:
+                    - paragraph [ref=e108]: Outer
+                    - paragraph [ref=e109]: Earth (K'un)
+                  - generic [ref=e110]: →
+                - button "Inner Earth (K'un) →" [ref=e112]:
+                  - img [ref=e113]
+                  - generic [ref=e120]:
+                    - paragraph [ref=e121]: Inner
+                    - paragraph [ref=e122]: Earth (K'un)
+                  - generic [ref=e123]: →
+                - generic [ref=e381]:
+                  - paragraph [ref=e382]: Hexagram 2
+                  - paragraph [ref=e383]: "The Receptive works sublime success, furthering through the perseverance of a mare. Field, the surface of the world. Support of all existence, manifestation of Yin, where Energy or Yang activates all creation and destruction. All-involving service. Earth, moon, wife, mother. Rest, receptivity, docile obedience. The terrestrial globe stretching out. Action: yield, give way, comply, agree, follow, obey. Docile, flexible. Bear, produce, nourish, provide. Thereupon yielding receives heaven. Beforehand delusion, afterwards acquiring. Associating: sorting movement."
+                  - button "Full reading →" [ref=e384]
+              - button "Gene Keys → Shadow Dislocation Gift Orientation Siddhi Unity" [ref=e124]:
+                - generic [ref=e125]:
+                  - paragraph [ref=e126]: Gene Keys
+                  - generic [ref=e127]: →
+                - generic [ref=e128]:
+                  - generic [ref=e129]:
+                    - generic [ref=e130]: Shadow
+                    - generic [ref=e131]: Dislocation
+                  - generic [ref=e132]:
+                    - generic [ref=e133]: Gift
+                    - generic [ref=e134]: Orientation
+                  - generic [ref=e135]:
+                    - generic [ref=e136]: Siddhi
+                    - generic [ref=e137]: Unity
+              - generic [ref=e138]:
+                - 'button "Human Design → G Center Knowing 14: Possession in Great Measure" [ref=e139]':
+                  - generic [ref=e140]:
+                    - paragraph [ref=e141]: Human Design
+                    - generic [ref=e142]: →
+                  - paragraph [ref=e143]: G Center
+                  - generic [ref=e144]:
+                    - paragraph [ref=e145]: Knowing
+                    - paragraph [ref=e146]: "14: Possession in Great Measure"
+                - button "Tarot → XVII — The Star Aquarius Tzaddi · Path 28" [ref=e147]:
+                  - generic [ref=e148]:
+                    - paragraph [ref=e149]: Tarot
+                    - generic [ref=e150]: →
+                  - paragraph [ref=e151]: XVII — The Star
+                  - generic [ref=e152]:
+                    - paragraph [ref=e153]: Aquarius
+                    - paragraph [ref=e154]: Tzaddi · Path 28
+              - button "Body → Sternum Amino Acid Phenylalanine Partner Key 1" [ref=e155]:
+                - generic [ref=e156]:
+                  - paragraph [ref=e157]: Body
+                  - generic [ref=e158]: →
+                - generic [ref=e159]:
+                  - paragraph [ref=e160]: Sternum
+                  - generic [ref=e161]:
+                    - paragraph [ref=e162]: Amino Acid
+                    - paragraph [ref=e163]: Phenylalanine
+                  - generic [ref=e164]:
+                    - paragraph [ref=e165]: Partner Key
+                    - paragraph [ref=e166]: "1"
+        - generic [ref=e168]:
+          - paragraph [ref=e169]: The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - img [ref=e172]
+              - generic [ref=e185]:
+                - paragraph [ref=e186]: Hexagram 2
+                - heading "The Receptive (K'un)" [level=2] [ref=e187]
+            - generic [ref=e188]:
+              - paragraph [ref=e189]: Trigrams
+              - generic [ref=e190]:
+                - generic [ref=e191]:
+                  - generic [ref=e192]:
+                    - img [ref=e193]
+                    - paragraph [ref=e200]: Earth (K'un)
+                  - paragraph [ref=e201]: Surface of the world, support of all existence. Essential Yin. Moon, wife, mother. Rest, receptivity. The terrestrial globe stretching out.
+                - generic [ref=e202]:
+                  - generic [ref=e203]:
+                    - img [ref=e204]
+                    - paragraph [ref=e211]: Earth (K'un)
+                  - paragraph [ref=e212]: Same as above
+              - generic [ref=e213]:
+                - paragraph [ref=e214]: Reading
+                - paragraph [ref=e215]: Both the upper and lower trigrams are Earth, pure Yin doubled. This is the only hexagram where both trigrams are identical, and in this case that identity is the receptive itself. What emerges is not movement but field. Not action but the condition that makes all action possible. The earth holds everything that grows, everything that passes, without preference. Total yielding without passivity.
+          - generic [ref=e216]:
+            - 'button "The reading the oracle''s reading for this configuration The hexagram is called The Receptive. The entire field is Yin. There is no initiating force here, no creative push. What is present is something more subtle and, for most people, harder to meet: the quality of receiving. Of clearing the ground. Of allowing the guidance that is already moving through things to become apparent." [ref=e218]':
+              - generic [ref=e219]:
+                - generic [ref=e220]:
+                  - paragraph [ref=e221]: The reading
+                  - paragraph [ref=e222]: the oracle's reading for this configuration
+                  - paragraph [ref=e224]: "The hexagram is called The Receptive. The entire field is Yin. There is no initiating force here, no creative push. What is present is something more subtle and, for most people, harder to meet: the quality of receiving. Of clearing the ground. Of allowing the guidance that is already moving through things to become apparent."
+                - generic [ref=e225]: +
+            - button "The classical text Wilhelm translation The Receptive brings about sublime success," [ref=e227]:
+              - generic [ref=e228]:
+                - generic [ref=e229]:
+                  - paragraph [ref=e230]: The classical text
+                  - paragraph [ref=e231]: Wilhelm translation
+                  - paragraph [ref=e233]: The Receptive brings about sublime success,
+                - generic [ref=e234]: +
+          - paragraph [ref=e236]: "The Receptive works sublime success, furthering through the perseverance of a mare. Field, the surface of the world. Support of all existence, manifestation of Yin, where Energy or Yang activates all creation and destruction. All-involving service. Earth, moon, wife, mother. Rest, receptivity, docile obedience. The terrestrial globe stretching out. Action: yield, give way, comply, agree, follow, obey. Docile, flexible. Bear, produce, nourish, provide. Thereupon yielding receives heaven. Beforehand delusion, afterwards acquiring. Associating: sorting movement."
+        - generic [ref=e238]:
+          - paragraph [ref=e239]: A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression — rare, but real.
+          - generic [ref=e240]:
+            - paragraph [ref=e241]: Gene Key 2 · Gate 2
+            - heading "Beyond the Shell" [level=2] [ref=e242]
+            - generic [ref=e243]:
+              - generic [ref=e244]: Dislocation
+              - generic [ref=e245]: ·
+              - generic [ref=e246]: Orientation
+              - generic [ref=e247]: ·
+              - generic [ref=e248]: Unity
+          - button "Shadow Dislocation The Shadow of Dislocation is the feeling of being cut off from the natural flow of things, lost in time and space, unmoored from any sense of where you belong or where you are going. This is a feeling, not a fact. Nothing in the universe is actually out of place." [ref=e249] [cursor=pointer]:
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - generic [ref=e254]: Shadow
+                  - generic [ref=e255]: Dislocation
+                - generic [ref=e256]: +
+              - paragraph [ref=e258]: The Shadow of Dislocation is the feeling of being cut off from the natural flow of things, lost in time and space, unmoored from any sense of where you belong or where you are going. This is a feeling, not a fact. Nothing in the universe is actually out of place.
+          - button "Gift Orientation The Gift of Orientation is what becomes available when the frequency lifts. This is not something you produce through effort, but a biological reorientation that occurs when you stop fighting the flow. One indicator is synchronicity, the direct manifestation of this gift. Things begin to arrive in the right order. Your timing improves. The inner compass, which was always there, becomes audible again." [ref=e259] [cursor=pointer]:
+            - generic [ref=e261]:
+              - generic [ref=e262]:
+                - generic [ref=e263]:
+                  - generic [ref=e264]: Gift
+                  - generic [ref=e265]: Orientation
+                - generic [ref=e266]: +
+              - paragraph [ref=e268]: The Gift of Orientation is what becomes available when the frequency lifts. This is not something you produce through effort, but a biological reorientation that occurs when you stop fighting the flow. One indicator is synchronicity, the direct manifestation of this gift. Things begin to arrive in the right order. Your timing improves. The inner compass, which was always there, becomes audible again.
+          - button "Siddhi Unity The Siddhi of Unity is the cornerstone of all siddhic states. At this frequency, the sense of a separate self that could be dislocated from the universal field has dissolved. What remains is not the union of two things, but the recognition that the two were never separate to begin with." [ref=e269] [cursor=pointer]:
+            - generic [ref=e271]:
+              - generic [ref=e272]:
+                - generic [ref=e273]:
+                  - generic [ref=e274]: Siddhi
+                  - generic [ref=e275]: Unity
+                - generic [ref=e276]: +
+              - paragraph [ref=e278]: The Siddhi of Unity is the cornerstone of all siddhic states. At this frequency, the sense of a separate self that could be dislocated from the universal field has dissolved. What remains is not the union of two things, but the recognition that the two were never separate to begin with.
+          - paragraph [ref=e279]:
+            - text: Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at
+            - link "genekeys.com" [ref=e280] [cursor=pointer]:
+              - /url: https://genekeys.com
+        - generic [ref=e282]:
+          - paragraph [ref=e283]: Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+          - generic [ref=e284]:
+            - paragraph [ref=e285]: Human Design · Gate 2
+            - heading "Direction of the Self" [level=2] [ref=e286]
+          - button "The Gate Direction of the Self Gate 2 sits in the G Center, the center of identity, love, and direction. Its keyword is Direction of the Self. This is not a gate of planning or navigation in the ordinary sense. It is the body's internal compass, the felt sense of which way to move that does not depend on reasoning or maps. In behavior it shows up as people who seem to know where they are going without being able to explain why, who are moved rather than directed." [ref=e287] [cursor=pointer]:
+            - generic [ref=e288]:
+              - generic [ref=e289]:
+                - generic [ref=e290]:
+                  - text: The Gate
+                  - paragraph [ref=e291]: Direction of the Self
+                - generic [ref=e292]: +
+              - paragraph [ref=e294]: Gate 2 sits in the G Center, the center of identity, love, and direction. Its keyword is Direction of the Self. This is not a gate of planning or navigation in the ordinary sense. It is the body's internal compass, the felt sense of which way to move that does not depend on reasoning or maps. In behavior it shows up as people who seem to know where they are going without being able to explain why, who are moved rather than directed.
+          - 'button "The Channel Gate 2 · 14: Possession in Great Measure Gate 2 completes with Gate 14 to form the channel called The Beat, a design described as being the keeper of keys. Gate 14 sits in the Sacral Center and carries the quality of possession in great measure, the capacity to resource what is needed. Together these two gates form a channel that links the body''s deepest power to the internal compass of identity. The Beat suggests that the right direction and the energy to move in it are not separate things. They arrive together." [ref=e295] [cursor=pointer]':
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - generic [ref=e298]:
+                  - text: The Channel
+                  - paragraph [ref=e299]: "Gate 2 · 14: Possession in Great Measure"
+                - generic [ref=e300]: +
+              - paragraph [ref=e302]: Gate 2 completes with Gate 14 to form the channel called The Beat, a design described as being the keeper of keys. Gate 14 sits in the Sacral Center and carries the quality of possession in great measure, the capacity to resource what is needed. Together these two gates form a channel that links the body's deepest power to the internal compass of identity. The Beat suggests that the right direction and the energy to move in it are not separate things. They arrive together.
+          - button "The Circuit Knowing Gate 2 belongs to the Knowing circuit, also called the Individual circuit. This circuit transmits through the quality of presence that comes from genuine self-knowledge. A person drawing on it influences others not by speaking or demonstrating but simply by being in a state of alignment." [ref=e303] [cursor=pointer]:
+            - generic [ref=e304]:
+              - generic [ref=e305]:
+                - generic [ref=e306]:
+                  - text: The Circuit
+                  - paragraph [ref=e307]: Knowing
+                - generic [ref=e308]: +
+              - paragraph [ref=e310]: Gate 2 belongs to the Knowing circuit, also called the Individual circuit. This circuit transmits through the quality of presence that comes from genuine self-knowledge. A person drawing on it influences others not by speaking or demonstrating but simply by being in a state of alignment.
+          - button "Ring of Water 17 - The Star The receptive depths and the individual contribution. Water finds its way without forcing. The star shines by its own nature." [ref=e311] [cursor=pointer]:
+            - generic [ref=e313]:
+              - generic [ref=e314]:
+                - generic [ref=e315]:
+                  - text: Ring of Water
+                  - paragraph [ref=e316]: 17 - The Star
+                - generic [ref=e317]: +
+              - paragraph [ref=e319]: The receptive depths and the individual contribution. Water finds its way without forcing. The star shines by its own nature.
+        - generic [ref=e321]:
+          - paragraph [ref=e323]: Connection data will be available soon.
+          - 'button "Tarot · Ring of Water XVII — The Star Key 2 and Key 8 share The Star in the Ring of Water. Key 8 carries the quality of individual style emerging from that star''s light, a unique face showing itself in the world. Key 2 holds something deeper: the starlight before it takes a form. It carries the original receptive quality of The Star, the open sky, the uncontracted field from which all guidance and hope arise. Where Key 8 is what flows out from that source, Key 2 is the source itself." [ref=e324] [cursor=pointer]':
+            - generic [ref=e325]:
+              - generic [ref=e326]:
+                - generic [ref=e327]:
+                  - text: Tarot · Ring of Water
+                  - paragraph [ref=e328]: XVII — The Star
+                - generic [ref=e329]: +
+              - paragraph [ref=e331]: "Key 2 and Key 8 share The Star in the Ring of Water. Key 8 carries the quality of individual style emerging from that star's light, a unique face showing itself in the world. Key 2 holds something deeper: the starlight before it takes a form. It carries the original receptive quality of The Star, the open sky, the uncontracted field from which all guidance and hope arise. Where Key 8 is what flows out from that source, Key 2 is the source itself."
+          - button "Body · Physiology Sternum The sternum is the bone that both shields and opens. It is the physical midpoint of the body's front surface, the place the chest opens from. When dislocation eases and orientation arrives, this is where it lands in the body." [ref=e332] [cursor=pointer]:
+            - generic [ref=e333]:
+              - generic [ref=e334]:
+                - generic [ref=e335]:
+                  - text: Body · Physiology
+                  - paragraph [ref=e336]: Sternum
+                - generic [ref=e337]: +
+              - paragraph [ref=e339]: The sternum is the bone that both shields and opens. It is the physical midpoint of the body's front surface, the place the chest opens from. When dislocation eases and orientation arrives, this is where it lands in the body.
+          - 'button "Body · Amino Acid Phenylalanine Phenylalanine is an essential amino acid, meaning the body cannot produce it and must receive it from food. This alone makes it a fitting carrier for Key 2''s theme: what is most fundamental sometimes requires reception rather than self-generation." [ref=e340] [cursor=pointer]':
+            - generic [ref=e341]:
+              - generic [ref=e342]:
+                - generic [ref=e343]:
+                  - text: Body · Amino Acid
+                  - paragraph [ref=e344]: Phenylalanine
+                - generic [ref=e345]: +
+              - paragraph [ref=e347]: "Phenylalanine is an essential amino acid, meaning the body cannot produce it and must receive it from food. This alone makes it a fitting carrier for Key 2's theme: what is most fundamental sometimes requires reception rather than self-generation."
+      - generic [ref=e349]:
+        - link "← Prev Earth's Breath" [ref=e350] [cursor=pointer]:
+          - /url: /oracle/universal-language/1
+          - img [ref=e352]
+          - generic [ref=e359]:
+            - paragraph [ref=e360]: ← Prev
+            - paragraph [ref=e361]: Earth's Breath
+        - link "2 All 64" [ref=e362] [cursor=pointer]:
+          - /url: /oracle/universal-language
+          - generic [ref=e363]: "2"
+          - generic [ref=e364]: All 64
+        - link "Next → Messengers of the Infinite" [ref=e365] [cursor=pointer]:
+          - /url: /oracle/universal-language/3
+          - generic [ref=e366]:
+            - paragraph [ref=e367]: Next →
+            - paragraph [ref=e368]: Messengers of the Infinite
+          - img [ref=e370]
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
