@@ -121,8 +121,8 @@ const OracleGateway: React.FC = () => {
           viewBox="0 0 800 800"
           style={{
             position: 'absolute',
-            width:    'min(94vmin, 720px)',
-            height:   'min(94vmin, 720px)',
+            width:    'min(160vmin, 1200px)',
+            height:   'min(160vmin, 1200px)',
             animation: 'og-ring-in 2.8s cubic-bezier(0.16, 1, 0.3, 1) both',
           }}
           aria-label="Ring of 64 hexagrams — tap one to enter"
