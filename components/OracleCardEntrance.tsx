@@ -79,7 +79,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
   const dismiss = () => {
     if (exiting) return;
     setExiting(true);
-    setTimeout(onDone, EXIT_DUR);
+    setTimeout(onDone, 1120); // bg-exit: 320ms delay + EXIT_DUR
   };
 
   // Preload card image while animation plays
