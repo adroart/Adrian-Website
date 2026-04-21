@@ -10,9 +10,6 @@ export interface SizeVariant {
   editionNumber?: number;              // For in-stock pieces: which number in the edition
 }
 
-/** @deprecated Use SizeVariant instead */
-export type MadeToOrderSize = SizeVariant;
-
 export interface Artwork {
   id: string;
   title: string;
@@ -45,9 +42,7 @@ export interface Artwork {
   // Size variants — if set, piece page shows unified configurator with per-variant availability.
   // Each variant has its own Stripe Price ID and stock status.
   sizeVariants?: SizeVariant[];
-
-  /** @deprecated Use sizeVariants instead */
-  madeToOrderSizes?: SizeVariant[];
+  madeToOrderSizes?: SizeVariant[]; // Legacy alias — still read as fallback in PiecePage + GalleryTileCard
 
   // Architecture update fields
   illuminated?: boolean; // Piece has LED/light work
@@ -88,6 +83,11 @@ export interface Product {
   stripePriceId?: string;   // Stripe Price ID (price_xxx) for Checkout Session API
   // For configured made-to-order items: add-on Stripe Price IDs sent as additional line items
   addOnPriceIds?: string[];
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
 }
 
 export type StoryCategory = 'Living Knowledge' | 'Beneath the Surface' | 'The Practice' | 'The Path';

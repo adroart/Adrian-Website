@@ -1,7 +1,10 @@
 User-agent: *
 Allow: /
 
+Disallow: /admin/
+Disallow: /admin
 Disallow: /api/
-Disallow: /welcome
+Disallow: /keystatic/
+Disallow: /font-preview
 
 Sitemap: https://adrianrasmussen.com/sitemap.xml

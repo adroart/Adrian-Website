@@ -14,9 +14,11 @@
     "crop:oracle": "tsx scripts/crop-oracle-images.ts",
     "rename:oracle": "tsx scripts/rename-oracle-images.ts",
     "keystatic:dev": "vite --port 8888",
-    "test": "playwright test",
+    "test": "npx playwright test",
+    "test:mobile": "npx playwright test --project='Mobile Chrome' --reporter=list",
     "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
+    "test:headed": "playwright test --headed",
+    "sitemap": "tsx scripts/generate-sitemap.ts"
   },
   "dependencies": {
     "@keystatic/core": "^0.5.50",

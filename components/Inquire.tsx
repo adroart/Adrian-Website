@@ -4,7 +4,7 @@ import { CheckCircle, AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 
 // Update this with your actual WhatsApp number (international format, no + or spaces, e.g. 6281234567890)
-const WHATSAPP_NUMBER = ''; // TODO: add your number here
+const WHATSAPP_NUMBER = '18313259164';
 
 type CommissionType = 'personal' | 'spatial';
 type SendStatus = 'IDLE' | 'SENDING' | 'ERROR';

@@ -5,7 +5,9 @@ import { Artwork } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, LIGHT_CODE_SUBCATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import GalleryTileCard from './GalleryTileCard';
+import Breadcrumb from './Breadcrumb';
 import { img } from '../utils/cloudinary';
+import { useMetaTags } from '../hooks/useMetaTags';
 
 // --- Subcategory config ---
 
@@ -139,6 +141,11 @@ const SubcategoryPage: React.FC = () => {
         window.scrollTo(0, 0);
     }, [subcategory]);
 
+    const ogImage = config?.image
+        ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${config.image}`
+        : undefined;
+    useMetaTags({ title: config?.title, image: ogImage });
+
     if (!config) {
         return (
             <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
@@ -177,13 +184,14 @@ const SubcategoryPage: React.FC = () => {
 
             {/* Header — more breathing room */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10 pt-12 pb-14">
-                <div className="flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 font-semibold mb-8">
-                    <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
-                    <span className="text-wood-300">/</span>
-                    <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">Multidimensional Art</Link>
-                    <span className="text-wood-300">/</span>
-                    <span className="text-wood-900">{config.title}</span>
-                </div>
+                <Breadcrumb
+                    crumbs={[
+                        { label: 'Creations', to: '/creations' },
+                        { label: 'Multidimensional Art', to: '/creations/multidimensional-art' },
+                        { label: config.title },
+                    ]}
+                    className="mb-8"
+                />
                 <h1 className="font-serif text-5xl md:text-7xl text-wood-900 mb-6 font-medium">{config.title}</h1>
                 <p className="font-serif text-xl text-wood-600 max-w-2xl font-light leading-[1.7]">{config.description}</p>
             </div>

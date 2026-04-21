@@ -21,6 +21,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { totalItems, openCart } = useCart();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
@@ -78,17 +79,28 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Close mobile menu on Escape key + lock body scroll when menu open
+  // Close mobile menu on Escape key + lock body scroll + trap focus when menu open
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     document.body.style.overflow = 'hidden';
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    const focusableSelector = 'button, [href], input, [tabindex]:not([tabindex="-1"])';
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setIsMobileMenuOpen(false); return; }
+      if (e.key !== 'Tab' || !mobileMenuRef.current) return;
+      const focusable = mobileMenuRef.current.querySelectorAll<HTMLElement>(focusableSelector);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
     };
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeydown);
     return () => {
       document.body.style.overflow = '';
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeydown);
     };
   }, [isMobileMenuOpen]);
 
@@ -130,7 +142,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               >
                 {item.label}
                 {/* #1 Active underline uses prefix matching */}
-                <span className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${isNavActive(item.path) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                <span aria-hidden="true" className={`absolute -bottom-0 left-0 h-px bg-bronze-500 transition-all duration-300 ease-out ${isNavActive(item.path) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
             ))}
           </div>
@@ -143,7 +155,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDarkMode ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="5" />
                   <line x1="12" y1="1" x2="12" y2="3" />
                   <line x1="12" y1="21" x2="12" y2="23" />
@@ -155,7 +167,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                 </svg>
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
               )}
@@ -166,7 +178,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
               aria-label="Open cart"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <path d="M16 10a4 4 0 0 1-8 0" />
@@ -195,6 +207,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
         {/* Mobile Menu — #21 ARIA attributes */}
         {isMobileMenuOpen && (
              <div
+               ref={mobileMenuRef}
                id="mobile-nav-menu"
                role="navigation"
                aria-label="Mobile navigation"

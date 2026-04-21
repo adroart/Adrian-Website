@@ -3,36 +3,38 @@ import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 
 const KeystaticRoute = lazy(() => import('./components/KeystaticRoute'));
+const Home = lazy(() => import('./components/Home'));
+const Hero = lazy(() => import('./components/Hero'));
+const Creations = lazy(() => import('./components/Creations'));
+const Writings = lazy(() => import('./components/Writings'));
+const WritingArticle = lazy(() => import('./components/Writings').then(m => ({ default: m.WritingArticle })));
+const About = lazy(() => import('./components/About'));
+const Inquire = lazy(() => import('./components/Inquire'));
+const Store = lazy(() => import('./components/Store'));
+const PiecePage = lazy(() => import('./components/PiecePage'));
+const MultidimensionalArt = lazy(() => import('./components/MultidimensionalArt'));
+const SubcategoryPage = lazy(() => import('./components/SubcategoryPage'));
+const IlluminatedWorks = lazy(() => import('./components/IlluminatedWorks'));
+const OracleCards = lazy(() => import('./components/OracleCards'));
+const UniversalLanguageIndex = lazy(() => import('./components/UniversalLanguageIndex'));
+const UniversalLanguageCard = lazy(() => import('./components/UniversalLanguageCard'));
+const OracleGateway = lazy(() => import('./components/OracleGateway'));
+const Welcome = lazy(() => import('./components/Welcome'));
+const NotFound = lazy(() => import('./components/NotFound'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const Terms = lazy(() => import('./components/Terms'));
+const FontPreview = lazy(() => import('./components/FontPreview'));
+const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
+const AdminLogin = lazy(() => import('./components/AdminLogin'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const Footer = lazy(() => import('./components/Footer'));
+const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
+
 import { useSeoMeta } from './useSeoMeta';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
-import Home from './components/Home';
-import Hero from './components/Hero';
-import Creations from './components/Creations';
-import Writings, { WritingArticle } from './components/Writings';
-import About from './components/About';
-import Inquire from './components/Inquire';
-import Store from './components/Store';
-import PiecePage from './components/PiecePage';
-import MultidimensionalArt from './components/MultidimensionalArt';
-import SubcategoryPage from './components/SubcategoryPage';
-import IlluminatedWorks from './components/IlluminatedWorks';
-import OracleCards from './components/OracleCards';
-import UniversalLanguageIndex from './components/UniversalLanguageIndex';
-import UniversalLanguageCard from './components/UniversalLanguageCard';
-import OracleGateway from './components/OracleGateway';
-import Welcome from './components/Welcome';
-import NotFound from './components/NotFound';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import Terms from './components/Terms';
-import FontPreview from './components/FontPreview';
-import AdminFileUpload from './components/AdminFileUpload';
-import AdminLogin from './components/AdminLogin';
-import AdminDashboard from './components/AdminDashboard';
-import Footer from './components/Footer';
-import GenerativeBackground from './components/GenerativeBackground';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -85,6 +87,7 @@ const AppInner: React.FC = () => {
   const theme = (isHome || isDarkMode) ? 'DARK' : 'LIGHT';
 
   return (
+    <Suspense fallback={<div className="min-h-screen bg-[#262321]" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       <GenerativeBackground pathname={location.pathname} theme={theme} />
       {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}
@@ -129,6 +132,7 @@ const AppInner: React.FC = () => {
       {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
       <CartDrawer />
     </div>
+    </Suspense>
   );
 };
 

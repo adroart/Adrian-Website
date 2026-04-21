@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
 const NotFound: React.FC = () => {
+    const navigate = useNavigate();
+
     return (
         <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
             <div className="max-w-xl text-center">
@@ -27,6 +29,12 @@ const NotFound: React.FC = () => {
                     >
                         Browse Creations
                     </Link>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-bronze-600 font-semibold border-b border-wood-300 pb-1"
+                    >
+                        Go Back
+                    </button>
                 </div>
             </div>
         </section>

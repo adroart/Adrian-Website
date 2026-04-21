@@ -9,6 +9,8 @@ import { LAUNCH_FLAGS } from '../launchFlags';
 import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
+import Breadcrumb from './Breadcrumb';
+import GalleryTileCard from './GalleryTileCard';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
 
@@ -91,6 +93,42 @@ const Checkmark: React.FC = () => (
         <path d="M1 4.5L4 7.5L10 1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
+
+// More from this series — compact tile grid
+const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({ art, seriesLink }) => {
+    if (!art.series) return null;
+    const seriesPieces = FULL_ARCHIVE.filter(a => a.id !== art.id && a.series === art.series).slice(0, 3);
+    if (seriesPieces.length === 0) return null;
+    return (
+        <div className="max-w-7xl mx-auto px-6 md:px-12 mt-20 md:mt-32">
+            <div className="border-t border-wood-200 pt-12 mb-10">
+                <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                    More from this series
+                </span>
+            </div>
+            <div className="columns-2 md:columns-3 gap-4 md:gap-6 card-stagger">
+                {seriesPieces.map(piece => (
+                    <GalleryTileCard
+                        key={piece.id}
+                        art={piece}
+                        showDetails
+                        subtitleOverride={piece.series ?? piece.category}
+                    />
+                ))}
+            </div>
+            {seriesLink && (
+                <div className="mt-10 text-center">
+                    <Link
+                        to={seriesLink}
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 font-semibold border-b border-bronze-300 pb-1 transition-colors"
+                    >
+                        View all {art.series} <ArrowRight size={12} />
+                    </Link>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -430,6 +468,23 @@ const PiecePage: React.FC = () => {
     const detailParts = [art.dimensions, art.material, art.year].filter(Boolean);
     const detailString = detailParts.join(' · ');
 
+    // Breadcrumb crumbs for the Breadcrumb component (desktop)
+    const breadcrumbCrumbs = (() => {
+        const crumbs = [{ label: 'Creations', to: '/creations' }];
+        if (isMultidimensional) {
+            crumbs.push({ label: 'Multidimensional Art', to: '/creations/multidimensional-art' });
+            if (seriesLink && art.series) {
+                crumbs.push({ label: art.series, to: seriesLink });
+            } else if (signaturePiecesLink) {
+                crumbs.push({ label: 'Signature Pieces', to: signaturePiecesLink });
+            }
+        } else if (art.category) {
+            crumbs.push({ label: art.category, to: `/creations?category=${encodeURIComponent(art.category)}` });
+        }
+        crumbs.push({ label: art.title });
+        return crumbs;
+    })();
+
     // Structured metadata for mobile-first stacked display
     const metadataRows = [
         art.dimensions && { label: 'Dimensions', value: art.dimensions },
@@ -471,47 +526,8 @@ const PiecePage: React.FC = () => {
             </div>
 
             {/* Desktop breadcrumb — full path */}
-            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6 flex-wrap items-center gap-2.5 font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold">
-                <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
-                <span className="text-wood-300">/</span>
-
-                {/* Non-Multidimensional category breadcrumb */}
-                {!isMultidimensional && art.category && (
-                    <>
-                        <Link to={`/creations?category=${encodeURIComponent(art.category)}`} className="hover:text-wood-900 transition-colors">
-                            {art.category}
-                        </Link>
-                        <span className="text-wood-300">/</span>
-                    </>
-                )}
-
-                {/* Multidimensional Art hierarchy */}
-                {isMultidimensional && (
-                    <>
-                        <Link to="/creations/multidimensional-art" className="hover:text-wood-900 transition-colors">
-                            Multidimensional Art
-                        </Link>
-                        <span className="text-wood-300">/</span>
-                        {seriesLink && (
-                            <>
-                                <Link to={seriesLink} className="hover:text-wood-900 transition-colors">
-                                    {art.series}
-                                </Link>
-                                <span className="text-wood-300">/</span>
-                            </>
-                        )}
-                        {signaturePiecesLink && (
-                            <>
-                                <Link to={signaturePiecesLink} className="hover:text-wood-900 transition-colors">
-                                    Signature Pieces
-                                </Link>
-                                <span className="text-wood-300">/</span>
-                            </>
-                        )}
-                    </>
-                )}
-
-                <span className="text-wood-900">{art.title}</span>
+            <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6">
+                <Breadcrumb crumbs={breadcrumbCrumbs} />
             </div>
 
             {/* Main Content */}
@@ -1119,6 +1135,9 @@ const PiecePage: React.FC = () => {
                     )}
                 </div>
             )}
+
+            {/* More from this series — compact tile grid, series pieces only */}
+            <MoreFromSeries art={art} seriesLink={seriesLink} />
 
             {/* Related Pieces */}
             {relatedPieces.length === 0 && (

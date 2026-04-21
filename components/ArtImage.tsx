@@ -121,7 +121,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
         );
     }
 
-    return (
+    const img = (
         <img
             {...rest}
             src={resolvedSrc}
@@ -142,6 +142,22 @@ const ArtImage: React.FC<ArtImageProps> = ({
             ].filter(Boolean).join(' ')}
         />
     );
+
+    if (hasFade) {
+        const wrapperClass = variant === 'cover'
+            ? 'absolute inset-0'
+            : 'relative overflow-hidden';
+        return (
+            <div className={wrapperClass}>
+                {!loaded && (
+                    <div className="absolute inset-0 bg-stone-100 animate-pulse" aria-hidden="true" />
+                )}
+                {img}
+            </div>
+        );
+    }
+
+    return img;
 };
 
 export default ArtImage;
