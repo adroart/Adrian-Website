@@ -960,6 +960,8 @@ const UniversalLanguageCard: React.FC = () => {
 
   useEffect(() => {
     setLightboxOpen(false);
+    setShareOpen(false);
+    storyFileRef.current = null;
     window.scrollTo(0, 0);
   }, [cardNum]);
 
