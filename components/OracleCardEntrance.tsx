@@ -201,8 +201,8 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           aria-hidden="true"
           style={{
             position:  'absolute',
-            width:     '130vw',
-            height:    '130vw',
+            width:     '117vw',
+            height:    '117vw',
             animation: exiting
               ? `ce-ring-exit 480ms cubic-bezier(0.4, 0, 1, 1) both`
               : `ce-ring-bloom ${RING_DUR}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
