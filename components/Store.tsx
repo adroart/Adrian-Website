@@ -820,6 +820,25 @@ const Store: React.FC = () => {
 
     const isUnfiltered = filters.length === 0 && !search.trim();
 
+    // Canonical tag: filtered URLs canonicalize to /shop so search engines don't index them
+    useEffect(() => {
+        const hasFilters = filters.length > 0 || search.trim().length > 0 || sort !== 'NEW' || activeCollection !== null;
+        let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'canonical';
+            document.head.appendChild(link);
+        }
+        link.href = hasFilters
+            ? 'https://adrianrasmussen.com/shop'
+            : `https://adrianrasmussen.com${window.location.pathname}`;
+
+        return () => {
+            // Reset canonical on unmount
+            if (link) link.href = 'https://adrianrasmussen.com/shop';
+        };
+    }, [filters, search, sort, activeCollection]);
+
     // Handle Stripe redirect
     useEffect(() => {
         const status = searchParams.get('checkout');

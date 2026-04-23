@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
@@ -61,6 +61,15 @@ async function startCheckout(
         if (!data.url || !isValidStripeUrl(data.url)) {
             throw new Error('Received an invalid checkout URL. Please try again or contact the studio.');
         }
+        // Fire conversion event — Cloudflare Analytics compatible
+        try {
+            if (typeof window !== 'undefined' && (window as Window & { zaraz?: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz) {
+                (window as Window & { zaraz: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz.track('purchase_initiated', {
+                    item_count: items.length,
+                    value: items.reduce((sum, i) => sum + i.quantity, 0),
+                });
+            }
+        } catch {}
         window.location.href = data.url;
         return;
     }
@@ -84,7 +93,9 @@ const CartDrawer: React.FC = () => {
     const { items, removeFromCart, updateQuantity, totalItems, totalPrice, isCartOpen, closeCart } = useCart();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [swipeOffset, setSwipeOffset] = useState(0);
     const drawerRef = useRef<HTMLDivElement>(null);
+    const touchStartRef = useRef(0);
 
     useEffect(() => {
         if (typeof document === 'undefined' || !document.body) return;
@@ -125,8 +136,29 @@ const CartDrawer: React.FC = () => {
         return () => document.removeEventListener('keydown', handleTab);
     }, [isCartOpen]);
 
+    // Reset swipe offset when cart closes
+    useEffect(() => {
+        if (!isCartOpen) setSwipeOffset(0);
+    }, [isCartOpen]);
+
     // Clear error when cart closes or items change
     useEffect(() => { setError(null); }, [isCartOpen, items.length]);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        touchStartRef.current = e.touches[0].clientX;
+    }, []);
+
+    const handleTouchMove = useCallback((e: React.TouchEvent) => {
+        const diff = e.touches[0].clientX - touchStartRef.current;
+        if (diff > 0) setSwipeOffset(Math.min(diff, 120));
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        if (swipeOffset > 80) {
+            closeCart();
+        }
+        setSwipeOffset(0);
+    }, [swipeOffset, closeCart]);
 
     // Duplicate Escape handler removed — already handled in useEffect above
 
@@ -143,6 +175,10 @@ const CartDrawer: React.FC = () => {
                     title: product.title,
                 }))
             );
+            // Dispatch custom event for any analytics listeners
+            window.dispatchEvent(new CustomEvent('checkout_initiated', {
+                detail: { itemCount: items.length, totalPrice }
+            }));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
         } finally {
@@ -168,7 +204,11 @@ const CartDrawer: React.FC = () => {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Shopping cart"
-                className={`relative w-full max-w-[480px] h-full bg-paper-50 border-l border-wood-200 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                className={`relative w-full max-w-[480px] h-full bg-paper-50 border-l border-wood-200 shadow-2xl flex flex-col ${swipeOffset === 0 ? 'transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]' : ''} ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                style={isCartOpen && swipeOffset > 0 ? { transform: `translateX(${swipeOffset}px)` } : undefined}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}>
 
                 {/* Header */}
                 <div className="h-16 border-b border-wood-200 flex items-center justify-between px-6 bg-paper-50 shrink-0">

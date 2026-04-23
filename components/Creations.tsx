@@ -208,6 +208,63 @@ const SortDropdown: React.FC<{
     </div>
 );
 
+// ─── Available Now Section ────────────────────────────────────────────────────
+
+const AvailableNowSection: React.FC = () => {
+    const readyToShip = useMemo(
+        () => FULL_ARCHIVE.filter(a => a.availability === 'READY_TO_SHIP').slice(0, 6),
+        []
+    );
+
+    if (readyToShip.length === 0) return null;
+
+    return (
+        <div className="max-w-[1800px] mx-auto px-6 mb-20 animate-fade-in">
+            <div className="border-t border-wood-200 pt-14">
+                <div className="flex justify-between items-end mb-8">
+                    <div>
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Ready to Ship</span>
+                        <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">Available Now</h2>
+                        <p className="font-sans text-base text-wood-500 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
+                    </div>
+                    <Link
+                        to="/shop"
+                        className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2"
+                    >
+                        See all in the shop <ArrowRight size={14} />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {readyToShip.map(piece => (
+                        <Link key={piece.id} to={`/creations/${piece.id}`} className="group">
+                            <div className="overflow-hidden aspect-square mb-3">
+                                <ArtImage
+                                    publicId={piece.coverImage}
+                                    alt={piece.title}
+                                    variant="tile"
+                                    loading="lazy"
+                                />
+                            </div>
+                            <p className="font-sans text-sm text-wood-800 font-medium group-hover:text-bronze-600 transition-colors leading-snug">{piece.title}</p>
+                            <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 mt-1">{piece.series || piece.category}</p>
+                        </Link>
+                    ))}
+                </div>
+
+                <div className="mt-8 text-center md:hidden">
+                    <Link
+                        to="/shop"
+                        className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold"
+                    >
+                        See all in the shop →
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const Creations: React.FC = () => {
@@ -339,6 +396,9 @@ const Creations: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* ── Available Now ─────────────────────────────────────────── */}
+            {!filter && <AvailableNowSection />}
 
             {/* ── Sticky Filter / Breadcrumb Bar ────────────────────────── */}
             <div className="max-w-[1800px] mx-auto px-6 sticky top-[var(--nav-height)] z-30 bg-paper-50 backdrop-blur-md py-4 border-b border-wood-200 mb-10">

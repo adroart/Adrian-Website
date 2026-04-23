@@ -587,6 +587,16 @@ button, a, [role="button"], input, select, textarea, label {
   .margin-note { display: none; }
 }
 
+/* ─── Route Transition ────────────────────────────────────────────────── */
+/* Subtle fade + slight lift when navigating between pages.                 */
+@keyframes routeFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.route-fade-in {
+  animation: routeFadeIn 0.3s ease-out forwards;
+}
+
 /* ─── Reduced Motion Support ──────────────────────────────────────────── */
 /* Respects user preference to minimize non-essential animations (WCAG 2.1) */
 @media (prefers-reduced-motion: reduce) {

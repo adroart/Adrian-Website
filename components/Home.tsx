@@ -1,16 +1,21 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { STORIES } from '../data/generatedStories';
+import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
+import GalleryTileCard from './GalleryTileCard';
 import { img } from '../utils/cloudinary';
-
-/* ─── Commission Invitation ────────────────────────────────────────────── */
 
 /* ─── Home Component ──────────────────────────────────────────────────────── */
 
 const Home: React.FC = () => {
+    const featuredPieces = useMemo(
+        () => FULL_ARCHIVE.filter(p => p.featured).slice(0, 12),
+        []
+    );
+
     return (
         <div className="bg-paper-50 min-h-screen animate-fade-in">
 
@@ -39,6 +44,33 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
             </section>
+
+            {/* Selected Works masonry gallery */}
+            {featuredPieces.length > 0 && (
+                <section className="py-16 md:py-24 px-6 border-t border-wood-100">
+                    <div className="max-w-[1800px] mx-auto">
+                        <div className="flex justify-between items-end mb-10 md:mb-14">
+                            <div>
+                                <span className="font-label text-xs uppercase tracking-[0.2em] text-bronze-600 font-semibold block mb-3">Selected Works</span>
+                                <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">A window into the work</h2>
+                            </div>
+                            <Link to="/creations" className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2">
+                                All Creations <ArrowRight size={14} />
+                            </Link>
+                        </div>
+                        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-5 card-stagger">
+                            {featuredPieces.map(piece => (
+                                <GalleryTileCard key={piece.id} art={piece} showDetails />
+                            ))}
+                        </div>
+                        <div className="mt-10 text-center md:hidden">
+                            <Link to="/creations" className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold">
+                                View all creations →
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* 3.5 Commission Invitation */}
             <section className="relative overflow-hidden">

@@ -21,6 +21,7 @@ const UniversalLanguageCard = lazy(() => import('./components/UniversalLanguageC
 const OracleGateway = lazy(() => import('./components/OracleGateway'));
 const Welcome = lazy(() => import('./components/Welcome'));
 const NotFound = lazy(() => import('./components/NotFound'));
+const OrderConfirmed = lazy(() => import('./components/OrderConfirmed'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const Terms = lazy(() => import('./components/Terms'));
 const FontPreview = lazy(() => import('./components/FontPreview'));
@@ -35,6 +36,7 @@ import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
+import CookieConsent from './components/CookieConsent';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -93,44 +95,48 @@ const AppInner: React.FC = () => {
       {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}
 
       <main id="main-content">
-        <Routes>
-          <Route path="/" element={<><Hero /><Home /></>} />
+        <div key={location.pathname} className="route-fade-in">
+          <Routes>
+            <Route path="/" element={<><Hero /><Home /></>} />
 
-          {/* Creations — static routes must come before /:id catch-all */}
-          <Route path="/creations" element={<Creations />} />
-          <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
-          {/* Oracle gateway — QR code target */}
-          <Route path="/oracle" element={<OracleGateway />} />
-          <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
-          <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
-          {/* Backwards-compat redirects — old URLs still resolve */}
-          <Route path="/universal-language/:number" element={<UniversalLanguageCard />} />
-          <Route path="/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
-          <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCard />} />
-          <Route path="/creations/oracle-cards/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
-          <Route path="/creations/oracle-cards" element={<Navigate to="/oracle/universal-language" replace />} />
-          <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
-          <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
-          <Route path="/creations/:id" element={<PiecePage />} />
+            {/* Creations — static routes must come before /:id catch-all */}
+            <Route path="/creations" element={<Creations />} />
+            <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+            {/* Oracle gateway — QR code target */}
+            <Route path="/oracle" element={<OracleGateway />} />
+            <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
+            <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
+            {/* Backwards-compat redirects — old URLs still resolve */}
+            <Route path="/universal-language/:number" element={<UniversalLanguageCard />} />
+            <Route path="/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
+            <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCard />} />
+            <Route path="/creations/oracle-cards/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
+            <Route path="/creations/oracle-cards" element={<Navigate to="/oracle/universal-language" replace />} />
+            <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
+            <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
+            <Route path="/creations/:id" element={<PiecePage />} />
 
-          <Route path="/writings" element={<Writings />} />
-          <Route path="/writings/:slug" element={<WritingArticle />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/inquire" element={<Inquire />} />
-          <Route path="/shop" element={<Store />} />
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/font-preview" element={<FontPreview />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/files" element={<AdminFileUpload />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/writings" element={<Writings />} />
+            <Route path="/writings/:slug" element={<WritingArticle />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/inquire" element={<Inquire />} />
+            <Route path="/shop" element={<Store />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/font-preview" element={<FontPreview />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/files" element={<AdminFileUpload />} />
+            <Route path="/order-confirmed" element={<OrderConfirmed />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </main>
 
       {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
       <CartDrawer />
+      <CookieConsent />
     </div>
     </Suspense>
   );

@@ -371,6 +371,24 @@ const Inquire: React.FC = () => {
       if (res.ok) {
         setSubmitted(true);
         setSendStatus('IDLE');
+
+        // Conversion tracking
+        window.dispatchEvent(new CustomEvent('inquiry_submitted', {
+          detail: {
+            commissionType: form.commissionType,
+            budget: form.budget,
+          },
+        }));
+
+        // Cloudflare Zaraz (if available)
+        try {
+          if (typeof window !== 'undefined' && (window as { zaraz?: { track: (event: string, data: Record<string, string>) => void } }).zaraz) {
+            (window as { zaraz?: { track: (event: string, data: Record<string, string>) => void } }).zaraz!.track('inquiry_submitted', {
+              commission_type: form.commissionType,
+              budget: form.budget,
+            });
+          }
+        } catch { /* ignore */ }
       } else {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || 'Submission failed.');

@@ -94,6 +94,29 @@ const Checkmark: React.FC = () => (
     </svg>
 );
 
+// Recently viewed — localStorage ring buffer, max 8 IDs
+function useRecentlyViewed(currentId: string): string[] {
+    const KEY = 'recently_viewed_pieces';
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(KEY);
+            const prev: string[] = raw ? JSON.parse(raw) : [];
+            const updated = [currentId, ...prev.filter(id => id !== currentId)].slice(0, 8);
+            localStorage.setItem(KEY, JSON.stringify(updated));
+        } catch { /* ignore */ }
+    }, [currentId]);
+
+    return useMemo(() => {
+        try {
+            const raw = localStorage.getItem(KEY);
+            if (!raw) return [];
+            const all: string[] = JSON.parse(raw);
+            return all.filter(id => id !== currentId).slice(0, 4);
+        } catch { return []; }
+    }, [currentId]);
+}
+
 // More from this series — compact tile grid
 const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({ art, seriesLink }) => {
     if (!art.series) return null;
@@ -163,6 +186,13 @@ const PiecePage: React.FC = () => {
     const [purchaseVisible, setPurchaseVisible] = useState(false);
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+
+    // Recently viewed tracking
+    const recentIds = useRecentlyViewed(id ?? '');
+    const recentPieces = useMemo(
+        () => recentIds.map(rid => FULL_ARCHIVE.find(a => a.id === rid)).filter((a): a is Artwork => Boolean(a)),
+        [recentIds],
+    );
 
     // Dynamic meta tags for sharing
     const ogImage = art ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${art.coverImage}` : undefined;
@@ -1138,6 +1168,22 @@ const PiecePage: React.FC = () => {
 
             {/* More from this series — compact tile grid, series pieces only */}
             <MoreFromSeries art={art} seriesLink={seriesLink} />
+
+            {/* Recently Viewed */}
+            {recentPieces.length > 0 && (
+                <div className="max-w-7xl mx-auto px-6 md:px-12 mt-16 md:mt-24">
+                    <div className="border-t border-wood-200 pt-12 mb-10">
+                        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
+                            Recently Viewed
+                        </span>
+                    </div>
+                    <div className="columns-2 md:columns-4 gap-4 md:gap-6 card-stagger">
+                        {recentPieces.map(piece => (
+                            <GalleryTileCard key={piece.id} art={piece} showDetails subtitleOverride={piece.series ?? piece.category} />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Related Pieces */}
             {relatedPieces.length === 0 && (

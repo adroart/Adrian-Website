@@ -317,148 +317,183 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         const isHome = pathname === '/';
         const isCreations = pathname === '/creations';
 
-        // Pause animation when tab is not visible (saves battery)
-        let isVisible = !document.hidden;
-        const handleVisibility = () => { isVisible = !document.hidden; };
-        document.addEventListener('visibilitychange', handleVisibility);
-
         // Respect prefers-reduced-motion: skip animation entirely
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // isRunning guard — prevents double-starting the rAF loop
+        const isRunning = { current: false };
 
         const animate = () => {
             timeRef.current += 0.005;
 
             if (!ctx || !canvas) return;
 
-            // Skip all computation on home page (canvas is opacity: 0),
-            // when tab is hidden, or when user prefers reduced motion
-            if (isHome || !isVisible || prefersReducedMotion) {
-                frameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            // Advance morph progress (~2.8 seconds at 60fps)
-            if (morphProgressRef.current < 1) {
-                morphProgressRef.current = Math.min(1, morphProgressRef.current + 0.006);
-            }
-
-            ctx.clearRect(0, 0, width, height);
-
-            const isDark = theme === 'DARK' || isDarkMode;
-            const safeParticles = particles.current || [];
-            const len = safeParticles.length;
-            const time = timeRef.current;
-            const morphT = morphProgressRef.current;
-            const easedT = morphT < 0.5
-                ? 4 * morphT * morphT * morphT
-                : 1 - Math.pow(-2 * morphT + 2, 3) / 2;
-            const isMorphing = easedT < 1;
-            const prevPattern = prevPatternRef.current;
-            const mx = mouseRef.current.x;
-            const my = mouseRef.current.y;
-
-            // --- Update all particle positions ---
-            for (let i = 0; i < len; i++) {
-                const p = safeParticles[i];
-                const target = currentPattern(p, i, len, width, height, time);
-                const tx = target.x;
-                const ty = target.y;
-
-                if (isMorphing) {
-                    const prev = prevPattern(p, i, len, width, height, time);
-                    p.targetX = prev.x + (tx - prev.x) * easedT;
-                    p.targetY = prev.y + (ty - prev.y) * easedT;
-                } else {
-                    p.targetX = tx;
-                    p.targetY = ty;
+            // Skip rendering on home page (canvas is opacity: 0)
+            // but still advance the frame so morph state is preserved
+            if (!isHome && !prefersReducedMotion) {
+                // Advance morph progress (~2.8 seconds at 60fps)
+                if (morphProgressRef.current < 1) {
+                    morphProgressRef.current = Math.min(1, morphProgressRef.current + 0.006);
                 }
 
-                p.update(mx, my);
-            }
+                ctx.clearRect(0, 0, width, height);
 
-            // --- Draw particles batched by layer ---
-            for (let layer = 0; layer < 3; layer++) {
-                const alpha = isDark
-                    ? LAYER_PARTICLE_ALPHA_DARK[layer]
-                    : LAYER_PARTICLE_ALPHA_LIGHT[layer];
-                ctx.fillStyle = isDark
-                    ? `rgba(176, 141, 85, ${alpha})`
-                    : `rgba(90, 70, 50, ${alpha})`;
+                const isDark = theme === 'DARK' || isDarkMode;
+                const safeParticles = particles.current || [];
+                const len = safeParticles.length;
+                const time = timeRef.current;
+                const morphT = morphProgressRef.current;
+                const easedT = morphT < 0.5
+                    ? 4 * morphT * morphT * morphT
+                    : 1 - Math.pow(-2 * morphT + 2, 3) / 2;
+                const isMorphing = easedT < 1;
+                const prevPattern = prevPatternRef.current;
+                const mx = mouseRef.current.x;
+                const my = mouseRef.current.y;
 
-                ctx.beginPath();
+                // --- Update all particle positions ---
                 for (let i = 0; i < len; i++) {
                     const p = safeParticles[i];
-                    if (p.layer !== layer) continue;
-                    ctx.moveTo(p.x + p.radius, p.y);
-                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                }
-                ctx.fill();
-            }
+                    const target = currentPattern(p, i, len, width, height, time);
+                    const tx = target.x;
+                    const ty = target.y;
 
-            // --- Draw connections batched by layer pair ---
-            const baseThreshold = isCreations ? 12000 : 18000;
-
-            for (let layerMin = 0; layerMin < 3; layerMin++) {
-                const threshold = baseThreshold * LAYER_CONN_SCALE[layerMin];
-                const alphaMul = LAYER_LINE_ALPHA_MUL[layerMin];
-                ctx.lineWidth = LAYER_LINE_WIDTH[layerMin];
-
-                // Collect lines at a few alpha buckets to minimize strokeStyle changes
-                // Use 4 alpha buckets: 0.25, 0.5, 0.75, 1.0 of the max alpha
-                const buckets: [number, number, number, number][][] = [[], [], [], []];
-
-                for (let i = 0; i < len; i++) {
-                    const p1 = safeParticles[i];
-                    const minL = Math.min(p1.layer, layerMin);
-                    if (minL !== layerMin && p1.layer !== layerMin) continue;
-
-                    for (let j = i + 1; j < len; j++) {
-                        const p2 = safeParticles[j];
-                        if (Math.abs(p1.layer - p2.layer) > 1) continue;
-                        if (Math.min(p1.layer, p2.layer) !== layerMin) continue;
-
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const distSq = dx * dx + dy * dy;
-
-                        if (distSq < threshold) {
-                            const alpha = (1 - distSq / threshold) * alphaMul;
-                            // Bucket: 0-25%, 25-50%, 50-75%, 75-100%
-                            const bucket = Math.min(3, (alpha / alphaMul * 4) | 0);
-                            buckets[bucket].push(p1.x, p1.y, p2.x, p2.y);
-                        }
+                    if (isMorphing) {
+                        const prev = prevPattern(p, i, len, width, height, time);
+                        p.targetX = prev.x + (tx - prev.x) * easedT;
+                        p.targetY = prev.y + (ty - prev.y) * easedT;
+                    } else {
+                        p.targetX = tx;
+                        p.targetY = ty;
                     }
+
+                    p.update(mx, my);
                 }
 
-                // Draw each bucket as a single batched path
-                for (let b = 0; b < 4; b++) {
-                    const lines = buckets[b];
-                    if (lines.length === 0) continue;
-
-                    const bucketAlpha = ((b + 0.5) / 4) * alphaMul;
-                    ctx.strokeStyle = isDark
-                        ? `rgba(176, 141, 85, ${bucketAlpha})`
-                        : `rgba(80, 65, 45, ${bucketAlpha})`;
+                // --- Draw particles batched by layer ---
+                for (let layer = 0; layer < 3; layer++) {
+                    const alpha = isDark
+                        ? LAYER_PARTICLE_ALPHA_DARK[layer]
+                        : LAYER_PARTICLE_ALPHA_LIGHT[layer];
+                    ctx.fillStyle = isDark
+                        ? `rgba(176, 141, 85, ${alpha})`
+                        : `rgba(90, 70, 50, ${alpha})`;
 
                     ctx.beginPath();
-                    for (let k = 0; k < lines.length; k += 4) {
-                        ctx.moveTo(lines[k], lines[k + 1]);
-                        ctx.lineTo(lines[k + 2], lines[k + 3]);
+                    for (let i = 0; i < len; i++) {
+                        const p = safeParticles[i];
+                        if (p.layer !== layer) continue;
+                        ctx.moveTo(p.x + p.radius, p.y);
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     }
-                    ctx.stroke();
+                    ctx.fill();
+                }
+
+                // --- Draw connections batched by layer pair ---
+                const baseThreshold = isCreations ? 12000 : 18000;
+
+                for (let layerMin = 0; layerMin < 3; layerMin++) {
+                    const threshold = baseThreshold * LAYER_CONN_SCALE[layerMin];
+                    const alphaMul = LAYER_LINE_ALPHA_MUL[layerMin];
+                    ctx.lineWidth = LAYER_LINE_WIDTH[layerMin];
+
+                    // Collect lines at a few alpha buckets to minimize strokeStyle changes
+                    // Use 4 alpha buckets: 0.25, 0.5, 0.75, 1.0 of the max alpha
+                    const buckets: [number, number, number, number][][] = [[], [], [], []];
+
+                    for (let i = 0; i < len; i++) {
+                        const p1 = safeParticles[i];
+                        const minL = Math.min(p1.layer, layerMin);
+                        if (minL !== layerMin && p1.layer !== layerMin) continue;
+
+                        for (let j = i + 1; j < len; j++) {
+                            const p2 = safeParticles[j];
+                            if (Math.abs(p1.layer - p2.layer) > 1) continue;
+                            if (Math.min(p1.layer, p2.layer) !== layerMin) continue;
+
+                            const dx = p1.x - p2.x;
+                            const dy = p1.y - p2.y;
+                            const distSq = dx * dx + dy * dy;
+
+                            if (distSq < threshold) {
+                                const alpha = (1 - distSq / threshold) * alphaMul;
+                                // Bucket: 0-25%, 25-50%, 50-75%, 75-100%
+                                const bucket = Math.min(3, (alpha / alphaMul * 4) | 0);
+                                buckets[bucket].push(p1.x, p1.y, p2.x, p2.y);
+                            }
+                        }
+                    }
+
+                    // Draw each bucket as a single batched path
+                    for (let b = 0; b < 4; b++) {
+                        const lines = buckets[b];
+                        if (lines.length === 0) continue;
+
+                        const bucketAlpha = ((b + 0.5) / 4) * alphaMul;
+                        ctx.strokeStyle = isDark
+                            ? `rgba(176, 141, 85, ${bucketAlpha})`
+                            : `rgba(80, 65, 45, ${bucketAlpha})`;
+
+                        ctx.beginPath();
+                        for (let k = 0; k < lines.length; k += 4) {
+                            ctx.moveTo(lines[k], lines[k + 1]);
+                            ctx.lineTo(lines[k + 2], lines[k + 3]);
+                        }
+                        ctx.stroke();
+                    }
                 }
             }
 
             frameRef.current = requestAnimationFrame(animate);
         };
 
-        animate();
+        const startLoop = () => {
+            if (isRunning.current) return;
+            isRunning.current = true;
+            frameRef.current = requestAnimationFrame(animate);
+        };
+
+        const stopLoop = () => {
+            isRunning.current = false;
+            cancelAnimationFrame(frameRef.current);
+        };
+
+        // Page Visibility API — fully cancel rAF when tab is hidden
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopLoop();
+            } else {
+                startLoop();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // IntersectionObserver — pause when canvas scrolls off screen
+        // (guards against future layout changes where canvas is not fixed)
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                if (entry.isIntersecting) {
+                    startLoop();
+                } else {
+                    stopLoop();
+                }
+            },
+            { threshold: 0 }
+        );
+        observer.observe(canvas);
+
+        // Start the loop (unless tab is already hidden at mount time)
+        if (!document.hidden) {
+            startLoop();
+        }
 
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibility);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            observer.disconnect();
             window.removeEventListener('resize', handleResize);
             if (resizeTimeoutRef.current) cancelAnimationFrame(resizeTimeoutRef.current);
-            cancelAnimationFrame(frameRef.current);
+            stopLoop();
         };
     }, [pathname, theme, isDarkMode]);
 

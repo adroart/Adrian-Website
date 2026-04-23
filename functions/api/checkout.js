@@ -46,6 +46,35 @@ function isAllowedOrigin(origin, env) {
 const MAX_ITEMS = 20;
 const MAX_QUANTITY_PER_ITEM = 10;
 
+// Simple in-memory rate limiter: max 5 requests per IP per 60s window
+// Note: resets when Worker instance is recycled. Effective for burst prevention.
+const rateLimitMap = new Map();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, windowStart: now };
+
+  // Reset window if expired
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry.count = 0;
+    entry.windowStart = now;
+  }
+
+  entry.count += 1;
+  rateLimitMap.set(ip, entry);
+
+  // Clean up old entries periodically
+  if (rateLimitMap.size > 1000) {
+    for (const [key, val] of rateLimitMap.entries()) {
+      if (now - val.windowStart > RATE_LIMIT_WINDOW_MS) rateLimitMap.delete(key);
+    }
+  }
+
+  return entry.count <= RATE_LIMIT_MAX;
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -58,6 +87,17 @@ export async function onRequestPost(context) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
   };
+
+  const clientIp = request.headers.get('cf-connecting-ip') ||
+                   request.headers.get('x-forwarded-for') ||
+                   'unknown';
+
+  if (!checkRateLimit(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Please wait a moment and try again.' }),
+      { status: 429, headers: { ...corsHeaders, 'Retry-After': '60' } }
+    );
+  }
 
   let body;
   try {
@@ -132,7 +172,7 @@ export async function onRequestPost(context) {
       ),
       // Collect shipping address for all orders (ships internationally from Bali)
       ...shippingParams,
-      success_url: `${origin}/shop?checkout=success`,
+      success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop?checkout=cancelled`,
       // Allow promo codes
       allow_promotion_codes: 'true',
