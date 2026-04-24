@@ -36,7 +36,6 @@ import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
-import CookieConsent from './components/CookieConsent';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -136,7 +135,6 @@ const AppInner: React.FC = () => {
 
       {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
       <CartDrawer />
-      <CookieConsent />
     </div>
     </Suspense>
   );

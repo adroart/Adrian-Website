@@ -44,7 +44,7 @@ function mockApiPlugin(): Plugin {
  * ─────────────────────────────────────────────────────────────────────────── */
 
 const CLOUDINARY  = 'https://res.cloudinary.com/dobbosnda/image/upload';
-const OG_CROP     = 'f_auto,q_auto,w_300,h_300,c_fill,g_center';
+const OG_CROP     = 'f_auto,q_auto:best,w_1200,h_1200,c_fill,g_center';
 const SITE_URL    = 'https://www.adrianrasmussen.com';
 
 const UL_CARD_NAMES: Record<number, string> = {
@@ -118,8 +118,8 @@ function generateOgPagesPlugin(): Plugin {
           .replace(/(<meta name="twitter:title"\s+content=")[^"]*(")/,       `$1${title}$2`)
           .replace(/(<meta name="twitter:description"\s+content=")[^"]*(")/,`$1${description}$2`)
           .replace(/(<meta name="twitter:image"\s+content=")[^"]*(")/,       `$1${image}$2`)
-          .replace(/(<meta property="og:image:width"\s+content=")[^"]*(")/,  `$1300$2`)
-          .replace(/(<meta property="og:image:height"\s+content=")[^"]*(")/,  `$1300$2`);
+          .replace(/(<meta property="og:image:width"\s+content=")[^"]*(")/,  `$11200$2`)
+          .replace(/(<meta property="og:image:height"\s+content=")[^"]*(")/,  `$11200$2`);
 
         if (!html.includes('<link rel="canonical"')) {
           html = html.replace(
