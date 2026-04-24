@@ -411,6 +411,38 @@ html.dark body { background-color: #141210; }
   overflow: hidden;
 }
 
+/* ─── Oracle ritual motion ──────────────────────────────────────────────── */
+/* Shared keyframes for the gateway, QR entrance, and card-entrance rituals.
+ * Defined once here so the <style> blocks in those components don't ship
+ * duplicate CSS on every mount. */
+
+@keyframes oracle-ring-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes oracle-ring-bloom {
+  0%   { transform: scale(0.04); opacity: 0; }
+  16%  { opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes oracle-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes oracle-draw-ltr {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0%   0 0); }
+}
+@keyframes oracle-draw-rtl {
+  from { clip-path: inset(0 0 0 100%); }
+  to   { clip-path: inset(0 0 0 0%  ); }
+}
+@keyframes oracle-pulse {
+  0%   { opacity: 0.3; }
+  50%  { opacity: 0.85; }
+  100% { opacity: 0.3; }
+}
+
 /* ─── Oracle card field screen ──────────────────────────────────────────── */
 
 /* Warm card surface with paper grain overlay — used for identity cluster */

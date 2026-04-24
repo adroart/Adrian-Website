@@ -16398,6 +16398,22 @@ function isAllowedOrigin(origin, env) {
   }
   return false;
 }
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, windowStart: now };
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry.count = 0;
+    entry.windowStart = now;
+  }
+  entry.count += 1;
+  rateLimitMap.set(ip, entry);
+  if (rateLimitMap.size > 1e3) {
+    for (const [key, val] of rateLimitMap.entries()) {
+      if (now - val.windowStart > RATE_LIMIT_WINDOW_MS) rateLimitMap.delete(key);
+    }
+  }
+  return entry.count <= RATE_LIMIT_MAX;
+}
 async function onRequestPost3(context) {
   const { request, env } = context;
   const requestOrigin = request.headers.get("origin") || "";
@@ -16406,6 +16422,13 @@ async function onRequestPost3(context) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": origin
   };
+  const clientIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
+      { status: 429, headers: { ...corsHeaders, "Retry-After": "60" } }
+    );
+  }
   let body;
   try {
     body = await request.json();
@@ -16471,7 +16494,7 @@ async function onRequestPost3(context) {
       ),
       // Collect shipping address for all orders (ships internationally from Bali)
       ...shippingParams,
-      success_url: `${origin}/shop?checkout=success`,
+      success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop?checkout=cancelled`,
       // Allow promo codes
       allow_promotion_codes: "true"
@@ -16502,7 +16525,7 @@ async function onRequestOptions(context) {
     }
   });
 }
-var SHIPPING_COUNTRIES, ALLOWED_ORIGINS, MAX_ITEMS, MAX_QUANTITY_PER_ITEM;
+var SHIPPING_COUNTRIES, ALLOWED_ORIGINS, MAX_ITEMS, MAX_QUANTITY_PER_ITEM, rateLimitMap, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS;
 var init_checkout = __esm({
   "api/checkout.js"() {
     init_functionsRoutes_0_7200797038504574();
@@ -16550,6 +16573,10 @@ var init_checkout = __esm({
     __name(isAllowedOrigin, "isAllowedOrigin");
     MAX_ITEMS = 20;
     MAX_QUANTITY_PER_ITEM = 10;
+    rateLimitMap = /* @__PURE__ */ new Map();
+    RATE_LIMIT_MAX = 5;
+    RATE_LIMIT_WINDOW_MS = 6e4;
+    __name(checkRateLimit, "checkRateLimit");
     __name(onRequestPost3, "onRequestPost");
     __name(onRequestOptions, "onRequestOptions");
   }
@@ -17120,10 +17147,10 @@ var init_functionsRoutes_0_7200797038504574 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-yxwPo7/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-TAK8wV/middleware-loader.entry.ts
 init_functionsRoutes_0_7200797038504574();
 
-// ../.wrangler/tmp/bundle-yxwPo7/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-TAK8wV/middleware-insertion-facade.js
 init_functionsRoutes_0_7200797038504574();
 
 // ../../../../../../.nvm/versions/node/v22.20.0/lib/node_modules/wrangler/templates/pages-template-worker.ts
@@ -17619,7 +17646,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-yxwPo7/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-TAK8wV/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -17652,7 +17679,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-yxwPo7/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-TAK8wV/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

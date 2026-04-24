@@ -17104,6 +17104,23 @@ function isAllowedOrigin(origin, env) {
   return false;
 }
 __name(isAllowedOrigin, "isAllowedOrigin");
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, windowStart: now };
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry.count = 0;
+    entry.windowStart = now;
+  }
+  entry.count += 1;
+  rateLimitMap.set(ip, entry);
+  if (rateLimitMap.size > 1e3) {
+    for (const [key, val] of rateLimitMap.entries()) {
+      if (now - val.windowStart > RATE_LIMIT_WINDOW_MS) rateLimitMap.delete(key);
+    }
+  }
+  return entry.count <= RATE_LIMIT_MAX;
+}
+__name(checkRateLimit, "checkRateLimit");
 async function onRequestPost3(context) {
   const { request, env } = context;
   const requestOrigin = request.headers.get("origin") || "";
@@ -17112,6 +17129,13 @@ async function onRequestPost3(context) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": origin
   };
+  const clientIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }),
+      { status: 429, headers: { ...corsHeaders, "Retry-After": "60" } }
+    );
+  }
   let body;
   try {
     body = await request.json();
@@ -17177,7 +17201,7 @@ async function onRequestPost3(context) {
       ),
       // Collect shipping address for all orders (ships internationally from Bali)
       ...shippingParams,
-      success_url: `${origin}/shop?checkout=success`,
+      success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop?checkout=cancelled`,
       // Allow promo codes
       allow_promotion_codes: "true"
@@ -17214,6 +17238,9 @@ var SHIPPING_COUNTRIES;
 var ALLOWED_ORIGINS;
 var MAX_ITEMS;
 var MAX_QUANTITY_PER_ITEM;
+var rateLimitMap;
+var RATE_LIMIT_MAX;
+var RATE_LIMIT_WINDOW_MS;
 var init_checkout = __esm({
   "api/checkout.js"() {
     init_functionsRoutes_0_09056668851917404();
@@ -17261,6 +17288,10 @@ var init_checkout = __esm({
     __name2(isAllowedOrigin, "isAllowedOrigin");
     MAX_ITEMS = 20;
     MAX_QUANTITY_PER_ITEM = 10;
+    rateLimitMap = /* @__PURE__ */ new Map();
+    RATE_LIMIT_MAX = 5;
+    RATE_LIMIT_WINDOW_MS = 6e4;
+    __name2(checkRateLimit, "checkRateLimit");
     __name2(onRequestPost3, "onRequestPost");
     __name2(onRequestOptions, "onRequestOptions");
   }
