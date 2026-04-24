@@ -1,0 +1,288 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - button "Enlarge image" [ref=e24]:
+                - img "Earth's Breath, Universal Language 1. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e25]
+              - generic [ref=e27]:
+                - link "Acquire Physical piece" [ref=e28] [cursor=pointer]:
+                  - /url: /creations/UL-122
+                  - generic [ref=e29]:
+                    - paragraph [ref=e30]: Acquire
+                    - paragraph [ref=e31]: Physical piece
+                - img [ref=e33]
+                - button "Share This card" [ref=e40]:
+                  - generic [ref=e41]:
+                    - paragraph [ref=e42]: Share
+                    - paragraph [ref=e43]: This card
+            - generic [ref=e47]:
+              - heading "Earth's Breath" [level=1] [ref=e49]
+              - button "Originating Force Pure Potential Creative Impulse Renewal Genesis The Tempering" [ref=e51] [cursor=pointer]:
+                - generic [ref=e52]: Originating Force
+                - generic [ref=e53]: ·
+                - generic [ref=e54]: Pure Potential
+                - generic [ref=e55]: ·
+                - generic [ref=e56]: Creative Impulse
+                - generic [ref=e57]: ·
+                - generic [ref=e58]: Renewal
+                - generic [ref=e59]: ·
+                - generic [ref=e60]: Genesis
+                - generic [ref=e61]: ·
+                - generic [ref=e62]: The Tempering
+            - generic [ref=e63]:
+              - generic [ref=e65]:
+                - paragraph [ref=e66]: The character of this card is singular. Not a continuation of what came before, not a refinement or a response. Creative impulse before it has taken any particular shape, before it has been tested or adjusted for anyone else. One voice, originating from scratch.
+                - paragraph [ref=e67]: There is a cycle that belongs to this energy. The fire burns, and then retreats into a low, quiet place. That retreat is not a failure. It is part of the same movement, the pause before the next origination. What emerges from that low place is always fresh, always unlike what came before, carrying a quality that cannot be manufactured or repeated.
+              - generic [ref=e68]:
+                - paragraph [ref=e69]: This energy, seen through
+                - generic [ref=e70]:
+                  - generic [ref=e71]: I Ching
+                  - generic [ref=e72]:
+                    - button "Go to I Ching reading for The Creative (Ch'ien)" [ref=e73]: The Creative (Ch'ien)
+                    - paragraph [ref=e74]:
+                      - text: Hexagram 1 · Heaven (Ch'ien) over Heaven (Ch'ien) · paired with
+                      - link "Open Code 2, Beyond the Shell" [ref=e75] [cursor=pointer]:
+                        - /url: /oracle/universal-language/2
+                        - text: Hexagram 2 · The Receptive (K'un)
+                - generic [ref=e76]:
+                  - generic [ref=e77]: Gene Keys
+                  - generic [ref=e78]:
+                    - 'button "Go to Gene Keys reading: Shadow Entropy, Gift Freshness, Siddhi Beauty" [ref=e79]':
+                      - generic [ref=e80]:
+                        - generic [ref=e81]: Entropy
+                        - generic [ref=e82]: ·
+                        - generic [ref=e83]: Freshness
+                        - generic [ref=e84]: ·
+                        - generic [ref=e85]: Beauty
+                    - paragraph [ref=e86]: Shadow, Gift, Siddhi — three frequencies of one theme
+                - generic [ref=e87]:
+                  - generic [ref=e88]: Human Design
+                  - generic [ref=e89]:
+                    - 'button "Go to Human Design reading: G Center" [ref=e90]': G Center
+                    - paragraph [ref=e91]: "Gate 1 · Knowing · paired with 8: Holding Together"
+                - generic [ref=e92]:
+                  - generic [ref=e93]: Tarot
+                  - generic [ref=e94]:
+                    - 'button "Go to Tarot reading: XIV — The Art, Ring of Fire" [ref=e95]': XIV — The Art
+                    - paragraph [ref=e96]:
+                      - text: Ring of Fire, with
+                      - link "Open Code 14, Ancestors Bloom" [ref=e97] [cursor=pointer]:
+                        - /url: /oracle/universal-language/14
+                        - text: Code 14 · Ancestors Bloom
+                - generic [ref=e98]:
+                  - generic [ref=e99]: Body
+                  - generic [ref=e100]:
+                    - 'button "Go to Body reading: Liver" [ref=e101]': Liver
+                    - paragraph [ref=e102]: Amino acid · Lysine
+          - generic [ref=e104]:
+            - paragraph [ref=e105]: The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+            - generic [ref=e106]:
+              - button "Hexagram 1 The Creative (Ch'ien) →" [ref=e107]:
+                - img [ref=e108]
+                - generic [ref=e115]:
+                  - paragraph [ref=e116]: Hexagram 1
+                  - heading "The Creative (Ch'ien)" [level=2] [ref=e117]
+                - generic [ref=e118]: →
+              - generic [ref=e120]:
+                - button "Upper Heaven (Ch'ien)" [ref=e121]:
+                  - img [ref=e122]
+                  - generic [ref=e126]:
+                    - paragraph [ref=e127]: Upper
+                    - paragraph [ref=e128]: Heaven (Ch'ien)
+                - button "Lower Heaven (Ch'ien)" [ref=e129]:
+                  - img [ref=e130]
+                  - generic [ref=e134]:
+                    - paragraph [ref=e135]: Lower
+                    - paragraph [ref=e136]: Heaven (Ch'ien)
+              - generic [ref=e137]:
+                - paragraph [ref=e138]: Hexagram 1 · The Creative (Ch'ien)
+                - paragraph [ref=e139]: "Heaven doubled: both the upper and lower trigrams are Ch'ien, pure yang, pure forward movement. Nothing yields, nothing receives, nothing rests. What this pairing produces is not aggression but a kind of absolute originating force, the first cause that has no prior cause. Where most hexagrams carry a dialogue between two different qualities, this one is a single voice speaking at full volume. The creative impulse before anything has yet shaped it."
+            - generic [ref=e140]:
+              - button "The reading the oracle's reading for this configuration The Creative is the first hexagram, and it stands alone. Six unbroken lines, all yang, no yin. The situation is one of pure originating power. Something is beginning. The energy is not borrowed or inherited. It comes from within, and it comes from the deep." [ref=e142]:
+                - generic [ref=e143]:
+                  - generic [ref=e144]:
+                    - paragraph [ref=e145]: The reading
+                    - paragraph [ref=e146]: the oracle's reading for this configuration
+                    - paragraph [ref=e148]: The Creative is the first hexagram, and it stands alone. Six unbroken lines, all yang, no yin. The situation is one of pure originating power. Something is beginning. The energy is not borrowed or inherited. It comes from within, and it comes from the deep.
+                  - generic [ref=e149]: +
+              - button "The classical text Wilhelm translation The Creative works sublime success," [ref=e151]:
+                - generic [ref=e152]:
+                  - generic [ref=e153]:
+                    - paragraph [ref=e154]: The classical text
+                    - paragraph [ref=e155]: Wilhelm translation
+                    - paragraph [ref=e157]: The Creative works sublime success,
+                  - generic [ref=e158]: +
+          - generic [ref=e160]:
+            - paragraph [ref=e161]: A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
+            - generic [ref=e162]:
+              - paragraph [ref=e163]: Gene Key 1 · Gate 1
+              - heading "The Freshness Key" [level=2] [ref=e164]
+              - generic [ref=e165]:
+                - generic [ref=e166]: Entropy
+                - generic [ref=e167]: ·
+                - generic [ref=e168]: Freshness
+                - generic [ref=e169]: ·
+                - generic [ref=e170]: Beauty
+            - button "Shadow Entropy The Shadow of Entropy is the slow withdrawal of life force, a kind of deep numbness or sense of gloom that settles in when the creative cycle moves into its recharging phase. At its core it is not a pathology. It is a natural chemical process." [ref=e171] [cursor=pointer]:
+              - generic [ref=e173]:
+                - generic [ref=e174]:
+                  - generic [ref=e175]:
+                    - generic [ref=e176]: Shadow
+                    - generic [ref=e177]: Entropy
+                  - generic [ref=e178]: +
+                - paragraph [ref=e180]: The Shadow of Entropy is the slow withdrawal of life force, a kind of deep numbness or sense of gloom that settles in when the creative cycle moves into its recharging phase. At its core it is not a pathology. It is a natural chemical process.
+            - button "Gift Freshness When entropy is accepted rather than resisted, the natural chemical cycle completes itself. Out of the dark, suddenly light emerges. The Gift of Freshness is the specific word that matters here. Freshness is not the same as newness. It carries the quality of being alive, burning with an inner fire. Something that has come from another place and cannot be replicated." [ref=e181] [cursor=pointer]:
+              - generic [ref=e183]:
+                - generic [ref=e184]:
+                  - generic [ref=e185]:
+                    - generic [ref=e186]: Gift
+                    - generic [ref=e187]: Freshness
+                  - generic [ref=e188]: +
+                - paragraph [ref=e190]: When entropy is accepted rather than resisted, the natural chemical cycle completes itself. Out of the dark, suddenly light emerges. The Gift of Freshness is the specific word that matters here. Freshness is not the same as newness. It carries the quality of being alive, burning with an inner fire. Something that has come from another place and cannot be replicated.
+            - button "Siddhi Beauty At the siddhic frequency, the dance of creation and entropy resolves into what is named the Promethean Fire. Beauty is the term, and it is not beauty in any aesthetic sense. It is the fundamental nature of reality when seen without the filter of entropy. At this frequency, even the shadow state is beautiful. Everything is experienced as a unique creative expression of a single source." [ref=e191] [cursor=pointer]:
+              - generic [ref=e193]:
+                - generic [ref=e194]:
+                  - generic [ref=e195]:
+                    - generic [ref=e196]: Siddhi
+                    - generic [ref=e197]: Beauty
+                  - generic [ref=e198]: +
+                - paragraph [ref=e200]: At the siddhic frequency, the dance of creation and entropy resolves into what is named the Promethean Fire. Beauty is the term, and it is not beauty in any aesthetic sense. It is the fundamental nature of reality when seen without the filter of entropy. At this frequency, even the shadow state is beautiful. Everything is experienced as a unique creative expression of a single source.
+            - paragraph [ref=e201]:
+              - text: Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at
+              - link "genekeys.com" [ref=e202] [cursor=pointer]:
+                - /url: https://genekeys.com
+          - generic [ref=e204]:
+            - paragraph [ref=e205]: Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+            - generic [ref=e206]:
+              - paragraph [ref=e207]: Human Design · Gate 1
+              - heading "Self Expression" [level=2] [ref=e208]
+            - button "The Gate Self Expression Gate 1 sits in the G Center, the center of identity, love, and direction in the Human Design body graph. Its keyword is Self Expression." [ref=e209] [cursor=pointer]:
+              - generic [ref=e210]:
+                - generic [ref=e211]:
+                  - generic [ref=e212]:
+                    - text: The Gate
+                    - paragraph [ref=e213]: Self Expression
+                  - generic [ref=e214]: +
+                - paragraph [ref=e216]: Gate 1 sits in the G Center, the center of identity, love, and direction in the Human Design body graph. Its keyword is Self Expression.
+            - 'button "The Channel Gate 1 · 8: Holding Together Gate 1 completes its channel with Gate 8, the gate of Contribution, sitting in the Throat Center. This channel is called Inspiration, and its design is that of the Creative Role Model." [ref=e217] [cursor=pointer]':
+              - generic [ref=e218]:
+                - generic [ref=e219]:
+                  - generic [ref=e220]:
+                    - text: The Channel
+                    - paragraph [ref=e221]: "Gate 1 · 8: Holding Together"
+                  - generic [ref=e222]: +
+                - paragraph [ref=e224]: Gate 1 completes its channel with Gate 8, the gate of Contribution, sitting in the Throat Center. This channel is called Inspiration, and its design is that of the Creative Role Model.
+            - button "The Circuit Knowing Gate 1 belongs to the Knowing circuit, a sub-circuit within Individual circuitry. This circuit carries acoustic and creative knowing, the kind that does not arrive through thinking but through being. A person carrying it may not know how they know what they know. They simply do." [ref=e225] [cursor=pointer]:
+              - generic [ref=e226]:
+                - generic [ref=e227]:
+                  - generic [ref=e228]:
+                    - text: The Circuit
+                    - paragraph [ref=e229]: Knowing
+                  - generic [ref=e230]: +
+                - paragraph [ref=e232]: Gate 1 belongs to the Knowing circuit, a sub-circuit within Individual circuitry. This circuit carries acoustic and creative knowing, the kind that does not arrive through thinking but through being. A person carrying it may not know how they know what they know. They simply do.
+            - button "Ring of Fire 14 - Temperance The creative flame and its abundance. These two cards share the fire that moves through all things, the force that both creates and consumes." [ref=e233] [cursor=pointer]:
+              - generic [ref=e235]:
+                - generic [ref=e236]:
+                  - generic [ref=e237]:
+                    - text: Ring of Fire
+                    - paragraph [ref=e238]: 14 - Temperance
+                  - generic [ref=e239]: +
+                - paragraph [ref=e241]: The creative flame and its abundance. These two cards share the fire that moves through all things, the force that both creates and consumes.
+          - generic [ref=e243]:
+            - generic [ref=e244]:
+              - generic [ref=e245]:
+                - paragraph [ref=e246]: Paired Hexagram
+                - paragraph [ref=e247]: Hexagram 1 and 2 are the fundamental polarity. Energy is solid, unyielding, persisting. Space is supple, yielding, receptive. One cannot exist without the other. This pairing mirrors the Gene Keys programming partnership between Gene Key 1 and Gene Key 2.
+              - button "Code 2 Beyond the Shell The Receptive (K'un) →" [ref=e249]:
+                - generic [ref=e250]:
+                  - paragraph [ref=e251]: Code 2
+                  - paragraph [ref=e252]: Beyond the Shell
+                  - paragraph [ref=e253]: The Receptive (K'un)
+                - generic [ref=e254]: →
+            - generic [ref=e255]:
+              - generic [ref=e256]:
+                - paragraph [ref=e257]: Programming Partner
+                - paragraph [ref=e258]: "The 1st Gene Key provides the raw creative thrust. Its partner, the 2nd Gene Key, provides the direction. Together they form the primary polarity of all creative life: the spark and the compass."
+              - button "Code 2 Beyond the Shell The Receptive (K'un) →" [ref=e260]:
+                - generic [ref=e261]:
+                  - paragraph [ref=e262]: Code 2
+                  - paragraph [ref=e263]: Beyond the Shell
+                  - paragraph [ref=e264]: The Receptive (K'un)
+                - generic [ref=e265]: →
+            - generic [ref=e266]:
+              - paragraph [ref=e267]: The Ring of Fire
+              - paragraph [ref=e268]: Through the Ring of Fire, this Gene Key is chemically bonded to the 14th Gene Key whose Shadow is Compromise. When your creative fire burns, everyone gathers around your warmth. When it dims, resist the urge to force it back through compromise.
+              - button "14 Ancestors Bloom" [ref=e270]:
+                - generic [ref=e271]:
+                  - paragraph [ref=e272]: "14"
+                  - paragraph [ref=e273]: Ancestors Bloom
+            - button "Tarot · Ring of Fire XIV — The Art Key 1 shares the Arcana of Temperance, called The Art in the Thoth deck, with Key 14. Within the Ring of Fire these two keys carry different faces of the same flame. Key 14 holds the abundant, outward expression of that fire, the gift that multiplies and overflows. Key 1 holds the originating spark itself, the primal creative force before it becomes abundance. Key 1 is the fire before anything has been made from it." [ref=e274] [cursor=pointer]:
+              - generic [ref=e275]:
+                - generic [ref=e276]:
+                  - generic [ref=e277]:
+                    - text: Tarot · Ring of Fire
+                    - paragraph [ref=e278]: XIV — The Art
+                  - generic [ref=e279]: +
+                - paragraph [ref=e281]: Key 1 shares the Arcana of Temperance, called The Art in the Thoth deck, with Key 14. Within the Ring of Fire these two keys carry different faces of the same flame. Key 14 holds the abundant, outward expression of that fire, the gift that multiplies and overflows. Key 1 holds the originating spark itself, the primal creative force before it becomes abundance. Key 1 is the fire before anything has been made from it.
+            - button "Body · Physiology Liver The liver is one of the only organs in the body that can fully restore itself from significant damage. Entropy and regeneration, the core polarity of this key, are written directly into the physiology." [ref=e282] [cursor=pointer]:
+              - generic [ref=e283]:
+                - generic [ref=e284]:
+                  - generic [ref=e285]:
+                    - text: Body · Physiology
+                    - paragraph [ref=e286]: Liver
+                  - generic [ref=e287]: +
+                - paragraph [ref=e289]: The liver is one of the only organs in the body that can fully restore itself from significant damage. Entropy and regeneration, the core polarity of this key, are written directly into the physiology.
+            - button "Body · Amino Acid Lysine Lysine cannot be generated from within the body. It must be received from outside. This mirrors the shadow dynamic of this key directly. Entropy is, in part, the closing off of that reception. Freshness is what happens when the system opens again to receive what it needs." [ref=e290] [cursor=pointer]:
+              - generic [ref=e291]:
+                - generic [ref=e292]:
+                  - generic [ref=e293]:
+                    - text: Body · Amino Acid
+                    - paragraph [ref=e294]: Lysine
+                  - generic [ref=e295]: +
+                - paragraph [ref=e297]: Lysine cannot be generated from within the body. It must be received from outside. This mirrors the shadow dynamic of this key directly. Entropy is, in part, the closing off of that reception. Freshness is what happens when the system opens again to receive what it needs.
+        - generic [ref=e299]:
+          - link "1 All 64" [ref=e301] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - generic [ref=e302]: "1"
+            - generic [ref=e303]: All 64
+          - link "Next → Beyond the Shell" [ref=e304] [cursor=pointer]:
+            - /url: /oracle/universal-language/2
+            - generic [ref=e305]:
+              - paragraph [ref=e306]: Next →
+              - paragraph [ref=e307]: Beyond the Shell
+            - img [ref=e309]
+  - dialog "Card entrance. Press Escape or tap to skip." [active] [ref=e322] [cursor=pointer]:
+    - img [ref=e323]
+    - generic [ref=e1158]:
+      - paragraph [ref=e1159]: Earth's Breath
+      - img [ref=e1160]
+      - paragraph [ref=e1167]: Originating Force·Pure Potential·Creative Impulse·Renewal·Genesis·The Tempering
+      - paragraph [ref=e1168]: tap to begin
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

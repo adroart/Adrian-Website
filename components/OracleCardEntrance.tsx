@@ -190,18 +190,25 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
         role="dialog"
         aria-modal="true"
       >
-        {/* Ring */}
+        {/* Ring + content share a square box so everything sits on a common
+             coordinate grid. The ring fills the box; the name pins to the
+             top arc; the hexagram + keywords center within. */}
+        <div style={{
+          position: 'relative',
+          width: 'min(70vh, 612px)',
+          height: 'min(70vh, 612px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
         <svg
           viewBox="0 0 1100 1100"
           aria-hidden="true"
           style={{
             position: 'absolute',
-            // Ring diameter follows viewport height so the circle always
-            // encloses the stacked center content. On portrait phones this
-            // means the ring spills off the sides (matches desktop look).
-            // Capped at 720px so it doesn't bloat on tall/wide desktops.
-            width: 'min(70vh, 612px)',
-            height: 'min(70vh, 612px)',
+            inset: 0,
+            width: '100%',
+            height: '100%',
             animation: exiting
               ? `ce-ring-exit 480ms cubic-bezier(0.4, 0, 1, 1) both`
               : `oracle-ring-bloom ${RING_DUR}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
@@ -235,7 +242,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           </g>
         </svg>
 
-        {/* Center content */}
+        {/* Inner cluster — hexagram + keywords centered inside the ring */}
         <div style={{
           position: 'relative',
           zIndex: 1,
@@ -246,21 +253,6 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           textAlign: 'center',
           padding: '0 clamp(16px, 5vw, 32px)',
         }}>
-
-          <p style={{
-            fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
-            fontSize: 'clamp(22px, 5vw, 28px)',
-            fontStyle: 'italic',
-            color: 'var(--color-wood-900)',
-            letterSpacing: '0.02em',
-            lineHeight: 1.1,
-            margin: 0,
-            animation: exiting
-              ? `ce-name-exit 300ms ease-in both`
-              : `oracle-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) ${NAME_DELAY}ms both`,
-          }}>
-            {card.card_name}
-          </p>
 
           <svg width="64" height="80" viewBox="0 0 80 80" aria-hidden="true"
             style={exiting ? {
@@ -295,47 +287,83 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           </svg>
 
           {keywords.length > 0 && (
-            <p style={{
-              fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
-              fontSize: '16px',
-              color: 'var(--color-wood-700)',
-              lineHeight: 1.9,
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
               margin: 0,
-              maxWidth: '280px',
-              letterSpacing: '0.01em',
-              animation: exiting
-                ? `ce-keys-exit 260ms ease-in 120ms both`
-                : `oracle-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) ${KEYS_DELAY}ms both`,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
             }}>
               {keywords.map((kw, i) => (
-                <React.Fragment key={kw}>
+                <li
+                  key={kw}
+                  style={{
+                    fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
+                    fontSize: '17px',
+                    fontStyle: 'italic',
+                    color: 'var(--color-wood-700)',
+                    lineHeight: 1.3,
+                    letterSpacing: '0.03em',
+                    animation: exiting
+                      ? `ce-keys-exit 260ms ease-in ${i * 40}ms both`
+                      : `oracle-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) ${KEYS_DELAY + i * 140}ms both`,
+                  }}
+                >
                   {kw}
-                  {i < keywords.length - 1 && (
-                    <span style={{
-                      color: 'color-mix(in oklab, var(--color-bronze-600) 40%, transparent)',
-                      padding: '0 8px',
-                    }}>·</span>
-                  )}
-                </React.Fragment>
+                </li>
               ))}
-            </p>
+            </ul>
           )}
 
-          <p style={{
-            fontFamily: "'Lato', Helvetica, sans-serif",
-            fontSize: '11px',
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            color: 'var(--color-wood-600)',
-            margin: 0,
-            animation: exiting
-              ? `ce-hint-exit 200ms ease-in both`
-              : `oracle-pulse 2.6s ease-in-out 1.6s infinite`,
-          }}>
-            tap to begin
-          </p>
-
         </div>
+        </div>
+
+        {/* Card name pinned to the top of the screen, symmetric with the
+             bottom hint so the ring sits in balanced negative space. */}
+        <p style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 'max(24px, env(safe-area-inset-top))',
+          textAlign: 'center',
+          padding: '0 clamp(16px, 5vw, 32px)',
+          fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
+          fontSize: 'clamp(22px, 5vw, 28px)',
+          fontStyle: 'italic',
+          color: 'var(--color-wood-900)',
+          letterSpacing: '0.02em',
+          lineHeight: 1.1,
+          margin: 0,
+          pointerEvents: 'none',
+          animation: exiting
+            ? `ce-name-exit 300ms ease-in both`
+            : `oracle-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) ${NAME_DELAY}ms both`,
+        }}>
+          {card.card_name}
+        </p>
+
+        {/* Nonchalant hint pinned to the bottom of the screen */}
+        <p style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 'max(24px, env(safe-area-inset-bottom))',
+          textAlign: 'center',
+          fontFamily: "'Lato', Helvetica, sans-serif",
+          fontSize: '10px',
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
+          color: 'var(--color-wood-500)',
+          margin: 0,
+          pointerEvents: 'none',
+          animation: exiting
+            ? `ce-hint-exit 200ms ease-in both`
+            : `oracle-pulse 3.2s ease-in-out 2s infinite`,
+        }}>
+          tap to begin
+        </p>
       </div>
     </>,
     document.body,

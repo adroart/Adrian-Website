@@ -1276,103 +1276,180 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
 
-            {/* Reference strip — hero + context composition.
-                Rhythm: tight label-value pairs inside sections, generous space
-                between hero and metadata. Two containers instead of five. */}
-            {synthesis?.reference && (
-              <div className="mt-10 mb-6 max-w-md mx-auto">
+            {/* Reference strip — museum specimen plate.
+                Five systems as peers, each a facet of one energy.
+                No per-row containers; hairline dividers. Hover underline
+                communicates interactivity without arrows on every row.
+                Label column fixed so values align vertically. */}
+            {synthesis?.reference && (() => {
+              // Codon ring siblings (other cards that share this card's ring
+              // via the tarot arcana). These ARE the ring relationship shown
+              // in the Tarot row.
+              const siblingNums = (card.codon_ring_siblings ?? []).filter(n => n !== card.number);
+              const siblingCards = siblingNums
+                .map(n => CARD_BY_NUMBER.get(n))
+                .filter((c): c is NonNullable<typeof c> => !!c);
 
-                {/* I Ching — thin row at top, sets entry.
-                    Type: Lato 10/caps label + Cormorant 17 title. */}
-                <button
-                  onClick={() => go('iching')}
-                  className="group w-full flex items-baseline gap-4 text-left pb-4 border-b border-wood-200/70 hover:border-bronze-400/70 transition-colors"
-                >
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={24} />
-                  <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center">I Ching</span>
-                  <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors flex-1 truncate">{card.iching.hexagram_name}</span>
-                  <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
-                </button>
+              // Pair partner: the I Ching / Gene Keys structural pair
+              // (hexagram 1↔2, 3↔50, etc.). Same relationship, named in each
+              // system's own vocabulary.
+              const pairNum = synthesis.reference.programming_partner;
+              const pair = typeof pairNum === 'number' ? CARD_BY_NUMBER.get(pairNum) : undefined;
 
-                {/* Gene Keys — the reading. Three equal-weight serif values
-                    in an asymmetric label-gutter composition. Gift tinted
-                    bronze for emphasis without size change. */}
-                <button
-                  onClick={() => go('genekeys')}
-                  className="group block w-full text-left mt-6 mb-6"
-                >
-                  <div className="flex items-baseline justify-between mb-4 pb-2 border-b border-bronze-400/30 group-hover:border-bronze-500/70 transition-colors">
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gene Keys</p>
-                    <span className="text-[11px] text-bronze-400 group-hover:text-bronze-600 transition-colors">→</span>
+              // Row is a clickable div (role="button") whose click navigates
+              // to the section. Partner/sibling Links inside use stopPropagation
+              // so they open the linked card instead of bubbling to the row.
+              const rowCls = 'group grid grid-cols-[88px_1fr] gap-x-5 px-3 -mx-3 py-4 border-t border-wood-200/50 w-full rounded-md cursor-pointer hover:bg-bronze-500/[0.05] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] focus-visible:ring-1 focus-visible:ring-bronze-400/40 transition-colors';
+              const labelCls = 'font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center';
+              const primaryCls = 'font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline';
+              const contextCls = 'font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5';
+              const contextEmphCls = 'font-serif text-[14px] text-wood-700';
+              const partnerLinkCls = 'font-serif text-[14px] text-wood-700 underline decoration-bronze-400/50 decoration-1 underline-offset-[3px] hover:text-bronze-700 hover:decoration-bronze-500 focus-visible:outline-none focus-visible:text-bronze-700 focus-visible:decoration-bronze-500 transition-colors';
+              // Keyboard handler for role="button" divs
+              const keyActivate = (fn: () => void) => (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+              };
+              // Stop partner link clicks from bubbling to the row
+              const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+              return (
+                <div className="mt-10 mb-6 max-w-md mx-auto">
+                  <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-400 mb-3 pb-3 border-b border-wood-200/50">
+                    This energy, seen through
+                  </p>
+
+                  {/* I Ching — whole row clicks scroll to the I Ching section.
+                      Paired hexagram link stops propagation to open that card. */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => go('iching')}
+                    onKeyDown={keyActivate(() => go('iching'))}
+                    className={rowCls}
+                    aria-label={`Go to I Ching reading for ${card.iching.hexagram_name}`}
+                  >
+                    <span className={labelCls}>I Ching</span>
+                    <div className="min-w-0">
+                      <span className={primaryCls}>{card.iching.hexagram_name}</span>
+                      <p className={contextCls}>
+                        Hexagram {card.number} · {card.iching.upper_trigram.name} over {card.iching.lower_trigram.name}
+                        {pair && (
+                          <> · paired with{' '}
+                            <Link
+                              to={`/oracle/universal-language/${pair.number}`}
+                              state={{ ritual: true }}
+                              onClick={stop}
+                              className={partnerLinkCls}
+                              aria-label={`Open Code ${pair.number}, ${pair.card_name}`}
+                            >
+                              Hexagram {pair.number} · {pair.iching.hexagram_name}
+                            </Link>
+                          </>
+                        )}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 items-baseline">
-                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400">Shadow</span>
-                    <span className="font-serif text-[17px] text-wood-700 leading-none tracking-[-0.005em]">{card.gene_keys.shadow}</span>
-
-                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gift</span>
-                    <span className="font-serif text-[17px] text-bronze-700 leading-none font-medium tracking-[-0.005em] group-hover:text-bronze-800 transition-colors">{card.gene_keys.gift}</span>
-
-                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400">Siddhi</span>
-                    <span className="font-serif text-[17px] text-wood-700 leading-none tracking-[-0.005em]">{card.gene_keys.siddhi}</span>
+                  {/* Gene Keys — whole row scrolls to the Gene Keys section. */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => go('genekeys')}
+                    onKeyDown={keyActivate(() => go('genekeys'))}
+                    className={rowCls}
+                    aria-label={`Go to Gene Keys reading: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
+                  >
+                    <span className={labelCls}>Gene Keys</span>
+                    <div className="min-w-0">
+                      <span className="inline-flex items-baseline flex-wrap gap-x-2 gap-y-1">
+                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.shadow}</span>
+                        <span className="text-wood-300" aria-hidden="true">·</span>
+                        <span className="font-serif text-[17px] text-bronze-700 leading-[1.3] tracking-[-0.005em] font-medium decoration-bronze-500/60 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.gift}</span>
+                        <span className="text-wood-300" aria-hidden="true">·</span>
+                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.siddhi}</span>
+                      </span>
+                      <p className={contextCls}>
+                        Shadow, Gift, Siddhi — three frequencies of one theme
+                      </p>
+                    </div>
                   </div>
-                </button>
-
-                {/* Metadata panel — tabular label/value rows. Context text in
-                    italic Cormorant differentiates from Lato caps labels. */}
-                <div className="rounded-2xl border border-wood-200/80 bg-paper-50 overflow-hidden">
 
                   {/* Human Design */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => go('humandesign')}
-                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                    onKeyDown={keyActivate(() => go('humandesign'))}
+                    className={rowCls}
+                    aria-label={`Go to Human Design reading: ${synthesis.reference.hd_center} Center`}
                   >
-                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Human Design</span>
-                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
-                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.hd_center}</span>
-                      <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.hd_circuit} · {synthesis.reference.hd_harmonic_gate}</span>
+                    <span className={labelCls}>Human Design</span>
+                    <div className="min-w-0">
+                      <span className={primaryCls}>{synthesis.reference.hd_center} Center</span>
+                      <p className={contextCls}>
+                        Gate {synthesis.reference.hd_gate} · {synthesis.reference.hd_circuit} · paired with {synthesis.reference.hd_harmonic_gate}
+                      </p>
                     </div>
-                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
-                  </button>
+                  </div>
 
-                  <div className="border-t border-wood-200/40" />
-
-                  {/* Tarot */}
-                  <button
+                  {/* Tarot — arcana = ring. Sibling links open those cards. */}
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => go('connections')}
-                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                    onKeyDown={keyActivate(() => go('connections'))}
+                    className={rowCls}
+                    aria-label={`Go to Tarot reading: ${synthesis.reference.tarot_card}, ${card.ring_name}`}
                   >
-                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Tarot</span>
-                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
-                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.tarot_card}</span>
-                      <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.astrology} · {synthesis.reference.hebrew_letter}</span>
+                    <span className={labelCls}>Tarot</span>
+                    <div className="min-w-0">
+                      <span className={primaryCls}>{synthesis.reference.tarot_card}</span>
+                      <p className={contextCls}>
+                        {card.ring_name}
+                        {siblingCards.length > 0 && (
+                          siblingCards.length <= 3
+                            ? <>, with {siblingCards.map((c, i) => (
+                                <React.Fragment key={c.number}>
+                                  {i > 0 && (i === siblingCards.length - 1 ? ' and ' : ', ')}
+                                  <Link
+                                    to={`/oracle/universal-language/${c.number}`}
+                                    state={{ ritual: true }}
+                                    onClick={stop}
+                                    className={partnerLinkCls}
+                                    aria-label={`Open Code ${c.number}, ${c.card_name}`}
+                                  >
+                                    Code {c.number} · {c.card_name}
+                                  </Link>
+                                </React.Fragment>
+                              ))}</>
+                            : <>, shared with {siblingCards.length} other keys</>
+                        )}
+                      </p>
                     </div>
-                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
-                  </button>
+                  </div>
 
-                  <div className="border-t border-wood-200/40" />
-
-                  {/* Body */}
-                  <button
+                  {/* Body — physiology + amino acid */}
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => go('connections')}
-                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                    onKeyDown={keyActivate(() => go('connections'))}
+                    className={rowCls + ' border-b border-wood-200/50'}
+                    aria-label={`Go to Body reading: ${synthesis.reference.body_physiology}`}
                   >
-                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Body</span>
-                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
-                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.body_physiology}</span>
+                    <span className={labelCls}>Body</span>
+                    <div className="min-w-0">
+                      <span className={primaryCls}>{synthesis.reference.body_physiology}</span>
                       {synthesis.reference.body_amino_acid && (
-                        <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.body_amino_acid}</span>
-                      )}
-                      {synthesis.reference.programming_partner && (
-                        <span className="font-serif italic text-[13px] text-wood-500 leading-none">Partner {synthesis.reference.programming_partner}</span>
+                        <p className={contextCls}>
+                          Amino acid · <span className={contextEmphCls}>{synthesis.reference.body_amino_acid}</span>
+                        </p>
                       )}
                     </div>
-                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
-                  </button>
-
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
 
 

@@ -1,0 +1,263 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - button "Enlarge image" [ref=e24]:
+                - img "Messengers of the Infinite, Universal Language 3. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e25]
+              - generic [ref=e27]:
+                - link "Acquire Physical piece" [ref=e28] [cursor=pointer]:
+                  - /url: /creations/UL-124
+                  - generic [ref=e29]:
+                    - paragraph [ref=e30]: Acquire
+                    - paragraph [ref=e31]: Physical piece
+                - img [ref=e33]
+                - button "Share This card" [ref=e44]:
+                  - generic [ref=e45]:
+                    - paragraph [ref=e46]: Share
+                    - paragraph [ref=e47]: This card
+            - generic [ref=e51]:
+              - heading "Messengers of the Infinite" [level=1] [ref=e53]
+              - button "Difficult Birth Emergence Chaos as Portal Ordering Force Mutation Beginnings" [ref=e55] [cursor=pointer]:
+                - generic [ref=e56]: Difficult Birth
+                - generic [ref=e57]: ·
+                - generic [ref=e58]: Emergence
+                - generic [ref=e59]: ·
+                - generic [ref=e60]: Chaos as Portal
+                - generic [ref=e61]: ·
+                - generic [ref=e62]: Ordering Force
+                - generic [ref=e63]: ·
+                - generic [ref=e64]: Mutation
+                - generic [ref=e65]: ·
+                - generic [ref=e66]: Beginnings
+            - generic [ref=e67]:
+              - generic [ref=e69]:
+                - paragraph [ref=e70]: This energy belongs to the moment just after a beginning, when everything is in motion but nothing has settled yet. The force is real and the direction is real, but the path has not cleared. A shoot pushing through hard soil is not failing. The soil is simply not yet broken. Both the shoot and the resistance are part of the same event, the ordinary condition of anything genuinely new trying to come into form for the first time.
+                - paragraph [ref=e71]: Something in this energy knows the difference between the chaos that destroys and the chaos that precedes order. When the mind loosens its grip on what it already knows, something shifts, a kind of living synthesis that cannot be manufactured or forced. Play is part of this. The child who looks chaotic is in fact doing something precise. The innovation that looks like disruption carries an organic pattern inside it, already forming, waiting for the right conditions to become visible.
+              - generic [ref=e72]:
+                - paragraph [ref=e73]: This energy, seen through
+                - 'button "I Ching: Difficulty at the Beginning (Chun)" [ref=e74]':
+                  - generic [ref=e75]: I Ching
+                  - generic [ref=e76]:
+                    - text: Difficulty at the Beginning (Chun)
+                    - paragraph [ref=e77]: Hexagram 3 · Water (K'an) over Thunder (Chen)
+                - 'button "Gene Keys: Shadow Chaos, Gift Innovation, Siddhi Innocence" [ref=e78]':
+                  - generic [ref=e79]: Gene Keys
+                  - generic [ref=e80]:
+                    - generic [ref=e81]: Chaos
+                    - generic [ref=e82]: ·
+                    - generic [ref=e83]: Innovation
+                    - generic [ref=e84]: ·
+                    - generic [ref=e85]: Innocence
+                    - paragraph [ref=e86]:
+                      - text: Shadow · Gift · Siddhi, three frequencies of one theme. Programming partner,
+                      - generic [ref=e87]: Code 50
+                      - text: · Melt Into Perfection
+                - 'button "Human Design: Sacral Center" [ref=e88]':
+                  - generic [ref=e89]: Human Design
+                  - generic [ref=e90]:
+                    - generic [ref=e91]: Sacral Center
+                    - paragraph [ref=e92]: "Gate 3 · Knowing · paired with 60: Limitation"
+                - 'button "Tarot: XIII — Death, Ring of Life and Death" [ref=e93]':
+                  - generic [ref=e94]: Tarot
+                  - generic [ref=e95]:
+                    - text: XIII — Death
+                    - paragraph [ref=e96]: Ring of Life and Death, shared with 5 other keys
+                    - paragraph [ref=e97]: Scorpio · Nun · Path 24
+                - 'button "Body: Navel" [ref=e98]':
+                  - generic [ref=e99]: Body
+                  - generic [ref=e100]:
+                    - text: Navel
+                    - paragraph [ref=e101]: Amino acid · Leucine
+          - generic [ref=e103]:
+            - paragraph [ref=e104]: The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+            - generic [ref=e105]:
+              - button "Hexagram 3 Difficulty at the Beginning (Chun) →" [ref=e106]:
+                - img [ref=e107]
+                - generic [ref=e118]:
+                  - paragraph [ref=e119]: Hexagram 3
+                  - heading "Difficulty at the Beginning (Chun)" [level=2] [ref=e120]
+                - generic [ref=e121]: →
+              - generic [ref=e123]:
+                - button "Upper Water (K'an)" [ref=e124]:
+                  - img [ref=e125]
+                  - generic [ref=e131]:
+                    - paragraph [ref=e132]: Upper
+                    - paragraph [ref=e133]: Water (K'an)
+                - button "Lower Thunder (Chen)" [ref=e134]:
+                  - img [ref=e135]
+                  - generic [ref=e141]:
+                    - paragraph [ref=e142]: Lower
+                    - paragraph [ref=e143]: Thunder (Chen)
+              - generic [ref=e144]:
+                - paragraph [ref=e145]: Hexagram 3 · Difficulty at the Beginning (Chun)
+                - paragraph [ref=e146]: "Water rests above Thunder below. Thunder stirs upward from the depths, full of potential and urgency, while Water sits above it, deep and obstructed. The upward push meets resistance before it can move freely. What this pairing produces is the quality of a difficult birth: enormous life force pressing through an opening that has not yet cleared. It is not failure. It is the necessary pressure of something genuinely new trying to come into being."
+            - generic [ref=e147]:
+              - button "The reading the oracle's reading for this configuration This hexagram describes the moment just after beginning, when everything is in motion but nothing has settled. There is energy, there is direction, but the path is not yet clear. The image is a tender shoot pushing up through hard soil. The shoot is not weak. The soil is simply not yet broken. Both are doing exactly what they should be doing." [ref=e149]:
+                - generic [ref=e150]:
+                  - generic [ref=e151]:
+                    - paragraph [ref=e152]: The reading
+                    - paragraph [ref=e153]: the oracle's reading for this configuration
+                    - paragraph [ref=e155]: This hexagram describes the moment just after beginning, when everything is in motion but nothing has settled. There is energy, there is direction, but the path is not yet clear. The image is a tender shoot pushing up through hard soil. The shoot is not weak. The soil is simply not yet broken. Both are doing exactly what they should be doing.
+                  - generic [ref=e156]: +
+              - button "The classical text Wilhelm translation Difficulty at the Beginning works supreme success," [ref=e158]:
+                - generic [ref=e159]:
+                  - generic [ref=e160]:
+                    - paragraph [ref=e161]: The classical text
+                    - paragraph [ref=e162]: Wilhelm translation
+                    - paragraph [ref=e164]: Difficulty at the Beginning works supreme success,
+                  - generic [ref=e165]: +
+            - paragraph [ref=e167]: "Sprouting. Spring, Growing. Harvesting Trial. No availing of possessing directed going. Harvesting: installing feudatories. Clouds and thunder: sprouting. Thunder and rain's stirring-up: plenitude overfilled. The situation is characterized by the first chaotic push of new life, the difficulty of beginnings. Heaven creates grasses' duskiness. A jun zi uses the canons to arrange."
+          - generic [ref=e169]:
+            - paragraph [ref=e170]: A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
+            - generic [ref=e171]:
+              - paragraph [ref=e172]: Gene Key 3 · Gate 3
+              - heading "The Innovation Key" [level=2] [ref=e173]
+              - generic [ref=e174]:
+                - generic [ref=e175]: Chaos
+                - generic [ref=e176]: ·
+                - generic [ref=e177]: Innovation
+                - generic [ref=e178]: ·
+                - generic [ref=e179]: Innocence
+            - button "Shadow Chaos The Shadow of Chaos is the experience of a mind that cannot land. It traces to a fundamental distrust of life itself, a fear rooted in the single-celled survival instinct that sees the world as competitive and hostile. At this frequency, a person feels like a victim of forces too large and too random to navigate." [ref=e180] [cursor=pointer]:
+              - generic [ref=e182]:
+                - generic [ref=e183]:
+                  - generic [ref=e184]:
+                    - generic [ref=e185]: Shadow
+                    - generic [ref=e186]: Chaos
+                  - generic [ref=e187]: +
+                - paragraph [ref=e189]: The Shadow of Chaos is the experience of a mind that cannot land. It traces to a fundamental distrust of life itself, a fear rooted in the single-celled survival instinct that sees the world as competitive and hostile. At this frequency, a person feels like a victim of forces too large and too random to navigate.
+            - 'button "Gift Innovation The Gift of Innovation emerges when chaos is no longer resisted. There is a direct parallel to cellular evolution: single-celled organisms only became multi-celled life because the membrane of each cell learned to respond to its environment and allow new information in. Innovation works the same way. It is not something you manufacture. It is what happens when you stop defending your existing model of the world and allow genuine synthesis to occur." [ref=e190] [cursor=pointer]':
+              - generic [ref=e192]:
+                - generic [ref=e193]:
+                  - generic [ref=e194]:
+                    - generic [ref=e195]: Gift
+                    - generic [ref=e196]: Innovation
+                  - generic [ref=e197]: +
+                - paragraph [ref=e199]: "The Gift of Innovation emerges when chaos is no longer resisted. There is a direct parallel to cellular evolution: single-celled organisms only became multi-celled life because the membrane of each cell learned to respond to its environment and allow new information in. Innovation works the same way. It is not something you manufacture. It is what happens when you stop defending your existing model of the world and allow genuine synthesis to occur."
+            - button "Siddhi Innocence The Siddhi of Innocence is all play and no work. At this frequency, the entire framework of chaos versus order dissolves. What remains is the recognition that life is, at its root, innocent. Every cell, every organism, every human being is participating in an experiment that nobody designed and nobody controls, and this is not terrifying but delightful." [ref=e200] [cursor=pointer]:
+              - generic [ref=e202]:
+                - generic [ref=e203]:
+                  - generic [ref=e204]:
+                    - generic [ref=e205]: Siddhi
+                    - generic [ref=e206]: Innocence
+                  - generic [ref=e207]: +
+                - paragraph [ref=e209]: The Siddhi of Innocence is all play and no work. At this frequency, the entire framework of chaos versus order dissolves. What remains is the recognition that life is, at its root, innocent. Every cell, every organism, every human being is participating in an experiment that nobody designed and nobody controls, and this is not terrifying but delightful.
+            - paragraph [ref=e210]:
+              - text: Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at
+              - link "genekeys.com" [ref=e211] [cursor=pointer]:
+                - /url: https://genekeys.com
+          - generic [ref=e213]:
+            - paragraph [ref=e214]: Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+            - generic [ref=e215]:
+              - paragraph [ref=e216]: Human Design · Gate 3
+              - heading "Ordering" [level=2] [ref=e217]
+            - button "The Gate Ordering Gate 3 sits in the Sacral Center, the body's primary center of life force and generative power. Its keyword is Ordering, but this does not mean imposing structure. Gate 3 carries the energy of finding the organic pattern that already exists within apparent disorder. It holds the mutation that brings new forms into being, and mutation by its nature is awkward before it is coherent." [ref=e218] [cursor=pointer]:
+              - generic [ref=e219]:
+                - generic [ref=e220]:
+                  - generic [ref=e221]:
+                    - text: The Gate
+                    - paragraph [ref=e222]: Ordering
+                  - generic [ref=e223]: +
+                - paragraph [ref=e225]: Gate 3 sits in the Sacral Center, the body's primary center of life force and generative power. Its keyword is Ordering, but this does not mean imposing structure. Gate 3 carries the energy of finding the organic pattern that already exists within apparent disorder. It holds the mutation that brings new forms into being, and mutation by its nature is awkward before it is coherent.
+            - 'button "The Channel Gate 3 · 60: Limitation Gate 3 completes a channel with Gate 60 in the Root Center. The 3-60 channel is called Mutation, and it is described as energy that fluctuates and initiates. Gate 60 carries the principle of Limitation, the constraint that mutation requires in order to take form." [ref=e226] [cursor=pointer]':
+              - generic [ref=e227]:
+                - generic [ref=e228]:
+                  - generic [ref=e229]:
+                    - text: The Channel
+                    - paragraph [ref=e230]: "Gate 3 · 60: Limitation"
+                  - generic [ref=e231]: +
+                - paragraph [ref=e233]: Gate 3 completes a channel with Gate 60 in the Root Center. The 3-60 channel is called Mutation, and it is described as energy that fluctuates and initiates. Gate 60 carries the principle of Limitation, the constraint that mutation requires in order to take form.
+            - button "The Circuit Knowing The 3-60 channel belongs to the Knowing Circuit within the Individual circuitry. This circuit operates through the body's own timing, through melancholy and empowerment, through mutation that cannot be shared until it is complete. The Knowing Circuit specifically carries the frequency of innovation, of things that have no template." [ref=e234] [cursor=pointer]:
+              - generic [ref=e235]:
+                - generic [ref=e236]:
+                  - generic [ref=e237]:
+                    - text: The Circuit
+                    - paragraph [ref=e238]: Knowing
+                  - generic [ref=e239]: +
+                - paragraph [ref=e241]: The 3-60 channel belongs to the Knowing Circuit within the Individual circuitry. This circuit operates through the body's own timing, through melancholy and empowerment, through mutation that cannot be shared until it is complete. The Knowing Circuit specifically carries the frequency of innovation, of things that have no template.
+            - button "Ring of Life and Death 13 - Death Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation." [ref=e242] [cursor=pointer]:
+              - generic [ref=e244]:
+                - generic [ref=e245]:
+                  - generic [ref=e246]:
+                    - text: Ring of Life and Death
+                    - paragraph [ref=e247]: 13 - Death
+                  - generic [ref=e248]: +
+                - paragraph [ref=e250]: Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.
+          - generic [ref=e252]:
+            - paragraph [ref=e254]: Connection data will be available soon.
+            - 'button "Tarot · Ring of Life and Death XIII — Death Key 3 holds the moment of entry in the Death Arcana. The Ring of Life and Death contains six keys spanning the full cycle of incarnation. Key 3 sits at the threshold where new life forces its way through obstruction, the difficulty at the beginning that the hexagram names directly. Where other keys in this ring carry different phases of transformation, Key 3 carries the specific quality of birth: the tremendous pressure of something coming into form for the first time, before it has any shape yet. This is the part of the Death Arcana that most people overlook, that every ending is also a point of entry, and that entry is always difficult." [ref=e255] [cursor=pointer]':
+              - generic [ref=e256]:
+                - generic [ref=e257]:
+                  - generic [ref=e258]:
+                    - text: Tarot · Ring of Life and Death
+                    - paragraph [ref=e259]: XIII — Death
+                  - generic [ref=e260]: +
+                - paragraph [ref=e262]: "Key 3 holds the moment of entry in the Death Arcana. The Ring of Life and Death contains six keys spanning the full cycle of incarnation. Key 3 sits at the threshold where new life forces its way through obstruction, the difficulty at the beginning that the hexagram names directly. Where other keys in this ring carry different phases of transformation, Key 3 carries the specific quality of birth: the tremendous pressure of something coming into form for the first time, before it has any shape yet. This is the part of the Death Arcana that most people overlook, that every ending is also a point of entry, and that entry is always difficult."
+            - 'button "Body · Physiology Navel Key 3 is associated with the navel, the point of original connection and first nourishment. The navel is where the umbilical cord attached, carrying everything a forming body needed before it could sustain itself. This connects to the theme of beginnings: the navel is literally the mark of entry into independent life, the point at which the new organism first separated and became itself." [ref=e263] [cursor=pointer]':
+              - generic [ref=e264]:
+                - generic [ref=e265]:
+                  - generic [ref=e266]:
+                    - text: Body · Physiology
+                    - paragraph [ref=e267]: Navel
+                  - generic [ref=e268]: +
+                - paragraph [ref=e270]: "Key 3 is associated with the navel, the point of original connection and first nourishment. The navel is where the umbilical cord attached, carrying everything a forming body needed before it could sustain itself. This connects to the theme of beginnings: the navel is literally the mark of entry into independent life, the point at which the new organism first separated and became itself."
+            - button "Body · Amino Acid Leucine Leucine is the amino acid of the start signal. The biochemical equivalent of the moment when a new pattern begins to assemble itself out of raw material, it triggers the cellular machinery that begins construction of everything that follows." [ref=e271] [cursor=pointer]:
+              - generic [ref=e272]:
+                - generic [ref=e273]:
+                  - generic [ref=e274]:
+                    - text: Body · Amino Acid
+                    - paragraph [ref=e275]: Leucine
+                  - generic [ref=e276]: +
+                - paragraph [ref=e278]: Leucine is the amino acid of the start signal. The biochemical equivalent of the moment when a new pattern begins to assemble itself out of raw material, it triggers the cellular machinery that begins construction of everything that follows.
+        - generic [ref=e280]:
+          - link "← Prev Beyond the Shell" [ref=e281] [cursor=pointer]:
+            - /url: /oracle/universal-language/2
+            - img [ref=e283]
+            - generic [ref=e296]:
+              - paragraph [ref=e297]: ← Prev
+              - paragraph [ref=e298]: Beyond the Shell
+          - link "3 All 64" [ref=e299] [cursor=pointer]:
+            - /url: /oracle/universal-language
+            - generic [ref=e300]: "3"
+            - generic [ref=e301]: All 64
+          - link "Next → Veils of Knowledge" [ref=e302] [cursor=pointer]:
+            - /url: /oracle/universal-language/4
+            - generic [ref=e303]:
+              - paragraph [ref=e304]: Next →
+              - paragraph [ref=e305]: Veils of Knowledge
+            - img [ref=e307]
+  - dialog "Card entrance. Press Escape or tap to skip." [active] [ref=e318] [cursor=pointer]:
+    - img [ref=e319]
+    - generic [ref=e1154]:
+      - paragraph [ref=e1155]: Messengers of the Infinite
+      - img [ref=e1156]
+      - paragraph [ref=e1171]: Difficult Birth·Emergence·Chaos as Portal·Ordering Force·Mutation·Beginnings
+      - paragraph [ref=e1172]: tap to begin
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
