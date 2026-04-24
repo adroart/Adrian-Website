@@ -522,7 +522,7 @@ const Expand: React.FC<{
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <p className={`font-label text-[11px] uppercase tracking-[0.2em] ${labelColor} mb-1`}>{label}</p>
-            {subtitle && <p className="font-label text-[11px] text-stone-500 mb-2">{subtitle}</p>}
+            {subtitle && <p className="font-label text-[11px] text-stone-400 mb-2">{subtitle}</p>}
             {!open && (
               <div
                 className={previewMask !== 'none' ? 'max-h-[8.6em] overflow-hidden' : ''}
@@ -936,8 +936,10 @@ const UniversalLanguageCard: React.FC = () => {
   const [showQREntrance, setShowQREntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') === 'qr'
   );
+  // Ritual entrance plays on every landing (direct URL, internal nav, or ritual
+  // state) unless the visitor arrived via a QR scan, which has its own entrance.
   const [showIndexEntrance, setShowIndexEntrance] = useState(
-    () => (location.state as { ritual?: boolean } | null)?.ritual === true
+    () => new URLSearchParams(window.location.search).get('ref') !== 'qr'
   );
   // Bridge — lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
@@ -1115,7 +1117,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Acquire
                     </p>
-                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
+                    <p className="font-label text-[11px] uppercase tracking-[0.25em] text-wood-500 mt-0.5">
                       Physical piece
                     </p>
                   </div>
@@ -1148,7 +1150,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Share
                     </p>
-                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-300 mt-0.5">
+                    <p className="font-label text-[11px] uppercase tracking-[0.25em] text-wood-500 mt-0.5">
                       This card
                     </p>
                   </div>
@@ -1274,100 +1276,101 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
 
-            {/* Reference strip */}
+            {/* Reference strip — hero + context composition.
+                Rhythm: tight label-value pairs inside sections, generous space
+                between hero and metadata. Two containers instead of five. */}
             {synthesis?.reference && (
-              <div className="mt-8 mb-4 space-y-2">
-                {/* I Ching — simple nav tile */}
+              <div className="mt-10 mb-6 max-w-md mx-auto">
+
+                {/* I Ching — thin row at top, sets entry.
+                    Type: Lato 10/caps label + Cormorant 17 title. */}
                 <button
                   onClick={() => go('iching')}
-                  className="group w-full flex items-center gap-3 px-4 py-4 text-left rounded-xl border border-stone-200 border-l-[3px] border-l-stone-400 bg-paper-50 hover:bg-paper-100 transition-colors shadow-[0_1px_6px_rgba(60,44,22,0.05)]"
+                  className="group w-full flex items-baseline gap-4 text-left pb-4 border-b border-wood-200/70 hover:border-bronze-400/70 transition-colors"
                 >
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={28} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">I Ching</p>
-                    <p className="font-serif text-[16px] text-wood-900 leading-tight group-hover:text-bronze-600 transition-colors">{card.iching.hexagram_name}</p>
-                  </div>
-                  <span className="text-[11px] text-wood-200 group-hover:text-wood-400 transition-colors flex-shrink-0">→</span>
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={24} />
+                  <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center">I Ching</span>
+                  <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors flex-1 truncate">{card.iching.hexagram_name}</span>
+                  <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
                 </button>
 
-
-                {/* Gene Keys */}
-                <button onClick={() => go('genekeys')} className="group block text-left w-full px-4 py-4 rounded-xl border border-bronze-300/50 border-l-[3px] border-l-bronze-400 bg-bronze-500/[0.04] transition-colors hover:bg-bronze-500/[0.08] shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-500">Gene Keys</p>
-                    <span className="text-bronze-200 text-[11px] group-hover:text-bronze-400 transition-colors">→</span>
+                {/* Gene Keys — the reading. Three equal-weight serif values
+                    in an asymmetric label-gutter composition. Gift tinted
+                    bronze for emphasis without size change. */}
+                <button
+                  onClick={() => go('genekeys')}
+                  className="group block w-full text-left mt-6 mb-6"
+                >
+                  <div className="flex items-baseline justify-between mb-4 pb-2 border-b border-bronze-400/30 group-hover:border-bronze-500/70 transition-colors">
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gene Keys</p>
+                    <span className="text-[11px] text-bronze-400 group-hover:text-bronze-600 transition-colors">→</span>
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Shadow</span>
-                      <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.shadow}</span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-bronze-400 w-9 shrink-0">Gift</span>
-                      <span className="font-serif text-[18px] text-bronze-700 leading-none font-medium">{card.gene_keys.gift}</span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 w-9 shrink-0">Siddhi</span>
-                      <span className="font-serif text-[14px] text-wood-500 leading-none">{card.gene_keys.siddhi}</span>
-                    </div>
+
+                  <div className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 items-baseline">
+                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400">Shadow</span>
+                    <span className="font-serif text-[17px] text-wood-700 leading-none tracking-[-0.005em]">{card.gene_keys.shadow}</span>
+
+                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600">Gift</span>
+                    <span className="font-serif text-[17px] text-bronze-700 leading-none font-medium tracking-[-0.005em] group-hover:text-bronze-800 transition-colors">{card.gene_keys.gift}</span>
+
+                    <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400">Siddhi</span>
+                    <span className="font-serif text-[17px] text-wood-700 leading-none tracking-[-0.005em]">{card.gene_keys.siddhi}</span>
                   </div>
                 </button>
 
-                {/* Middle row: Human Design + Tarot */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Metadata panel — tabular label/value rows. Context text in
+                    italic Cormorant differentiates from Lato caps labels. */}
+                <div className="rounded-2xl border border-wood-200/80 bg-paper-50 overflow-hidden">
+
                   {/* Human Design */}
-                  <button onClick={() => go('humandesign')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-500 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Human Design</p>
-                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                  <button
+                    onClick={() => go('humandesign')}
+                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                  >
+                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Human Design</span>
+                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
+                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.hd_center}</span>
+                      <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.hd_circuit} · {synthesis.reference.hd_harmonic_gate}</span>
                     </div>
-                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{synthesis.reference.hd_center} Center</p>
-                    <div className="space-y-0.5">
-                      <p className="font-label text-[11px] text-wood-400">{synthesis.reference.hd_circuit}</p>
-                      <p className="font-label text-[11px] text-wood-400">{synthesis.reference.hd_harmonic_gate}</p>
-                    </div>
+                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
                   </button>
+
+                  <div className="border-t border-wood-200/40" />
 
                   {/* Tarot */}
-                  <button onClick={() => go('connections')} className="group block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-700 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Tarot</p>
-                      <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
+                  <button
+                    onClick={() => go('connections')}
+                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                  >
+                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Tarot</span>
+                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
+                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.tarot_card}</span>
+                      <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.astrology} · {synthesis.reference.hebrew_letter}</span>
                     </div>
-                    <p className="font-serif text-[18px] text-wood-900 leading-tight mb-3">{synthesis.reference.tarot_card}</p>
-                    <div className="space-y-0.5">
-                      <p className="font-label text-[11px] text-wood-400">
-                        {synthesis.reference.astrology}
-                      </p>
-                      <p className="font-label text-[11px] text-wood-400">
-                        {synthesis.reference.hebrew_letter} · Path {synthesis.reference.path}
-                      </p>
-                    </div>
+                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
                   </button>
-                </div>
 
-                {/* Bottom row: Body full width */}
-                <button onClick={() => go('connections')} className="group w-full block text-left px-4 py-4 rounded-xl border border-wood-200 border-l-[3px] border-l-wood-300 bg-paper-50 transition-colors hover:bg-paper-100 shadow-[0_1px_6px_rgba(60,44,22,0.05)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-label text-[10px] uppercase tracking-[0.25em] text-wood-400">Body</p>
-                    <span className="text-wood-200 text-[11px] group-hover:text-wood-400 transition-colors">→</span>
-                  </div>
-                  <div className="flex items-baseline gap-6 flex-wrap">
-                    <p className="font-serif text-[18px] text-wood-900 leading-none">{synthesis.reference.body_physiology}</p>
-                    {synthesis.reference.body_amino_acid && (
-                      <div>
-                        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 mb-0.5">Amino Acid</p>
-                        <p className="font-label text-[12px] text-wood-500">{synthesis.reference.body_amino_acid}</p>
-                      </div>
-                    )}
-                    {synthesis.reference.programming_partner && (
-                      <div>
-                        <p className="font-label text-[9px] uppercase tracking-[0.15em] text-wood-300 mb-0.5">Partner Key</p>
-                        <p className="font-label text-[12px] text-wood-500">{synthesis.reference.programming_partner}</p>
-                      </div>
-                    )}
-                  </div>
-                </button>
+                  <div className="border-t border-wood-200/40" />
+
+                  {/* Body */}
+                  <button
+                    onClick={() => go('connections')}
+                    className="group w-full flex items-baseline gap-4 px-5 py-4 text-left hover:bg-paper-100/60 transition-colors"
+                  >
+                    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 w-[88px] shrink-0 self-center">Body</span>
+                    <div className="flex-1 min-w-0 flex items-baseline gap-x-3 gap-y-1 flex-wrap">
+                      <span className="font-serif text-[17px] text-wood-900 leading-none group-hover:text-bronze-600 transition-colors">{synthesis.reference.body_physiology}</span>
+                      {synthesis.reference.body_amino_acid && (
+                        <span className="font-serif italic text-[13px] text-wood-500 leading-none">{synthesis.reference.body_amino_acid}</span>
+                      )}
+                      {synthesis.reference.programming_partner && (
+                        <span className="font-serif italic text-[13px] text-wood-500 leading-none">Partner {synthesis.reference.programming_partner}</span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-wood-400 group-hover:text-wood-600 transition-colors self-center">→</span>
+                  </button>
+
+                </div>
               </div>
             )}
 
@@ -1395,7 +1398,7 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
 
-            <p className="font-sans text-[15px] text-stone-500 leading-[1.9] px-1">
+            <p className="font-sans text-[15px] text-stone-300 leading-[1.9] px-1">
               The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
             </p>
 
@@ -1405,14 +1408,14 @@ const UniversalLanguageCard: React.FC = () => {
               {/* Row 1: Full hexagram */}
               <button
                 onClick={() => setIchingOpen('hex')}
-                className={`group w-full flex items-center gap-4 px-6 py-5 text-left transition-colors border-l-[3px] ${ichingOpen === 'hex' ? 'border-l-bronze-500 bg-white/[0.04]' : 'border-l-transparent hover:bg-white/[0.03]'}`}
+                className={`group w-full flex items-center gap-4 px-6 py-5 text-left transition-colors ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
               >
                 <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color={ichingOpen === 'hex' ? 'rgba(180,130,70,0.9)' : 'rgba(180,130,70,0.5)'} width={36} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-0.5">Hexagram {card.number}</p>
-                  <h2 className={`font-serif text-2xl leading-[1.2] transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-400 group-hover:text-stone-200'}`}>{card.iching.hexagram_name}</h2>
+                  <p className="font-label text-[11px] uppercase tracking-[0.22em] text-stone-300 mb-0.5">Hexagram {card.number}</p>
+                  <h2 className={`font-serif text-2xl leading-[1.2] transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.hexagram_name}</h2>
                 </div>
-                <span className={`text-sm transition-colors flex-shrink-0 ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-600 group-hover:text-stone-400'}`}>→</span>
+                <span className={`text-sm transition-colors flex-shrink-0 ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-400 group-hover:text-stone-200'}`}>→</span>
               </button>
 
               <div className="border-t border-stone-700/50" />
@@ -1421,29 +1424,29 @@ const UniversalLanguageCard: React.FC = () => {
               <div className="flex divide-x divide-stone-700/50">
                 <button
                   onClick={() => setIchingOpen('upper')}
-                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors border-l-[3px] ${ichingOpen === 'upper' ? 'border-l-bronze-500 bg-white/[0.04]' : 'border-l-transparent hover:bg-white/[0.03]'}`}
+                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
                 >
                   <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-600 mb-0.5">Upper</p>
-                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-200' : 'text-stone-500 group-hover:text-stone-300'}`}>{card.iching.upper_trigram.name}</p>
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Upper</p>
+                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-200' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.upper_trigram.name}</p>
                   </div>
                 </button>
                 <button
                   onClick={() => setIchingOpen('lower')}
-                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'lower' ? 'bg-white/[0.04]' : 'hover:bg-white/[0.03]'}`}
+                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
                 >
                   <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-label text-[9px] uppercase tracking-[0.2em] text-stone-600 mb-0.5">Lower</p>
-                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-200' : 'text-stone-500 group-hover:text-stone-300'}`}>{card.iching.lower_trigram.name}</p>
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Lower</p>
+                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-200' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.lower_trigram.name}</p>
                   </div>
                 </button>
               </div>
 
               {/* Reading zone — always visible, updates on tap */}
               <div className="border-t border-stone-700/50 px-6 py-5">
-                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-bronze-600 mb-3">
+                <p className="font-label text-[11px] uppercase tracking-[0.22em] text-bronze-400 mb-3">
                   {ichingOpen === 'hex'
                     ? `Hexagram ${card.number} · ${card.iching.hexagram_name}`
                     : ichingOpen === 'upper'
@@ -1470,7 +1473,7 @@ const UniversalLanguageCard: React.FC = () => {
                   label="The reading"
                   subtitle="the oracle's reading for this configuration"
                   borderColor="border-stone-700/40"
-                  labelColor="text-stone-500"
+                  labelColor="text-stone-400"
                   innerPx="px-6"
                   previewMask="dark"
                   preview={(() => {
@@ -1491,7 +1494,7 @@ const UniversalLanguageCard: React.FC = () => {
                     label="The classical text"
                     subtitle="Wilhelm translation"
                     borderColor="border-stone-700/40"
-                    labelColor="text-stone-500"
+                    labelColor="text-stone-400"
                     innerPx="px-6"
                     previewMask="dark"
                     preview={(() => {
@@ -1532,7 +1535,7 @@ const UniversalLanguageCard: React.FC = () => {
                   section="iching"
                   defaultOpen
                   label="Overview"
-                  borderColor="border-stone-700/40" labelColor="text-stone-500"
+                  borderColor="border-stone-700/40" labelColor="text-stone-400"
                   innerPx="px-6"
                   previewMask="dark"
                   preview={<p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{expanded.i_ching.trigrams.overview.text}</p>}
@@ -1547,7 +1550,7 @@ const UniversalLanguageCard: React.FC = () => {
                       <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
-                  <p className="font-sans text-[15px] text-stone-500 leading-[1.9] mt-4">
+                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9] mt-4">
                     {expanded.i_ching.trigrams.family_dynamic.text}
                   </p>
                 </Expand>
@@ -1556,7 +1559,7 @@ const UniversalLanguageCard: React.FC = () => {
                   section="iching"
                   label="The Judgment"
                   subtitle="the oracle's ruling on this moment"
-                  borderColor="border-stone-700/40" labelColor="text-stone-500"
+                  borderColor="border-stone-700/40" labelColor="text-stone-400"
                   innerPx="px-6"
                   previewMask="dark"
                   preview={(() => {
@@ -1586,7 +1589,7 @@ const UniversalLanguageCard: React.FC = () => {
                     );
                   })()}
                 >
-                  <p className="font-sans text-[15px] text-stone-500 leading-[1.9] mb-5">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9] mb-5">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
                   <div className="space-y-2 border-t border-stone-700/30 pt-4">
                     {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
                       <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.9]">{line}</p>
@@ -1597,7 +1600,7 @@ const UniversalLanguageCard: React.FC = () => {
                   id="iching-patterns"
                   section="iching"
                   label="Patterns of Wisdom"
-                  borderColor="border-stone-700/40" labelColor="text-stone-500"
+                  borderColor="border-stone-700/40" labelColor="text-stone-400"
                   innerPx="px-6"
                   previewMask="dark"
                   preview={<p className="font-sans text-[15px] text-stone-400 leading-[1.9]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>}
@@ -1637,16 +1640,16 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
 
-            <p className="font-sans text-[15px] text-wood-400 leading-[1.9] px-1">
-              A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression — rare, but real.
+            <p className="font-sans text-[15px] text-wood-600 leading-[1.9] px-1">
+              A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
             </p>
 
             {/* Island 1 — Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mb-2">
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 mb-2">
                 Gene Key {card.number} · Gate {card.human_design.gate}
               </p>
-              <h2 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.2] mb-3">{card.card_name}</h2>
+              <h2 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.2] mb-3">The {card.gene_keys.gift} Key</h2>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-sans text-[15px] text-stone-500">{card.gene_keys.shadow}</span>
                 <span className="text-wood-300" aria-hidden="true">·</span>
@@ -1718,7 +1721,7 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
 
 
-            <p className="font-sans text-[15px] text-stone-500 leading-[1.9] px-1">
+            <p className="font-sans text-[15px] text-stone-300 leading-[1.9] px-1">
               Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
             </p>
 

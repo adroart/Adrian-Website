@@ -151,7 +151,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           <div className="flex items-center gap-0">
             <button
               onClick={toggleDarkMode}
-              className={`p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+              className={`p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity ${textPrimary}`}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDarkMode ? (
@@ -175,7 +175,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             {LAUNCH_FLAGS.shopEnabled && (
             <button
               onClick={openCart}
-              className={`relative p-2 hover:opacity-70 transition-opacity ${textPrimary}`}
+              className={`relative p-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity ${textPrimary}`}
               aria-label="Open cart"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

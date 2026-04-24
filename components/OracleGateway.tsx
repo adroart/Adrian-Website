@@ -8,7 +8,7 @@
  * Suggested QR target: /oracle
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ALL_CARDS } from '../data/oracleData';
 
@@ -40,7 +40,6 @@ const HEX_H      = 5 * (LINE_H + LINE_GAP) + LINE_H;
 
 const OracleGateway: React.FC = () => {
   const navigate = useNavigate();
-  const ringRef = useRef<SVGGElement>(null);
 
   const hexagrams = useMemo(() =>
     ALL_CARDS.map((card, i) => {
@@ -62,19 +61,6 @@ const OracleGateway: React.FC = () => {
   return (
     <>
       <style>{`
-        @keyframes og-spin {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-        @keyframes og-center-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes og-ring-in {
-          0%   { transform: scale(0.04); opacity: 0; }
-          18%  { opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
         .og-link {
           display: block;
           font-family: 'Lato', Helvetica, sans-serif;
@@ -137,9 +123,9 @@ const OracleGateway: React.FC = () => {
           viewBox="0 0 800 800"
           style={{
             position: 'absolute',
-            width: 'min(160vmin, 1200px)',
-            height: 'min(160vmin, 1200px)',
-            animation: 'og-ring-in 2.8s cubic-bezier(0.16, 1, 0.3, 1) both',
+            width: 'min(220vmin, 1800px)',
+            height: 'min(220vmin, 1800px)',
+            animation: 'oracle-ring-bloom 2.8s cubic-bezier(0.16, 1, 0.3, 1) both',
           }}
           aria-label="Sixty-four hexagrams. Activate one to enter its reading."
           role="group"
@@ -148,7 +134,7 @@ const OracleGateway: React.FC = () => {
             stroke="color-mix(in oklab, var(--color-wood-600) 12%, transparent)"
             strokeWidth="1" />
 
-          <g ref={ringRef} style={{ transformOrigin: `${CX}px ${CY}px`, animation: 'og-spin 96s linear infinite' }}>
+          <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: 'oracle-ring-spin 96s linear infinite' }}>
             {hexagrams.map(({ number, name, x, y, rotationDeg, lines }) => (
               <g
                 key={number}
@@ -165,22 +151,24 @@ const OracleGateway: React.FC = () => {
                   }
                 }}
               >
-                {/* Enlarged hit area — 72×72 for comfortable touch target */}
-                <rect className="og-hex-hit"
-                  x={-25} y={-23} width={HEX_W + 50} height={HEX_H + 46}
-                  fill="transparent" rx="2" />
-                {lines.map((solid, li) => {
-                  const ly = li * (LINE_H + LINE_GAP);
-                  const fill = 'var(--color-wood-500)';
-                  return solid ? (
-                    <rect key={li} x={0} y={ly} width={HEX_W} height={LINE_H} fill={fill} opacity="0.6" />
-                  ) : (
-                    <g key={li}>
-                      <rect x={0}                   y={ly} width={HALF_W} height={LINE_H} fill={fill} opacity="0.6" />
-                      <rect x={HALF_W + BROKEN_GAP} y={ly} width={HALF_W} height={LINE_H} fill={fill} opacity="0.6" />
-                    </g>
-                  );
-                })}
+                <g aria-hidden="true">
+                  {/* Enlarged hit area — 72×72 for comfortable touch target */}
+                  <rect className="og-hex-hit"
+                    x={-25} y={-23} width={HEX_W + 50} height={HEX_H + 46}
+                    fill="transparent" rx="2" />
+                  {lines.map((solid, li) => {
+                    const ly = li * (LINE_H + LINE_GAP);
+                    const fill = 'var(--color-wood-500)';
+                    return solid ? (
+                      <rect key={li} x={0} y={ly} width={HEX_W} height={LINE_H} fill={fill} opacity="0.6" />
+                    ) : (
+                      <g key={li}>
+                        <rect x={0}                   y={ly} width={HALF_W} height={LINE_H} fill={fill} opacity="0.6" />
+                        <rect x={HALF_W + BROKEN_GAP} y={ly} width={HALF_W} height={LINE_H} fill={fill} opacity="0.6" />
+                      </g>
+                    );
+                  })}
+                </g>
               </g>
             ))}
           </g>
@@ -194,7 +182,7 @@ const OracleGateway: React.FC = () => {
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 10,
-            animation: 'og-center-in 1.4s ease 0.6s both',
+            animation: 'oracle-rise 1.4s ease 0.6s both',
             pointerEvents: 'auto',
           }}
         >

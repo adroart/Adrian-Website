@@ -10,31 +10,20 @@
  */
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ALL_CARDS, type OracleCard } from '../data/oracleData';
 import { getSynthesis } from '../data/synthesisData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
+import { TRIGRAM_LINES, getHexagramLines } from '../data/trigrams';
 
-const TRIGRAM_LINES: Record<string, [boolean, boolean, boolean]> = {
-  '☰': [true,  true,  true ],
-  '☷': [false, false, false],
-  '☳': [true,  false, false],
-  '☴': [false, true,  true ],
-  '☵': [false, true,  false],
-  '☲': [true,  false, true ],
-  '☶': [false, false, true ],
-  '☱': [true,  true,  false],
-};
-
-function getLines(upper: string, lower: string): boolean[] {
-  const u = TRIGRAM_LINES[upper] ?? [true, true, true];
-  const l = TRIGRAM_LINES[lower] ?? [true, true, true];
-  return [u[2], u[1], u[0], l[2], l[1], l[0]];
-}
-
-const CX = 400; const CY = 400; const R = 315;
-const LINE_H = 3; const LINE_GAP = 1.5;
-const HEX_W = 22; const BROKEN_GAP = 5;
+// viewBox 1100×1100 so R can grow without the 64 hexagrams colliding.
+// Arc-length between neighbors at R=460 is ≈ 45 units (2π·R/64), so HEX_W
+// up to ~36 still leaves breathing room. The SVG is then sized down on
+// screen so the whole ring hugs the centered content.
+const CX = 550; const CY = 550; const R = 460;
+const LINE_H = 5; const LINE_GAP = 2.5;
+const HEX_W = 36; const BROKEN_GAP = 8;
 const HALF_W = (HEX_W - BROKEN_GAP) / 2;
 const HEX_H = 5 * (LINE_H + LINE_GAP) + LINE_H;
 
@@ -94,10 +83,14 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
   }, [card.number]);
 
   // Focus management — trap focus on the dialog; restore on unmount.
+  // Also lock body scroll so the page underneath can't peek through.
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
     dialogRef.current?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
+      document.body.style.overflow = prevOverflow;
       if (previouslyFocused.current instanceof HTMLElement) {
         previouslyFocused.current.focus();
       }
@@ -117,7 +110,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const centerLines = useMemo(
-    () => getLines(card.iching.upper_trigram.symbol, card.iching.lower_trigram.symbol),
+    () => getHexagramLines(card.iching.upper_trigram.symbol, card.iching.lower_trigram.symbol),
     [card],
   );
 
@@ -138,34 +131,9 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
     }),
   [card.number]);
 
-  return (
+  return createPortal(
     <>
       <style>{`
-        @keyframes ce-ring-bloom {
-          0%   { transform: scale(0.04); opacity: 0; }
-          16%  { opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes ce-ring-spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes ce-rise {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes ce-draw-ltr {
-          from { clip-path: inset(0 100% 0 0); }
-          to   { clip-path: inset(0 0% 0 0); }
-        }
-        @keyframes ce-draw-rtl {
-          from { clip-path: inset(0 0 0 100%); }
-          to   { clip-path: inset(0 0 0 0%); }
-        }
-        @keyframes ce-pulse {
-          0%   { opacity: 0.3; }
-          50%  { opacity: 0.85; }
-          100% { opacity: 0.3; }
-        }
         @keyframes ce-ring-exit {
           from { transform: scale(1);   opacity: 1; }
           to   { transform: scale(3.8); opacity: 0; }
@@ -199,7 +167,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9999,
+          zIndex: 99999,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -224,15 +192,19 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
       >
         {/* Ring */}
         <svg
-          viewBox="0 0 800 800"
+          viewBox="0 0 1100 1100"
           aria-hidden="true"
           style={{
             position: 'absolute',
-            width: '117vw',
-            height: '117vw',
+            // Ring diameter follows viewport height so the circle always
+            // encloses the stacked center content. On portrait phones this
+            // means the ring spills off the sides (matches desktop look).
+            // Capped at 720px so it doesn't bloat on tall/wide desktops.
+            width: 'min(70vh, 612px)',
+            height: 'min(70vh, 612px)',
             animation: exiting
               ? `ce-ring-exit 480ms cubic-bezier(0.4, 0, 1, 1) both`
-              : `ce-ring-bloom ${RING_DUR}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
+              : `oracle-ring-bloom ${RING_DUR}ms cubic-bezier(0.16, 1, 0.3, 1) both`,
           }}
         >
           <circle cx={CX} cy={CY} r={R} fill="none"
@@ -240,7 +212,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
             strokeWidth="1" />
           <g style={{
             transformOrigin: `${CX}px ${CY}px`,
-            animation: 'ce-ring-spin 96s linear infinite',
+            animation: 'oracle-ring-spin 96s linear infinite',
           }}>
             {ringHexagrams.map(({ number, x, y, rotationDeg, lines, isCurrent }) => (
               <g key={number}
@@ -285,7 +257,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
             margin: 0,
             animation: exiting
               ? `ce-name-exit 300ms ease-in both`
-              : `ce-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) ${NAME_DELAY}ms both`,
+              : `oracle-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) ${NAME_DELAY}ms both`,
           }}>
             {card.card_name}
           </p>
@@ -310,13 +282,13 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
               const fill = 'var(--color-wood-800)';
               return isYang ? (
                 <rect key={i} x="4" y={y} width="72" height="10" fill={fill}
-                  style={{ animationName: 'ce-draw-ltr', ...base }} />
+                  style={{ animationName: 'oracle-draw-ltr', ...base }} />
               ) : (
                 <g key={i}>
                   <rect x="4"  y={y} width="32" height="10" fill={fill}
-                    style={{ animationName: 'ce-draw-ltr', ...base }} />
+                    style={{ animationName: 'oracle-draw-ltr', ...base }} />
                   <rect x="44" y={y} width="32" height="10" fill={fill}
-                    style={{ animationName: 'ce-draw-rtl', ...base }} />
+                    style={{ animationName: 'oracle-draw-rtl', ...base }} />
                 </g>
               );
             })}
@@ -333,7 +305,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
               letterSpacing: '0.01em',
               animation: exiting
                 ? `ce-keys-exit 260ms ease-in 120ms both`
-                : `ce-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) ${KEYS_DELAY}ms both`,
+                : `oracle-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) ${KEYS_DELAY}ms both`,
             }}>
               {keywords.map((kw, i) => (
                 <React.Fragment key={kw}>
@@ -351,20 +323,21 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
 
           <p style={{
             fontFamily: "'Lato', Helvetica, sans-serif",
-            fontSize: '10px',
+            fontSize: '11px',
             letterSpacing: '0.24em',
             textTransform: 'uppercase',
             color: 'var(--color-wood-600)',
             margin: 0,
             animation: exiting
               ? `ce-hint-exit 200ms ease-in both`
-              : `ce-pulse 2.6s ease-in-out 1.6s infinite`,
+              : `oracle-pulse 2.6s ease-in-out 1.6s infinite`,
           }}>
             tap to begin
           </p>
 
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };

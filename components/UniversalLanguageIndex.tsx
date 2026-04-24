@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CODON_RINGS, ALL_CARDS, type OracleCard } from '../data/oracleData';
 import { FULL_ARCHIVE } from '../data/mockData';
@@ -75,72 +75,103 @@ const HexagramSVG: React.FC<{ upper: string; lower: string }> = ({ upper, lower 
 const CardThumbnail: React.FC<{
   card: OracleCard;
   isFlipped: boolean;
+  artworkMode: boolean;
   onFlip: () => void;
   onFlipBack: () => void;
-}> = ({ card, isFlipped, onFlip, onFlipBack }) => {
+}> = ({ card, isFlipped, artworkMode, onFlip, onFlipBack }) => {
   const navigate = useNavigate();
-  return (
-  <div
-    className={`[perspective:600px] relative select-none ${isFlipped ? 'z-10' : ''}`}
-    onClick={() => { if (!isFlipped) onFlip(); }}
-  >
-    <div
-      className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] ${
-        isFlipped ? '[transform:rotateY(180deg)]' : 'cursor-pointer'
-      }`}
-    >
-      {/* BACK face — absolute, fills the front face dimensions */}
-      <div className="absolute inset-0 [backface-visibility:hidden] bg-paper-50 flex flex-col items-center justify-center gap-1.5">
-        <div className="w-[38%] text-stone-900 dark:text-white/90">
-          <HexagramSVG
-            upper={card.iching.upper_trigram.symbol}
-            lower={card.iching.lower_trigram.symbol}
-          />
-        </div>
-        <span className="font-label font-bold text-xs lg:text-sm text-stone-900 dark:text-white/90 leading-none">
-          {card.number}
-        </span>
-      </div>
+  const goRead = () => navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } });
 
-      {/* FRONT face — in-flow, defines tile height naturally */}
-      <div
-        className="relative w-full [backface-visibility:hidden] [transform:rotateY(180deg)] bg-[#e0d8cc] dark:bg-[#3b2f26] cursor-pointer"
-        onClick={e => { e.stopPropagation(); onFlipBack(); }}
-      >
-        {/* Art — square image with equal padding on l/r/top */}
-        <div
-          className="pt-[6px] px-[6px]"
-          onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } }); }}
+  // Artwork mode renders the front face flat — no 3D layer per tile.
+  if (artworkMode) {
+    return (
+      <div className="relative w-full aspect-square bg-[#e0d8cc] select-none">
+        <button
+          type="button"
+          onClick={goRead}
+          aria-label={`Read ${card.card_name}, Card ${card.number}`}
+          className="absolute inset-0 cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
         >
           <img
             src={cardImageUrl(card.number, 320)}
-            alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
-            className="w-full aspect-square object-cover block cursor-pointer"
+            alt={`${card.card_name}, Universal Language ${card.number}`}
+            className="w-full h-full object-cover block"
             loading="lazy"
+            decoding="async"
           />
-        </div>
+        </button>
+      </div>
+    );
+  }
 
-        {/* Bottom strip — two labeled actions split by a divider */}
-        <div className="h-[16px] flex items-center pt-[2px]">
+  // Both faces share the same shape: square image area + 44px action strip beneath.
+  // Strip sits OUTSIDE the image — nothing ever covers the art.
+  return (
+    <div className={`[perspective:600px] relative select-none ${isFlipped ? 'z-10' : ''}`}>
+      <div
+        className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] ${
+          isFlipped ? '[transform:rotateY(180deg)]' : ''
+        }`}
+      >
+        {/* BACK face — hexagram only, no card background. Page background shows through. */}
+        <button
+          type="button"
+          onClick={onFlip}
+          aria-label={`Reveal Card ${card.number}: ${card.iching.hexagram_name}`}
+          className="absolute inset-0 [backface-visibility:hidden] bg-transparent flex flex-col items-center justify-center gap-1.5 cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
+        >
+          <span className="w-[42%] max-w-[48px] text-wood-900">
+            <HexagramSVG
+              upper={card.iching.upper_trigram.symbol}
+              lower={card.iching.lower_trigram.symbol}
+            />
+          </span>
+          <span className="font-label font-bold text-[11px] text-wood-900 leading-none">
+            {card.number}
+          </span>
+        </button>
+
+        {/* FRONT face — art square (uncovered) + action strip beneath */}
+        <div className="relative w-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col">
+          {/* Art — clean, nothing overlaid */}
           <button
-            className="flex-1 flex items-center justify-center font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-wood-700 hover:text-wood-900 font-black transition-colors leading-none"
-            onClick={e => { e.stopPropagation(); onFlipBack(); }}
-            aria-label="Flip back"
+            type="button"
+            onClick={goRead}
+            aria-label={`Read ${card.card_name}, Card ${card.number}`}
+            className="block w-full aspect-square bg-[#e0d8cc] cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
           >
-            Back
+            <img
+              src={cardImageUrl(card.number, 320)}
+              alt={`${card.card_name}, Universal Language ${card.number}`}
+              className="w-full h-full object-cover block"
+              loading="lazy"
+              decoding="async"
+            />
           </button>
-          <span className="w-px h-[8px] bg-wood-400 shrink-0" />
-          <button
-            className="flex-1 flex items-center justify-center font-label text-[8px] sm:text-[9px] uppercase tracking-[0.15em] text-wood-700 hover:text-wood-900 font-black transition-colors leading-none"
-            onClick={e => { e.stopPropagation(); navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } }); }}
-            aria-label={`Read ${card.card_name}`}
-          >
-            Read
-          </button>
+
+          {/* Action strip — BELOW the image, never overlaps */}
+          <div className="h-11 flex items-stretch bg-paper-100">
+            <button
+              type="button"
+              onClick={onFlipBack}
+              aria-label={`Flip Card ${card.number} back to hexagram`}
+              className="flex-1 flex items-center justify-center font-label text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-wood-700 hover:text-wood-900 font-semibold transition-colors leading-none cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
+            >
+              Back
+            </button>
+            <span aria-hidden className="w-px self-center h-3 bg-wood-400" />
+            <button
+              type="button"
+              onClick={goRead}
+              aria-label={`Read ${card.card_name}, Card ${card.number}`}
+              className="flex-1 flex items-center justify-center font-label text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-bronze-700 hover:text-wood-900 font-semibold transition-colors leading-none cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
+            >
+              Read
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -165,22 +196,22 @@ const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
     {/* Info below image */}
     <div className="px-0.5">
       <div className="flex items-baseline gap-2 mb-1">
-        <span className="font-label text-[10px] uppercase tracking-[0.12em] text-bronze-600/70 flex-shrink-0">
+        <span className="font-label text-[11px] uppercase tracking-[0.1em] text-bronze-700 flex-shrink-0">
           {String(card.number).padStart(2, '0')}
         </span>
-        <h3 className="font-sans text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-600 transition-colors duration-200">
+        <h4 className="font-sans text-base text-wood-900 font-medium leading-tight group-hover:text-bronze-700 transition-colors duration-200">
           {card.card_name}
-        </h3>
+        </h4>
       </div>
-      <p className="font-sans text-sm text-wood-500 leading-snug mb-2">
+      <p className="font-sans text-sm text-wood-700 leading-snug mb-2">
         {card.iching.hexagram_name}
       </p>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-wood-500">{card.gene_keys.shadow}</span>
-        <span className="text-wood-300 text-[10px]">·</span>
-        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-bronze-600">{card.gene_keys.gift}</span>
-        <span className="text-wood-300 text-[10px]">·</span>
-        <span className="font-label text-[10px] uppercase tracking-[0.08em] text-wood-500">{card.gene_keys.siddhi}</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.shadow}</span>
+        <span aria-hidden className="text-wood-400 text-[11px]">·</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-bronze-700">{card.gene_keys.gift}</span>
+        <span aria-hidden className="text-wood-400 text-[11px]">·</span>
+        <span className="font-label text-[11px] uppercase tracking-[0.08em] text-wood-600">{card.gene_keys.siddhi}</span>
       </div>
     </div>
   </Link>
@@ -197,10 +228,10 @@ const RingSection: React.FC<{
   <div className="border-t border-wood-200 pt-10 pb-6">
     <div className="mb-6">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-2">
-        <h2 className="font-serif text-xl text-wood-900 font-medium">{ring_name}</h2>
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600/70">{tarot}</span>
+        <h3 className="font-serif text-xl text-wood-900 font-medium">{ring_name}</h3>
+        <span className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700">{tarot}</span>
       </div>
-      <p className="font-sans text-sm text-wood-500 max-w-xl leading-[1.65]">{description}</p>
+      <p className="font-sans text-sm text-wood-700 max-w-xl leading-[1.65]">{description}</p>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
       {cards.map(card => <RingCardTile key={card.number} card={card} />)}
@@ -212,17 +243,22 @@ const RingSection: React.FC<{
 
 const SearchBar: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
   <div className="relative flex-1">
+    <label htmlFor="ul-search" className="sr-only">Search cards</label>
     <input
-      type="text"
+      id="ul-search"
+      type="search"
       value={value}
       onChange={e => onChange(e.target.value)}
+      onKeyDown={e => { if (e.key === 'Escape' && value) { e.preventDefault(); onChange(''); } }}
       placeholder="Search cards..."
-      className="w-full bg-transparent border border-wood-300 focus:border-bronze-500 text-wood-900 placeholder-wood-400 font-sans text-sm px-4 py-2.5 outline-none transition-colors duration-200"
+      aria-label="Search cards"
+      className="w-full bg-transparent border border-wood-400 focus:border-bronze-700 text-wood-900 placeholder-wood-600 font-sans text-sm px-4 py-2.5 min-h-[44px] outline-none focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 transition-colors duration-200"
     />
     {value && (
       <button
         onClick={() => onChange('')}
-        className="absolute right-3 top-1/2 -translate-y-1/2 font-label text-[10px] uppercase tracking-widest text-wood-400 hover:text-wood-700 transition-colors"
+        aria-label="Clear search"
+        className="absolute right-3 top-1/2 -translate-y-1/2 font-label text-[11px] uppercase tracking-widest text-wood-700 hover:text-wood-900 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         Clear
       </button>
@@ -238,30 +274,37 @@ const GridToggle: React.FC<{
   onGridMode: (m: GridMode) => void;
   onViewMode: (v: ViewMode) => void;
 }> = ({ gridMode, viewMode, onGridMode, onViewMode }) => {
-  const btnBase = 'font-label text-[10px] uppercase tracking-[0.2em] px-4 py-2.5 border transition-colors duration-200';
+  const btnBase = 'font-label text-[11px] uppercase tracking-[0.18em] px-4 min-h-[44px] border transition-colors duration-200 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2';
   const active = 'bg-wood-900 text-paper-50 border-wood-900 z-10 relative';
-  const inactive = 'text-wood-500 border-wood-300 hover:text-wood-900 hover:border-wood-500 bg-transparent';
+  const inactive = 'text-wood-700 border-wood-400 hover:text-wood-900 hover:border-wood-700 bg-transparent';
+
+  const isCards = viewMode === 'grid' && gridMode === 'cards';
+  const isArtwork = viewMode === 'grid' && gridMode === 'artwork';
+  const isRings = viewMode === 'rings';
 
   return (
-    <div className="flex items-center">
+    <div role="group" aria-label="View mode" className="flex items-center">
       <button
+        type="button"
+        aria-pressed={isCards}
         onClick={() => { onGridMode('cards'); onViewMode('grid'); }}
-        className={`${btnBase} ${viewMode === 'grid' && gridMode === 'cards' ? active : inactive}`}
-        title="View hexagram symbols"
+        className={`${btnBase} ${isCards ? active : inactive}`}
       >
         I Ching
       </button>
       <button
+        type="button"
+        aria-pressed={isArtwork}
         onClick={() => { onGridMode('artwork'); onViewMode('grid'); }}
-        className={`${btnBase} -ml-px ${viewMode === 'grid' && gridMode === 'artwork' ? active : inactive}`}
-        title="View the paintings"
+        className={`${btnBase} -ml-px ${isArtwork ? active : inactive}`}
       >
         Artwork
       </button>
       <button
+        type="button"
+        aria-pressed={isRings}
         onClick={() => onViewMode('rings')}
-        className={`${btnBase} -ml-px ${viewMode === 'rings' ? active : inactive}`}
-        title="Browse by Codon Ring"
+        className={`${btnBase} -ml-px ${isRings ? active : inactive}`}
       >
         By Ring
       </button>
@@ -273,10 +316,10 @@ const GridToggle: React.FC<{
 
 const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
   <div className="border-t border-wood-200 pt-16 text-center py-24">
-    <p className="font-serif text-xl text-wood-500 mb-4">No cards match that search.</p>
+    <p className="font-serif text-xl text-wood-700 mb-4">No cards match that search.</p>
     <button
       onClick={onClear}
-      className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 transition-colors border-b border-bronze-600/40 pb-px"
+      className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700 hover:text-wood-900 transition-colors border-b border-bronze-700/50 pb-px"
     >
       Clear search
     </button>
@@ -296,7 +339,8 @@ const HeroPreview: React.FC = () => (
           alt=""
           aria-hidden
           className="w-full h-full object-cover"
-          loading="eager"
+          loading="lazy"
+          decoding="async"
         />
       </div>
     ))}
@@ -312,15 +356,9 @@ const UniversalLanguageIndex: React.FC = () => {
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
-
   const handleGridMode = (mode: GridMode) => {
     setGridMode(mode);
-    if (mode === 'artwork') {
-      setFlippedCards(new Set(ALL_CARDS.map(c => c.number)));
-    } else {
-      setFlippedCards(new Set());
-    }
+    setFlippedCards(new Set());
   };
 
   const flipCard = (number: number) => {
@@ -377,22 +415,22 @@ const UniversalLanguageIndex: React.FC = () => {
       <div className="px-6 pt-32 pb-10 max-w-7xl mx-auto">
 
         {/* Breadcrumb — Oracle middle node removed */}
-        <nav className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-wood-400 mb-8 sm:mb-12">
-          <Link to="/creations" className="hover:text-wood-700 transition-colors">Creations</Link>
-          <span className="text-wood-300">/</span>
-          <span className="text-wood-700">Universal Language</span>
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.2em] text-wood-700 mb-8 sm:mb-12">
+          <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
+          <span aria-hidden className="text-wood-400">/</span>
+          <span className="text-wood-900">Universal Language</span>
         </nav>
 
         <div className="relative">
           <div
             aria-hidden
-            className="md:hidden absolute -inset-x-6 -inset-y-6 -z-10 bg-paper-50/75 dark:bg-stone-950/75 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_82%)]"
+            className="md:hidden absolute -inset-x-6 -inset-y-6 -z-10 bg-paper-50/75 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_82%)]"
           />
 
           {/* Hero row: text left, card preview right */}
           <div className="flex items-start gap-8 lg:gap-12 mb-10">
             <div className="flex-1 min-w-0">
-              <p className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-600 mb-5">
+              <p className="font-label text-[11px] uppercase tracking-[0.25em] text-bronze-700 mb-5">
                 Universal Language Oracle
               </p>
               <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
@@ -412,17 +450,17 @@ const UniversalLanguageIndex: React.FC = () => {
                 >
                   Draw at Random
                 </button>
-                <div className="flex items-center gap-4 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+                <div className="flex items-center gap-4 font-label text-[11px] uppercase tracking-[0.18em] text-wood-700">
                   <button
                     onClick={() => { handleGridMode('cards'); setViewMode('grid'); }}
-                    className="hover:text-wood-700 transition-colors"
+                    className="hover:text-wood-900 transition-colors"
                   >
                     {ALL_CARDS.length} Cards
                   </button>
-                  <span className="text-wood-300">·</span>
+                  <span aria-hidden className="text-wood-400">·</span>
                   <button
                     onClick={() => setViewMode('rings')}
-                    className="hover:text-wood-700 transition-colors"
+                    className="hover:text-wood-900 transition-colors"
                   >
                     {CODON_RINGS.length} Codon Rings
                   </button>
@@ -437,7 +475,7 @@ const UniversalLanguageIndex: React.FC = () => {
       </div>
 
       {/* ── Sticky search + tabs ───────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-paper-50/95 backdrop-blur-sm border-b border-wood-200">
+      <div className="sticky top-0 z-20 bg-paper-50 border-b border-wood-200">
         <div className="px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <SearchBar value={query} onChange={setQuery} />
           <GridToggle
@@ -448,8 +486,8 @@ const UniversalLanguageIndex: React.FC = () => {
           />
         </div>
         {query && (
-          <div className="px-6 pb-3 max-w-7xl mx-auto">
-            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+          <div className="px-6 pb-3 max-w-7xl mx-auto" aria-live="polite">
+            <p className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-700">
               {totalShown} {totalShown === 1 ? 'card' : 'cards'} found
             </p>
           </div>
@@ -464,7 +502,8 @@ const UniversalLanguageIndex: React.FC = () => {
           filteredCards.length > 0 ? (
             <>
               {/* First-time instruction */}
-              <p className="pt-5 pb-3 font-label text-[10px] uppercase tracking-[0.2em] text-wood-400">
+              <h2 className="sr-only">All cards</h2>
+              <p className="pt-5 pb-3 font-label text-[11px] uppercase tracking-[0.18em] text-wood-600">
                 {gridInstruction}
               </p>
               <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
@@ -474,6 +513,7 @@ const UniversalLanguageIndex: React.FC = () => {
                       key={card.number}
                       card={card}
                       isFlipped={flippedCards.has(card.number)}
+                      artworkMode={gridMode === 'artwork'}
                       onFlip={() => flipCard(card.number)}
                       onFlipBack={() => flipCardBack(card.number)}
                     />
@@ -490,6 +530,7 @@ const UniversalLanguageIndex: React.FC = () => {
         {viewMode === 'rings' && (
           filteredRings.length > 0 ? (
             <div className="space-y-2">
+              <h2 className="sr-only">Cards by codon ring</h2>
               {filteredRings.map(ring => (
                 <RingSection
                   key={ring.ring_name}
@@ -510,13 +551,13 @@ const UniversalLanguageIndex: React.FC = () => {
       <div className="border-t border-wood-200 px-6 py-10 max-w-7xl mx-auto flex items-center justify-between">
         <Link
           to="/creations"
-          className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 hover:text-wood-700 transition-colors"
+          className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-700 hover:text-wood-900 transition-colors"
         >
           ← Creations
         </Link>
         <button
           onClick={handleRandom}
-          className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-500 transition-colors font-semibold border-b border-bronze-600/40 hover:border-bronze-500 pb-px"
+          className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700 hover:text-wood-900 transition-colors font-semibold border-b border-bronze-700/50 hover:border-wood-900 pb-px"
         >
           Draw at Random →
         </button>

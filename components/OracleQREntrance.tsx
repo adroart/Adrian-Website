@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { OracleCard } from '../data/oracleData';
 import { getHexagramLines } from '../data/trigrams';
 
@@ -44,7 +45,10 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
     dialogRef.current?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
+      document.body.style.overflow = prevOverflow;
       if (previouslyFocused.current instanceof HTMLElement) {
         previouslyFocused.current.focus();
       }
@@ -72,7 +76,7 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
     [card],
   );
 
-  return (
+  return createPortal(
     <>
       <div
         ref={dialogRef}
@@ -81,7 +85,7 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9999,
+          zIndex: 99999,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -182,6 +186,7 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
           tap to continue
         </p>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };

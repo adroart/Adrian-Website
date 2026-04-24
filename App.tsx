@@ -95,7 +95,7 @@ const AppInner: React.FC = () => {
       {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}
 
       <main id="main-content">
-        <div key={location.pathname} className="route-fade-in">
+        <div key={/^\/oracle\/universal-language\/\d+$/.test(location.pathname) ? '/oracle/universal-language/:n' : location.pathname} className="route-fade-in">
           <Routes>
             <Route path="/" element={<><Hero /><Home /></>} />
 

@@ -191,8 +191,8 @@ blockquote {
   --color-stone-100: #ebe9e6;
   --color-stone-200: #dcd9d4;
   --color-stone-300: #c2beb8;
-  --color-stone-400: #a39e96;
-  --color-stone-500: #878179;
+  --color-stone-400: #8a857c;
+  --color-stone-500: #6f6a62;
   --color-stone-600: #6b665f;
   --color-stone-700: #524e49;
   --color-stone-800: #3d3a36;
@@ -265,10 +265,10 @@ blockquote {
   color-scheme: dark;
 
   /* Paper: light surfaces → warm darks (wider spread for separation) */
-  --color-paper-50: #141210;
-  --color-paper-100: #1c1a17;
-  --color-paper-200: #26231e;
-  --color-paper-300: #332f28;
+  --color-paper-50: #171310;
+  --color-paper-100: #1f1a15;
+  --color-paper-200: #29231c;
+  --color-paper-300: #362f26;
 
   /* Wood: dark → light  (low end = dark surfaces, high end = light text) */
   --color-wood-50: #181614;
@@ -286,14 +286,14 @@ blockquote {
   --color-stone-50: #141210;
   --color-stone-100: #1c1a17;
   --color-stone-200: #2e2b26;
-  --color-stone-300: #403c36;
-  --color-stone-400: #8a857e;
-  --color-stone-500: #a09a92;
-  --color-stone-600: #b8b2aa;
-  --color-stone-700: #c8c2ba;
-  --color-stone-800: #d8d4cc;
-  --color-stone-900: #e8e5de;
-  --color-stone-950: #f0ede8;
+  --color-stone-300: #4a453e;
+  --color-stone-400: #b0aaa0;
+  --color-stone-500: #c0bab0;
+  --color-stone-600: #ccc5bc;
+  --color-stone-700: #d4cec4;
+  --color-stone-800: #dfdbd3;
+  --color-stone-900: #ece8e1;
+  --color-stone-950: #f2efe9;
 
   /* Cream → warm darks */
   --color-cream: #1a1816;
@@ -348,7 +348,7 @@ blockquote {
   --color-stone-200: #dcd9d4;
   --color-stone-300: #c2beb8;
   --color-stone-400: #a39e96;
-  --color-stone-500: #878179;
+  --color-stone-500: #aaa49a;
   --color-stone-600: #6b665f;
   --color-stone-700: #524e49;
   --color-stone-800: #3d3a36;
@@ -379,7 +379,7 @@ blockquote {
 
 /* Body background */
 body { transition: background-color 0.5s ease; }
-html.dark body { background-color: #141210; }
+html.dark body { background-color: #171310; }
 
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #a09a92; }
@@ -622,11 +622,11 @@ button, a, [role="button"], input, select, textarea, label {
 /* ─── Route Transition ────────────────────────────────────────────────── */
 /* Subtle fade + slight lift when navigating between pages.                 */
 @keyframes routeFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .route-fade-in {
-  animation: routeFadeIn 0.3s ease-out forwards;
+  animation: routeFadeIn 0.3s ease-out;
 }
 
 /* ─── Reduced Motion Support ──────────────────────────────────────────── */
