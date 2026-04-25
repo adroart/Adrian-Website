@@ -311,8 +311,8 @@ const Inquire: React.FC = () => {
   /* ── Submit ───────────────────────────────────────────────────────── */
   const buildMailtoFallback = () => {
     const subject = purchaseMode
-      ? encodeURIComponent(`Purchase Request — ${pieceTitle}`)
-      : encodeURIComponent(`Commission Inquiry — ${COMMISSION_PATHS[form.commissionType].label}`);
+      ? encodeURIComponent(`Purchase Request: ${pieceTitle}`)
+      : encodeURIComponent(`Commission Inquiry: ${COMMISSION_PATHS[form.commissionType].label}`);
     const parts = purchaseMode
       ? [
           `Name: ${form.name}`,
@@ -339,7 +339,7 @@ const Inquire: React.FC = () => {
     if (form.timeline)
       parts.push(`Timeline: ${form.timeline}${form.specificDate ? ` (${form.specificDate})` : ''}`);
     if (form.referral)
-      parts.push(`Found via: ${form.referral}${form.referralOther ? ` — ${form.referralOther}` : ''}`);
+      parts.push(`Found via: ${form.referral}${form.referralOther ? `, ${form.referralOther}` : ''}`);
     const body = encodeURIComponent(parts.join('\n'));
     return `mailto:hello@adrianrasmussen.com?subject=${subject}&body=${body}`;
   };

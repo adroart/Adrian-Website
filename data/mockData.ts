@@ -3558,7 +3558,7 @@ export const STORIES: Story[] = [
         excerpt: 'Creating is how I grow. My inner journey. A celebration of creation itself.',
         content: [
             "Art is the experience of listening, bringing what is felt from the whispers into form. Creating the artifacts of the future in reverence of this moment.",
-            "I start with silence. Before the laser is turned on, before the wood is selected, there is the intention. Often, the design comes in a flash—a 'download'—during meditation or tea ceremony.",
+            "I start with silence. Before the laser is turned on, before the wood is selected, there is the intention. Often, the design comes in a flash, a 'download', during meditation or tea ceremony.",
             "The execution is a dance between digital precision and analog chaos. Airbrushing allows for organic gradients that the computer cannot replicate. The result is a piece that feels both made by a machine and born from a dream."
         ],
         readMinutes: 4,

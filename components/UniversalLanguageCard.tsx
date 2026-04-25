@@ -1369,7 +1369,7 @@ const UniversalLanguageCard: React.FC = () => {
                         <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.siddhi}</span>
                       </span>
                       <p className={contextCls}>
-                        Shadow, Gift, Siddhi — three frequencies of one theme
+                        Shadow, Gift, Siddhi · three frequencies of one theme
                       </p>
                     </div>
                   </div>
@@ -1476,7 +1476,7 @@ const UniversalLanguageCard: React.FC = () => {
 
 
             <p className="font-sans text-[15px] text-stone-300 leading-[1.9] px-1">
-              The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams — combinations of heaven and earth.
+              The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
             </p>
 
             {/* Island 1 — Interactive hexagram + trigram selector */}

@@ -507,7 +507,7 @@ const Creations: React.FC = () => {
                         {categoryCollections[0].name}
                         {categoryCollections[0].description && (
                             <span className="text-wood-300 font-normal normal-case tracking-normal ml-2 font-sans text-sm">
-                                — {categoryCollections[0].description}
+                                · {categoryCollections[0].description}
                             </span>
                         )}
                     </p>

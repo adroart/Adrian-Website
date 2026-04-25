@@ -11,9 +11,9 @@ import { useMetaTags } from '../hooks/useMetaTags';
 
 // Category subtext descriptions — the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
-    'Living Knowledge': 'Deep explorations of subjects earned through direct experience — not theory, but embodied understanding.',
+    'Living Knowledge': 'Deep explorations of subjects earned through direct experience. Not theory, but embodied understanding.',
     'Beneath the Surface': 'The meaning, origins, and stories woven into each body of work.',
-    'The Practice': 'How creation happens — the rituals, tools, and inner process behind the art.',
+    'The Practice': 'How creation happens. The rituals, tools, and inner process behind the art.',
     'The Path': 'The personal journey. Where this all began, and where it continues to lead.',
 };
 
@@ -498,7 +498,7 @@ const Writings: React.FC = () => {
                 <div className="text-center mb-8">
                     <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium mb-4">Writings</h1>
                     <p className="font-sans text-lg md:text-xl text-wood-500 font-light max-w-lg mx-auto leading-relaxed">
-                        Reflections on art, knowledge, and the inner life — written from experience.
+                        Reflections on art, knowledge, and the inner life, written from experience.
                     </p>
                 </div>
 

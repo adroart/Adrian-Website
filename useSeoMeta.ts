@@ -94,7 +94,7 @@ function resolveConfig(pathname: string): SeoConfig {
     const name = SUBCATEGORY_NAMES[slug] ?? slug;
     return {
       title: `${name} | Multidimensional Art | Adrian Rasmussen`,
-      description: `Explore the ${name} series — multidimensional artworks by Adrian Rasmussen.`,
+      description: `Explore the ${name} series. Multidimensional artworks by Adrian Rasmussen.`,
     };
   }
 

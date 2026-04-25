@@ -187,7 +187,7 @@ const RingCardTile: React.FC<{ card: OracleCard }> = ({ card }) => (
     <div className="relative aspect-square overflow-hidden mb-3">
       <img
         src={cardImageUrl(card.number, 400)}
-        alt={`${card.card_name} — Card ${card.number}, Universal Language Oracle`}
+        alt={`${card.card_name}, Card ${card.number}, Universal Language Oracle`}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />

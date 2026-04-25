@@ -89,7 +89,7 @@ const IlluminatedWorks: React.FC = () => {
             <div className="max-w-4xl mx-auto px-6 pb-24">
                 <div className="border-t border-wood-200 pt-16">
                     <p className="font-serif text-xl text-wood-600 font-light leading-loose max-w-2xl">
-                        Pause for a moment. Imagine your space after dark, with one illuminated piece on the wall. Consider what changes in the room — not just visually, but in atmosphere. This is the question worth sitting with before choosing.
+                        Pause for a moment. Imagine your space after dark, with one illuminated piece on the wall. Consider what changes in the room. Not just visually, but in atmosphere. This is the question worth sitting with before choosing.
                     </p>
                 </div>
             </div>
