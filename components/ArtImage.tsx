@@ -121,7 +121,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
         );
     }
 
-    const img = (
+    const imgEl = (
         <img
             {...rest}
             src={resolvedSrc}
@@ -152,12 +152,12 @@ const ArtImage: React.FC<ArtImageProps> = ({
                 {!loaded && (
                     <div className="absolute inset-0 bg-stone-100 animate-pulse" aria-hidden="true" />
                 )}
-                {img}
+                {imgEl}
             </div>
         );
     }
 
-    return img;
+    return imgEl;
 };
 
 export default ArtImage;
