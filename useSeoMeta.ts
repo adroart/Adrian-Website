@@ -57,7 +57,7 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
       'Shop ready-to-ship sacred geometry art, multidimensional sculptures, laser cut pieces, handcrafted jewelry, and unique creations by Adrian Rasmussen.',
   },
   '/welcome': {
-    title: 'Adrian Rasmussen | Technician of the Sacred',
+    title: 'Adrian Rasmussen | Bringing the Formless into Form',
     description:
       'Multidimensional art between Bali and California. Explore creations, writings, and commissions.',
   },
