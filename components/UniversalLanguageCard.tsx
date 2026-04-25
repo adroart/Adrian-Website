@@ -1796,7 +1796,7 @@ const UniversalLanguageCard: React.FC = () => {
             {!expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-stone-700/60 py-6 sm:py-7">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
-                <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{card.iching.essence}</p>
+                <p className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{card.iching.essence}</p>
               </div>
             )}
 
@@ -1867,7 +1867,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
                 <div className="space-y-4">
                   {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
                   ))}
                 </div>
               </div>
