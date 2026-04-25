@@ -23,11 +23,11 @@ const errors: string[] = [];
 
 for (const file of files) {
   const match = file.match(/(\d+)/);
-  if (!match) { console.warn(`  SKIP — no number found in "${file}"`); continue; }
+  if (!match) { console.warn(`  SKIP - no number found in "${file}"`); continue; }
 
   const num  = parseInt(match[1], 10);
   const card = CARD_BY_NUMBER.get(num);
-  if (!card) { console.warn(`  SKIP — no card data for #${num}`); continue; }
+  if (!card) { console.warn(`  SKIP - no card data for #${num}`); continue; }
 
   const nn      = String(num).padStart(2, '0');
   const newName = `${nn}-${slugify(card.card_name)}.jpg`;

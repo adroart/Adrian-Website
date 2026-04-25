@@ -7,7 +7,7 @@ import { useMetaTags } from '../hooks/useMetaTags';
 
 const OrderConfirmed: React.FC = () => {
   const [searchParams] = useSearchParams();
-  // Stored for future order lookup — not currently used in the UI
+  // Stored for future order lookup - not currently used in the UI
   const _sessionId = searchParams.get('session_id');
 
   const { clearCart } = useCart();

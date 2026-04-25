@@ -43,14 +43,14 @@ function screenBorder(screen: Screen): string {
   return 'border-stone-700';
 }
 
-// Dark-section card shadows (I Ching) — 1px white top edge simulates light source
+// Dark-section card shadows (I Ching) - 1px white top edge simulates light source
 const CARD_SHADOW      = 'shadow-[0_1px_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.55)]';
 const CARD_SHADOW_DEEP = 'shadow-[0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.7)]';
-// Light-section card shadows (Gene Keys) — warm paper drop shadow
+// Light-section card shadows (Gene Keys) - warm paper drop shadow
 const CARD_SHADOW_LIGHT = 'shadow-[0_4px_16px_rgba(60,44,22,0.1),0_1px_3px_rgba(60,44,22,0.06)]';
 
 
-/* ─── Trigram / hexagram SVG — pure vector, no Unicode emoji ─────────────── */
+/* ─── Trigram / hexagram SVG - pure vector, no Unicode emoji ─────────────── */
 
 // lines = [top, middle, bottom], true = yang (solid), false = yin (broken)
 const TRIGRAM_LINES: Record<string, [boolean, boolean, boolean]> = {
@@ -209,7 +209,7 @@ async function generateStoryBlob(
   ctx.fillStyle = '#262321';
   ctx.fillRect(0, 0, W, H);
 
-  // Card image — sits 80px from top
+  // Card image - sits 80px from top
   ctx.drawImage(cardImg, 0, 80, W, W);
 
   // Gradient fade: image blends into background
@@ -228,7 +228,7 @@ async function generateStoryBlob(
   ctx.font = '300 26px "Karla", sans-serif';
   ctx.fillText('UNIVERSAL LANGUAGE ORACLE', cx, 1230);
 
-  // Card name — scale down for long names
+  // Card name - scale down for long names
   ctx.fillStyle = '#f5f0e8';
   fitText(ctx, cardName, 960, 88, 52, s => `400 ${s}px "Cormorant Garamond", serif`);
   ctx.fillText(cardName, cx, 1335);
@@ -307,7 +307,7 @@ function usePrefersReducedMotion(): boolean {
   return prm;
 }
 
-/* ─── Expand context — page-wide accordion registry ───────────────────────── */
+/* ─── Expand context - page-wide accordion registry ───────────────────────── */
 /* Tracks every Expand / GeneKeyCard on the page so that:
    · section-level Expand-all / Collapse-all controls can drive them in concert
    · deep-links (?open=…  or #id) can force a specific block open + scroll to it
@@ -421,7 +421,7 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
   return <ExpandContext.Provider value={value}>{children}</ExpandContext.Provider>;
 };
 
-/* ─── Sticky mobile section label — shows the current section name as the
+/* ─── Sticky mobile section label - shows the current section name as the
        reader scrolls, so when accordions push content down they still know
        where they are in the four-part architecture. Mobile only.          */
 
@@ -468,7 +468,7 @@ const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }
   );
 };
 
-/* ─── Bridge — expose the Expand context up to the parent component so the
+/* ─── Bridge - expose the Expand context up to the parent component so the
        main component (which hosts the Provider) can drive it without being
        split into an inner sub-component. Mounts null, only sets a ref.  ─── */
 
@@ -544,7 +544,7 @@ const Expand: React.FC<{
   );
 };
 
-/* ─── Gene Key level — floating island with tone-specific personality ─────── */
+/* ─── Gene Key level - floating island with tone-specific personality ─────── */
 
 type GeneKeyTone = 'shadow' | 'gift' | 'siddhi';
 
@@ -552,7 +552,7 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   label:      string;
   // Background uses a tailwind class with a dark: variant so the card flips
   // in dark mode (inline hex styles don't respond to .dark, but the text
-  // tokens inside do — keeping them in sync prevents invisible text).
+  // tokens inside do - keeping them in sync prevents invisible text).
   cardBg:     string;
   cardBorder: string;
   topBar:     string;
@@ -563,7 +563,7 @@ const TONE_CONFIG: Record<GeneKeyTone, {
 }> = {
   shadow: {
     label:      'Shadow',
-    // Cool stone — grounded, heavy, the beginning. Dark: cool midnight stone.
+    // Cool stone - grounded, heavy, the beginning. Dark: cool midnight stone.
     cardBg:     'bg-[#eae8e5] dark:bg-[#2a2825]',
     cardBorder: 'border-stone-300/70',
     topBar:     'bg-stone-400',
@@ -574,7 +574,7 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   },
   gift: {
     label:      'Gift',
-    // Warm amber cream — transformative warmth. Dark: deep ember.
+    // Warm amber cream - transformative warmth. Dark: deep ember.
     cardBg:     'bg-[#faf5ee] dark:bg-[#2a231a]',
     cardBorder: 'border-bronze-300/50',
     topBar:     'bg-bronze-500',
@@ -585,7 +585,7 @@ const TONE_CONFIG: Record<GeneKeyTone, {
   },
   siddhi: {
     label:      'Siddhi',
-    // Warm ivory — luminous, the most open. Dark: deep warm charcoal.
+    // Warm ivory - luminous, the most open. Dark: deep warm charcoal.
     cardBg:     'bg-[#f8f6f2] dark:bg-[#23201d]',
     cardBorder: 'border-wood-300/50',
     topBar:     'bg-wood-400',
@@ -622,7 +622,7 @@ const GeneKeyCard: React.FC<{
       tabIndex={0}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
     >
-      {/* Tone accent bar — 3px colored rule at card top */}
+      {/* Tone accent bar - 3px colored rule at card top */}
       <div className={`h-[3px] w-full ${cfg.topBar}`} />
 
       <div className="px-6 py-6">
@@ -637,9 +637,9 @@ const GeneKeyCard: React.FC<{
             aria-hidden="true"
           >+</span>
         </div>
-        {/* Contemplation title — non-text, stays clickable */}
+        {/* Contemplation title - non-text, stays clickable */}
         <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.moreColor} mb-5`}>{level.contemplation_title}</p>
-        {/* Text content — stop propagation only when open so expanded text stays selectable;
+        {/* Text content - stop propagation only when open so expanded text stays selectable;
             when collapsed, clicks fall through to the card toggle. */}
         <div className="space-y-4 mb-3" onClick={open ? e => e.stopPropagation() : undefined}>
           {paragraphs.map((p, i) => (
@@ -674,7 +674,7 @@ const GeneKeyCard: React.FC<{
   );
 };
 
-/* ─── Synthesis tone card — same tone palette as GeneKeyCard, simpler data.
+/* ─── Synthesis tone card - same tone palette as GeneKeyCard, simpler data.
        Used for synthesis rows where we have plain strings, not expanded levels. */
 
 const SynthesisToneCard: React.FC<{
@@ -749,7 +749,7 @@ const SynthesisToneCard: React.FC<{
   );
 };
 
-/* ─── Generic expandable card — full-card-click, matches Gene Keys UX ────── */
+/* ─── Generic expandable card - full-card-click, matches Gene Keys UX ────── */
 
 const ExpandCard: React.FC<{
   id: string;
@@ -865,12 +865,12 @@ const CardLink: React.FC<{
   );
 };
 
-/* ─── Keyword row — dots only between words on the same visual line ──────── */
+/* ─── Keyword row - dots only between words on the same visual line ──────── */
 
 const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onClick }) => {
   const spanRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const containerRef = useRef<HTMLButtonElement | null>(null);
-  // Default all dots visible — hidden after first measurement where needed
+  // Default all dots visible - hidden after first measurement where needed
   const [sameLine, setSameLine] = useState<boolean[]>(() => kws.map(() => true));
 
   const measure = useCallback(() => {
@@ -941,7 +941,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [showIndexEntrance, setShowIndexEntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') !== 'qr'
   );
-  // Bridge — lets `go()` and the deep-link effect reach into the Expand
+  // Bridge - lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
   const expandRef = useRef<ExpandContextValue | null>(null);
 
@@ -998,7 +998,7 @@ const UniversalLanguageCard: React.FC = () => {
   const shareText = card ? `${card.card_name} · Code ${card.number} · Universal Language Oracle by Adrian Rasmussen` : '';
 
   // Pre-generate the story image as soon as the share sheet opens so tapping
-  // Instagram is instant — no visible loading delay.
+  // Instagram is instant - no visible loading delay.
   const storyFileRef = useRef<File | null>(null);
   useEffect(() => {
     if (!shareOpen || !card) return;
@@ -1022,7 +1022,7 @@ const UniversalLanguageCard: React.FC = () => {
     if (file && 'canShare' in navigator && navigator.canShare({ files: [file] })) {
       try { await navigator.share({ files: [file], title: shareText, url: shareUrl }); } catch {}
     } else {
-      // Desktop or unsupported — fall back to download
+      // Desktop or unsupported - fall back to download
       handleStoryDownload();
     }
   };
@@ -1042,7 +1042,7 @@ const UniversalLanguageCard: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(objectUrl);
     } catch {
-      // ignore — nothing to fall back to without a URL
+      // ignore - nothing to fall back to without a URL
     } finally {
       setStoryLoading(false);
     }
@@ -1087,14 +1087,14 @@ const UniversalLanguageCard: React.FC = () => {
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
-      {/* ── Single scrolling page — four color-blocked sections ──────────── */}
+      {/* ── Single scrolling page - four color-blocked sections ──────────── */}
       {/* pt-20 (80px) clears the fixed Navigation (≈72px when not scrolled, ≈40px when scrolled) so the image isn't overlapped. */}
       <div className="pt-20 pb-14">
 
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
 
-          {/* Image — full-bleed on mobile, contained on desktop */}
+          {/* Image - full-bleed on mobile, contained on desktop */}
           <div className="md:max-w-2xl md:mx-auto">
             <figure
               className="w-full aspect-square cursor-zoom-in"
@@ -1105,7 +1105,7 @@ const UniversalLanguageCard: React.FC = () => {
               <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
-            {/* Order + Share — two-up row directly below image */}
+            {/* Order + Share - two-up row directly below image */}
             <div className="border-t border-b border-wood-200/60">
               <div className="flex divide-x divide-wood-200/40">
                 {/* Acquire */}
@@ -1157,7 +1157,7 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Share sheet — expands below */}
+              {/* Share sheet - expands below */}
               {shareOpen && (
                 <div className="border-t border-wood-200/40 bg-paper-100 px-5 py-4">
                   <div className="grid grid-cols-2 gap-2">
@@ -1225,7 +1225,7 @@ const UniversalLanguageCard: React.FC = () => {
                       <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
                     </a>
 
-                    {/* Instagram Stories — opens native share sheet with image on mobile,
+                    {/* Instagram Stories - opens native share sheet with image on mobile,
                         falls back to download on desktop */}
                     <button
                       onClick={handleInstagramShare}
@@ -1246,7 +1246,7 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
-            {/* Title block — card container */}
+            {/* Title block - card container */}
             <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden">
               {/* Bronze accent top bar */}
               <div className="h-[3px] w-full bg-bronze-400" />
@@ -1276,7 +1276,7 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
 
-            {/* Reference strip — museum specimen plate.
+            {/* Reference strip - museum specimen plate.
                 Five systems as peers, each a facet of one energy.
                 No per-row containers; hairline dividers. Hover underline
                 communicates interactivity without arrows on every row.
@@ -1318,7 +1318,7 @@ const UniversalLanguageCard: React.FC = () => {
                     This energy, seen through
                   </p>
 
-                  {/* I Ching — whole row clicks scroll to the I Ching section.
+                  {/* I Ching - whole row clicks scroll to the I Ching section.
                       Paired hexagram link stops propagation to open that card. */}
                   <div
                     role="button"
@@ -1350,7 +1350,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Gene Keys — whole row scrolls to the Gene Keys section. */}
+                  {/* Gene Keys - whole row scrolls to the Gene Keys section. */}
                   <div
                     role="button"
                     tabIndex={0}
@@ -1392,7 +1392,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Tarot — arcana = ring. Sibling links open those cards. */}
+                  {/* Tarot - arcana = ring. Sibling links open those cards. */}
                   <div
                     role="button"
                     tabIndex={0}
@@ -1428,7 +1428,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Body — physiology + amino acid */}
+                  {/* Body - physiology + amino acid */}
                   <div
                     role="button"
                     tabIndex={0}
@@ -1454,7 +1454,7 @@ const UniversalLanguageCard: React.FC = () => {
 
 
 
-            {/* Island 3 — Creator voice (conditional) */}
+            {/* Island 3 - Creator voice (conditional) */}
             {expanded?.creator_voice?.personal_reading ? (
               <div className="card-grain rounded-2xl bg-stone-100 border border-wood-200/30 px-5 py-8 shadow-[inset_0_1px_3px_rgba(60,44,22,0.06)]">
                 <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-6">From the creator</p>
@@ -1479,7 +1479,7 @@ const UniversalLanguageCard: React.FC = () => {
               The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
             </p>
 
-            {/* Island 1 — Interactive hexagram + trigram selector */}
+            {/* Island 1 - Interactive hexagram + trigram selector */}
             <div ref={ichingRef} className={`rounded-2xl border border-stone-700/50 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
 
               {/* Row 1: Full hexagram */}
@@ -1521,7 +1521,7 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Reading zone — always visible, updates on tap */}
+              {/* Reading zone - always visible, updates on tap */}
               <div className="border-t border-stone-700/50 px-6 py-5">
                 <p className="font-label text-[11px] uppercase tracking-[0.22em] text-bronze-400 mb-3">
                   {ichingOpen === 'hex'
@@ -1540,10 +1540,10 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Island 2 — Oracle reading + classical text (below trigrams) */}
+            {/* Island 2 - Oracle reading + classical text (below trigrams) */}
             {synthesis && (
               <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                {/* The reading — collapsed by default, click label or preview to expand */}
+                {/* The reading - collapsed by default, click label or preview to expand */}
                 <Expand
                   id="iching-reading"
                   section="iching"
@@ -1563,7 +1563,7 @@ const UniversalLanguageCard: React.FC = () => {
                   ))}
                 </Expand>
 
-                {/* Classical Judgement + Image — reference, collapsed by default */}
+                {/* Classical Judgement + Image - reference, collapsed by default */}
                 {(synthesis.synthesis.iching.judgement_lines.length > 0 || synthesis.synthesis.iching.image_lines.length > 0) && (
                   <Expand
                     id="iching-classical"
@@ -1604,7 +1604,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            {/* Island 3 — Wisdom group (only when no synthesis) */}
+            {/* Island 3 - Wisdom group (only when no synthesis) */}
             {!synthesis && expanded && (
               <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
                 <Expand
@@ -1689,7 +1689,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            {/* Island 4 — Reflection (only when no synthesis) */}
+            {/* Island 4 - Reflection (only when no synthesis) */}
             {!synthesis && expanded && (
               <div className={`rounded-2xl border border-bronze-800/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(30, 22, 12, 0.75)' }}>
                 {/* Bronze accent bar */}
@@ -1708,7 +1708,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            {/* Paired hexagram lives in Connections section — not duplicated here */}
+            {/* Paired hexagram lives in Connections section - not duplicated here */}
           </div>
         </section>
 
@@ -1721,7 +1721,7 @@ const UniversalLanguageCard: React.FC = () => {
               A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
             </p>
 
-            {/* Island 1 — Header */}
+            {/* Island 1 - Header */}
             <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
               <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 mb-2">
                 Gene Key {card.number} · Gate {card.human_design.gate}
@@ -1736,7 +1736,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Islands 2–4 — three tone cards (Shadow / Gift / Siddhi).
+            {/* Islands 2–4 - three tone cards (Shadow / Gift / Siddhi).
                 Gift opens by default as the primary reading; Repressive, Reactive
                 and Programming Partner are tucked inside their parent tone. */}
             {synthesis ? (
@@ -1820,7 +1820,7 @@ const UniversalLanguageCard: React.FC = () => {
               />
             )}
 
-            {/* Synthesis HD reading — three separate cards (Gate / Channel / Circuit) */}
+            {/* Synthesis HD reading - three separate cards (Gate / Channel / Circuit) */}
             {synthesis && (
               <>
                 <ExpandCard
@@ -1850,7 +1850,7 @@ const UniversalLanguageCard: React.FC = () => {
               </>
             )}
 
-            {/* Tarot — codon ring connection */}
+            {/* Tarot - codon ring connection */}
             {card.ring_tarot && (
               <ExpandCard
                 id="hd-ring-tarot"
@@ -1952,7 +1952,7 @@ const UniversalLanguageCard: React.FC = () => {
               />
             )}
 
-            {/* Body — physiology and amino acid as separate expandable cards */}
+            {/* Body - physiology and amino acid as separate expandable cards */}
             {synthesis && (
               <>
                 <ExpandCard
@@ -1984,7 +1984,7 @@ const UniversalLanguageCard: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-paper-50/95 border-t border-wood-200 backdrop-blur-sm">
         <div className="flex items-stretch h-11">
 
-          {/* Prev — icon inside the link */}
+          {/* Prev - icon inside the link */}
           {prevCardNum !== null ? (() => {
             const c = CARD_BY_NUMBER.get(prevCardNum);
             return (
@@ -2014,7 +2014,7 @@ const UniversalLanguageCard: React.FC = () => {
             <span className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-400 mt-[3px]">All 64</span>
           </Link>
 
-          {/* Next — icon inside the link */}
+          {/* Next - icon inside the link */}
           {nextCardNum !== null ? (() => {
             const c = CARD_BY_NUMBER.get(nextCardNum);
             return (

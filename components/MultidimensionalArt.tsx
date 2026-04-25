@@ -47,7 +47,7 @@ const SubcategoryTile: React.FC<{
                 )}
             </div>
 
-            {/* Title — snug under the photo */}
+            {/* Title - snug under the photo */}
             <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
@@ -83,7 +83,7 @@ const MultidimensionalArt: React.FC = () => {
                 </p>
             </div>
 
-            {/* Subcategory tiles — 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
+            {/* Subcategory tiles - 2-col mobile, 3-col (6-grid) desktop with centered bottom row */}
             <div className="max-w-[1800px] mx-auto px-6 mb-16">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                     {MULTIDIMENSIONAL_CATEGORIES.map((cat, idx) => (
@@ -101,7 +101,7 @@ const MultidimensionalArt: React.FC = () => {
                 </div>
             </div>
 
-            {/* View all — navigates to Creations page filtered to Multidimensional Art */}
+            {/* View all - navigates to Creations page filtered to Multidimensional Art */}
             <div className="max-w-[1800px] mx-auto px-6 mb-8 text-center">
                 <Link
                     to="/creations?category=Multidimensional+Art"

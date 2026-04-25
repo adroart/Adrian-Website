@@ -94,7 +94,7 @@ const Checkmark: React.FC = () => (
     </svg>
 );
 
-// Recently viewed — localStorage ring buffer, max 8 IDs
+// Recently viewed - localStorage ring buffer, max 8 IDs
 function useRecentlyViewed(currentId: string): string[] {
     const KEY = 'recently_viewed_pieces';
 
@@ -117,7 +117,7 @@ function useRecentlyViewed(currentId: string): string[] {
     }, [currentId]);
 }
 
-// More from this series — compact tile grid
+// More from this series - compact tile grid
 const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({ art, seriesLink }) => {
     if (!art.series) return null;
     const seriesPieces = FULL_ARCHIVE.filter(a => a.id !== art.id && a.series === art.series).slice(0, 3);
@@ -533,7 +533,7 @@ const PiecePage: React.FC = () => {
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
             />
 
-            {/* Breadcrumb — Mobile: simplified (← Category), Desktop: full path */}
+            {/* Breadcrumb - Mobile: simplified (← Category), Desktop: full path */}
             {/* Mobile breadcrumb */}
             <div className="md:hidden max-w-7xl mx-auto px-6 py-5 border-b border-wood-100">
                 <button
@@ -555,7 +555,7 @@ const PiecePage: React.FC = () => {
                 </button>
             </div>
 
-            {/* Desktop breadcrumb — full path */}
+            {/* Desktop breadcrumb - full path */}
             <div className="hidden md:flex max-w-7xl mx-auto px-12 py-6">
                 <Breadcrumb crumbs={breadcrumbCrumbs} />
             </div>
@@ -860,7 +860,7 @@ const PiecePage: React.FC = () => {
                                             />
                                         </label>
 
-                                        {/* Illumination — only shown when selected size supports it */}
+                                        {/* Illumination - only shown when selected size supports it */}
                                         {illuminationTier !== 'none' && (
                                             <label className="flex items-start gap-3 cursor-pointer group">
                                                 <div className={`w-6 h-6 border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
@@ -1166,7 +1166,7 @@ const PiecePage: React.FC = () => {
                 </div>
             )}
 
-            {/* More from this series — compact tile grid, series pieces only */}
+            {/* More from this series - compact tile grid, series pieces only */}
             <MoreFromSeries art={art} seriesLink={seriesLink} />
 
             {/* Recently Viewed */}

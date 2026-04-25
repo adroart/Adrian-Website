@@ -82,7 +82,7 @@ const CardThumbnail: React.FC<{
   const navigate = useNavigate();
   const goRead = () => navigate(`/oracle/universal-language/${card.number}`, { state: { ritual: true } });
 
-  // Artwork mode renders the front face flat — no 3D layer per tile.
+  // Artwork mode renders the front face flat - no 3D layer per tile.
   if (artworkMode) {
     return (
       <div className="relative w-full aspect-square bg-[#e0d8cc] select-none">
@@ -105,7 +105,7 @@ const CardThumbnail: React.FC<{
   }
 
   // Both faces share the same shape: square image area + 44px action strip beneath.
-  // Strip sits OUTSIDE the image — nothing ever covers the art.
+  // Strip sits OUTSIDE the image - nothing ever covers the art.
   return (
     <div className={`[perspective:600px] relative select-none ${isFlipped ? 'z-10' : ''}`}>
       <div
@@ -113,7 +113,7 @@ const CardThumbnail: React.FC<{
           isFlipped ? '[transform:rotateY(180deg)]' : ''
         }`}
       >
-        {/* BACK face — hexagram only, no card background. Page background shows through. */}
+        {/* BACK face - hexagram only, no card background. Page background shows through. */}
         <button
           type="button"
           onClick={onFlip}
@@ -131,9 +131,9 @@ const CardThumbnail: React.FC<{
           </span>
         </button>
 
-        {/* FRONT face — art square (uncovered) + action strip beneath */}
+        {/* FRONT face - art square (uncovered) + action strip beneath */}
         <div className="relative w-full [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col">
-          {/* Art — clean, nothing overlaid */}
+          {/* Art - clean, nothing overlaid */}
           <button
             type="button"
             onClick={goRead}
@@ -149,7 +149,7 @@ const CardThumbnail: React.FC<{
             />
           </button>
 
-          {/* Action strip — BELOW the image, never overlaps */}
+          {/* Action strip - BELOW the image, never overlaps */}
           <div className="h-11 flex items-stretch bg-paper-100">
             <button
               type="button"
@@ -414,7 +414,7 @@ const UniversalLanguageIndex: React.FC = () => {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="px-6 pt-32 pb-10 max-w-7xl mx-auto">
 
-        {/* Breadcrumb — Oracle middle node removed */}
+        {/* Breadcrumb - Oracle middle node removed */}
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.2em] text-wood-700 mb-8 sm:mb-12">
           <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
           <span aria-hidden className="text-wood-400">/</span>

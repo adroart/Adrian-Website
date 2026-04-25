@@ -64,7 +64,7 @@ stories.sort((a, b) => a._order - b._order)
 // Strip the internal _order field before writing
 const output = stories.map(({ _order: _o, ...s }) => s)
 
-const fileContent = `// AUTO-GENERATED — do not edit. Source: content/stories/*.md
+const fileContent = `// AUTO-GENERATED - do not edit. Source: content/stories/*.md
 // Regenerate: npm run generate:stories
 import type { Story } from '../types'
 

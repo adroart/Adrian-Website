@@ -7,11 +7,11 @@ import { CARD_BY_NUMBER } from '../data/oracleData';
  * Returns null if the number cannot be determined.
  */
 export function ulCardNumber(coverImage: string): number | null {
-  // Pattern 1: "32_x9qxas" — number is before the first underscore
+  // Pattern 1: "32_x9qxas" - number is before the first underscore
   const shortMatch = coverImage.match(/^(\d+)_/);
   if (shortMatch) return parseInt(shortMatch[1], 10);
 
-  // Pattern 2: ends with "-32" — number is after the last hyphen
+  // Pattern 2: ends with "-32" - number is after the last hyphen
   const longMatch = coverImage.match(/-(\d+)$/);
   if (longMatch) return parseInt(longMatch[1], 10);
 

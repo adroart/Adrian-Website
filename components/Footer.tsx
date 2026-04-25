@@ -155,7 +155,7 @@ const Footer: React.FC = () => {
                 {/* #1 Asymmetric hero layout + #3 Newsletter stacks first on mobile */}
                 <div className="flex flex-col md:flex-row md:items-start gap-12 mb-16">
 
-                    {/* Brand — 60% on desktop */}
+                    {/* Brand - 60% on desktop */}
                     <div className="md:w-[60%]">
                         <h2 className="font-display text-3xl md:text-4xl text-wood-100 mb-4 tracking-normal font-normal">Adrian Rasmussen</h2>
                         <p className="font-sans text-wood-300 text-sm leading-[1.7] max-w-lg">
@@ -171,7 +171,7 @@ const Footer: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Newsletter — 40% on desktop, appears first on mobile */}
+                    {/* Newsletter - 40% on desktop, appears first on mobile */}
                     <div className="w-full md:w-[40%] order-first md:order-last">
                         <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-200 block mb-1 font-semibold">
                             Join the Inner Circle
@@ -186,7 +186,7 @@ const Footer: React.FC = () => {
                 {/* Gradient divider */}
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-wood-500 to-transparent mb-10"></div>
 
-                {/* Nav links — single row */}
+                {/* Nav links - single row */}
                 <nav className="flex flex-wrap gap-x-7 gap-y-3 mb-10">
                     <Link to="/creations" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Creations</Link>
                     <Link to="/writings" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Writings</Link>

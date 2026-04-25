@@ -320,7 +320,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         // Respect prefers-reduced-motion: skip animation entirely
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // isRunning guard — prevents double-starting the rAF loop
+        // isRunning guard - prevents double-starting the rAF loop
         const isRunning = { current: false };
 
         const animate = () => {
@@ -458,7 +458,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
             cancelAnimationFrame(frameRef.current);
         };
 
-        // Page Visibility API — fully cancel rAF when tab is hidden
+        // Page Visibility API - fully cancel rAF when tab is hidden
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 stopLoop();
@@ -468,7 +468,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // IntersectionObserver — pause when canvas scrolls off screen
+        // IntersectionObserver - pause when canvas scrolls off screen
         // (guards against future layout changes where canvas is not fixed)
         const observer = new IntersectionObserver(
             (entries) => {

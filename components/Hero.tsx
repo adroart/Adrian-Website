@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { img } from '../utils/cloudinary';
 
-// Detect touch/low-end devices — disable parallax to save battery and avoid jank
+// Detect touch/low-end devices - disable parallax to save battery and avoid jank
 const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
 const Hero: React.FC = () => {
@@ -16,7 +16,7 @@ const Hero: React.FC = () => {
         videoRef.current.playbackRate = 0.8;
     }
 
-    // Skip parallax on touch devices — barely visible on small screens, wastes battery
+    // Skip parallax on touch devices - barely visible on small screens, wastes battery
     if (isTouchDevice) return;
 
     const handleScroll = () => {
@@ -106,7 +106,7 @@ const Hero: React.FC = () => {
           </div>
       </div>
 
-      {/* #9 "Enter" indicator — enlarged touch target + gentle bounce */}
+      {/* #9 "Enter" indicator - enlarged touch target + gentle bounce */}
       <button
         onClick={scrollToContent}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 transition-opacity duration-500 cursor-pointer group/enter p-4 min-w-[48px] min-h-[48px]"

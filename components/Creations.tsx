@@ -39,7 +39,7 @@ function sortArchive(data: Artwork[], sort: SortOption): Artwork[] {
     if (sort === 'price-asc') return [...data].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     if (sort === 'price-desc') return [...data].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     if (sort === 'newest') return [...data].sort((a, b) => Number(b.year) - Number(a.year));
-    return data; // 'default' — keep original order
+    return data; // 'default' - keep original order
 }
 
 const SORT_LABELS: Record<SortOption, string> = {
@@ -90,7 +90,7 @@ const CreationCategoryCard: React.FC<{
                 )}
             </div>
 
-            {/* Title — snug under the photo */}
+            {/* Title - snug under the photo */}
             <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
                 <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
@@ -129,7 +129,7 @@ const CreationCategoryCard: React.FC<{
 };
 
 /**
- * A collection card — uses <button> for proper semantics and keyboard access.
+ * A collection card - uses <button> for proper semantics and keyboard access.
  */
 const CollectionCard: React.FC<{
     collection: Collection;
@@ -436,7 +436,7 @@ const Creations: React.FC = () => {
 
                     {/* Right: controls */}
                     <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Sort — only shown in filtered views */}
+                        {/* Sort - only shown in filtered views */}
                         {filter && (
                             <SortDropdown value={sort} onChange={setSort} />
                         )}

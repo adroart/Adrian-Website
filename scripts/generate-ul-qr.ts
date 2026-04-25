@@ -2,12 +2,12 @@
  * Universal Language QR Plaque Generator
  *
  * Design principles:
- *  - Generous white space above and below the hexagram — it should breathe
+ *  - Generous white space above and below the hexagram - it should breathe
  *  - Clear typographic hierarchy: hexagram name (label) → card name (hero) → keywords (whisper)
- *  - Hexagram lines are precise and narrow — a sigil, not a banner
+ *  - Hexagram lines are precise and narrow - a sigil, not a banner
  *  - QR is large enough to scan reliably from any phone distance
  *  - Card number sits quietly at the bottom like a print edition mark
- *  - No decorative noise — the content is the design
+ *  - No decorative noise - the content is the design
  *
  * Usage:
  *   npm run generate:qr
@@ -24,12 +24,12 @@ import { CARD_BY_NUMBER } from '../data/oracleData';
 import { hexagramLines } from './trigram-lines';
 import { slugify } from './slugify';
 
-// ── URL config — edit here when canonical paths change ────────────────────────
+// ── URL config - edit here when canonical paths change ────────────────────────
 
 const BASE_URL = 'https://adrianrasmussen.com';
 
 const URLS = {
-  // Short redirect — hosted on your domain, never depends on a third party.
+  // Short redirect - hosted on your domain, never depends on a third party.
   // /qr/:number → /oracle/universal-language/:number?ref=qr (via functions/qr/[number].js)
   // Update that one file if the destination ever changes; no reprinting needed.
   oracleCard:        (n: number) => `${BASE_URL}/qr/${n}`,
@@ -37,14 +37,14 @@ const URLS = {
 };
 
 // ── Plaque dimensions ─────────────────────────────────────────────────────────
-// 85×130 mm — portrait card, generous proportions, wider than typical label
+// 85×130 mm - portrait card, generous proportions, wider than typical label
 
 const W  = 85;   // mm
 const H  = 130;  // mm
 const CX = W / 2;
 
 // ── Hexagram geometry ─────────────────────────────────────────────────────────
-// Lines are narrow and centred — approximately 30% of plaque width.
+// Lines are narrow and centred - approximately 30% of plaque width.
 // No gap between upper and lower trigrams; all 6 lines read as one unified symbol.
 
 const HEX_LINE_W = 26;   // width of each bar
@@ -174,12 +174,12 @@ async function buildPlaque(opts: PlaqueOpts): Promise<string> {
   const keywordsY  = cardNameY + cnHeight + 4;           // Shadow · Gift · Siddhi
   const keywordsH  = 3 * 0.75;                          // approx 2.25mm
 
-  // QR code — centred, large enough for reliable scanning
+  // QR code - centred, large enough for reliable scanning
   const qrSize     = 36;
   const qrX        = CX - qrSize / 2;
   const qrY        = keywordsY + keywordsH + 10;         // generous breath before QR
 
-  // Card number — quiet, bottom, like an edition mark
+  // Card number - quiet, bottom, like an edition mark
   const numberY    = qrY + qrSize + 6;
 
   // ── QR generation ─────────────────────────────────────────────────────────
@@ -237,14 +237,14 @@ function buildIndex(cards: Array<{ number: number; filename: string; cardName: s
       <a href="oracle/${filename}" target="_blank">
         <img src="oracle/${filename}" alt="Card ${number}">
       </a>
-      <div class="label">${number} — ${cardName}</div>
+      <div class="label">${number} - ${cardName}</div>
     </div>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Universal Language — Oracle Plaques</title>
+  <title>Universal Language - Oracle Plaques</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #111009; font-family: sans-serif; padding: 32px; }
@@ -297,7 +297,7 @@ async function buildCardQR(qrUrl: string): Promise<string> {
 // ── Multi-layer QR builder ────────────────────────────────────────────────────
 // Single SVG file with 64 Inkscape-compatible layers.
 // Each layer is named "01 · Earth's Breath", "02 · …", etc.
-// Layers are stacked — toggle visibility per card in Illustrator / Inkscape / Figma.
+// Layers are stacked - toggle visibility per card in Illustrator / Inkscape / Figma.
 
 async function buildMultiLayerQR(): Promise<string> {
   const layers: string[] = [];
@@ -350,7 +350,7 @@ async function main() {
 
   for (let n = 1; n <= 64; n++) {
     const card = CARD_BY_NUMBER.get(n);
-    if (!card) { console.warn(`  SKIP — no oracle card for #${n}`); continue; }
+    if (!card) { console.warn(`  SKIP - no oracle card for #${n}`); continue; }
 
     const lines    = hexagramLines(card.iching.upper_trigram.symbol, card.iching.lower_trigram.symbol);
     const keywords = `${card.gene_keys.shadow}  ·  ${card.gene_keys.gift}  ·  ${card.gene_keys.siddhi}`;
@@ -373,7 +373,7 @@ async function main() {
     if (n % 16 === 0) process.stdout.write(`  ${n}/64\n`);
   }
 
-  // Marketing plaque — oracle deck landing
+  // Marketing plaque - oracle deck landing
   const card1   = CARD_BY_NUMBER.get(1)!;
   const allYang = hexagramLines(card1.iching.upper_trigram.symbol, card1.iching.lower_trigram.symbol);
   const mktSvg  = await buildPlaque({
@@ -388,7 +388,7 @@ async function main() {
 
   writeFileSync(join(outRoot, 'index.html'), buildIndex(indexEntries), 'utf8');
 
-  // Card QR layer files — 2050×2050 transparent SVG, QR centred at 235×235
+  // Card QR layer files - 2050×2050 transparent SVG, QR centred at 235×235
   let cardCount = 0;
   for (let n = 1; n <= 64; n++) {
     const card = CARD_BY_NUMBER.get(n);
@@ -401,7 +401,7 @@ async function main() {
     cardCount++;
   }
 
-  // Multi-layer file — all 64 QRs in one SVG, one named layer per card
+  // Multi-layer file - all 64 QRs in one SVG, one named layer per card
   const multiSvg = await buildMultiLayerQR();
   writeFileSync(join(cardsDir, 'all-64-layers.svg'), multiSvg, 'utf8');
 

@@ -174,7 +174,7 @@ const SubcategoryPage: React.FC = () => {
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
 
-            {/* Hero — with gradient fade into content */}
+            {/* Hero - with gradient fade into content */}
             {config.image && (
                 <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden relative">
                     <img src={img(config.image, { w: 1600, h: 900 })} alt={subcategory === 'universal-language' ? 'Universal Language, a series of 64 mandala artworks by Adrian Rasmussen, original airbrushed painting on laser-cut wood.' : config.title} className="w-full h-full object-cover" />
@@ -182,7 +182,7 @@ const SubcategoryPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Header — more breathing room */}
+            {/* Header - more breathing room */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10 pt-12 pb-14">
                 <Breadcrumb
                     crumbs={[
@@ -215,7 +215,7 @@ const SubcategoryPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Filter bar — pill-style with visual grouping */}
+            {/* Filter bar - pill-style with visual grouping */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10 sticky top-[var(--nav-height)] z-30 bg-paper-50 backdrop-blur-md py-4 border-y border-wood-200/60 mb-14">
                 <div className="flex justify-between items-center gap-6">
                     <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide min-w-0">
@@ -311,7 +311,7 @@ const SubcategoryPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Grid — wider gaps, staggered entrance */}
+            {/* Grid - wider gaps, staggered entrance */}
             <div className="max-w-[1800px] mx-auto px-6 md:px-10">
                 {filteredPieces.length > 0 ? (
                     <div className="columns-2 md:columns-4 gap-3 sm:gap-5 md:gap-3 lg:gap-5 xl:gap-8 card-stagger">

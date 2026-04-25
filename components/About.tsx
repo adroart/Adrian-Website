@@ -73,10 +73,10 @@ const About: React.FC = () => {
         .timeline-node:last-child { padding-bottom: 0; }
       `}</style>
 
-      {/* #14 — Reading progress bar */}
+      {/* #14 - Reading progress bar */}
       <ProgressBar />
 
-      {/* #1 — Sticky side navigation */}
+      {/* #1 - Sticky side navigation */}
       <SideNav sections={SECTIONS} />
 
       <section className="bg-paper-50 min-h-screen">
@@ -94,10 +94,10 @@ const About: React.FC = () => {
               </h1>
             </Reveal>
 
-            {/* #4 — Three-column layout for hero paragraphs */}
+            {/* #4 - Three-column layout for hero paragraphs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
               <Reveal delay={160} dir="up">
-                {/* #2 — paragraph width varies per column */}
+                {/* #2 - paragraph width varies per column */}
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
                   I create art and spaces of presence and connection. Multidimensional wooden sculptures
                   with original paintings, light, and crystals. Jewelry. Oracle cards. Tea houses. Stages.
@@ -122,12 +122,12 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #12 — Typographic glyph divider (desktop only) */}
+        {/* #12 - Typographic glyph divider (desktop only) */}
         <div className="hidden md:block">
           <GlyphDivider glyph="&" />
         </div>
 
-        {/* Portrait photo interstitial (mobile only) — full-bleed cinematic break */}
+        {/* Portrait photo interstitial (mobile only) - full-bleed cinematic break */}
         <div className="md:hidden relative overflow-hidden" style={{ height: 'clamp(360px, 70vh, 560px)' }}>
           <img
             src={img('path_x92l78', { w: 800, h: 1200 })}
@@ -137,13 +137,13 @@ const About: React.FC = () => {
         </div>
 
         {/* ══ THE ROOT ══════════════════════════════════════════════════════ */}
-        {/* #13 — wider max-w container for this section */}
+        {/* #13 - wider max-w container for this section */}
         <div id="about-root" className="px-6 py-20">
-          {/* #15 — Asymmetric 60/40 grid (text-heavy side wider) */}
+          {/* #15 - Asymmetric 60/40 grid (text-heavy side wider) */}
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[3fr_2fr] gap-12 md:gap-20 items-start">
 
             <Reveal dir="left">
-              {/* #7 — margin annotation wrapper */}
+              {/* #7 - margin annotation wrapper */}
               <div className="with-margin-note">
                 <Tag>The Root</Tag>
                 {/* #3 drop cap, #17 opacity gradient, #2 varied widths, #6 spacing */}
@@ -171,7 +171,7 @@ const About: React.FC = () => {
               </div>
             </Reveal>
 
-            {/* #9 — parallax image (desktop only — mobile version shown above root) */}
+            {/* #9 - parallax image (desktop only - mobile version shown above root) */}
             <Reveal dir="right" delay={140}>
               <div className="hidden md:block aspect-[3/4] relative overflow-hidden bg-wood-200 md:sticky md:top-24">
                 <ParallaxImg src={img('path_x92l78', { w: 800, h: 1200 })} alt="Adrian Rasmussen portrait" />
@@ -180,10 +180,10 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #12 — Divider before video (prevents photo-on-photo stacking on mobile) */}
+        {/* #12 - Divider before video (prevents photo-on-photo stacking on mobile) */}
         <GlyphDivider glyph="·" />
 
-        {/* #18 — Full-bleed video interstitial (Star Dance) */}
+        {/* #18 - Full-bleed video interstitial (Star Dance) */}
         <div
           className="relative overflow-hidden"
           style={{
@@ -204,15 +204,15 @@ const About: React.FC = () => {
           </video>
         </div>
 
-        {/* ══ THE PATH — timeline layout ════════════════════════════════════ */}
-        {/* #13 — narrow container for contrast with surrounding sections */}
+        {/* ══ THE PATH - timeline layout ════════════════════════════════════ */}
+        {/* #13 - narrow container for contrast with surrounding sections */}
         <div id="about-path" className="px-6 py-28">
           <div className="max-w-3xl mx-auto">
             <Reveal>
               <Tag>The Path</Tag>
             </Reveal>
 
-            {/* #11 — vertical timeline */}
+            {/* #11 - vertical timeline */}
             <div className="timeline-track">
               <Reveal dir="left" delay={60}>
                 <div className="timeline-node">
@@ -269,18 +269,18 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #12 — Section glyph divider */}
+        {/* #12 - Section glyph divider */}
         <GlyphDivider glyph="§" />
 
         {/* ══ CONNECTION ════════════════════════════════════════════════════ */}
-        {/* #10 — Connection is now its own full section, separated from The Team */}
-        {/* #13 — full-bleed dark background, wider container */}
+        {/* #10 - Connection is now its own full section, separated from The Team */}
+        {/* #13 - full-bleed dark background, wider container */}
         <div id="about-connection" className="px-6 py-28 bg-wood-800 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal dir="up">
               <Tag light>Connection</Tag>
             </Reveal>
-            {/* #15 — Asymmetric 2/1 grid */}
+            {/* #15 - Asymmetric 2/1 grid */}
             <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-12 md:gap-20 items-start">
               <Reveal dir="left" delay={80}>
                 <div className="space-y-8 font-serif text-xl text-paper-100 leading-[1.7] font-light">
@@ -321,7 +321,7 @@ const About: React.FC = () => {
         </div>
 
         {/* ══ THE TEAM ══════════════════════════════════════════════════════ */}
-        {/* #10 — Team is its own separate, darker band — centered and intimate */}
+        {/* #10 - Team is its own separate, darker band - centered and intimate */}
         <div id="about-team" className="px-6 py-24 bg-wood-900 dark-preserve">
           <div className="max-w-xl mx-auto text-center">
             <Reveal dir="scale">
@@ -339,7 +339,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #18 — Second photo interstitial (Earth Dance) */}
+        {/* #18 - Second photo interstitial (Earth Dance) */}
         <div
           className="relative overflow-hidden"
           style={{
@@ -357,7 +357,7 @@ const About: React.FC = () => {
         </div>
 
         {/* ══ CREATION AS PRACTICE ══════════════════════════════════════════ */}
-        {/* #15 — Reversed asymmetric grid: image left (narrower), text right (wider) */}
+        {/* #15 - Reversed asymmetric grid: image left (narrower), text right (wider) */}
         <div id="about-practice" className="px-6 py-28">
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 md:gap-20 items-center">
             <Reveal dir="left" delay={120}>
@@ -371,7 +371,7 @@ const About: React.FC = () => {
                 <p className="drop-cap pg-1">
                   Creating is how I grow. My inner journey. A celebration of creation itself.
                 </p>
-                {/* #2 — narrower max-w on second paragraph for visual variation */}
+                {/* #2 - narrower max-w on second paragraph for visual variation */}
                 <p className="pg-2 max-w-lg">
                   Through the process of creation I find deeper alignment with what is true to me.
                   The more I create, the more authentic I become. And by expressing what is true for me,
@@ -386,7 +386,7 @@ const About: React.FC = () => {
           </div>
         </div>
 
-        {/* #7 — Pull quote as margin-style narrow annotation, not full-width bar */}
+        {/* #7 - Pull quote as margin-style narrow annotation, not full-width bar */}
         <Reveal dir="scale">
           <div className="px-6 py-14">
             <div className="max-w-md mx-auto border-l-2 border-r-2 border-bronze-400/25 px-8 text-center">
@@ -400,18 +400,18 @@ const About: React.FC = () => {
 
         {LAUNCH_FLAGS.aboutMeaning && (
         <>
-        {/* #12 — Typographic glyph divider */}
+        {/* #12 - Typographic glyph divider */}
         <GlyphDivider glyph="*" />
 
         {/* ══ WHAT ART CAN MEAN ═════════════════════════════════════════════ */}
-        {/* #13 — full-bleed very dark section */}
+        {/* #13 - full-bleed very dark section */}
         <div id="about-meaning" className="px-6 py-28 bg-wood-900 dark-preserve">
           <div className="max-w-5xl mx-auto">
             <Reveal>
               <Tag light>What Art Can Mean</Tag>
             </Reveal>
             <Reveal delay={80} dir="left">
-              {/* #88 — removed TODO_REPLACE badge. Story content kept, styling cleaned. */}
+              {/* #88 - removed TODO_REPLACE badge. Story content kept, styling cleaned. */}
               <div>
                   <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-[1.5] font-light max-w-3xl mb-10 border-l-2 border-bronze-400/60 pl-6">
                     <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat

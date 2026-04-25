@@ -88,7 +88,7 @@ test('2. /creations page shows at least 6 category tiles', async ({ page }) => {
   await page.goto('/creations', { waitUntil: 'networkidle' });
 
   // Category tiles are rendered as clickable grid items; look for visible tiles
-  // The grid renders CREATION_CATEGORIES — 8 total, some hidden. At least 6 expected.
+  // The grid renders CREATION_CATEGORIES - 8 total, some hidden. At least 6 expected.
   const tiles = page.locator('a[href], button').filter({ hasText: /Art|Works|Jewelry|Oracle|Objects|Spaces|Furniture|Installations/i });
   const count = await tiles.count();
   expect(count, 'Expected at least 6 category tiles on /creations').toBeGreaterThanOrEqual(6);
@@ -148,10 +148,10 @@ test('4. /shop cart flow - Configure or Add to Cart opens expected UI', async ({
   } else if (hasAddToCartBtn) {
     await addToCartBtn.click();
     await page.waitForTimeout(600);
-    // CartDrawer should open — look for it
+    // CartDrawer should open - look for it
     const drawer = page.locator('[data-testid="cart-drawer"], aside, [role="dialog"]').first();
     const drawerVisible = await drawer.isVisible().catch(() => false);
-    // Pass even if drawer detection is uncertain — main check is no errors
+    // Pass even if drawer detection is uncertain - main check is no errors
     void drawerVisible;
   }
 
@@ -198,7 +198,7 @@ test('6. /inquire form validation shows errors on empty submit', async ({ page }
   const errorEls = page.locator('[role="alert"], .text-red-700, .border-red-500, .border-wood-500');
   const errorCount = await errorEls.count();
 
-  // The form uses required fields — either browser validation fires or JS shows errors.
+  // The form uses required fields - either browser validation fires or JS shows errors.
   // At minimum, no error boundary should appear.
   await assertNoErrorBoundary(page);
   await screenshot(page, '06-inquire-validation');

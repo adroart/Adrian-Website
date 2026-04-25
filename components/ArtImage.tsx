@@ -3,30 +3,30 @@ import React, { useState } from 'react';
 import { img, srcset } from '../utils/cloudinary';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DESIGN TOKENS — the single source of truth for all art image styling.
+// DESIGN TOKENS - the single source of truth for all art image styling.
 // Change a value here and every gallery/card image on the site updates.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** How much images scale on card hover */
 const HOVER_SCALE = 'group-hover:scale-[1.03]';
 
-/** Shared transition — governs both hover zoom and load fade */
+/** Shared transition - governs both hover zoom and load fade */
 const TRANSITION  = 'transition-all duration-700 ease-out';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// VARIANTS — how the image sizes within its container
+// VARIANTS - how the image sizes within its container
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export type ArtVariant = 'gallery' | 'tile' | 'product' | 'cover';
 
 const VARIANT_CLASSES: Record<ArtVariant, string> = {
-    /** Natural aspect ratio — masonry / waterfall grids (GalleryTileCard) */
+    /** Natural aspect ratio - masonry / waterfall grids (GalleryTileCard) */
     gallery: 'w-full h-auto block',
-    /** Forced square — category tiles, subcategory tiles */
+    /** Forced square - category tiles, subcategory tiles */
     tile:    'w-full aspect-square object-cover',
-    /** Fills a fixed-height or aspect-ratio parent — product cards, story cards */
+    /** Fills a fixed-height or aspect-ratio parent - product cards, story cards */
     product: 'w-full h-full object-cover',
-    /** Absolutely fills parent — CollectionCard overlays, hero backgrounds */
+    /** Absolutely fills parent - CollectionCard overlays, hero backgrounds */
     cover:   'absolute inset-0 w-full h-full object-cover',
 };
 
@@ -39,7 +39,7 @@ const FADE_ON_LOAD: Set<ArtVariant> = new Set(['tile', 'product', 'cover']);
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export interface ArtImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'className'> {
-    /** Visual context — controls sizing classes. Default: 'gallery' */
+    /** Visual context - controls sizing classes. Default: 'gallery' */
     variant?: ArtVariant;
     /** Renders grayscale on large screens; color reveals on hover.
      *  Used for inactive collection filter cards. */
@@ -51,12 +51,12 @@ export interface ArtImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageEle
 }
 
 /**
- * ArtImage — unified image component for all gallery and card contexts.
+ * ArtImage - unified image component for all gallery and card contexts.
  *
  * Use this instead of a raw <img> in any artwork/product card.
  * Changing the DESIGN TOKENS at the top of this file updates the entire site.
  */
-/** Responsive widths per variant — smaller variants get fewer/smaller breakpoints */
+/** Responsive widths per variant - smaller variants get fewer/smaller breakpoints */
 const VARIANT_WIDTHS: Record<ArtVariant, number[]> = {
     gallery: [400, 800, 1200],
     tile:    [300, 600],

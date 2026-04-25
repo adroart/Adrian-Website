@@ -61,7 +61,7 @@ async function startCheckout(
         if (!data.url || !isValidStripeUrl(data.url)) {
             throw new Error('Received an invalid checkout URL. Please try again or contact the studio.');
         }
-        // Fire conversion event — Cloudflare Analytics compatible
+        // Fire conversion event - Cloudflare Analytics compatible
         try {
             if (typeof window !== 'undefined' && (window as Window & { zaraz?: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz) {
                 (window as Window & { zaraz: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz.track('purchase_initiated', {
@@ -85,7 +85,7 @@ async function startCheckout(
         return;
     }
 
-    // No valid Stripe IDs or payment links — surface a clear error
+    // No valid Stripe IDs or payment links - surface a clear error
     throw new Error('Checkout is not yet configured for these pieces. Please contact the studio.');
 }
 
@@ -160,7 +160,7 @@ const CartDrawer: React.FC = () => {
         setSwipeOffset(0);
     }, [swipeOffset, closeCart]);
 
-    // Duplicate Escape handler removed — already handled in useEffect above
+    // Duplicate Escape handler removed - already handled in useEffect above
 
     const handleCheckout = async () => {
         setLoading(true);

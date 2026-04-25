@@ -125,7 +125,7 @@ const Home: React.FC = () => {
 
                     {/* Hero + supporting layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                        {/* Featured story — large card */}
+                        {/* Featured story - large card */}
                         {STORIES.filter(s => s.isFeatured).slice(0, 1).map(story => (
                             <Link
                                 key={story.id}
@@ -157,7 +157,7 @@ const Home: React.FC = () => {
                             </Link>
                         ))}
 
-                        {/* Supporting stories — stacked column */}
+                        {/* Supporting stories - stacked column */}
                         <div className="flex flex-col gap-6 lg:gap-8">
                             {STORIES.filter(s => !s.isFeatured).slice(0, 3).map(story => (
                                 <Link

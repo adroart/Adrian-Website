@@ -152,7 +152,7 @@ const OracleGateway: React.FC = () => {
                 }}
               >
                 <g aria-hidden="true">
-                  {/* Enlarged hit area — 72×72 for comfortable touch target */}
+                  {/* Enlarged hit area - 72×72 for comfortable touch target */}
                   <rect className="og-hex-hit"
                     x={-25} y={-23} width={HEX_W + 50} height={HEX_H + 46}
                     fill="transparent" rx="2" />

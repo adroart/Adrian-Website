@@ -33,10 +33,10 @@ async function main() {
 
   for (const file of files) {
     const num = parseInt(basename(file).replace(/\.[^.]+$/, ''), 10);
-    if (isNaN(num)) { console.warn(`  SKIP — can't parse number from "${file}"`); continue; }
+    if (isNaN(num)) { console.warn(`  SKIP - can't parse number from "${file}"`); continue; }
 
     const card = CARD_BY_NUMBER.get(num);
-    if (!card) { console.warn(`  SKIP — no card data for #${num} ("${file}")`); continue; }
+    if (!card) { console.warn(`  SKIP - no card data for #${num} ("${file}")`); continue; }
 
     const nn       = String(num).padStart(2, '0');
     const outName  = `${nn}-${slugify(card.card_name)}.jpg`;

@@ -290,7 +290,7 @@ const ProductCard: React.FC<{
                 />
 
 
-                {/* Hover detail reveal — material + excerpt + View */}
+                {/* Hover detail reveal - material + excerpt + View */}
                 {isAvailable && (
                     <div className="absolute inset-0 bg-wood-900/0 group-hover:bg-wood-900/70 transition-all duration-500 flex flex-col justify-end p-4 pointer-events-none">
                         <div className="translate-y-3 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 space-y-1.5">
@@ -312,7 +312,7 @@ const ProductCard: React.FC<{
                 )}
             </div>
 
-            {/* Label band — matching GalleryTileCard style */}
+            {/* Label band - matching GalleryTileCard style */}
             <div className="px-1 pt-3 pb-1">
                 <span className="font-label text-[11px] uppercase tracking-[0.1em] text-wood-700 font-semibold">
                     {product.category}
@@ -395,13 +395,13 @@ const InspectionDrawer: React.FC<{
         return () => document.removeEventListener('keydown', handleEscape);
     }, [product, onClose]);
 
-    // Related story slug — look up from FULL_ARCHIVE
+    // Related story slug - look up from FULL_ARCHIVE
     const relatedStorySlug = useMemo(() => {
         if (!product) return null;
         return FULL_ARCHIVE.find(a => a.id === product.id)?.relatedStorySlug ?? null;
     }, [product]);
 
-    // You Might Also Like — same category, different product, available
+    // You Might Also Like - same category, different product, available
     const related = useMemo(() => {
         if (!product) return [];
         return allProducts
@@ -555,7 +555,7 @@ const InspectionDrawer: React.FC<{
                         </div>
                     )}
 
-                    {/* Made to Order — reframed as invitation */}
+                    {/* Made to Order - reframed as invitation */}
                     {product.available && !product.isReadyToShip && !product.hasVariants && (
                         <div className="flex items-center gap-4 p-4 bg-bronze-50 border border-bronze-200 mt-4">
                             <Package size={20} className="text-bronze-600 shrink-0" />
@@ -683,7 +683,7 @@ const ControlDeck: React.FC<{
         <div className="sticky top-[var(--nav-height)] z-40 bg-paper-50 backdrop-blur-md border-b border-wood-100 shadow-sm">
             <div className="max-w-[1800px] mx-auto px-6 h-14 flex items-center gap-5">
 
-                {/* Filter toggle — minimal text style */}
+                {/* Filter toggle - minimal text style */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`flex items-center gap-1.5 font-label text-xs uppercase tracking-[0.1em] font-semibold transition-colors shrink-0 focus-visible:outline-none focus-visible:underline ${
@@ -699,7 +699,7 @@ const ControlDeck: React.FC<{
 
                 <span className="text-wood-200 text-xs" aria-hidden="true">|</span>
 
-                {/* Search — underline style */}
+                {/* Search - underline style */}
                 <div className="flex items-center gap-2 flex-1 max-w-sm border-b border-wood-200 focus-within:border-wood-600 transition-colors">
                     <Search size={12} className="text-wood-300 shrink-0" aria-hidden="true" />
                     <input
@@ -721,7 +721,7 @@ const ControlDeck: React.FC<{
                     )}
                 </div>
 
-                {/* Sort — right side */}
+                {/* Sort - right side */}
                 <div className="flex items-center gap-2 shrink-0 ml-auto">
                     <span className="hidden sm:inline font-label text-xs uppercase tracking-[0.1em] text-wood-700 font-semibold">Sort</span>
                     <select
@@ -964,12 +964,12 @@ const Store: React.FC = () => {
                 </p>
             </div>
 
-            {/* Hero featured — only when no filters/search */}
+            {/* Hero featured - only when no filters/search */}
             {isUnfiltered && (
                 <ShopHero products={heroProducts} onSelect={setSelectedProduct} />
             )}
 
-            {/* Category tiles — visible unless searching; active tile acts as a toggle */}
+            {/* Category tiles - visible unless searching; active tile acts as a toggle */}
             {!search.trim() && (
                 <div className="max-w-[1800px] mx-auto px-6 mb-14">
                     <div className="mb-8 flex items-center gap-4">
@@ -1002,7 +1002,7 @@ const Store: React.FC = () => {
                 </div>
             )}
 
-            {/* Control deck — sticky */}
+            {/* Control deck - sticky */}
             <ControlDeck
                 count={filteredProducts.length}
                 sort={sort}
@@ -1013,7 +1013,7 @@ const Store: React.FC = () => {
                 setSearch={setSearch}
             />
 
-            {/* Collection cards — shown when a single category with collections is filtered */}
+            {/* Collection cards - shown when a single category with collections is filtered */}
             {shopCollections.length > 0 && !isFiltering && (
                 <div className="max-w-[1800px] mx-auto px-6 mt-8 mb-4 animate-fade-in">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

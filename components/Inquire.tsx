@@ -456,7 +456,7 @@ const Inquire: React.FC = () => {
     </div>
   );
 
-  /* Reusable submit button — used twice (above and below optional fields) */
+  /* Reusable submit button - used twice (above and below optional fields) */
   const submitBtn = (
     <button
       type="submit"
@@ -739,7 +739,7 @@ const Inquire: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ── Vision (commission mode only — shown above name) ── */}
+                    {/* ── Vision (commission mode only - shown above name) ── */}
                     {!purchaseMode && (
                     <div className="mb-[6px]">
                       <label
@@ -833,7 +833,7 @@ const Inquire: React.FC = () => {
                       )}
                     </div>
 
-                    {/* ── Notes / Questions (purchase mode only — shown below name+email) */}
+                    {/* ── Notes / Questions (purchase mode only - shown below name+email) */}
                     {purchaseMode && (
                     <div className="mb-[6px] pt-3">
                       <label

@@ -9,7 +9,7 @@ import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
 import { useMetaTags } from '../hooks/useMetaTags';
 
-// Category subtext descriptions — the soul of each section
+// Category subtext descriptions - the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
     'Living Knowledge': 'Deep explorations of subjects earned through direct experience. Not theory, but embodied understanding.',
     'Beneath the Surface': 'The meaning, origins, and stories woven into each body of work.',
@@ -310,12 +310,12 @@ export const WritingArticle: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Music: player + lyrics combined — after the story */}
+                {/* Music: player + lyrics combined - after the story */}
                 {story.tracks && story.tracks.length > 0 && story.tracks.map((track, i) => (
                     <MusicSection key={i} track={track} lyrics={i === 0 ? story.lyrics : undefined} />
                 ))}
 
-                {/* Related Creations — bidirectional link back to pieces */}
+                {/* Related Creations - bidirectional link back to pieces */}
                 {relatedArtworks.length > 0 && (
                     <div className="mt-16 pt-12 border-t border-wood-200">
                         <h3 className="font-serif text-2xl text-wood-900 mb-8 font-medium">Related Creations</h3>
@@ -377,7 +377,7 @@ export const WritingArticle: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Continue the Journey — next readings */}
+                {/* Continue the Journey - next readings */}
                 {nextReadings.length > 0 && (
                     <div className="mt-16 pt-12 border-t border-wood-200">
                         <div className="flex items-center gap-3 mb-8">
@@ -416,7 +416,7 @@ export const WritingArticle: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Admin edit shortcut — links directly into Keystatic editor */}
+                {/* Admin edit shortcut - links directly into Keystatic editor */}
                 <div className="mt-6 text-center">
                     <a
                         href={`/keystatic/collections/stories/${slug}`}

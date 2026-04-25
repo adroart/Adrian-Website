@@ -204,7 +204,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
           </div>
         </div>
 
-        {/* Mobile Menu — #21 ARIA attributes */}
+        {/* Mobile Menu - #21 ARIA attributes */}
         {isMobileMenuOpen && (
              <div
                ref={mobileMenuRef}

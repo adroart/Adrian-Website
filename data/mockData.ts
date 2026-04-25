@@ -50,23 +50,23 @@ export const MADE_TO_ORDER_ADD_ONS = {
     medium: {
       id: 'illumination_medium',
       label: 'Illuminate this piece',
-      price: 350, // [DUMMY] — sizes 12–24"
+      price: 350, // [DUMMY] - sizes 12–24"
       stripePriceId: 'price_illum_medium_REPLACE_WITH_REAL_ID',
     },
     large: {
       id: 'illumination_large',
       label: 'Illuminate this piece',
-      price: 500, // [DUMMY] — sizes 24–36"
+      price: 500, // [DUMMY] - sizes 24–36"
       stripePriceId: 'price_illum_large_REPLACE_WITH_REAL_ID',
     },
     major: {
       id: 'illumination_major',
       label: 'Illuminate this piece',
-      price: 750, // [DUMMY] — sizes 36"+
+      price: 750, // [DUMMY] - sizes 36"+
       stripePriceId: 'price_illum_major_REPLACE_WITH_REAL_ID',
     },
   },
-  // customFrame: temporarily disabled — laser cut frame option to be added later
+  // customFrame: temporarily disabled - laser cut frame option to be added later
 } as const;
 
 // --- CONSTANTS FROM MASTER DOC ---
@@ -106,7 +106,7 @@ export const LIGHT_CODE_SUBCATEGORIES = [
     'Resonant Formations',
 ];
 
-// Jewelry photo gallery — not individual pieces, just images grouped by type.
+// Jewelry photo gallery - not individual pieces, just images grouped by type.
 // Visitors inquire for details rather than purchasing directly.
 export const JEWELRY_GALLERY = {
     rings: [
@@ -192,7 +192,7 @@ const UL_SERIES_DESCRIPTION = 'There\'s a language that all of us speak, it is b
 
 export const FULL_ARCHIVE: Artwork[] = [
     // ═══════════════════════════════════════════════════════════════
-    // MIGRATED FROM WIX — 133 products
+    // MIGRATED FROM WIX - 133 products
     // Phase 2: Adrian reviews descriptions, prices, featured status
     // ═══════════════════════════════════════════════════════════════
 

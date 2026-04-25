@@ -1,7 +1,7 @@
 /**
  * OracleCardEntrance
  *
- * Everything plays immediately on mount — ring blooms out, card name rises,
+ * Everything plays immediately on mount - ring blooms out, card name rises,
  * hexagram draws line by line, keywords cascade in. Tap, press Escape, or
  * press Enter/Space at any point to exit early. Card image preloads in the
  * background; the reveal waits (up to a short budget) for it.
@@ -44,7 +44,7 @@ const LINE_DUR    = 260;
 const LAST_LINE   = LINE_DELAY + 5 * LINE_STAGGER + LINE_DUR;
 const KEYS_DELAY  = LAST_LINE + 200;
 const EXIT_DUR    = 800;
-const PRELOAD_TIMEOUT = 1200; // ms — fall through even if the image is slow
+const PRELOAD_TIMEOUT = 1200; // ms - fall through even if the image is slow
 
 interface Props {
   card: OracleCard;
@@ -66,7 +66,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
     setTimeout(onDone, 1120);
   };
 
-  // Preload card image — the reading page uses it immediately after dismiss.
+  // Preload card image - the reading page uses it immediately after dismiss.
   // We don't gate the animation on this (the ritual should start instantly),
   // but we do make sure to await onload/onerror so we know when it's ready.
   useEffect(() => {
@@ -82,7 +82,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
     return () => { clearTimeout(t); if (!done) { image.onload = null; image.onerror = null; } };
   }, [card.number]);
 
-  // Focus management — trap focus on the dialog; restore on unmount.
+  // Focus management - trap focus on the dialog; restore on unmount.
   // Also lock body scroll so the page underneath can't peek through.
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
@@ -242,7 +242,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           </g>
         </svg>
 
-        {/* Inner cluster — hexagram + keywords centered inside the ring */}
+        {/* Inner cluster - hexagram + keywords centered inside the ring */}
         <div style={{
           position: 'relative',
           zIndex: 1,

@@ -7,14 +7,14 @@
 type TrigramLines = [boolean, boolean, boolean]; // [bottom, middle, top]
 
 export const TRIGRAM_LINES: Record<string, TrigramLines> = {
-  '☰': [true,  true,  true ],  // Qian — Heaven
-  '☷': [false, false, false],  // Kun  — Earth
-  '☳': [true,  false, false],  // Zhen — Thunder
-  '☴': [false, true,  true ],  // Xun  — Wind
-  '☵': [false, true,  false],  // Kan  — Water
-  '☲': [true,  false, true ],  // Li   — Fire
-  '☶': [false, false, true ],  // Ken  — Mountain
-  '☱': [true,  true,  false],  // Dui  — Lake
+  '☰': [true,  true,  true ],  // Qian - Heaven
+  '☷': [false, false, false],  // Kun  - Earth
+  '☳': [true,  false, false],  // Zhen - Thunder
+  '☴': [false, true,  true ],  // Xun  - Wind
+  '☵': [false, true,  false],  // Kan  - Water
+  '☲': [true,  false, true ],  // Li   - Fire
+  '☶': [false, false, true ],  // Ken  - Mountain
+  '☱': [true,  true,  false],  // Dui  - Lake
 };
 
 /**

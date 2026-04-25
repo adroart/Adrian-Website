@@ -2,14 +2,14 @@
 import React, { useEffect } from 'react';
 import { CARD_BY_NUMBER, ALL_CARDS } from '../data/oracleData';
 
-/* ─── Sample content — card 32, Art of Living ────────────────────────────── */
+/* ─── Sample content - card 32, Art of Living ────────────────────────────── */
 
 const SAMPLE = CARD_BY_NUMBER.get(32) ?? ALL_CARDS[0];
 const PREV   = CARD_BY_NUMBER.get(SAMPLE.number - 1) ?? null;
 const NEXT   = CARD_BY_NUMBER.get(SAMPLE.number + 1) ?? null;
 const GK_P   = SAMPLE.gene_keys.description.split('\n\n').filter(Boolean)[0] ?? '';
 
-/* ─── Google Fonts — all preview families ────────────────────────────────── */
+/* ─── Google Fonts - all preview families ────────────────────────────────── */
 
 const FONTS_URL =
   'https://fonts.googleapis.com/css2?' +
@@ -260,7 +260,7 @@ const Preview: React.FC<{ s: System }> = ({ s }) => {
           </span>
         </div>
 
-        {/* Card name — the make-or-break moment */}
+        {/* Card name - the make-or-break moment */}
         <h2 style={heading(38)} className="text-wood-900 mb-2">
           {SAMPLE.card_name}
         </h2>
@@ -298,14 +298,14 @@ const Preview: React.FC<{ s: System }> = ({ s }) => {
           </div>
         </div>
 
-        {/* I Ching essence — short prose */}
+        {/* I Ching essence - short prose */}
         <div className="border-l-2 border-bronze-300/60 pl-4 mb-5">
           <p style={body(15)} className="text-wood-600">
             {SAMPLE.iching.essence}
           </p>
         </div>
 
-        {/* Gene Keys paragraph — the main readability test */}
+        {/* Gene Keys paragraph - the main readability test */}
         <p style={body(15)} className="text-wood-700 mb-6">
           {GK_P}
         </p>

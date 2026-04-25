@@ -72,7 +72,7 @@ async function main() {
     );
     console.log(`Loaded ${artworkRoutes.length} artworks and ${storyRoutes.length} stories.`);
   } catch (err) {
-    console.warn('Could not load mockData — generating static routes only.', err instanceof Error ? err.message : err);
+    console.warn('Could not load mockData - generating static routes only.', err instanceof Error ? err.message : err);
   }
 
   const allUrls: UrlEntry[] = [

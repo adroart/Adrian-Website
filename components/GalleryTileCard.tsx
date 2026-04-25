@@ -15,7 +15,7 @@ interface GalleryTileCardProps {
 }
 
 /**
- * Shared gallery tile card — refined design with:
+ * Shared gallery tile card - refined design with:
  * - No hard borders (shadow-based depth on hover)
  * - Hover overlay with visual cue
  * - Stacked price below title for readability
@@ -36,7 +36,7 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
 
     return (
         <div className="group break-inside-avoid mb-6 sm:mb-8 lg:mb-10 transition-all duration-500 touch-active">
-            {/* Image — links to the piece */}
+            {/* Image - links to the piece */}
             <Link to={`/creations/${art.id}`} className={`block overflow-hidden relative bg-wood-100 border border-wood-200 ${isSquare ? 'aspect-square' : ''}`}>
                 <ArtImage
                     publicId={art.coverImage}
@@ -54,15 +54,15 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                 </div>
             </Link>
 
-            {/* Title plaque — sits between image and detail box like a gallery label */}
-            {/* Title plaque — sits between image and detail box like a gallery label */}
+            {/* Title plaque - sits between image and detail box like a gallery label */}
+            {/* Title plaque - sits between image and detail box like a gallery label */}
             <Link to={`/creations/${art.id}`} className="block py-2 text-center">
                 <h3 className="font-sans text-base sm:text-lg text-wood-900 hover:text-bronze-700 transition-colors font-medium leading-snug truncate">
                     {displayTitle}
                 </h3>
             </Link>
 
-            {/* Detail band — entire tag links to piece, centered like a gallery label */}
+            {/* Detail band - entire tag links to piece, centered like a gallery label */}
             <Link to={`/creations/${art.id}`} className="block bg-paper-100 border border-wood-200 pt-2 pb-2 px-3 sm:pb-3 sm:px-4 text-center hover:border-bronze-300 transition-colors">
                 {/* Category / Series label + piece number */}
                 <div className="flex items-center justify-center gap-2">

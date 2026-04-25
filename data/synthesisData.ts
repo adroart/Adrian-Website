@@ -69,7 +69,7 @@ export interface CardSynthesis {
 }
 
 /* ─── Auto-discovery ─────────────────────────────────────────────────────── */
-// Vite glob import — picks up every key_N.json in oracle/synthesis/ automatically.
+// Vite glob import - picks up every key_N.json in oracle/synthesis/ automatically.
 // No manual registration needed. Drop a new file in the folder and it's live.
 
 const modules = import.meta.glob('../oracle/synthesis/key_*.json', { eager: true });
