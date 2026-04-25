@@ -484,6 +484,123 @@ const ExpandBridge: React.FC<{ bind: (ctx: ExpandContextValue) => void }> = ({ b
    deep-links can drive it. Preview text fades to transparent via a mask so it
    never looks truncated; chevron is a + rotating 45° to match GeneKeyCard.   */
 
+/* ─── PlateExpand — museum-plate styled accordion row ────────────────────────
+   Used by the four detail sections (I Ching, Gene Keys, Human Design,
+   Connections). No card chrome, no rounded-2xl, no nested borders. Single
+   hairline top border separates rows. 88px label column, serif body text,
+   whole-row click target, + that rotates 45°. Variant 'dark' renders on
+   stone-900 backgrounds; 'light' on paper. */
+
+const PLATE_TYPE = {
+  dark: {
+    border:    'border-stone-700/60',
+    rule:      'border-stone-700/40',
+    label:     'text-stone-500',
+    caption:   'text-stone-500',
+    primary:   'text-stone-100',
+    body:      'text-stone-300',
+    bodyOpen:  'text-stone-200',
+    chevron:   'text-stone-500',
+    chevronOn: 'text-bronze-400',
+    rowHover:  'hover:bg-white/[0.025]',
+    rowFocus:  'focus-visible:bg-bronze-500/[0.08]',
+    maskGrad:  'linear-gradient(to bottom, black 55%, transparent 100%)',
+  },
+  light: {
+    border:    'border-wood-200/70',
+    rule:      'border-wood-200/50',
+    label:     'text-wood-500',
+    caption:   'text-wood-400',
+    primary:   'text-wood-900',
+    body:      'text-wood-700',
+    bodyOpen:  'text-wood-800',
+    chevron:   'text-wood-400',
+    chevronOn: 'text-bronze-600',
+    rowHover:  'hover:bg-bronze-500/[0.04]',
+    rowFocus:  'focus-visible:bg-bronze-500/[0.07]',
+    maskGrad:  'linear-gradient(to bottom, black 55%, transparent 100%)',
+  },
+} as const;
+
+const PlateExpand: React.FC<{
+  id: string;
+  section: SectionKey;
+  variant: 'dark' | 'light';
+  label: string;
+  caption?: string;
+  preview: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  meta?: React.ReactNode;
+}> = ({ id, section, variant, label, caption, preview, children, defaultOpen = false, meta }) => {
+  const ctx = useExpand();
+  const open = ctx.isOpen(id, section, defaultOpen);
+  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+
+  const t = PLATE_TYPE[variant];
+
+  const previewNode = typeof preview === 'string'
+    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.6]`}>{preview}</p>
+    : preview;
+
+  return (
+    <div
+      id={id}
+      className={`scroll-mt-24 border-t ${t.border} ${open ? '' : 'cursor-pointer'} ${open ? '' : t.rowHover}`}
+      onClick={open ? undefined : () => ctx.toggle(id)}
+      role={open ? undefined : 'button'}
+      aria-expanded={open}
+      tabIndex={open ? -1 : 0}
+      onKeyDown={open ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+    >
+      <button
+        type="button"
+        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        className={`block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none ${t.rowFocus}`}
+      >
+        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <div className="min-w-0">
+            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
+            {caption && <p className={`font-serif text-[14px] ${t.caption} italic mt-1.5 leading-[1.4]`}>{caption}</p>}
+          </div>
+          <span
+            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? t.chevronOn : t.chevron} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
+        </div>
+        <div className="min-w-0">
+          {!open && (
+            <div
+              className="max-h-[7.4em] overflow-hidden"
+              style={{ WebkitMaskImage: t.maskGrad, maskImage: t.maskGrad }}
+            >{previewNode}</div>
+          )}
+          {open && meta}
+        </div>
+        <span
+          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? t.chevronOn : t.chevron} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+          aria-hidden="true"
+        >+</span>
+      </button>
+      {open && (
+        <div
+          id={`${id}-panel`}
+          className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="hidden sm:block" />
+          <div className="min-w-0 space-y-4 select-text cursor-text">{children}</div>
+          <div className="hidden sm:block" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Expand: React.FC<{
   id: string;
   section: SectionKey;
@@ -548,52 +665,19 @@ const Expand: React.FC<{
 
 type GeneKeyTone = 'shadow' | 'gift' | 'siddhi';
 
-const TONE_CONFIG: Record<GeneKeyTone, {
+/* Plate-style tone palette — light section, paper backgrounds.
+   Tone is encoded purely through the label color (museum plate aesthetic).
+   Body and primary use the wood scale uniformly so the section reads as
+   one editorial composition rather than three competing cards. */
+
+const PLATE_TONE: Record<GeneKeyTone, {
   label:      string;
-  // Background uses a tailwind class with a dark: variant so the card flips
-  // in dark mode (inline hex styles don't respond to .dark, but the text
-  // tokens inside do - keeping them in sync prevents invisible text).
-  cardBg:     string;
-  cardBorder: string;
-  topBar:     string;
   labelColor: string;
-  nameColor:  string;
-  bodyColor:  string;
-  moreColor:  string;
+  primaryColor: string;
 }> = {
-  shadow: {
-    label:      'Shadow',
-    // Cool stone - grounded, heavy, the beginning. Dark: cool midnight stone.
-    cardBg:     'bg-[#eae8e5] dark:bg-[#2a2825]',
-    cardBorder: 'border-stone-300/70',
-    topBar:     'bg-stone-400',
-    labelColor: 'text-stone-500',
-    nameColor:  'text-stone-800',
-    bodyColor:  'text-stone-700',
-    moreColor:  'text-stone-500',
-  },
-  gift: {
-    label:      'Gift',
-    // Warm amber cream - transformative warmth. Dark: deep ember.
-    cardBg:     'bg-[#faf5ee] dark:bg-[#2a231a]',
-    cardBorder: 'border-bronze-300/50',
-    topBar:     'bg-bronze-500',
-    labelColor: 'text-bronze-600',
-    nameColor:  'text-wood-800',
-    bodyColor:  'text-wood-700',
-    moreColor:  'text-bronze-500',
-  },
-  siddhi: {
-    label:      'Siddhi',
-    // Warm ivory - luminous, the most open. Dark: deep warm charcoal.
-    cardBg:     'bg-[#f8f6f2] dark:bg-[#23201d]',
-    cardBorder: 'border-wood-300/50',
-    topBar:     'bg-wood-400',
-    labelColor: 'text-wood-500',
-    nameColor:  'text-wood-900',
-    bodyColor:  'text-wood-800',
-    moreColor:  'text-wood-500',
-  },
+  shadow: { label: 'Shadow', labelColor: 'text-stone-500',  primaryColor: 'text-wood-800' },
+  gift:   { label: 'Gift',   labelColor: 'text-bronze-600', primaryColor: 'text-wood-900' },
+  siddhi: { label: 'Siddhi', labelColor: 'text-wood-500',   primaryColor: 'text-wood-900' },
 };
 
 const GeneKeyCard: React.FC<{
@@ -607,75 +691,90 @@ const GeneKeyCard: React.FC<{
   const open = ctx.isOpen(id, section, defaultOpen);
   useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
 
-  const cfg = TONE_CONFIG[tone];
+  const t = PLATE_TONE[tone];
   const paragraphs = (open ? level.expanded.text : level.collapsed.text).split('\n\n').filter(Boolean);
 
   return (
-    // Entire card is the click target for expand/collapse.
-    // Text nodes stop propagation so users can still select and copy text.
     <div
       id={id}
-      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer scroll-mt-24`}
-      onClick={() => ctx.toggle(id)}
-      role="button"
+      className={`scroll-mt-24 border-t border-wood-200/70 ${open ? '' : 'cursor-pointer hover:bg-bronze-500/[0.04]'}`}
+      onClick={open ? undefined : () => ctx.toggle(id)}
+      role={open ? undefined : 'button'}
       aria-expanded={open}
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+      tabIndex={open ? -1 : 0}
+      onKeyDown={open ? undefined : e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
     >
-      {/* Tone accent bar - 3px colored rule at card top */}
-      <div className={`h-[3px] w-full ${cfg.topBar}`} />
-
-      <div className="px-6 py-6">
-        <div className="flex items-baseline justify-between gap-4 mb-1">
-          <div className="flex items-baseline gap-2 min-w-0">
-            <span className={`font-label text-[11px] uppercase tracking-[0.2em] flex-shrink-0 ${cfg.labelColor}`}>{cfg.label}</span>
-            <span className={`font-sans text-xl font-medium ${cfg.nameColor}`}>{level.name}</span>
+      <button
+        type="button"
+        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        aria-expanded={open}
+        className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
+      >
+        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <div className="min-w-0">
+            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+            <p className="font-serif text-[14px] text-wood-500 italic mt-1.5 leading-[1.4]">{level.contemplation_title}</p>
           </div>
           <span
-            className={`text-lg flex-shrink-0 leading-none ${cfg.moreColor} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
             style={{ transform: open ? 'rotate(45deg)' : 'none' }}
             aria-hidden="true"
           >+</span>
         </div>
-        {/* Contemplation title - non-text, stays clickable */}
-        <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.moreColor} mb-5`}>{level.contemplation_title}</p>
-        {/* Text content - stop propagation only when open so expanded text stays selectable;
-            when collapsed, clicks fall through to the card toggle. */}
-        <div className="space-y-4 mb-3" onClick={open ? e => e.stopPropagation() : undefined}>
-          {paragraphs.map((p, i) => (
-            <p key={i} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] ${open ? 'select-text cursor-text' : ''}`}>{p}</p>
-          ))}
+        <div className="min-w-0">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{level.name}</p>
+          {!open && (
+            <div
+              className="max-h-[7.4em] overflow-hidden"
+              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
+            >
+              <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{paragraphs[0]}</p>
+            </div>
+          )}
         </div>
-        {tone === 'shadow' && open && (level.repressive_nature || level.reactive_nature) && (
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-5 border-t border-stone-300/60"
-            onClick={e => e.stopPropagation()}
-          >
-            {level.repressive_nature && (
-              <div className="border-l border-stone-300 pl-3">
-                <p className="font-label text-[11px] uppercase tracking-[0.15em] text-stone-500 mb-1">
-                  Repressive · {level.repressive_nature.label}
-                </p>
-                <p className="font-sans text-[15px] text-stone-600 leading-[1.9] select-text cursor-text">{level.repressive_nature.description}</p>
-              </div>
-            )}
-            {level.reactive_nature && (
-              <div className="border-l border-stone-300 pl-3">
-                <p className="font-label text-[11px] uppercase tracking-[0.15em] text-stone-500 mb-1">
-                  Reactive · {level.reactive_nature.label}
-                </p>
-                <p className="font-sans text-[15px] text-stone-600 leading-[1.9] select-text cursor-text">{level.reactive_nature.description}</p>
+        <span
+          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+          aria-hidden="true"
+        >+</span>
+      </button>
+      {open && (
+        <div className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7" onClick={e => e.stopPropagation()}>
+          <div className="hidden sm:block" />
+          <div className="min-w-0 space-y-4 select-text cursor-text">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+            ))}
+            {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
+                {level.repressive_nature && (
+                  <div>
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                      Repressive · {level.repressive_nature.label}
+                    </p>
+                    <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{level.repressive_nature.description}</p>
+                  </div>
+                )}
+                {level.reactive_nature && (
+                  <div>
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                      Reactive · {level.reactive_nature.label}
+                    </p>
+                    <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{level.reactive_nature.description}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+          <div className="hidden sm:block" />
+        </div>
+      )}
     </div>
   );
 };
 
-/* ─── Synthesis tone card - same tone palette as GeneKeyCard, simpler data.
-       Used for synthesis rows where we have plain strings, not expanded levels. */
+/* Synthesis tone plate — plain-string variant with optional extras.
+   Same museum-plate composition as GeneKeyCard. */
 
 const SynthesisToneCard: React.FC<{
   tone: GeneKeyTone;
@@ -688,63 +787,74 @@ const SynthesisToneCard: React.FC<{
   const ctx = useExpand();
   const open = ctx.isOpen(id, 'genekeys', defaultOpen);
   useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
-  const cfg = TONE_CONFIG[tone];
+  const t = PLATE_TONE[tone];
   const paragraphs = text.split('\n\n').filter(Boolean);
   const previewPara = paragraphs[0] ?? '';
 
   return (
     <div
       id={id}
-      className={`rounded-2xl border ${cfg.cardBorder} ${cfg.cardBg} mb-4 overflow-hidden ${CARD_SHADOW_LIGHT} cursor-pointer scroll-mt-24`}
-      onClick={() => ctx.toggle(id)}
-      role="button"
+      className={`scroll-mt-24 border-t border-wood-200/70 ${open ? '' : 'cursor-pointer hover:bg-bronze-500/[0.04]'}`}
+      onClick={open ? undefined : () => ctx.toggle(id)}
+      role={open ? undefined : 'button'}
       aria-expanded={open}
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+      tabIndex={open ? -1 : 0}
+      onKeyDown={open ? undefined : e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
     >
-      <div className={`h-[3px] w-full ${cfg.topBar}`} />
-      <div className="px-6 py-6">
-        <div className="flex items-baseline justify-between gap-4 mb-3">
-          <div className="flex items-baseline gap-2 min-w-0">
-            <span className={`font-label text-[11px] uppercase tracking-[0.2em] flex-shrink-0 ${cfg.labelColor}`}>{cfg.label}</span>
-            <span className={`font-sans text-xl font-medium ${cfg.nameColor}`}>{name}</span>
-          </div>
+      <button
+        type="button"
+        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        aria-expanded={open}
+        className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
+      >
+        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
           <span
-            className={`text-lg flex-shrink-0 leading-none ${cfg.moreColor} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
             style={{ transform: open ? 'rotate(45deg)' : 'none' }}
             aria-hidden="true"
           >+</span>
         </div>
-        <div className="space-y-4" onClick={open ? e => e.stopPropagation() : undefined}>
-          {open ? (
-            <>
-              {paragraphs.map((p, i) => (
-                <p key={i} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text`}>{p}</p>
-              ))}
-              {extras.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5 pt-5 border-t border-stone-300/60">
-                  {extras.map((ex, i) => (
-                    <div key={i} className="border-l border-stone-300 pl-3">
-                      <p className={`font-label text-[11px] uppercase tracking-[0.15em] ${cfg.labelColor} mb-1`}>{ex.label}</p>
-                      {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                        <p key={j} className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] select-text cursor-text ${j > 0 ? 'mt-3' : ''}`}>{p}</p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <p
-              className={`font-sans text-[15px] ${cfg.bodyColor} leading-[1.9] max-h-[8.6em] overflow-hidden`}
-              style={{
-                WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
-                maskImage:       'linear-gradient(to bottom, black 55%, transparent 100%)',
-              }}
-            >{previewPara}</p>
+        <div className="min-w-0">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{name}</p>
+          {!open && (
+            <div
+              className="max-h-[7.4em] overflow-hidden"
+              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
+            >
+              <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{previewPara}</p>
+            </div>
           )}
         </div>
-      </div>
+        <span
+          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+          aria-hidden="true"
+        >+</span>
+      </button>
+      {open && (
+        <div className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7" onClick={e => e.stopPropagation()}>
+          <div className="hidden sm:block" />
+          <div className="min-w-0 space-y-4 select-text cursor-text">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+            ))}
+            {extras.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
+                {extras.map((ex, i) => (
+                  <div key={i}>
+                    <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
+                    {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                      <p key={j} className={`font-serif text-[14px] text-wood-700 leading-[1.6] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="hidden sm:block" />
+        </div>
+      )}
     </div>
   );
 };
@@ -847,20 +957,20 @@ const CardLink: React.FC<{
   return (
     <button
       onClick={onClick}
-      className="group w-full flex items-center gap-4 p-4 rounded-xl bg-white hover:bg-paper-50 border border-wood-200 hover:border-wood-300 transition-all text-left shadow-[0_2px_8px_rgba(60,44,22,0.07)]"
+      className="group w-full flex items-center gap-4 py-3 text-left transition-colors hover:bg-bronze-500/[0.04] focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
     >
       <img
         src={cardImageUrl(number, 120)}
         alt=""
-        className="w-16 h-16 object-cover flex-shrink-0 rounded-lg"
+        className="w-14 h-14 object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity"
       />
       <div className="flex-1 min-w-0">
-        {label && <p className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 mb-0.5">{label}</p>}
-        <p className="font-sans text-sm text-wood-900 font-medium group-hover:text-bronze-600 transition-colors">{sibling.card_name}</p>
-        <p className="font-sans text-xs text-wood-500 mt-0.5">{sibling.iching.hexagram_name}</p>
-        {context && <p className="font-sans text-xs text-wood-400 mt-1 leading-[1.65] line-clamp-2">{context}</p>}
+        {label && <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mb-1">{label}</p>}
+        <p className="font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] group-hover:text-bronze-700 transition-colors">{sibling.card_name}</p>
+        <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-0.5">{sibling.iching.hexagram_name}</p>
+        {context && <p className="font-serif text-[14px] text-wood-500 mt-1 leading-[1.5] line-clamp-2">{context}</p>}
       </div>
-      <span className="text-wood-300 group-hover:text-bronze-500 transition-colors flex-shrink-0 text-sm">→</span>
+      <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0">Open</span>
     </button>
   );
 };
@@ -1472,65 +1582,71 @@ const UniversalLanguageCard: React.FC = () => {
         {/* dark-preserve: intentionally-dark section stays dark in dark mode
             (without it, bg-stone-900 would remap to a light tone). */}
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
+            {/* Plate header */}
+            <header className="mb-8 sm:mb-10">
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">I Ching</p>
+              <h2 className="font-serif text-[28px] leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.iching.hexagram_name}</h2>
+              <p className="font-serif text-[14px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
+                The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
+              </p>
+            </header>
 
-            <p className="font-sans text-[15px] text-stone-300 leading-[1.9] px-1">
-              The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
-            </p>
-
-            {/* Island 1 - Interactive hexagram + trigram selector */}
-            <div ref={ichingRef} className={`rounded-2xl border border-stone-700/50 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
-
-              {/* Row 1: Full hexagram */}
+            {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
+            <div ref={ichingRef} className="border-t border-stone-700/60">
               <button
+                type="button"
                 onClick={() => setIchingOpen('hex')}
-                className={`group w-full flex items-center gap-4 px-6 py-5 text-left transition-colors ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-4 sm:py-5 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                aria-pressed={ichingOpen === 'hex'}
               >
-                <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color={ichingOpen === 'hex' ? 'rgba(180,130,70,0.9)' : 'rgba(180,130,70,0.5)'} width={36} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-label text-[11px] uppercase tracking-[0.22em] text-stone-300 mb-0.5">Hexagram {card.number}</p>
-                  <h2 className={`font-serif text-2xl leading-[1.2] transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.hexagram_name}</h2>
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
+                <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color={ichingOpen === 'hex' ? 'rgba(201,160,90,0.9)' : 'rgba(180,130,70,0.5)'} width={28} />
+                  <span className={`font-serif text-[17px] leading-[1.3] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.hexagram_name}</span>
                 </div>
-                <span className={`text-sm transition-colors flex-shrink-0 ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-400 group-hover:text-stone-200'}`}>→</span>
+                <span className={`font-label text-[10px] uppercase tracking-[0.22em] flex-shrink-0 transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-500 group-hover:text-stone-300'}`}>Read</span>
               </button>
 
-              <div className="border-t border-stone-700/50" />
+              <button
+                type="button"
+                onClick={() => setIchingOpen('upper')}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                aria-pressed={ichingOpen === 'upper'}
+              >
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Upper</span>
+                <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
+                  <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
+                  <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.upper_trigram.name}</span>
+                </div>
+                <span className="font-serif text-[14px] text-stone-500 italic flex-shrink-0">trigram</span>
+              </button>
 
-              {/* Row 2: Upper + Lower side by side */}
-              <div className="flex divide-x divide-stone-700/50">
-                <button
-                  onClick={() => setIchingOpen('upper')}
-                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
-                >
-                  <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Upper</p>
-                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-200' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.upper_trigram.name}</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setIchingOpen('lower')}
-                  className={`group flex-1 flex items-center gap-3 px-5 py-4 text-left transition-colors ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.08]' : 'hover:bg-white/[0.03]'}`}
-                >
-                  <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={28} height={20} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Lower</p>
-                    <p className={`font-serif text-[15px] leading-tight truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-200' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.lower_trigram.name}</p>
-                  </div>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIchingOpen('lower')}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                aria-pressed={ichingOpen === 'lower'}
+              >
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Lower</span>
+                <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
+                  <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
+                  <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.lower_trigram.name}</span>
+                </div>
+                <span className="font-serif text-[14px] text-stone-500 italic flex-shrink-0">trigram</span>
+              </button>
 
-              {/* Reading zone - always visible, updates on tap */}
-              <div className="border-t border-stone-700/50 px-6 py-5">
-                <p className="font-label text-[11px] uppercase tracking-[0.22em] text-bronze-400 mb-3">
+              {/* Reading zone — updates on tap */}
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 border-b border-stone-700/60">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400/80 sm:self-start sm:pt-1 mb-2 sm:mb-0">
                   {ichingOpen === 'hex'
-                    ? `Hexagram ${card.number} · ${card.iching.hexagram_name}`
+                    ? 'Combination'
                     : ichingOpen === 'upper'
-                    ? `Upper · ${card.iching.upper_trigram.name}`
-                    : `Lower · ${card.iching.lower_trigram.name}`}
+                    ? 'Upper nature'
+                    : 'Lower nature'}
                 </p>
-                <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">
+                <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">
                   {ichingOpen === 'hex'
                     ? (synthesis?.synthesis.iching.trigram_combination ?? card.iching.essence)
                     : ichingOpen === 'upper'
@@ -1540,205 +1656,178 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Island 2 - Oracle reading + classical text (below trigrams) */}
+            {/* Synthesis: reading + classical text */}
             {synthesis && (
-              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                {/* The reading - collapsed by default, click label or preview to expand */}
-                <Expand
+              <>
+                <PlateExpand
                   id="iching-reading"
                   section="iching"
+                  variant="dark"
                   label="The reading"
-                  subtitle="the oracle's reading for this configuration"
-                  borderColor="border-stone-700/40"
-                  labelColor="text-stone-400"
-                  innerPx="px-6"
-                  previewMask="dark"
-                  preview={(() => {
-                    const first = synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? '';
-                    return <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{first}</p>;
-                  })()}
+                  caption="for this configuration"
+                  preview={synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? ''}
                 >
                   {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.9]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
                   ))}
-                </Expand>
+                </PlateExpand>
 
-                {/* Classical Judgement + Image - reference, collapsed by default */}
                 {(synthesis.synthesis.iching.judgement_lines.length > 0 || synthesis.synthesis.iching.image_lines.length > 0) && (
-                  <Expand
+                  <PlateExpand
                     id="iching-classical"
                     section="iching"
-                    label="The classical text"
-                    subtitle="Wilhelm translation"
-                    borderColor="border-stone-700/40"
-                    labelColor="text-stone-400"
-                    innerPx="px-6"
-                    previewMask="dark"
-                    preview={(() => {
-                      const firstLine = synthesis.synthesis.iching.judgement_lines[0]
-                        ?? synthesis.synthesis.iching.image_lines[0]
-                        ?? '';
-                      return <p className="font-sans text-[15px] text-stone-400 leading-[1.9]">{firstLine}</p>;
-                    })()}
+                    variant="dark"
+                    label="Classical text"
+                    caption="Wilhelm translation"
+                    preview={synthesis.synthesis.iching.judgement_lines[0] ?? synthesis.synthesis.iching.image_lines[0] ?? ''}
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                       {synthesis.synthesis.iching.judgement_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Judgement</p>
-                          {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
-                            <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.9]">{line}</p>
-                          ))}
+                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Judgement</p>
+                          <div className="space-y-2">
+                            {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
+                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.6]">{line}</p>
+                            ))}
+                          </div>
                         </div>
                       )}
                       {synthesis.synthesis.iching.image_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">Image</p>
-                          {synthesis.synthesis.iching.image_lines.map((line, i) => (
-                            <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.9]">{line}</p>
-                          ))}
+                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Image</p>
+                          <div className="space-y-2">
+                            {synthesis.synthesis.iching.image_lines.map((line, i) => (
+                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.6]">{line}</p>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
-                  </Expand>
+                  </PlateExpand>
                 )}
-              </div>
+              </>
             )}
 
-            {/* Island 3 - Wisdom group (only when no synthesis) */}
+            {/* Wisdom group (only when no synthesis) */}
             {!synthesis && expanded && (
-              <div className={`rounded-2xl border border-stone-700/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <Expand
+              <>
+                <PlateExpand
                   id="iching-overview"
                   section="iching"
+                  variant="dark"
                   defaultOpen
                   label="Overview"
-                  borderColor="border-stone-700/40" labelColor="text-stone-400"
-                  innerPx="px-6"
-                  previewMask="dark"
-                  preview={<p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{expanded.i_ching.trigrams.overview.text}</p>}
+                  preview={expanded.i_ching.trigrams.overview.text}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
-                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Outer</p>
-                      <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{expanded.i_ching.trigrams.outer.context.text}</p>
+                      <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Outer</p>
+                      <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.trigrams.outer.context.text}</p>
                     </div>
                     <div>
-                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Inner</p>
-                      <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{expanded.i_ching.trigrams.inner.context.text}</p>
+                      <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Inner</p>
+                      <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
-                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9] mt-4">
+                  <p className="font-serif text-[17px] text-stone-300 leading-[1.6] mt-2">
                     {expanded.i_ching.trigrams.family_dynamic.text}
                   </p>
-                </Expand>
-                <Expand
+                </PlateExpand>
+
+                <PlateExpand
                   id="iching-judgment"
                   section="iching"
+                  variant="dark"
                   label="The Judgment"
-                  subtitle="the oracle's ruling on this moment"
-                  borderColor="border-stone-700/40" labelColor="text-stone-400"
-                  innerPx="px-6"
-                  previewMask="dark"
-                  preview={(() => {
+                  caption="the oracle's ruling"
+                  preview={expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean)[0] ?? ''}
+                >
+                  {(() => {
                     const lines = expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean);
                     const headline = lines[0];
                     const stages = lines[1]?.replace(/\.$/, '').split(',').map(s => s.trim()).filter(Boolean) ?? [];
-                    const fom = expanded.i_ching.image_of_the_situation.fields_of_meaning ?? '';
-                    const timeCycleSentences = fom.split('. ').filter(s => s.includes('Time Cycle') || s.includes('four stages'));
-                    const timeCycleText = timeCycleSentences.join('. ').replace(/\.?$/, '.');
                     return (
-                      <div className="space-y-5">
-                        <p className="font-sans text-[15px] text-stone-100 leading-[1.9]">{headline}</p>
+                      <>
+                        {headline && <p className="font-serif text-[17px] text-stone-100 leading-[1.6]">{headline}</p>}
                         {stages.length > 0 && (
                           <div>
-                            <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone-600 mb-2">The four stages of the time cycle</p>
-                            <div className="flex gap-3 flex-wrap">
+                            <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Four stages of the time cycle</p>
+                            <div className="flex gap-x-6 gap-y-1 flex-wrap">
                               {stages.map((s, i) => (
-                                <span key={i} className="font-sans text-[15px] text-stone-300 border border-stone-700/50 rounded px-3 py-1">{s}</span>
+                                <span key={i} className="font-serif text-[17px] text-stone-300">{s}</span>
                               ))}
                             </div>
                           </div>
                         )}
-                        {timeCycleText && (
-                          <p className="font-sans text-[15px] text-stone-400 leading-[1.9]">{timeCycleText}</p>
-                        )}
-                      </div>
+                        <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                        <div className="pt-5 border-t border-stone-700/40 space-y-2">
+                          {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
+                            <p key={i} className="font-serif text-[14px] text-stone-400 leading-[1.6] italic">{line}</p>
+                          ))}
+                        </div>
+                      </>
                     );
                   })()}
-                >
-                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9] mb-5">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
-                  <div className="space-y-2 border-t border-stone-700/30 pt-4">
-                    {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
-                      <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.9]">{line}</p>
-                    ))}
-                  </div>
-                </Expand>
-                <Expand
+                </PlateExpand>
+
+                <PlateExpand
                   id="iching-patterns"
                   section="iching"
+                  variant="dark"
                   label="Patterns of Wisdom"
-                  borderColor="border-stone-700/40" labelColor="text-stone-400"
-                  innerPx="px-6"
-                  previewMask="dark"
-                  preview={<p className="font-sans text-[15px] text-stone-400 leading-[1.9]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>}
+                  preview={expanded.i_ching.patterns_of_wisdom.nature_image}
                 >
-                  <p className="font-sans text-[15px] text-stone-200 mb-1">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
-                  <p className="font-sans text-[15px] text-stone-200 mb-5">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
-                  <p className="font-sans text-[15px] text-stone-300 leading-[1.9]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
-                </Expand>
-              </div>
+                  <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
+                  <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
+                  <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
+                </PlateExpand>
+              </>
             )}
 
-            {/* Island 4 - Reflection (only when no synthesis) */}
+            {/* Reflection (only when no synthesis) */}
             {!synthesis && expanded && (
-              <div className={`rounded-2xl border border-bronze-800/40 overflow-hidden ${CARD_SHADOW}`} style={{ background: 'rgba(30, 22, 12, 0.75)' }}>
-                {/* Bronze accent bar */}
-                <div className="h-[3px] w-full bg-bronze-400" />
-                <div className="px-6 py-7">
-                  <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-500 mb-5">Reflection</p>
-                  <p className="font-sans text-[15px] text-stone-100 leading-[1.9]">{expanded.i_ching.reflection.text}</p>
-                </div>
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
+                <p className="font-serif text-[17px] text-stone-100 leading-[1.6]">{expanded.i_ching.reflection.text}</p>
               </div>
             )}
 
             {/* Fallback if no expanded data */}
             {!expanded && (
-              <div className={`rounded-2xl border border-stone-700/40 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(22, 20, 18, 0.6)' }}>
-                <p className="font-sans text-[15px] text-stone-200 leading-[1.9]">{card.iching.essence}</p>
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-stone-700/60 py-6 sm:py-7">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
+                <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{card.iching.essence}</p>
               </div>
             )}
 
-            {/* Paired hexagram lives in Connections section - not duplicated here */}
           </div>
         </section>
 
         {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-
-            <p className="font-sans text-[15px] text-wood-600 leading-[1.9] px-1">
-              A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
-            </p>
-
-            {/* Island 1 - Header */}
-            <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 mb-2">
+            {/* Plate header */}
+            <header className="mb-8 sm:mb-10">
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">
                 Gene Key {card.number} · Gate {card.human_design.gate}
               </p>
-              <h2 className="font-serif text-3xl text-wood-900 font-semibold leading-[1.2] mb-3">The {card.gene_keys.gift} Key</h2>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="font-sans text-[15px] text-stone-500">{card.gene_keys.shadow}</span>
+              <h2 className="font-serif text-[28px] leading-[1.15] text-wood-900 tracking-[-0.005em]">The {card.gene_keys.gift} Key</h2>
+              <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
+                A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
+              </p>
+              <div className="flex items-baseline gap-3 flex-wrap mt-5">
+                <span className="font-serif text-[14px] text-stone-500">{card.gene_keys.shadow}</span>
                 <span className="text-wood-300" aria-hidden="true">·</span>
-                <span className="font-sans text-[15px] text-bronze-600 font-medium">{card.gene_keys.gift}</span>
+                <span className="font-serif text-[14px] text-bronze-700">{card.gene_keys.gift}</span>
                 <span className="text-wood-300" aria-hidden="true">·</span>
-                <span className="font-sans text-[15px] text-wood-600">{card.gene_keys.siddhi}</span>
+                <span className="font-serif text-[14px] text-wood-700">{card.gene_keys.siddhi}</span>
               </div>
-            </div>
+            </header>
 
-            {/* Islands 2–4 - three tone cards (Shadow / Gift / Siddhi).
-                Gift opens by default as the primary reading; Repressive, Reactive
-                and Programming Partner are tucked inside their parent tone. */}
+            {/* Three tone plates (Shadow / Gift / Siddhi). Gift opens by default
+                as the primary reading; Repressive/Reactive/Programming Partner
+                are tucked inside their parent tone. */}
             {synthesis ? (
               <>
                 <SynthesisToneCard
@@ -1766,27 +1855,29 @@ const UniversalLanguageCard: React.FC = () => {
                   name={card.gene_keys.siddhi}
                   text={synthesis.synthesis.gene_keys.siddhi}
                 />
-                <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.9]">
-                  Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
-                  <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-wood-600 transition-colors">genekeys.com</a>
-                </p>
               </>
             ) : expanded ? (
               <>
                 <GeneKeyCard tone="shadow" level={expanded.gene_keys.shadow} id="genekey-shadow" />
                 <GeneKeyCard tone="gift"   level={expanded.gene_keys.gift}   id="genekey-gift" />
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
-                <p className="font-label text-[11px] text-wood-400 px-1 leading-[1.9]">
-                  Gene Keys text based on the work of Richard Rudd, visit him to dive deeper in wisdom and experiences at{' '}
-                  <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-wood-600 transition-colors">genekeys.com</a>
-                </p>
               </>
             ) : (
-              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 space-y-5 ${CARD_SHADOW_LIGHT}`}>
-                {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
-                  <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
-                ))}
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
+                <div className="space-y-4">
+                  {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
+                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {(synthesis || expanded) && (
+              <p className="font-serif text-[14px] text-wood-500 italic leading-[1.5] mt-10 pt-7 border-t border-wood-200/50">
+                Gene Keys text based on the work of Richard Rudd. Visit him to dive deeper at{' '}
+                <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline decoration-wood-300 underline-offset-[3px] hover:text-bronze-700 hover:decoration-bronze-500 transition-colors">genekeys.com</a>.
+              </p>
             )}
 
           </div>
@@ -1795,91 +1886,138 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
         {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
-          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-
-            <p className="font-sans text-[15px] text-stone-300 leading-[1.9] px-1">
-              Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
-            </p>
-
-            {/* Header */}
-            <div className={`rounded-2xl border border-stone-700/50 px-6 py-6 ${CARD_SHADOW}`} style={{ background: 'rgba(28, 25, 23, 0.7)' }}>
-              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">Human Design · Gate {card.human_design.gate}</p>
-              <h2 className="font-serif text-3xl text-stone-100 font-semibold leading-[1.2] mb-1">{card.human_design.keyword}</h2>
-            </div>
+            {/* Plate header */}
+            <header className="mb-8 sm:mb-10">
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">Human Design · Gate {card.human_design.gate}</p>
+              <h2 className="font-serif text-[28px] leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.human_design.keyword}</h2>
+              <p className="font-serif text-[14px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
+                Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
+              </p>
+            </header>
 
             {/* Description (only when no synthesis) */}
-            {!synthesis && (
-              <ExpandCard
-                id="hd-description"
-                section="humandesign"
-                label="Description"
-                title={card.human_design.keyword}
-                text={card.human_design.description + (card.traditional_colors ? '\n\n' + card.traditional_colors : '')}
-                variant="dark"
-              />
-            )}
+            {!synthesis && (() => {
+              const text = card.human_design.description + (card.traditional_colors ? '\n\n' + card.traditional_colors : '');
+              const paragraphs = text.split('\n\n').filter(Boolean);
+              return (
+                <PlateExpand
+                  id="hd-description"
+                  section="humandesign"
+                  variant="dark"
+                  label="Description"
+                  caption={card.human_design.keyword}
+                  preview={paragraphs[0] ?? ''}
+                >
+                  {paragraphs.map((p, i) => (
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                  ))}
+                </PlateExpand>
+              );
+            })()}
 
-            {/* Synthesis HD reading - three separate cards (Gate / Channel / Circuit) */}
+            {/* Synthesis HD reading — three plates (Gate / Channel / Circuit) */}
             {synthesis && (
               <>
-                <ExpandCard
-                  id="hd-gate"
-                  section="humandesign"
-                  label="The Gate"
-                  title={synthesis.reference?.hd_keyword ?? card.human_design.keyword}
-                  text={synthesis.synthesis.human_design.gate}
-                  variant="dark"
-                />
-                <ExpandCard
-                  id="hd-channel"
-                  section="humandesign"
-                  label="The Channel"
-                  title={synthesis.reference?.hd_harmonic_gate ? `Gate ${card.human_design.gate} · ${synthesis.reference.hd_harmonic_gate}` : undefined}
-                  text={synthesis.synthesis.human_design.channel}
-                  variant="dark"
-                />
-                <ExpandCard
-                  id="hd-circuit"
-                  section="humandesign"
-                  label="The Circuit"
-                  title={synthesis.reference?.hd_circuit ?? undefined}
-                  text={synthesis.synthesis.human_design.circuit}
-                  variant="dark"
-                />
+                {(() => {
+                  const paragraphs = synthesis.synthesis.human_design.gate.split('\n\n').filter(Boolean);
+                  return (
+                    <PlateExpand
+                      id="hd-gate"
+                      section="humandesign"
+                      variant="dark"
+                      label="The Gate"
+                      caption={synthesis.reference?.hd_keyword ?? card.human_design.keyword}
+                      preview={paragraphs[0] ?? ''}
+                    >
+                      {paragraphs.map((p, i) => (
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                      ))}
+                    </PlateExpand>
+                  );
+                })()}
+                {(() => {
+                  const paragraphs = synthesis.synthesis.human_design.channel.split('\n\n').filter(Boolean);
+                  const cap = synthesis.reference?.hd_harmonic_gate ? `Gate ${card.human_design.gate} · ${synthesis.reference.hd_harmonic_gate}` : undefined;
+                  return (
+                    <PlateExpand
+                      id="hd-channel"
+                      section="humandesign"
+                      variant="dark"
+                      label="The Channel"
+                      caption={cap}
+                      preview={paragraphs[0] ?? ''}
+                    >
+                      {paragraphs.map((p, i) => (
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                      ))}
+                    </PlateExpand>
+                  );
+                })()}
+                {(() => {
+                  const paragraphs = synthesis.synthesis.human_design.circuit.split('\n\n').filter(Boolean);
+                  return (
+                    <PlateExpand
+                      id="hd-circuit"
+                      section="humandesign"
+                      variant="dark"
+                      label="The Circuit"
+                      caption={synthesis.reference?.hd_circuit ?? undefined}
+                      preview={paragraphs[0] ?? ''}
+                    >
+                      {paragraphs.map((p, i) => (
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                      ))}
+                    </PlateExpand>
+                  );
+                })()}
               </>
             )}
 
-            {/* Tarot - codon ring connection */}
-            {card.ring_tarot && (
-              <ExpandCard
-                id="hd-ring-tarot"
-                section="humandesign"
-                label={card.ring_name}
-                title={card.ring_tarot}
-                text={card.ring_description ?? ''}
-                variant="dark"
-                accent="bg-bronze-400"
-              />
-            )}
+            {/* Codon-ring tarot connection */}
+            {card.ring_tarot && (() => {
+              const paragraphs = (card.ring_description ?? '').split('\n\n').filter(Boolean);
+              return (
+                <PlateExpand
+                  id="hd-ring-tarot"
+                  section="humandesign"
+                  variant="dark"
+                  label={card.ring_name}
+                  caption={card.ring_tarot}
+                  preview={paragraphs[0] ?? ''}
+                >
+                  {paragraphs.map((p, i) => (
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                  ))}
+                </PlateExpand>
+              );
+            })()}
 
           </div>
         </section>
 
         {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
         <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
-          <div className="max-w-2xl mx-auto px-3 pt-12 pb-14 space-y-4">
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
+
+            {/* Plate header */}
+            <header className="mb-8 sm:mb-10">
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">Connections</p>
+              <h2 className="font-serif text-[28px] leading-[1.15] text-wood-900 tracking-[-0.005em]">Threads in the weave</h2>
+              <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
+                Each code lives in a wider pattern. Pairs that mirror it, partners that balance it, and the ring of related codons it belongs to.
+              </p>
+            </header>
 
             {expanded ? (
               <>
                 {/* Paired Hexagram */}
                 {pairCard && (
-                  <div className={`rounded-2xl border border-wood-200 overflow-hidden bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
-                    <div className="px-5 pt-5 pb-3">
-                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Paired Hexagram</p>
-                      <p className="font-sans text-[15px] text-wood-600 leading-[1.9] mb-3">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
-                    </div>
-                    <div className="px-3 pb-3">
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
+                    <div className="space-y-4 min-w-0">
+                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
                       <CardLink
                         number={expanded.i_ching.hexagrams_in_pairs.pair_hexagram}
                         label={`Code ${expanded.i_ching.hexagrams_in_pairs.pair_hexagram}`}
@@ -1891,12 +2029,10 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Programming Partner */}
                 {expanded.gene_keys.programming_partner && (
-                  <div className={`rounded-2xl border border-wood-200 overflow-hidden bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
-                    <div className="px-5 pt-5 pb-3">
-                      <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">Programming Partner</p>
-                      <p className="font-sans text-[15px] text-wood-600 leading-[1.9] mb-3">{expanded.gene_keys.programming_partner.relationship_context}</p>
-                    </div>
-                    <div className="px-3 pb-3">
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
+                    <div className="space-y-4 min-w-0">
+                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6]">{expanded.gene_keys.programming_partner.relationship_context}</p>
                       <CardLink
                         number={expanded.gene_keys.programming_partner.number}
                         label={`Code ${expanded.gene_keys.programming_partner.number}`}
@@ -1908,69 +2044,98 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Codon Ring */}
                 {siblings.length > 0 && (
-                  <div className={`rounded-2xl border border-wood-200 px-5 py-5 bg-[#fafaf8] dark:bg-[#1d1b18] ${CARD_SHADOW_LIGHT}`}>
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">{expanded.gene_keys.codon_ring.name}</p>
-                    <p className="font-sans text-[15px] text-wood-600 leading-[1.9] mb-4">{expanded.gene_keys.codon_ring.relationship_context}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {siblings.map(n => {
-                        const sibling = CARD_BY_NUMBER.get(n);
-                        return sibling ? (
-                          <button
-                            key={n}
-                            onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
-                            className="group flex items-center gap-3 p-3 rounded-xl bg-white hover:bg-stone-50 border border-wood-200 hover:border-wood-300 transition-all text-left"
-                          >
-                            {UL_IMAGE_BY_NUMBER.get(n) && (
-                              <img src={cardImageUrl(n, 80)} alt="" className="w-9 h-9 object-cover flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity rounded" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-label text-[11px] text-wood-400">{n}</p>
-                              <p className="font-sans text-xs text-wood-700 group-hover:text-bronze-600 transition-colors truncate">{sibling.card_name}</p>
-                            </div>
-                          </button>
-                        ) : null;
-                      })}
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">{expanded.gene_keys.codon_ring.name}</p>
+                    <div className="min-w-0">
+                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6] mb-5">{expanded.gene_keys.codon_ring.relationship_context}</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                        {siblings.map(n => {
+                          const sibling = CARD_BY_NUMBER.get(n);
+                          return sibling ? (
+                            <button
+                              key={n}
+                              onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
+                              className="group flex items-center gap-3 py-2 text-left transition-colors hover:bg-bronze-500/[0.04]"
+                            >
+                              {UL_IMAGE_BY_NUMBER.get(n) && (
+                                <img src={cardImageUrl(n, 80)} alt="" className="w-10 h-10 object-cover flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500">{n}</p>
+                                <p className="font-serif text-[14px] text-wood-700 group-hover:text-bronze-700 transition-colors truncate">{sibling.card_name}</p>
+                              </div>
+                            </button>
+                          ) : null;
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              <div className={`rounded-2xl border border-wood-200 bg-white px-6 py-6 ${CARD_SHADOW_LIGHT}`}>
-                <p className="font-sans text-[15px] text-wood-500 leading-[1.9]">Connection data will be available soon.</p>
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+                <p className="font-serif text-[17px] text-wood-500 italic leading-[1.6]">Connection data will be available soon.</p>
               </div>
             )}
 
             {/* Tarot resonance */}
-            {synthesis && (
-              <ExpandCard
-                id="connections-tarot"
-                section="connections"
-                label={`Tarot · ${card.ring_name}`}
-                title={synthesis.reference?.tarot_card ?? card.ring_tarot}
-                text={synthesis.synthesis.tarot.ring_role + '\n\n' + synthesis.synthesis.tarot.tarot_resonance}
-                variant="light"
-              />
-            )}
+            {synthesis && (() => {
+              const text = synthesis.synthesis.tarot.ring_role + '\n\n' + synthesis.synthesis.tarot.tarot_resonance;
+              const paragraphs = text.split('\n\n').filter(Boolean);
+              return (
+                <PlateExpand
+                  id="connections-tarot"
+                  section="connections"
+                  variant="light"
+                  label={`Tarot · ${card.ring_name}`}
+                  caption={synthesis.reference?.tarot_card ?? card.ring_tarot}
+                  preview={paragraphs[0] ?? ''}
+                >
+                  {paragraphs.map((p, i) => (
+                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                  ))}
+                </PlateExpand>
+              );
+            })()}
 
-            {/* Body - physiology and amino acid as separate expandable cards */}
+            {/* Body — physiology and amino acid as separate plates */}
             {synthesis && (
               <>
-                <ExpandCard
-                  id="connections-physiology"
-                  section="connections"
-                  label="Body · Physiology"
-                  title={synthesis.reference?.body_physiology ?? undefined}
-                  text={synthesis.synthesis.body.physiology}
-                  variant="light"
-                />
-                <ExpandCard
-                  id="connections-amino-acid"
-                  section="connections"
-                  label="Body · Amino Acid"
-                  title={synthesis.reference?.body_amino_acid ?? undefined}
-                  text={synthesis.synthesis.body.amino_acid}
-                  variant="light"
-                />
+                {(() => {
+                  const paragraphs = synthesis.synthesis.body.physiology.split('\n\n').filter(Boolean);
+                  return (
+                    <PlateExpand
+                      id="connections-physiology"
+                      section="connections"
+                      variant="light"
+                      label="Body · Physiology"
+                      caption={synthesis.reference?.body_physiology ?? undefined}
+                      preview={paragraphs[0] ?? ''}
+                    >
+                      {paragraphs.map((p, i) => (
+                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                      ))}
+                    </PlateExpand>
+                  );
+                })()}
+                {(() => {
+                  const paragraphs = synthesis.synthesis.body.amino_acid.split('\n\n').filter(Boolean);
+                  return (
+                    <PlateExpand
+                      id="connections-amino-acid"
+                      section="connections"
+                      variant="light"
+                      label="Body · Amino Acid"
+                      caption={synthesis.reference?.body_amino_acid ?? undefined}
+                      preview={paragraphs[0] ?? ''}
+                    >
+                      {paragraphs.map((p, i) => (
+                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                      ))}
+                    </PlateExpand>
+                  );
+                })()}
               </>
             )}
 
