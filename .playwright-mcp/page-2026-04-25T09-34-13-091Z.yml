@@ -1,0 +1,2492 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e12] [cursor=pointer]:
+            - /url: /writings
+          - link "Oracle" [ref=e13] [cursor=pointer]:
+            - /url: /oracle/universal-language
+          - link "Inquire" [ref=e14] [cursor=pointer]:
+            - /url: /inquire
+          - link "About" [ref=e15] [cursor=pointer]:
+            - /url: /about
+        - button "Switch to light mode" [ref=e17]:
+          - img [ref=e18]
+    - main [ref=e24]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Creations" [level=1] [ref=e29]
+            - paragraph [ref=e30]: I create across many forms.
+            - paragraph [ref=e31]: Some you hang on the wall. Some you wear. Some you sit with. Some you walk into.
+            - paragraph [ref=e32]: These are not decoration. They are portals. A place to sit with. To find your center. To feel an opening. Find what calls to you.
+          - list "Art categories" [ref=e33]:
+            - listitem [ref=e34]:
+              - 'link "Explore Multidimensional Art: Windows into the infinite" [ref=e35] [cursor=pointer]':
+                - /url: /creations/multidimensional-art
+                - img [ref=e39]
+                - generic [ref=e40]:
+                  - heading "Multidimensional Art" [level=3] [ref=e41]
+                  - paragraph [ref=e42]: Windows into the infinite
+            - listitem [ref=e43]:
+              - 'link "Explore Illuminated Works: Art that lives differently after dark" [ref=e44] [cursor=pointer]':
+                - /url: /creations/illuminated-works
+                - generic [ref=e47]:
+                  - heading "Illuminated Works" [level=3] [ref=e48]
+                  - paragraph [ref=e49]: Art that lives differently after dark
+            - listitem [ref=e50]:
+              - 'button "Browse Jewelry: Wearable pieces and talismans" [ref=e51] [cursor=pointer]':
+                - img [ref=e55]
+                - generic [ref=e56]:
+                  - heading "Jewelry" [level=3] [ref=e57]
+                  - paragraph [ref=e58]: Wearable pieces and talismans
+            - listitem [ref=e59]:
+              - 'link "Explore Oracle Cards: Tools for reflection" [ref=e60] [cursor=pointer]':
+                - /url: /oracle/universal-language
+                - img [ref=e64]
+                - generic [ref=e65]:
+                  - heading "Oracle Cards" [level=3] [ref=e66]
+                  - paragraph [ref=e67]: Tools for reflection
+            - listitem [ref=e68]:
+              - 'button "Browse Objects: Functional objects for the altar, the table, the everyday ritual" [ref=e69] [cursor=pointer]':
+                - img [ref=e73]
+                - generic [ref=e74]:
+                  - heading "Objects" [level=3] [ref=e75]
+                  - paragraph [ref=e76]: Functional objects for the altar, the table, the everyday ritual
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: Ready to Ship
+              - heading "Available Now" [level=2] [ref=e82]
+              - paragraph [ref=e83]: These pieces are complete and ready to be shipped to their new home.
+            - link "See all in the shop" [ref=e84] [cursor=pointer]:
+              - /url: /shop
+              - text: See all in the shop
+              - img [ref=e85]
+          - generic [ref=e87]:
+            - link "Doorways Of The Unknown - 48 Doorways Of The Unknown - 48 Universal Language" [ref=e88] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - img "Doorways Of The Unknown - 48" [ref=e91]
+              - paragraph [ref=e92]: Doorways Of The Unknown - 48
+              - paragraph [ref=e93]: Universal Language
+            - link "Amphibian Dream Amphibian Dream Multidimensional Art" [ref=e94] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - img "Amphibian Dream" [ref=e98]
+              - paragraph [ref=e99]: Amphibian Dream
+              - paragraph [ref=e100]: Multidimensional Art
+            - link "Communion Communion Multidimensional Art" [ref=e101] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - img "Communion" [ref=e105]
+              - paragraph [ref=e106]: Communion
+              - paragraph [ref=e107]: Multidimensional Art
+            - link "Communion - Gold, Blue, Red Communion - Gold, Blue, Red Multidimensional Art" [ref=e108] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - img "Communion - Gold, Blue, Red" [ref=e112]
+              - paragraph [ref=e113]: Communion - Gold, Blue, Red
+              - paragraph [ref=e114]: Multidimensional Art
+            - link "Communion - Red Burst Communion - Red Burst Multidimensional Art" [ref=e115] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - img "Communion - Red Burst" [ref=e119]
+              - paragraph [ref=e120]: Communion - Red Burst
+              - paragraph [ref=e121]: Multidimensional Art
+            - link "Creation Unfolding Creation Unfolding Multidimensional Art" [ref=e122] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - img "Creation Unfolding" [ref=e126]
+              - paragraph [ref=e127]: Creation Unfolding
+              - paragraph [ref=e128]: Multidimensional Art
+        - generic [ref=e130]:
+          - heading "Creations" [level=2] [ref=e132]
+          - button "Available Only" [ref=e134]
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - link "Art of Living - 32, Universal Language 32. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e138] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - img "Art of Living - 32, Universal Language 32. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e141]
+              - generic [ref=e143]: View
+            - link "Art of Living" [ref=e144] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - heading "Art of Living" [level=3] [ref=e145]
+            - link "Multidimensional Art 32 $295 to $2,500" [ref=e146] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - generic [ref=e147]:
+                - generic [ref=e148]: Multidimensional Art
+                - generic [ref=e149]: "32"
+              - generic [ref=e150]:
+                - text: $295
+                - generic [ref=e151]: to $2,500
+          - generic [ref=e152]:
+            - link "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e153] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - img "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e155]
+              - generic [ref=e157]: View
+            - link "Crystal Creation" [ref=e158] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - heading "Crystal Creation" [level=3] [ref=e159]
+            - link "Multidimensional Art 36 $295 to $2,500" [ref=e160] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - generic [ref=e161]:
+                - generic [ref=e162]: Multidimensional Art
+                - generic [ref=e163]: "36"
+              - generic [ref=e164]:
+                - text: $295
+                - generic [ref=e165]: to $2,500
+          - generic [ref=e166]:
+            - link "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e167] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - img "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e169]
+              - generic [ref=e171]: View
+            - link "Doorways Of The Unknown" [ref=e172] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - heading "Doorways Of The Unknown" [level=3] [ref=e173]
+            - link "Multidimensional Art 48 $295 to $3,000" [ref=e174] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - generic [ref=e175]:
+                - generic [ref=e176]: Multidimensional Art
+                - generic [ref=e177]: "48"
+              - generic [ref=e178]:
+                - text: $295
+                - generic [ref=e179]: to $3,000
+          - generic [ref=e180]:
+            - link "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e181] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - img "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e183]
+              - generic [ref=e185]: View
+            - link "Ease in This" [ref=e186] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - heading "Ease in This" [level=3] [ref=e187]
+            - link "Multidimensional Art 9 $295 to $2,500" [ref=e188] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - generic [ref=e189]:
+                - generic [ref=e190]: Multidimensional Art
+                - generic [ref=e191]: "9"
+              - generic [ref=e192]:
+                - text: $295
+                - generic [ref=e193]: to $2,500
+          - generic [ref=e194]:
+            - link "Emerging as the Code - 20, Universal Language 20. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e195] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - img "Emerging as the Code - 20, Universal Language 20. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e198]
+              - generic [ref=e200]: View
+            - link "Emerging as the Code" [ref=e201] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - heading "Emerging as the Code" [level=3] [ref=e202]
+            - link "Multidimensional Art 20 $295 to $2,500" [ref=e203] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - generic [ref=e204]:
+                - generic [ref=e205]: Multidimensional Art
+                - generic [ref=e206]: "20"
+              - generic [ref=e207]:
+                - text: $295
+                - generic [ref=e208]: to $2,500
+          - generic [ref=e209]:
+            - link "Essential Nexus - 7, Universal Language 7. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e210] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - img "Essential Nexus - 7, Universal Language 7. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e213]
+              - generic [ref=e215]: View
+            - link "Essential Nexus" [ref=e216] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - heading "Essential Nexus" [level=3] [ref=e217]
+            - link "Multidimensional Art 7 $295 to $2,500" [ref=e218] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - generic [ref=e219]:
+                - generic [ref=e220]: Multidimensional Art
+                - generic [ref=e221]: "7"
+              - generic [ref=e222]:
+                - text: $295
+                - generic [ref=e223]: to $2,500
+          - generic [ref=e224]:
+            - link "Flight of the Tao - 57, Universal Language 57. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e225] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - img "Flight of the Tao - 57, Universal Language 57. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e228]
+              - generic [ref=e230]: View
+            - link "Flight of the Tao" [ref=e231] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - heading "Flight of the Tao" [level=3] [ref=e232]
+            - link "Multidimensional Art 57 $295 to $2,500" [ref=e233] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - generic [ref=e234]:
+                - generic [ref=e235]: Multidimensional Art
+                - generic [ref=e236]: "57"
+              - generic [ref=e237]:
+                - text: $295
+                - generic [ref=e238]: to $2,500
+          - generic [ref=e239]:
+            - link "Fountain of Light - 46, Universal Language 46. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e240] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - img "Fountain of Light - 46, Universal Language 46. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e243]
+              - generic [ref=e245]: View
+            - link "Fountain of Light" [ref=e246] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - heading "Fountain of Light" [level=3] [ref=e247]
+            - link "Multidimensional Art 46 $295 to $2,500" [ref=e248] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - generic [ref=e249]:
+                - generic [ref=e250]: Multidimensional Art
+                - generic [ref=e251]: "46"
+              - generic [ref=e252]:
+                - text: $295
+                - generic [ref=e253]: to $2,500
+          - generic [ref=e254]:
+            - link "Harmonious Mirage - 6, Universal Language 6. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e255] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - img "Harmonious Mirage - 6, Universal Language 6. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e258]
+              - generic [ref=e260]: View
+            - link "Harmonious Mirage" [ref=e261] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - heading "Harmonious Mirage" [level=3] [ref=e262]
+            - link "Multidimensional Art 6 $295 to $2,500" [ref=e263] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - generic [ref=e264]:
+                - generic [ref=e265]: Multidimensional Art
+                - generic [ref=e266]: "6"
+              - generic [ref=e267]:
+                - text: $295
+                - generic [ref=e268]: to $2,500
+          - generic [ref=e269]:
+            - link "Liberation of the Greater - 18, Universal Language 18. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e270] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - img "Liberation of the Greater - 18, Universal Language 18. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e273]
+              - generic [ref=e275]: View
+            - link "Liberation of the Greater" [ref=e276] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - heading "Liberation of the Greater" [level=3] [ref=e277]
+            - link "Multidimensional Art 18 $295 to $2,500" [ref=e278] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - generic [ref=e279]:
+                - generic [ref=e280]: Multidimensional Art
+                - generic [ref=e281]: "18"
+              - generic [ref=e282]:
+                - text: $295
+                - generic [ref=e283]: to $2,500
+          - generic [ref=e284]:
+            - link "Moving to Perfection - 42, Universal Language 42. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e285] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - img "Moving to Perfection - 42, Universal Language 42. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e288]
+              - generic [ref=e290]: View
+            - link "Moving to Perfection" [ref=e291] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - heading "Moving to Perfection" [level=3] [ref=e292]
+            - link "Multidimensional Art 42 $295 to $2,500" [ref=e293] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - generic [ref=e294]:
+                - generic [ref=e295]: Multidimensional Art
+                - generic [ref=e296]: "42"
+              - generic [ref=e297]:
+                - text: $295
+                - generic [ref=e298]: to $2,500
+          - generic [ref=e299]:
+            - link "Nobel Spark - 39, Universal Language 39. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e300] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - img "Nobel Spark - 39, Universal Language 39. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e303]
+              - generic [ref=e305]: View
+            - link "Nobel Spark" [ref=e306] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - heading "Nobel Spark" [level=3] [ref=e307]
+            - link "Multidimensional Art 39 $295 to $2,500" [ref=e308] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - generic [ref=e309]:
+                - generic [ref=e310]: Multidimensional Art
+                - generic [ref=e311]: "39"
+              - generic [ref=e312]:
+                - text: $295
+                - generic [ref=e313]: to $2,500
+          - generic [ref=e314]:
+            - link "Odyssey of Freedom - 8, Universal Language 8. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e315] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - img "Odyssey of Freedom - 8, Universal Language 8. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e318]
+              - generic [ref=e320]: View
+            - link "Odyssey of Freedom" [ref=e321] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - heading "Odyssey of Freedom" [level=3] [ref=e322]
+            - link "Multidimensional Art 8 $295 to $2,500" [ref=e323] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - generic [ref=e324]:
+                - generic [ref=e325]: Multidimensional Art
+                - generic [ref=e326]: "8"
+              - generic [ref=e327]:
+                - text: $295
+                - generic [ref=e328]: to $2,500
+          - generic [ref=e329]:
+            - link "Everlasting Bounty - 54, Universal Language 54. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e330] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - img "Everlasting Bounty - 54, Universal Language 54. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e333]
+              - generic [ref=e335]: View
+            - link "Everlasting Bounty" [ref=e336] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - heading "Everlasting Bounty" [level=3] [ref=e337]
+            - link "Multidimensional Art 54 $295 to $2,500" [ref=e338] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - generic [ref=e339]:
+                - generic [ref=e340]: Multidimensional Art
+                - generic [ref=e341]: "54"
+              - generic [ref=e342]:
+                - text: $295
+                - generic [ref=e343]: to $2,500
+          - generic [ref=e344]:
+            - link "Sol Star - 11, Universal Language 11. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e345] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - img "Sol Star - 11, Universal Language 11. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e348]
+              - generic [ref=e350]: View
+            - link "Sol Star" [ref=e351] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - heading "Sol Star" [level=3] [ref=e352]
+            - link "Multidimensional Art 11 $295 to $2,500" [ref=e353] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - generic [ref=e354]:
+                - generic [ref=e355]: Multidimensional Art
+                - generic [ref=e356]: "11"
+              - generic [ref=e357]:
+                - text: $295
+                - generic [ref=e358]: to $2,500
+          - generic [ref=e359]:
+            - link "Solection - 19, Universal Language 19. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e360] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - img "Solection - 19, Universal Language 19. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e363]
+              - generic [ref=e365]: View
+            - link "Solection" [ref=e366] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - heading "Solection" [level=3] [ref=e367]
+            - link "Multidimensional Art 19 $295 to $2,500" [ref=e368] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - generic [ref=e369]:
+                - generic [ref=e370]: Multidimensional Art
+                - generic [ref=e371]: "19"
+              - generic [ref=e372]:
+                - text: $295
+                - generic [ref=e373]: to $2,500
+          - generic [ref=e374]:
+            - link "Sophia's Orchestra - 44, Universal Language 44. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e375] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - img "Sophia's Orchestra - 44, Universal Language 44. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e378]
+              - generic [ref=e380]: View
+            - link "Sophia's Orchestra" [ref=e381] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - heading "Sophia's Orchestra" [level=3] [ref=e382]
+            - link "Multidimensional Art 44 $295 to $2,500" [ref=e383] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - generic [ref=e384]:
+                - generic [ref=e385]: Multidimensional Art
+                - generic [ref=e386]: "44"
+              - generic [ref=e387]:
+                - text: $295
+                - generic [ref=e388]: to $2,500
+          - generic [ref=e389]:
+            - link "The Mysteries Play - 25, Universal Language 25. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e390] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - img "The Mysteries Play - 25, Universal Language 25. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e393]
+              - generic [ref=e395]: View
+            - link "The Mysteries Play" [ref=e396] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - heading "The Mysteries Play" [level=3] [ref=e397]
+            - link "Multidimensional Art 25 $295 to $2,500" [ref=e398] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - generic [ref=e399]:
+                - generic [ref=e400]: Multidimensional Art
+                - generic [ref=e401]: "25"
+              - generic [ref=e402]:
+                - text: $295
+                - generic [ref=e403]: to $2,500
+          - generic [ref=e404]:
+            - link "Theater of Truth - 31, Universal Language 31. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e405] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - img "Theater of Truth - 31, Universal Language 31. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e408]
+              - generic [ref=e410]: View
+            - link "Theater of Truth" [ref=e411] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - heading "Theater of Truth" [level=3] [ref=e412]
+            - link "Multidimensional Art 31 $295 to $2,500" [ref=e413] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - generic [ref=e414]:
+                - generic [ref=e415]: Multidimensional Art
+                - generic [ref=e416]: "31"
+              - generic [ref=e417]:
+                - text: $295
+                - generic [ref=e418]: to $2,500
+          - generic [ref=e419]:
+            - link "Treasure of the Way - 22, Universal Language 22. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e420] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - img "Treasure of the Way - 22, Universal Language 22. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e423]
+              - generic [ref=e425]: View
+            - link "Treasure of the Way" [ref=e426] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - heading "Treasure of the Way" [level=3] [ref=e427]
+            - link "Multidimensional Art 22 $295 to $2,500" [ref=e428] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - generic [ref=e429]:
+                - generic [ref=e430]: Multidimensional Art
+                - generic [ref=e431]: "22"
+              - generic [ref=e432]:
+                - text: $295
+                - generic [ref=e433]: to $2,500
+          - generic [ref=e434]:
+            - link "Unshakable Arrival - 51, Universal Language 51. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e435] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - img "Unshakable Arrival - 51, Universal Language 51. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e438]
+              - generic [ref=e440]: View
+            - link "Unshakable Arrival" [ref=e441] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - heading "Unshakable Arrival" [level=3] [ref=e442]
+            - link "Multidimensional Art 51 $295 to $2,500" [ref=e443] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - generic [ref=e444]:
+                - generic [ref=e445]: Multidimensional Art
+                - generic [ref=e446]: "51"
+              - generic [ref=e447]:
+                - text: $295
+                - generic [ref=e448]: to $2,500
+          - generic [ref=e449]:
+            - link "Veils of Knowledge - 4, Universal Language 4. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e450] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - img "Veils of Knowledge - 4, Universal Language 4. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e453]
+              - generic [ref=e455]: View
+            - link "Veils of Knowledge" [ref=e456] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - heading "Veils of Knowledge" [level=3] [ref=e457]
+            - link "Multidimensional Art 4 $295 to $2,500" [ref=e458] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - generic [ref=e459]:
+                - generic [ref=e460]: Multidimensional Art
+                - generic [ref=e461]: "4"
+              - generic [ref=e462]:
+                - text: $295
+                - generic [ref=e463]: to $2,500
+          - generic [ref=e464]:
+            - link "Earth's Breath - 1, Universal Language 1. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e465] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - img "Earth's Breath - 1, Universal Language 1. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e468]
+              - generic [ref=e470]: View
+            - link "Earth's Breath" [ref=e471] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - heading "Earth's Breath" [level=3] [ref=e472]
+            - link "Multidimensional Art 1 $295 to $2,500" [ref=e473] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - generic [ref=e474]:
+                - generic [ref=e475]: Multidimensional Art
+                - generic [ref=e476]: "1"
+              - generic [ref=e477]:
+                - text: $295
+                - generic [ref=e478]: to $2,500
+          - generic [ref=e479]:
+            - link "Beyond the Shell - 2, Universal Language 2. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e480] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - img "Beyond the Shell - 2, Universal Language 2. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e483]
+              - generic [ref=e485]: View
+            - link "Beyond the Shell" [ref=e486] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - heading "Beyond the Shell" [level=3] [ref=e487]
+            - link "Multidimensional Art 2 $295 to $2,500" [ref=e488] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - generic [ref=e489]:
+                - generic [ref=e490]: Multidimensional Art
+                - generic [ref=e491]: "2"
+              - generic [ref=e492]:
+                - text: $295
+                - generic [ref=e493]: to $2,500
+          - generic [ref=e494]:
+            - link "Messengers of the Infinite - 3, Universal Language 3. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e495] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - img "Messengers of the Infinite - 3, Universal Language 3. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e498]
+              - generic [ref=e500]: View
+            - link "Messengers of the Infinite" [ref=e501] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - heading "Messengers of the Infinite" [level=3] [ref=e502]
+            - link "Multidimensional Art 3 $295 to $2,500" [ref=e503] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - generic [ref=e504]:
+                - generic [ref=e505]: Multidimensional Art
+                - generic [ref=e506]: "3"
+              - generic [ref=e507]:
+                - text: $295
+                - generic [ref=e508]: to $2,500
+          - generic [ref=e509]:
+            - link "The Space Between Time - 5, Universal Language 5. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e510] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - img "The Space Between Time - 5, Universal Language 5. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e513]
+              - generic [ref=e515]: View
+            - link "The Space Between Time" [ref=e516] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - heading "The Space Between Time" [level=3] [ref=e517]
+            - link "Multidimensional Art 5 $295 to $2,500" [ref=e518] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - generic [ref=e519]:
+                - generic [ref=e520]: Multidimensional Art
+                - generic [ref=e521]: "5"
+              - generic [ref=e522]:
+                - text: $295
+                - generic [ref=e523]: to $2,500
+          - generic [ref=e524]:
+            - link "Internal Treasure - 10, Universal Language 10. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e525] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - img "Internal Treasure - 10, Universal Language 10. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e528]
+              - generic [ref=e530]: View
+            - link "Internal Treasure" [ref=e531] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - heading "Internal Treasure" [level=3] [ref=e532]
+            - link "Multidimensional Art 10 $295 to $2,500" [ref=e533] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - generic [ref=e534]:
+                - generic [ref=e535]: Multidimensional Art
+                - generic [ref=e536]: "10"
+              - generic [ref=e537]:
+                - text: $295
+                - generic [ref=e538]: to $2,500
+          - generic [ref=e539]:
+            - link "Petals of Freedom - 12, Universal Language 12. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e540] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - img "Petals of Freedom - 12, Universal Language 12. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e543]
+              - generic [ref=e545]: View
+            - link "Petals of Freedom" [ref=e546] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - heading "Petals of Freedom" [level=3] [ref=e547]
+            - link "Multidimensional Art 12 $295 to $2,500" [ref=e548] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - generic [ref=e549]:
+                - generic [ref=e550]: Multidimensional Art
+                - generic [ref=e551]: "12"
+              - generic [ref=e552]:
+                - text: $295
+                - generic [ref=e553]: to $2,500
+          - generic [ref=e554]:
+            - link "Universal Crest - 13, Universal Language 13. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e555] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - img "Universal Crest - 13, Universal Language 13. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e558]
+              - generic [ref=e560]: View
+            - link "Universal Crest" [ref=e561] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - heading "Universal Crest" [level=3] [ref=e562]
+            - link "Multidimensional Art 13 $295 to $2,500" [ref=e563] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - generic [ref=e564]:
+                - generic [ref=e565]: Multidimensional Art
+                - generic [ref=e566]: "13"
+              - generic [ref=e567]:
+                - text: $295
+                - generic [ref=e568]: to $2,500
+          - generic [ref=e569]:
+            - link "Ancestors Bloom - 14, Universal Language 14. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e570] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - img "Ancestors Bloom - 14, Universal Language 14. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e573]
+              - generic [ref=e575]: View
+            - link "Ancestors Bloom" [ref=e576] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - heading "Ancestors Bloom" [level=3] [ref=e577]
+            - link "Multidimensional Art 14 $295 to $2,500" [ref=e578] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - generic [ref=e579]:
+                - generic [ref=e580]: Multidimensional Art
+                - generic [ref=e581]: "14"
+              - generic [ref=e582]:
+                - text: $295
+                - generic [ref=e583]: to $2,500
+          - generic [ref=e584]:
+            - link "Ordinary Valiance - 15, Universal Language 15. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e585] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - img "Ordinary Valiance - 15, Universal Language 15. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e588]
+              - generic [ref=e590]: View
+            - link "Ordinary Valiance" [ref=e591] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - heading "Ordinary Valiance" [level=3] [ref=e592]
+            - link "Multidimensional Art 15 $295 to $2,500" [ref=e593] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - generic [ref=e594]:
+                - generic [ref=e595]: Multidimensional Art
+                - generic [ref=e596]: "15"
+              - generic [ref=e597]:
+                - text: $295
+                - generic [ref=e598]: to $2,500
+          - generic [ref=e599]:
+            - link "Grand Rising - 16, Universal Language 16. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e600] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - img "Grand Rising - 16, Universal Language 16. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e603]
+              - generic [ref=e605]: View
+            - link "Grand Rising" [ref=e606] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - heading "Grand Rising" [level=3] [ref=e607]
+            - link "Multidimensional Art 16 $295 to $2,500" [ref=e608] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - generic [ref=e609]:
+                - generic [ref=e610]: Multidimensional Art
+                - generic [ref=e611]: "16"
+              - generic [ref=e612]:
+                - text: $295
+                - generic [ref=e613]: to $2,500
+          - generic [ref=e614]:
+            - link "Peral of Christos - 17, Universal Language 17. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e615] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - img "Peral of Christos - 17, Universal Language 17. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e618]
+              - generic [ref=e620]: View
+            - link "Peral of Christos" [ref=e621] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - heading "Peral of Christos" [level=3] [ref=e622]
+            - link "Multidimensional Art 17 $295 to $2,500" [ref=e623] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - generic [ref=e624]:
+                - generic [ref=e625]: Multidimensional Art
+                - generic [ref=e626]: "17"
+              - generic [ref=e627]:
+                - text: $295
+                - generic [ref=e628]: to $2,500
+          - generic [ref=e629]:
+            - link "Beyond Binary - 21, Universal Language 21. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e630] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - img "Beyond Binary - 21, Universal Language 21. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e633]
+              - generic [ref=e635]: View
+            - link "Beyond Binary" [ref=e636] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - heading "Beyond Binary" [level=3] [ref=e637]
+            - link "Multidimensional Art 21 $295 to $2,500" [ref=e638] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - generic [ref=e639]:
+                - generic [ref=e640]: Multidimensional Art
+                - generic [ref=e641]: "21"
+              - generic [ref=e642]:
+                - text: $295
+                - generic [ref=e643]: to $2,500
+          - generic [ref=e644]:
+            - link "Beneath the Surface - 23, Universal Language 23. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e645] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - img "Beneath the Surface - 23, Universal Language 23. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e648]
+              - generic [ref=e650]: View
+            - link "Beneath the Surface" [ref=e651] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - heading "Beneath the Surface" [level=3] [ref=e652]
+            - link "Multidimensional Art 23 $295 to $2,500" [ref=e653] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - generic [ref=e654]:
+                - generic [ref=e655]: Multidimensional Art
+                - generic [ref=e656]: "23"
+              - generic [ref=e657]:
+                - text: $295
+                - generic [ref=e658]: to $2,500
+          - generic [ref=e659]:
+            - link "Frequency Flutter - 24, Universal Language 24. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e660] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - img "Frequency Flutter - 24, Universal Language 24. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e663]
+              - generic [ref=e665]: View
+            - link "Frequency Flutter" [ref=e666] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - heading "Frequency Flutter" [level=3] [ref=e667]
+            - link "Multidimensional Art 24 $295 to $2,500" [ref=e668] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - generic [ref=e669]:
+                - generic [ref=e670]: Multidimensional Art
+                - generic [ref=e671]: "24"
+              - generic [ref=e672]:
+                - text: $295
+                - generic [ref=e673]: to $2,500
+          - generic [ref=e674]:
+            - link "Lighter Than a Feather - 26, Universal Language 26. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e675] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - img "Lighter Than a Feather - 26, Universal Language 26. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e678]
+              - generic [ref=e680]: View
+            - link "Lighter Than a Feather" [ref=e681] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - heading "Lighter Than a Feather" [level=3] [ref=e682]
+            - link "Multidimensional Art 26 $295 to $2,500" [ref=e683] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - generic [ref=e684]:
+                - generic [ref=e685]: Multidimensional Art
+                - generic [ref=e686]: "26"
+              - generic [ref=e687]:
+                - text: $295
+                - generic [ref=e688]: to $2,500
+          - generic [ref=e689]:
+            - link "Inner Majesty - 27, Universal Language 27. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e690] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - img "Inner Majesty - 27, Universal Language 27. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e693]
+              - generic [ref=e695]: View
+            - link "Inner Majesty" [ref=e696] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - heading "Inner Majesty" [level=3] [ref=e697]
+            - link "Multidimensional Art 27 $295 to $2,500" [ref=e698] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - generic [ref=e699]:
+                - generic [ref=e700]: Multidimensional Art
+                - generic [ref=e701]: "27"
+              - generic [ref=e702]:
+                - text: $295
+                - generic [ref=e703]: to $2,500
+          - generic [ref=e704]:
+            - link "Becoming the Mystery - 28, Universal Language 28. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e705] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - img "Becoming the Mystery - 28, Universal Language 28. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e708]
+              - generic [ref=e710]: View
+            - link "Becoming the Mystery" [ref=e711] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - heading "Becoming the Mystery" [level=3] [ref=e712]
+            - link "Multidimensional Art 28 $295 to $2,500" [ref=e713] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - generic [ref=e714]:
+                - generic [ref=e715]: Multidimensional Art
+                - generic [ref=e716]: "28"
+              - generic [ref=e717]:
+                - text: $295
+                - generic [ref=e718]: to $2,500
+          - generic [ref=e719]:
+            - link "All In - 29, Universal Language 29. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e720] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - img "All In - 29, Universal Language 29. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e723]
+              - generic [ref=e725]: View
+            - link "All In" [ref=e726] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - heading "All In" [level=3] [ref=e727]
+            - link "Multidimensional Art 29 $295 to $2,500" [ref=e728] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - generic [ref=e729]:
+                - generic [ref=e730]: Multidimensional Art
+                - generic [ref=e731]: "29"
+              - generic [ref=e732]:
+                - text: $295
+                - generic [ref=e733]: to $2,500
+          - generic [ref=e734]:
+            - link "Sparking the Blaze - 30, Universal Language 30. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e735] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - img "Sparking the Blaze - 30, Universal Language 30. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e738]
+              - generic [ref=e740]: View
+            - link "Sparking the Blaze" [ref=e741] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - heading "Sparking the Blaze" [level=3] [ref=e742]
+            - link "Multidimensional Art 30 $295 to $2,500" [ref=e743] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - generic [ref=e744]:
+                - generic [ref=e745]: Multidimensional Art
+                - generic [ref=e746]: "30"
+              - generic [ref=e747]:
+                - text: $295
+                - generic [ref=e748]: to $2,500
+          - generic [ref=e749]:
+            - link "Echos of Time - 33, Universal Language 33. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e750] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - img "Echos of Time - 33, Universal Language 33. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e753]
+              - generic [ref=e755]: View
+            - link "Echos of Time" [ref=e756] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - heading "Echos of Time" [level=3] [ref=e757]
+            - link "Multidimensional Art 33 $295 to $2,500" [ref=e758] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - generic [ref=e759]:
+                - generic [ref=e760]: Multidimensional Art
+                - generic [ref=e761]: "33"
+              - generic [ref=e762]:
+                - text: $295
+                - generic [ref=e763]: to $2,500
+          - generic [ref=e764]:
+            - link "Sublime Power - 34, Universal Language 34. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e765] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - img "Sublime Power - 34, Universal Language 34. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e768]
+              - generic [ref=e770]: View
+            - link "Sublime Power" [ref=e771] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - heading "Sublime Power" [level=3] [ref=e772]
+            - link "Multidimensional Art 34 $295 to $2,500" [ref=e773] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - generic [ref=e774]:
+                - generic [ref=e775]: Multidimensional Art
+                - generic [ref=e776]: "34"
+              - generic [ref=e777]:
+                - text: $295
+                - generic [ref=e778]: to $2,500
+          - generic [ref=e779]:
+            - link "Navigational Star - 35, Universal Language 35. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e780] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - img "Navigational Star - 35, Universal Language 35. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e783]
+              - generic [ref=e785]: View
+            - link "Navigational Star" [ref=e786] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - heading "Navigational Star" [level=3] [ref=e787]
+            - link "Multidimensional Art 35 $295 to $2,500" [ref=e788] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - generic [ref=e789]:
+                - generic [ref=e790]: Multidimensional Art
+                - generic [ref=e791]: "35"
+              - generic [ref=e792]:
+                - text: $295
+                - generic [ref=e793]: to $2,500
+          - generic [ref=e794]:
+            - link "Journey Home - 37, Universal Language 37. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e795] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - img "Journey Home - 37, Universal Language 37. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e798]
+              - generic [ref=e800]: View
+            - link "Journey Home" [ref=e801] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - heading "Journey Home" [level=3] [ref=e802]
+            - link "Multidimensional Art 37 $295 to $2,500" [ref=e803] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - generic [ref=e804]:
+                - generic [ref=e805]: Multidimensional Art
+                - generic [ref=e806]: "37"
+              - generic [ref=e807]:
+                - text: $295
+                - generic [ref=e808]: to $2,500
+          - generic [ref=e809]:
+            - link "Inner Light Symphony - 38, Universal Language 38. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e810] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - img "Inner Light Symphony - 38, Universal Language 38. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e813]
+              - generic [ref=e815]: View
+            - link "Inner Light Symphony" [ref=e816] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - heading "Inner Light Symphony" [level=3] [ref=e817]
+            - link "Multidimensional Art 38 $295 to $2,500" [ref=e818] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - generic [ref=e819]:
+                - generic [ref=e820]: Multidimensional Art
+                - generic [ref=e821]: "38"
+              - generic [ref=e822]:
+                - text: $295
+                - generic [ref=e823]: to $2,500
+          - generic [ref=e824]:
+            - link "Eternal Wellspring - 40, Universal Language 40. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e825] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - img "Eternal Wellspring - 40, Universal Language 40. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e828]
+              - generic [ref=e830]: View
+            - link "Eternal Wellspring" [ref=e831] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - heading "Eternal Wellspring" [level=3] [ref=e832]
+            - link "Multidimensional Art 40 $295 to $2,500" [ref=e833] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - generic [ref=e834]:
+                - generic [ref=e835]: Multidimensional Art
+                - generic [ref=e836]: "40"
+              - generic [ref=e837]:
+                - text: $295
+                - generic [ref=e838]: to $2,500
+          - generic [ref=e839]:
+            - link "Beginning and the End - 41, Universal Language 41. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e840] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - img "Beginning and the End - 41, Universal Language 41. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e843]
+              - generic [ref=e845]: View
+            - link "Beginning and the End" [ref=e846] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - heading "Beginning and the End" [level=3] [ref=e847]
+            - link "Multidimensional Art 41 $295 to $2,500" [ref=e848] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - generic [ref=e849]:
+                - generic [ref=e850]: Multidimensional Art
+                - generic [ref=e851]: "41"
+              - generic [ref=e852]:
+                - text: $295
+                - generic [ref=e853]: to $2,500
+          - generic [ref=e854]:
+            - link "Cipher of Knowledge - 43, Universal Language 43. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e855] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - img "Cipher of Knowledge - 43, Universal Language 43. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e858]
+              - generic [ref=e860]: View
+            - link "Cipher of Knowledge" [ref=e861] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - heading "Cipher of Knowledge" [level=3] [ref=e862]
+            - link "Multidimensional Art 43 $295 to $2,500" [ref=e863] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - generic [ref=e864]:
+                - generic [ref=e865]: Multidimensional Art
+                - generic [ref=e866]: "43"
+              - generic [ref=e867]:
+                - text: $295
+                - generic [ref=e868]: to $2,500
+          - generic [ref=e869]:
+            - link "Tribal Tapestry - 45, Universal Language 45. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e870] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - img "Tribal Tapestry - 45, Universal Language 45. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e873]
+              - generic [ref=e875]: View
+            - link "Tribal Tapestry" [ref=e876] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - heading "Tribal Tapestry" [level=3] [ref=e877]
+            - link "Multidimensional Art 45 $295 to $2,500" [ref=e878] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - generic [ref=e879]:
+                - generic [ref=e880]: Multidimensional Art
+                - generic [ref=e881]: "45"
+              - generic [ref=e882]:
+                - text: $295
+                - generic [ref=e883]: to $2,500
+          - generic [ref=e884]:
+            - link "Garden of Alchemy - 47, Universal Language 47. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e885] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - img "Garden of Alchemy - 47, Universal Language 47. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e888]
+              - generic [ref=e890]: View
+            - link "Garden of Alchemy" [ref=e891] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - heading "Garden of Alchemy" [level=3] [ref=e892]
+            - link "Multidimensional Art 47 $295 to $2,500" [ref=e893] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - generic [ref=e894]:
+                - generic [ref=e895]: Multidimensional Art
+                - generic [ref=e896]: "47"
+              - generic [ref=e897]:
+                - text: $295
+                - generic [ref=e898]: to $2,500
+          - generic [ref=e899]:
+            - link "Union in the Ashes - 49, Universal Language 49. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e900] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - img "Union in the Ashes - 49, Universal Language 49. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e903]
+              - generic [ref=e905]: View
+            - link "Union in the Ashes" [ref=e906] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - heading "Union in the Ashes" [level=3] [ref=e907]
+            - link "Multidimensional Art 49 $295 to $2,500" [ref=e908] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - generic [ref=e909]:
+                - generic [ref=e910]: Multidimensional Art
+                - generic [ref=e911]: "49"
+              - generic [ref=e912]:
+                - text: $295
+                - generic [ref=e913]: to $2,500
+          - generic [ref=e914]:
+            - link "Melt Into Perfection - 50, Universal Language 50. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e915] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - img "Melt Into Perfection - 50, Universal Language 50. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e918]
+              - generic [ref=e920]: View
+            - link "Melt Into Perfection" [ref=e921] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - heading "Melt Into Perfection" [level=3] [ref=e922]
+            - link "Multidimensional Art 50 $295 to $2,500" [ref=e923] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - generic [ref=e924]:
+                - generic [ref=e925]: Multidimensional Art
+                - generic [ref=e926]: "50"
+              - generic [ref=e927]:
+                - text: $295
+                - generic [ref=e928]: to $2,500
+          - generic [ref=e929]:
+            - link "Timeless Blossom - 52, Universal Language 52. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e930] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - img "Timeless Blossom - 52, Universal Language 52. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e933]
+              - generic [ref=e935]: View
+            - link "Timeless Blossom" [ref=e936] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - heading "Timeless Blossom" [level=3] [ref=e937]
+            - link "Multidimensional Art 52 $295 to $2,500" [ref=e938] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - generic [ref=e939]:
+                - generic [ref=e940]: Multidimensional Art
+                - generic [ref=e941]: "52"
+              - generic [ref=e942]:
+                - text: $295
+                - generic [ref=e943]: to $2,500
+          - generic [ref=e944]:
+            - link "Creation Oscillation - 53, Universal Language 53. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e945] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - img "Creation Oscillation - 53, Universal Language 53. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e948]
+              - generic [ref=e950]: View
+            - link "Creation Oscillation" [ref=e951] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - heading "Creation Oscillation" [level=3] [ref=e952]
+            - link "Multidimensional Art 53 $295 to $2,500" [ref=e953] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - generic [ref=e954]:
+                - generic [ref=e955]: Multidimensional Art
+                - generic [ref=e956]: "53"
+              - generic [ref=e957]:
+                - text: $295
+                - generic [ref=e958]: to $2,500
+          - generic [ref=e959]:
+            - link "Untouched Perfection - 55, Universal Language 55. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e960] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - img "Untouched Perfection - 55, Universal Language 55. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e963]
+              - generic [ref=e965]: View
+            - link "Untouched Perfection" [ref=e966] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - heading "Untouched Perfection" [level=3] [ref=e967]
+            - link "Multidimensional Art 55 $295 to $2,500" [ref=e968] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - generic [ref=e969]:
+                - generic [ref=e970]: Multidimensional Art
+                - generic [ref=e971]: "55"
+              - generic [ref=e972]:
+                - text: $295
+                - generic [ref=e973]: to $2,500
+          - generic [ref=e974]:
+            - link "Infinite Journey - 56, Universal Language 56. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e975] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - img "Infinite Journey - 56, Universal Language 56. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e978]
+              - generic [ref=e980]: View
+            - link "Infinite Journey" [ref=e981] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - heading "Infinite Journey" [level=3] [ref=e982]
+            - link "Multidimensional Art 56 $295 to $2,500" [ref=e983] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - generic [ref=e984]:
+                - generic [ref=e985]: Multidimensional Art
+                - generic [ref=e986]: "56"
+              - generic [ref=e987]:
+                - text: $295
+                - generic [ref=e988]: to $2,500
+          - generic [ref=e989]:
+            - link "Rhythm of Life - 58, Universal Language 58. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e990] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - img "Rhythm of Life - 58, Universal Language 58. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e993]
+              - generic [ref=e995]: View
+            - link "Rhythm of Life" [ref=e996] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - heading "Rhythm of Life" [level=3] [ref=e997]
+            - link "Multidimensional Art 58 $295 to $2,500" [ref=e998] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - generic [ref=e999]:
+                - generic [ref=e1000]: Multidimensional Art
+                - generic [ref=e1001]: "58"
+              - generic [ref=e1002]:
+                - text: $295
+                - generic [ref=e1003]: to $2,500
+          - generic [ref=e1004]:
+            - link "Mystics Treasures - 59, Universal Language 59. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1005] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - img "Mystics Treasures - 59, Universal Language 59. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1008]
+              - generic [ref=e1010]: View
+            - link "Mystics Treasures" [ref=e1011] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - heading "Mystics Treasures" [level=3] [ref=e1012]
+            - link "Multidimensional Art 59 $295 to $2,500" [ref=e1013] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - generic [ref=e1014]:
+                - generic [ref=e1015]: Multidimensional Art
+                - generic [ref=e1016]: "59"
+              - generic [ref=e1017]:
+                - text: $295
+                - generic [ref=e1018]: to $2,500
+          - generic [ref=e1019]:
+            - link "Woven Light - 60, Universal Language 60. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1020] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - img "Woven Light - 60, Universal Language 60. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1023]
+              - generic [ref=e1025]: View
+            - link "Woven Light" [ref=e1026] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - heading "Woven Light" [level=3] [ref=e1027]
+            - link "Multidimensional Art 60 $295 to $2,500" [ref=e1028] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - generic [ref=e1029]:
+                - generic [ref=e1030]: Multidimensional Art
+                - generic [ref=e1031]: "60"
+              - generic [ref=e1032]:
+                - text: $295
+                - generic [ref=e1033]: to $2,500
+          - generic [ref=e1034]:
+            - link "Celestial Remembrance - 61, Universal Language 61. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1035] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - img "Celestial Remembrance - 61, Universal Language 61. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1038]
+              - generic [ref=e1040]: View
+            - link "Celestial Remembrance" [ref=e1041] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - heading "Celestial Remembrance" [level=3] [ref=e1042]
+            - link "Multidimensional Art 61 $295 to $2,500" [ref=e1043] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - generic [ref=e1044]:
+                - generic [ref=e1045]: Multidimensional Art
+                - generic [ref=e1046]: "61"
+              - generic [ref=e1047]:
+                - text: $295
+                - generic [ref=e1048]: to $2,500
+          - generic [ref=e1049]:
+            - link "Voice of Nature - 62, Universal Language 62. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1050] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - img "Voice of Nature - 62, Universal Language 62. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1053]
+              - generic [ref=e1055]: View
+            - link "Voice of Nature" [ref=e1056] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - heading "Voice of Nature" [level=3] [ref=e1057]
+            - link "Multidimensional Art 62 $295 to $2,500" [ref=e1058] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - generic [ref=e1059]:
+                - generic [ref=e1060]: Multidimensional Art
+                - generic [ref=e1061]: "62"
+              - generic [ref=e1062]:
+                - text: $295
+                - generic [ref=e1063]: to $2,500
+          - generic [ref=e1064]:
+            - link "Adornments of Time - 63, Universal Language 63. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1065] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - img "Adornments of Time - 63, Universal Language 63. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1068]
+              - generic [ref=e1070]: View
+            - link "Adornments of Time" [ref=e1071] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - heading "Adornments of Time" [level=3] [ref=e1072]
+            - link "Multidimensional Art 63 $295 to $2,500" [ref=e1073] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - generic [ref=e1074]:
+                - generic [ref=e1075]: Multidimensional Art
+                - generic [ref=e1076]: "63"
+              - generic [ref=e1077]:
+                - text: $295
+                - generic [ref=e1078]: to $2,500
+          - generic [ref=e1079]:
+            - link "Communion - 64, Universal Language 64. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1080] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - img "Communion - 64, Universal Language 64. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1083]
+              - generic [ref=e1085]: View
+            - link "Communion" [ref=e1086] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - heading "Communion" [level=3] [ref=e1087]
+            - link "Multidimensional Art 64 $295 to $2,500" [ref=e1088] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - generic [ref=e1089]:
+                - generic [ref=e1090]: Multidimensional Art
+                - generic [ref=e1091]: "64"
+              - generic [ref=e1092]:
+                - text: $295
+                - generic [ref=e1093]: to $2,500
+          - generic [ref=e1094]:
+            - link "Amphibian Dream by Adrian Rasmussen View" [ref=e1095] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - img "Amphibian Dream by Adrian Rasmussen"
+              - generic [ref=e1096]: View
+            - link "Amphibian Dream" [ref=e1097] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - heading "Amphibian Dream" [level=3] [ref=e1098]
+            - link "Multidimensional Art $745" [ref=e1099] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - generic [ref=e1101]: Multidimensional Art
+              - generic [ref=e1102]: $745
+          - generic [ref=e1103]:
+            - link "Beyond the Matrix by Adrian Rasmussen View" [ref=e1104] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - img "Beyond the Matrix by Adrian Rasmussen"
+              - generic [ref=e1105]: View
+            - link "Beyond the Matrix" [ref=e1106] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - heading "Beyond the Matrix" [level=3] [ref=e1107]
+            - link "Multidimensional Art" [ref=e1108] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - generic [ref=e1110]: Multidimensional Art
+          - generic [ref=e1111]:
+            - link "Communion by Adrian Rasmussen View" [ref=e1112] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - img "Communion by Adrian Rasmussen"
+              - generic [ref=e1113]: View
+            - link "Communion" [ref=e1114] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - heading "Communion" [level=3] [ref=e1115]
+            - link "Multidimensional Art $1,111" [ref=e1116] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - generic [ref=e1118]: Multidimensional Art
+              - generic [ref=e1119]: $1,111
+          - generic [ref=e1120]:
+            - link "Communion - Gold, Blue, Red by Adrian Rasmussen View" [ref=e1121] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - img "Communion - Gold, Blue, Red by Adrian Rasmussen"
+              - generic [ref=e1122]: View
+            - link "Communion - Gold, Blue, Red" [ref=e1123] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - heading "Communion - Gold, Blue, Red" [level=3] [ref=e1124]
+            - link "Multidimensional Art $1,111" [ref=e1125] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - generic [ref=e1127]: Multidimensional Art
+              - generic [ref=e1128]: $1,111
+          - generic [ref=e1129]:
+            - link "Communion - Red Burst by Adrian Rasmussen View" [ref=e1130] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - img "Communion - Red Burst by Adrian Rasmussen"
+              - generic [ref=e1131]: View
+            - link "Communion - Red Burst" [ref=e1132] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - heading "Communion - Red Burst" [level=3] [ref=e1133]
+            - link "Multidimensional Art $1,111" [ref=e1134] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - generic [ref=e1136]: Multidimensional Art
+              - generic [ref=e1137]: $1,111
+          - generic [ref=e1138]:
+            - link "Creation Unfolding by Adrian Rasmussen View" [ref=e1139] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - img "Creation Unfolding by Adrian Rasmussen"
+              - generic [ref=e1140]: View
+            - link "Creation Unfolding" [ref=e1141] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - heading "Creation Unfolding" [level=3] [ref=e1142]
+            - link "Multidimensional Art $969" [ref=e1143] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - generic [ref=e1145]: Multidimensional Art
+              - generic [ref=e1146]: $969
+          - generic [ref=e1147]:
+            - link "Mystics Journey - Framed by Adrian Rasmussen View" [ref=e1148] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - img "Mystics Journey - Framed by Adrian Rasmussen"
+              - generic [ref=e1149]: View
+            - link "Mystics Journey - Framed" [ref=e1150] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - heading "Mystics Journey - Framed" [level=3] [ref=e1151]
+            - link "Multidimensional Art $9,000" [ref=e1152] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - generic [ref=e1154]: Multidimensional Art
+              - generic [ref=e1155]: $9,000
+          - generic [ref=e1156]:
+            - link "Path of the Ordinary by Adrian Rasmussen View" [ref=e1157] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - img "Path of the Ordinary by Adrian Rasmussen"
+              - generic [ref=e1158]: View
+            - link "Path of the Ordinary" [ref=e1159] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - heading "Path of the Ordinary" [level=3] [ref=e1160]
+            - link "Multidimensional Art $4,000" [ref=e1161] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - generic [ref=e1163]: Multidimensional Art
+              - generic [ref=e1164]: $4,000
+          - generic [ref=e1165]:
+            - link "Winged Spirit Wood by Adrian Rasmussen View" [ref=e1166] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - img "Winged Spirit Wood by Adrian Rasmussen"
+              - generic [ref=e1167]: View
+            - link "Winged Spirit Wood" [ref=e1168] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - heading "Winged Spirit Wood" [level=3] [ref=e1169]
+            - link "Multidimensional Art $969" [ref=e1170] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - generic [ref=e1172]: Multidimensional Art
+              - generic [ref=e1173]: $969
+          - generic [ref=e1174]:
+            - link "Green Gold by Adrian Rasmussen View" [ref=e1175] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - img "Green Gold by Adrian Rasmussen"
+              - generic [ref=e1176]: View
+            - link "Green Gold" [ref=e1177] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - heading "Green Gold" [level=3] [ref=e1178]
+            - link "Multidimensional Art" [ref=e1179] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - generic [ref=e1181]: Multidimensional Art
+          - generic [ref=e1182]:
+            - link "Blue gold by Adrian Rasmussen View" [ref=e1183] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - img "Blue gold by Adrian Rasmussen"
+              - generic [ref=e1184]: View
+            - link "Blue gold" [ref=e1185] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - heading "Blue gold" [level=3] [ref=e1186]
+            - link "Multidimensional Art" [ref=e1187] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - generic [ref=e1189]: Multidimensional Art
+          - generic [ref=e1190]:
+            - link "Red gold by Adrian Rasmussen View" [ref=e1191] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - img "Red gold by Adrian Rasmussen"
+              - generic [ref=e1192]: View
+            - link "Red gold" [ref=e1193] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - heading "Red gold" [level=3] [ref=e1194]
+            - link "Multidimensional Art" [ref=e1195] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - generic [ref=e1197]: Multidimensional Art
+          - generic [ref=e1198]:
+            - link "Blue Sun by Adrian Rasmussen View" [ref=e1199] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - img "Blue Sun by Adrian Rasmussen"
+              - generic [ref=e1200]: View
+            - link "Blue Sun" [ref=e1201] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - heading "Blue Sun" [level=3] [ref=e1202]
+            - link "Multidimensional Art $111" [ref=e1203] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - generic [ref=e1205]: Multidimensional Art
+              - generic [ref=e1206]: $111
+          - generic [ref=e1207]:
+            - link "Blue White by Adrian Rasmussen View" [ref=e1208] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - img "Blue White by Adrian Rasmussen"
+              - generic [ref=e1209]: View
+            - link "Blue White" [ref=e1210] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - heading "Blue White" [level=3] [ref=e1211]
+            - link "Multidimensional Art" [ref=e1212] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - generic [ref=e1214]: Multidimensional Art
+          - generic [ref=e1215]:
+            - link "Blue-pink-white by Adrian Rasmussen View" [ref=e1216] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - img "Blue-pink-white by Adrian Rasmussen"
+              - generic [ref=e1217]: View
+            - link "Blue-pink-white" [ref=e1218] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - heading "Blue-pink-white" [level=3] [ref=e1219]
+            - link "Multidimensional Art" [ref=e1220] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - generic [ref=e1222]: Multidimensional Art
+          - generic [ref=e1223]:
+            - link "Boundless Flower - Blue Purple by Adrian Rasmussen View" [ref=e1224] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - img "Boundless Flower - Blue Purple by Adrian Rasmussen"
+              - generic [ref=e1225]: View
+            - link "Boundless Flower - Blue Purple" [ref=e1226] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - heading "Boundless Flower - Blue Purple" [level=3] [ref=e1227]
+            - link "Multidimensional Art $500" [ref=e1228] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - generic [ref=e1230]: Multidimensional Art
+              - generic [ref=e1231]: $500
+          - generic [ref=e1232]:
+            - link "Boundless Flower - Green Gold by Adrian Rasmussen View" [ref=e1233] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - img "Boundless Flower - Green Gold by Adrian Rasmussen"
+              - generic [ref=e1234]: View
+            - link "Boundless Flower - Green Gold" [ref=e1235] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - heading "Boundless Flower - Green Gold" [level=3] [ref=e1236]
+            - link "Multidimensional Art $500" [ref=e1237] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - generic [ref=e1239]: Multidimensional Art
+              - generic [ref=e1240]: $500
+          - generic [ref=e1241]:
+            - link "Brown Gold by Adrian Rasmussen View" [ref=e1242] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - img "Brown Gold by Adrian Rasmussen"
+              - generic [ref=e1243]: View
+            - link "Brown Gold" [ref=e1244] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - heading "Brown Gold" [level=3] [ref=e1245]
+            - link "Multidimensional Art" [ref=e1246] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - generic [ref=e1248]: Multidimensional Art
+          - generic [ref=e1249]:
+            - link "Circle Of Existance - Bloom by Adrian Rasmussen View" [ref=e1250] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - img "Circle Of Existance - Bloom by Adrian Rasmussen"
+              - generic [ref=e1251]: View
+            - link "Circle Of Existance - Bloom" [ref=e1252] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - heading "Circle Of Existance - Bloom" [level=3] [ref=e1253]
+            - link "Multidimensional Art $250" [ref=e1254] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - generic [ref=e1256]: Multidimensional Art
+              - generic [ref=e1257]: $250
+          - generic [ref=e1258]:
+            - link "Circle Of Existance - Blue by Adrian Rasmussen View" [ref=e1259] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - img "Circle Of Existance - Blue by Adrian Rasmussen"
+              - generic [ref=e1260]: View
+            - link "Circle Of Existance - Blue" [ref=e1261] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - heading "Circle Of Existance - Blue" [level=3] [ref=e1262]
+            - link "Multidimensional Art $969" [ref=e1263] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - generic [ref=e1265]: Multidimensional Art
+              - generic [ref=e1266]: $969
+          - generic [ref=e1267]:
+            - link "Circle Of Existance - Remix Orange by Adrian Rasmussen View" [ref=e1268] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - img "Circle Of Existance - Remix Orange by Adrian Rasmussen"
+              - generic [ref=e1269]: View
+            - link "Circle Of Existance - Remix Orange" [ref=e1270] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - heading "Circle Of Existance - Remix Orange" [level=3] [ref=e1271]
+            - link "Multidimensional Art $300" [ref=e1272] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - generic [ref=e1274]: Multidimensional Art
+              - generic [ref=e1275]: $300
+          - generic [ref=e1276]:
+            - link "Emergence - Metatron's Cube Brown by Adrian Rasmussen View" [ref=e1277] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - img "Emergence - Metatron's Cube Brown by Adrian Rasmussen"
+              - generic [ref=e1278]: View
+            - link "Emergence - Metatron's Cube Brown" [ref=e1279] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - heading "Emergence - Metatron's Cube Brown" [level=3] [ref=e1280]
+            - link "Multidimensional Art $300" [ref=e1281] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - generic [ref=e1283]: Multidimensional Art
+              - generic [ref=e1284]: $300
+          - generic [ref=e1285]:
+            - link "Emergence - Metatron's Cube Red by Adrian Rasmussen View" [ref=e1286] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - img "Emergence - Metatron's Cube Red by Adrian Rasmussen"
+              - generic [ref=e1287]: View
+            - link "Emergence - Metatron's Cube Red" [ref=e1288] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - heading "Emergence - Metatron's Cube Red" [level=3] [ref=e1289]
+            - link "Multidimensional Art $300" [ref=e1290] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - generic [ref=e1292]: Multidimensional Art
+              - generic [ref=e1293]: $300
+          - generic [ref=e1294]:
+            - link "Emergence - Metatron's Cube Remix by Adrian Rasmussen View" [ref=e1295] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - img "Emergence - Metatron's Cube Remix by Adrian Rasmussen"
+              - generic [ref=e1296]: View
+            - link "Emergence - Metatron's Cube Remix" [ref=e1297] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - heading "Emergence - Metatron's Cube Remix" [level=3] [ref=e1298]
+            - link "Multidimensional Art $250" [ref=e1299] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - generic [ref=e1301]: Multidimensional Art
+              - generic [ref=e1302]: $250
+          - generic [ref=e1303]:
+            - link "Endless Bloom - Remix by Adrian Rasmussen View" [ref=e1304] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - img "Endless Bloom - Remix by Adrian Rasmussen"
+              - generic [ref=e1305]: View
+            - link "Endless Bloom - Remix" [ref=e1306] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - heading "Endless Bloom - Remix" [level=3] [ref=e1307]
+            - link "Multidimensional Art $222" [ref=e1308] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - generic [ref=e1310]: Multidimensional Art
+              - generic [ref=e1311]: $222
+          - generic [ref=e1312]:
+            - link "Golden Harmony - Gold Brass by Adrian Rasmussen View" [ref=e1313] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - img "Golden Harmony - Gold Brass by Adrian Rasmussen"
+              - generic [ref=e1314]: View
+            - link "Golden Harmony - Gold Brass" [ref=e1315] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - heading "Golden Harmony - Gold Brass" [level=3] [ref=e1316]
+            - link "Multidimensional Art $969" [ref=e1317] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - generic [ref=e1319]: Multidimensional Art
+              - generic [ref=e1320]: $969
+          - generic [ref=e1321]:
+            - link "Green by Adrian Rasmussen View" [ref=e1322] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - img "Green by Adrian Rasmussen"
+              - generic [ref=e1323]: View
+            - link "Green" [ref=e1324] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - heading "Green" [level=3] [ref=e1325]
+            - link "Multidimensional Art" [ref=e1326] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - generic [ref=e1328]: Multidimensional Art
+          - generic [ref=e1329]:
+            - link "Green-blue-gold by Adrian Rasmussen View" [ref=e1330] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - img "Green-blue-gold by Adrian Rasmussen"
+              - generic [ref=e1331]: View
+            - link "Green-blue-gold" [ref=e1332] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - heading "Green-blue-gold" [level=3] [ref=e1333]
+            - link "Multidimensional Art" [ref=e1334] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - generic [ref=e1336]: Multidimensional Art
+          - generic [ref=e1337]:
+            - link "Heart Centered - Remix Star by Adrian Rasmussen View" [ref=e1338] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - img "Heart Centered - Remix Star by Adrian Rasmussen"
+              - generic [ref=e1339]: View
+            - link "Heart Centered - Remix Star" [ref=e1340] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - heading "Heart Centered - Remix Star" [level=3] [ref=e1341]
+            - link "Multidimensional Art $300" [ref=e1342] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - generic [ref=e1344]: Multidimensional Art
+              - generic [ref=e1345]: $300
+          - generic [ref=e1346]:
+            - link "Infinite Zoom by Adrian Rasmussen View" [ref=e1347] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - img "Infinite Zoom by Adrian Rasmussen"
+              - generic [ref=e1348]: View
+            - link "Infinite Zoom" [ref=e1349] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - heading "Infinite Zoom" [level=3] [ref=e1350]
+            - link "Multidimensional Art $500" [ref=e1351] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - generic [ref=e1353]: Multidimensional Art
+              - generic [ref=e1354]: $500
+          - generic [ref=e1355]:
+            - link "Metatron Flower - Black by Adrian Rasmussen View" [ref=e1356] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - img "Metatron Flower - Black by Adrian Rasmussen"
+              - generic [ref=e1357]: View
+            - link "Metatron Flower - Black" [ref=e1358] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - heading "Metatron Flower - Black" [level=3] [ref=e1359]
+            - link "Multidimensional Art $85" [ref=e1360] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - generic [ref=e1362]: Multidimensional Art
+              - generic [ref=e1363]: $85
+          - generic [ref=e1364]:
+            - link "Metatron Flower - Green by Adrian Rasmussen View" [ref=e1365] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - img "Metatron Flower - Green by Adrian Rasmussen"
+              - generic [ref=e1366]: View
+            - link "Metatron Flower - Green" [ref=e1367] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - heading "Metatron Flower - Green" [level=3] [ref=e1368]
+            - link "Multidimensional Art $85" [ref=e1369] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - generic [ref=e1371]: Multidimensional Art
+              - generic [ref=e1372]: $85
+          - generic [ref=e1373]:
+            - link "Midnight Sunrise - Black Gold by Adrian Rasmussen View" [ref=e1374] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - img "Midnight Sunrise - Black Gold by Adrian Rasmussen"
+              - generic [ref=e1375]: View
+            - link "Midnight Sunrise - Black Gold" [ref=e1376] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - heading "Midnight Sunrise - Black Gold" [level=3] [ref=e1377]
+            - link "Multidimensional Art $300" [ref=e1378] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - generic [ref=e1380]: Multidimensional Art
+              - generic [ref=e1381]: $300
+          - generic [ref=e1382]:
+            - link "Midnight Sunrise - Remix by Adrian Rasmussen View" [ref=e1383] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - img "Midnight Sunrise - Remix by Adrian Rasmussen"
+              - generic [ref=e1384]: View
+            - link "Midnight Sunrise - Remix" [ref=e1385] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - heading "Midnight Sunrise - Remix" [level=3] [ref=e1386]
+            - link "Multidimensional Art $300" [ref=e1387] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - generic [ref=e1389]: Multidimensional Art
+              - generic [ref=e1390]: $300
+          - generic [ref=e1391]:
+            - link "Night - Fly by Adrian Rasmussen View" [ref=e1392] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - img "Night - Fly by Adrian Rasmussen"
+              - generic [ref=e1393]: View
+            - link "Night - Fly" [ref=e1394] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - heading "Night - Fly" [level=3] [ref=e1395]
+            - link "Multidimensional Art $250" [ref=e1396] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - generic [ref=e1398]: Multidimensional Art
+              - generic [ref=e1399]: $250
+          - generic [ref=e1400]:
+            - link "Red by Adrian Rasmussen View" [ref=e1401] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - img "Red by Adrian Rasmussen"
+              - generic [ref=e1402]: View
+            - link "Red" [ref=e1403] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - heading "Red" [level=3] [ref=e1404]
+            - link "Multidimensional Art" [ref=e1405] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - generic [ref=e1407]: Multidimensional Art
+          - generic [ref=e1408]:
+            - link "Resequence - Blue Purple by Adrian Rasmussen View" [ref=e1409] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - img "Resequence - Blue Purple by Adrian Rasmussen"
+              - generic [ref=e1410]: View
+            - link "Resequence - Blue Purple" [ref=e1411] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - heading "Resequence - Blue Purple" [level=3] [ref=e1412]
+            - link "Multidimensional Art $250" [ref=e1413] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - generic [ref=e1415]: Multidimensional Art
+              - generic [ref=e1416]: $250
+          - generic [ref=e1417]:
+            - link "Secret Garden by Adrian Rasmussen View" [ref=e1418] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - img "Secret Garden by Adrian Rasmussen"
+              - generic [ref=e1419]: View
+            - link "Secret Garden" [ref=e1420] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - heading "Secret Garden" [level=3] [ref=e1421]
+            - link "Multidimensional Art $500" [ref=e1422] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - generic [ref=e1424]: Multidimensional Art
+              - generic [ref=e1425]: $500
+          - generic [ref=e1426]:
+            - link "Seed Of Life - Bloom Blue by Adrian Rasmussen View" [ref=e1427] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - img "Seed Of Life - Bloom Blue by Adrian Rasmussen"
+              - generic [ref=e1428]: View
+            - link "Seed Of Life - Bloom Blue" [ref=e1429] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - heading "Seed Of Life - Bloom Blue" [level=3] [ref=e1430]
+            - link "Multidimensional Art $85" [ref=e1431] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - generic [ref=e1433]: Multidimensional Art
+              - generic [ref=e1434]: $85
+          - generic [ref=e1435]:
+            - link "Seed Of Life - Bloom Orange by Adrian Rasmussen View" [ref=e1436] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - img "Seed Of Life - Bloom Orange by Adrian Rasmussen"
+              - generic [ref=e1437]: View
+            - link "Seed Of Life - Bloom Orange" [ref=e1438] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - heading "Seed Of Life - Bloom Orange" [level=3] [ref=e1439]
+            - link "Multidimensional Art $111" [ref=e1440] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - generic [ref=e1442]: Multidimensional Art
+              - generic [ref=e1443]: $111
+          - generic [ref=e1444]:
+            - link "Sol Urchin - Blue by Adrian Rasmussen View" [ref=e1445] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - img "Sol Urchin - Blue by Adrian Rasmussen"
+              - generic [ref=e1446]: View
+            - link "Sol Urchin - Blue" [ref=e1447] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - heading "Sol Urchin - Blue" [level=3] [ref=e1448]
+            - link "Multidimensional Art $300" [ref=e1449] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - generic [ref=e1451]: Multidimensional Art
+              - generic [ref=e1452]: $300
+          - generic [ref=e1453]:
+            - link "Sol Urchin - Green by Adrian Rasmussen View" [ref=e1454] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - img "Sol Urchin - Green by Adrian Rasmussen"
+              - generic [ref=e1455]: View
+            - link "Sol Urchin - Green" [ref=e1456] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - heading "Sol Urchin - Green" [level=3] [ref=e1457]
+            - link "Multidimensional Art $300" [ref=e1458] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - generic [ref=e1460]: Multidimensional Art
+              - generic [ref=e1461]: $300
+          - generic [ref=e1462]:
+            - link "Sol Urchin - Green Blue by Adrian Rasmussen View" [ref=e1463] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - img "Sol Urchin - Green Blue by Adrian Rasmussen"
+              - generic [ref=e1464]: View
+            - link "Sol Urchin - Green Blue" [ref=e1465] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - heading "Sol Urchin - Green Blue" [level=3] [ref=e1466]
+            - link "Multidimensional Art $969" [ref=e1467] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - generic [ref=e1469]: Multidimensional Art
+              - generic [ref=e1470]: $969
+          - generic [ref=e1471]:
+            - link "Sol Urchin - Purple Gold by Adrian Rasmussen View" [ref=e1472] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - img "Sol Urchin - Purple Gold by Adrian Rasmussen"
+              - generic [ref=e1473]: View
+            - link "Sol Urchin - Purple Gold" [ref=e1474] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - heading "Sol Urchin - Purple Gold" [level=3] [ref=e1475]
+            - link "Multidimensional Art $300" [ref=e1476] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - generic [ref=e1478]: Multidimensional Art
+              - generic [ref=e1479]: $300
+          - generic [ref=e1480]:
+            - link "Sol Urchin - Red Gold by Adrian Rasmussen View" [ref=e1481] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - img "Sol Urchin - Red Gold by Adrian Rasmussen"
+              - generic [ref=e1482]: View
+            - link "Sol Urchin - Red Gold" [ref=e1483] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - heading "Sol Urchin - Red Gold" [level=3] [ref=e1484]
+            - link "Multidimensional Art $300" [ref=e1485] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - generic [ref=e1487]: Multidimensional Art
+              - generic [ref=e1488]: $300
+          - generic [ref=e1489]:
+            - link "Sol Urchin - Remix Metatron's Cube by Adrian Rasmussen View" [ref=e1490] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - img "Sol Urchin - Remix Metatron's Cube by Adrian Rasmussen"
+              - generic [ref=e1491]: View
+            - link "Sol Urchin - Remix Metatron's Cube" [ref=e1492] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - heading "Sol Urchin - Remix Metatron's Cube" [level=3] [ref=e1493]
+            - link "Multidimensional Art $250" [ref=e1494] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - generic [ref=e1496]: Multidimensional Art
+              - generic [ref=e1497]: $250
+          - generic [ref=e1498]:
+            - link "Star Sun - Red by Adrian Rasmussen View" [ref=e1499] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - img "Star Sun - Red by Adrian Rasmussen"
+              - generic [ref=e1500]: View
+            - link "Star Sun - Red" [ref=e1501] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - heading "Star Sun - Red" [level=3] [ref=e1502]
+            - link "Multidimensional Art $300" [ref=e1503] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - generic [ref=e1505]: Multidimensional Art
+              - generic [ref=e1506]: $300
+          - generic [ref=e1507]:
+            - link "Starburst - Green by Adrian Rasmussen View" [ref=e1508] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - img "Starburst - Green by Adrian Rasmussen"
+              - generic [ref=e1509]: View
+            - link "Starburst - Green" [ref=e1510] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - heading "Starburst - Green" [level=3] [ref=e1511]
+            - link "Multidimensional Art $250" [ref=e1512] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - generic [ref=e1514]: Multidimensional Art
+              - generic [ref=e1515]: $250
+          - generic [ref=e1516]:
+            - link "Starburst - Red by Adrian Rasmussen View" [ref=e1517] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - img "Starburst - Red by Adrian Rasmussen"
+              - generic [ref=e1518]: View
+            - link "Starburst - Red" [ref=e1519] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - heading "Starburst - Red" [level=3] [ref=e1520]
+            - link "Multidimensional Art $250" [ref=e1521] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - generic [ref=e1523]: Multidimensional Art
+              - generic [ref=e1524]: $250
+          - generic [ref=e1525]:
+            - link "Sun Star - Pastel by Adrian Rasmussen View" [ref=e1526] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - img "Sun Star - Pastel by Adrian Rasmussen"
+              - generic [ref=e1527]: View
+            - link "Sun Star - Pastel" [ref=e1528] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - heading "Sun Star - Pastel" [level=3] [ref=e1529]
+            - link "Multidimensional Art $300" [ref=e1530] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - generic [ref=e1532]: Multidimensional Art
+              - generic [ref=e1533]: $300
+          - generic [ref=e1534]:
+            - link "Unfolding - Green Blue by Adrian Rasmussen View" [ref=e1535] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - img "Unfolding - Green Blue by Adrian Rasmussen"
+              - generic [ref=e1536]: View
+            - link "Unfolding - Green Blue" [ref=e1537] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - heading "Unfolding - Green Blue" [level=3] [ref=e1538]
+            - link "Multidimensional Art $969" [ref=e1539] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - generic [ref=e1541]: Multidimensional Art
+              - generic [ref=e1542]: $969
+          - generic [ref=e1543]:
+            - link "Bodi by Adrian Rasmussen View" [ref=e1544] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - img "Bodi by Adrian Rasmussen"
+              - generic [ref=e1545]: View
+            - link "Bodi" [ref=e1546] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - heading "Bodi" [level=3] [ref=e1547]
+            - link "Multidimensional Art $55" [ref=e1548] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - generic [ref=e1550]: Multidimensional Art
+              - generic [ref=e1551]: $55
+          - generic [ref=e1552]:
+            - link "Cenil by Adrian Rasmussen View" [ref=e1553] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - img "Cenil by Adrian Rasmussen"
+              - generic [ref=e1554]: View
+            - link "Cenil" [ref=e1555] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - heading "Cenil" [level=3] [ref=e1556]
+            - link "Multidimensional Art $55" [ref=e1557] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - generic [ref=e1559]: Multidimensional Art
+              - generic [ref=e1560]: $55
+          - generic [ref=e1561]:
+            - link "Centrano by Adrian Rasmussen View" [ref=e1562] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - img "Centrano by Adrian Rasmussen"
+              - generic [ref=e1563]: View
+            - link "Centrano" [ref=e1564] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - heading "Centrano" [level=3] [ref=e1565]
+            - link "Multidimensional Art $55" [ref=e1566] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - generic [ref=e1568]: Multidimensional Art
+              - generic [ref=e1569]: $55
+          - generic [ref=e1570]:
+            - link "Cosmi by Adrian Rasmussen View" [ref=e1571] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - img "Cosmi by Adrian Rasmussen"
+              - generic [ref=e1572]: View
+            - link "Cosmi" [ref=e1573] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - heading "Cosmi" [level=3] [ref=e1574]
+            - link "Multidimensional Art $55" [ref=e1575] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - generic [ref=e1577]: Multidimensional Art
+              - generic [ref=e1578]: $55
+          - generic [ref=e1579]:
+            - link "Derah by Adrian Rasmussen View" [ref=e1580] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - img "Derah by Adrian Rasmussen"
+              - generic [ref=e1581]: View
+            - link "Derah" [ref=e1582] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - heading "Derah" [level=3] [ref=e1583]
+            - link "Multidimensional Art $55" [ref=e1584] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - generic [ref=e1586]: Multidimensional Art
+              - generic [ref=e1587]: $55
+          - generic [ref=e1588]:
+            - link "Egon by Adrian Rasmussen View" [ref=e1589] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - img "Egon by Adrian Rasmussen"
+              - generic [ref=e1590]: View
+            - link "Egon" [ref=e1591] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - heading "Egon" [level=3] [ref=e1592]
+            - link "Multidimensional Art $55" [ref=e1593] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - generic [ref=e1595]: Multidimensional Art
+              - generic [ref=e1596]: $55
+          - generic [ref=e1597]:
+            - link "Elona by Adrian Rasmussen View" [ref=e1598] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - img "Elona by Adrian Rasmussen"
+              - generic [ref=e1599]: View
+            - link "Elona" [ref=e1600] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - heading "Elona" [level=3] [ref=e1601]
+            - link "Multidimensional Art $55" [ref=e1602] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - generic [ref=e1604]: Multidimensional Art
+              - generic [ref=e1605]: $55
+          - generic [ref=e1606]:
+            - link "Emans by Adrian Rasmussen View" [ref=e1607] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - img "Emans by Adrian Rasmussen"
+              - generic [ref=e1608]: View
+            - link "Emans" [ref=e1609] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - heading "Emans" [level=3] [ref=e1610]
+            - link "Multidimensional Art $55" [ref=e1611] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - generic [ref=e1613]: Multidimensional Art
+              - generic [ref=e1614]: $55
+          - generic [ref=e1615]:
+            - link "Flanos by Adrian Rasmussen View" [ref=e1616] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - img "Flanos by Adrian Rasmussen"
+              - generic [ref=e1617]: View
+            - link "Flanos" [ref=e1618] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - heading "Flanos" [level=3] [ref=e1619]
+            - link "Multidimensional Art $55" [ref=e1620] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - generic [ref=e1622]: Multidimensional Art
+              - generic [ref=e1623]: $55
+          - generic [ref=e1624]:
+            - link "Flora by Adrian Rasmussen View" [ref=e1625] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - img "Flora by Adrian Rasmussen"
+              - generic [ref=e1626]: View
+            - link "Flora" [ref=e1627] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - heading "Flora" [level=3] [ref=e1628]
+            - link "Multidimensional Art $55" [ref=e1629] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - generic [ref=e1631]: Multidimensional Art
+              - generic [ref=e1632]: $55
+          - generic [ref=e1633]:
+            - link "Fluma by Adrian Rasmussen View" [ref=e1634] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - img "Fluma by Adrian Rasmussen"
+              - generic [ref=e1635]: View
+            - link "Fluma" [ref=e1636] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - heading "Fluma" [level=3] [ref=e1637]
+            - link "Multidimensional Art $85" [ref=e1638] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - generic [ref=e1640]: Multidimensional Art
+              - generic [ref=e1641]: $85
+          - generic [ref=e1642]:
+            - link "Hiru by Adrian Rasmussen View" [ref=e1643] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - img "Hiru by Adrian Rasmussen"
+              - generic [ref=e1644]: View
+            - link "Hiru" [ref=e1645] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - heading "Hiru" [level=3] [ref=e1646]
+            - link "Multidimensional Art $55" [ref=e1647] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - generic [ref=e1649]: Multidimensional Art
+              - generic [ref=e1650]: $55
+          - generic [ref=e1651]:
+            - link "Kani by Adrian Rasmussen View" [ref=e1652] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - img "Kani by Adrian Rasmussen"
+              - generic [ref=e1653]: View
+            - link "Kani" [ref=e1654] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - heading "Kani" [level=3] [ref=e1655]
+            - link "Multidimensional Art $55" [ref=e1656] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - generic [ref=e1658]: Multidimensional Art
+              - generic [ref=e1659]: $55
+          - generic [ref=e1660]:
+            - link "Natura by Adrian Rasmussen View" [ref=e1661] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - img "Natura by Adrian Rasmussen"
+              - generic [ref=e1662]: View
+            - link "Natura" [ref=e1663] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - heading "Natura" [level=3] [ref=e1664]
+            - link "Multidimensional Art $55" [ref=e1665] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - generic [ref=e1667]: Multidimensional Art
+              - generic [ref=e1668]: $55
+          - generic [ref=e1669]:
+            - link "Nocturna by Adrian Rasmussen View" [ref=e1670] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - img "Nocturna by Adrian Rasmussen"
+              - generic [ref=e1671]: View
+            - link "Nocturna" [ref=e1672] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - heading "Nocturna" [level=3] [ref=e1673]
+            - link "Multidimensional Art $55" [ref=e1674] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - generic [ref=e1676]: Multidimensional Art
+              - generic [ref=e1677]: $55
+          - generic [ref=e1678]:
+            - link "Ongo by Adrian Rasmussen View" [ref=e1679] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - img "Ongo by Adrian Rasmussen"
+              - generic [ref=e1680]: View
+            - link "Ongo" [ref=e1681] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - heading "Ongo" [level=3] [ref=e1682]
+            - link "Multidimensional Art $55" [ref=e1683] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - generic [ref=e1685]: Multidimensional Art
+              - generic [ref=e1686]: $55
+          - generic [ref=e1687]:
+            - link "Onxen by Adrian Rasmussen View" [ref=e1688] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - img "Onxen by Adrian Rasmussen"
+              - generic [ref=e1689]: View
+            - link "Onxen" [ref=e1690] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - heading "Onxen" [level=3] [ref=e1691]
+            - link "Multidimensional Art $55" [ref=e1692] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - generic [ref=e1694]: Multidimensional Art
+              - generic [ref=e1695]: $55
+          - generic [ref=e1696]:
+            - link "Oseno by Adrian Rasmussen View" [ref=e1697] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - img "Oseno by Adrian Rasmussen"
+              - generic [ref=e1698]: View
+            - link "Oseno" [ref=e1699] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - heading "Oseno" [level=3] [ref=e1700]
+            - link "Multidimensional Art $55" [ref=e1701] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - generic [ref=e1703]: Multidimensional Art
+              - generic [ref=e1704]: $55
+          - generic [ref=e1705]:
+            - link "Ramah by Adrian Rasmussen View" [ref=e1706] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - img "Ramah by Adrian Rasmussen"
+              - generic [ref=e1707]: View
+            - link "Ramah" [ref=e1708] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - heading "Ramah" [level=3] [ref=e1709]
+            - link "Multidimensional Art $55" [ref=e1710] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - generic [ref=e1712]: Multidimensional Art
+              - generic [ref=e1713]: $55
+          - generic [ref=e1714]:
+            - link "Raza by Adrian Rasmussen View" [ref=e1715] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - img "Raza by Adrian Rasmussen"
+              - generic [ref=e1716]: View
+            - link "Raza" [ref=e1717] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - heading "Raza" [level=3] [ref=e1718]
+            - link "Multidimensional Art $55" [ref=e1719] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - generic [ref=e1721]: Multidimensional Art
+              - generic [ref=e1722]: $55
+          - generic [ref=e1723]:
+            - link "Rondot by Adrian Rasmussen View" [ref=e1724] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - img "Rondot by Adrian Rasmussen"
+              - generic [ref=e1725]: View
+            - link "Rondot" [ref=e1726] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - heading "Rondot" [level=3] [ref=e1727]
+            - link "Multidimensional Art $55" [ref=e1728] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - generic [ref=e1730]: Multidimensional Art
+              - generic [ref=e1731]: $55
+          - generic [ref=e1732]:
+            - link "Sensis by Adrian Rasmussen View" [ref=e1733] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - img "Sensis by Adrian Rasmussen"
+              - generic [ref=e1734]: View
+            - link "Sensis" [ref=e1735] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - heading "Sensis" [level=3] [ref=e1736]
+            - link "Multidimensional Art $55" [ref=e1737] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - generic [ref=e1739]: Multidimensional Art
+              - generic [ref=e1740]: $55
+          - generic [ref=e1741]:
+            - link "Shama by Adrian Rasmussen View" [ref=e1742] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - img "Shama by Adrian Rasmussen"
+              - generic [ref=e1743]: View
+            - link "Shama" [ref=e1744] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - heading "Shama" [level=3] [ref=e1745]
+            - link "Multidimensional Art $55" [ref=e1746] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - generic [ref=e1748]: Multidimensional Art
+              - generic [ref=e1749]: $55
+          - generic [ref=e1750]:
+            - link "Sino Chano by Adrian Rasmussen View" [ref=e1751] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - img "Sino Chano by Adrian Rasmussen"
+              - generic [ref=e1752]: View
+            - link "Sino Chano" [ref=e1753] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - heading "Sino Chano" [level=3] [ref=e1754]
+            - link "Multidimensional Art $55" [ref=e1755] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - generic [ref=e1757]: Multidimensional Art
+              - generic [ref=e1758]: $55
+          - generic [ref=e1759]:
+            - link "Sophi by Adrian Rasmussen View" [ref=e1760] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - img "Sophi by Adrian Rasmussen"
+              - generic [ref=e1761]: View
+            - link "Sophi" [ref=e1762] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - heading "Sophi" [level=3] [ref=e1763]
+            - link "Multidimensional Art $55" [ref=e1764] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - generic [ref=e1766]: Multidimensional Art
+              - generic [ref=e1767]: $55
+          - generic [ref=e1768]:
+            - link "Starla by Adrian Rasmussen View" [ref=e1769] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - img "Starla by Adrian Rasmussen"
+              - generic [ref=e1770]: View
+            - link "Starla" [ref=e1771] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - heading "Starla" [level=3] [ref=e1772]
+            - link "Multidimensional Art $55" [ref=e1773] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - generic [ref=e1775]: Multidimensional Art
+              - generic [ref=e1776]: $55
+          - generic [ref=e1777]:
+            - link "Suni by Adrian Rasmussen View" [ref=e1778] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - img "Suni by Adrian Rasmussen"
+              - generic [ref=e1779]: View
+            - link "Suni" [ref=e1780] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - heading "Suni" [level=3] [ref=e1781]
+            - link "Multidimensional Art $55" [ref=e1782] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - generic [ref=e1784]: Multidimensional Art
+              - generic [ref=e1785]: $55
+          - generic [ref=e1786]:
+            - link "Tijiro by Adrian Rasmussen View" [ref=e1787] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - img "Tijiro by Adrian Rasmussen"
+              - generic [ref=e1788]: View
+            - link "Tijiro" [ref=e1789] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - heading "Tijiro" [level=3] [ref=e1790]
+            - link "Multidimensional Art $55" [ref=e1791] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - generic [ref=e1793]: Multidimensional Art
+              - generic [ref=e1794]: $55
+          - generic [ref=e1795]:
+            - link "Toran by Adrian Rasmussen View" [ref=e1796] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - img "Toran by Adrian Rasmussen"
+              - generic [ref=e1797]: View
+            - link "Toran" [ref=e1798] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - heading "Toran" [level=3] [ref=e1799]
+            - link "Multidimensional Art $55" [ref=e1800] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - generic [ref=e1802]: Multidimensional Art
+              - generic [ref=e1803]: $55
+          - generic [ref=e1804]:
+            - link "Tribon by Adrian Rasmussen View" [ref=e1805] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - img "Tribon by Adrian Rasmussen"
+              - generic [ref=e1806]: View
+            - link "Tribon" [ref=e1807] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - heading "Tribon" [level=3] [ref=e1808]
+            - link "Multidimensional Art $55" [ref=e1809] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - generic [ref=e1811]: Multidimensional Art
+              - generic [ref=e1812]: $55
+          - generic [ref=e1813]:
+            - link "Utone by Adrian Rasmussen View" [ref=e1814] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - img "Utone by Adrian Rasmussen"
+              - generic [ref=e1815]: View
+            - link "Utone" [ref=e1816] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - heading "Utone" [level=3] [ref=e1817]
+            - link "Multidimensional Art $55" [ref=e1818] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - generic [ref=e1820]: Multidimensional Art
+              - generic [ref=e1821]: $55
+          - generic [ref=e1822]:
+            - link "Wifly by Adrian Rasmussen View" [ref=e1823] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - img "Wifly by Adrian Rasmussen"
+              - generic [ref=e1824]: View
+            - link "Wifly" [ref=e1825] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - heading "Wifly" [level=3] [ref=e1826]
+            - link "Multidimensional Art $55" [ref=e1827] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - generic [ref=e1829]: Multidimensional Art
+              - generic [ref=e1830]: $55
+          - generic [ref=e1831]:
+            - link "Yonis by Adrian Rasmussen View" [ref=e1832] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - img "Yonis by Adrian Rasmussen"
+              - generic [ref=e1833]: View
+            - link "Yonis" [ref=e1834] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - heading "Yonis" [level=3] [ref=e1835]
+            - link "Multidimensional Art $55" [ref=e1836] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - generic [ref=e1838]: Multidimensional Art
+              - generic [ref=e1839]: $55
+          - generic [ref=e1840]:
+            - link "Zelio by Adrian Rasmussen View" [ref=e1841] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - img "Zelio by Adrian Rasmussen"
+              - generic [ref=e1842]: View
+            - link "Zelio" [ref=e1843] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - heading "Zelio" [level=3] [ref=e1844]
+            - link "Multidimensional Art $55" [ref=e1845] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - generic [ref=e1847]: Multidimensional Art
+              - generic [ref=e1848]: $55
+          - generic [ref=e1849]:
+            - link "Lotus Stand - Brown Leaf by Adrian Rasmussen View" [ref=e1850] [cursor=pointer]:
+              - /url: /creations/OBJ-001
+              - img "Lotus Stand - Brown Leaf by Adrian Rasmussen"
+              - generic [ref=e1851]: View
+            - link "Lotus Stand - Brown Leaf" [ref=e1852] [cursor=pointer]:
+              - /url: /creations/OBJ-001
+              - heading "Lotus Stand - Brown Leaf" [level=3] [ref=e1853]
+            - link "Objects $30" [ref=e1854] [cursor=pointer]:
+              - /url: /creations/OBJ-001
+              - generic [ref=e1856]: Objects
+              - generic [ref=e1857]: $30
+          - generic [ref=e1858]:
+            - link "Lotus Stand - Autumn Bloom by Adrian Rasmussen View" [ref=e1859] [cursor=pointer]:
+              - /url: /creations/OBJ-002
+              - img "Lotus Stand - Autumn Bloom by Adrian Rasmussen"
+              - generic [ref=e1860]: View
+            - link "Lotus Stand - Autumn Bloom" [ref=e1861] [cursor=pointer]:
+              - /url: /creations/OBJ-002
+              - heading "Lotus Stand - Autumn Bloom" [level=3] [ref=e1862]
+            - link "Objects $30" [ref=e1863] [cursor=pointer]:
+              - /url: /creations/OBJ-002
+              - generic [ref=e1865]: Objects
+              - generic [ref=e1866]: $30
+          - generic [ref=e1867]:
+            - link "Lotus Stand - Beyond Lumber by Adrian Rasmussen View" [ref=e1868] [cursor=pointer]:
+              - /url: /creations/OBJ-003
+              - img "Lotus Stand - Beyond Lumber by Adrian Rasmussen"
+              - generic [ref=e1869]: View
+            - link "Lotus Stand - Beyond Lumber" [ref=e1870] [cursor=pointer]:
+              - /url: /creations/OBJ-003
+              - heading "Lotus Stand - Beyond Lumber" [level=3] [ref=e1871]
+            - link "Objects $30" [ref=e1872] [cursor=pointer]:
+              - /url: /creations/OBJ-003
+              - generic [ref=e1874]: Objects
+              - generic [ref=e1875]: $30
+          - generic [ref=e1876]:
+            - link "Lotus Stand - Campfire by Adrian Rasmussen View" [ref=e1877] [cursor=pointer]:
+              - /url: /creations/OBJ-004
+              - img "Lotus Stand - Campfire by Adrian Rasmussen"
+              - generic [ref=e1878]: View
+            - link "Lotus Stand - Campfire" [ref=e1879] [cursor=pointer]:
+              - /url: /creations/OBJ-004
+              - heading "Lotus Stand - Campfire" [level=3] [ref=e1880]
+            - link "Objects $30" [ref=e1881] [cursor=pointer]:
+              - /url: /creations/OBJ-004
+              - generic [ref=e1883]: Objects
+              - generic [ref=e1884]: $30
+          - generic [ref=e1885]:
+            - link "Lotus Stand - Cherry by Adrian Rasmussen View" [ref=e1886] [cursor=pointer]:
+              - /url: /creations/OBJ-005
+              - img "Lotus Stand - Cherry by Adrian Rasmussen"
+              - generic [ref=e1887]: View
+            - link "Lotus Stand - Cherry" [ref=e1888] [cursor=pointer]:
+              - /url: /creations/OBJ-005
+              - heading "Lotus Stand - Cherry" [level=3] [ref=e1889]
+            - link "Objects $30" [ref=e1890] [cursor=pointer]:
+              - /url: /creations/OBJ-005
+              - generic [ref=e1892]: Objects
+              - generic [ref=e1893]: $30
+          - generic [ref=e1894]:
+            - link "Lotus Stand - Cherry X by Adrian Rasmussen View" [ref=e1895] [cursor=pointer]:
+              - /url: /creations/OBJ-006
+              - img "Lotus Stand - Cherry X by Adrian Rasmussen"
+              - generic [ref=e1896]: View
+            - link "Lotus Stand - Cherry X" [ref=e1897] [cursor=pointer]:
+              - /url: /creations/OBJ-006
+              - heading "Lotus Stand - Cherry X" [level=3] [ref=e1898]
+            - link "Objects $30" [ref=e1899] [cursor=pointer]:
+              - /url: /creations/OBJ-006
+              - generic [ref=e1901]: Objects
+              - generic [ref=e1902]: $30
+          - generic [ref=e1903]:
+            - link "Lotus Stand - Classic by Adrian Rasmussen View" [ref=e1904] [cursor=pointer]:
+              - /url: /creations/OBJ-007
+              - img "Lotus Stand - Classic by Adrian Rasmussen"
+              - generic [ref=e1905]: View
+            - link "Lotus Stand - Classic" [ref=e1906] [cursor=pointer]:
+              - /url: /creations/OBJ-007
+              - heading "Lotus Stand - Classic" [level=3] [ref=e1907]
+            - link "Objects $30" [ref=e1908] [cursor=pointer]:
+              - /url: /creations/OBJ-007
+              - generic [ref=e1910]: Objects
+              - generic [ref=e1911]: $30
+          - generic [ref=e1912]:
+            - link "Lotus Stand - Daylight by Adrian Rasmussen View" [ref=e1913] [cursor=pointer]:
+              - /url: /creations/OBJ-008
+              - img "Lotus Stand - Daylight by Adrian Rasmussen"
+              - generic [ref=e1914]: View
+            - link "Lotus Stand - Daylight" [ref=e1915] [cursor=pointer]:
+              - /url: /creations/OBJ-008
+              - heading "Lotus Stand - Daylight" [level=3] [ref=e1916]
+            - link "Objects $30" [ref=e1917] [cursor=pointer]:
+              - /url: /creations/OBJ-008
+              - generic [ref=e1919]: Objects
+              - generic [ref=e1920]: $30
+          - generic [ref=e1921]:
+            - link "Lotus Stand - Fall Days by Adrian Rasmussen View" [ref=e1922] [cursor=pointer]:
+              - /url: /creations/OBJ-009
+              - img "Lotus Stand - Fall Days by Adrian Rasmussen"
+              - generic [ref=e1923]: View
+            - link "Lotus Stand - Fall Days" [ref=e1924] [cursor=pointer]:
+              - /url: /creations/OBJ-009
+              - heading "Lotus Stand - Fall Days" [level=3] [ref=e1925]
+            - link "Objects $30" [ref=e1926] [cursor=pointer]:
+              - /url: /creations/OBJ-009
+              - generic [ref=e1928]: Objects
+              - generic [ref=e1929]: $30
+          - generic [ref=e1930]:
+            - link "Lotus Stand - Forest Fauna by Adrian Rasmussen View" [ref=e1931] [cursor=pointer]:
+              - /url: /creations/OBJ-010
+              - img "Lotus Stand - Forest Fauna by Adrian Rasmussen"
+              - generic [ref=e1932]: View
+            - link "Lotus Stand - Forest Fauna" [ref=e1933] [cursor=pointer]:
+              - /url: /creations/OBJ-010
+              - heading "Lotus Stand - Forest Fauna" [level=3] [ref=e1934]
+            - link "Objects $30" [ref=e1935] [cursor=pointer]:
+              - /url: /creations/OBJ-010
+              - generic [ref=e1937]: Objects
+              - generic [ref=e1938]: $30
+          - generic [ref=e1939]:
+            - link "Lotus Stand - Inner Bloom by Adrian Rasmussen View" [ref=e1940] [cursor=pointer]:
+              - /url: /creations/OBJ-011
+              - img "Lotus Stand - Inner Bloom by Adrian Rasmussen"
+              - generic [ref=e1941]: View
+            - link "Lotus Stand - Inner Bloom" [ref=e1942] [cursor=pointer]:
+              - /url: /creations/OBJ-011
+              - heading "Lotus Stand - Inner Bloom" [level=3] [ref=e1943]
+            - link "Objects $30" [ref=e1944] [cursor=pointer]:
+              - /url: /creations/OBJ-011
+              - generic [ref=e1946]: Objects
+              - generic [ref=e1947]: $30
+          - generic [ref=e1948]:
+            - link "Lotus Stand - Mahogany Dream by Adrian Rasmussen View" [ref=e1949] [cursor=pointer]:
+              - /url: /creations/OBJ-012
+              - img "Lotus Stand - Mahogany Dream by Adrian Rasmussen"
+              - generic [ref=e1950]: View
+            - link "Lotus Stand - Mahogany Dream" [ref=e1951] [cursor=pointer]:
+              - /url: /creations/OBJ-012
+              - heading "Lotus Stand - Mahogany Dream" [level=3] [ref=e1952]
+            - link "Objects $30" [ref=e1953] [cursor=pointer]:
+              - /url: /creations/OBJ-012
+              - generic [ref=e1955]: Objects
+              - generic [ref=e1956]: $30
+          - generic [ref=e1957]:
+            - link "Lotus Stand - Midnight Fall by Adrian Rasmussen View" [ref=e1958] [cursor=pointer]:
+              - /url: /creations/OBJ-013
+              - img "Lotus Stand - Midnight Fall by Adrian Rasmussen"
+              - generic [ref=e1959]: View
+            - link "Lotus Stand - Midnight Fall" [ref=e1960] [cursor=pointer]:
+              - /url: /creations/OBJ-013
+              - heading "Lotus Stand - Midnight Fall" [level=3] [ref=e1961]
+            - link "Objects $30" [ref=e1962] [cursor=pointer]:
+              - /url: /creations/OBJ-013
+              - generic [ref=e1964]: Objects
+              - generic [ref=e1965]: $30
+          - generic [ref=e1966]:
+            - link "Lotus Stand - Regenerative Forest by Adrian Rasmussen View" [ref=e1967] [cursor=pointer]:
+              - /url: /creations/OBJ-014
+              - img "Lotus Stand - Regenerative Forest by Adrian Rasmussen"
+              - generic [ref=e1968]: View
+            - link "Lotus Stand - Regenerative Forest" [ref=e1969] [cursor=pointer]:
+              - /url: /creations/OBJ-014
+              - heading "Lotus Stand - Regenerative Forest" [level=3] [ref=e1970]
+            - link "Objects $30" [ref=e1971] [cursor=pointer]:
+              - /url: /creations/OBJ-014
+              - generic [ref=e1973]: Objects
+              - generic [ref=e1974]: $30
+          - generic [ref=e1975]:
+            - link "Lotus Stand - Sondari Days by Adrian Rasmussen View" [ref=e1976] [cursor=pointer]:
+              - /url: /creations/OBJ-015
+              - img "Lotus Stand - Sondari Days by Adrian Rasmussen"
+              - generic [ref=e1977]: View
+            - link "Lotus Stand - Sondari Days" [ref=e1978] [cursor=pointer]:
+              - /url: /creations/OBJ-015
+              - heading "Lotus Stand - Sondari Days" [level=3] [ref=e1979]
+            - link "Objects $30" [ref=e1980] [cursor=pointer]:
+              - /url: /creations/OBJ-015
+              - generic [ref=e1982]: Objects
+              - generic [ref=e1983]: $30
+          - generic [ref=e1984]:
+            - link "Lotus Stand - Still Night by Adrian Rasmussen View" [ref=e1985] [cursor=pointer]:
+              - /url: /creations/OBJ-016
+              - img "Lotus Stand - Still Night by Adrian Rasmussen"
+              - generic [ref=e1986]: View
+            - link "Lotus Stand - Still Night" [ref=e1987] [cursor=pointer]:
+              - /url: /creations/OBJ-016
+              - heading "Lotus Stand - Still Night" [level=3] [ref=e1988]
+            - link "Objects $30" [ref=e1989] [cursor=pointer]:
+              - /url: /creations/OBJ-016
+              - generic [ref=e1991]: Objects
+              - generic [ref=e1992]: $30
+          - generic [ref=e1993]:
+            - link "Lotus Stand - Summer Harvest by Adrian Rasmussen View" [ref=e1994] [cursor=pointer]:
+              - /url: /creations/OBJ-017
+              - img "Lotus Stand - Summer Harvest by Adrian Rasmussen"
+              - generic [ref=e1995]: View
+            - link "Lotus Stand - Summer Harvest" [ref=e1996] [cursor=pointer]:
+              - /url: /creations/OBJ-017
+              - heading "Lotus Stand - Summer Harvest" [level=3] [ref=e1997]
+            - link "Objects $30" [ref=e1998] [cursor=pointer]:
+              - /url: /creations/OBJ-017
+              - generic [ref=e2000]: Objects
+              - generic [ref=e2001]: $30
+          - generic [ref=e2002]:
+            - link "Lotus Stand - Tan, Light Tan by Adrian Rasmussen View" [ref=e2003] [cursor=pointer]:
+              - /url: /creations/OBJ-018
+              - img "Lotus Stand - Tan, Light Tan by Adrian Rasmussen"
+              - generic [ref=e2004]: View
+            - link "Lotus Stand - Tan, Light Tan" [ref=e2005] [cursor=pointer]:
+              - /url: /creations/OBJ-018
+              - heading "Lotus Stand - Tan, Light Tan" [level=3] [ref=e2006]
+            - link "Objects $30" [ref=e2007] [cursor=pointer]:
+              - /url: /creations/OBJ-018
+              - generic [ref=e2009]: Objects
+              - generic [ref=e2010]: $30
+          - generic [ref=e2011]:
+            - link "Lotus Stand - Time Glimpse by Adrian Rasmussen View" [ref=e2012] [cursor=pointer]:
+              - /url: /creations/OBJ-019
+              - img "Lotus Stand - Time Glimpse by Adrian Rasmussen"
+              - generic [ref=e2013]: View
+            - link "Lotus Stand - Time Glimpse" [ref=e2014] [cursor=pointer]:
+              - /url: /creations/OBJ-019
+              - heading "Lotus Stand - Time Glimpse" [level=3] [ref=e2015]
+            - link "Objects $30" [ref=e2016] [cursor=pointer]:
+              - /url: /creations/OBJ-019
+              - generic [ref=e2018]: Objects
+              - generic [ref=e2019]: $30
+          - generic [ref=e2020]:
+            - link "Lotus Stand - Wood Cabin by Adrian Rasmussen View" [ref=e2021] [cursor=pointer]:
+              - /url: /creations/OBJ-020
+              - img "Lotus Stand - Wood Cabin by Adrian Rasmussen"
+              - generic [ref=e2022]: View
+            - link "Lotus Stand - Wood Cabin" [ref=e2023] [cursor=pointer]:
+              - /url: /creations/OBJ-020
+              - heading "Lotus Stand - Wood Cabin" [level=3] [ref=e2024]
+            - link "Objects $30" [ref=e2025] [cursor=pointer]:
+              - /url: /creations/OBJ-020
+              - generic [ref=e2027]: Objects
+              - generic [ref=e2028]: $30
+          - generic [ref=e2029]:
+            - link "Lotus Stand - Wooden Trail by Adrian Rasmussen View" [ref=e2030] [cursor=pointer]:
+              - /url: /creations/OBJ-021
+              - img "Lotus Stand - Wooden Trail by Adrian Rasmussen"
+              - generic [ref=e2031]: View
+            - link "Lotus Stand - Wooden Trail" [ref=e2032] [cursor=pointer]:
+              - /url: /creations/OBJ-021
+              - heading "Lotus Stand - Wooden Trail" [level=3] [ref=e2033]
+            - link "Objects $30" [ref=e2034] [cursor=pointer]:
+              - /url: /creations/OBJ-021
+              - generic [ref=e2036]: Objects
+              - generic [ref=e2037]: $30
+          - generic [ref=e2038]:
+            - link "Rise Of The Buffalo by Adrian Rasmussen View" [ref=e2039] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - img "Rise Of The Buffalo by Adrian Rasmussen"
+              - generic [ref=e2040]: View
+            - link "Rise Of The Buffalo" [ref=e2041] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - heading "Rise Of The Buffalo" [level=3] [ref=e2042]
+            - link "Multidimensional Art $1,111" [ref=e2043] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - generic [ref=e2045]: Multidimensional Art
+              - generic [ref=e2046]: $1,111
+          - generic [ref=e2047]:
+            - link "Metamorphosis by Adrian Rasmussen View" [ref=e2048] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - img "Metamorphosis by Adrian Rasmussen"
+              - generic [ref=e2049]: View
+            - link "Metamorphosis" [ref=e2050] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - heading "Metamorphosis" [level=3] [ref=e2051]
+            - link "Multidimensional Art $9,000" [ref=e2052] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - generic [ref=e2054]: Multidimensional Art
+              - generic [ref=e2055]: $9,000
+          - generic [ref=e2056]:
+            - link "We Rise by Adrian Rasmussen View" [ref=e2057] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - img "We Rise by Adrian Rasmussen"
+              - generic [ref=e2058]: View
+            - link "We Rise" [ref=e2059] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - heading "We Rise" [level=3] [ref=e2060]
+            - link "Multidimensional Art $5,000" [ref=e2061] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - generic [ref=e2063]: Multidimensional Art
+              - generic [ref=e2064]: $5,000
+        - button "Back to top":
+          - img
+    - contentinfo [ref=e2065]:
+      - generic [ref=e2067]:
+        - generic [ref=e2068]:
+          - generic [ref=e2069]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e2070]
+            - paragraph [ref=e2071]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e2074]: Currently, taking commissions for Spring 2026
+          - generic [ref=e2075]:
+            - generic [ref=e2076]: Join the Inner Circle
+            - generic [ref=e2077]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e2079]:
+              - generic: Email address
+              - textbox [ref=e2080]
+              - button [ref=e2081]:
+                - img [ref=e2082]
+        - navigation [ref=e2085]:
+          - link "Creations" [ref=e2086] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e2087] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e2088] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e2089] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e2090] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e2092]:
+          - generic [ref=e2093]:
+            - generic [ref=e2094]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e2095] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e2096] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e2097]
+          - generic [ref=e2098]:
+            - link "Instagram" [ref=e2099] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e2100]
+            - link "Email" [ref=e2103] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e2104]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

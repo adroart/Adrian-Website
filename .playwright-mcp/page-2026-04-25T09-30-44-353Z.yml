@@ -1,0 +1,594 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - img "Light Codes" [ref=e23]
+        - generic [ref=e25]:
+          - navigation "Breadcrumb" [ref=e26]:
+            - link "Creations" [ref=e27] [cursor=pointer]:
+              - /url: /creations
+            - generic [ref=e28]: ·
+            - link "Multidimensional Art" [ref=e29] [cursor=pointer]:
+              - /url: /creations/multidimensional-art
+            - generic [ref=e30]: ·
+            - generic [ref=e31]: Light Codes
+          - heading "Light Codes" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Frequencies anchored in matter. Approximately forty works across three subcategories, each encoding a different dimension of resonance.
+        - generic [ref=e35]:
+          - paragraph [ref=e36]: After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art. These are anchorings of unseen realms.
+          - link "Read the full story" [ref=e37] [cursor=pointer]:
+            - /url: /writings/light-codes
+            - text: Read the full story
+            - img [ref=e38]
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: 34 pieces
+            - generic [ref=e45]:
+              - button "All" [ref=e46]
+              - button "Frequency Foundations" [ref=e47]
+              - button "Embodied Vibrations" [ref=e48]
+              - button "Resonant Formations" [ref=e49]
+          - button "Available Only" [ref=e51]
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - link "Bodi by Adrian Rasmussen View" [ref=e55] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - img "Bodi by Adrian Rasmussen"
+              - generic [ref=e56]: View
+            - link "Bodi" [ref=e57] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - heading "Bodi" [level=3] [ref=e58]
+            - link "Resonant Formations $55 Ready to ship" [ref=e59] [cursor=pointer]:
+              - /url: /creations/LC-100
+              - generic [ref=e61]: Resonant Formations
+              - generic [ref=e62]:
+                - text: $55
+                - paragraph [ref=e63]: Ready to ship
+          - generic [ref=e64]:
+            - link "Cenil by Adrian Rasmussen View" [ref=e65] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - img "Cenil by Adrian Rasmussen"
+              - generic [ref=e66]: View
+            - link "Cenil" [ref=e67] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - heading "Cenil" [level=3] [ref=e68]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e69] [cursor=pointer]:
+              - /url: /creations/LC-101
+              - generic [ref=e71]: Embodied Vibrations
+              - generic [ref=e72]:
+                - text: $55
+                - paragraph [ref=e73]: Ready to ship
+          - generic [ref=e74]:
+            - link "Centrano by Adrian Rasmussen View" [ref=e75] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - img "Centrano by Adrian Rasmussen"
+              - generic [ref=e76]: View
+            - link "Centrano" [ref=e77] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - heading "Centrano" [level=3] [ref=e78]
+            - link "Resonant Formations $55 Ready to ship" [ref=e79] [cursor=pointer]:
+              - /url: /creations/LC-102
+              - generic [ref=e81]: Resonant Formations
+              - generic [ref=e82]:
+                - text: $55
+                - paragraph [ref=e83]: Ready to ship
+          - generic [ref=e84]:
+            - link "Cosmi by Adrian Rasmussen View" [ref=e85] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - img "Cosmi by Adrian Rasmussen"
+              - generic [ref=e86]: View
+            - link "Cosmi" [ref=e87] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - heading "Cosmi" [level=3] [ref=e88]
+            - link "Resonant Formations $55 Ready to ship" [ref=e89] [cursor=pointer]:
+              - /url: /creations/LC-103
+              - generic [ref=e91]: Resonant Formations
+              - generic [ref=e92]:
+                - text: $55
+                - paragraph [ref=e93]: Ready to ship
+          - generic [ref=e94]:
+            - link "Derah by Adrian Rasmussen View" [ref=e95] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - img "Derah by Adrian Rasmussen"
+              - generic [ref=e96]: View
+            - link "Derah" [ref=e97] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - heading "Derah" [level=3] [ref=e98]
+            - link "Resonant Formations $55 Ready to ship" [ref=e99] [cursor=pointer]:
+              - /url: /creations/LC-104
+              - generic [ref=e101]: Resonant Formations
+              - generic [ref=e102]:
+                - text: $55
+                - paragraph [ref=e103]: Ready to ship
+          - generic [ref=e104]:
+            - link "Egon by Adrian Rasmussen View" [ref=e105] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - img "Egon by Adrian Rasmussen"
+              - generic [ref=e106]: View
+            - link "Egon" [ref=e107] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - heading "Egon" [level=3] [ref=e108]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e109] [cursor=pointer]:
+              - /url: /creations/LC-105
+              - generic [ref=e111]: Frequency Foundations
+              - generic [ref=e112]:
+                - text: $55
+                - paragraph [ref=e113]: Ready to ship
+          - generic [ref=e114]:
+            - link "Elona by Adrian Rasmussen View" [ref=e115] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - img "Elona by Adrian Rasmussen"
+              - generic [ref=e116]: View
+            - link "Elona" [ref=e117] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - heading "Elona" [level=3] [ref=e118]
+            - link "Resonant Formations $55 Ready to ship" [ref=e119] [cursor=pointer]:
+              - /url: /creations/LC-106
+              - generic [ref=e121]: Resonant Formations
+              - generic [ref=e122]:
+                - text: $55
+                - paragraph [ref=e123]: Ready to ship
+          - generic [ref=e124]:
+            - link "Emans by Adrian Rasmussen View" [ref=e125] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - img "Emans by Adrian Rasmussen"
+              - generic [ref=e126]: View
+            - link "Emans" [ref=e127] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - heading "Emans" [level=3] [ref=e128]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e129] [cursor=pointer]:
+              - /url: /creations/LC-107
+              - generic [ref=e131]: Embodied Vibrations
+              - generic [ref=e132]:
+                - text: $55
+                - paragraph [ref=e133]: Ready to ship
+          - generic [ref=e134]:
+            - link "Flanos by Adrian Rasmussen View" [ref=e135] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - img "Flanos by Adrian Rasmussen"
+              - generic [ref=e136]: View
+            - link "Flanos" [ref=e137] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - heading "Flanos" [level=3] [ref=e138]
+            - link "Resonant Formations $55 Ready to ship" [ref=e139] [cursor=pointer]:
+              - /url: /creations/LC-108
+              - generic [ref=e141]: Resonant Formations
+              - generic [ref=e142]:
+                - text: $55
+                - paragraph [ref=e143]: Ready to ship
+          - generic [ref=e144]:
+            - link "Flora by Adrian Rasmussen View" [ref=e145] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - img "Flora by Adrian Rasmussen"
+              - generic [ref=e146]: View
+            - link "Flora" [ref=e147] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - heading "Flora" [level=3] [ref=e148]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e149] [cursor=pointer]:
+              - /url: /creations/LC-109
+              - generic [ref=e151]: Frequency Foundations
+              - generic [ref=e152]:
+                - text: $55
+                - paragraph [ref=e153]: Ready to ship
+          - generic [ref=e154]:
+            - link "Fluma by Adrian Rasmussen View" [ref=e155] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - img "Fluma by Adrian Rasmussen"
+              - generic [ref=e156]: View
+            - link "Fluma" [ref=e157] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - heading "Fluma" [level=3] [ref=e158]
+            - link "Frequency Foundations $85 Ready to ship" [ref=e159] [cursor=pointer]:
+              - /url: /creations/LC-110
+              - generic [ref=e161]: Frequency Foundations
+              - generic [ref=e162]:
+                - text: $85
+                - paragraph [ref=e163]: Ready to ship
+          - generic [ref=e164]:
+            - link "Hiru by Adrian Rasmussen View" [ref=e165] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - img "Hiru by Adrian Rasmussen"
+              - generic [ref=e166]: View
+            - link "Hiru" [ref=e167] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - heading "Hiru" [level=3] [ref=e168]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e169] [cursor=pointer]:
+              - /url: /creations/LC-111
+              - generic [ref=e171]: Embodied Vibrations
+              - generic [ref=e172]:
+                - text: $55
+                - paragraph [ref=e173]: Ready to ship
+          - generic [ref=e174]:
+            - link "Kani by Adrian Rasmussen View" [ref=e175] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - img "Kani by Adrian Rasmussen"
+              - generic [ref=e176]: View
+            - link "Kani" [ref=e177] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - heading "Kani" [level=3] [ref=e178]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e179] [cursor=pointer]:
+              - /url: /creations/LC-112
+              - generic [ref=e181]: Embodied Vibrations
+              - generic [ref=e182]:
+                - text: $55
+                - paragraph [ref=e183]: Ready to ship
+          - generic [ref=e184]:
+            - link "Natura by Adrian Rasmussen View" [ref=e185] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - img "Natura by Adrian Rasmussen"
+              - generic [ref=e186]: View
+            - link "Natura" [ref=e187] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - heading "Natura" [level=3] [ref=e188]
+            - link "Resonant Formations $55 Ready to ship" [ref=e189] [cursor=pointer]:
+              - /url: /creations/LC-113
+              - generic [ref=e191]: Resonant Formations
+              - generic [ref=e192]:
+                - text: $55
+                - paragraph [ref=e193]: Ready to ship
+          - generic [ref=e194]:
+            - link "Nocturna by Adrian Rasmussen View" [ref=e195] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - img "Nocturna by Adrian Rasmussen"
+              - generic [ref=e196]: View
+            - link "Nocturna" [ref=e197] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - heading "Nocturna" [level=3] [ref=e198]
+            - link "Resonant Formations $55 Ready to ship" [ref=e199] [cursor=pointer]:
+              - /url: /creations/LC-114
+              - generic [ref=e201]: Resonant Formations
+              - generic [ref=e202]:
+                - text: $55
+                - paragraph [ref=e203]: Ready to ship
+          - generic [ref=e204]:
+            - link "Ongo by Adrian Rasmussen View" [ref=e205] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - img "Ongo by Adrian Rasmussen"
+              - generic [ref=e206]: View
+            - link "Ongo" [ref=e207] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - heading "Ongo" [level=3] [ref=e208]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e209] [cursor=pointer]:
+              - /url: /creations/LC-115
+              - generic [ref=e211]: Embodied Vibrations
+              - generic [ref=e212]:
+                - text: $55
+                - paragraph [ref=e213]: Ready to ship
+          - generic [ref=e214]:
+            - link "Onxen by Adrian Rasmussen View" [ref=e215] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - img "Onxen by Adrian Rasmussen"
+              - generic [ref=e216]: View
+            - link "Onxen" [ref=e217] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - heading "Onxen" [level=3] [ref=e218]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e219] [cursor=pointer]:
+              - /url: /creations/LC-116
+              - generic [ref=e221]: Frequency Foundations
+              - generic [ref=e222]:
+                - text: $55
+                - paragraph [ref=e223]: Ready to ship
+          - generic [ref=e224]:
+            - link "Oseno by Adrian Rasmussen View" [ref=e225] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - img "Oseno by Adrian Rasmussen"
+              - generic [ref=e226]: View
+            - link "Oseno" [ref=e227] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - heading "Oseno" [level=3] [ref=e228]
+            - link "Resonant Formations $55 Ready to ship" [ref=e229] [cursor=pointer]:
+              - /url: /creations/LC-117
+              - generic [ref=e231]: Resonant Formations
+              - generic [ref=e232]:
+                - text: $55
+                - paragraph [ref=e233]: Ready to ship
+          - generic [ref=e234]:
+            - link "Ramah by Adrian Rasmussen View" [ref=e235] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - img "Ramah by Adrian Rasmussen"
+              - generic [ref=e236]: View
+            - link "Ramah" [ref=e237] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - heading "Ramah" [level=3] [ref=e238]
+            - link "Resonant Formations $55 Ready to ship" [ref=e239] [cursor=pointer]:
+              - /url: /creations/LC-118
+              - generic [ref=e241]: Resonant Formations
+              - generic [ref=e242]:
+                - text: $55
+                - paragraph [ref=e243]: Ready to ship
+          - generic [ref=e244]:
+            - link "Raza by Adrian Rasmussen View" [ref=e245] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - img "Raza by Adrian Rasmussen"
+              - generic [ref=e246]: View
+            - link "Raza" [ref=e247] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - heading "Raza" [level=3] [ref=e248]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e249] [cursor=pointer]:
+              - /url: /creations/LC-119
+              - generic [ref=e251]: Embodied Vibrations
+              - generic [ref=e252]:
+                - text: $55
+                - paragraph [ref=e253]: Ready to ship
+          - generic [ref=e254]:
+            - link "Rondot by Adrian Rasmussen View" [ref=e255] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - img "Rondot by Adrian Rasmussen"
+              - generic [ref=e256]: View
+            - link "Rondot" [ref=e257] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - heading "Rondot" [level=3] [ref=e258]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e259] [cursor=pointer]:
+              - /url: /creations/LC-120
+              - generic [ref=e261]: Frequency Foundations
+              - generic [ref=e262]:
+                - text: $55
+                - paragraph [ref=e263]: Ready to ship
+          - generic [ref=e264]:
+            - link "Sensis by Adrian Rasmussen View" [ref=e265] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - img "Sensis by Adrian Rasmussen"
+              - generic [ref=e266]: View
+            - link "Sensis" [ref=e267] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - heading "Sensis" [level=3] [ref=e268]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e269] [cursor=pointer]:
+              - /url: /creations/LC-121
+              - generic [ref=e271]: Embodied Vibrations
+              - generic [ref=e272]:
+                - text: $55
+                - paragraph [ref=e273]: Ready to ship
+          - generic [ref=e274]:
+            - link "Shama by Adrian Rasmussen View" [ref=e275] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - img "Shama by Adrian Rasmussen"
+              - generic [ref=e276]: View
+            - link "Shama" [ref=e277] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - heading "Shama" [level=3] [ref=e278]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e279] [cursor=pointer]:
+              - /url: /creations/LC-122
+              - generic [ref=e281]: Embodied Vibrations
+              - generic [ref=e282]:
+                - text: $55
+                - paragraph [ref=e283]: Ready to ship
+          - generic [ref=e284]:
+            - link "Sino Chano by Adrian Rasmussen View" [ref=e285] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - img "Sino Chano by Adrian Rasmussen"
+              - generic [ref=e286]: View
+            - link "Sino Chano" [ref=e287] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - heading "Sino Chano" [level=3] [ref=e288]
+            - link "Resonant Formations $55 Ready to ship" [ref=e289] [cursor=pointer]:
+              - /url: /creations/LC-123
+              - generic [ref=e291]: Resonant Formations
+              - generic [ref=e292]:
+                - text: $55
+                - paragraph [ref=e293]: Ready to ship
+          - generic [ref=e294]:
+            - link "Sophi by Adrian Rasmussen View" [ref=e295] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - img "Sophi by Adrian Rasmussen"
+              - generic [ref=e296]: View
+            - link "Sophi" [ref=e297] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - heading "Sophi" [level=3] [ref=e298]
+            - link "Embodied Vibrations $55 Ready to ship" [ref=e299] [cursor=pointer]:
+              - /url: /creations/LC-124
+              - generic [ref=e301]: Embodied Vibrations
+              - generic [ref=e302]:
+                - text: $55
+                - paragraph [ref=e303]: Ready to ship
+          - generic [ref=e304]:
+            - link "Starla by Adrian Rasmussen View" [ref=e305] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - img "Starla by Adrian Rasmussen"
+              - generic [ref=e306]: View
+            - link "Starla" [ref=e307] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - heading "Starla" [level=3] [ref=e308]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e309] [cursor=pointer]:
+              - /url: /creations/LC-125
+              - generic [ref=e311]: Frequency Foundations
+              - generic [ref=e312]:
+                - text: $55
+                - paragraph [ref=e313]: Ready to ship
+          - generic [ref=e314]:
+            - link "Suni by Adrian Rasmussen View" [ref=e315] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - img "Suni by Adrian Rasmussen"
+              - generic [ref=e316]: View
+            - link "Suni" [ref=e317] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - heading "Suni" [level=3] [ref=e318]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e319] [cursor=pointer]:
+              - /url: /creations/LC-126
+              - generic [ref=e321]: Frequency Foundations
+              - generic [ref=e322]:
+                - text: $55
+                - paragraph [ref=e323]: Ready to ship
+          - generic [ref=e324]:
+            - link "Tijiro by Adrian Rasmussen View" [ref=e325] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - img "Tijiro by Adrian Rasmussen"
+              - generic [ref=e326]: View
+            - link "Tijiro" [ref=e327] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - heading "Tijiro" [level=3] [ref=e328]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e329] [cursor=pointer]:
+              - /url: /creations/LC-127
+              - generic [ref=e331]: Frequency Foundations
+              - generic [ref=e332]:
+                - text: $55
+                - paragraph [ref=e333]: Ready to ship
+          - generic [ref=e334]:
+            - link "Toran by Adrian Rasmussen View" [ref=e335] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - img "Toran by Adrian Rasmussen"
+              - generic [ref=e336]: View
+            - link "Toran" [ref=e337] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - heading "Toran" [level=3] [ref=e338]
+            - link "Resonant Formations $55 Ready to ship" [ref=e339] [cursor=pointer]:
+              - /url: /creations/LC-128
+              - generic [ref=e341]: Resonant Formations
+              - generic [ref=e342]:
+                - text: $55
+                - paragraph [ref=e343]: Ready to ship
+          - generic [ref=e344]:
+            - link "Tribon by Adrian Rasmussen View" [ref=e345] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - img "Tribon by Adrian Rasmussen"
+              - generic [ref=e346]: View
+            - link "Tribon" [ref=e347] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - heading "Tribon" [level=3] [ref=e348]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e349] [cursor=pointer]:
+              - /url: /creations/LC-129
+              - generic [ref=e351]: Frequency Foundations
+              - generic [ref=e352]:
+                - text: $55
+                - paragraph [ref=e353]: Ready to ship
+          - generic [ref=e354]:
+            - link "Utone by Adrian Rasmussen View" [ref=e355] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - img "Utone by Adrian Rasmussen"
+              - generic [ref=e356]: View
+            - link "Utone" [ref=e357] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - heading "Utone" [level=3] [ref=e358]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e359] [cursor=pointer]:
+              - /url: /creations/LC-130
+              - generic [ref=e361]: Frequency Foundations
+              - generic [ref=e362]:
+                - text: $55
+                - paragraph [ref=e363]: Ready to ship
+          - generic [ref=e364]:
+            - link "Wifly by Adrian Rasmussen View" [ref=e365] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - img "Wifly by Adrian Rasmussen"
+              - generic [ref=e366]: View
+            - link "Wifly" [ref=e367] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - heading "Wifly" [level=3] [ref=e368]
+            - link "Resonant Formations $55 Ready to ship" [ref=e369] [cursor=pointer]:
+              - /url: /creations/LC-131
+              - generic [ref=e371]: Resonant Formations
+              - generic [ref=e372]:
+                - text: $55
+                - paragraph [ref=e373]: Ready to ship
+          - generic [ref=e374]:
+            - link "Yonis by Adrian Rasmussen View" [ref=e375] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - img "Yonis by Adrian Rasmussen"
+              - generic [ref=e376]: View
+            - link "Yonis" [ref=e377] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - heading "Yonis" [level=3] [ref=e378]
+            - link "Resonant Formations $55 Ready to ship" [ref=e379] [cursor=pointer]:
+              - /url: /creations/LC-132
+              - generic [ref=e381]: Resonant Formations
+              - generic [ref=e382]:
+                - text: $55
+                - paragraph [ref=e383]: Ready to ship
+          - generic [ref=e384]:
+            - link "Zelio by Adrian Rasmussen View" [ref=e385] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - img "Zelio by Adrian Rasmussen"
+              - generic [ref=e386]: View
+            - link "Zelio" [ref=e387] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - heading "Zelio" [level=3] [ref=e388]
+            - link "Frequency Foundations $55 Ready to ship" [ref=e389] [cursor=pointer]:
+              - /url: /creations/LC-133
+              - generic [ref=e391]: Frequency Foundations
+              - generic [ref=e392]:
+                - text: $55
+                - paragraph [ref=e393]: Ready to ship
+        - generic [ref=e395]:
+          - heading "A Light Code can also be created for you." [level=3] [ref=e396]
+          - paragraph [ref=e397]: Through conversation, I receive the energy and intentions of your life, then anchor what wants to come through.
+          - link "Begin a conversation" [ref=e398] [cursor=pointer]:
+            - /url: /inquire
+            - text: Begin a conversation
+            - img [ref=e399]
+        - generic [ref=e401]:
+          - heading "Explore more" [level=2] [ref=e403]
+          - generic [ref=e404]:
+            - link "Universal Language" [ref=e405] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/universal-language
+            - link "Mandala" [ref=e406] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/mandala
+            - link "Signature Pieces" [ref=e407] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/signature-pieces
+    - contentinfo [ref=e408]:
+      - generic [ref=e410]:
+        - generic [ref=e411]:
+          - generic [ref=e412]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e413]
+            - paragraph [ref=e414]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e417]: Currently, taking commissions for Spring 2026
+          - generic [ref=e418]:
+            - generic [ref=e419]: Join the Inner Circle
+            - generic [ref=e420]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e422]:
+              - generic: Email address
+              - textbox [ref=e423]
+              - button [ref=e424]:
+                - img [ref=e425]
+        - navigation [ref=e428]:
+          - link "Creations" [ref=e429] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e430] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e431] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e432] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e433] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e435]:
+          - generic [ref=e436]:
+            - generic [ref=e437]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e438] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e439] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e440]
+          - generic [ref=e441]:
+            - link "Instagram" [ref=e442] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e443]
+            - link "Email" [ref=e446] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e447]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

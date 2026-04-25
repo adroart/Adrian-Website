@@ -1,0 +1,1383 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - img "Universal Language, a series of 64 mandala artworks by Adrian Rasmussen, original airbrushed painting on laser-cut wood." [ref=e23]
+        - generic [ref=e25]:
+          - navigation "Breadcrumb" [ref=e26]:
+            - link "Creations" [ref=e27] [cursor=pointer]:
+              - /url: /creations
+            - generic [ref=e28]: ·
+            - link "Multidimensional Art" [ref=e29] [cursor=pointer]:
+              - /url: /creations/multidimensional-art
+            - generic [ref=e30]: ·
+            - generic [ref=e31]: Universal Language
+          - heading "Universal Language" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Sixty-four works. Each connected to a hexagram from the I Ching and a corresponding Gene Key. A complete symbolic language encoded in layered wood.
+        - generic [ref=e35]:
+          - paragraph [ref=e36]: There is a language that all of us know. Elemental. Genetic. Interstellar. Patterns that navigate the experience of life through the passage of time. It existed before the I Ching, Gene Keys, or astrology gave it a name. Felt through the diverse experiences of being human. Perceived through a 64-fold cycle of change. These creations are my way of cultivating a relationship to that cycle. Pay close attention to which ones call out to you. When one speaks, there is a reason waiting in the oracle.
+          - link "Read the full story" [ref=e37] [cursor=pointer]:
+            - /url: /writings/the-universal-language
+            - text: Read the full story
+            - img [ref=e38]
+        - generic [ref=e43]: 64 pieces
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - link "Art of Living - 32, Universal Language 32. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e48] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - img "Art of Living - 32, Universal Language 32. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e51]
+              - generic [ref=e53]: View
+            - link "Art of Living" [ref=e54] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - heading "Art of Living" [level=3] [ref=e55]
+            - link "Universal Language 32 $295 to $2,500 Made to order · 3 sizes" [ref=e56] [cursor=pointer]:
+              - /url: /creations/UL-100
+              - generic [ref=e57]:
+                - generic [ref=e58]: Universal Language
+                - generic [ref=e59]: "32"
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - text: $295
+                  - generic [ref=e62]: to $2,500
+                - paragraph [ref=e63]:
+                  - text: Made to order
+                  - generic [ref=e64]: · 3 sizes
+          - generic [ref=e65]:
+            - link "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e66] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - img "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e69]
+              - generic [ref=e71]: View
+            - link "Crystal Creation" [ref=e72] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - heading "Crystal Creation" [level=3] [ref=e73]
+            - link "Universal Language 36 $295 to $2,500 Made to order · 3 sizes" [ref=e74] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - generic [ref=e75]:
+                - generic [ref=e76]: Universal Language
+                - generic [ref=e77]: "36"
+              - generic [ref=e78]:
+                - generic [ref=e79]:
+                  - text: $295
+                  - generic [ref=e80]: to $2,500
+                - paragraph [ref=e81]:
+                  - text: Made to order
+                  - generic [ref=e82]: · 3 sizes
+          - generic [ref=e83]:
+            - link "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e84] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - img "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e87]
+              - generic [ref=e89]: View
+            - link "Doorways Of The Unknown" [ref=e90] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - heading "Doorways Of The Unknown" [level=3] [ref=e91]
+            - link "Universal Language 48 $295 to $3,000 Ready to ship · 3 sizes" [ref=e92] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - generic [ref=e93]:
+                - generic [ref=e94]: Universal Language
+                - generic [ref=e95]: "48"
+              - generic [ref=e96]:
+                - generic [ref=e97]:
+                  - text: $295
+                  - generic [ref=e98]: to $3,000
+                - paragraph [ref=e99]:
+                  - text: Ready to ship
+                  - generic [ref=e100]: · 3 sizes
+          - generic [ref=e101]:
+            - link "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e102] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - img "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e105]
+              - generic [ref=e107]: View
+            - link "Ease in This" [ref=e108] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - heading "Ease in This" [level=3] [ref=e109]
+            - link "Universal Language 9 $295 to $2,500 Made to order · 3 sizes" [ref=e110] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - generic [ref=e111]:
+                - generic [ref=e112]: Universal Language
+                - generic [ref=e113]: "9"
+              - generic [ref=e114]:
+                - generic [ref=e115]:
+                  - text: $295
+                  - generic [ref=e116]: to $2,500
+                - paragraph [ref=e117]:
+                  - text: Made to order
+                  - generic [ref=e118]: · 3 sizes
+          - generic [ref=e119]:
+            - link "Emerging as the Code - 20, Universal Language 20. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e120] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - img "Emerging as the Code - 20, Universal Language 20. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e123]
+              - generic [ref=e125]: View
+            - link "Emerging as the Code" [ref=e126] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - heading "Emerging as the Code" [level=3] [ref=e127]
+            - link "Universal Language 20 $295 to $2,500 Made to order · 3 sizes" [ref=e128] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - generic [ref=e129]:
+                - generic [ref=e130]: Universal Language
+                - generic [ref=e131]: "20"
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - text: $295
+                  - generic [ref=e134]: to $2,500
+                - paragraph [ref=e135]:
+                  - text: Made to order
+                  - generic [ref=e136]: · 3 sizes
+          - generic [ref=e137]:
+            - link "Essential Nexus - 7, Universal Language 7. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e138] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - img "Essential Nexus - 7, Universal Language 7. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e141]
+              - generic [ref=e143]: View
+            - link "Essential Nexus" [ref=e144] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - heading "Essential Nexus" [level=3] [ref=e145]
+            - link "Universal Language 7 $295 to $2,500 Made to order · 3 sizes" [ref=e146] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - generic [ref=e147]:
+                - generic [ref=e148]: Universal Language
+                - generic [ref=e149]: "7"
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - text: $295
+                  - generic [ref=e152]: to $2,500
+                - paragraph [ref=e153]:
+                  - text: Made to order
+                  - generic [ref=e154]: · 3 sizes
+          - generic [ref=e155]:
+            - link "Flight of the Tao - 57, Universal Language 57. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e156] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - img "Flight of the Tao - 57, Universal Language 57. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e159]
+              - generic [ref=e161]: View
+            - link "Flight of the Tao" [ref=e162] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - heading "Flight of the Tao" [level=3] [ref=e163]
+            - link "Universal Language 57 $295 to $2,500 Made to order · 3 sizes" [ref=e164] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - generic [ref=e165]:
+                - generic [ref=e166]: Universal Language
+                - generic [ref=e167]: "57"
+              - generic [ref=e168]:
+                - generic [ref=e169]:
+                  - text: $295
+                  - generic [ref=e170]: to $2,500
+                - paragraph [ref=e171]:
+                  - text: Made to order
+                  - generic [ref=e172]: · 3 sizes
+          - generic [ref=e173]:
+            - link "Fountain of Light - 46, Universal Language 46. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e174] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - img "Fountain of Light - 46, Universal Language 46. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e177]
+              - generic [ref=e179]: View
+            - link "Fountain of Light" [ref=e180] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - heading "Fountain of Light" [level=3] [ref=e181]
+            - link "Universal Language 46 $295 to $2,500 Made to order · 3 sizes" [ref=e182] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - generic [ref=e183]:
+                - generic [ref=e184]: Universal Language
+                - generic [ref=e185]: "46"
+              - generic [ref=e186]:
+                - generic [ref=e187]:
+                  - text: $295
+                  - generic [ref=e188]: to $2,500
+                - paragraph [ref=e189]:
+                  - text: Made to order
+                  - generic [ref=e190]: · 3 sizes
+          - generic [ref=e191]:
+            - link "Harmonious Mirage - 6, Universal Language 6. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e192] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - img "Harmonious Mirage - 6, Universal Language 6. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e195]
+              - generic [ref=e197]: View
+            - link "Harmonious Mirage" [ref=e198] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - heading "Harmonious Mirage" [level=3] [ref=e199]
+            - link "Universal Language 6 $295 to $2,500 Made to order · 3 sizes" [ref=e200] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - generic [ref=e201]:
+                - generic [ref=e202]: Universal Language
+                - generic [ref=e203]: "6"
+              - generic [ref=e204]:
+                - generic [ref=e205]:
+                  - text: $295
+                  - generic [ref=e206]: to $2,500
+                - paragraph [ref=e207]:
+                  - text: Made to order
+                  - generic [ref=e208]: · 3 sizes
+          - generic [ref=e209]:
+            - link "Liberation of the Greater - 18, Universal Language 18. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e210] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - img "Liberation of the Greater - 18, Universal Language 18. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e213]
+              - generic [ref=e215]: View
+            - link "Liberation of the Greater" [ref=e216] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - heading "Liberation of the Greater" [level=3] [ref=e217]
+            - link "Universal Language 18 $295 to $2,500 Made to order · 3 sizes" [ref=e218] [cursor=pointer]:
+              - /url: /creations/UL-109
+              - generic [ref=e219]:
+                - generic [ref=e220]: Universal Language
+                - generic [ref=e221]: "18"
+              - generic [ref=e222]:
+                - generic [ref=e223]:
+                  - text: $295
+                  - generic [ref=e224]: to $2,500
+                - paragraph [ref=e225]:
+                  - text: Made to order
+                  - generic [ref=e226]: · 3 sizes
+          - generic [ref=e227]:
+            - link "Moving to Perfection - 42, Universal Language 42. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e228] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - img "Moving to Perfection - 42, Universal Language 42. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e231]
+              - generic [ref=e233]: View
+            - link "Moving to Perfection" [ref=e234] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - heading "Moving to Perfection" [level=3] [ref=e235]
+            - link "Universal Language 42 $295 to $2,500 Made to order · 3 sizes" [ref=e236] [cursor=pointer]:
+              - /url: /creations/UL-110
+              - generic [ref=e237]:
+                - generic [ref=e238]: Universal Language
+                - generic [ref=e239]: "42"
+              - generic [ref=e240]:
+                - generic [ref=e241]:
+                  - text: $295
+                  - generic [ref=e242]: to $2,500
+                - paragraph [ref=e243]:
+                  - text: Made to order
+                  - generic [ref=e244]: · 3 sizes
+          - generic [ref=e245]:
+            - link "Nobel Spark - 39, Universal Language 39. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e246] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - img "Nobel Spark - 39, Universal Language 39. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e249]
+              - generic [ref=e251]: View
+            - link "Nobel Spark" [ref=e252] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - heading "Nobel Spark" [level=3] [ref=e253]
+            - link "Universal Language 39 $295 to $2,500 Made to order · 3 sizes" [ref=e254] [cursor=pointer]:
+              - /url: /creations/UL-111
+              - generic [ref=e255]:
+                - generic [ref=e256]: Universal Language
+                - generic [ref=e257]: "39"
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - text: $295
+                  - generic [ref=e260]: to $2,500
+                - paragraph [ref=e261]:
+                  - text: Made to order
+                  - generic [ref=e262]: · 3 sizes
+          - generic [ref=e263]:
+            - link "Odyssey of Freedom - 8, Universal Language 8. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e264] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - img "Odyssey of Freedom - 8, Universal Language 8. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e267]
+              - generic [ref=e269]: View
+            - link "Odyssey of Freedom" [ref=e270] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - heading "Odyssey of Freedom" [level=3] [ref=e271]
+            - link "Universal Language 8 $295 to $2,500 Made to order · 3 sizes" [ref=e272] [cursor=pointer]:
+              - /url: /creations/UL-112
+              - generic [ref=e273]:
+                - generic [ref=e274]: Universal Language
+                - generic [ref=e275]: "8"
+              - generic [ref=e276]:
+                - generic [ref=e277]:
+                  - text: $295
+                  - generic [ref=e278]: to $2,500
+                - paragraph [ref=e279]:
+                  - text: Made to order
+                  - generic [ref=e280]: · 3 sizes
+          - generic [ref=e281]:
+            - link "Everlasting Bounty - 54, Universal Language 54. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e282] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - img "Everlasting Bounty - 54, Universal Language 54. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e285]
+              - generic [ref=e287]: View
+            - link "Everlasting Bounty" [ref=e288] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - heading "Everlasting Bounty" [level=3] [ref=e289]
+            - link "Universal Language 54 $295 to $2,500 Made to order · 3 sizes" [ref=e290] [cursor=pointer]:
+              - /url: /creations/UL-113
+              - generic [ref=e291]:
+                - generic [ref=e292]: Universal Language
+                - generic [ref=e293]: "54"
+              - generic [ref=e294]:
+                - generic [ref=e295]:
+                  - text: $295
+                  - generic [ref=e296]: to $2,500
+                - paragraph [ref=e297]:
+                  - text: Made to order
+                  - generic [ref=e298]: · 3 sizes
+          - generic [ref=e299]:
+            - link "Sol Star - 11, Universal Language 11. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e300] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - img "Sol Star - 11, Universal Language 11. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e303]
+              - generic [ref=e305]: View
+            - link "Sol Star" [ref=e306] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - heading "Sol Star" [level=3] [ref=e307]
+            - link "Universal Language 11 $295 to $2,500 Made to order · 3 sizes" [ref=e308] [cursor=pointer]:
+              - /url: /creations/UL-114
+              - generic [ref=e309]:
+                - generic [ref=e310]: Universal Language
+                - generic [ref=e311]: "11"
+              - generic [ref=e312]:
+                - generic [ref=e313]:
+                  - text: $295
+                  - generic [ref=e314]: to $2,500
+                - paragraph [ref=e315]:
+                  - text: Made to order
+                  - generic [ref=e316]: · 3 sizes
+          - generic [ref=e317]:
+            - link "Solection - 19, Universal Language 19. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e318] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - img "Solection - 19, Universal Language 19. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e321]
+              - generic [ref=e323]: View
+            - link "Solection" [ref=e324] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - heading "Solection" [level=3] [ref=e325]
+            - link "Universal Language 19 $295 to $2,500 Made to order · 3 sizes" [ref=e326] [cursor=pointer]:
+              - /url: /creations/UL-115
+              - generic [ref=e327]:
+                - generic [ref=e328]: Universal Language
+                - generic [ref=e329]: "19"
+              - generic [ref=e330]:
+                - generic [ref=e331]:
+                  - text: $295
+                  - generic [ref=e332]: to $2,500
+                - paragraph [ref=e333]:
+                  - text: Made to order
+                  - generic [ref=e334]: · 3 sizes
+          - generic [ref=e335]:
+            - link "Sophia's Orchestra - 44, Universal Language 44. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e336] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - img "Sophia's Orchestra - 44, Universal Language 44. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e339]
+              - generic [ref=e341]: View
+            - link "Sophia's Orchestra" [ref=e342] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - heading "Sophia's Orchestra" [level=3] [ref=e343]
+            - link "Universal Language 44 $295 to $2,500 Made to order · 3 sizes" [ref=e344] [cursor=pointer]:
+              - /url: /creations/UL-116
+              - generic [ref=e345]:
+                - generic [ref=e346]: Universal Language
+                - generic [ref=e347]: "44"
+              - generic [ref=e348]:
+                - generic [ref=e349]:
+                  - text: $295
+                  - generic [ref=e350]: to $2,500
+                - paragraph [ref=e351]:
+                  - text: Made to order
+                  - generic [ref=e352]: · 3 sizes
+          - generic [ref=e353]:
+            - link "The Mysteries Play - 25, Universal Language 25. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e354] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - img "The Mysteries Play - 25, Universal Language 25. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e357]
+              - generic [ref=e359]: View
+            - link "The Mysteries Play" [ref=e360] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - heading "The Mysteries Play" [level=3] [ref=e361]
+            - link "Universal Language 25 $295 to $2,500 Made to order · 3 sizes" [ref=e362] [cursor=pointer]:
+              - /url: /creations/UL-117
+              - generic [ref=e363]:
+                - generic [ref=e364]: Universal Language
+                - generic [ref=e365]: "25"
+              - generic [ref=e366]:
+                - generic [ref=e367]:
+                  - text: $295
+                  - generic [ref=e368]: to $2,500
+                - paragraph [ref=e369]:
+                  - text: Made to order
+                  - generic [ref=e370]: · 3 sizes
+          - generic [ref=e371]:
+            - link "Theater of Truth - 31, Universal Language 31. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e372] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - img "Theater of Truth - 31, Universal Language 31. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e375]
+              - generic [ref=e377]: View
+            - link "Theater of Truth" [ref=e378] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - heading "Theater of Truth" [level=3] [ref=e379]
+            - link "Universal Language 31 $295 to $2,500 Made to order · 3 sizes" [ref=e380] [cursor=pointer]:
+              - /url: /creations/UL-118
+              - generic [ref=e381]:
+                - generic [ref=e382]: Universal Language
+                - generic [ref=e383]: "31"
+              - generic [ref=e384]:
+                - generic [ref=e385]:
+                  - text: $295
+                  - generic [ref=e386]: to $2,500
+                - paragraph [ref=e387]:
+                  - text: Made to order
+                  - generic [ref=e388]: · 3 sizes
+          - generic [ref=e389]:
+            - link "Treasure of the Way - 22, Universal Language 22. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e390] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - img "Treasure of the Way - 22, Universal Language 22. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e393]
+              - generic [ref=e395]: View
+            - link "Treasure of the Way" [ref=e396] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - heading "Treasure of the Way" [level=3] [ref=e397]
+            - link "Universal Language 22 $295 to $2,500 Made to order · 3 sizes" [ref=e398] [cursor=pointer]:
+              - /url: /creations/UL-119
+              - generic [ref=e399]:
+                - generic [ref=e400]: Universal Language
+                - generic [ref=e401]: "22"
+              - generic [ref=e402]:
+                - generic [ref=e403]:
+                  - text: $295
+                  - generic [ref=e404]: to $2,500
+                - paragraph [ref=e405]:
+                  - text: Made to order
+                  - generic [ref=e406]: · 3 sizes
+          - generic [ref=e407]:
+            - link "Unshakable Arrival - 51, Universal Language 51. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e408] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - img "Unshakable Arrival - 51, Universal Language 51. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e411]
+              - generic [ref=e413]: View
+            - link "Unshakable Arrival" [ref=e414] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - heading "Unshakable Arrival" [level=3] [ref=e415]
+            - link "Universal Language 51 $295 to $2,500 Made to order · 3 sizes" [ref=e416] [cursor=pointer]:
+              - /url: /creations/UL-120
+              - generic [ref=e417]:
+                - generic [ref=e418]: Universal Language
+                - generic [ref=e419]: "51"
+              - generic [ref=e420]:
+                - generic [ref=e421]:
+                  - text: $295
+                  - generic [ref=e422]: to $2,500
+                - paragraph [ref=e423]:
+                  - text: Made to order
+                  - generic [ref=e424]: · 3 sizes
+          - generic [ref=e425]:
+            - link "Veils of Knowledge - 4, Universal Language 4. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e426] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - img "Veils of Knowledge - 4, Universal Language 4. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e429]
+              - generic [ref=e431]: View
+            - link "Veils of Knowledge" [ref=e432] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - heading "Veils of Knowledge" [level=3] [ref=e433]
+            - link "Universal Language 4 $295 to $2,500 Made to order · 3 sizes" [ref=e434] [cursor=pointer]:
+              - /url: /creations/UL-121
+              - generic [ref=e435]:
+                - generic [ref=e436]: Universal Language
+                - generic [ref=e437]: "4"
+              - generic [ref=e438]:
+                - generic [ref=e439]:
+                  - text: $295
+                  - generic [ref=e440]: to $2,500
+                - paragraph [ref=e441]:
+                  - text: Made to order
+                  - generic [ref=e442]: · 3 sizes
+          - generic [ref=e443]:
+            - link "Earth's Breath - 1, Universal Language 1. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e444] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - img "Earth's Breath - 1, Universal Language 1. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e447]
+              - generic [ref=e449]: View
+            - link "Earth's Breath" [ref=e450] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - heading "Earth's Breath" [level=3] [ref=e451]
+            - link "Universal Language 1 $295 to $2,500 Made to order · 3 sizes" [ref=e452] [cursor=pointer]:
+              - /url: /creations/UL-122
+              - generic [ref=e453]:
+                - generic [ref=e454]: Universal Language
+                - generic [ref=e455]: "1"
+              - generic [ref=e456]:
+                - generic [ref=e457]:
+                  - text: $295
+                  - generic [ref=e458]: to $2,500
+                - paragraph [ref=e459]:
+                  - text: Made to order
+                  - generic [ref=e460]: · 3 sizes
+          - generic [ref=e461]:
+            - link "Beyond the Shell - 2, Universal Language 2. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e462] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - img "Beyond the Shell - 2, Universal Language 2. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e465]
+              - generic [ref=e467]: View
+            - link "Beyond the Shell" [ref=e468] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - heading "Beyond the Shell" [level=3] [ref=e469]
+            - link "Universal Language 2 $295 to $2,500 Made to order · 3 sizes" [ref=e470] [cursor=pointer]:
+              - /url: /creations/UL-123
+              - generic [ref=e471]:
+                - generic [ref=e472]: Universal Language
+                - generic [ref=e473]: "2"
+              - generic [ref=e474]:
+                - generic [ref=e475]:
+                  - text: $295
+                  - generic [ref=e476]: to $2,500
+                - paragraph [ref=e477]:
+                  - text: Made to order
+                  - generic [ref=e478]: · 3 sizes
+          - generic [ref=e479]:
+            - link "Messengers of the Infinite - 3, Universal Language 3. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e480] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - img "Messengers of the Infinite - 3, Universal Language 3. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e483]
+              - generic [ref=e485]: View
+            - link "Messengers of the Infinite" [ref=e486] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - heading "Messengers of the Infinite" [level=3] [ref=e487]
+            - link "Universal Language 3 $295 to $2,500 Made to order · 3 sizes" [ref=e488] [cursor=pointer]:
+              - /url: /creations/UL-124
+              - generic [ref=e489]:
+                - generic [ref=e490]: Universal Language
+                - generic [ref=e491]: "3"
+              - generic [ref=e492]:
+                - generic [ref=e493]:
+                  - text: $295
+                  - generic [ref=e494]: to $2,500
+                - paragraph [ref=e495]:
+                  - text: Made to order
+                  - generic [ref=e496]: · 3 sizes
+          - generic [ref=e497]:
+            - link "The Space Between Time - 5, Universal Language 5. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e498] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - img "The Space Between Time - 5, Universal Language 5. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e501]
+              - generic [ref=e503]: View
+            - link "The Space Between Time" [ref=e504] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - heading "The Space Between Time" [level=3] [ref=e505]
+            - link "Universal Language 5 $295 to $2,500 Made to order · 3 sizes" [ref=e506] [cursor=pointer]:
+              - /url: /creations/UL-125
+              - generic [ref=e507]:
+                - generic [ref=e508]: Universal Language
+                - generic [ref=e509]: "5"
+              - generic [ref=e510]:
+                - generic [ref=e511]:
+                  - text: $295
+                  - generic [ref=e512]: to $2,500
+                - paragraph [ref=e513]:
+                  - text: Made to order
+                  - generic [ref=e514]: · 3 sizes
+          - generic [ref=e515]:
+            - link "Internal Treasure - 10, Universal Language 10. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e516] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - img "Internal Treasure - 10, Universal Language 10. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e519]
+              - generic [ref=e521]: View
+            - link "Internal Treasure" [ref=e522] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - heading "Internal Treasure" [level=3] [ref=e523]
+            - link "Universal Language 10 $295 to $2,500 Made to order · 3 sizes" [ref=e524] [cursor=pointer]:
+              - /url: /creations/UL-126
+              - generic [ref=e525]:
+                - generic [ref=e526]: Universal Language
+                - generic [ref=e527]: "10"
+              - generic [ref=e528]:
+                - generic [ref=e529]:
+                  - text: $295
+                  - generic [ref=e530]: to $2,500
+                - paragraph [ref=e531]:
+                  - text: Made to order
+                  - generic [ref=e532]: · 3 sizes
+          - generic [ref=e533]:
+            - link "Petals of Freedom - 12, Universal Language 12. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e534] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - img "Petals of Freedom - 12, Universal Language 12. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e537]
+              - generic [ref=e539]: View
+            - link "Petals of Freedom" [ref=e540] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - heading "Petals of Freedom" [level=3] [ref=e541]
+            - link "Universal Language 12 $295 to $2,500 Made to order · 3 sizes" [ref=e542] [cursor=pointer]:
+              - /url: /creations/UL-127
+              - generic [ref=e543]:
+                - generic [ref=e544]: Universal Language
+                - generic [ref=e545]: "12"
+              - generic [ref=e546]:
+                - generic [ref=e547]:
+                  - text: $295
+                  - generic [ref=e548]: to $2,500
+                - paragraph [ref=e549]:
+                  - text: Made to order
+                  - generic [ref=e550]: · 3 sizes
+          - generic [ref=e551]:
+            - link "Universal Crest - 13, Universal Language 13. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e552] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - img "Universal Crest - 13, Universal Language 13. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e555]
+              - generic [ref=e557]: View
+            - link "Universal Crest" [ref=e558] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - heading "Universal Crest" [level=3] [ref=e559]
+            - link "Universal Language 13 $295 to $2,500 Made to order · 3 sizes" [ref=e560] [cursor=pointer]:
+              - /url: /creations/UL-128
+              - generic [ref=e561]:
+                - generic [ref=e562]: Universal Language
+                - generic [ref=e563]: "13"
+              - generic [ref=e564]:
+                - generic [ref=e565]:
+                  - text: $295
+                  - generic [ref=e566]: to $2,500
+                - paragraph [ref=e567]:
+                  - text: Made to order
+                  - generic [ref=e568]: · 3 sizes
+          - generic [ref=e569]:
+            - link "Ancestors Bloom - 14, Universal Language 14. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e570] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - img "Ancestors Bloom - 14, Universal Language 14. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e573]
+              - generic [ref=e575]: View
+            - link "Ancestors Bloom" [ref=e576] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - heading "Ancestors Bloom" [level=3] [ref=e577]
+            - link "Universal Language 14 $295 to $2,500 Made to order · 3 sizes" [ref=e578] [cursor=pointer]:
+              - /url: /creations/UL-129
+              - generic [ref=e579]:
+                - generic [ref=e580]: Universal Language
+                - generic [ref=e581]: "14"
+              - generic [ref=e582]:
+                - generic [ref=e583]:
+                  - text: $295
+                  - generic [ref=e584]: to $2,500
+                - paragraph [ref=e585]:
+                  - text: Made to order
+                  - generic [ref=e586]: · 3 sizes
+          - generic [ref=e587]:
+            - link "Ordinary Valiance - 15, Universal Language 15. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e588] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - img "Ordinary Valiance - 15, Universal Language 15. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e591]
+              - generic [ref=e593]: View
+            - link "Ordinary Valiance" [ref=e594] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - heading "Ordinary Valiance" [level=3] [ref=e595]
+            - link "Universal Language 15 $295 to $2,500 Made to order · 3 sizes" [ref=e596] [cursor=pointer]:
+              - /url: /creations/UL-130
+              - generic [ref=e597]:
+                - generic [ref=e598]: Universal Language
+                - generic [ref=e599]: "15"
+              - generic [ref=e600]:
+                - generic [ref=e601]:
+                  - text: $295
+                  - generic [ref=e602]: to $2,500
+                - paragraph [ref=e603]:
+                  - text: Made to order
+                  - generic [ref=e604]: · 3 sizes
+          - generic [ref=e605]:
+            - link "Grand Rising - 16, Universal Language 16. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e606] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - img "Grand Rising - 16, Universal Language 16. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e609]
+              - generic [ref=e611]: View
+            - link "Grand Rising" [ref=e612] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - heading "Grand Rising" [level=3] [ref=e613]
+            - link "Universal Language 16 $295 to $2,500 Made to order · 3 sizes" [ref=e614] [cursor=pointer]:
+              - /url: /creations/UL-131
+              - generic [ref=e615]:
+                - generic [ref=e616]: Universal Language
+                - generic [ref=e617]: "16"
+              - generic [ref=e618]:
+                - generic [ref=e619]:
+                  - text: $295
+                  - generic [ref=e620]: to $2,500
+                - paragraph [ref=e621]:
+                  - text: Made to order
+                  - generic [ref=e622]: · 3 sizes
+          - generic [ref=e623]:
+            - link "Peral of Christos - 17, Universal Language 17. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e624] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - img "Peral of Christos - 17, Universal Language 17. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e627]
+              - generic [ref=e629]: View
+            - link "Peral of Christos" [ref=e630] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - heading "Peral of Christos" [level=3] [ref=e631]
+            - link "Universal Language 17 $295 to $2,500 Made to order · 3 sizes" [ref=e632] [cursor=pointer]:
+              - /url: /creations/UL-132
+              - generic [ref=e633]:
+                - generic [ref=e634]: Universal Language
+                - generic [ref=e635]: "17"
+              - generic [ref=e636]:
+                - generic [ref=e637]:
+                  - text: $295
+                  - generic [ref=e638]: to $2,500
+                - paragraph [ref=e639]:
+                  - text: Made to order
+                  - generic [ref=e640]: · 3 sizes
+          - generic [ref=e641]:
+            - link "Beyond Binary - 21, Universal Language 21. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e642] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - img "Beyond Binary - 21, Universal Language 21. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e645]
+              - generic [ref=e647]: View
+            - link "Beyond Binary" [ref=e648] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - heading "Beyond Binary" [level=3] [ref=e649]
+            - link "Universal Language 21 $295 to $2,500 Made to order · 3 sizes" [ref=e650] [cursor=pointer]:
+              - /url: /creations/UL-133
+              - generic [ref=e651]:
+                - generic [ref=e652]: Universal Language
+                - generic [ref=e653]: "21"
+              - generic [ref=e654]:
+                - generic [ref=e655]:
+                  - text: $295
+                  - generic [ref=e656]: to $2,500
+                - paragraph [ref=e657]:
+                  - text: Made to order
+                  - generic [ref=e658]: · 3 sizes
+          - generic [ref=e659]:
+            - link "Beneath the Surface - 23, Universal Language 23. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e660] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - img "Beneath the Surface - 23, Universal Language 23. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e663]
+              - generic [ref=e665]: View
+            - link "Beneath the Surface" [ref=e666] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - heading "Beneath the Surface" [level=3] [ref=e667]
+            - link "Universal Language 23 $295 to $2,500 Made to order · 3 sizes" [ref=e668] [cursor=pointer]:
+              - /url: /creations/UL-134
+              - generic [ref=e669]:
+                - generic [ref=e670]: Universal Language
+                - generic [ref=e671]: "23"
+              - generic [ref=e672]:
+                - generic [ref=e673]:
+                  - text: $295
+                  - generic [ref=e674]: to $2,500
+                - paragraph [ref=e675]:
+                  - text: Made to order
+                  - generic [ref=e676]: · 3 sizes
+          - generic [ref=e677]:
+            - link "Frequency Flutter - 24, Universal Language 24. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e678] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - img "Frequency Flutter - 24, Universal Language 24. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e681]
+              - generic [ref=e683]: View
+            - link "Frequency Flutter" [ref=e684] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - heading "Frequency Flutter" [level=3] [ref=e685]
+            - link "Universal Language 24 $295 to $2,500 Made to order · 3 sizes" [ref=e686] [cursor=pointer]:
+              - /url: /creations/UL-135
+              - generic [ref=e687]:
+                - generic [ref=e688]: Universal Language
+                - generic [ref=e689]: "24"
+              - generic [ref=e690]:
+                - generic [ref=e691]:
+                  - text: $295
+                  - generic [ref=e692]: to $2,500
+                - paragraph [ref=e693]:
+                  - text: Made to order
+                  - generic [ref=e694]: · 3 sizes
+          - generic [ref=e695]:
+            - link "Lighter Than a Feather - 26, Universal Language 26. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e696] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - img "Lighter Than a Feather - 26, Universal Language 26. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e699]
+              - generic [ref=e701]: View
+            - link "Lighter Than a Feather" [ref=e702] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - heading "Lighter Than a Feather" [level=3] [ref=e703]
+            - link "Universal Language 26 $295 to $2,500 Made to order · 3 sizes" [ref=e704] [cursor=pointer]:
+              - /url: /creations/UL-136
+              - generic [ref=e705]:
+                - generic [ref=e706]: Universal Language
+                - generic [ref=e707]: "26"
+              - generic [ref=e708]:
+                - generic [ref=e709]:
+                  - text: $295
+                  - generic [ref=e710]: to $2,500
+                - paragraph [ref=e711]:
+                  - text: Made to order
+                  - generic [ref=e712]: · 3 sizes
+          - generic [ref=e713]:
+            - link "Inner Majesty - 27, Universal Language 27. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e714] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - img "Inner Majesty - 27, Universal Language 27. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e717]
+              - generic [ref=e719]: View
+            - link "Inner Majesty" [ref=e720] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - heading "Inner Majesty" [level=3] [ref=e721]
+            - link "Universal Language 27 $295 to $2,500 Made to order · 3 sizes" [ref=e722] [cursor=pointer]:
+              - /url: /creations/UL-137
+              - generic [ref=e723]:
+                - generic [ref=e724]: Universal Language
+                - generic [ref=e725]: "27"
+              - generic [ref=e726]:
+                - generic [ref=e727]:
+                  - text: $295
+                  - generic [ref=e728]: to $2,500
+                - paragraph [ref=e729]:
+                  - text: Made to order
+                  - generic [ref=e730]: · 3 sizes
+          - generic [ref=e731]:
+            - link "Becoming the Mystery - 28, Universal Language 28. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e732] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - img "Becoming the Mystery - 28, Universal Language 28. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e735]
+              - generic [ref=e737]: View
+            - link "Becoming the Mystery" [ref=e738] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - heading "Becoming the Mystery" [level=3] [ref=e739]
+            - link "Universal Language 28 $295 to $2,500 Made to order · 3 sizes" [ref=e740] [cursor=pointer]:
+              - /url: /creations/UL-138
+              - generic [ref=e741]:
+                - generic [ref=e742]: Universal Language
+                - generic [ref=e743]: "28"
+              - generic [ref=e744]:
+                - generic [ref=e745]:
+                  - text: $295
+                  - generic [ref=e746]: to $2,500
+                - paragraph [ref=e747]:
+                  - text: Made to order
+                  - generic [ref=e748]: · 3 sizes
+          - generic [ref=e749]:
+            - link "All In - 29, Universal Language 29. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e750] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - img "All In - 29, Universal Language 29. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e753]
+              - generic [ref=e755]: View
+            - link "All In" [ref=e756] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - heading "All In" [level=3] [ref=e757]
+            - link "Universal Language 29 $295 to $2,500 Made to order · 3 sizes" [ref=e758] [cursor=pointer]:
+              - /url: /creations/UL-139
+              - generic [ref=e759]:
+                - generic [ref=e760]: Universal Language
+                - generic [ref=e761]: "29"
+              - generic [ref=e762]:
+                - generic [ref=e763]:
+                  - text: $295
+                  - generic [ref=e764]: to $2,500
+                - paragraph [ref=e765]:
+                  - text: Made to order
+                  - generic [ref=e766]: · 3 sizes
+          - generic [ref=e767]:
+            - link "Sparking the Blaze - 30, Universal Language 30. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e768] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - img "Sparking the Blaze - 30, Universal Language 30. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e771]
+              - generic [ref=e773]: View
+            - link "Sparking the Blaze" [ref=e774] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - heading "Sparking the Blaze" [level=3] [ref=e775]
+            - link "Universal Language 30 $295 to $2,500 Made to order · 3 sizes" [ref=e776] [cursor=pointer]:
+              - /url: /creations/UL-140
+              - generic [ref=e777]:
+                - generic [ref=e778]: Universal Language
+                - generic [ref=e779]: "30"
+              - generic [ref=e780]:
+                - generic [ref=e781]:
+                  - text: $295
+                  - generic [ref=e782]: to $2,500
+                - paragraph [ref=e783]:
+                  - text: Made to order
+                  - generic [ref=e784]: · 3 sizes
+          - generic [ref=e785]:
+            - link "Echos of Time - 33, Universal Language 33. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e786] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - img "Echos of Time - 33, Universal Language 33. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e789]
+              - generic [ref=e791]: View
+            - link "Echos of Time" [ref=e792] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - heading "Echos of Time" [level=3] [ref=e793]
+            - link "Universal Language 33 $295 to $2,500 Made to order · 3 sizes" [ref=e794] [cursor=pointer]:
+              - /url: /creations/UL-141
+              - generic [ref=e795]:
+                - generic [ref=e796]: Universal Language
+                - generic [ref=e797]: "33"
+              - generic [ref=e798]:
+                - generic [ref=e799]:
+                  - text: $295
+                  - generic [ref=e800]: to $2,500
+                - paragraph [ref=e801]:
+                  - text: Made to order
+                  - generic [ref=e802]: · 3 sizes
+          - generic [ref=e803]:
+            - link "Sublime Power - 34, Universal Language 34. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e804] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - img "Sublime Power - 34, Universal Language 34. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e807]
+              - generic [ref=e809]: View
+            - link "Sublime Power" [ref=e810] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - heading "Sublime Power" [level=3] [ref=e811]
+            - link "Universal Language 34 $295 to $2,500 Made to order · 3 sizes" [ref=e812] [cursor=pointer]:
+              - /url: /creations/UL-142
+              - generic [ref=e813]:
+                - generic [ref=e814]: Universal Language
+                - generic [ref=e815]: "34"
+              - generic [ref=e816]:
+                - generic [ref=e817]:
+                  - text: $295
+                  - generic [ref=e818]: to $2,500
+                - paragraph [ref=e819]:
+                  - text: Made to order
+                  - generic [ref=e820]: · 3 sizes
+          - generic [ref=e821]:
+            - link "Navigational Star - 35, Universal Language 35. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e822] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - img "Navigational Star - 35, Universal Language 35. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e825]
+              - generic [ref=e827]: View
+            - link "Navigational Star" [ref=e828] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - heading "Navigational Star" [level=3] [ref=e829]
+            - link "Universal Language 35 $295 to $2,500 Made to order · 3 sizes" [ref=e830] [cursor=pointer]:
+              - /url: /creations/UL-143
+              - generic [ref=e831]:
+                - generic [ref=e832]: Universal Language
+                - generic [ref=e833]: "35"
+              - generic [ref=e834]:
+                - generic [ref=e835]:
+                  - text: $295
+                  - generic [ref=e836]: to $2,500
+                - paragraph [ref=e837]:
+                  - text: Made to order
+                  - generic [ref=e838]: · 3 sizes
+          - generic [ref=e839]:
+            - link "Journey Home - 37, Universal Language 37. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e840] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - img "Journey Home - 37, Universal Language 37. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e843]
+              - generic [ref=e845]: View
+            - link "Journey Home" [ref=e846] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - heading "Journey Home" [level=3] [ref=e847]
+            - link "Universal Language 37 $295 to $2,500 Made to order · 3 sizes" [ref=e848] [cursor=pointer]:
+              - /url: /creations/UL-144
+              - generic [ref=e849]:
+                - generic [ref=e850]: Universal Language
+                - generic [ref=e851]: "37"
+              - generic [ref=e852]:
+                - generic [ref=e853]:
+                  - text: $295
+                  - generic [ref=e854]: to $2,500
+                - paragraph [ref=e855]:
+                  - text: Made to order
+                  - generic [ref=e856]: · 3 sizes
+          - generic [ref=e857]:
+            - link "Inner Light Symphony - 38, Universal Language 38. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e858] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - img "Inner Light Symphony - 38, Universal Language 38. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e861]
+              - generic [ref=e863]: View
+            - link "Inner Light Symphony" [ref=e864] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - heading "Inner Light Symphony" [level=3] [ref=e865]
+            - link "Universal Language 38 $295 to $2,500 Made to order · 3 sizes" [ref=e866] [cursor=pointer]:
+              - /url: /creations/UL-145
+              - generic [ref=e867]:
+                - generic [ref=e868]: Universal Language
+                - generic [ref=e869]: "38"
+              - generic [ref=e870]:
+                - generic [ref=e871]:
+                  - text: $295
+                  - generic [ref=e872]: to $2,500
+                - paragraph [ref=e873]:
+                  - text: Made to order
+                  - generic [ref=e874]: · 3 sizes
+          - generic [ref=e875]:
+            - link "Eternal Wellspring - 40, Universal Language 40. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e876] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - img "Eternal Wellspring - 40, Universal Language 40. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e879]
+              - generic [ref=e881]: View
+            - link "Eternal Wellspring" [ref=e882] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - heading "Eternal Wellspring" [level=3] [ref=e883]
+            - link "Universal Language 40 $295 to $2,500 Made to order · 3 sizes" [ref=e884] [cursor=pointer]:
+              - /url: /creations/UL-146
+              - generic [ref=e885]:
+                - generic [ref=e886]: Universal Language
+                - generic [ref=e887]: "40"
+              - generic [ref=e888]:
+                - generic [ref=e889]:
+                  - text: $295
+                  - generic [ref=e890]: to $2,500
+                - paragraph [ref=e891]:
+                  - text: Made to order
+                  - generic [ref=e892]: · 3 sizes
+          - generic [ref=e893]:
+            - link "Beginning and the End - 41, Universal Language 41. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e894] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - img "Beginning and the End - 41, Universal Language 41. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e897]
+              - generic [ref=e899]: View
+            - link "Beginning and the End" [ref=e900] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - heading "Beginning and the End" [level=3] [ref=e901]
+            - link "Universal Language 41 $295 to $2,500 Made to order · 3 sizes" [ref=e902] [cursor=pointer]:
+              - /url: /creations/UL-147
+              - generic [ref=e903]:
+                - generic [ref=e904]: Universal Language
+                - generic [ref=e905]: "41"
+              - generic [ref=e906]:
+                - generic [ref=e907]:
+                  - text: $295
+                  - generic [ref=e908]: to $2,500
+                - paragraph [ref=e909]:
+                  - text: Made to order
+                  - generic [ref=e910]: · 3 sizes
+          - generic [ref=e911]:
+            - link "Cipher of Knowledge - 43, Universal Language 43. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e912] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - img "Cipher of Knowledge - 43, Universal Language 43. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e915]
+              - generic [ref=e917]: View
+            - link "Cipher of Knowledge" [ref=e918] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - heading "Cipher of Knowledge" [level=3] [ref=e919]
+            - link "Universal Language 43 $295 to $2,500 Made to order · 3 sizes" [ref=e920] [cursor=pointer]:
+              - /url: /creations/UL-148
+              - generic [ref=e921]:
+                - generic [ref=e922]: Universal Language
+                - generic [ref=e923]: "43"
+              - generic [ref=e924]:
+                - generic [ref=e925]:
+                  - text: $295
+                  - generic [ref=e926]: to $2,500
+                - paragraph [ref=e927]:
+                  - text: Made to order
+                  - generic [ref=e928]: · 3 sizes
+          - generic [ref=e929]:
+            - link "Tribal Tapestry - 45, Universal Language 45. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e930] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - img "Tribal Tapestry - 45, Universal Language 45. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e933]
+              - generic [ref=e935]: View
+            - link "Tribal Tapestry" [ref=e936] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - heading "Tribal Tapestry" [level=3] [ref=e937]
+            - link "Universal Language 45 $295 to $2,500 Made to order · 3 sizes" [ref=e938] [cursor=pointer]:
+              - /url: /creations/UL-149
+              - generic [ref=e939]:
+                - generic [ref=e940]: Universal Language
+                - generic [ref=e941]: "45"
+              - generic [ref=e942]:
+                - generic [ref=e943]:
+                  - text: $295
+                  - generic [ref=e944]: to $2,500
+                - paragraph [ref=e945]:
+                  - text: Made to order
+                  - generic [ref=e946]: · 3 sizes
+          - generic [ref=e947]:
+            - link "Garden of Alchemy - 47, Universal Language 47. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e948] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - img "Garden of Alchemy - 47, Universal Language 47. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e951]
+              - generic [ref=e953]: View
+            - link "Garden of Alchemy" [ref=e954] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - heading "Garden of Alchemy" [level=3] [ref=e955]
+            - link "Universal Language 47 $295 to $2,500 Made to order · 3 sizes" [ref=e956] [cursor=pointer]:
+              - /url: /creations/UL-150
+              - generic [ref=e957]:
+                - generic [ref=e958]: Universal Language
+                - generic [ref=e959]: "47"
+              - generic [ref=e960]:
+                - generic [ref=e961]:
+                  - text: $295
+                  - generic [ref=e962]: to $2,500
+                - paragraph [ref=e963]:
+                  - text: Made to order
+                  - generic [ref=e964]: · 3 sizes
+          - generic [ref=e965]:
+            - link "Union in the Ashes - 49, Universal Language 49. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e966] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - img "Union in the Ashes - 49, Universal Language 49. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e969]
+              - generic [ref=e971]: View
+            - link "Union in the Ashes" [ref=e972] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - heading "Union in the Ashes" [level=3] [ref=e973]
+            - link "Universal Language 49 $295 to $2,500 Made to order · 3 sizes" [ref=e974] [cursor=pointer]:
+              - /url: /creations/UL-151
+              - generic [ref=e975]:
+                - generic [ref=e976]: Universal Language
+                - generic [ref=e977]: "49"
+              - generic [ref=e978]:
+                - generic [ref=e979]:
+                  - text: $295
+                  - generic [ref=e980]: to $2,500
+                - paragraph [ref=e981]:
+                  - text: Made to order
+                  - generic [ref=e982]: · 3 sizes
+          - generic [ref=e983]:
+            - link "Melt Into Perfection - 50, Universal Language 50. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e984] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - img "Melt Into Perfection - 50, Universal Language 50. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e987]
+              - generic [ref=e989]: View
+            - link "Melt Into Perfection" [ref=e990] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - heading "Melt Into Perfection" [level=3] [ref=e991]
+            - link "Universal Language 50 $295 to $2,500 Made to order · 3 sizes" [ref=e992] [cursor=pointer]:
+              - /url: /creations/UL-152
+              - generic [ref=e993]:
+                - generic [ref=e994]: Universal Language
+                - generic [ref=e995]: "50"
+              - generic [ref=e996]:
+                - generic [ref=e997]:
+                  - text: $295
+                  - generic [ref=e998]: to $2,500
+                - paragraph [ref=e999]:
+                  - text: Made to order
+                  - generic [ref=e1000]: · 3 sizes
+          - generic [ref=e1001]:
+            - link "Timeless Blossom - 52, Universal Language 52. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1002] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - img "Timeless Blossom - 52, Universal Language 52. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1005]
+              - generic [ref=e1007]: View
+            - link "Timeless Blossom" [ref=e1008] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - heading "Timeless Blossom" [level=3] [ref=e1009]
+            - link "Universal Language 52 $295 to $2,500 Made to order · 3 sizes" [ref=e1010] [cursor=pointer]:
+              - /url: /creations/UL-153
+              - generic [ref=e1011]:
+                - generic [ref=e1012]: Universal Language
+                - generic [ref=e1013]: "52"
+              - generic [ref=e1014]:
+                - generic [ref=e1015]:
+                  - text: $295
+                  - generic [ref=e1016]: to $2,500
+                - paragraph [ref=e1017]:
+                  - text: Made to order
+                  - generic [ref=e1018]: · 3 sizes
+          - generic [ref=e1019]:
+            - link "Creation Oscillation - 53, Universal Language 53. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1020] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - img "Creation Oscillation - 53, Universal Language 53. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1023]
+              - generic [ref=e1025]: View
+            - link "Creation Oscillation" [ref=e1026] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - heading "Creation Oscillation" [level=3] [ref=e1027]
+            - link "Universal Language 53 $295 to $2,500 Made to order · 3 sizes" [ref=e1028] [cursor=pointer]:
+              - /url: /creations/UL-154
+              - generic [ref=e1029]:
+                - generic [ref=e1030]: Universal Language
+                - generic [ref=e1031]: "53"
+              - generic [ref=e1032]:
+                - generic [ref=e1033]:
+                  - text: $295
+                  - generic [ref=e1034]: to $2,500
+                - paragraph [ref=e1035]:
+                  - text: Made to order
+                  - generic [ref=e1036]: · 3 sizes
+          - generic [ref=e1037]:
+            - link "Untouched Perfection - 55, Universal Language 55. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1038] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - img "Untouched Perfection - 55, Universal Language 55. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1041]
+              - generic [ref=e1043]: View
+            - link "Untouched Perfection" [ref=e1044] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - heading "Untouched Perfection" [level=3] [ref=e1045]
+            - link "Universal Language 55 $295 to $2,500 Made to order · 3 sizes" [ref=e1046] [cursor=pointer]:
+              - /url: /creations/UL-155
+              - generic [ref=e1047]:
+                - generic [ref=e1048]: Universal Language
+                - generic [ref=e1049]: "55"
+              - generic [ref=e1050]:
+                - generic [ref=e1051]:
+                  - text: $295
+                  - generic [ref=e1052]: to $2,500
+                - paragraph [ref=e1053]:
+                  - text: Made to order
+                  - generic [ref=e1054]: · 3 sizes
+          - generic [ref=e1055]:
+            - link "Infinite Journey - 56, Universal Language 56. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1056] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - img "Infinite Journey - 56, Universal Language 56. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1059]
+              - generic [ref=e1061]: View
+            - link "Infinite Journey" [ref=e1062] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - heading "Infinite Journey" [level=3] [ref=e1063]
+            - link "Universal Language 56 $295 to $2,500 Made to order · 3 sizes" [ref=e1064] [cursor=pointer]:
+              - /url: /creations/UL-156
+              - generic [ref=e1065]:
+                - generic [ref=e1066]: Universal Language
+                - generic [ref=e1067]: "56"
+              - generic [ref=e1068]:
+                - generic [ref=e1069]:
+                  - text: $295
+                  - generic [ref=e1070]: to $2,500
+                - paragraph [ref=e1071]:
+                  - text: Made to order
+                  - generic [ref=e1072]: · 3 sizes
+          - generic [ref=e1073]:
+            - link "Rhythm of Life - 58, Universal Language 58. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1074] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - img "Rhythm of Life - 58, Universal Language 58. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1077]
+              - generic [ref=e1079]: View
+            - link "Rhythm of Life" [ref=e1080] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - heading "Rhythm of Life" [level=3] [ref=e1081]
+            - link "Universal Language 58 $295 to $2,500 Made to order · 3 sizes" [ref=e1082] [cursor=pointer]:
+              - /url: /creations/UL-157
+              - generic [ref=e1083]:
+                - generic [ref=e1084]: Universal Language
+                - generic [ref=e1085]: "58"
+              - generic [ref=e1086]:
+                - generic [ref=e1087]:
+                  - text: $295
+                  - generic [ref=e1088]: to $2,500
+                - paragraph [ref=e1089]:
+                  - text: Made to order
+                  - generic [ref=e1090]: · 3 sizes
+          - generic [ref=e1091]:
+            - link "Mystics Treasures - 59, Universal Language 59. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1092] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - img "Mystics Treasures - 59, Universal Language 59. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1095]
+              - generic [ref=e1097]: View
+            - link "Mystics Treasures" [ref=e1098] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - heading "Mystics Treasures" [level=3] [ref=e1099]
+            - link "Universal Language 59 $295 to $2,500 Made to order · 3 sizes" [ref=e1100] [cursor=pointer]:
+              - /url: /creations/UL-158
+              - generic [ref=e1101]:
+                - generic [ref=e1102]: Universal Language
+                - generic [ref=e1103]: "59"
+              - generic [ref=e1104]:
+                - generic [ref=e1105]:
+                  - text: $295
+                  - generic [ref=e1106]: to $2,500
+                - paragraph [ref=e1107]:
+                  - text: Made to order
+                  - generic [ref=e1108]: · 3 sizes
+          - generic [ref=e1109]:
+            - link "Woven Light - 60, Universal Language 60. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1110] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - img "Woven Light - 60, Universal Language 60. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1113]
+              - generic [ref=e1115]: View
+            - link "Woven Light" [ref=e1116] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - heading "Woven Light" [level=3] [ref=e1117]
+            - link "Universal Language 60 $295 to $2,500 Made to order · 3 sizes" [ref=e1118] [cursor=pointer]:
+              - /url: /creations/UL-159
+              - generic [ref=e1119]:
+                - generic [ref=e1120]: Universal Language
+                - generic [ref=e1121]: "60"
+              - generic [ref=e1122]:
+                - generic [ref=e1123]:
+                  - text: $295
+                  - generic [ref=e1124]: to $2,500
+                - paragraph [ref=e1125]:
+                  - text: Made to order
+                  - generic [ref=e1126]: · 3 sizes
+          - generic [ref=e1127]:
+            - link "Celestial Remembrance - 61, Universal Language 61. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1128] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - img "Celestial Remembrance - 61, Universal Language 61. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1131]
+              - generic [ref=e1133]: View
+            - link "Celestial Remembrance" [ref=e1134] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - heading "Celestial Remembrance" [level=3] [ref=e1135]
+            - link "Universal Language 61 $295 to $2,500 Made to order · 3 sizes" [ref=e1136] [cursor=pointer]:
+              - /url: /creations/UL-160
+              - generic [ref=e1137]:
+                - generic [ref=e1138]: Universal Language
+                - generic [ref=e1139]: "61"
+              - generic [ref=e1140]:
+                - generic [ref=e1141]:
+                  - text: $295
+                  - generic [ref=e1142]: to $2,500
+                - paragraph [ref=e1143]:
+                  - text: Made to order
+                  - generic [ref=e1144]: · 3 sizes
+          - generic [ref=e1145]:
+            - link "Voice of Nature - 62, Universal Language 62. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1146] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - img "Voice of Nature - 62, Universal Language 62. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1149]
+              - generic [ref=e1151]: View
+            - link "Voice of Nature" [ref=e1152] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - heading "Voice of Nature" [level=3] [ref=e1153]
+            - link "Universal Language 62 $295 to $2,500 Made to order · 3 sizes" [ref=e1154] [cursor=pointer]:
+              - /url: /creations/UL-161
+              - generic [ref=e1155]:
+                - generic [ref=e1156]: Universal Language
+                - generic [ref=e1157]: "62"
+              - generic [ref=e1158]:
+                - generic [ref=e1159]:
+                  - text: $295
+                  - generic [ref=e1160]: to $2,500
+                - paragraph [ref=e1161]:
+                  - text: Made to order
+                  - generic [ref=e1162]: · 3 sizes
+          - generic [ref=e1163]:
+            - link "Adornments of Time - 63, Universal Language 63. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1164] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - img "Adornments of Time - 63, Universal Language 63. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1167]
+              - generic [ref=e1169]: View
+            - link "Adornments of Time" [ref=e1170] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - heading "Adornments of Time" [level=3] [ref=e1171]
+            - link "Universal Language 63 $295 to $2,500 Made to order · 3 sizes" [ref=e1172] [cursor=pointer]:
+              - /url: /creations/UL-162
+              - generic [ref=e1173]:
+                - generic [ref=e1174]: Universal Language
+                - generic [ref=e1175]: "63"
+              - generic [ref=e1176]:
+                - generic [ref=e1177]:
+                  - text: $295
+                  - generic [ref=e1178]: to $2,500
+                - paragraph [ref=e1179]:
+                  - text: Made to order
+                  - generic [ref=e1180]: · 3 sizes
+          - generic [ref=e1181]:
+            - link "Communion - 64, Universal Language 64. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e1182] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - img "Communion - 64, Universal Language 64. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e1185]
+              - generic [ref=e1187]: View
+            - link "Communion" [ref=e1188] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - heading "Communion" [level=3] [ref=e1189]
+            - link "Universal Language 64 $295 to $2,500 Made to order · 3 sizes" [ref=e1190] [cursor=pointer]:
+              - /url: /creations/UL-163
+              - generic [ref=e1191]:
+                - generic [ref=e1192]: Universal Language
+                - generic [ref=e1193]: "64"
+              - generic [ref=e1194]:
+                - generic [ref=e1195]:
+                  - text: $295
+                  - generic [ref=e1196]: to $2,500
+                - paragraph [ref=e1197]:
+                  - text: Made to order
+                  - generic [ref=e1198]: · 3 sizes
+        - generic [ref=e1199]:
+          - heading "Explore more" [level=2] [ref=e1201]
+          - generic [ref=e1202]:
+            - link "Mandala" [ref=e1203] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/mandala
+            - link "Light Codes" [ref=e1204] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/light-codes
+            - link "Signature Pieces" [ref=e1205] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/signature-pieces
+    - contentinfo [ref=e1206]:
+      - generic [ref=e1208]:
+        - generic [ref=e1209]:
+          - generic [ref=e1210]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e1211]
+            - paragraph [ref=e1212]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e1215]: Currently, taking commissions for Spring 2026
+          - generic [ref=e1216]:
+            - generic [ref=e1217]: Join the Inner Circle
+            - generic [ref=e1218]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e1220]:
+              - generic: Email address
+              - textbox [ref=e1221]
+              - button [ref=e1222]:
+                - img [ref=e1223]
+        - navigation [ref=e1226]:
+          - link "Creations" [ref=e1227] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e1228] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e1229] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e1230] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e1231] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e1233]:
+          - generic [ref=e1234]:
+            - generic [ref=e1235]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e1236] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e1237] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e1238]
+          - generic [ref=e1239]:
+            - link "Instagram" [ref=e1240] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e1241]
+            - link "Email" [ref=e1244] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e1245]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

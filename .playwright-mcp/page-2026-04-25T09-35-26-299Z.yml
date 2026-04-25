@@ -1,0 +1,118 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - link "Creations" [ref=e10] [cursor=pointer]:
+            - /url: /creations
+            - text: Creations
+          - link "Writings" [ref=e12] [cursor=pointer]:
+            - /url: /writings
+          - link "Oracle" [ref=e13] [cursor=pointer]:
+            - /url: /oracle/universal-language
+          - link "Inquire" [ref=e14] [cursor=pointer]:
+            - /url: /inquire
+          - link "About" [ref=e15] [cursor=pointer]:
+            - /url: /about
+        - button "Switch to light mode" [ref=e17]:
+          - img [ref=e18]
+    - main [ref=e24]:
+      - article [ref=e26]:
+        - generic [ref=e27]:
+          - link "Creations" [ref=e28] [cursor=pointer]:
+            - /url: /creations
+          - generic [ref=e29]: /
+          - generic [ref=e30]: Illuminated Works
+        - generic [ref=e33]:
+          - heading "Illuminated Works" [level=1] [ref=e34]
+          - paragraph [ref=e35]: There is a version of every piece that you only discover after dark.
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Light does something to layered wood that no other medium quite achieves. It travels through the depths. It finds the edges. It makes visible what was always there, waiting for the right conditions to reveal itself.
+            - paragraph [ref=e38]: This is not decoration. It is a second life within the same form.
+        - generic [ref=e39]:
+          - heading "Two expressions of light" [level=2] [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: Basic Illumination
+              - heading "Light, included." [level=3] [ref=e45]
+              - paragraph [ref=e46]: Standard LED strips with preset modes. The piece glows. It shifts between colors. It does what LEDs do out of the box.
+              - paragraph [ref=e47]: Included with any illuminated piece. Functional, beautiful, ready to go.
+            - generic [ref=e48]:
+              - generic [ref=e49]: Curated Light
+              - heading "Programmed by hand. Felt in the room." [level=3] [ref=e50]
+              - paragraph [ref=e51]: I personally program every transition, every color palette, every mood. Smooth fades. Ambient rhythms. Light that breathes with the piece instead of competing with it.
+              - paragraph [ref=e52]: An upgrade for those who want the light to feel as intentional as the art itself.
+        - paragraph [ref=e55]: Pause for a moment. Imagine your space after dark, with one illuminated piece on the wall. Consider what changes in the room. Not just visually, but in atmosphere. This is the question worth sitting with before choosing.
+        - generic [ref=e57]:
+          - heading "Begin with a conversation" [level=2] [ref=e58]
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: Illumination can be added to most multidimensional pieces. Whether you have a piece in mind or are beginning from conversation, this is where we start.
+            - paragraph [ref=e61]: Whether through an in-person viewing or a virtual conversation, I am here to guide you toward the right piece for your space.
+          - link "Begin a conversation" [ref=e62] [cursor=pointer]:
+            - /url: /inquire
+            - text: Begin a conversation
+            - img [ref=e63]
+    - contentinfo [ref=e65]:
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e70]
+            - paragraph [ref=e71]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e74]: Currently, taking commissions for Spring 2026
+          - generic [ref=e75]:
+            - generic [ref=e76]: Join the Inner Circle
+            - generic [ref=e77]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e79]:
+              - generic: Email address
+              - textbox [ref=e80]
+              - button [ref=e81]:
+                - img [ref=e82]
+        - navigation [ref=e85]:
+          - link "Creations" [ref=e86] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e87] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e88] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e89] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e90] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - generic [ref=e94]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e95] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e96] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e97]
+          - generic [ref=e98]:
+            - link "Instagram" [ref=e99] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e100]
+            - link "Email" [ref=e103] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e104]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button "Close":
+          - generic: Close
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

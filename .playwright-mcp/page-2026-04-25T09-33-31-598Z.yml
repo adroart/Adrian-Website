@@ -1,0 +1,304 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - button "Universal Language" [ref=e23]:
+          - img [ref=e24]
+          - text: Universal Language
+        - generic [ref=e26]:
+          - generic:
+            - generic:
+              - img "Art of Living - 32, Universal Language 32. Original airbrushed painting on laser-cut wood by Adrian Rasmussen."
+              - generic: Tap to enlarge
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - link "Universal Language Series" [ref=e29] [cursor=pointer]:
+                - /url: /creations/multidimensional-art/universal-language
+                - text: Universal Language Series
+                - img [ref=e30]
+              - generic [ref=e33]:
+                - heading "Art of Living - 32" [level=1] [ref=e34]
+                - button "Share this piece" [ref=e35]:
+                  - img [ref=e36]
+                  - text: Share
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]: Dimensions
+                  - generic [ref=e46]: 23 in (58 cm) square
+                - generic [ref=e47]:
+                  - generic [ref=e48]: Material
+                  - generic [ref=e50]: Laser Cut Wood, Acrylic
+                - generic [ref=e51]:
+                  - generic [ref=e52]: Year
+                  - generic [ref=e54]: "2024"
+            - generic [ref=e55]:
+              - paragraph [ref=e57]: Number 32 in the Universal Language series.
+              - button "About the Universal Language More" [ref=e59]:
+                - generic [ref=e60]: About the Universal Language
+                - generic [ref=e61]: More
+            - generic [ref=e63]:
+              - generic [ref=e64]:
+                - paragraph [ref=e65]: Select your size
+                - generic [ref=e66]:
+                  - generic [ref=e67] [cursor=pointer]:
+                    - generic [ref=e71]:
+                      - generic [ref=e72]: 29 cm
+                      - generic [ref=e73]: Made to order · 1 to 3 weeks
+                    - generic [ref=e74]: $295
+                    - radio "29 cm Made to order · 1 to 3 weeks $295" [checked] [ref=e75]
+                  - generic [ref=e76] [cursor=pointer]:
+                    - generic [ref=e79]:
+                      - generic [ref=e80]: 58 cm
+                      - generic [ref=e81]: Made to order · 1 to 3 weeks
+                    - generic [ref=e82]: $1,111
+                    - radio "58 cm Made to order · 1 to 3 weeks $1,111" [ref=e83]
+                  - generic [ref=e84] [cursor=pointer]:
+                    - generic [ref=e87]:
+                      - generic [ref=e88]: 90 cm
+                      - generic [ref=e89]: Made to order · 1 to 3 weeks
+                    - generic [ref=e90]: $2,500
+                    - radio "90 cm Made to order · 1 to 3 weeks $2,500" [ref=e91]
+              - generic [ref=e92]:
+                - paragraph [ref=e93]: Add to your piece
+                - generic [ref=e94]:
+                  - generic [ref=e95] [cursor=pointer]:
+                    - generic [ref=e98]:
+                      - generic [ref=e99]: Add crystals
+                      - generic [ref=e100]: +$15
+                    - checkbox "Add crystals +$15" [ref=e101]
+                  - generic [ref=e102] [cursor=pointer]:
+                    - generic [ref=e105]:
+                      - generic [ref=e106]: Add wood frame
+                      - generic [ref=e107]: +$40
+                    - checkbox "Add wood frame +$40" [ref=e108]
+                - link "See what's possible" [ref=e109] [cursor=pointer]:
+                  - /url: /creations
+                  - text: See what's possible
+                  - img [ref=e110]
+              - generic [ref=e112]:
+                - generic [ref=e113]:
+                  - generic [ref=e114]: Total
+                  - generic [ref=e115]: $295
+                - generic [ref=e116]:
+                  - generic [ref=e117]: Made to order
+                  - text: · 1 to 3 weeks
+              - link "Request to Purchase" [ref=e118] [cursor=pointer]:
+                - /url: /inquire
+              - paragraph [ref=e119]: Ships from Bali
+            - generic [ref=e120]:
+              - generic [ref=e121]: Multidimensional Art
+              - link "Browse all" [ref=e122] [cursor=pointer]:
+                - /url: /creations/multidimensional-art
+                - text: Browse all
+                - img [ref=e123]
+        - generic [ref=e125]:
+          - generic [ref=e126]: $295
+          - link "Request to Purchase" [ref=e127] [cursor=pointer]:
+            - /url: /inquire
+        - generic [ref=e128]:
+          - generic [ref=e129]: More from this series
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - link "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e132] [cursor=pointer]:
+                - /url: /creations/UL-101
+                - img "Crystal Creation - 36, Universal Language 36. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e134]
+                - generic [ref=e136]: View
+              - link "Crystal Creation" [ref=e137] [cursor=pointer]:
+                - /url: /creations/UL-101
+                - heading "Crystal Creation" [level=3] [ref=e138]
+              - link "Universal Language 36 $295 to $2,500 Made to order · 3 sizes" [ref=e139] [cursor=pointer]:
+                - /url: /creations/UL-101
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Universal Language
+                  - generic [ref=e142]: "36"
+                - generic [ref=e143]:
+                  - generic [ref=e144]:
+                    - text: $295
+                    - generic [ref=e145]: to $2,500
+                  - paragraph [ref=e146]:
+                    - text: Made to order
+                    - generic [ref=e147]: · 3 sizes
+            - generic [ref=e148]:
+              - link "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e149] [cursor=pointer]:
+                - /url: /creations/UL-102
+                - img "Doorways Of The Unknown - 48, Universal Language 48. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e151]
+                - generic [ref=e153]: View
+              - link "Doorways Of The Unknown" [ref=e154] [cursor=pointer]:
+                - /url: /creations/UL-102
+                - heading "Doorways Of The Unknown" [level=3] [ref=e155]
+              - link "Universal Language 48 $295 to $3,000 Ready to ship · 3 sizes" [ref=e156] [cursor=pointer]:
+                - /url: /creations/UL-102
+                - generic [ref=e157]:
+                  - generic [ref=e158]: Universal Language
+                  - generic [ref=e159]: "48"
+                - generic [ref=e160]:
+                  - generic [ref=e161]:
+                    - text: $295
+                    - generic [ref=e162]: to $3,000
+                  - paragraph [ref=e163]:
+                    - text: Ready to ship
+                    - generic [ref=e164]: · 3 sizes
+            - generic [ref=e165]:
+              - link "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen. View" [ref=e166] [cursor=pointer]:
+                - /url: /creations/UL-103
+                - img "Ease in This - 9, Universal Language 9. Original airbrushed painting on laser-cut wood by Adrian Rasmussen." [ref=e168]
+                - generic [ref=e170]: View
+              - link "Ease in This" [ref=e171] [cursor=pointer]:
+                - /url: /creations/UL-103
+                - heading "Ease in This" [level=3] [ref=e172]
+              - link "Universal Language 9 $295 to $2,500 Made to order · 3 sizes" [ref=e173] [cursor=pointer]:
+                - /url: /creations/UL-103
+                - generic [ref=e174]:
+                  - generic [ref=e175]: Universal Language
+                  - generic [ref=e176]: "9"
+                - generic [ref=e177]:
+                  - generic [ref=e178]:
+                    - text: $295
+                    - generic [ref=e179]: to $2,500
+                  - paragraph [ref=e180]:
+                    - text: Made to order
+                    - generic [ref=e181]: · 3 sizes
+          - link "View all Universal Language" [ref=e183] [cursor=pointer]:
+            - /url: /creations/multidimensional-art/universal-language
+            - text: View all Universal Language
+            - img [ref=e184]
+        - generic [ref=e186]:
+          - generic [ref=e187]:
+            - heading "More from Universal Language" [level=2] [ref=e188]
+            - paragraph [ref=e189]: Explore other pieces in the Universal Language series
+          - generic [ref=e190]:
+            - link "Crystal Creation - 36 by Adrian Rasmussen Crystal Creation - 36 Made to order" [ref=e191] [cursor=pointer]:
+              - /url: /creations/UL-101
+              - generic:
+                - img "Crystal Creation - 36 by Adrian Rasmussen"
+              - generic [ref=e192]:
+                - heading "Crystal Creation - 36" [level=4] [ref=e193]
+                - generic [ref=e194]: Made to order
+            - link "Doorways Of The Unknown - 48 by Adrian Rasmussen Doorways Of The Unknown - 48 Ready to ship" [ref=e195] [cursor=pointer]:
+              - /url: /creations/UL-102
+              - generic:
+                - img "Doorways Of The Unknown - 48 by Adrian Rasmussen"
+              - generic [ref=e196]:
+                - heading "Doorways Of The Unknown - 48" [level=4] [ref=e197]
+                - generic [ref=e198]: Ready to ship
+            - link "Ease in This - 9 by Adrian Rasmussen Ease in This - 9 Made to order" [ref=e199] [cursor=pointer]:
+              - /url: /creations/UL-103
+              - generic:
+                - img "Ease in This - 9 by Adrian Rasmussen"
+              - generic [ref=e200]:
+                - heading "Ease in This - 9" [level=4] [ref=e201]
+                - generic [ref=e202]: Made to order
+            - link "Emerging as the Code - 20 by Adrian Rasmussen Emerging as the Code - 20 Made to order" [ref=e203] [cursor=pointer]:
+              - /url: /creations/UL-104
+              - generic:
+                - img "Emerging as the Code - 20 by Adrian Rasmussen"
+              - generic [ref=e204]:
+                - heading "Emerging as the Code - 20" [level=4] [ref=e205]
+                - generic [ref=e206]: Made to order
+            - link "Essential Nexus - 7 by Adrian Rasmussen Essential Nexus - 7 Made to order" [ref=e207] [cursor=pointer]:
+              - /url: /creations/UL-105
+              - generic:
+                - img "Essential Nexus - 7 by Adrian Rasmussen"
+              - generic [ref=e208]:
+                - heading "Essential Nexus - 7" [level=4] [ref=e209]
+                - generic [ref=e210]: Made to order
+            - link "Flight of the Tao - 57 by Adrian Rasmussen Flight of the Tao - 57 Made to order" [ref=e211] [cursor=pointer]:
+              - /url: /creations/UL-106
+              - generic:
+                - img "Flight of the Tao - 57 by Adrian Rasmussen"
+              - generic [ref=e212]:
+                - heading "Flight of the Tao - 57" [level=4] [ref=e213]
+                - generic [ref=e214]: Made to order
+            - link "Fountain of Light - 46 by Adrian Rasmussen Fountain of Light - 46 Made to order" [ref=e215] [cursor=pointer]:
+              - /url: /creations/UL-107
+              - generic:
+                - img "Fountain of Light - 46 by Adrian Rasmussen"
+              - generic [ref=e216]:
+                - heading "Fountain of Light - 46" [level=4] [ref=e217]
+                - generic [ref=e218]: Made to order
+            - link "Harmonious Mirage - 6 by Adrian Rasmussen Harmonious Mirage - 6 Made to order" [ref=e219] [cursor=pointer]:
+              - /url: /creations/UL-108
+              - generic:
+                - img "Harmonious Mirage - 6 by Adrian Rasmussen"
+              - generic [ref=e220]:
+                - heading "Harmonious Mirage - 6" [level=4] [ref=e221]
+                - generic [ref=e222]: Made to order
+          - generic [ref=e223]:
+            - link "View all Universal Language" [ref=e224] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/universal-language
+              - generic [ref=e225]: View all Universal Language
+              - img [ref=e226]
+            - link "Explore all Multidimensional Art" [ref=e228] [cursor=pointer]:
+              - /url: /creations/multidimensional-art
+              - generic [ref=e229]: Explore all Multidimensional Art
+              - img [ref=e230]
+    - contentinfo [ref=e232]:
+      - generic [ref=e234]:
+        - generic [ref=e235]:
+          - generic [ref=e236]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e237]
+            - paragraph [ref=e238]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e241]: Currently, taking commissions for Spring 2026
+          - generic [ref=e242]:
+            - generic [ref=e243]: Join the Inner Circle
+            - generic [ref=e244]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e246]:
+              - generic: Email address
+              - textbox [ref=e247]
+              - button [ref=e248]:
+                - img [ref=e249]
+        - navigation [ref=e252]:
+          - link "Creations" [ref=e253] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e254] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e255] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e256] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e257] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e259]:
+          - generic [ref=e260]:
+            - generic [ref=e261]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e262] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e263] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e264]
+          - generic [ref=e265]:
+            - link "Instagram" [ref=e266] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e267]
+            - link "Email" [ref=e270] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e271]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

@@ -503,12 +503,12 @@ const PLATE_TYPE = {
     chevron:   'text-stone-500',
     chevronOn: 'text-bronze-400',
     rowHover:  'hover:bg-white/[0.025]',
-    rowFocus:  'focus-visible:bg-bronze-500/[0.08]',
+    rowFocus:  'focus-visible:bg-white/[0.04]',
     maskGrad:  'linear-gradient(to bottom, black 55%, transparent 100%)',
   },
   light: {
-    border:    'border-wood-200/70',
-    rule:      'border-wood-200/50',
+    border:    'border-wood-200/50',
+    rule:      'border-wood-200/40',
     label:     'text-wood-500',
     caption:   'text-wood-400',
     primary:   'text-wood-900',
@@ -516,8 +516,8 @@ const PLATE_TYPE = {
     bodyOpen:  'text-wood-800',
     chevron:   'text-wood-400',
     chevronOn: 'text-bronze-600',
-    rowHover:  'hover:bg-bronze-500/[0.04]',
-    rowFocus:  'focus-visible:bg-bronze-500/[0.07]',
+    rowHover:  'hover:bg-wood-500/[0.04]',
+    rowFocus:  'focus-visible:bg-wood-500/[0.06]',
     maskGrad:  'linear-gradient(to bottom, black 55%, transparent 100%)',
   },
 } as const;
@@ -546,30 +546,21 @@ const PlateExpand: React.FC<{
   return (
     <div
       id={id}
-      className={`scroll-mt-24 border-t ${t.border} ${open ? '' : 'cursor-pointer'} ${open ? '' : t.rowHover}`}
-      onClick={open ? undefined : () => ctx.toggle(id)}
-      role={open ? undefined : 'button'}
-      aria-expanded={open}
-      tabIndex={open ? -1 : 0}
-      onKeyDown={open ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+      className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}
     >
       <button
         type="button"
-        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        onClick={() => ctx.toggle(id)}
         aria-expanded={open}
         aria-controls={`${id}-panel`}
-        className={`block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none ${t.rowFocus}`}
+        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none ${open ? '' : t.rowHover} ${t.rowFocus}`}
       >
         <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
           <div className="min-w-0">
             <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
+            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
             {caption && <p className={`font-serif text-[13px] sm:text-[14px] ${t.caption} italic mt-1.5 leading-[1.4]`}>{caption}</p>}
           </div>
-          <span
-            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? t.chevronOn : t.chevron} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
         </div>
         <div className="min-w-0">
           {!open && (
@@ -580,21 +571,15 @@ const PlateExpand: React.FC<{
           )}
           {open && meta}
         </div>
-        <span
-          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? t.chevronOn : t.chevron} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-          aria-hidden="true"
-        >+</span>
       </button>
       {open && (
         <div
           id={`${id}-panel`}
-          className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7"
-          onClick={(e) => e.stopPropagation()}
+          className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7"
+          style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}
         >
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">{children}</div>
-          <div className="hidden sm:block" />
         </div>
       )}
     </div>
@@ -697,29 +682,20 @@ const GeneKeyCard: React.FC<{
   return (
     <div
       id={id}
-      className={`scroll-mt-24 border-t border-wood-200/70 ${open ? '' : 'cursor-pointer hover:bg-bronze-500/[0.04]'}`}
-      onClick={open ? undefined : () => ctx.toggle(id)}
-      role={open ? undefined : 'button'}
-      aria-expanded={open}
-      tabIndex={open ? -1 : 0}
-      onKeyDown={open ? undefined : e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
     >
       <button
         type="button"
-        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        onClick={() => ctx.toggle(id)}
         aria-expanded={open}
-        className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
+        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
       >
         <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
           <div className="min-w-0">
             <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
             <p className="font-serif text-[13px] sm:text-[14px] text-wood-500 italic mt-1.5 leading-[1.4]">{level.contemplation_title}</p>
           </div>
-          <span
-            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
         </div>
         <div className="min-w-0">
           <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{level.name}</p>
@@ -732,21 +708,16 @@ const GeneKeyCard: React.FC<{
             </div>
           )}
         </div>
-        <span
-          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-          aria-hidden="true"
-        >+</span>
       </button>
       {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7" onClick={e => e.stopPropagation()}>
+        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
               <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
             ))}
             {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
                 {level.repressive_nature && (
                   <div>
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
@@ -766,7 +737,6 @@ const GeneKeyCard: React.FC<{
               </div>
             )}
           </div>
-          <div className="hidden sm:block" />
         </div>
       )}
     </div>
@@ -794,26 +764,19 @@ const SynthesisToneCard: React.FC<{
   return (
     <div
       id={id}
-      className={`scroll-mt-24 border-t border-wood-200/70 ${open ? '' : 'cursor-pointer hover:bg-bronze-500/[0.04]'}`}
-      onClick={open ? undefined : () => ctx.toggle(id)}
-      role={open ? undefined : 'button'}
-      aria-expanded={open}
-      tabIndex={open ? -1 : 0}
-      onKeyDown={open ? undefined : e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ctx.toggle(id); } }}
+      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
     >
       <button
         type="button"
-        onClick={open ? () => ctx.toggle(id) : (e) => { e.stopPropagation(); ctx.toggle(id); }}
+        onClick={() => ctx.toggle(id)}
         aria-expanded={open}
-        className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
+        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
       >
         <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-          <span
-            className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
+          <div className="min-w-0">
+            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
+          </div>
         </div>
         <div className="min-w-0">
           <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{name}</p>
@@ -826,21 +789,16 @@ const SynthesisToneCard: React.FC<{
             </div>
           )}
         </div>
-        <span
-          className={`hidden sm:inline-block text-[18px] flex-shrink-0 leading-none mt-1 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-          style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-          aria-hidden="true"
-        >+</span>
       </button>
       {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 pb-6 sm:pb-7" onClick={e => e.stopPropagation()}>
+        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
               <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
             ))}
             {extras.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
                 {extras.map((ex, i) => (
                   <div key={i}>
                     <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
@@ -852,7 +810,6 @@ const SynthesisToneCard: React.FC<{
               </div>
             )}
           </div>
-          <div className="hidden sm:block" />
         </div>
       )}
     </div>
@@ -957,7 +914,7 @@ const CardLink: React.FC<{
   return (
     <button
       onClick={onClick}
-      className="group w-full flex items-center gap-4 py-3 text-left transition-colors hover:bg-bronze-500/[0.04] focus-visible:outline-none focus-visible:bg-bronze-500/[0.07]"
+      className="group w-full flex items-center gap-4 py-3 text-left transition-colors hover:bg-wood-500/[0.04] focus-visible:outline-none focus-visible:bg-wood-500/[0.06]"
     >
       <img
         src={cardImageUrl(number, 120)}
@@ -1185,7 +1142,7 @@ const UniversalLanguageCard: React.FC = () => {
   const piece    = UL_PIECE_BY_NUMBER.get(card.number);
   const pairCard = expanded ? CARD_BY_NUMBER.get(expanded.i_ching.hexagrams_in_pairs.pair_hexagram) : undefined;
   const siblings = card.codon_ring_siblings;
-  const imageAlt = `${card.card_name}, Universal Language ${card.number}. Original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const imageAlt = `${card.card_name}, Universal Language ${card.number}. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`;
 
   const ichingHighlight = expanded?.i_ching?.reflection?.text ?? card.iching.essence;
 
@@ -1594,11 +1551,11 @@ const UniversalLanguageCard: React.FC = () => {
             </header>
 
             {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
-            <div ref={ichingRef} className="border-t border-stone-700/60">
+            <div ref={ichingRef} className="border-t border-stone-700/60 -mx-4 sm:-mx-7">
               <button
                 type="button"
                 onClick={() => setIchingOpen('hex')}
-                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-4 sm:py-5 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-4 sm:py-5 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'hex'}
               >
                 <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
@@ -1612,7 +1569,7 @@ const UniversalLanguageCard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIchingOpen('upper')}
-                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'upper'}
               >
                 <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Upper</span>
@@ -1626,7 +1583,7 @@ const UniversalLanguageCard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIchingOpen('lower')}
-                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'lower'}
               >
                 <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Lower</span>
@@ -1638,7 +1595,7 @@ const UniversalLanguageCard: React.FC = () => {
               </button>
 
               {/* Reading zone — updates on tap */}
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 border-b border-stone-700/60">
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400/80 sm:self-start sm:pt-1 mb-2 sm:mb-0">
                   {ichingOpen === 'hex'
                     ? 'Combination'
@@ -1681,10 +1638,11 @@ const UniversalLanguageCard: React.FC = () => {
                     caption="Wilhelm translation"
                     preview={synthesis.synthesis.iching.judgement_lines[0] ?? synthesis.synthesis.iching.image_lines[0] ?? ''}
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
                       {synthesis.synthesis.iching.judgement_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Judgement</p>
+                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">The Judgement</p>
+                          <p className="font-serif text-[13px] sm:text-[14px] text-stone-500 italic leading-[1.4] mt-1 mb-3">the oracle's reading of this moment</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
                               <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{line}</p>
@@ -1694,7 +1652,8 @@ const UniversalLanguageCard: React.FC = () => {
                       )}
                       {synthesis.synthesis.iching.image_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Image</p>
+                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">The Image</p>
+                          <p className="font-serif text-[13px] sm:text-[14px] text-stone-500 italic leading-[1.4] mt-1 mb-3">a picture from nature that mirrors the energy</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.image_lines.map((line, i) => (
                               <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{line}</p>
@@ -1738,8 +1697,8 @@ const UniversalLanguageCard: React.FC = () => {
                   id="iching-judgment"
                   section="iching"
                   variant="dark"
-                  label="The Judgment"
-                  caption="the oracle's ruling"
+                  label="The Judgement"
+                  caption="the oracle's reading of this moment"
                   preview={expanded.i_ching.image_of_the_situation.text.split('\n').filter(Boolean)[0] ?? ''}
                 >
                   {(() => {
@@ -1863,7 +1822,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
               </>
             ) : (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
                 <div className="space-y-4">
                   {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
@@ -1911,7 +1870,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -1932,7 +1891,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1950,7 +1909,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1967,7 +1926,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                        <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1988,7 +1947,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -2014,10 +1973,10 @@ const UniversalLanguageCard: React.FC = () => {
               <>
                 {/* Paired Hexagram */}
                 {pairCard && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
                     <div className="space-y-4 min-w-0">
-                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
+                      <p className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
                       <CardLink
                         number={expanded.i_ching.hexagrams_in_pairs.pair_hexagram}
                         label={`Code ${expanded.i_ching.hexagrams_in_pairs.pair_hexagram}`}
@@ -2029,10 +1988,10 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Programming Partner */}
                 {expanded.gene_keys.programming_partner && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
                     <div className="space-y-4 min-w-0">
-                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6]">{expanded.gene_keys.programming_partner.relationship_context}</p>
+                      <p className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{expanded.gene_keys.programming_partner.relationship_context}</p>
                       <CardLink
                         number={expanded.gene_keys.programming_partner.number}
                         label={`Code ${expanded.gene_keys.programming_partner.number}`}
@@ -2044,26 +2003,24 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Codon Ring */}
                 {siblings.length > 0 && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">{expanded.gene_keys.codon_ring.name}</p>
                     <div className="min-w-0">
-                      <p className="font-serif text-[17px] text-wood-700 leading-[1.6] mb-5">{expanded.gene_keys.codon_ring.relationship_context}</p>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mb-6">{expanded.gene_keys.codon_ring.relationship_context}</p>
+                      <div className="grid grid-cols-4 sm:grid-cols-8 gap-x-2 gap-y-3">
                         {siblings.map(n => {
                           const sibling = CARD_BY_NUMBER.get(n);
                           return sibling ? (
                             <button
                               key={n}
                               onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
-                              className="group flex items-center gap-3 py-2 text-left transition-colors hover:bg-bronze-500/[0.04]"
+                              className="group flex flex-col items-center text-center transition-colors"
                             >
                               {UL_IMAGE_BY_NUMBER.get(n) && (
-                                <img src={cardImageUrl(n, 80)} alt="" className="w-10 h-10 object-cover flex-shrink-0 opacity-75 group-hover:opacity-100 transition-opacity" />
+                                <img src={cardImageUrl(n, 80)} alt="" className="w-full aspect-square object-cover opacity-75 group-hover:opacity-100 transition-opacity" />
                               )}
-                              <div className="min-w-0">
-                                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500">{n}</p>
-                                <p className="font-serif text-[14px] text-wood-700 group-hover:text-bronze-700 transition-colors truncate">{sibling.card_name}</p>
-                              </div>
+                              <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-wood-500 mt-1">{n}</p>
+                              <p className="font-serif text-[12px] sm:text-[13px] text-wood-700 leading-tight truncate w-full">{sibling.card_name}</p>
                             </button>
                           ) : null;
                         })}
@@ -2073,7 +2030,7 @@ const UniversalLanguageCard: React.FC = () => {
                 )}
               </>
             ) : (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/70 py-6 sm:py-7">
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
                 <p className="font-serif text-[17px] text-wood-500 italic leading-[1.6]">Connection data will be available soon.</p>
               </div>
@@ -2093,7 +2050,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -2114,7 +2071,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -2131,7 +2088,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+                        <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
                       ))}
                     </PlateExpand>
                   );

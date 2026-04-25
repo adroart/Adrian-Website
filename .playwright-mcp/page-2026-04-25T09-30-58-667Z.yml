@@ -1,0 +1,270 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - navigation "Breadcrumb" [ref=e23]:
+            - link "Creations" [ref=e24] [cursor=pointer]:
+              - /url: /creations
+            - generic [ref=e25]: ·
+            - link "Multidimensional Art" [ref=e26] [cursor=pointer]:
+              - /url: /creations/multidimensional-art
+            - generic [ref=e27]: ·
+            - generic [ref=e28]: Signature Pieces
+          - heading "Signature Pieces" [level=1] [ref=e29]
+          - paragraph [ref=e30]: Works outside any series. An animal. A scene. A world compressed into layers of wood and light. Each arrives with its own reason for existing.
+        - generic [ref=e32]:
+          - generic [ref=e34]: 12 pieces
+          - button "Available Only" [ref=e37]
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - link "Amphibian Dream by Adrian Rasmussen View" [ref=e41] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - img "Amphibian Dream by Adrian Rasmussen"
+              - generic [ref=e42]: View
+            - link "Amphibian Dream" [ref=e43] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - heading "Amphibian Dream" [level=3] [ref=e44]
+            - link "Amphibian Dream $745 Ready to ship" [ref=e45] [cursor=pointer]:
+              - /url: /creations/SIG-100
+              - generic [ref=e47]: Amphibian Dream
+              - generic [ref=e48]:
+                - text: $745
+                - paragraph [ref=e49]: Ready to ship
+          - generic [ref=e50]:
+            - link "Beyond the Matrix by Adrian Rasmussen View" [ref=e51] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - img "Beyond the Matrix by Adrian Rasmussen"
+              - generic [ref=e52]: View
+            - link "Beyond the Matrix" [ref=e53] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - heading "Beyond the Matrix" [level=3] [ref=e54]
+            - link "Beyond the Matrix Sold" [ref=e55] [cursor=pointer]:
+              - /url: /creations/SIG-101
+              - generic [ref=e57]: Beyond the Matrix
+              - generic [ref=e58]: Sold
+          - generic [ref=e59]:
+            - link "Communion by Adrian Rasmussen View" [ref=e60] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - img "Communion by Adrian Rasmussen"
+              - generic [ref=e61]: View
+            - link "Communion" [ref=e62] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - heading "Communion" [level=3] [ref=e63]
+            - link "Communion $1,111 Ready to ship" [ref=e64] [cursor=pointer]:
+              - /url: /creations/SIG-102
+              - generic [ref=e66]: Communion
+              - generic [ref=e67]:
+                - text: $1,111
+                - paragraph [ref=e68]: Ready to ship
+          - generic [ref=e69]:
+            - link "Communion - Gold, Blue, Red by Adrian Rasmussen View" [ref=e70] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - img "Communion - Gold, Blue, Red by Adrian Rasmussen"
+              - generic [ref=e71]: View
+            - link "Communion - Gold, Blue, Red" [ref=e72] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - heading "Communion - Gold, Blue, Red" [level=3] [ref=e73]
+            - link "Communion - Gold, Blue, Red $1,111 Ready to ship" [ref=e74] [cursor=pointer]:
+              - /url: /creations/SIG-103
+              - generic [ref=e76]: Communion - Gold, Blue, Red
+              - generic [ref=e77]:
+                - text: $1,111
+                - paragraph [ref=e78]: Ready to ship
+          - generic [ref=e79]:
+            - link "Communion - Red Burst by Adrian Rasmussen View" [ref=e80] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - img "Communion - Red Burst by Adrian Rasmussen"
+              - generic [ref=e81]: View
+            - link "Communion - Red Burst" [ref=e82] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - heading "Communion - Red Burst" [level=3] [ref=e83]
+            - link "Communion - Red Burst $1,111 Ready to ship" [ref=e84] [cursor=pointer]:
+              - /url: /creations/SIG-104
+              - generic [ref=e86]: Communion - Red Burst
+              - generic [ref=e87]:
+                - text: $1,111
+                - paragraph [ref=e88]: Ready to ship
+          - generic [ref=e89]:
+            - link "Creation Unfolding by Adrian Rasmussen View" [ref=e90] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - img "Creation Unfolding by Adrian Rasmussen"
+              - generic [ref=e91]: View
+            - link "Creation Unfolding" [ref=e92] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - heading "Creation Unfolding" [level=3] [ref=e93]
+            - link "Creation Unfolding $969 Ready to ship" [ref=e94] [cursor=pointer]:
+              - /url: /creations/SIG-105
+              - generic [ref=e96]: Creation Unfolding
+              - generic [ref=e97]:
+                - text: $969
+                - paragraph [ref=e98]: Ready to ship
+          - generic [ref=e99]:
+            - link "Mystics Journey - Framed by Adrian Rasmussen View" [ref=e100] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - img "Mystics Journey - Framed by Adrian Rasmussen"
+              - generic [ref=e101]: View
+            - link "Mystics Journey - Framed" [ref=e102] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - heading "Mystics Journey - Framed" [level=3] [ref=e103]
+            - link "Mystics Journey - Framed $9,000 Ready to ship" [ref=e104] [cursor=pointer]:
+              - /url: /creations/SIG-106
+              - generic [ref=e106]: Mystics Journey - Framed
+              - generic [ref=e107]:
+                - text: $9,000
+                - paragraph [ref=e108]: Ready to ship
+          - generic [ref=e109]:
+            - link "Path of the Ordinary by Adrian Rasmussen View" [ref=e110] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - img "Path of the Ordinary by Adrian Rasmussen"
+              - generic [ref=e111]: View
+            - link "Path of the Ordinary" [ref=e112] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - heading "Path of the Ordinary" [level=3] [ref=e113]
+            - link "Path of the Ordinary $4,000 Ready to ship" [ref=e114] [cursor=pointer]:
+              - /url: /creations/SIG-107
+              - generic [ref=e116]: Path of the Ordinary
+              - generic [ref=e117]:
+                - text: $4,000
+                - paragraph [ref=e118]: Ready to ship
+          - generic [ref=e119]:
+            - link "Winged Spirit Wood by Adrian Rasmussen View" [ref=e120] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - img "Winged Spirit Wood by Adrian Rasmussen"
+              - generic [ref=e121]: View
+            - link "Winged Spirit Wood" [ref=e122] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - heading "Winged Spirit Wood" [level=3] [ref=e123]
+            - link "Winged Spirit Wood $969 Ready to ship" [ref=e124] [cursor=pointer]:
+              - /url: /creations/SIG-108
+              - generic [ref=e126]: Winged Spirit Wood
+              - generic [ref=e127]:
+                - text: $969
+                - paragraph [ref=e128]: Ready to ship
+          - generic [ref=e129]:
+            - link "Rise Of The Buffalo by Adrian Rasmussen View" [ref=e130] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - img "Rise Of The Buffalo by Adrian Rasmussen"
+              - generic [ref=e131]: View
+            - link "Rise Of The Buffalo" [ref=e132] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - heading "Rise Of The Buffalo" [level=3] [ref=e133]
+            - link "Rise Of The Buffalo $1,111 Ready to ship" [ref=e134] [cursor=pointer]:
+              - /url: /creations/SIG-110
+              - generic [ref=e136]: Rise Of The Buffalo
+              - generic [ref=e137]:
+                - text: $1,111
+                - paragraph [ref=e138]: Ready to ship
+          - generic [ref=e139]:
+            - link "Metamorphosis by Adrian Rasmussen View" [ref=e140] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - img "Metamorphosis by Adrian Rasmussen"
+              - generic [ref=e141]: View
+            - link "Metamorphosis" [ref=e142] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - heading "Metamorphosis" [level=3] [ref=e143]
+            - link "Metamorphosis $9,000 Ready to ship" [ref=e144] [cursor=pointer]:
+              - /url: /creations/SIG-112
+              - generic [ref=e146]: Metamorphosis
+              - generic [ref=e147]:
+                - text: $9,000
+                - paragraph [ref=e148]: Ready to ship
+          - generic [ref=e149]:
+            - link "We Rise by Adrian Rasmussen View" [ref=e150] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - img "We Rise by Adrian Rasmussen"
+              - generic [ref=e151]: View
+            - link "We Rise" [ref=e152] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - heading "We Rise" [level=3] [ref=e153]
+            - link "We Rise $5,000 Ready to ship" [ref=e154] [cursor=pointer]:
+              - /url: /creations/SIG-113
+              - generic [ref=e156]: We Rise
+              - generic [ref=e157]:
+                - text: $5,000
+                - paragraph [ref=e158]: Ready to ship
+        - generic [ref=e160]:
+          - paragraph [ref=e161]: Something calling to you that does not exist yet?
+          - link "Begin a conversation" [ref=e162] [cursor=pointer]:
+            - /url: /inquire
+            - text: Begin a conversation
+            - img [ref=e163]
+        - generic [ref=e165]:
+          - heading "Explore more" [level=2] [ref=e167]
+          - generic [ref=e168]:
+            - link "Universal Language" [ref=e169] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/universal-language
+            - link "Mandala" [ref=e170] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/mandala
+            - link "Light Codes" [ref=e171] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/light-codes
+    - contentinfo [ref=e172]:
+      - generic [ref=e174]:
+        - generic [ref=e175]:
+          - generic [ref=e176]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e177]
+            - paragraph [ref=e178]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e181]: Currently, taking commissions for Spring 2026
+          - generic [ref=e182]:
+            - generic [ref=e183]: Join the Inner Circle
+            - generic [ref=e184]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e186]:
+              - generic: Email address
+              - textbox [ref=e187]
+              - button [ref=e188]:
+                - img [ref=e189]
+        - navigation [ref=e192]:
+          - link "Creations" [ref=e193] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e194] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e195] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e196] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e197] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e201]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e202] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e203] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e204]
+          - generic [ref=e205]:
+            - link "Instagram" [ref=e206] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e207]
+            - link "Email" [ref=e210] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e211]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

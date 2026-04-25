@@ -1,0 +1,675 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - img "Mandala" [ref=e23]
+        - generic [ref=e25]:
+          - navigation "Breadcrumb" [ref=e26]:
+            - link "Creations" [ref=e27] [cursor=pointer]:
+              - /url: /creations
+            - generic [ref=e28]: ·
+            - link "Multidimensional Art" [ref=e29] [cursor=pointer]:
+              - /url: /creations/multidimensional-art
+            - generic [ref=e30]: ·
+            - generic [ref=e31]: Mandala
+          - heading "Mandala" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Sacred geometry forms. Maps of the inner and outer cosmos. Each layer a ring of the palace, moving inward toward the bindu.
+        - generic [ref=e35]:
+          - paragraph [ref=e36]: A mandala is not something to look at. It is a place to enter. Laser-cut geometry aligned with universal ratios. Each one painted by hand. No two the same. Windows inward, to glimpse the infinite.
+          - link "Read the full story" [ref=e37] [cursor=pointer]:
+            - /url: /writings/the-mandala-series
+            - text: Read the full story
+            - img [ref=e38]
+        - generic [ref=e41]:
+          - generic [ref=e43]: 42 pieces
+          - button "Available Only" [ref=e46]
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - link "Green Gold by Adrian Rasmussen View" [ref=e50] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - img "Green Gold by Adrian Rasmussen"
+              - generic [ref=e51]: View
+            - link "Green Gold" [ref=e52] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - heading "Green Gold" [level=3] [ref=e53]
+            - link "Mandala Sold" [ref=e54] [cursor=pointer]:
+              - /url: /creations/MAN-001
+              - generic [ref=e56]: Mandala
+              - generic [ref=e57]: Sold
+          - generic [ref=e58]:
+            - link "Blue gold by Adrian Rasmussen View" [ref=e59] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - img "Blue gold by Adrian Rasmussen"
+              - generic [ref=e60]: View
+            - link "Blue gold" [ref=e61] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - heading "Blue gold" [level=3] [ref=e62]
+            - link "Mandala Sold" [ref=e63] [cursor=pointer]:
+              - /url: /creations/MAN-002
+              - generic [ref=e65]: Mandala
+              - generic [ref=e66]: Sold
+          - generic [ref=e67]:
+            - link "Red gold by Adrian Rasmussen View" [ref=e68] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - img "Red gold by Adrian Rasmussen"
+              - generic [ref=e69]: View
+            - link "Red gold" [ref=e70] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - heading "Red gold" [level=3] [ref=e71]
+            - link "Mandala Sold" [ref=e72] [cursor=pointer]:
+              - /url: /creations/MAN-003
+              - generic [ref=e74]: Mandala
+              - generic [ref=e75]: Sold
+          - generic [ref=e76]:
+            - link "Blue Sun by Adrian Rasmussen View" [ref=e77] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - img "Blue Sun by Adrian Rasmussen"
+              - generic [ref=e78]: View
+            - link "Blue Sun" [ref=e79] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - heading "Blue Sun" [level=3] [ref=e80]
+            - link "Mandala $111 Ready to ship" [ref=e81] [cursor=pointer]:
+              - /url: /creations/MAN-004
+              - generic [ref=e83]: Mandala
+              - generic [ref=e84]:
+                - text: $111
+                - paragraph [ref=e85]: Ready to ship
+          - generic [ref=e86]:
+            - link "Blue White by Adrian Rasmussen View" [ref=e87] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - img "Blue White by Adrian Rasmussen"
+              - generic [ref=e88]: View
+            - link "Blue White" [ref=e89] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - heading "Blue White" [level=3] [ref=e90]
+            - link "Mandala Sold" [ref=e91] [cursor=pointer]:
+              - /url: /creations/MAN-005
+              - generic [ref=e93]: Mandala
+              - generic [ref=e94]: Sold
+          - generic [ref=e95]:
+            - link "Blue-pink-white by Adrian Rasmussen View" [ref=e96] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - img "Blue-pink-white by Adrian Rasmussen"
+              - generic [ref=e97]: View
+            - link "Blue-pink-white" [ref=e98] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - heading "Blue-pink-white" [level=3] [ref=e99]
+            - link "Mandala Sold" [ref=e100] [cursor=pointer]:
+              - /url: /creations/MAN-006
+              - generic [ref=e102]: Mandala
+              - generic [ref=e103]: Sold
+          - generic [ref=e104]:
+            - link "Boundless Flower - Blue Purple by Adrian Rasmussen View" [ref=e105] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - img "Boundless Flower - Blue Purple by Adrian Rasmussen"
+              - generic [ref=e106]: View
+            - link "Boundless Flower - Blue Purple" [ref=e107] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - heading "Boundless Flower - Blue Purple" [level=3] [ref=e108]
+            - link "Mandala $500 Ready to ship" [ref=e109] [cursor=pointer]:
+              - /url: /creations/MAN-007
+              - generic [ref=e111]: Mandala
+              - generic [ref=e112]:
+                - text: $500
+                - paragraph [ref=e113]: Ready to ship
+          - generic [ref=e114]:
+            - link "Boundless Flower - Green Gold by Adrian Rasmussen View" [ref=e115] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - img "Boundless Flower - Green Gold by Adrian Rasmussen"
+              - generic [ref=e116]: View
+            - link "Boundless Flower - Green Gold" [ref=e117] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - heading "Boundless Flower - Green Gold" [level=3] [ref=e118]
+            - link "Mandala $500 Ready to ship" [ref=e119] [cursor=pointer]:
+              - /url: /creations/MAN-008
+              - generic [ref=e121]: Mandala
+              - generic [ref=e122]:
+                - text: $500
+                - paragraph [ref=e123]: Ready to ship
+          - generic [ref=e124]:
+            - link "Brown Gold by Adrian Rasmussen View" [ref=e125] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - img "Brown Gold by Adrian Rasmussen"
+              - generic [ref=e126]: View
+            - link "Brown Gold" [ref=e127] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - heading "Brown Gold" [level=3] [ref=e128]
+            - link "Mandala Sold" [ref=e129] [cursor=pointer]:
+              - /url: /creations/MAN-009
+              - generic [ref=e131]: Mandala
+              - generic [ref=e132]: Sold
+          - generic [ref=e133]:
+            - link "Circle Of Existance - Bloom by Adrian Rasmussen View" [ref=e134] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - img "Circle Of Existance - Bloom by Adrian Rasmussen"
+              - generic [ref=e135]: View
+            - link "Circle Of Existance - Bloom" [ref=e136] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - heading "Circle Of Existance - Bloom" [level=3] [ref=e137]
+            - link "Mandala $250 Ready to ship" [ref=e138] [cursor=pointer]:
+              - /url: /creations/MAN-010
+              - generic [ref=e140]: Mandala
+              - generic [ref=e141]:
+                - text: $250
+                - paragraph [ref=e142]: Ready to ship
+          - generic [ref=e143]:
+            - link "Circle Of Existance - Blue by Adrian Rasmussen View" [ref=e144] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - img "Circle Of Existance - Blue by Adrian Rasmussen"
+              - generic [ref=e145]: View
+            - link "Circle Of Existance - Blue" [ref=e146] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - heading "Circle Of Existance - Blue" [level=3] [ref=e147]
+            - link "Mandala $969 Ready to ship" [ref=e148] [cursor=pointer]:
+              - /url: /creations/MAN-011
+              - generic [ref=e150]: Mandala
+              - generic [ref=e151]:
+                - text: $969
+                - paragraph [ref=e152]: Ready to ship
+          - generic [ref=e153]:
+            - link "Circle Of Existance - Remix Orange by Adrian Rasmussen View" [ref=e154] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - img "Circle Of Existance - Remix Orange by Adrian Rasmussen"
+              - generic [ref=e155]: View
+            - link "Circle Of Existance - Remix Orange" [ref=e156] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - heading "Circle Of Existance - Remix Orange" [level=3] [ref=e157]
+            - link "Mandala $300 Ready to ship" [ref=e158] [cursor=pointer]:
+              - /url: /creations/MAN-012
+              - generic [ref=e160]: Mandala
+              - generic [ref=e161]:
+                - text: $300
+                - paragraph [ref=e162]: Ready to ship
+          - generic [ref=e163]:
+            - link "Emergence - Metatron's Cube Brown by Adrian Rasmussen View" [ref=e164] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - img "Emergence - Metatron's Cube Brown by Adrian Rasmussen"
+              - generic [ref=e165]: View
+            - link "Emergence - Metatron's Cube Brown" [ref=e166] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - heading "Emergence - Metatron's Cube Brown" [level=3] [ref=e167]
+            - link "Mandala $300 Ready to ship" [ref=e168] [cursor=pointer]:
+              - /url: /creations/MAN-013
+              - generic [ref=e170]: Mandala
+              - generic [ref=e171]:
+                - text: $300
+                - paragraph [ref=e172]: Ready to ship
+          - generic [ref=e173]:
+            - link "Emergence - Metatron's Cube Red by Adrian Rasmussen View" [ref=e174] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - img "Emergence - Metatron's Cube Red by Adrian Rasmussen"
+              - generic [ref=e175]: View
+            - link "Emergence - Metatron's Cube Red" [ref=e176] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - heading "Emergence - Metatron's Cube Red" [level=3] [ref=e177]
+            - link "Mandala $300 Ready to ship" [ref=e178] [cursor=pointer]:
+              - /url: /creations/MAN-014
+              - generic [ref=e180]: Mandala
+              - generic [ref=e181]:
+                - text: $300
+                - paragraph [ref=e182]: Ready to ship
+          - generic [ref=e183]:
+            - link "Emergence - Metatron's Cube Remix by Adrian Rasmussen View" [ref=e184] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - img "Emergence - Metatron's Cube Remix by Adrian Rasmussen"
+              - generic [ref=e185]: View
+            - link "Emergence - Metatron's Cube Remix" [ref=e186] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - heading "Emergence - Metatron's Cube Remix" [level=3] [ref=e187]
+            - link "Mandala $250 Ready to ship" [ref=e188] [cursor=pointer]:
+              - /url: /creations/MAN-015
+              - generic [ref=e190]: Mandala
+              - generic [ref=e191]:
+                - text: $250
+                - paragraph [ref=e192]: Ready to ship
+          - generic [ref=e193]:
+            - link "Endless Bloom - Remix by Adrian Rasmussen View" [ref=e194] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - img "Endless Bloom - Remix by Adrian Rasmussen"
+              - generic [ref=e195]: View
+            - link "Endless Bloom - Remix" [ref=e196] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - heading "Endless Bloom - Remix" [level=3] [ref=e197]
+            - link "Mandala $222 Ready to ship" [ref=e198] [cursor=pointer]:
+              - /url: /creations/MAN-016
+              - generic [ref=e200]: Mandala
+              - generic [ref=e201]:
+                - text: $222
+                - paragraph [ref=e202]: Ready to ship
+          - generic [ref=e203]:
+            - link "Golden Harmony - Gold Brass by Adrian Rasmussen View" [ref=e204] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - img "Golden Harmony - Gold Brass by Adrian Rasmussen"
+              - generic [ref=e205]: View
+            - link "Golden Harmony - Gold Brass" [ref=e206] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - heading "Golden Harmony - Gold Brass" [level=3] [ref=e207]
+            - link "Mandala $969 Ready to ship" [ref=e208] [cursor=pointer]:
+              - /url: /creations/MAN-017
+              - generic [ref=e210]: Mandala
+              - generic [ref=e211]:
+                - text: $969
+                - paragraph [ref=e212]: Ready to ship
+          - generic [ref=e213]:
+            - link "Green by Adrian Rasmussen View" [ref=e214] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - img "Green by Adrian Rasmussen"
+              - generic [ref=e215]: View
+            - link "Green" [ref=e216] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - heading "Green" [level=3] [ref=e217]
+            - link "Mandala Sold" [ref=e218] [cursor=pointer]:
+              - /url: /creations/MAN-018
+              - generic [ref=e220]: Mandala
+              - generic [ref=e221]: Sold
+          - generic [ref=e222]:
+            - link "Green-blue-gold by Adrian Rasmussen View" [ref=e223] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - img "Green-blue-gold by Adrian Rasmussen"
+              - generic [ref=e224]: View
+            - link "Green-blue-gold" [ref=e225] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - heading "Green-blue-gold" [level=3] [ref=e226]
+            - link "Mandala Sold" [ref=e227] [cursor=pointer]:
+              - /url: /creations/MAN-019
+              - generic [ref=e229]: Mandala
+              - generic [ref=e230]: Sold
+          - generic [ref=e231]:
+            - link "Heart Centered - Remix Star by Adrian Rasmussen View" [ref=e232] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - img "Heart Centered - Remix Star by Adrian Rasmussen"
+              - generic [ref=e233]: View
+            - link "Heart Centered - Remix Star" [ref=e234] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - heading "Heart Centered - Remix Star" [level=3] [ref=e235]
+            - link "Mandala $300 Ready to ship" [ref=e236] [cursor=pointer]:
+              - /url: /creations/MAN-020
+              - generic [ref=e238]: Mandala
+              - generic [ref=e239]:
+                - text: $300
+                - paragraph [ref=e240]: Ready to ship
+          - generic [ref=e241]:
+            - link "Infinite Zoom by Adrian Rasmussen View" [ref=e242] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - img "Infinite Zoom by Adrian Rasmussen"
+              - generic [ref=e243]: View
+            - link "Infinite Zoom" [ref=e244] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - heading "Infinite Zoom" [level=3] [ref=e245]
+            - link "Mandala $500 Ready to ship" [ref=e246] [cursor=pointer]:
+              - /url: /creations/MAN-021
+              - generic [ref=e248]: Mandala
+              - generic [ref=e249]:
+                - text: $500
+                - paragraph [ref=e250]: Ready to ship
+          - generic [ref=e251]:
+            - link "Metatron Flower - Black by Adrian Rasmussen View" [ref=e252] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - img "Metatron Flower - Black by Adrian Rasmussen"
+              - generic [ref=e253]: View
+            - link "Metatron Flower - Black" [ref=e254] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - heading "Metatron Flower - Black" [level=3] [ref=e255]
+            - link "Mandala $85 Ready to ship" [ref=e256] [cursor=pointer]:
+              - /url: /creations/MAN-022
+              - generic [ref=e258]: Mandala
+              - generic [ref=e259]:
+                - text: $85
+                - paragraph [ref=e260]: Ready to ship
+          - generic [ref=e261]:
+            - link "Metatron Flower - Green by Adrian Rasmussen View" [ref=e262] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - img "Metatron Flower - Green by Adrian Rasmussen"
+              - generic [ref=e263]: View
+            - link "Metatron Flower - Green" [ref=e264] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - heading "Metatron Flower - Green" [level=3] [ref=e265]
+            - link "Mandala $85 Ready to ship" [ref=e266] [cursor=pointer]:
+              - /url: /creations/MAN-023
+              - generic [ref=e268]: Mandala
+              - generic [ref=e269]:
+                - text: $85
+                - paragraph [ref=e270]: Ready to ship
+          - generic [ref=e271]:
+            - link "Midnight Sunrise - Black Gold by Adrian Rasmussen View" [ref=e272] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - img "Midnight Sunrise - Black Gold by Adrian Rasmussen"
+              - generic [ref=e273]: View
+            - link "Midnight Sunrise - Black Gold" [ref=e274] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - heading "Midnight Sunrise - Black Gold" [level=3] [ref=e275]
+            - link "Mandala $300 Ready to ship" [ref=e276] [cursor=pointer]:
+              - /url: /creations/MAN-024
+              - generic [ref=e278]: Mandala
+              - generic [ref=e279]:
+                - text: $300
+                - paragraph [ref=e280]: Ready to ship
+          - generic [ref=e281]:
+            - link "Midnight Sunrise - Remix by Adrian Rasmussen View" [ref=e282] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - img "Midnight Sunrise - Remix by Adrian Rasmussen"
+              - generic [ref=e283]: View
+            - link "Midnight Sunrise - Remix" [ref=e284] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - heading "Midnight Sunrise - Remix" [level=3] [ref=e285]
+            - link "Mandala $300 Ready to ship" [ref=e286] [cursor=pointer]:
+              - /url: /creations/MAN-025
+              - generic [ref=e288]: Mandala
+              - generic [ref=e289]:
+                - text: $300
+                - paragraph [ref=e290]: Ready to ship
+          - generic [ref=e291]:
+            - link "Night - Fly by Adrian Rasmussen View" [ref=e292] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - img "Night - Fly by Adrian Rasmussen"
+              - generic [ref=e293]: View
+            - link "Night - Fly" [ref=e294] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - heading "Night - Fly" [level=3] [ref=e295]
+            - link "Mandala $250 Ready to ship" [ref=e296] [cursor=pointer]:
+              - /url: /creations/MAN-026
+              - generic [ref=e298]: Mandala
+              - generic [ref=e299]:
+                - text: $250
+                - paragraph [ref=e300]: Ready to ship
+          - generic [ref=e301]:
+            - link "Red by Adrian Rasmussen View" [ref=e302] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - img "Red by Adrian Rasmussen"
+              - generic [ref=e303]: View
+            - link "Red" [ref=e304] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - heading "Red" [level=3] [ref=e305]
+            - link "Mandala Sold" [ref=e306] [cursor=pointer]:
+              - /url: /creations/MAN-027
+              - generic [ref=e308]: Mandala
+              - generic [ref=e309]: Sold
+          - generic [ref=e310]:
+            - link "Resequence - Blue Purple by Adrian Rasmussen View" [ref=e311] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - img "Resequence - Blue Purple by Adrian Rasmussen"
+              - generic [ref=e312]: View
+            - link "Resequence - Blue Purple" [ref=e313] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - heading "Resequence - Blue Purple" [level=3] [ref=e314]
+            - link "Mandala $250 Ready to ship" [ref=e315] [cursor=pointer]:
+              - /url: /creations/MAN-028
+              - generic [ref=e317]: Mandala
+              - generic [ref=e318]:
+                - text: $250
+                - paragraph [ref=e319]: Ready to ship
+          - generic [ref=e320]:
+            - link "Secret Garden by Adrian Rasmussen View" [ref=e321] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - img "Secret Garden by Adrian Rasmussen"
+              - generic [ref=e322]: View
+            - link "Secret Garden" [ref=e323] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - heading "Secret Garden" [level=3] [ref=e324]
+            - link "Mandala $500 Ready to ship" [ref=e325] [cursor=pointer]:
+              - /url: /creations/MAN-029
+              - generic [ref=e327]: Mandala
+              - generic [ref=e328]:
+                - text: $500
+                - paragraph [ref=e329]: Ready to ship
+          - generic [ref=e330]:
+            - link "Seed Of Life - Bloom Blue by Adrian Rasmussen View" [ref=e331] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - img "Seed Of Life - Bloom Blue by Adrian Rasmussen"
+              - generic [ref=e332]: View
+            - link "Seed Of Life - Bloom Blue" [ref=e333] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - heading "Seed Of Life - Bloom Blue" [level=3] [ref=e334]
+            - link "Mandala $85 Ready to ship" [ref=e335] [cursor=pointer]:
+              - /url: /creations/MAN-030
+              - generic [ref=e337]: Mandala
+              - generic [ref=e338]:
+                - text: $85
+                - paragraph [ref=e339]: Ready to ship
+          - generic [ref=e340]:
+            - link "Seed Of Life - Bloom Orange by Adrian Rasmussen View" [ref=e341] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - img "Seed Of Life - Bloom Orange by Adrian Rasmussen"
+              - generic [ref=e342]: View
+            - link "Seed Of Life - Bloom Orange" [ref=e343] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - heading "Seed Of Life - Bloom Orange" [level=3] [ref=e344]
+            - link "Mandala $111 Ready to ship" [ref=e345] [cursor=pointer]:
+              - /url: /creations/MAN-031
+              - generic [ref=e347]: Mandala
+              - generic [ref=e348]:
+                - text: $111
+                - paragraph [ref=e349]: Ready to ship
+          - generic [ref=e350]:
+            - link "Sol Urchin - Blue by Adrian Rasmussen View" [ref=e351] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - img "Sol Urchin - Blue by Adrian Rasmussen"
+              - generic [ref=e352]: View
+            - link "Sol Urchin - Blue" [ref=e353] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - heading "Sol Urchin - Blue" [level=3] [ref=e354]
+            - link "Mandala $300 Ready to ship" [ref=e355] [cursor=pointer]:
+              - /url: /creations/MAN-032
+              - generic [ref=e357]: Mandala
+              - generic [ref=e358]:
+                - text: $300
+                - paragraph [ref=e359]: Ready to ship
+          - generic [ref=e360]:
+            - link "Sol Urchin - Green by Adrian Rasmussen View" [ref=e361] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - img "Sol Urchin - Green by Adrian Rasmussen"
+              - generic [ref=e362]: View
+            - link "Sol Urchin - Green" [ref=e363] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - heading "Sol Urchin - Green" [level=3] [ref=e364]
+            - link "Mandala $300 Ready to ship" [ref=e365] [cursor=pointer]:
+              - /url: /creations/MAN-033
+              - generic [ref=e367]: Mandala
+              - generic [ref=e368]:
+                - text: $300
+                - paragraph [ref=e369]: Ready to ship
+          - generic [ref=e370]:
+            - link "Sol Urchin - Green Blue by Adrian Rasmussen View" [ref=e371] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - img "Sol Urchin - Green Blue by Adrian Rasmussen"
+              - generic [ref=e372]: View
+            - link "Sol Urchin - Green Blue" [ref=e373] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - heading "Sol Urchin - Green Blue" [level=3] [ref=e374]
+            - link "Mandala $969 Ready to ship" [ref=e375] [cursor=pointer]:
+              - /url: /creations/MAN-034
+              - generic [ref=e377]: Mandala
+              - generic [ref=e378]:
+                - text: $969
+                - paragraph [ref=e379]: Ready to ship
+          - generic [ref=e380]:
+            - link "Sol Urchin - Purple Gold by Adrian Rasmussen View" [ref=e381] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - img "Sol Urchin - Purple Gold by Adrian Rasmussen"
+              - generic [ref=e382]: View
+            - link "Sol Urchin - Purple Gold" [ref=e383] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - heading "Sol Urchin - Purple Gold" [level=3] [ref=e384]
+            - link "Mandala $300 Ready to ship" [ref=e385] [cursor=pointer]:
+              - /url: /creations/MAN-035
+              - generic [ref=e387]: Mandala
+              - generic [ref=e388]:
+                - text: $300
+                - paragraph [ref=e389]: Ready to ship
+          - generic [ref=e390]:
+            - link "Sol Urchin - Red Gold by Adrian Rasmussen View" [ref=e391] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - img "Sol Urchin - Red Gold by Adrian Rasmussen"
+              - generic [ref=e392]: View
+            - link "Sol Urchin - Red Gold" [ref=e393] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - heading "Sol Urchin - Red Gold" [level=3] [ref=e394]
+            - link "Mandala $300 Ready to ship" [ref=e395] [cursor=pointer]:
+              - /url: /creations/MAN-036
+              - generic [ref=e397]: Mandala
+              - generic [ref=e398]:
+                - text: $300
+                - paragraph [ref=e399]: Ready to ship
+          - generic [ref=e400]:
+            - link "Sol Urchin - Remix Metatron's Cube by Adrian Rasmussen View" [ref=e401] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - img "Sol Urchin - Remix Metatron's Cube by Adrian Rasmussen"
+              - generic [ref=e402]: View
+            - link "Sol Urchin - Remix Metatron's Cube" [ref=e403] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - heading "Sol Urchin - Remix Metatron's Cube" [level=3] [ref=e404]
+            - link "Mandala $250 Ready to ship" [ref=e405] [cursor=pointer]:
+              - /url: /creations/MAN-037
+              - generic [ref=e407]: Mandala
+              - generic [ref=e408]:
+                - text: $250
+                - paragraph [ref=e409]: Ready to ship
+          - generic [ref=e410]:
+            - link "Star Sun - Red by Adrian Rasmussen View" [ref=e411] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - img "Star Sun - Red by Adrian Rasmussen"
+              - generic [ref=e412]: View
+            - link "Star Sun - Red" [ref=e413] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - heading "Star Sun - Red" [level=3] [ref=e414]
+            - link "Mandala $300 Ready to ship" [ref=e415] [cursor=pointer]:
+              - /url: /creations/MAN-038
+              - generic [ref=e417]: Mandala
+              - generic [ref=e418]:
+                - text: $300
+                - paragraph [ref=e419]: Ready to ship
+          - generic [ref=e420]:
+            - link "Starburst - Green by Adrian Rasmussen View" [ref=e421] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - img "Starburst - Green by Adrian Rasmussen"
+              - generic [ref=e422]: View
+            - link "Starburst - Green" [ref=e423] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - heading "Starburst - Green" [level=3] [ref=e424]
+            - link "Mandala $250 Ready to ship" [ref=e425] [cursor=pointer]:
+              - /url: /creations/MAN-039
+              - generic [ref=e427]: Mandala
+              - generic [ref=e428]:
+                - text: $250
+                - paragraph [ref=e429]: Ready to ship
+          - generic [ref=e430]:
+            - link "Starburst - Red by Adrian Rasmussen View" [ref=e431] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - img "Starburst - Red by Adrian Rasmussen"
+              - generic [ref=e432]: View
+            - link "Starburst - Red" [ref=e433] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - heading "Starburst - Red" [level=3] [ref=e434]
+            - link "Mandala $250 Ready to ship" [ref=e435] [cursor=pointer]:
+              - /url: /creations/MAN-040
+              - generic [ref=e437]: Mandala
+              - generic [ref=e438]:
+                - text: $250
+                - paragraph [ref=e439]: Ready to ship
+          - generic [ref=e440]:
+            - link "Sun Star - Pastel by Adrian Rasmussen View" [ref=e441] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - img "Sun Star - Pastel by Adrian Rasmussen"
+              - generic [ref=e442]: View
+            - link "Sun Star - Pastel" [ref=e443] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - heading "Sun Star - Pastel" [level=3] [ref=e444]
+            - link "Mandala $300 Ready to ship" [ref=e445] [cursor=pointer]:
+              - /url: /creations/MAN-041
+              - generic [ref=e447]: Mandala
+              - generic [ref=e448]:
+                - text: $300
+                - paragraph [ref=e449]: Ready to ship
+          - generic [ref=e450]:
+            - link "Unfolding - Green Blue by Adrian Rasmussen View" [ref=e451] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - img "Unfolding - Green Blue by Adrian Rasmussen"
+              - generic [ref=e452]: View
+            - link "Unfolding - Green Blue" [ref=e453] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - heading "Unfolding - Green Blue" [level=3] [ref=e454]
+            - link "Mandala $969 Ready to ship" [ref=e455] [cursor=pointer]:
+              - /url: /creations/MAN-042
+              - generic [ref=e457]: Mandala
+              - generic [ref=e458]:
+                - text: $969
+                - paragraph [ref=e459]: Ready to ship
+        - generic [ref=e460]:
+          - heading "Explore more" [level=2] [ref=e462]
+          - generic [ref=e463]:
+            - link "Universal Language" [ref=e464] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/universal-language
+            - link "Light Codes" [ref=e465] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/light-codes
+            - link "Signature Pieces" [ref=e466] [cursor=pointer]:
+              - /url: /creations/multidimensional-art/signature-pieces
+    - contentinfo [ref=e467]:
+      - generic [ref=e469]:
+        - generic [ref=e470]:
+          - generic [ref=e471]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e472]
+            - paragraph [ref=e473]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e476]: Currently, taking commissions for Spring 2026
+          - generic [ref=e477]:
+            - generic [ref=e478]: Join the Inner Circle
+            - generic [ref=e479]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e481]:
+              - generic: Email address
+              - textbox [ref=e482]
+              - button [ref=e483]:
+                - img [ref=e484]
+        - navigation [ref=e487]:
+          - link "Creations" [ref=e488] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e489] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e490] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e491] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e492] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e494]:
+          - generic [ref=e495]:
+            - generic [ref=e496]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e497] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e498] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e499]
+          - generic [ref=e500]:
+            - link "Instagram" [ref=e501] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e502]
+            - link "Email" [ref=e505] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e506]
+            - button "Back to top":
+              - img
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
