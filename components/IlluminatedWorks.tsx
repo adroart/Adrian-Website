@@ -39,6 +39,9 @@ const IlluminatedWorks: React.FC = () => {
 
             {/* Section 1: What illumination is */}
             <div className="max-w-4xl mx-auto px-6 py-24">
+                <h1 className="font-label text-xs uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
+                    Illuminated Works
+                </h1>
                 <p className="font-serif text-2xl md:text-3xl text-wood-800 font-light leading-[1.4] mb-8">
                     There is a version of every piece that you only discover after dark.
                 </p>

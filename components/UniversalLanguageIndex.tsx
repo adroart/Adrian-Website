@@ -433,9 +433,8 @@ const UniversalLanguageIndex: React.FC = () => {
               <p className="font-label text-[11px] uppercase tracking-[0.25em] text-bronze-700 mb-5">
                 Universal Language Oracle
               </p>
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
-                Sixty-Four<br />
-                <span className="text-wood-500 font-light">Expressions</span>
+              <h1 aria-label="Sixty-Four Expressions" className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
+                <span aria-hidden="true">Sixty-Four<br /><span className="text-wood-500 font-light">Expressions</span></span>
               </h1>
               <p className="font-sans text-lg text-wood-600 max-w-xl leading-[1.7] font-light mb-8">
                 Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.

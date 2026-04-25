@@ -557,9 +557,9 @@ const Inquire: React.FC = () => {
                     />
                   </div>
                   <div className="p-5 md:p-6 flex flex-col flex-1 bg-white">
-                    <h3 className="font-label text-lg tracking-[0.08em] text-wood-900 mb-2">
+                    <h2 className="font-label text-lg tracking-[0.08em] text-wood-900 mb-2">
                       {path.title}
-                    </h3>
+                    </h2>
                     <p
                       className={`font-sans text-wood-600 leading-[1.7] mb-4 flex-1 text-sm transition-all duration-500 overflow-hidden ${
                         isSelected ? 'max-h-40 opacity-100' : 'max-h-16 opacity-60'
@@ -1096,9 +1096,9 @@ const Inquire: React.FC = () => {
           <div className="mt-20 max-w-3xl mx-auto">
             <div className="flex items-center gap-4 mb-10">
               <span className="h-px flex-1 bg-wood-200" />
-              <h3 className="font-label text-base tracking-[0.15em] text-wood-900">
+              <h2 className="font-label text-base tracking-[0.15em] text-wood-900">
                 Common Questions
-              </h3>
+              </h2>
               <span className="h-px flex-1 bg-wood-200" />
             </div>
             <div className="space-y-8">
