@@ -540,7 +540,7 @@ const PlateExpand: React.FC<{
   const t = PLATE_TYPE[variant];
 
   const previewNode = typeof preview === 'string'
-    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.6]`}>{preview}</p>
+    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.55] sm:leading-[1.6]`}>{preview}</p>
     : preview;
 
   return (
@@ -563,7 +563,7 @@ const PlateExpand: React.FC<{
         <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
           <div className="min-w-0">
             <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
-            {caption && <p className={`font-serif text-[14px] ${t.caption} italic mt-1.5 leading-[1.4]`}>{caption}</p>}
+            {caption && <p className={`font-serif text-[13px] sm:text-[14px] ${t.caption} italic mt-1.5 leading-[1.4]`}>{caption}</p>}
           </div>
           <span
             className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? t.chevronOn : t.chevron} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
@@ -713,7 +713,7 @@ const GeneKeyCard: React.FC<{
         <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
           <div className="min-w-0">
             <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-            <p className="font-serif text-[14px] text-wood-500 italic mt-1.5 leading-[1.4]">{level.contemplation_title}</p>
+            <p className="font-serif text-[13px] sm:text-[14px] text-wood-500 italic mt-1.5 leading-[1.4]">{level.contemplation_title}</p>
           </div>
           <span
             className={`sm:hidden text-[18px] flex-shrink-0 leading-none mt-0.5 ${open ? 'text-bronze-600' : 'text-wood-400'} ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
@@ -728,7 +728,7 @@ const GeneKeyCard: React.FC<{
               className="max-h-[7.4em] overflow-hidden"
               style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
             >
-              <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{paragraphs[0]}</p>
+              <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{paragraphs[0]}</p>
             </div>
           )}
         </div>
@@ -743,7 +743,7 @@ const GeneKeyCard: React.FC<{
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
-              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
             ))}
             {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
@@ -752,7 +752,7 @@ const GeneKeyCard: React.FC<{
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                       Repressive · {level.repressive_nature.label}
                     </p>
-                    <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{level.repressive_nature.description}</p>
+                    <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.repressive_nature.description}</p>
                   </div>
                 )}
                 {level.reactive_nature && (
@@ -760,7 +760,7 @@ const GeneKeyCard: React.FC<{
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                       Reactive · {level.reactive_nature.label}
                     </p>
-                    <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{level.reactive_nature.description}</p>
+                    <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.reactive_nature.description}</p>
                   </div>
                 )}
               </div>
@@ -822,7 +822,7 @@ const SynthesisToneCard: React.FC<{
               className="max-h-[7.4em] overflow-hidden"
               style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
             >
-              <p className="font-serif text-[14px] text-wood-700 leading-[1.6]">{previewPara}</p>
+              <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{previewPara}</p>
             </div>
           )}
         </div>
@@ -837,7 +837,7 @@ const SynthesisToneCard: React.FC<{
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
-              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.6]">{p}</p>
+              <p key={i} className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{p}</p>
             ))}
             {extras.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/70 mt-2">
@@ -845,7 +845,7 @@ const SynthesisToneCard: React.FC<{
                   <div key={i}>
                     <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
                     {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                      <p key={j} className={`font-serif text-[14px] text-wood-700 leading-[1.6] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                      <p key={j} className={`font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
                     ))}
                   </div>
                 ))}
@@ -967,8 +967,8 @@ const CardLink: React.FC<{
       <div className="flex-1 min-w-0">
         {label && <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mb-1">{label}</p>}
         <p className="font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] group-hover:text-bronze-700 transition-colors">{sibling.card_name}</p>
-        <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-0.5">{sibling.iching.hexagram_name}</p>
-        {context && <p className="font-serif text-[14px] text-wood-500 mt-1 leading-[1.5] line-clamp-2">{context}</p>}
+        <p className="font-serif text-[14px] text-wood-600 leading-[1.55] sm:leading-[1.6] mt-0.5">{sibling.iching.hexagram_name}</p>
+        {context && <p className="font-serif text-[14px] text-wood-500 mt-1 leading-[1.55] sm:leading-[1.6] line-clamp-2">{context}</p>}
       </div>
       <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0">Open</span>
     </button>
@@ -1587,8 +1587,8 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Plate header */}
             <header className="mb-8 sm:mb-10">
               <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">I Ching</p>
-              <h2 className="font-serif text-[28px] leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.iching.hexagram_name}</h2>
-              <p className="font-serif text-[14px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
+              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.iching.hexagram_name}</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
                 The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
               </p>
             </header>
@@ -1646,7 +1646,7 @@ const UniversalLanguageCard: React.FC = () => {
                     ? 'Upper nature'
                     : 'Lower nature'}
                 </p>
-                <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">
+                <p className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">
                   {ichingOpen === 'hex'
                     ? (synthesis?.synthesis.iching.trigram_combination ?? card.iching.essence)
                     : ichingOpen === 'upper'
@@ -1668,7 +1668,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? ''}
                 >
                   {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.6]">{p}</p>
+                    <p key={i} className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{p}</p>
                   ))}
                 </PlateExpand>
 
@@ -1687,7 +1687,7 @@ const UniversalLanguageCard: React.FC = () => {
                           <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Judgement</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
-                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.6]">{line}</p>
+                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{line}</p>
                             ))}
                           </div>
                         </div>
@@ -1697,7 +1697,7 @@ const UniversalLanguageCard: React.FC = () => {
                           <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Image</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.image_lines.map((line, i) => (
-                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.6]">{line}</p>
+                              <p key={i} className="font-serif text-[14px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{line}</p>
                             ))}
                           </div>
                         </div>
@@ -1722,14 +1722,14 @@ const UniversalLanguageCard: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
                       <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Outer</p>
-                      <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.trigrams.outer.context.text}</p>
+                      <p className="font-serif text-[17px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.trigrams.outer.context.text}</p>
                     </div>
                     <div>
                       <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Inner</p>
-                      <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.trigrams.inner.context.text}</p>
+                      <p className="font-serif text-[17px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
-                  <p className="font-serif text-[17px] text-stone-300 leading-[1.6] mt-2">
+                  <p className="font-serif text-[17px] text-stone-300 leading-[1.55] sm:leading-[1.6] mt-2">
                     {expanded.i_ching.trigrams.family_dynamic.text}
                   </p>
                 </PlateExpand>
@@ -1748,7 +1748,7 @@ const UniversalLanguageCard: React.FC = () => {
                     const stages = lines[1]?.replace(/\.$/, '').split(',').map(s => s.trim()).filter(Boolean) ?? [];
                     return (
                       <>
-                        {headline && <p className="font-serif text-[17px] text-stone-100 leading-[1.6]">{headline}</p>}
+                        {headline && <p className="font-serif text-[17px] text-stone-100 leading-[1.55] sm:leading-[1.6]">{headline}</p>}
                         {stages.length > 0 && (
                           <div>
                             <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Four stages of the time cycle</p>
@@ -1759,7 +1759,7 @@ const UniversalLanguageCard: React.FC = () => {
                             </div>
                           </div>
                         )}
-                        <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                        <p className="font-serif text-[17px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
                         <div className="pt-5 border-t border-stone-700/40 space-y-2">
                           {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
                             <p key={i} className="font-serif text-[14px] text-stone-400 leading-[1.6] italic">{line}</p>
@@ -1777,9 +1777,9 @@ const UniversalLanguageCard: React.FC = () => {
                   label="Patterns of Wisdom"
                   preview={expanded.i_ching.patterns_of_wisdom.nature_image}
                 >
-                  <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
-                  <p className="font-serif text-[17px] text-stone-200 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
-                  <p className="font-serif text-[17px] text-stone-300 leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
+                  <p className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
+                  <p className="font-serif text-[17px] text-stone-200 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
+                  <p className="font-serif text-[17px] text-stone-300 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
                 </PlateExpand>
               </>
             )}
@@ -1788,7 +1788,7 @@ const UniversalLanguageCard: React.FC = () => {
             {!synthesis && expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
-                <p className="font-serif text-[17px] text-stone-100 leading-[1.6]">{expanded.i_ching.reflection.text}</p>
+                <p className="font-serif text-[17px] text-stone-100 leading-[1.55] sm:leading-[1.6]">{expanded.i_ching.reflection.text}</p>
               </div>
             )}
 
@@ -1812,8 +1812,8 @@ const UniversalLanguageCard: React.FC = () => {
               <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">
                 Gene Key {card.number} · Gate {card.human_design.gate}
               </p>
-              <h2 className="font-serif text-[28px] leading-[1.15] text-wood-900 tracking-[-0.005em]">The {card.gene_keys.gift} Key</h2>
-              <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
+              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em]">The {card.gene_keys.gift} Key</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
                 A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
               </p>
               <div className="flex items-baseline gap-3 flex-wrap mt-5">
@@ -1891,8 +1891,8 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Plate header */}
             <header className="mb-8 sm:mb-10">
               <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">Human Design · Gate {card.human_design.gate}</p>
-              <h2 className="font-serif text-[28px] leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.human_design.keyword}</h2>
-              <p className="font-serif text-[14px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
+              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.human_design.keyword}</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
                 Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
               </p>
             </header>
@@ -2004,8 +2004,8 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Plate header */}
             <header className="mb-8 sm:mb-10">
               <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">Connections</p>
-              <h2 className="font-serif text-[28px] leading-[1.15] text-wood-900 tracking-[-0.005em]">Threads in the weave</h2>
-              <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
+              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em]">Threads in the weave</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
                 Each code lives in a wider pattern. Pairs that mirror it, partners that balance it, and the ring of related codons it belongs to.
               </p>
             </header>
