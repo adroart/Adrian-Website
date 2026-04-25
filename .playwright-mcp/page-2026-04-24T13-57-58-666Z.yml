@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e5]:
+    - heading "System Error" [level=1] [ref=e6]
+    - paragraph [ref=e7]: The application encountered an unexpected state. Please reload the page.
+    - button "Reload Interface" [ref=e8] [cursor=pointer]

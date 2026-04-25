@@ -1,0 +1,210 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - heading "Writings" [level=1] [ref=e24]
+          - paragraph [ref=e25]: Reflections on art, knowledge, and the inner life — written from experience.
+        - navigation "Writing sections" [ref=e26]:
+          - link "Living Knowledge" [ref=e27] [cursor=pointer]:
+            - /url: "#living-knowledge"
+          - link "Beneath the Surface" [ref=e28] [cursor=pointer]:
+            - /url: "#beneath-the-surface"
+          - link "The Practice" [ref=e29] [cursor=pointer]:
+            - /url: "#the-practice"
+          - link "The Path" [ref=e30] [cursor=pointer]:
+            - /url: "#the-path"
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - heading "Living Knowledge" [level=2] [ref=e33]
+            - paragraph [ref=e34]: Deep explorations of subjects earned through direct experience — not theory, but embodied understanding.
+          - 'link "Ye Ming Zhu: The Glowing Crystal Ye Ming Zhu: The Glowing Crystal These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon''s glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth. Crystals History Ye Ming Zhu Read" [ref=e36] [cursor=pointer]':
+            - /url: /writings/ye-ming-zhu
+            - generic [ref=e37]:
+              - 'img "Ye Ming Zhu: The Glowing Crystal" [ref=e39]'
+              - generic [ref=e40]:
+                - 'heading "Ye Ming Zhu: The Glowing Crystal" [level=3] [ref=e41]'
+                - paragraph [ref=e42]: These glowing crystals are more than the royal lineage of the Chinese and Ancient Taoists. They are beyond the legends of the Phoenix and Dragon's glowing pearl, the Hindu and Buddhist Chintamani wish-fulfilling gem, the Atlantean blue glowing stones, and stories from ancient texts of glowing crystals used to discern truth.
+                - generic [ref=e43]:
+                  - generic [ref=e44]: Crystals
+                  - generic [ref=e45]: History
+                  - generic [ref=e46]: Ye Ming Zhu
+                - generic [ref=e47]:
+                  - text: Read
+                  - img [ref=e48]
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - heading "Beneath the Surface" [level=2] [ref=e52]
+            - paragraph [ref=e53]: The meaning, origins, and stories woven into each body of work.
+          - generic [ref=e54]:
+            - link "The Mandala Series The Mandala Series A mandala is not something to look at. It is a place to enter. Geometry Philosophy Mandala Read" [ref=e55] [cursor=pointer]:
+              - /url: /writings/the-mandala-series
+              - generic [ref=e56]:
+                - img "The Mandala Series" [ref=e58]
+                - generic [ref=e59]:
+                  - heading "The Mandala Series" [level=3] [ref=e60]
+                  - paragraph [ref=e61]: A mandala is not something to look at. It is a place to enter.
+                  - generic [ref=e62]:
+                    - generic [ref=e63]: Geometry
+                    - generic [ref=e64]: Philosophy
+                    - generic [ref=e65]: Mandala
+                  - generic [ref=e66]:
+                    - text: Read
+                    - img [ref=e67]
+            - link "The Universal Language The Universal Language There is a language that all of us speak. It exists beyond words and concepts of the mind. Universal Language Gene Keys I Ching Read" [ref=e69] [cursor=pointer]:
+              - /url: /writings/the-universal-language
+              - generic [ref=e70]:
+                - img "The Universal Language" [ref=e72]
+                - generic [ref=e73]:
+                  - heading "The Universal Language" [level=3] [ref=e74]
+                  - paragraph [ref=e75]: There is a language that all of us speak. It exists beyond words and concepts of the mind.
+                  - generic [ref=e76]:
+                    - generic [ref=e77]: Universal Language
+                    - generic [ref=e78]: Gene Keys
+                    - generic [ref=e79]: I Ching
+                  - generic [ref=e80]:
+                    - text: Read
+                    - img [ref=e81]
+            - link "Light Codes Light Codes After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art. Light Codes Dream Frequency Read" [ref=e83] [cursor=pointer]:
+              - /url: /writings/light-codes
+              - generic [ref=e84]:
+                - img "Light Codes" [ref=e86]
+                - generic [ref=e87]:
+                  - heading "Light Codes" [level=3] [ref=e88]
+                  - paragraph [ref=e89]: After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.
+                  - generic [ref=e90]:
+                    - generic [ref=e91]: Light Codes
+                    - generic [ref=e92]: Dream
+                    - generic [ref=e93]: Frequency
+                  - generic [ref=e94]:
+                    - text: Read
+                    - img [ref=e95]
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - heading "The Practice" [level=2] [ref=e99]
+            - paragraph [ref=e100]: How creation happens — the rituals, tools, and inner process behind the art.
+          - generic [ref=e101]:
+            - link "When Poetry Becomes Sound I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound. Music Poetry AI Read" [ref=e102] [cursor=pointer]:
+              - /url: /writings/when-poetry-becomes-sound
+              - generic [ref=e104]:
+                - heading "When Poetry Becomes Sound" [level=3] [ref=e105]
+                - paragraph [ref=e106]: I have always written. Poetry that lives in notebooks, in margins, in the quiet after ceremony. Now I am learning what happens when those words are given a body of sound.
+                - generic [ref=e107]:
+                  - generic [ref=e108]: Music
+                  - generic [ref=e109]: Poetry
+                  - generic [ref=e110]: AI
+                - generic [ref=e111]:
+                  - text: Read
+                  - img [ref=e112]
+            - link "How I Create How I Create Creating is how I grow. My inner journey. A celebration of creation itself. Process Studio Read" [ref=e114] [cursor=pointer]:
+              - /url: /writings/the-practice-creation
+              - generic [ref=e115]:
+                - img "How I Create" [ref=e117]
+                - generic [ref=e118]:
+                  - heading "How I Create" [level=3] [ref=e119]
+                  - paragraph [ref=e120]: Creating is how I grow. My inner journey. A celebration of creation itself.
+                  - generic [ref=e121]:
+                    - generic [ref=e122]: Process
+                    - generic [ref=e123]: Studio
+                  - generic [ref=e124]:
+                    - text: Read
+                    - img [ref=e125]
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - heading "The Path" [level=2] [ref=e129]
+            - paragraph [ref=e130]: The personal journey. Where this all began, and where it continues to lead.
+          - link "The Way of Tea The Way of Tea Tea came early. My father introduced it when I was young. Since 2010, I've been trading artwork for Chinese tea. Tea Autobiography Read" [ref=e132] [cursor=pointer]:
+            - /url: /writings/path-tea
+            - generic [ref=e133]:
+              - img "The Way of Tea" [ref=e135]
+              - generic [ref=e136]:
+                - heading "The Way of Tea" [level=3] [ref=e137]
+                - paragraph [ref=e138]: Tea came early. My father introduced it when I was young. Since 2010, I've been trading artwork for Chinese tea.
+                - generic [ref=e139]:
+                  - generic [ref=e140]: Tea
+                  - generic [ref=e141]: Autobiography
+                - generic [ref=e142]:
+                  - text: Read
+                  - img [ref=e143]
+        - generic [ref=e145]:
+          - paragraph [ref=e146]: If something here resonated, there is more to explore. Every piece begins with a conversation.
+          - link "Begin a conversation" [ref=e147] [cursor=pointer]:
+            - /url: /inquire
+            - text: Begin a conversation
+            - img [ref=e148]
+    - contentinfo [ref=e150]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e155]
+            - paragraph [ref=e156]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e159]: Currently, taking commissions for Spring 2026
+          - generic [ref=e160]:
+            - generic [ref=e161]: Join the Inner Circle
+            - generic [ref=e162]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e164]:
+              - generic: Email address
+              - textbox [ref=e165]
+              - button [ref=e166]:
+                - img [ref=e167]
+        - navigation [ref=e170]:
+          - link "Creations" [ref=e171] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e172] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e173] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e174] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e175] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e179]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e180] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e181] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e182]
+          - generic [ref=e183]:
+            - link "Instagram" [ref=e184] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e185]
+            - link "Email" [ref=e188] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e189]
+            - button "Back to top":
+              - img
+    - generic [ref=e192]:
+      - paragraph [ref=e193]:
+        - text: This site uses cookies for analytics and to remember your preferences.
+        - link "Privacy Policy" [ref=e194] [cursor=pointer]:
+          - /url: /privacy
+      - button "Accept" [ref=e195]
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

@@ -1,0 +1,216 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - heading "Inquire" [level=1] [ref=e24]
+          - paragraph [ref=e25]: Commissions and collaborations.
+          - generic [ref=e26]:
+            - paragraph [ref=e27]: I take on a small number of commissions each year. Some become intimate pieces for personal spaces. Others become installations that transform environments.
+            - paragraph [ref=e29]: I am selective. Not every project is the right project. The right ones find me, and I recognize them when they do.
+            - paragraph [ref=e30]: If you are feeling a pull toward working together, trust that.
+        - generic [ref=e32]:
+          - button "Personal commission piece by Adrian Rasmussen Personal Commissions Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist. Selected" [ref=e33]:
+            - img "Personal commission piece by Adrian Rasmussen" [ref=e35]
+            - generic [ref=e37]:
+              - heading "Personal Commissions" [level=3] [ref=e38]
+              - paragraph [ref=e39]: Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.
+              - generic [ref=e40]:
+                - text: Selected
+                - img [ref=e41]
+          - button "Spatial installation by Adrian Rasmussen Spatial Commissions When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held. Select this path" [ref=e43]:
+            - img "Spatial installation by Adrian Rasmussen" [ref=e45]
+            - generic [ref=e47]:
+              - heading "Spatial Commissions" [level=3] [ref=e48]
+              - paragraph [ref=e49]: When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.
+              - generic [ref=e50]:
+                - text: Select this path
+                - img [ref=e51]
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: Past Commissions Include
+          - paragraph [ref=e56]: Oracle deck illustrations, hand-carved furniture, festival stage designs, and illuminated altar pieces.
+        - group [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - paragraph [ref=e63]: Tell me what you are imagining.
+              - paragraph [ref=e64]:
+                - text: For a personal piece.
+                - button "Change" [ref=e65]
+            - generic [ref=e66]:
+              - generic [ref=e67]: What wants to exist?
+              - textbox "What wants to exist?" [ref=e68]:
+                - /placeholder: A piece for my meditation space, something that holds stillness...
+            - generic [ref=e69]:
+              - textbox "Name" [ref=e70]
+              - generic: Name
+            - generic [ref=e71]:
+              - textbox "Email" [ref=e72]
+              - generic: Email
+            - generic [ref=e73]:
+              - button "Start the conversation" [ref=e74]:
+                - text: Start the conversation
+                - img [ref=e75]
+              - paragraph [ref=e78]:
+                - text: "Or write directly:"
+                - link "hello@adrianrasmussen.com" [ref=e79] [cursor=pointer]:
+                  - /url: mailto:hello@adrianrasmussen.com
+            - generic:
+              - generic:
+                - generic [ref=e80]:
+                  - generic [ref=e83]: Optional details
+                  - paragraph [ref=e85]: Helps me prepare for our conversation.
+                - generic [ref=e86]:
+                  - generic [ref=e87]:
+                    - generic [ref=e88]: Budget Range
+                    - combobox "Budget Range" [ref=e89] [cursor=pointer]:
+                      - option "Select a range" [selected]
+                      - option "Under $1,000"
+                      - option "$1,000 to $3,000"
+                      - option "$3,000 to $5,000"
+                      - option "$5,000 to $10,000"
+                      - option "$10,000 to $25,000"
+                      - option "$25,000+"
+                      - option "Not sure yet"
+                  - generic [ref=e90]:
+                    - generic: Approximate Size
+                    - textbox "Approximate Size" [ref=e91]
+                    - paragraph [ref=e92]: Wall space, table dimensions, or a general sense of scale.
+                  - generic [ref=e93]:
+                    - generic [ref=e94]: Timeline
+                    - generic [ref=e95]:
+                      - button "Flexible, no rush" [ref=e96] [cursor=pointer]:
+                        - generic [ref=e98]: Flexible, no rush
+                      - button "Within 3 months" [ref=e99] [cursor=pointer]:
+                        - generic [ref=e101]: Within 3 months
+                      - button "Within 6 months" [ref=e102] [cursor=pointer]:
+                        - generic [ref=e104]: Within 6 months
+                      - button "Within a year" [ref=e105] [cursor=pointer]:
+                        - generic [ref=e107]: Within a year
+                      - button "Tied to a specific date" [ref=e108] [cursor=pointer]:
+                        - generic [ref=e110]: Tied to a specific date
+                  - generic [ref=e111]:
+                    - generic [ref=e112]: How did you find me?
+                    - generic [ref=e113]:
+                      - button "Word of mouth" [ref=e114] [cursor=pointer]:
+                        - generic [ref=e116]: Word of mouth
+                      - button "Instagram" [ref=e117] [cursor=pointer]:
+                        - generic [ref=e119]: Instagram
+                      - button "Seeing a piece in person" [ref=e120] [cursor=pointer]:
+                        - generic [ref=e122]: Seeing a piece in person
+                      - button "Your writings" [ref=e123] [cursor=pointer]:
+                        - generic [ref=e125]: Your writings
+                      - button "Burning Man or a festival" [ref=e126] [cursor=pointer]:
+                        - generic [ref=e128]: Burning Man or a festival
+                      - button "Somewhere else" [ref=e129] [cursor=pointer]:
+                        - generic [ref=e131]: Somewhere else
+                  - generic [ref=e132]:
+                    - generic: Location
+                    - textbox "Location" [ref=e133]
+                    - paragraph [ref=e134]: City, country, or region where the piece will live.
+                - button "Start the conversation" [ref=e136]:
+                  - text: Start the conversation
+                  - img [ref=e137]
+        - generic [ref=e140]:
+          - paragraph [ref=e141]: What Happens Next
+          - generic [ref=e142]:
+            - generic [ref=e144]:
+              - paragraph [ref=e146]: You inquire
+              - paragraph [ref=e147]: Right now
+            - generic [ref=e148]:
+              - paragraph [ref=e150]: We talk
+              - paragraph [ref=e151]: Within days
+            - generic [ref=e152]:
+              - paragraph [ref=e154]: Creation begins
+              - paragraph [ref=e155]: When it's right
+        - generic [ref=e157]:
+          - heading "Common Questions" [level=3] [ref=e160]
+          - generic [ref=e162]:
+            - generic [ref=e163]:
+              - heading "How long does a commission take?" [level=4] [ref=e164]
+              - paragraph [ref=e165]: Personal pieces typically take 4 to 8 weeks from our first conversation to completion. Spatial commissions and installations vary widely depending on scope, anywhere from 2 months to a year. We'll establish a timeline together once the vision is clear.
+            - generic [ref=e167]:
+              - heading "Where do pieces ship from?" [level=4] [ref=e168]
+              - paragraph [ref=e169]: Most pieces are created in my studio in Bali and ship internationally from there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned work ships upon completion. I handle packaging personally to ensure safe arrival.
+            - generic [ref=e171]:
+              - heading "What sizes are available?" [level=4] [ref=e172]
+              - paragraph [ref=e173]: I work across all scales, from palm-sized talismans and jewelry to room-filling installations. For commissions, size is part of the conversation. For ready-to-ship pieces, dimensions are listed on each piece's page.
+        - link "Just want to say hello? Email" [ref=e175] [cursor=pointer]:
+          - /url: mailto:hello@adrianrasmussen.com
+          - generic [ref=e176]: Just want to say hello?
+          - generic [ref=e178]: Email
+    - contentinfo [ref=e179]:
+      - generic [ref=e181]:
+        - generic [ref=e182]:
+          - generic [ref=e183]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e184]
+            - paragraph [ref=e185]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e188]: Currently, taking commissions for Spring 2026
+          - generic [ref=e189]:
+            - generic [ref=e190]: Join the Inner Circle
+            - generic [ref=e191]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e193]:
+              - generic: Email address
+              - textbox [ref=e194]
+              - button [ref=e195]:
+                - img [ref=e196]
+        - navigation [ref=e199]:
+          - link "Creations" [ref=e200] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e201] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e202] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e203] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e204] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - generic [ref=e208]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e209] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e210] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e211]
+          - generic [ref=e212]:
+            - link "Instagram" [ref=e213] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e214]
+            - link "Email" [ref=e217] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e218]
+            - button "Back to top":
+              - img
+    - generic [ref=e221]:
+      - paragraph [ref=e222]:
+        - text: This site uses cookies for analytics and to remember your preferences.
+        - link "Privacy Policy" [ref=e223] [cursor=pointer]:
+          - /url: /privacy
+      - button "Accept" [ref=e224]
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations

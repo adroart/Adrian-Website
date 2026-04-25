@@ -1,0 +1,754 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Adrian Rasmussen" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: Adrian Rasmussen
+        - generic [ref=e9]:
+          - button "Switch to light mode" [ref=e10]:
+            - img [ref=e11]
+          - button "Open menu" [ref=e17]:
+            - img [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - navigation "Breadcrumb" [ref=e23]:
+            - link "Creations" [ref=e24] [cursor=pointer]:
+              - /url: /creations
+            - generic [ref=e25]: /
+            - generic [ref=e26]: Universal Language
+          - generic [ref=e30]:
+            - paragraph [ref=e31]: Universal Language Oracle
+            - heading "Sixty-Four Expressions" [level=1] [ref=e32]:
+              - text: Sixty-Four
+              - text: Expressions
+            - paragraph [ref=e33]: Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design. Nothing needs to be understood to speak with them.
+            - generic [ref=e34]:
+              - button "Draw at Random" [ref=e35]
+              - generic [ref=e36]:
+                - button "64 Cards" [ref=e37]
+                - generic [ref=e38]: ·
+                - button "22 Codon Rings" [ref=e39]
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: Search cards
+            - searchbox "Search cards" [ref=e44]
+          - group "View mode" [ref=e45]:
+            - button "I Ching" [pressed] [ref=e46]
+            - button "Artwork" [ref=e47]
+            - button "By Ring" [ref=e48]
+        - generic [ref=e49]:
+          - heading "All cards" [level=2] [ref=e50]
+          - paragraph [ref=e51]: Tap a card to reveal it, then Read to enter
+          - generic [ref=e53]:
+            - generic [ref=e55]:
+              - 'button "Reveal Card 1: The Creative (Ch''ien)" [ref=e56] [cursor=pointer]':
+                - img [ref=e58]
+                - generic [ref=e65]: "1"
+              - generic [ref=e66]:
+                - button "Read Earth's Breath, Card 1" [ref=e67] [cursor=pointer]:
+                  - img "Earth's Breath, Universal Language 1" [ref=e68]
+                - generic [ref=e69]:
+                  - button "Flip Card 1 back to hexagram" [ref=e70] [cursor=pointer]: Back
+                  - button "Read Earth's Breath, Card 1" [ref=e72] [cursor=pointer]: Read
+            - generic [ref=e74]:
+              - 'button "Reveal Card 2: The Receptive (K''un)" [ref=e75] [cursor=pointer]':
+                - img [ref=e77]
+                - generic [ref=e96]: "2"
+              - generic [ref=e97]:
+                - button "Read Beyond the Shell, Card 2" [ref=e98] [cursor=pointer]:
+                  - img "Beyond the Shell, Universal Language 2" [ref=e99]
+                - generic [ref=e100]:
+                  - button "Flip Card 2 back to hexagram" [ref=e101] [cursor=pointer]: Back
+                  - button "Read Beyond the Shell, Card 2" [ref=e103] [cursor=pointer]: Read
+            - generic [ref=e105]:
+              - 'button "Reveal Card 3: Difficulty at the Beginning (Chun)" [ref=e106] [cursor=pointer]':
+                - img [ref=e108]
+                - generic [ref=e123]: "3"
+              - generic [ref=e124]:
+                - button "Read Messengers of the Infinite, Card 3" [ref=e125] [cursor=pointer]:
+                  - img "Messengers of the Infinite, Universal Language 3" [ref=e126]
+                - generic [ref=e127]:
+                  - button "Flip Card 3 back to hexagram" [ref=e128] [cursor=pointer]: Back
+                  - button "Read Messengers of the Infinite, Card 3" [ref=e130] [cursor=pointer]: Read
+            - generic [ref=e132]:
+              - 'button "Reveal Card 4: Youthful Folly (Meng)" [ref=e133] [cursor=pointer]':
+                - img [ref=e135]
+                - generic [ref=e150]: "4"
+              - generic [ref=e151]:
+                - button "Read Veils of Knowledge, Card 4" [ref=e152] [cursor=pointer]:
+                  - img "Veils of Knowledge, Universal Language 4" [ref=e153]
+                - generic [ref=e154]:
+                  - button "Flip Card 4 back to hexagram" [ref=e155] [cursor=pointer]: Back
+                  - button "Read Veils of Knowledge, Card 4" [ref=e157] [cursor=pointer]: Read
+            - generic [ref=e159]:
+              - 'button "Reveal Card 5: Waiting (Hsu)" [ref=e160] [cursor=pointer]':
+                - img [ref=e162]
+                - generic [ref=e173]: "5"
+              - generic [ref=e174]:
+                - button "Read The Space Between Time, Card 5" [ref=e175] [cursor=pointer]:
+                  - img "The Space Between Time, Universal Language 5" [ref=e176]
+                - generic [ref=e177]:
+                  - button "Flip Card 5 back to hexagram" [ref=e178] [cursor=pointer]: Back
+                  - button "Read The Space Between Time, Card 5" [ref=e180] [cursor=pointer]: Read
+            - generic [ref=e182]:
+              - 'button "Reveal Card 6: Conflict (Sung)" [ref=e183] [cursor=pointer]':
+                - img [ref=e185]
+                - generic [ref=e196]: "6"
+              - generic [ref=e197]:
+                - button "Read Harmonious Mirage, Card 6" [ref=e198] [cursor=pointer]:
+                  - img "Harmonious Mirage, Universal Language 6" [ref=e199]
+                - generic [ref=e200]:
+                  - button "Flip Card 6 back to hexagram" [ref=e201] [cursor=pointer]: Back
+                  - button "Read Harmonious Mirage, Card 6" [ref=e203] [cursor=pointer]: Read
+            - generic [ref=e205]:
+              - 'button "Reveal Card 7: The Army (Shih)" [ref=e206] [cursor=pointer]':
+                - img [ref=e208]
+                - generic [ref=e225]: "7"
+              - generic [ref=e226]:
+                - button "Read Essential Nexus, Card 7" [ref=e227] [cursor=pointer]:
+                  - img "Essential Nexus, Universal Language 7" [ref=e228]
+                - generic [ref=e229]:
+                  - button "Flip Card 7 back to hexagram" [ref=e230] [cursor=pointer]: Back
+                  - button "Read Essential Nexus, Card 7" [ref=e232] [cursor=pointer]: Read
+            - generic [ref=e234]:
+              - 'button "Reveal Card 8: Holding Together (Pi)" [ref=e235] [cursor=pointer]':
+                - img [ref=e237]
+                - generic [ref=e254]: "8"
+              - generic [ref=e255]:
+                - button "Read Odyssey of Freedom, Card 8" [ref=e256] [cursor=pointer]:
+                  - img "Odyssey of Freedom, Universal Language 8" [ref=e257]
+                - generic [ref=e258]:
+                  - button "Flip Card 8 back to hexagram" [ref=e259] [cursor=pointer]: Back
+                  - button "Read Odyssey of Freedom, Card 8" [ref=e261] [cursor=pointer]: Read
+            - generic [ref=e263]:
+              - 'button "Reveal Card 9: Taming Power of the Small (Hsiao Ch''u)" [ref=e264] [cursor=pointer]':
+                - img [ref=e266]
+                - generic [ref=e275]: "9"
+              - generic [ref=e276]:
+                - button "Read Ease in This, Card 9" [ref=e277] [cursor=pointer]:
+                  - img "Ease in This, Universal Language 9" [ref=e278]
+                - generic [ref=e279]:
+                  - button "Flip Card 9 back to hexagram" [ref=e280] [cursor=pointer]: Back
+                  - button "Read Ease in This, Card 9" [ref=e282] [cursor=pointer]: Read
+            - generic [ref=e284]:
+              - 'button "Reveal Card 10: Treading (Lu)" [ref=e285] [cursor=pointer]':
+                - img [ref=e287]
+                - generic [ref=e296]: "10"
+              - generic [ref=e297]:
+                - button "Read Internal Treasure, Card 10" [ref=e298] [cursor=pointer]:
+                  - img "Internal Treasure, Universal Language 10" [ref=e299]
+                - generic [ref=e300]:
+                  - button "Flip Card 10 back to hexagram" [ref=e301] [cursor=pointer]: Back
+                  - button "Read Internal Treasure, Card 10" [ref=e303] [cursor=pointer]: Read
+            - generic [ref=e305]:
+              - 'button "Reveal Card 11: Peace (T''ai)" [ref=e306] [cursor=pointer]':
+                - img [ref=e308]
+                - generic [ref=e321]: "11"
+              - generic [ref=e322]:
+                - button "Read Sol Star, Card 11" [ref=e323] [cursor=pointer]:
+                  - img "Sol Star, Universal Language 11" [ref=e324]
+                - generic [ref=e325]:
+                  - button "Flip Card 11 back to hexagram" [ref=e326] [cursor=pointer]: Back
+                  - button "Read Sol Star, Card 11" [ref=e328] [cursor=pointer]: Read
+            - generic [ref=e330]:
+              - 'button "Reveal Card 12: Standstill / Stagnation (P''i)" [ref=e331] [cursor=pointer]':
+                - img [ref=e333]
+                - generic [ref=e346]: "12"
+              - generic [ref=e347]:
+                - button "Read Petals of Freedom, Card 12" [ref=e348] [cursor=pointer]:
+                  - img "Petals of Freedom, Universal Language 12" [ref=e349]
+                - generic [ref=e350]:
+                  - button "Flip Card 12 back to hexagram" [ref=e351] [cursor=pointer]: Back
+                  - button "Read Petals of Freedom, Card 12" [ref=e353] [cursor=pointer]: Read
+            - generic [ref=e355]:
+              - 'button "Reveal Card 13: Fellowship with Men (T''ung Jen)" [ref=e356] [cursor=pointer]':
+                - img [ref=e358]
+                - generic [ref=e367]: "13"
+              - generic [ref=e368]:
+                - button "Read Universal Crest, Card 13" [ref=e369] [cursor=pointer]:
+                  - img "Universal Crest, Universal Language 13" [ref=e370]
+                - generic [ref=e371]:
+                  - button "Flip Card 13 back to hexagram" [ref=e372] [cursor=pointer]: Back
+                  - button "Read Universal Crest, Card 13" [ref=e374] [cursor=pointer]: Read
+            - generic [ref=e376]:
+              - 'button "Reveal Card 14: The Great Possessing (Ta Yu)" [ref=e377] [cursor=pointer]':
+                - img [ref=e379]
+                - generic [ref=e388]: "14"
+              - generic [ref=e389]:
+                - button "Read Ancestors Bloom, Card 14" [ref=e390] [cursor=pointer]:
+                  - img "Ancestors Bloom, Universal Language 14" [ref=e391]
+                - generic [ref=e392]:
+                  - button "Flip Card 14 back to hexagram" [ref=e393] [cursor=pointer]: Back
+                  - button "Read Ancestors Bloom, Card 14" [ref=e395] [cursor=pointer]: Read
+            - generic [ref=e397]:
+              - 'button "Reveal Card 15: Modesty (Ch''ien)" [ref=e398] [cursor=pointer]':
+                - img [ref=e400]
+                - generic [ref=e417]: "15"
+              - generic [ref=e418]:
+                - button "Read Ordinary Valiance, Card 15" [ref=e419] [cursor=pointer]:
+                  - img "Ordinary Valiance, Universal Language 15" [ref=e420]
+                - generic [ref=e421]:
+                  - button "Flip Card 15 back to hexagram" [ref=e422] [cursor=pointer]: Back
+                  - button "Read Ordinary Valiance, Card 15" [ref=e424] [cursor=pointer]: Read
+            - generic [ref=e426]:
+              - 'button "Reveal Card 16: Enthusiasm (Yu)" [ref=e427] [cursor=pointer]':
+                - img [ref=e429]
+                - generic [ref=e446]: "16"
+              - generic [ref=e447]:
+                - button "Read Grand Rising, Card 16" [ref=e448] [cursor=pointer]:
+                  - img "Grand Rising, Universal Language 16" [ref=e449]
+                - generic [ref=e450]:
+                  - button "Flip Card 16 back to hexagram" [ref=e451] [cursor=pointer]: Back
+                  - button "Read Grand Rising, Card 16" [ref=e453] [cursor=pointer]: Read
+            - generic [ref=e455]:
+              - 'button "Reveal Card 17: Following (Sui)" [ref=e456] [cursor=pointer]':
+                - img [ref=e458]
+                - generic [ref=e471]: "17"
+              - generic [ref=e472]:
+                - button "Read Peral of Christos, Card 17" [ref=e473] [cursor=pointer]:
+                  - img "Peral of Christos, Universal Language 17" [ref=e474]
+                - generic [ref=e475]:
+                  - button "Flip Card 17 back to hexagram" [ref=e476] [cursor=pointer]: Back
+                  - button "Read Peral of Christos, Card 17" [ref=e478] [cursor=pointer]: Read
+            - generic [ref=e480]:
+              - 'button "Reveal Card 18: Work on What Has Been Spoiled (Ku)" [ref=e481] [cursor=pointer]':
+                - img [ref=e483]
+                - generic [ref=e496]: "18"
+              - generic [ref=e497]:
+                - button "Read Liberation of the Greater, Card 18" [ref=e498] [cursor=pointer]:
+                  - img "Liberation of the Greater, Universal Language 18" [ref=e499]
+                - generic [ref=e500]:
+                  - button "Flip Card 18 back to hexagram" [ref=e501] [cursor=pointer]: Back
+                  - button "Read Liberation of the Greater, Card 18" [ref=e503] [cursor=pointer]: Read
+            - generic [ref=e505]:
+              - 'button "Reveal Card 19: Approach (Lin)" [ref=e506] [cursor=pointer]':
+                - img [ref=e508]
+                - generic [ref=e523]: "19"
+              - generic [ref=e524]:
+                - button "Read Solection, Card 19" [ref=e525] [cursor=pointer]:
+                  - img "Solection, Universal Language 19" [ref=e526]
+                - generic [ref=e527]:
+                  - button "Flip Card 19 back to hexagram" [ref=e528] [cursor=pointer]: Back
+                  - button "Read Solection, Card 19" [ref=e530] [cursor=pointer]: Read
+            - generic [ref=e532]:
+              - 'button "Reveal Card 20: Contemplation (Kuan)" [ref=e533] [cursor=pointer]':
+                - img [ref=e535]
+                - generic [ref=e550]: "20"
+              - generic [ref=e551]:
+                - button "Read Emerging as the Code, Card 20" [ref=e552] [cursor=pointer]:
+                  - img "Emerging as the Code, Universal Language 20" [ref=e553]
+                - generic [ref=e554]:
+                  - button "Flip Card 20 back to hexagram" [ref=e555] [cursor=pointer]: Back
+                  - button "Read Emerging as the Code, Card 20" [ref=e557] [cursor=pointer]: Read
+            - generic [ref=e559]:
+              - 'button "Reveal Card 21: Biting Through (Shih Ho)" [ref=e560] [cursor=pointer]':
+                - img [ref=e562]
+                - generic [ref=e575]: "21"
+              - generic [ref=e576]:
+                - button "Read Beyond Binary, Card 21" [ref=e577] [cursor=pointer]:
+                  - img "Beyond Binary, Universal Language 21" [ref=e578]
+                - generic [ref=e579]:
+                  - button "Flip Card 21 back to hexagram" [ref=e580] [cursor=pointer]: Back
+                  - button "Read Beyond Binary, Card 21" [ref=e582] [cursor=pointer]: Read
+            - generic [ref=e584]:
+              - 'button "Reveal Card 22: Grace (Pi)" [ref=e585] [cursor=pointer]':
+                - img [ref=e587]
+                - generic [ref=e600]: "22"
+              - generic [ref=e601]:
+                - button "Read Treasure of the Way, Card 22" [ref=e602] [cursor=pointer]:
+                  - img "Treasure of the Way, Universal Language 22" [ref=e603]
+                - generic [ref=e604]:
+                  - button "Flip Card 22 back to hexagram" [ref=e605] [cursor=pointer]: Back
+                  - button "Read Treasure of the Way, Card 22" [ref=e607] [cursor=pointer]: Read
+            - generic [ref=e609]:
+              - 'button "Reveal Card 23: Splitting Apart (Po)" [ref=e610] [cursor=pointer]':
+                - img [ref=e612]
+                - generic [ref=e629]: "23"
+              - generic [ref=e630]:
+                - button "Read Beneath the Surface, Card 23" [ref=e631] [cursor=pointer]:
+                  - img "Beneath the Surface, Universal Language 23" [ref=e632]
+                - generic [ref=e633]:
+                  - button "Flip Card 23 back to hexagram" [ref=e634] [cursor=pointer]: Back
+                  - button "Read Beneath the Surface, Card 23" [ref=e636] [cursor=pointer]: Read
+            - generic [ref=e638]:
+              - 'button "Reveal Card 24: Return (Fu)" [ref=e639] [cursor=pointer]':
+                - img [ref=e641]
+                - generic [ref=e658]: "24"
+              - generic [ref=e659]:
+                - button "Read Frequency Flutter, Card 24" [ref=e660] [cursor=pointer]:
+                  - img "Frequency Flutter, Universal Language 24" [ref=e661]
+                - generic [ref=e662]:
+                  - button "Flip Card 24 back to hexagram" [ref=e663] [cursor=pointer]: Back
+                  - button "Read Frequency Flutter, Card 24" [ref=e665] [cursor=pointer]: Read
+            - generic [ref=e667]:
+              - 'button "Reveal Card 25: Innocence (Wu Wang)" [ref=e668] [cursor=pointer]':
+                - img [ref=e670]
+                - generic [ref=e681]: "25"
+              - generic [ref=e682]:
+                - button "Read The Mysteries Play, Card 25" [ref=e683] [cursor=pointer]:
+                  - img "The Mysteries Play, Universal Language 25" [ref=e684]
+                - generic [ref=e685]:
+                  - button "Flip Card 25 back to hexagram" [ref=e686] [cursor=pointer]: Back
+                  - button "Read The Mysteries Play, Card 25" [ref=e688] [cursor=pointer]: Read
+            - generic [ref=e690]:
+              - 'button "Reveal Card 26: Taming Power of the Great (Ta Ch''u)" [ref=e691] [cursor=pointer]':
+                - img [ref=e693]
+                - generic [ref=e704]: "26"
+              - generic [ref=e705]:
+                - button "Read Lighter Than a Feather, Card 26" [ref=e706] [cursor=pointer]:
+                  - img "Lighter Than a Feather, Universal Language 26" [ref=e707]
+                - generic [ref=e708]:
+                  - button "Flip Card 26 back to hexagram" [ref=e709] [cursor=pointer]: Back
+                  - button "Read Lighter Than a Feather, Card 26" [ref=e711] [cursor=pointer]: Read
+            - generic [ref=e713]:
+              - 'button "Reveal Card 27: Nourishment (I)" [ref=e714] [cursor=pointer]':
+                - img [ref=e716]
+                - generic [ref=e731]: "27"
+              - generic [ref=e732]:
+                - button "Read Inner Majesty, Card 27" [ref=e733] [cursor=pointer]:
+                  - img "Inner Majesty, Universal Language 27" [ref=e734]
+                - generic [ref=e735]:
+                  - button "Flip Card 27 back to hexagram" [ref=e736] [cursor=pointer]: Back
+                  - button "Read Inner Majesty, Card 27" [ref=e738] [cursor=pointer]: Read
+            - generic [ref=e740]:
+              - 'button "Reveal Card 28: Preponderance of the Great (Ta Kuo)" [ref=e741] [cursor=pointer]':
+                - img [ref=e743]
+                - generic [ref=e754]: "28"
+              - generic [ref=e755]:
+                - button "Read Becoming the Mystery, Card 28" [ref=e756] [cursor=pointer]:
+                  - img "Becoming the Mystery, Universal Language 28" [ref=e757]
+                - generic [ref=e758]:
+                  - button "Flip Card 28 back to hexagram" [ref=e759] [cursor=pointer]: Back
+                  - button "Read Becoming the Mystery, Card 28" [ref=e761] [cursor=pointer]: Read
+            - generic [ref=e763]:
+              - 'button "Reveal Card 29: The Abysmal, Water (K''an)" [ref=e764] [cursor=pointer]':
+                - img [ref=e766]
+                - generic [ref=e781]: "29"
+              - generic [ref=e782]:
+                - button "Read All In, Card 29" [ref=e783] [cursor=pointer]:
+                  - img "All In, Universal Language 29" [ref=e784]
+                - generic [ref=e785]:
+                  - button "Flip Card 29 back to hexagram" [ref=e786] [cursor=pointer]: Back
+                  - button "Read All In, Card 29" [ref=e788] [cursor=pointer]: Read
+            - generic [ref=e790]:
+              - 'button "Reveal Card 30: The Clinging, Fire (Li)" [ref=e791] [cursor=pointer]':
+                - img [ref=e793]
+                - generic [ref=e804]: "30"
+              - generic [ref=e805]:
+                - button "Read Sparking the Blaze, Card 30" [ref=e806] [cursor=pointer]:
+                  - img "Sparking the Blaze, Universal Language 30" [ref=e807]
+                - generic [ref=e808]:
+                  - button "Flip Card 30 back to hexagram" [ref=e809] [cursor=pointer]: Back
+                  - button "Read Sparking the Blaze, Card 30" [ref=e811] [cursor=pointer]: Read
+            - generic [ref=e813]:
+              - 'button "Reveal Card 31: Influence (Hsien)" [ref=e814] [cursor=pointer]':
+                - img [ref=e816]
+                - generic [ref=e829]: "31"
+              - generic [ref=e830]:
+                - button "Read Theater of Truth, Card 31" [ref=e831] [cursor=pointer]:
+                  - img "Theater of Truth, Universal Language 31" [ref=e832]
+                - generic [ref=e833]:
+                  - button "Flip Card 31 back to hexagram" [ref=e834] [cursor=pointer]: Back
+                  - button "Read Theater of Truth, Card 31" [ref=e836] [cursor=pointer]: Read
+            - generic [ref=e838]:
+              - 'button "Reveal Card 32: Duration (Heng)" [ref=e839] [cursor=pointer]':
+                - img [ref=e841]
+                - generic [ref=e854]: "32"
+              - generic [ref=e855]:
+                - button "Read Art of Living, Card 32" [ref=e856] [cursor=pointer]:
+                  - img "Art of Living, Universal Language 32" [ref=e857]
+                - generic [ref=e858]:
+                  - button "Flip Card 32 back to hexagram" [ref=e859] [cursor=pointer]: Back
+                  - button "Read Art of Living, Card 32" [ref=e861] [cursor=pointer]: Read
+            - generic [ref=e863]:
+              - 'button "Reveal Card 33: Retreat (Tun)" [ref=e864] [cursor=pointer]':
+                - img [ref=e866]
+                - generic [ref=e877]: "33"
+              - generic [ref=e878]:
+                - button "Read Echos of Time, Card 33" [ref=e879] [cursor=pointer]:
+                  - img "Echos of Time, Universal Language 33" [ref=e880]
+                - generic [ref=e881]:
+                  - button "Flip Card 33 back to hexagram" [ref=e882] [cursor=pointer]: Back
+                  - button "Read Echos of Time, Card 33" [ref=e884] [cursor=pointer]: Read
+            - generic [ref=e886]:
+              - 'button "Reveal Card 34: The Power of the Great (Ta Chuang)" [ref=e887] [cursor=pointer]':
+                - img [ref=e889]
+                - generic [ref=e900]: "34"
+              - generic [ref=e901]:
+                - button "Read Sublime Power, Card 34" [ref=e902] [cursor=pointer]:
+                  - img "Sublime Power, Universal Language 34" [ref=e903]
+                - generic [ref=e904]:
+                  - button "Flip Card 34 back to hexagram" [ref=e905] [cursor=pointer]: Back
+                  - button "Read Sublime Power, Card 34" [ref=e907] [cursor=pointer]: Read
+            - generic [ref=e909]:
+              - 'button "Reveal Card 35: Progress (Chin)" [ref=e910] [cursor=pointer]':
+                - img [ref=e912]
+                - generic [ref=e927]: "35"
+              - generic [ref=e928]:
+                - button "Read Navigational Star, Card 35" [ref=e929] [cursor=pointer]:
+                  - img "Navigational Star, Universal Language 35" [ref=e930]
+                - generic [ref=e931]:
+                  - button "Flip Card 35 back to hexagram" [ref=e932] [cursor=pointer]: Back
+                  - button "Read Navigational Star, Card 35" [ref=e934] [cursor=pointer]: Read
+            - generic [ref=e936]:
+              - 'button "Reveal Card 36: Darkening of the Light (Ming I)" [ref=e937] [cursor=pointer]':
+                - img [ref=e939]
+                - generic [ref=e954]: "36"
+              - generic [ref=e955]:
+                - button "Read Crystal Creation, Card 36" [ref=e956] [cursor=pointer]:
+                  - img "Crystal Creation, Universal Language 36" [ref=e957]
+                - generic [ref=e958]:
+                  - button "Flip Card 36 back to hexagram" [ref=e959] [cursor=pointer]: Back
+                  - button "Read Crystal Creation, Card 36" [ref=e961] [cursor=pointer]: Read
+            - generic [ref=e963]:
+              - 'button "Reveal Card 37: The Family (Chia Jen)" [ref=e964] [cursor=pointer]':
+                - img [ref=e966]
+                - generic [ref=e977]: "37"
+              - generic [ref=e978]:
+                - button "Read Journey Home, Card 37" [ref=e979] [cursor=pointer]:
+                  - img "Journey Home, Universal Language 37" [ref=e980]
+                - generic [ref=e981]:
+                  - button "Flip Card 37 back to hexagram" [ref=e982] [cursor=pointer]: Back
+                  - button "Read Journey Home, Card 37" [ref=e984] [cursor=pointer]: Read
+            - generic [ref=e986]:
+              - 'button "Reveal Card 38: Opposition (K''uei)" [ref=e987] [cursor=pointer]':
+                - img [ref=e989]
+                - generic [ref=e1000]: "38"
+              - generic [ref=e1001]:
+                - button "Read Inner Light Symphony, Card 38" [ref=e1002] [cursor=pointer]:
+                  - img "Inner Light Symphony, Universal Language 38" [ref=e1003]
+                - generic [ref=e1004]:
+                  - button "Flip Card 38 back to hexagram" [ref=e1005] [cursor=pointer]: Back
+                  - button "Read Inner Light Symphony, Card 38" [ref=e1007] [cursor=pointer]: Read
+            - generic [ref=e1009]:
+              - 'button "Reveal Card 39: Obstruction (Chien)" [ref=e1010] [cursor=pointer]':
+                - img [ref=e1012]
+                - generic [ref=e1027]: "39"
+              - generic [ref=e1028]:
+                - button "Read Nobel Spark, Card 39" [ref=e1029] [cursor=pointer]:
+                  - img "Nobel Spark, Universal Language 39" [ref=e1030]
+                - generic [ref=e1031]:
+                  - button "Flip Card 39 back to hexagram" [ref=e1032] [cursor=pointer]: Back
+                  - button "Read Nobel Spark, Card 39" [ref=e1034] [cursor=pointer]: Read
+            - generic [ref=e1036]:
+              - 'button "Reveal Card 40: Deliverance (Hsieh)" [ref=e1037] [cursor=pointer]':
+                - img [ref=e1039]
+                - generic [ref=e1054]: "40"
+              - generic [ref=e1055]:
+                - button "Read Eternal Wellspring, Card 40" [ref=e1056] [cursor=pointer]:
+                  - img "Eternal Wellspring, Universal Language 40" [ref=e1057]
+                - generic [ref=e1058]:
+                  - button "Flip Card 40 back to hexagram" [ref=e1059] [cursor=pointer]: Back
+                  - button "Read Eternal Wellspring, Card 40" [ref=e1061] [cursor=pointer]: Read
+            - generic [ref=e1063]:
+              - 'button "Reveal Card 41: Diminishing (Sun)" [ref=e1064] [cursor=pointer]':
+                - img [ref=e1066]
+                - generic [ref=e1079]: "41"
+              - generic [ref=e1080]:
+                - button "Read Beginning and the End, Card 41" [ref=e1081] [cursor=pointer]:
+                  - img "Beginning and the End, Universal Language 41" [ref=e1082]
+                - generic [ref=e1083]:
+                  - button "Flip Card 41 back to hexagram" [ref=e1084] [cursor=pointer]: Back
+                  - button "Read Beginning and the End, Card 41" [ref=e1086] [cursor=pointer]: Read
+            - generic [ref=e1088]:
+              - 'button "Reveal Card 42: Increase (I)" [ref=e1089] [cursor=pointer]':
+                - img [ref=e1091]
+                - generic [ref=e1104]: "42"
+              - generic [ref=e1105]:
+                - button "Read Moving to Perfection, Card 42" [ref=e1106] [cursor=pointer]:
+                  - img "Moving to Perfection, Universal Language 42" [ref=e1107]
+                - generic [ref=e1108]:
+                  - button "Flip Card 42 back to hexagram" [ref=e1109] [cursor=pointer]: Back
+                  - button "Read Moving to Perfection, Card 42" [ref=e1111] [cursor=pointer]: Read
+            - generic [ref=e1113]:
+              - 'button "Reveal Card 43: Breakthrough (Kuai)" [ref=e1114] [cursor=pointer]':
+                - img [ref=e1116]
+                - generic [ref=e1125]: "43"
+              - generic [ref=e1126]:
+                - button "Read Cipher of Knowledge, Card 43" [ref=e1127] [cursor=pointer]:
+                  - img "Cipher of Knowledge, Universal Language 43" [ref=e1128]
+                - generic [ref=e1129]:
+                  - button "Flip Card 43 back to hexagram" [ref=e1130] [cursor=pointer]: Back
+                  - button "Read Cipher of Knowledge, Card 43" [ref=e1132] [cursor=pointer]: Read
+            - generic [ref=e1134]:
+              - 'button "Reveal Card 44: Coming to Meet (Kou)" [ref=e1135] [cursor=pointer]':
+                - img [ref=e1137]
+                - generic [ref=e1146]: "44"
+              - generic [ref=e1147]:
+                - button "Read Sophia's Orchestra, Card 44" [ref=e1148] [cursor=pointer]:
+                  - img "Sophia's Orchestra, Universal Language 44" [ref=e1149]
+                - generic [ref=e1150]:
+                  - button "Flip Card 44 back to hexagram" [ref=e1151] [cursor=pointer]: Back
+                  - button "Read Sophia's Orchestra, Card 44" [ref=e1153] [cursor=pointer]: Read
+            - generic [ref=e1155]:
+              - 'button "Reveal Card 45: Gathering Together (Ts''ui)" [ref=e1156] [cursor=pointer]':
+                - img [ref=e1158]
+                - generic [ref=e1173]: "45"
+              - generic [ref=e1174]:
+                - button "Read Tribal Tapestry, Card 45" [ref=e1175] [cursor=pointer]:
+                  - img "Tribal Tapestry, Universal Language 45" [ref=e1176]
+                - generic [ref=e1177]:
+                  - button "Flip Card 45 back to hexagram" [ref=e1178] [cursor=pointer]: Back
+                  - button "Read Tribal Tapestry, Card 45" [ref=e1180] [cursor=pointer]: Read
+            - generic [ref=e1182]:
+              - 'button "Reveal Card 46: Pushing Upward (Sheng)" [ref=e1183] [cursor=pointer]':
+                - img [ref=e1185]
+                - generic [ref=e1200]: "46"
+              - generic [ref=e1201]:
+                - button "Read Fountain of Light, Card 46" [ref=e1202] [cursor=pointer]:
+                  - img "Fountain of Light, Universal Language 46" [ref=e1203]
+                - generic [ref=e1204]:
+                  - button "Flip Card 46 back to hexagram" [ref=e1205] [cursor=pointer]: Back
+                  - button "Read Fountain of Light, Card 46" [ref=e1207] [cursor=pointer]: Read
+            - generic [ref=e1209]:
+              - 'button "Reveal Card 47: Oppression (K''un)" [ref=e1210] [cursor=pointer]':
+                - img [ref=e1212]
+                - generic [ref=e1225]: "47"
+              - generic [ref=e1226]:
+                - button "Read Garden of Alchemy, Card 47" [ref=e1227] [cursor=pointer]:
+                  - img "Garden of Alchemy, Universal Language 47" [ref=e1228]
+                - generic [ref=e1229]:
+                  - button "Flip Card 47 back to hexagram" [ref=e1230] [cursor=pointer]: Back
+                  - button "Read Garden of Alchemy, Card 47" [ref=e1232] [cursor=pointer]: Read
+            - generic [ref=e1234]:
+              - 'button "Reveal Card 48: The Well (Ching)" [ref=e1235] [cursor=pointer]':
+                - img [ref=e1237]
+                - generic [ref=e1250]: "48"
+              - generic [ref=e1251]:
+                - button "Read Doorways of the Unknown, Card 48" [ref=e1252] [cursor=pointer]:
+                  - img "Doorways of the Unknown, Universal Language 48" [ref=e1253]
+                - generic [ref=e1254]:
+                  - button "Flip Card 48 back to hexagram" [ref=e1255] [cursor=pointer]: Back
+                  - button "Read Doorways of the Unknown, Card 48" [ref=e1257] [cursor=pointer]: Read
+            - generic [ref=e1259]:
+              - 'button "Reveal Card 49: Revolution (Ko)" [ref=e1260] [cursor=pointer]':
+                - img [ref=e1262]
+                - generic [ref=e1273]: "49"
+              - generic [ref=e1274]:
+                - button "Read Union in the Ashes, Card 49" [ref=e1275] [cursor=pointer]:
+                  - img "Union in the Ashes, Universal Language 49" [ref=e1276]
+                - generic [ref=e1277]:
+                  - button "Flip Card 49 back to hexagram" [ref=e1278] [cursor=pointer]: Back
+                  - button "Read Union in the Ashes, Card 49" [ref=e1280] [cursor=pointer]: Read
+            - generic [ref=e1282]:
+              - 'button "Reveal Card 50: The Cauldron (Ting)" [ref=e1283] [cursor=pointer]':
+                - img [ref=e1285]
+                - generic [ref=e1296]: "50"
+              - generic [ref=e1297]:
+                - button "Read Melt Into Perfection, Card 50" [ref=e1298] [cursor=pointer]:
+                  - img "Melt Into Perfection, Universal Language 50" [ref=e1299]
+                - generic [ref=e1300]:
+                  - button "Flip Card 50 back to hexagram" [ref=e1301] [cursor=pointer]: Back
+                  - button "Read Melt Into Perfection, Card 50" [ref=e1303] [cursor=pointer]: Read
+            - generic [ref=e1305]:
+              - 'button "Reveal Card 51: The Arousing, Thunder (Chen)" [ref=e1306] [cursor=pointer]':
+                - img [ref=e1308]
+                - generic [ref=e1323]: "51"
+              - generic [ref=e1324]:
+                - button "Read Unshakable Arrival, Card 51" [ref=e1325] [cursor=pointer]:
+                  - img "Unshakable Arrival, Universal Language 51" [ref=e1326]
+                - generic [ref=e1327]:
+                  - button "Flip Card 51 back to hexagram" [ref=e1328] [cursor=pointer]: Back
+                  - button "Read Unshakable Arrival, Card 51" [ref=e1330] [cursor=pointer]: Read
+            - generic [ref=e1332]:
+              - 'button "Reveal Card 52: Keeping Still, Mountain (Ken)" [ref=e1333] [cursor=pointer]':
+                - img [ref=e1335]
+                - generic [ref=e1350]: "52"
+              - generic [ref=e1351]:
+                - button "Read Timeless Blossom, Card 52" [ref=e1352] [cursor=pointer]:
+                  - img "Timeless Blossom, Universal Language 52" [ref=e1353]
+                - generic [ref=e1354]:
+                  - button "Flip Card 52 back to hexagram" [ref=e1355] [cursor=pointer]: Back
+                  - button "Read Timeless Blossom, Card 52" [ref=e1357] [cursor=pointer]: Read
+            - generic [ref=e1359]:
+              - 'button "Reveal Card 53: Gradual Progress (Chien)" [ref=e1360] [cursor=pointer]':
+                - img [ref=e1362]
+                - generic [ref=e1375]: "53"
+              - generic [ref=e1376]:
+                - button "Read Creation Oscillation, Card 53" [ref=e1377] [cursor=pointer]:
+                  - img "Creation Oscillation, Universal Language 53" [ref=e1378]
+                - generic [ref=e1379]:
+                  - button "Flip Card 53 back to hexagram" [ref=e1380] [cursor=pointer]: Back
+                  - button "Read Creation Oscillation, Card 53" [ref=e1382] [cursor=pointer]: Read
+            - generic [ref=e1384]:
+              - 'button "Reveal Card 54: The Marrying Maiden (Kuei Mei)" [ref=e1385] [cursor=pointer]':
+                - img [ref=e1387]
+                - generic [ref=e1400]: "54"
+              - generic [ref=e1401]:
+                - button "Read Everlasting Bounty, Card 54" [ref=e1402] [cursor=pointer]:
+                  - img "Everlasting Bounty, Universal Language 54" [ref=e1403]
+                - generic [ref=e1404]:
+                  - button "Flip Card 54 back to hexagram" [ref=e1405] [cursor=pointer]: Back
+                  - button "Read Everlasting Bounty, Card 54" [ref=e1407] [cursor=pointer]: Read
+            - generic [ref=e1409]:
+              - 'button "Reveal Card 55: Abundance (Feng)" [ref=e1410] [cursor=pointer]':
+                - img [ref=e1412]
+                - generic [ref=e1425]: "55"
+              - generic [ref=e1426]:
+                - button "Read Untouched Perfection, Card 55" [ref=e1427] [cursor=pointer]:
+                  - img "Untouched Perfection, Universal Language 55" [ref=e1428]
+                - generic [ref=e1429]:
+                  - button "Flip Card 55 back to hexagram" [ref=e1430] [cursor=pointer]: Back
+                  - button "Read Untouched Perfection, Card 55" [ref=e1432] [cursor=pointer]: Read
+            - generic [ref=e1434]:
+              - 'button "Reveal Card 56: The Wanderer (Lu)" [ref=e1435] [cursor=pointer]':
+                - img [ref=e1437]
+                - generic [ref=e1450]: "56"
+              - generic [ref=e1451]:
+                - button "Read Infinite Journey, Card 56" [ref=e1452] [cursor=pointer]:
+                  - img "Infinite Journey, Universal Language 56" [ref=e1453]
+                - generic [ref=e1454]:
+                  - button "Flip Card 56 back to hexagram" [ref=e1455] [cursor=pointer]: Back
+                  - button "Read Infinite Journey, Card 56" [ref=e1457] [cursor=pointer]: Read
+            - generic [ref=e1459]:
+              - 'button "Reveal Card 57: The Gentle, Wind (Sun)" [ref=e1460] [cursor=pointer]':
+                - img [ref=e1462]
+                - generic [ref=e1473]: "57"
+              - generic [ref=e1474]:
+                - button "Read Flight of the Tao, Card 57" [ref=e1475] [cursor=pointer]:
+                  - img "Flight of the Tao, Universal Language 57" [ref=e1476]
+                - generic [ref=e1477]:
+                  - button "Flip Card 57 back to hexagram" [ref=e1478] [cursor=pointer]: Back
+                  - button "Read Flight of the Tao, Card 57" [ref=e1480] [cursor=pointer]: Read
+            - generic [ref=e1482]:
+              - 'button "Reveal Card 58: The Joyous, Lake (Tui)" [ref=e1483] [cursor=pointer]':
+                - img [ref=e1485]
+                - generic [ref=e1496]: "58"
+              - generic [ref=e1497]:
+                - button "Read Rhythm of Life, Card 58" [ref=e1498] [cursor=pointer]:
+                  - img "Rhythm of Life, Universal Language 58" [ref=e1499]
+                - generic [ref=e1500]:
+                  - button "Flip Card 58 back to hexagram" [ref=e1501] [cursor=pointer]: Back
+                  - button "Read Rhythm of Life, Card 58" [ref=e1503] [cursor=pointer]: Read
+            - generic [ref=e1505]:
+              - 'button "Reveal Card 59: Dispersion (Huan)" [ref=e1506] [cursor=pointer]':
+                - img [ref=e1508]
+                - generic [ref=e1521]: "59"
+              - generic [ref=e1522]:
+                - button "Read Mystics Treasures, Card 59" [ref=e1523] [cursor=pointer]:
+                  - img "Mystics Treasures, Universal Language 59" [ref=e1524]
+                - generic [ref=e1525]:
+                  - button "Flip Card 59 back to hexagram" [ref=e1526] [cursor=pointer]: Back
+                  - button "Read Mystics Treasures, Card 59" [ref=e1528] [cursor=pointer]: Read
+            - generic [ref=e1530]:
+              - 'button "Reveal Card 60: Limitation (Chieh)" [ref=e1531] [cursor=pointer]':
+                - img [ref=e1533]
+                - generic [ref=e1546]: "60"
+              - generic [ref=e1547]:
+                - button "Read Woven Light, Card 60" [ref=e1548] [cursor=pointer]:
+                  - img "Woven Light, Universal Language 60" [ref=e1549]
+                - generic [ref=e1550]:
+                  - button "Flip Card 60 back to hexagram" [ref=e1551] [cursor=pointer]: Back
+                  - button "Read Woven Light, Card 60" [ref=e1553] [cursor=pointer]: Read
+            - generic [ref=e1555]:
+              - 'button "Reveal Card 61: Inner Truth (Chung Fu)" [ref=e1556] [cursor=pointer]':
+                - img [ref=e1558]
+                - generic [ref=e1569]: "61"
+              - generic [ref=e1570]:
+                - button "Read Celestial Remembrance, Card 61" [ref=e1571] [cursor=pointer]:
+                  - img "Celestial Remembrance, Universal Language 61" [ref=e1572]
+                - generic [ref=e1573]:
+                  - button "Flip Card 61 back to hexagram" [ref=e1574] [cursor=pointer]: Back
+                  - button "Read Celestial Remembrance, Card 61" [ref=e1576] [cursor=pointer]: Read
+            - generic [ref=e1578]:
+              - 'button "Reveal Card 62: Preponderance of the Small (Hsiao Kuo)" [ref=e1579] [cursor=pointer]':
+                - img [ref=e1581]
+                - generic [ref=e1596]: "62"
+              - generic [ref=e1597]:
+                - button "Read Voice of Nature, Card 62" [ref=e1598] [cursor=pointer]:
+                  - img "Voice of Nature, Universal Language 62" [ref=e1599]
+                - generic [ref=e1600]:
+                  - button "Flip Card 62 back to hexagram" [ref=e1601] [cursor=pointer]: Back
+                  - button "Read Voice of Nature, Card 62" [ref=e1603] [cursor=pointer]: Read
+            - generic [ref=e1605]:
+              - 'button "Reveal Card 63: After Completion (Chi Chi)" [ref=e1606] [cursor=pointer]':
+                - img [ref=e1608]
+                - generic [ref=e1621]: "63"
+              - generic [ref=e1622]:
+                - button "Read Adornments of Time, Card 63" [ref=e1623] [cursor=pointer]:
+                  - img "Adornments of Time, Universal Language 63" [ref=e1624]
+                - generic [ref=e1625]:
+                  - button "Flip Card 63 back to hexagram" [ref=e1626] [cursor=pointer]: Back
+                  - button "Read Adornments of Time, Card 63" [ref=e1628] [cursor=pointer]: Read
+            - generic [ref=e1630]:
+              - 'button "Reveal Card 64: Before Completion (Wei Chi)" [ref=e1631] [cursor=pointer]':
+                - img [ref=e1633]
+                - generic [ref=e1646]: "64"
+              - generic [ref=e1647]:
+                - button "Read Communion, Card 64" [ref=e1648] [cursor=pointer]:
+                  - img "Communion, Universal Language 64" [ref=e1649]
+                - generic [ref=e1650]:
+                  - button "Flip Card 64 back to hexagram" [ref=e1651] [cursor=pointer]: Back
+                  - button "Read Communion, Card 64" [ref=e1653] [cursor=pointer]: Read
+        - generic [ref=e1654]:
+          - link "← Creations" [ref=e1655] [cursor=pointer]:
+            - /url: /creations
+          - button "Draw at Random →" [ref=e1656]
+    - contentinfo [ref=e1657]:
+      - generic [ref=e1659]:
+        - generic [ref=e1660]:
+          - generic [ref=e1661]:
+            - heading "Adrian Rasmussen" [level=2] [ref=e1662]
+            - paragraph [ref=e1663]:
+              - text: Multidimensional art between Bali and California.
+              - text: Mandala series, sacred geometry, and layered wood.
+            - generic [ref=e1666]: Currently, taking commissions for Spring 2026
+          - generic [ref=e1667]:
+            - generic [ref=e1668]: Join the Inner Circle
+            - generic [ref=e1669]: Studio updates, new work, and writings. Delivered when something wants to be shared.
+            - generic [ref=e1671]:
+              - generic: Email address
+              - textbox [ref=e1672]
+              - button [ref=e1673]:
+                - img [ref=e1674]
+        - navigation [ref=e1677]:
+          - link "Creations" [ref=e1678] [cursor=pointer]:
+            - /url: /creations
+          - link "Writings" [ref=e1679] [cursor=pointer]:
+            - /url: /writings
+          - link "About" [ref=e1680] [cursor=pointer]:
+            - /url: /about
+          - link "Commissions" [ref=e1681] [cursor=pointer]:
+            - /url: /inquire
+          - link "Teajia" [ref=e1682] [cursor=pointer]:
+            - /url: https://teajia.com
+        - generic [ref=e1684]:
+          - generic [ref=e1685]:
+            - generic [ref=e1686]: © 2026 Adrian Rasmussen
+            - link "Privacy" [ref=e1687] [cursor=pointer]:
+              - /url: /privacy
+            - link "Terms" [ref=e1688] [cursor=pointer]:
+              - /url: /terms
+            - button "Day Mode" [ref=e1689]
+          - generic [ref=e1690]:
+            - link "Instagram" [ref=e1691] [cursor=pointer]:
+              - /url: https://www.instagram.com/technicianofthesacred
+              - img [ref=e1692]
+            - link "Email" [ref=e1695] [cursor=pointer]:
+              - /url: mailto:hello@adrianrasmussen.com
+              - img [ref=e1696]
+            - button "Back to top":
+              - img
+    - generic [ref=e1699]:
+      - paragraph [ref=e1700]:
+        - text: This site uses cookies for analytics and to remember your preferences.
+        - link "Privacy Policy" [ref=e1701] [cursor=pointer]:
+          - /url: /privacy
+      - button "Accept" [ref=e1702]
+  - generic:
+    - dialog "Shopping cart":
+      - generic:
+        - generic:
+          - img
+          - generic: Cart
+        - button:
+          - img
+      - generic:
+        - generic:
+          - paragraph: Nothing here yet.
+          - link "Explore the creations":
+            - /url: /creations
