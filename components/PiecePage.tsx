@@ -587,10 +587,10 @@ const PiecePage: React.FC = () => {
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
                             alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
                         />
-                        <span className="absolute bottom-3 right-3 font-label text-[10px] uppercase tracking-[0.15em] text-paper-50 bg-wood-900/50 px-2.5 py-1 pointer-events-none md:hidden">
-                            Tap to enlarge
-                        </span>
                     </div>
+                    <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500 text-center md:hidden">
+                        Tap image to enlarge
+                    </p>
 
                     {allImages.length > 1 && (
                         <div className="flex justify-center gap-3 py-3 lg:hidden">
@@ -689,7 +689,7 @@ const PiecePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="border-l border-bronze-300 pl-4 md:border-l-2 md:border-bronze-400 md:pl-6 mb-8">
+                    <div className="mb-8">
                         <div className="prose prose-stone font-sans text-wood-700 leading-[1.7] md:leading-[1.8] text-base md:text-[17px] max-w-[62ch]">
                             <p>{art.description}</p>
                             {art.longDescription && <p className="mt-4">{art.longDescription}</p>}

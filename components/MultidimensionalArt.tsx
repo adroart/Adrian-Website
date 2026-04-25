@@ -49,9 +49,9 @@ const SubcategoryTile: React.FC<{
 
             {/* Title - snug under the photo */}
             <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
-                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
+                <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
-                </h3>
+                </h2>
                 <p className="font-sans text-sm text-wood-600 font-light mt-1 leading-relaxed
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">

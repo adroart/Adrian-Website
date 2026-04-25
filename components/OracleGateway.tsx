@@ -198,7 +198,7 @@ const OracleGateway: React.FC = () => {
           </p>
 
           <Link to="/oracle/universal-language" className="og-link">Get a Reading</Link>
-          <Link to="/shop" className="og-link">Purchase the Artwork</Link>
+          <Link to="/creations/multidimensional-art/universal-language" className="og-link">View the Artwork</Link>
           <Link to="/inquire" className="og-link">Contact the Artist</Link>
 
           <p style={{

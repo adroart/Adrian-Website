@@ -389,7 +389,7 @@ const About: React.FC = () => {
         {/* #7 - Pull quote as margin-style narrow annotation, not full-width bar */}
         <Reveal dir="scale">
           <div className="px-6 py-14">
-            <div className="max-w-md mx-auto border-l-2 border-r-2 border-bronze-400/25 px-8 text-center">
+            <div className="max-w-md mx-auto border-t border-b border-bronze-400/30 py-8 px-8 text-center">
               <p className="font-serif text-2xl md:text-3xl text-wood-700 font-light leading-[1.35]">
                 <span className="ml-[-0.4em]">"</span>By expressing what is true for me,<br />
                 perhaps others feel permission to do the same."
@@ -413,7 +413,7 @@ const About: React.FC = () => {
             <Reveal delay={80} dir="left">
               {/* #88 - removed TODO_REPLACE badge. Story content kept, styling cleaned. */}
               <div>
-                  <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-[1.5] font-light max-w-3xl mb-10 border-l-2 border-bronze-400/60 pl-6">
+                  <blockquote className="font-serif text-2xl md:text-3xl text-paper-50 leading-[1.5] font-light max-w-3xl mb-10">
                     <span className="ml-[-0.5em]">"</span>A young man was gazing into one of my projection-mapped pieces at a festival. He sat
                     there a long time. When he finally stood, he told me what had happened."
                   </blockquote>

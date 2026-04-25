@@ -20,28 +20,28 @@ export function ulCardNumber(coverImage: string): number | null {
 
 /**
  * SEO-optimised alt text for a Universal Language artwork.
- * Pattern: "[Piece Name], Universal Language [Number]. Original airbrushed painting on laser-cut wood by Adrian Rasmussen."
+ * Pattern: "[Piece Name], Universal Language [Number]. Original multi-dimensional wooden sculpture by Adrian Rasmussen."
  */
 export function ulAltText(art: Artwork, number?: number | null): string {
   const num = number ?? ulCardNumber(art.coverImage);
   const numberPart = num != null ? ` ${num}` : '';
-  return `${art.title}, Universal Language${numberPart}. Original airbrushed painting on laser-cut wood by Adrian Rasmussen.`;
+  const cleanTitle = art.title.replace(/\s*-\s*\d+$/, '');
+  return `${cleanTitle}, Universal Language${numberPart}. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`;
 }
 
 /**
  * SEO-optimised meta description for a Universal Language piece page.
  * Pulls hexagram and Gene Key data from oracleData when available.
- * Pattern: "Original airbrushed painting on laser-cut wood, connected to Hexagram [X] of the I Ching and Gene Key [X]. One of 64 multidimensional artworks by Adrian Rasmussen."
  */
 export function ulMetaDescription(art: Artwork): string {
   const num = ulCardNumber(art.coverImage);
   if (num != null) {
     const card = CARD_BY_NUMBER.get(num);
     if (card) {
-      return `Original airbrushed painting on laser-cut wood, connected to ${card.iching.hexagram_name} (Hexagram ${num}) of the I Ching and Gene Key ${num}: ${card.gene_keys.gift}. One of 64 multidimensional artworks by Adrian Rasmussen.`;
+      return `Original multi-dimensional wooden sculpture, connected to ${card.iching.hexagram_name} (Hexagram ${num}) of the I Ching and Gene Key ${num}: ${card.gene_keys.gift}. One of 64 sculptures by Adrian Rasmussen.`;
     }
   }
-  return `Original airbrushed painting on laser-cut wood. One of 64 works in the Universal Language series by Adrian Rasmussen, each connected to a hexagram of the I Ching and a corresponding Gene Key.`;
+  return `Original multi-dimensional wooden sculpture. One of 64 works in the Universal Language series by Adrian Rasmussen, each connected to a hexagram of the I Ching and a corresponding Gene Key.`;
 }
 
 /**

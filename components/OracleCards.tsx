@@ -8,6 +8,7 @@ import { formatPrice } from '../utils/formatPrice';
 import Reveal from './shared/Reveal';
 import ProgressBar from './shared/ProgressBar';
 import SideNav from './shared/SideNav';
+import { LAUNCH_FLAGS } from '../launchFlags';
 import { Tag, GlyphDivider, Interstitial, ParallaxImg } from './shared/LongformElements';
 
 /* ─── DECK DATA ────────────────────────────────────────────────────── */
@@ -432,12 +433,14 @@ const OracleCards: React.FC = () => {
               ceremony, or personal practice, that conversation begins here.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
-              <Link
-                to="/shop"
-                className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
-              >
-                Browse available decks
-              </Link>
+              {LAUNCH_FLAGS.shopEnabled && (
+                <Link
+                  to="/shop"
+                  className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"
+                >
+                  Browse available decks
+                </Link>
+              )}
               <Link
                 to="/inquire"
                 className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold border-b border-wood-900 hover:border-bronze-600 pb-1 transition-colors"

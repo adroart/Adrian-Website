@@ -553,6 +553,13 @@ button, a, [role="button"], input, select, textarea, label {
 /* Used by About.tsx and OracleCards.tsx. Defined once here so the           */
 /* <style> blocks in those components aren't duplicated on re-render.        */
 
+/* Reveal animations use translateX which can push content past the viewport
+   on narrow screens. Clip horizontal overflow at the document root so reveal
+   start states never produce a scrollbar. */
+html, body {
+  overflow-x: hidden;
+}
+
 /* Varied reveal animations */
 .reveal-block {
   opacity: 0;
@@ -658,4 +665,10 @@ button, a, [role="button"], input, select, textarea, label {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ─── Accordion plate expand entry animation ──────────────────────────── */
+@keyframes plate-expand {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

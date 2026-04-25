@@ -573,18 +573,11 @@ const Writings: React.FC = () => {
                                                 <p className="font-sans text-wood-600 text-sm md:text-base leading-relaxed line-clamp-3 mb-5">
                                                     {story.excerpt}
                                                 </p>
-                                                {/* Refined tag pills */}
+                                                {/* Inline tag list - text and color only, no badges per house rules */}
                                                 {story.tags.length > 0 && (
-                                                    <div className="flex flex-wrap gap-1.5 mb-5">
-                                                        {story.tags.slice(0, 3).map(tag => (
-                                                            <span
-                                                                key={tag}
-                                                                className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 bg-wood-50 rounded px-2 py-0.5 font-semibold"
-                                                            >
-                                                                {tag}
-                                                            </span>
-                                                        ))}
-                                                    </div>
+                                                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5">
+                                                        {story.tags.slice(0, 3).join(' · ')}
+                                                    </p>
                                                 )}
                                                 <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold inline-flex items-center gap-2 group-hover:text-bronze-700 transition-colors">
                                                     Read <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />

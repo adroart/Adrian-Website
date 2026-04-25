@@ -32,6 +32,7 @@ const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 
 import { useSeoMeta } from './useSeoMeta';
+import { LAUNCH_FLAGS } from './launchFlags';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import Navigation from './components/Navigation';
@@ -119,7 +120,7 @@ const AppInner: React.FC = () => {
             <Route path="/writings/:slug" element={<WritingArticle />} />
             <Route path="/about" element={<About />} />
             <Route path="/inquire" element={<Inquire />} />
-            <Route path="/shop" element={<Store />} />
+            <Route path="/shop" element={LAUNCH_FLAGS.shopEnabled ? <Store /> : <Navigate to="/inquire" replace />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />

@@ -9,6 +9,7 @@ import { FULL_ARCHIVE, CREATION_CATEGORIES, COLLECTIONS, JEWELRY_GALLERY } from 
 import GalleryTileCard from './GalleryTileCard';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
+import { LAUNCH_FLAGS } from '../launchFlags';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,9 +93,9 @@ const CreationCategoryCard: React.FC<{
 
             {/* Title - snug under the photo */}
             <div className="text-center pt-2.5 sm:pt-3 pb-2 px-2">
-                <h3 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
+                <h2 className="font-serif text-xl md:text-2xl text-wood-900 font-medium tracking-wide">
                     {label}
-                </h3>
+                </h2>
                 <p className="font-sans text-sm text-wood-500 font-light mt-1 leading-relaxed line-clamp-1
                               sm:opacity-70 sm:group-hover:opacity-100
                               transition-opacity duration-500 ease-out">
@@ -227,12 +228,14 @@ const AvailableNowSection: React.FC = () => {
                         <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium">Available Now</h2>
                         <p className="font-sans text-base text-wood-500 font-light mt-2">These pieces are complete and ready to be shipped to their new home.</p>
                     </div>
-                    <Link
-                        to="/shop"
-                        className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2"
-                    >
-                        See all in the shop <ArrowRight size={14} />
-                    </Link>
+                    {LAUNCH_FLAGS.shopEnabled && (
+                        <Link
+                            to="/shop"
+                            className="hidden md:flex font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold items-center gap-2"
+                        >
+                            See all in the shop <ArrowRight size={14} />
+                        </Link>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -252,14 +255,16 @@ const AvailableNowSection: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="mt-8 text-center md:hidden">
-                    <Link
-                        to="/shop"
-                        className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold"
-                    >
-                        See all in the shop →
-                    </Link>
-                </div>
+                {LAUNCH_FLAGS.shopEnabled && (
+                    <div className="mt-8 text-center md:hidden">
+                        <Link
+                            to="/shop"
+                            className="font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-wood-900 font-semibold"
+                        >
+                            See all in the shop →
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );
