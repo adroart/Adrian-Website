@@ -723,7 +723,7 @@ const GeneKeyCard: React.FC<{
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                       Repressive · {level.repressive_nature.label}
                     </p>
-                    <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.repressive_nature.description}</p>
+                    <p className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.repressive_nature.description}</p>
                   </div>
                 )}
                 {level.reactive_nature && (
@@ -731,7 +731,7 @@ const GeneKeyCard: React.FC<{
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                       Reactive · {level.reactive_nature.label}
                     </p>
-                    <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.reactive_nature.description}</p>
+                    <p className="font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{level.reactive_nature.description}</p>
                   </div>
                 )}
               </div>
@@ -803,7 +803,7 @@ const SynthesisToneCard: React.FC<{
                   <div key={i}>
                     <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
                     {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                      <p key={j} className={`font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                      <p key={j} className={`font-serif text-[17px] text-wood-700 leading-[1.55] sm:leading-[1.6] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
                     ))}
                   </div>
                 ))}
@@ -1003,11 +1003,9 @@ const UniversalLanguageCard: React.FC = () => {
   const [showQREntrance, setShowQREntrance] = useState(
     () => new URLSearchParams(window.location.search).get('ref') === 'qr'
   );
-  // Ritual entrance plays on every landing (direct URL, internal nav, or ritual
-  // state) unless the visitor arrived via a QR scan, which has its own entrance.
-  const [showIndexEntrance, setShowIndexEntrance] = useState(
-    () => new URLSearchParams(window.location.search).get('ref') !== 'qr'
-  );
+  // Ritual entrance plays on every landing. On QR scans the QR entrance plays
+  // first and chains into the ritual when it finishes.
+  const [showIndexEntrance, setShowIndexEntrance] = useState(true);
   // Bridge - lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
   const expandRef = useRef<ExpandContextValue | null>(null);
@@ -1151,7 +1149,7 @@ const UniversalLanguageCard: React.FC = () => {
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
       <StickyMobileSectionLabel cardNumber={card.number} hexName={card.iching.hexagram_name} />
       {showQREntrance    && <OracleQREntrance   card={card} onDone={() => setShowQREntrance(false)} />}
-      {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
+      {!showQREntrance && showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
       {/* ── Single scrolling page - four color-blocked sections ──────────── */}

@@ -71,6 +71,12 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const ordinal = (n: number): string => {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
   const lines = useMemo(
     () => getHexagramLines(card.iching.upper_trigram.symbol, card.iching.lower_trigram.symbol),
     [card],
@@ -151,11 +157,12 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
         >
           <p style={{
             fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
-            fontSize: 'clamp(22px, 4.5vw, 28px)',
+            fontSize: 'clamp(36px, 7.2vw, 104px)',
             fontStyle: 'italic',
             color: 'var(--color-wood-900)',
-            lineHeight: 1.2,
-            marginBottom: '8px',
+            lineHeight: 1.1,
+            marginBottom: '12px',
+            whiteSpace: 'nowrap',
           }}>
             {card.card_name}
           </p>
@@ -165,7 +172,7 @@ export const OracleQREntrance: React.FC<Props> = ({ card, onDone }) => {
             letterSpacing: '0.22em',
             color: 'var(--color-bronze-600)',
           }}>
-            {card.iching.hexagram_name.toUpperCase()}
+            {`UNIVERSAL LANGUAGE ${ordinal(card.number)} CARD`}
           </p>
         </div>
 
