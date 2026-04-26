@@ -7,7 +7,6 @@ import { getSynthesis } from '../data/synthesisData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { OracleQREntrance } from './OracleQREntrance';
 import { OracleCardEntrance } from './OracleCardEntrance';
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
@@ -1000,11 +999,8 @@ const UniversalLanguageCard: React.FC = () => {
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const ichingRef    = useRef<HTMLDivElement>(null);
 
-  const [showQREntrance, setShowQREntrance] = useState(
-    () => new URLSearchParams(window.location.search).get('ref') === 'qr'
-  );
-  // Ritual entrance plays on every landing. On QR scans the QR entrance plays
-  // first and chains into the ritual when it finishes.
+  // Ritual entrance plays on every landing, including QR scans — the visitor
+  // taps to begin the reading rather than having it auto-load.
   const [showIndexEntrance, setShowIndexEntrance] = useState(true);
   // Bridge - lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
@@ -1148,8 +1144,7 @@ const UniversalLanguageCard: React.FC = () => {
     <ExpandProvider storageKey={`ul-card-${cardNum}`}>
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
       <StickyMobileSectionLabel cardNumber={card.number} hexName={card.iching.hexagram_name} />
-      {showQREntrance    && <OracleQREntrance   card={card} onDone={() => setShowQREntrance(false)} />}
-      {!showQREntrance && showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
+      {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
       {/* ── Single scrolling page - four color-blocked sections ──────────── */}

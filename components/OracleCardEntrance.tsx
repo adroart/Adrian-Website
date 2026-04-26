@@ -27,13 +27,18 @@ const HEX_W = 36; const BROKEN_GAP = 8;
 const HALF_W = (HEX_W - BROKEN_GAP) / 2;
 const HEX_H = 5 * (LINE_H + LINE_GAP) + LINE_H;
 
-function getCardImageUrl(number: number): string | null {
+function getCardImagePublicId(number: number): string | null {
   const piece = FULL_ARCHIVE.find(a => {
     if (a.series !== 'Universal Language') return false;
     return parseInt(a.coverImage.split('_')[0], 10) === number;
   });
-  if (!piece) return null;
-  return img(piece.coverImage, { w: 900, h: 900, crop: 'fill', gravity: 'center', format: 'webp' });
+  return piece ? piece.coverImage : null;
+}
+
+function getCardImageUrl(number: number, size = 900): string | null {
+  const publicId = getCardImagePublicId(number);
+  if (!publicId) return null;
+  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
 const RING_DUR    = 1400;
@@ -44,7 +49,6 @@ const LINE_DUR    = 260;
 const LAST_LINE   = LINE_DELAY + 5 * LINE_STAGGER + LINE_DUR;
 const KEYS_DELAY  = LAST_LINE + 200;
 const EXIT_DUR    = 800;
-const PRELOAD_TIMEOUT = 1200; // ms - fall through even if the image is slow
 
 interface Props {
   card: OracleCard;
@@ -66,20 +70,36 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
     setTimeout(onDone, 1120);
   };
 
-  // Preload card image - the reading page uses it immediately after dismiss.
-  // We don't gate the animation on this (the ritual should start instantly),
-  // but we do make sure to await onload/onerror so we know when it's ready.
+  // Preload card imagery while the visitor reads the entrance. Load the hero
+  // (900px) first; only once it has fully resolved do we warm the 1200px
+  // lightbox variant. We don't preload other cards — the visitor may never
+  // navigate to them, and warming speculatively wastes their bandwidth.
   useEffect(() => {
-    const url = getCardImageUrl(card.number);
-    if (!url) return;
-    const image = new window.Image();
-    let done = false;
-    const finish = () => { done = true; };
-    image.onload = finish;
-    image.onerror = finish;
-    image.src = url;
-    const t = setTimeout(finish, PRELOAD_TIMEOUT);
-    return () => { clearTimeout(t); if (!done) { image.onload = null; image.onerror = null; } };
+    const hero = new window.Image();
+    let lightbox: HTMLImageElement | null = null;
+    let cancelled = false;
+
+    const warmLightbox = () => {
+      if (cancelled) return;
+      const url = getCardImageUrl(card.number, 1200);
+      if (!url) return;
+      lightbox = new window.Image();
+      lightbox.src = url;
+    };
+
+    const heroUrl = getCardImageUrl(card.number, 900);
+    if (heroUrl) {
+      hero.onload  = warmLightbox;
+      hero.onerror = warmLightbox;
+      hero.src = heroUrl;
+    }
+
+    return () => {
+      cancelled = true;
+      hero.onload = null;
+      hero.onerror = null;
+      if (lightbox) { lightbox.onload = null; lightbox.onerror = null; }
+    };
   }, [card.number]);
 
   // Focus management - trap focus on the dialog; restore on unmount.
