@@ -420,53 +420,6 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
   return <ExpandContext.Provider value={value}>{children}</ExpandContext.Provider>;
 };
 
-/* ─── Sticky mobile section label - shows the current section name as the
-       reader scrolls, so when accordions push content down they still know
-       where they are in the four-part architecture. Mobile only.          */
-
-const SECTION_LABELS: Record<Exclude<Screen, 'field'>, string> = {
-  iching:      'I Ching',
-  genekeys:    'Gene Keys',
-  humandesign: 'Human Design',
-  connections: 'Connections',
-};
-
-function useCurrentSection(): Exclude<Screen, 'field'> | null {
-  const [current, setCurrent] = useState<Exclude<Screen, 'field'> | null>(null);
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
-    const ids: Exclude<Screen, 'field'>[] = ['iching', 'genekeys', 'humandesign', 'connections'];
-    const visibility = new Map<string, number>();
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => visibility.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
-      // Pick the most-visible section; clear if none are visible.
-      let bestId: string | null = null;
-      let bestVal = 0;
-      visibility.forEach((v, id) => { if (v > bestVal) { bestVal = v; bestId = id; } });
-      setCurrent(bestVal > 0 ? (bestId as Exclude<Screen, 'field'>) : null);
-    }, { rootMargin: '-80px 0px -55% 0px', threshold: [0, 0.15, 0.5, 1] });
-    ids.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
-    return () => io.disconnect();
-  }, []);
-  return current;
-}
-
-const StickyMobileSectionLabel: React.FC<{ cardNumber: number; hexName: string }> = ({ cardNumber, hexName }) => {
-  const current = useCurrentSection();
-  if (!current) return null;
-  return (
-    <div
-      aria-hidden="true"
-      className="md:hidden fixed left-0 right-0 z-30 h-8 flex items-center px-5 bg-paper-50/95 dark:bg-stone-950/95 backdrop-blur-sm border-b border-wood-200/60 dark:border-stone-800/60 pointer-events-none dark-preserve"
-      style={{ top: 'var(--nav-height, 56px)' }}
-    >
-      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 dark:text-stone-400">
-        {SECTION_LABELS[current]} · Code {cardNumber} · {hexName}
-      </span>
-    </div>
-  );
-};
-
 /* ─── Bridge - expose the Expand context up to the parent component so the
        main component (which hosts the Provider) can drive it without being
        split into an inner sub-component. Mounts null, only sets a ref.  ─── */
@@ -1143,7 +1096,6 @@ const UniversalLanguageCard: React.FC = () => {
   return (
     <ExpandProvider storageKey={`ul-card-${cardNum}`}>
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
-      <StickyMobileSectionLabel cardNumber={card.number} hexName={card.iching.hexagram_name} />
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
