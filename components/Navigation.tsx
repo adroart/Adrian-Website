@@ -42,10 +42,10 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
   const navTop = 'top-0';
 
   let navClasses = `fixed ${navTop} left-0 w-full z-[100] transition-all duration-500 ease-in-out`;
-  if (isMobileMenuOpen) navClasses += ` py-3 ${solidDark} dark-preserve`;
-  else if (useSolid && isScrolled) navClasses += ` py-1 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
-  else if (useSolid) navClasses += ` py-3 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
-  else navClasses += ` py-5 ${isDark ? `${glassDark} dark-preserve` : glassLight}`;
+  if (isMobileMenuOpen) navClasses += ` py-1 md:py-3 ${solidDark} dark-preserve`;
+  else if (useSolid && isScrolled) navClasses += ` py-0.5 md:py-1 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
+  else if (useSolid) navClasses += ` py-1 md:py-3 ${isDark ? `${solidDark} dark-preserve` : solidLight}`;
+  else navClasses += ` py-1.5 md:py-5 ${isDark ? `${glassDark} dark-preserve` : glassLight}`;
 
   // #1 Helper: check if a nav item is active using prefix matching
   const isNavActive = (itemPath: string) => {
@@ -123,7 +123,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
       <nav ref={navRef} className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
           <Link to="/" className="group flex flex-col items-start">
-            <span className={`font-display tracking-normal leading-none transition-all duration-300 font-normal ${textPrimary} hover:${accentColor} ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
+            <span className={`font-display tracking-normal leading-none transition-all duration-300 font-normal ${textPrimary} hover:${accentColor} ${isScrolled ? 'text-lg' : 'text-xl md:text-2xl'}`}>
               Adrian Rasmussen
             </span>
           </Link>
@@ -177,7 +177,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
 
             {/* #10 Larger tap target (min 44x44px) + #21 ARIA attributes */}
             <button
-              className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-3 -mr-3 min-w-[48px] min-h-[48px] flex items-center justify-center`}
+              className={`lg:hidden ${textPrimary} hover:opacity-70 transition-opacity p-3 -mr-3 min-w-[44px] min-h-[44px] flex items-center justify-center`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-nav-menu"
