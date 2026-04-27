@@ -1100,8 +1100,11 @@ const UniversalLanguageCard: React.FC = () => {
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
 
       {/* ── Single scrolling page - four color-blocked sections ──────────── */}
-      {/* pt-20 (80px) clears the fixed Navigation (≈72px when not scrolled, ≈40px when scrolled) so the image isn't overlapped. */}
-      <div className="pt-20 pb-14">
+      {/* Top padding follows the live nav height (Navigation.tsx writes
+          --nav-height on every resize/scroll change) so the first pixel of
+          the card image is never tucked under the fixed nav. The +12px buffer
+          is intentional breathing room. */}
+      <div className="pb-14" style={{ paddingTop: 'calc(var(--nav-height, 56px) + 12px)' }}>
 
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
