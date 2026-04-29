@@ -523,7 +523,7 @@ const PiecePage: React.FC = () => {
     ].filter(Boolean) as { label: string; value: string }[];
 
     return (
-        <section className="bg-paper-50 min-h-screen pt-[101px] md:pt-24 pb-24 md:pb-32 animate-fade-in">
+        <section className="bg-paper-50 min-h-screen pt-[101px] md:pt-[66px] pb-24 md:pb-32 animate-fade-in">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(artworkSchema) }}
