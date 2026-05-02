@@ -1532,9 +1532,8 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-pressed={ichingOpen === 'hex'}
               >
                 <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
-                <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color={ichingOpen === 'hex' ? 'rgba(201,160,90,0.9)' : 'rgba(180,130,70,0.5)'} width={28} />
-                  <span className={`font-serif text-[17px] leading-[1.3] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.hexagram_name}</span>
+                <div className="min-w-0 flex-1 flex items-center">
+                  <span className={`font-serif text-[17px] leading-[1.3] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>Combination</span>
                 </div>
                 <span className={`font-label text-[10px] uppercase tracking-[0.22em] flex-shrink-0 transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-500 group-hover:text-stone-300'}`}>Read</span>
               </button>

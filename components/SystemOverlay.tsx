@@ -119,19 +119,19 @@ const SystemOverlay: React.FC<Props> = ({ open, systemKey, glyph, onClose }) => 
       aria-label={`About ${config.label}`}
       onClick={triggerDismiss}
     >
-      <div className="system-overlay-scrim absolute inset-0 bg-stone-950/97" aria-hidden="true" />
+      <div className="system-overlay-scrim absolute inset-0 bg-paper-100/97" aria-hidden="true" />
 
       <div className="relative flex flex-col h-full w-full max-w-md mx-auto px-6 pt-14 pb-8 sm:pt-20 sm:pb-12">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <div className="system-overlay-glyph sink-target mb-7 sm:mb-8 text-bronze-400/95">
+          <div className="system-overlay-glyph sink-target mb-7 sm:mb-8 text-bronze-600">
             {glyph}
           </div>
 
-          <p className="system-overlay-label sink-target font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400 mb-7 sm:mb-9">
+          <p className="system-overlay-label sink-target font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700 mb-7 sm:mb-9">
             {config.label}
           </p>
 
-          <p className="system-overlay-body font-serif text-[17px] sm:text-[19px] text-stone-100 leading-[1.55] sm:leading-[1.5] max-w-[22rem]">
+          <p className="system-overlay-body font-serif text-[17px] sm:text-[19px] text-stone-900 leading-[1.55] sm:leading-[1.5] max-w-[22rem]">
             {words.map((word, i) => (
               <React.Fragment key={i}>
                 <span className="sink-target inline-block">{word}</span>
@@ -143,23 +143,23 @@ const SystemOverlay: React.FC<Props> = ({ open, systemKey, glyph, onClose }) => 
 
         <button
           type="button"
-          className="system-overlay-attribution group relative w-full text-center pt-7 sm:pt-8 pb-1 border-t border-bronze-500/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-0"
+          className="system-overlay-attribution group relative w-full text-center pt-7 sm:pt-8 pb-1 border-t border-bronze-500/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-600/50 focus-visible:ring-offset-0"
           onClick={(e) => {
             e.stopPropagation();
             triggerSink(e.clientX, e.clientY);
           }}
           aria-label={`Read the deeper story of ${config.label}`}
         >
-          <p className="sink-target font-label text-[10px] uppercase tracking-[0.28em] text-bronze-400/80 mb-3">
+          <p className="sink-target font-label text-[10px] uppercase tracking-[0.28em] text-bronze-700/80 mb-3">
             {config.attributionLabel}
           </p>
-          <p className="sink-target font-serif text-[18px] text-stone-100 leading-[1.45]">
+          <p className="sink-target font-serif text-[18px] text-stone-900 leading-[1.45]">
             {config.attributionName}
           </p>
-          <p className="sink-target font-serif text-[14px] text-stone-400 leading-[1.5] mt-1.5 max-w-[22rem] mx-auto">
+          <p className="sink-target font-serif text-[14px] text-stone-600 leading-[1.5] mt-1.5 max-w-[22rem] mx-auto">
             {config.attributionLine}
           </p>
-          <p className="sink-target font-label text-[10px] uppercase tracking-[0.28em] text-bronze-400 group-hover:text-bronze-300 mt-5 transition-colors">
+          <p className="sink-target font-label text-[10px] uppercase tracking-[0.28em] text-bronze-700 group-hover:text-bronze-600 mt-5 transition-colors">
             The deeper story <span aria-hidden="true">→</span>
           </p>
         </button>
