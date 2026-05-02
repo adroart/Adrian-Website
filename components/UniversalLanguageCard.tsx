@@ -8,6 +8,7 @@ import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { OracleCardEntrance } from './OracleCardEntrance';
+import SystemOverlay, { type SystemKey } from './SystemOverlay';
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
@@ -951,6 +952,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const ichingRef    = useRef<HTMLDivElement>(null);
+  const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
 
   // Ritual entrance plays on every landing, including QR scans — the visitor
   // taps to begin the reading rather than having it auto-load.
@@ -1098,6 +1100,20 @@ const UniversalLanguageCard: React.FC = () => {
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
+      <SystemOverlay
+        open={systemOverlay !== null}
+        systemKey={systemOverlay ?? 'iching'}
+        glyph={
+          <HexagramSVG
+            upper={card.iching.upper_trigram.symbol}
+            lower={card.iching.lower_trigram.symbol}
+            color="currentColor"
+            width={132}
+          />
+        }
+        onClose={() => setSystemOverlay(null)}
+      />
+
 
       {/* ── Single scrolling page - four color-blocked sections ──────────── */}
       {/* Top padding follows the live nav height (Navigation.tsx writes
@@ -1489,13 +1505,22 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header */}
-            <header className="mb-8 sm:mb-10">
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">I Ching</p>
-              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.iching.hexagram_name}</h2>
-              <p className="font-sans text-[15px] sm:text-[16px] text-stone-400 leading-[1.55] mt-3 max-w-prose">
-                The oldest of the three systems. Reads the energetic pattern of this moment through 64 hexagrams, combinations of heaven and earth.
-              </p>
+            {/* Plate header — hexagram glyph is the trigger to the system overlay */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <button
+                type="button"
+                onClick={() => setSystemOverlay('iching')}
+                className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900 rounded-sm"
+                aria-label="About the I Ching"
+              >
+                <div className="text-bronze-400/85 group-hover:text-bronze-300 transition-colors mb-5">
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
+                </div>
+                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
+                  I Ching
+                </p>
+              </button>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em] mt-7 sm:mt-8">{card.iching.hexagram_name}</h2>
             </header>
 
             {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
@@ -1714,16 +1739,26 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header */}
-            <header className="mb-8 sm:mb-10">
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">
+            {/* Plate header — hexagram glyph is the trigger to the system overlay */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <button
+                type="button"
+                onClick={() => setSystemOverlay('genekeys')}
+                className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-600/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-50 rounded-sm"
+                aria-label="About the Gene Keys"
+              >
+                <div className="text-bronze-700/80 group-hover:text-bronze-700 transition-colors mb-5">
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
+                </div>
+                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 group-hover:text-bronze-700 transition-colors pb-1.5 border-b border-bronze-600/30 group-hover:border-bronze-600/60">
+                  Gene Keys
+                </p>
+              </button>
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mt-7">
                 Gene Key {card.number} · Gate {card.human_design.gate}
               </p>
-              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em]">The {card.gene_keys.gift} Key</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
-                A spectrum of transformation. The shadow is the pattern you move through. The gift is what opens on the other side. The siddhi is the highest expression, rare but real.
-              </p>
-              <div className="flex items-baseline gap-3 flex-wrap mt-5">
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-2">The {card.gene_keys.gift} Key</h2>
+              <div className="flex items-baseline justify-center gap-3 flex-wrap mt-5">
                 <span className="font-serif text-[14px] text-stone-500">{card.gene_keys.shadow}</span>
                 <span className="text-wood-300" aria-hidden="true">·</span>
                 <span className="font-serif text-[14px] text-bronze-700">{card.gene_keys.gift}</span>
@@ -1795,13 +1830,23 @@ const UniversalLanguageCard: React.FC = () => {
         <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header */}
-            <header className="mb-8 sm:mb-10">
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mb-3">Human Design · Gate {card.human_design.gate}</p>
-              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em]">{card.human_design.keyword}</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-stone-400 leading-[1.5] mt-3 max-w-prose">
-                Human Design maps the gate this card activates in your body graph. The Gate is the quality. The Channel shows how it connects. The Circuit shows the larger pattern it belongs to.
-              </p>
+            {/* Plate header — hexagram glyph is the trigger to the system overlay */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <button
+                type="button"
+                onClick={() => setSystemOverlay('humandesign')}
+                className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900 rounded-sm"
+                aria-label="About Human Design"
+              >
+                <div className="text-bronze-400/85 group-hover:text-bronze-300 transition-colors mb-5">
+                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
+                </div>
+                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
+                  Human Design
+                </p>
+              </button>
+              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mt-7">Gate {card.human_design.gate}</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em] mt-2">{card.human_design.keyword}</h2>
             </header>
 
             {/* Description (only when no synthesis) */}
