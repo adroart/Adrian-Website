@@ -9,6 +9,7 @@ import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { OracleCardEntrance } from './OracleCardEntrance';
 import SystemOverlay, { type SystemKey } from './SystemOverlay';
+import { HEXAGRAM_CHINESE } from '../data/hexagramChinese';
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
@@ -124,6 +125,47 @@ const HexagramSVG: React.FC<{
         );
       })}
     </svg>
+  );
+};
+
+/* ─── Gene Keys spectrum glyph ──────────────────────────────────────────── */
+/* Three horizontal bars: Shadow (narrow, faint), Gift (wide, bright),
+ * Siddhi (narrow, faint). Generic to the Gene Keys system, not specific to
+ * any one key — used as the hero icon on the Gene Keys section header. */
+const SgsSpectrumSVG: React.FC<{ width?: number; color?: string }> = ({
+  width = 72,
+  color = 'currentColor',
+}) => {
+  const w = width;
+  const barH = Math.max(2, Math.round(w * 0.075));
+  const gap = Math.round(w * 0.18);
+  const totalH = barH * 3 + gap * 2;
+  const narrow = Math.round(w * 0.42);
+
+  return (
+    <svg width={w} height={totalH} viewBox={`0 0 ${w} ${totalH}`} fill="none" aria-hidden="true">
+      <rect x={(w - narrow) / 2} y={0}                    width={narrow} height={barH} rx={1} fill={color} opacity="0.4" />
+      <rect x={0}                 y={barH + gap}           width={w}      height={barH} rx={1} fill={color} opacity="1"   />
+      <rect x={(w - narrow) / 2} y={(barH + gap) * 2}     width={narrow} height={barH} rx={1} fill={color} opacity="0.4" />
+    </svg>
+  );
+};
+
+/* ─── Human Design "Gate N" hero ────────────────────────────────────────── */
+/* Display-serif treatment of the gate number. Used as the hero on the
+ * Human Design section header and inside the Human Design system overlay. */
+const GateHero: React.FC<{ gate: number; size?: 'sm' | 'lg' }> = ({ gate, size = 'sm' }) => {
+  const numCls = size === 'lg'
+    ? 'font-serif text-[64px] sm:text-[72px] leading-none tracking-[-0.01em]'
+    : 'font-serif text-[44px] sm:text-[52px] leading-none tracking-[-0.01em]';
+  const labelCls = size === 'lg'
+    ? 'font-label text-[11px] uppercase tracking-[0.32em] mb-2'
+    : 'font-label text-[10px] uppercase tracking-[0.32em] mb-1.5';
+  return (
+    <div className="flex flex-col items-center text-current">
+      <span className={`${labelCls} opacity-70`}>Gate</span>
+      <span className={numCls}>{gate}</span>
+    </div>
   );
 };
 
@@ -1104,12 +1146,18 @@ const UniversalLanguageCard: React.FC = () => {
         open={systemOverlay !== null}
         systemKey={systemOverlay ?? 'iching'}
         glyph={
-          <HexagramSVG
-            upper={card.iching.upper_trigram.symbol}
-            lower={card.iching.lower_trigram.symbol}
-            color="currentColor"
-            width={132}
-          />
+          systemOverlay === 'genekeys' ? (
+            <SgsSpectrumSVG width={120} color="currentColor" />
+          ) : systemOverlay === 'humandesign' ? (
+            <GateHero gate={card.human_design.gate} size="lg" />
+          ) : (
+            <HexagramSVG
+              upper={card.iching.upper_trigram.symbol}
+              lower={card.iching.lower_trigram.symbol}
+              color="currentColor"
+              width={132}
+            />
+          )
         }
         onClose={() => setSystemOverlay(null)}
       />
@@ -1530,10 +1578,18 @@ const UniversalLanguageCard: React.FC = () => {
                 onClick={() => setIchingOpen('hex')}
                 className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-4 sm:py-5 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'hex'}
+                aria-label={`Read the whole hexagram, ${HEXAGRAM_CHINESE[card.number]?.char ?? ''} ${HEXAGRAM_CHINESE[card.number]?.pinyin ?? ''}, ${card.iching.hexagram_name}`}
               >
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
+                <span
+                  className={`font-serif text-[22px] sm:text-[24px] leading-none flex-shrink-0 sm:self-center sm:w-[88px] sm:text-center transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-bronze-400/70 group-hover:text-bronze-300'}`}
+                  title={HEXAGRAM_CHINESE[card.number]?.pinyin}
+                >
+                  {HEXAGRAM_CHINESE[card.number]?.char ?? `Hex ${card.number}`}
+                </span>
                 <div className="min-w-0 flex-1 flex items-center">
-                  <span className={`font-serif text-[17px] leading-[1.3] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>Combination</span>
+                  <span className={`font-serif text-[17px] leading-[1.3] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>
+                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
+                  </span>
                 </div>
                 <span className={`font-label text-[10px] uppercase tracking-[0.22em] flex-shrink-0 transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-stone-500 group-hover:text-stone-300'}`}>Read</span>
               </button>
@@ -1747,7 +1803,7 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-label="About the Gene Keys"
               >
                 <div className="text-bronze-700/80 group-hover:text-bronze-700 transition-colors mb-5">
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
+                  <SgsSpectrumSVG width={72} color="currentColor" />
                 </div>
                 <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 group-hover:text-bronze-700 transition-colors pb-1.5 border-b border-bronze-600/30 group-hover:border-bronze-600/60">
                   Gene Keys
@@ -1835,17 +1891,16 @@ const UniversalLanguageCard: React.FC = () => {
                 type="button"
                 onClick={() => setSystemOverlay('humandesign')}
                 className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900 rounded-sm"
-                aria-label="About Human Design"
+                aria-label={`About Human Design, Gate ${card.human_design.gate}`}
               >
-                <div className="text-bronze-400/85 group-hover:text-bronze-300 transition-colors mb-5">
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
+                <div className="text-bronze-400/95 group-hover:text-bronze-300 transition-colors mb-5">
+                  <GateHero gate={card.human_design.gate} size="sm" />
                 </div>
                 <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
                   Human Design
                 </p>
               </button>
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-stone-500 mt-7">Gate {card.human_design.gate}</p>
-              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em] mt-2">{card.human_design.keyword}</h2>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em] mt-7 sm:mt-8">{card.human_design.keyword}</h2>
             </header>
 
             {/* Description (only when no synthesis) */}
