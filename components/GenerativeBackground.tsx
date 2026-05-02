@@ -204,6 +204,111 @@ const patternPiece: PatternFn = (p, i, count, width, height, time) => {
     return _t;
 };
 
+// Oracle: 64-point Fibonacci sphere. Holographic-globe aesthetic — points
+// distributed by golden-angle on a unit sphere, then rotated as a rigid 3D
+// body. Proximity lines auto-draw the geodesic facets from every angle,
+// giving the figure an unmistakable sphere read with constant new structure
+// as it turns. Particles past 64 stack on slots with a tiny halo so the
+// proximity graph stays dense.
+const FIB_POINTS: [number, number, number][] = (() => {
+    const N = 64;
+    const golden = Math.PI * (3 - Math.sqrt(5)); // golden angle in radians
+    const pts: [number, number, number][] = [];
+    for (let i = 0; i < N; i++) {
+        // y from 1 to -1, evenly spaced.
+        const y = 1 - (i / (N - 1)) * 2;
+        const r = Math.sqrt(1 - y * y);
+        const theta = i * golden;
+        pts.push([Math.cos(theta) * r, y, Math.sin(theta) * r]);
+    }
+    return pts;
+})();
+
+// Per-particle z-depth from the previous frame, used by the outer renderer to
+// modulate dot radius and alpha so far-side points dim and shrink. Lives at
+// module scope so the render loop can read it without re-projecting.
+const ORACLE_DEPTH = new Float32Array(256);
+const ORACLE_DEPTH_VALID = { current: false };
+
+// Per-slot radial scale. Bit count of the slot index (0..6) maps to a shell:
+// pure-yin (0 bits) sits at 0.55×, pure-yang (6 bits) at 1.0×. Creates a
+// lumpy sphere with concentric-shell structure that reads as 3D sculpture.
+const ORACLE_SHELL: number[] = (() => {
+    const out: number[] = [];
+    for (let i = 0; i < 64; i++) {
+        let n = i, c = 0;
+        while (n) { c += n & 1; n >>= 1; }
+        out.push(0.55 + (c / 6) * 0.45); // 0.55 .. 1.0
+    }
+    return out;
+})();
+
+const patternOracle: PatternFn = (p, i, _count, width, height, time) => {
+    const cx = width / 2;
+    const cy = height / 2;
+    const t = time;
+
+    const slot = i % 64;
+    const dup = Math.floor(i / 64);
+    const [fpx, fpy, fpz] = FIB_POINTS[slot];
+
+    // Apply the per-slot radial shell to make the sphere lumpy/structured.
+    const shell = ORACLE_SHELL[slot];
+    const px = fpx * shell;
+    const py = fpy * shell;
+    const pz = fpz * shell;
+
+    // Single-body rotation with PRECESSION: the rotation axis itself slowly
+    // traces a cone, so the figure reads as a gimballed/gyroscopic 3D object
+    // rather than a simple spinning ball.
+    //
+    // Precession: tilt the body by `precessTilt` radians, then rotate that
+    // tilt direction around the world Y at a slow rate. Then spin the body
+    // around its own (tilted) axis at the primary rate.
+    const spin = t * 0.22;
+    const precessRate = t * 0.07;       // axis cone traversal rate
+    const precessTilt = 0.45;            // cone half-angle (radians)
+
+    // Body-local spin around its own axis (which we'll call Y' before tilting).
+    const cs = Math.cos(spin), ss = Math.sin(spin);
+    let x1 = px * cs + pz * ss;
+    let z1 = -px * ss + pz * cs;
+    let y1 = py;
+
+    // Tilt the body so its Y' axis sits at angle `precessTilt` from world Y.
+    const ct = Math.cos(precessTilt), st = Math.sin(precessTilt);
+    const y2 = y1 * ct - z1 * st;
+    const z2 = y1 * st + z1 * ct;
+    const x2 = x1;
+
+    // Sweep the tilt direction around world Y at the precession rate.
+    const cp = Math.cos(precessRate), sp = Math.sin(precessRate);
+    const x3 = x2 * cp + z2 * sp;
+    const z3 = -x2 * sp + z2 * cp;
+    const y3 = y2;
+
+    // Perspective projection.
+    const baseR = Math.min(width, height) * 0.34;
+    const camZ = 3;
+    const persp = camZ / (camZ - z3);
+    const sx2 = x3 * baseR * persp;
+    const sy2 = y3 * baseR * persp;
+
+    // Cache normalized depth for the dot renderer.
+    if (i < ORACLE_DEPTH.length) {
+        ORACLE_DEPTH[i] = z3;
+        ORACLE_DEPTH_VALID.current = true;
+    }
+
+    // Halo for duplicate particles — small so chord lines stay clean.
+    const haloR = dup * 2.0;
+    const haloAng = i * 2.3998 + t * 0.6;
+
+    _t.x = cx + sx2 + Math.cos(haloAng) * haloR;
+    _t.y = cy + sy2 + Math.sin(haloAng) * haloR;
+    return _t;
+};
+
 // Fallback orbital ring
 const patternDefault: PatternFn = (p, i, count, width, height, time) => {
     const t = time * p.timeMul;
@@ -224,6 +329,7 @@ function getPattern(pathname: string): PatternFn {
     if (pathname === '/about') return patternAbout;
     if (pathname === '/inquire') return patternInquire;
     if (pathname === '/teajia') return patternTeajia;
+    if (pathname.startsWith('/oracle')) return patternOracle;
     if (pathname.startsWith('/writings/')) return patternWritings;
     if (pathname.startsWith('/creations/')) return patternPiece;
     return patternDefault;
@@ -316,6 +422,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
         const currentPattern = getPattern(pathname);
         const isHome = pathname === '/';
         const isCreations = pathname === '/creations';
+        const isOracle = pathname.startsWith('/oracle');
 
         // Respect prefers-reduced-motion: skip animation entirely
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -371,22 +478,50 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
                 }
 
                 // --- Draw particles batched by layer ---
-                for (let layer = 0; layer < 3; layer++) {
-                    const alpha = isDark
-                        ? LAYER_PARTICLE_ALPHA_DARK[layer]
-                        : LAYER_PARTICLE_ALPHA_LIGHT[layer];
-                    ctx.fillStyle = isDark
-                        ? `rgba(176, 141, 85, ${alpha})`
-                        : `rgba(90, 70, 50, ${alpha})`;
-
-                    ctx.beginPath();
-                    for (let i = 0; i < len; i++) {
-                        const p = safeParticles[i];
-                        if (p.layer !== layer) continue;
-                        ctx.moveTo(p.x + p.radius, p.y);
-                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                if (isOracle && ORACLE_DEPTH_VALID.current) {
+                    const baseColor = isDark ? '176, 141, 85' : '90, 70, 50';
+                    const bands = 4;
+                    const bandPaths: { r: number; alpha: number }[] = [];
+                    for (let b = 0; b < bands; b++) {
+                        bandPaths.push({
+                            r: 0.55 + (b / (bands - 1)) * 1.65, // 0.55 .. 2.2
+                            alpha: 0.06 + (b / (bands - 1)) * 0.42, // 0.06 .. 0.48
+                        });
                     }
-                    ctx.fill();
+                    for (let b = 0; b < bands; b++) {
+                        const { r, alpha } = bandPaths[b];
+                        ctx.fillStyle = `rgba(${baseColor}, ${alpha})`;
+                        ctx.beginPath();
+                        for (let i = 0; i < len; i++) {
+                            const p = safeParticles[i];
+                            const z = i < ORACLE_DEPTH.length ? ORACLE_DEPTH[i] : 0;
+                            // Map z [-1,1] to brightness [0,1] (front bright).
+                            const bright = (z + 1) * 0.5;
+                            const myBand = Math.min(bands - 1, (bright * bands) | 0);
+                            if (myBand !== b) continue;
+                            ctx.moveTo(p.x + r, p.y);
+                            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                        }
+                        ctx.fill();
+                    }
+                } else {
+                    for (let layer = 0; layer < 3; layer++) {
+                        const alpha = isDark
+                            ? LAYER_PARTICLE_ALPHA_DARK[layer]
+                            : LAYER_PARTICLE_ALPHA_LIGHT[layer];
+                        ctx.fillStyle = isDark
+                            ? `rgba(176, 141, 85, ${alpha})`
+                            : `rgba(90, 70, 50, ${alpha})`;
+
+                        ctx.beginPath();
+                        for (let i = 0; i < len; i++) {
+                            const p = safeParticles[i];
+                            if (p.layer !== layer) continue;
+                            ctx.moveTo(p.x + p.radius, p.y);
+                            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        }
+                        ctx.fill();
+                    }
                 }
 
                 // --- Draw connections batched by layer pair ---

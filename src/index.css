@@ -1,4 +1,17 @@
 /* ─── READABILITY GUARDRAILS ────────────────────────────────────────────────
+ * FONT ROLES (enforced):
+ *   - font-display / font-serif (Cormorant Garamond): titles + display text
+ *     ONLY at >= 20px. Cormorant is a display serif; its thin strokes
+ *     disappear at body sizes.
+ *   - font-sans (Lora): ALL body, descriptions, captions, meta < 20px.
+ *     Lora is a body-grade serif with screen-tuned strokes.
+ *   - font-label (Karla): uppercase eyebrows / row labels only.
+ * Italic Cormorant under 20px is forbidden — fails legibility on dark bg.
+ *
+ * TYPE SCALE — prefer the var() tokens below over arbitrary pixel values.
+ * Existing code uses Tailwind classes (text-sm, text-base...) which still work;
+ * use the tokens for new components and when refactoring inconsistent sizes.
+ *
  * Do NOT use these combinations — they fail WCAG AA:
  *   - text-wood-400 / text-stone-400 / text-paper-300 as body text on
  *     paper-50/100/200 backgrounds (contrast < 3.5:1)
@@ -27,6 +40,21 @@
   --art-transition-easing: ease-out;
   /* Updated dynamically by Navigation.tsx based on scroll state */
   --nav-height: 56px;
+
+  /* ─── Type scale ─────────────────────────────────────────────────────────
+   * Semantic sizes paired with their intended font role.
+   * Use these in new components instead of arbitrary text-[14px] values.
+   * Marketing/hero headings can fluid-size via clamp() inline; app UI
+   * (oracle reader, shop, piece pages) should hold to this fixed scale. */
+  --text-eyebrow:  0.6875rem; /* 11px — Karla uppercase labels       */
+  --text-caption:  0.8125rem; /* 13px — Lora — fine print only       */
+  --text-meta:     0.875rem;  /* 14px — Lora — secondary info, dates */
+  --text-small:    0.9375rem; /* 15px — Lora — secondary body        */
+  --text-body:     1rem;      /* 16px — Lora — default body          */
+  --text-lead:     1.0625rem; /* 17px — Lora — intro / lyrics        */
+  --text-subhead:  1.375rem;  /* 22px — Cormorant — small titles     */
+  --text-heading:  1.75rem;   /* 28px — Cormorant — page headings    */
+  --text-display:  clamp(2.5rem, 6vw, 4.5rem); /* 40-72px — hero    */
 }
 
 /* ─── Global Typography Foundations ───────────────────────────────────────── */
