@@ -89,8 +89,8 @@ const About: React.FC = () => {
               <Tag>Technician of the Sacred</Tag>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="font-serif text-6xl md:text-8xl text-wood-900 leading-[0.93] font-medium mb-16">
-                Adrian<br />Rasmussen
+              <h1 aria-label="Adrian Rasmussen" className="font-serif text-6xl md:text-8xl text-wood-900 leading-[0.93] font-medium mb-16">
+                <span aria-hidden="true">Adrian<br />Rasmussen</span>
               </h1>
             </Reveal>
 

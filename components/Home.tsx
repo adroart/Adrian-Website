@@ -38,7 +38,7 @@ const Home: React.FC = () => {
                 <div className="max-w-3xl mx-auto text-center">
                     <Link
                         to="/creations"
-                        className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors"
+                        className="inline-flex items-center gap-3 font-label text-xs uppercase tracking-[0.2em] text-wood-900 hover:text-bronze-600 font-semibold transition-colors py-3 px-2 -my-3 -mx-2"
                     >
                         Explore Creations <ArrowRight size={14} />
                     </Link>

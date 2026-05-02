@@ -122,7 +122,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
     <>
       <nav ref={navRef} className={navClasses}>
         <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex justify-between items-center relative z-[120]">
-          <Link to="/" className="group flex flex-col items-start">
+          <Link to="/" className="group flex flex-col items-start py-3 -my-3">
             <span className={`font-display tracking-normal leading-none transition-all duration-300 font-normal ${textPrimary} hover:${accentColor} ${isScrolled ? 'text-lg' : 'text-xl md:text-2xl'}`}>
               Adrian Rasmussen
             </span>
@@ -134,7 +134,7 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`group relative text-xs uppercase tracking-[0.2em] font-label py-2 transition-all duration-300 flex items-center gap-1 font-semibold ${
+                className={`group relative text-xs uppercase tracking-[0.2em] font-label py-3 transition-all duration-300 flex items-center gap-1 font-semibold ${
                   isNavActive(item.path)
                     ? `${textPrimary}`
                     : `${textSecondary} hover:${accentColor}`
