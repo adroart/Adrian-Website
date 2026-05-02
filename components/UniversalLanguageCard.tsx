@@ -1314,12 +1314,15 @@ const UniversalLanguageCard: React.FC = () => {
               // Row is a clickable div (role="button") whose click navigates
               // to the section. Partner/sibling Links inside use stopPropagation
               // so they open the linked card instead of bubbling to the row.
-              const rowCls = 'group grid grid-cols-[88px_1fr] gap-x-5 px-3 -mx-3 py-4 border-t border-wood-200/50 w-full rounded-md cursor-pointer hover:bg-bronze-500/[0.05] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] focus-visible:ring-1 focus-visible:ring-bronze-400/40 transition-colors';
+              const rowCls = 'group grid grid-cols-[88px_1fr] gap-x-5 px-3 -mx-3 py-3.5 border-t border-wood-200/50 w-full rounded-md cursor-pointer hover:bg-bronze-500/[0.05] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] focus-visible:ring-1 focus-visible:ring-bronze-400/40 transition-colors';
               const labelCls = 'font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center';
-              const primaryCls = 'font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline';
+              const primaryCls = 'font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/60 decoration-[1.5px] underline-offset-[5px] group-hover:underline group-focus-visible:underline';
               const contextCls = 'font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5';
               const contextEmphCls = 'font-serif text-[14px] text-wood-700';
-              const partnerLinkCls = 'font-serif text-[14px] text-wood-700 underline decoration-bronze-400/50 decoration-1 underline-offset-[3px] hover:text-bronze-700 hover:decoration-bronze-500 focus-visible:outline-none focus-visible:text-bronze-700 focus-visible:decoration-bronze-500 transition-colors';
+              // Compact chip for inline cross-references (paired hexagram, codon
+              // ring siblings). Small enough to live inside a sentence, bordered
+              // bronze so it reads as a tap target in both light and dark mode.
+              const chipCls = 'inline-flex items-center whitespace-nowrap align-middle font-serif text-[13px] leading-none px-2.5 py-[5px] mx-[2px] rounded-md bg-bronze-400/10 dark:bg-bronze-400/15 text-bronze-700 dark:text-bronze-400 border border-bronze-400/40 dark:border-bronze-400/45 no-underline hover:bg-bronze-400/20 dark:hover:bg-bronze-400/25 hover:border-bronze-500/60 dark:hover:border-bronze-300/60 hover:text-bronze-800 dark:hover:text-bronze-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-400/60 transition-colors';
               // Keyboard handler for role="button" divs
               const keyActivate = (fn: () => void) => (e: React.KeyboardEvent) => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
@@ -1348,20 +1351,21 @@ const UniversalLanguageCard: React.FC = () => {
                       <span className={primaryCls}>{card.iching.hexagram_name}</span>
                       <p className={contextCls}>
                         Hexagram {card.number} · {card.iching.upper_trigram.name} over {card.iching.lower_trigram.name}
-                        {pair && (
-                          <> · paired with{' '}
-                            <Link
-                              to={`/oracle/universal-language/${pair.number}`}
-                              state={{ ritual: true }}
-                              onClick={stop}
-                              className={partnerLinkCls}
-                              aria-label={`Open Code ${pair.number}, ${pair.card_name}`}
-                            >
-                              Hexagram {pair.number} · {pair.iching.hexagram_name}
-                            </Link>
-                          </>
-                        )}
                       </p>
+                      {pair && (
+                        <div className="mt-2 flex items-center gap-2 flex-wrap">
+                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Paired</span>
+                          <Link
+                            to={`/oracle/universal-language/${pair.number}`}
+                            state={{ ritual: true }}
+                            onClick={stop}
+                            className={chipCls}
+                            aria-label={`Open Code ${pair.number}, ${pair.card_name}`}
+                          >
+                            Hexagram {pair.number} · {pair.iching.hexagram_name}
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1421,25 +1425,27 @@ const UniversalLanguageCard: React.FC = () => {
                       <span className={primaryCls}>{synthesis.reference.tarot_card}</span>
                       <p className={contextCls}>
                         {card.ring_name}
-                        {siblingCards.length > 0 && (
-                          siblingCards.length <= 3
-                            ? <>, with {siblingCards.map((c, i) => (
-                                <React.Fragment key={c.number}>
-                                  {i > 0 && (i === siblingCards.length - 1 ? ' and ' : ', ')}
-                                  <Link
-                                    to={`/oracle/universal-language/${c.number}`}
-                                    state={{ ritual: true }}
-                                    onClick={stop}
-                                    className={partnerLinkCls}
-                                    aria-label={`Open Code ${c.number}, ${c.card_name}`}
-                                  >
-                                    Code {c.number} · {c.card_name}
-                                  </Link>
-                                </React.Fragment>
-                              ))}</>
-                            : <>, shared with {siblingCards.length} other keys</>
+                        {siblingCards.length > 3 && (
+                          <>, shared with {siblingCards.length} other keys</>
                         )}
                       </p>
+                      {siblingCards.length > 0 && siblingCards.length <= 3 && (
+                        <div className="mt-2 flex items-center gap-2 flex-wrap">
+                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Ring</span>
+                          {siblingCards.map((c) => (
+                            <Link
+                              key={c.number}
+                              to={`/oracle/universal-language/${c.number}`}
+                              state={{ ritual: true }}
+                              onClick={stop}
+                              className={chipCls}
+                              aria-label={`Open Code ${c.number}, ${c.card_name}`}
+                            >
+                              Code {c.number} · {c.card_name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
