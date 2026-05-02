@@ -1102,9 +1102,9 @@ const UniversalLanguageCard: React.FC = () => {
       {/* ── Single scrolling page - four color-blocked sections ──────────── */}
       {/* Top padding follows the live nav height (Navigation.tsx writes
           --nav-height on every resize/scroll change) so the first pixel of
-          the card image is never tucked under the fixed nav. The +12px buffer
-          is intentional breathing room. */}
-      <div className="pb-14" style={{ paddingTop: 'calc(var(--nav-height, 56px) + 12px)' }}>
+          the card image is never tucked under the fixed nav. The +32px buffer
+          gives the hero image clear breathing room below the nav. */}
+      <div className="pb-14" style={{ paddingTop: 'calc(var(--nav-height, 72px) + 32px)' }}>
 
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
@@ -1121,12 +1121,12 @@ const UniversalLanguageCard: React.FC = () => {
             </figure>
 
             {/* Order + Share - two-up row directly below image */}
-            <div className="border-t border-b border-wood-200/60">
-              <div className="flex divide-x divide-wood-200/40">
+            <div className="border-t border-b border-wood-200/60 bg-paper-100/50">
+              <div className="flex items-stretch gap-2 px-3 py-3">
                 {/* Acquire */}
                 <Link
                   to={piece ? `/creations/${piece.id}` : '/inquire'}
-                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200"
                 >
                   <div>
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
@@ -1148,9 +1148,9 @@ const UniversalLanguageCard: React.FC = () => {
                   )}
                 </Link>
 
-                {/* Hexagram symbol */}
+                {/* Hexagram symbol - decorative, sits between the two buttons */}
                 {synthesis?.reference?.hexagram_symbol && (
-                  <div className="flex items-center justify-center px-4 py-3 bg-paper-50">
+                  <div className="flex items-center justify-center px-2 flex-shrink-0">
                     <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={40} />
                   </div>
                 )}
@@ -1158,7 +1158,7 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Share */}
                 <button
                   onClick={() => setShareOpen(v => !v)}
-                  className="group flex-1 flex items-center justify-end px-4 py-3 bg-paper-50 hover:bg-paper-100 transition-colors duration-200"
+                  className="group flex-1 flex items-center justify-end px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200"
                   aria-expanded={shareOpen}
                 >
                   <div className="text-right">
