@@ -1593,7 +1593,7 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-pressed={ichingOpen === 'hex'}
                 aria-label={`Read ${card.iching.hexagram_name}, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
               >
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Guà {card.number}</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <HexagramSVG
                     upper={card.iching.upper_trigram.symbol}
