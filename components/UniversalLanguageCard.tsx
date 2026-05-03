@@ -443,9 +443,41 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
         : sectionMode[section] === 'open' ? true
         : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
         : reg?.defaultOpen ?? false;
-      return { ...o, [id]: !current };
+      const opening = !current;
+      const next = { ...o, [id]: opening };
+      // Accordion: opening one plate closes the others in the same section,
+      // so the reading stays a single calm column instead of a tower of stacks.
+      // Locked plates (Reflection) stay open by design.
+      if (opening) {
+        registry.current.forEach(other => {
+          if (other.id === id) return;
+          if (other.section !== section) return;
+          if (other.lock) return;
+          next[other.id] = false;
+        });
+      }
+      return next;
     });
-  }, [sectionMode]);
+    // After the layout settles, glide the just-opened plate to the top so
+    // the reader never has to chase content. Skip when closing.
+    const reg = registry.current.get(id);
+    const section = reg?.section ?? 'iching';
+    const wasOpen = (id in overrides)
+      ? overrides[id]
+      : sectionMode[section] === 'open' ? true
+      : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
+      : reg?.defaultOpen ?? false;
+    if (!wasOpen && typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({
+            behavior: reducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+          });
+        });
+      });
+    }
+  }, [sectionMode, overrides, reducedMotion]);
 
   const setSectionMode = useCallback((section: SectionKey, mode: 'open' | 'closed') => {
     setSectionModeState(prev => {
@@ -544,7 +576,7 @@ const PlateExpand: React.FC<{
   const t = PLATE_TYPE[variant];
 
   const previewNode = typeof preview === 'string'
-    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.55] sm:leading-[1.6]`}>{preview}</p>
+    ? <p className={`font-sans text-[16px] ${t.body} leading-[1.65] sm:leading-[1.7]`}>{preview}</p>
     : preview;
 
   return (
@@ -708,7 +740,7 @@ const GeneKeyCard: React.FC<{
               className="max-h-[7.4em] overflow-hidden"
               style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
             >
-              <p className="font-sans text-[15px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{paragraphs[0]}</p>
+              <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{paragraphs[0]}</p>
             </div>
           )}
         </div>
@@ -789,7 +821,7 @@ const SynthesisToneCard: React.FC<{
               className="max-h-[7.4em] overflow-hidden"
               style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
             >
-              <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{previewPara}</p>
+              <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{previewPara}</p>
             </div>
           )}
         </div>
