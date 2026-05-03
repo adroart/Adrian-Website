@@ -392,6 +392,24 @@ function useExpand(): ExpandContextValue {
   return ctx;
 }
 
+/* Slow, eye-trackable scroll. The browser's native smooth-scroll is too brisk
+   for a contemplative reading layout — at 700ms the reader can follow where
+   the new plate is travelling instead of being teleported. */
+function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
+  const startY  = window.scrollY;
+  const targetY = Math.max(0, startY + el.getBoundingClientRect().top - offsetPx);
+  if (Math.abs(targetY - startY) < 2) return;
+  const duration = 700;
+  const startT   = performance.now();
+  const ease = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const step = (now: number) => {
+    const t = Math.min(1, (now - startT) / duration);
+    window.scrollTo(0, startY + (targetY - startY) * ease(t));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }> = ({ storageKey, children }) => {
   const reducedMotion = usePrefersReducedMotion();
   const registry = useRef(new Map<string, ExpandRegistration>());
@@ -470,10 +488,14 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
     if (!wasOpen && typeof window !== 'undefined') {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          document.getElementById(id)?.scrollIntoView({
-            behavior: reducedMotion ? 'auto' : 'smooth',
-            block: 'start',
-          });
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (reducedMotion) {
+            el.scrollIntoView({ behavior: 'auto', block: 'start' });
+          } else {
+            // 96px matches scroll-mt-24 so the plate lands with breathing room.
+            calmScrollIntoView(el, 96);
+          }
         });
       });
     }
