@@ -1581,26 +1581,41 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
             <div ref={ichingRef} className="border-t border-stone-700/60 -mx-4 sm:-mx-7">
-              <button
-                type="button"
-                onClick={() => setIchingOpen('hex')}
-                className={`group flex flex-col items-center justify-center w-full text-center py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
-                aria-pressed={ichingOpen === 'hex'}
-                aria-label={`Read the whole hexagram, ${HEXAGRAM_CHINESE[card.number]?.char ?? ''} ${HEXAGRAM_CHINESE[card.number]?.pinyin ?? ''}, ${card.iching.hexagram_name}`}
-              >
-                <span
-                  className={`font-chinese-serif text-[40px] sm:text-[48px] leading-none transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-bronze-400/80 group-hover:text-bronze-300'}`}
-                  title={HEXAGRAM_CHINESE[card.number]?.pinyin}
+              {/* HEX block — two stacked tap zones:
+                    1. Chinese + name → opens the system overlay (about)
+                    2. Trigram formula → reads the combination */}
+              <div className="border-b border-stone-700/60">
+                <button
+                  type="button"
+                  onClick={() => setSystemOverlay('iching')}
+                  className="group flex flex-col items-center justify-center w-full text-center pt-6 sm:pt-7 pb-4 sm:pb-5 px-4 sm:px-7 transition-colors hover:bg-bronze-500/[0.04] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08]"
+                  aria-label={`About ${card.iching.hexagram_name}, ${HEXAGRAM_CHINESE[card.number]?.pinyin ?? ''}`}
                 >
-                  {HEXAGRAM_CHINESE[card.number]?.char ?? `Hex ${card.number}`}
-                </span>
-                <span className={`font-serif text-[20px] sm:text-[22px] leading-[1.2] tracking-[-0.005em] mt-3 transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-200 group-hover:text-stone-100'}`}>
-                  {card.iching.hexagram_name}
-                </span>
-                <span className={`font-serif text-[14px] sm:text-[15px] leading-[1.4] mt-1.5 transition-colors ${ichingOpen === 'hex' ? 'text-stone-400' : 'text-stone-500 group-hover:text-stone-400'}`}>
-                  {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
-                </span>
-              </button>
+                  <span
+                    className="font-chinese-serif text-[40px] sm:text-[48px] leading-none text-bronze-400/85 group-hover:text-bronze-300 transition-colors"
+                    title={HEXAGRAM_CHINESE[card.number]?.pinyin}
+                  >
+                    {HEXAGRAM_CHINESE[card.number]?.char ?? `Hex ${card.number}`}
+                  </span>
+                  <span className="font-serif text-[20px] sm:text-[22px] leading-[1.2] tracking-[-0.005em] mt-3 text-stone-100 group-hover:text-stone-100 transition-colors">
+                    {card.iching.hexagram_name}
+                  </span>
+                </button>
+
+                <div className="mx-auto h-px w-12 bg-stone-700/50" aria-hidden="true" />
+
+                <button
+                  type="button"
+                  onClick={() => setIchingOpen('hex')}
+                  className={`group flex items-center justify-center w-full text-center pt-3 sm:pt-4 pb-5 sm:pb-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                  aria-pressed={ichingOpen === 'hex'}
+                  aria-label={`Read the combination, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
+                >
+                  <span className={`font-serif text-[15px] sm:text-[16px] leading-[1.4] transition-colors ${ichingOpen === 'hex' ? 'text-stone-200' : 'text-stone-400 group-hover:text-stone-300'}`}>
+                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
+                  </span>
+                </button>
+              </div>
 
               <button
                 type="button"
