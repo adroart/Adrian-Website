@@ -392,16 +392,17 @@ function useExpand(): ExpandContextValue {
   return ctx;
 }
 
-/* Slow, eye-trackable scroll. The browser's native smooth-scroll is too brisk
-   for a contemplative reading layout — at 700ms the reader can follow where
-   the new plate is travelling instead of being teleported. */
+/* Slow, eye-trackable scroll. Native smooth-scroll covers the distance in
+   ~300ms and feels teleporty; ease-in-out has a slow start that the user
+   reads as lag. Cubic ease-out starts moving immediately on the first frame
+   and decelerates into the target so the eye can settle without a snap. */
 function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
   const startY  = window.scrollY;
   const targetY = Math.max(0, startY + el.getBoundingClientRect().top - offsetPx);
   if (Math.abs(targetY - startY) < 2) return;
-  const duration = 700;
+  const duration = 800;
   const startT   = performance.now();
-  const ease = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const ease = (t: number) => 1 - Math.pow(1 - t, 3);
   const step = (now: number) => {
     const t = Math.min(1, (now - startT) / duration);
     window.scrollTo(0, startY + (targetY - startY) * ease(t));
@@ -486,17 +487,17 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
       : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
       : reg?.defaultOpen ?? false;
     if (!wasOpen && typeof window !== 'undefined') {
+      // One rAF so React has flushed and the target's final position is
+      // known. Two frames felt like a stall before the scroll began.
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const el = document.getElementById(id);
-          if (!el) return;
-          if (reducedMotion) {
-            el.scrollIntoView({ behavior: 'auto', block: 'start' });
-          } else {
-            // 96px matches scroll-mt-24 so the plate lands with breathing room.
-            calmScrollIntoView(el, 96);
-          }
-        });
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (reducedMotion) {
+          el.scrollIntoView({ behavior: 'auto', block: 'start' });
+        } else {
+          // 96px matches scroll-mt-24 so the plate lands with breathing room.
+          calmScrollIntoView(el, 96);
+        }
       });
     }
   }, [sectionMode, overrides, reducedMotion]);
