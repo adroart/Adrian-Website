@@ -472,19 +472,21 @@ html.dark body { background-color: #171310; }
 }
 
 /* ─── Chinese serif (Mingti / Song) for hexagram glyph labels ──────────── */
-/* Stacks system Song-style fonts so traditional Chinese characters render
- * with thin horizontal strokes and thick verticals, matching woodblock-print
- * tradition. Falls back through macOS, iOS, Windows, Linux, and finally the
- * generic serif. */
+/* Loads Noto Serif TC from Google Fonts (see index.html) for consistent
+ * sharp Mingti rendering across platforms. Falls back to system Song fonts
+ * if the network fails. */
 .font-chinese-serif {
-  font-family: "Songti SC", "STSong", "Songti TC", "STSongti-TC-Regular",
-               "Source Han Serif TC", "Source Han Serif SC",
-               "Noto Serif TC", "Noto Serif SC",
+  font-family: "Noto Serif TC", "Source Han Serif TC", "Source Han Serif SC",
+               "Noto Serif SC",
                "PMingLiU", "MingLiU", "DFKai-SB",
+               "Songti TC", "Songti SC", "STSong",
                "AR PL UMing TW", "AR PL UMing CN",
                "宋體", "新細明體", serif;
-  font-weight: 400;
+  font-weight: 600;
   font-feature-settings: "palt";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ─── System overlay (full-screen system explainer) ─────────────────────── */

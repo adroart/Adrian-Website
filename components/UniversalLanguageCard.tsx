@@ -129,9 +129,10 @@ const HexagramSVG: React.FC<{
 };
 
 /* ─── Gene Keys dragonfly glyph ─────────────────────────────────────────── */
-/* Stylised dragonfly: long abdomen, two pairs of wings, segmented body.
- * Single-color (currentColor), translucent wing fills for a heraldic feel.
- * Used as the hero icon on the Gene Keys section header and overlay. */
+/* Heraldic dragonfly silhouette inspired by Japanese kamon "tombo" crests.
+ * Top-down view: round head, tapering abdomen, two pairs of elongated
+ * almond wings sweeping out from the thorax. Solid fill with currentColor.
+ * Used as the Gene Keys hero on the section header and inside the overlay. */
 const DragonflySVG: React.FC<{ width?: number; color?: string }> = ({
   width = 72,
   color = 'currentColor',
@@ -140,35 +141,22 @@ const DragonflySVG: React.FC<{ width?: number; color?: string }> = ({
     width={width}
     height={width}
     viewBox="0 0 100 100"
-    fill="none"
-    stroke={color}
-    strokeWidth={1.4}
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    fill={color}
     aria-hidden="true"
   >
-    {/* Head */}
-    <circle cx="50" cy="18" r="3.5" fill={color} stroke="none" />
+    {/* Head — small disc */}
+    <circle cx="50" cy="14" r="4.4" />
 
-    {/* Body / abdomen */}
-    <line x1="50" y1="22" x2="50" y2="86" strokeWidth={1.6} />
+    {/* Abdomen — long body tapering to a fine tail */}
+    <path d="M 47.8 19 L 52.2 19 L 51.5 84 Q 50 87.5 48.5 84 Z" />
 
-    {/* Tail tip */}
-    <circle cx="50" cy="86" r="1.4" fill={color} stroke="none" />
+    {/* Forewings — upper pair, swept slightly up-and-out */}
+    <ellipse cx="25" cy="28" rx="23" ry="4.2" transform="rotate(-4 25 28)" />
+    <ellipse cx="75" cy="28" rx="23" ry="4.2" transform="rotate(4 75 28)" />
 
-    {/* Forewings (upper pair) */}
-    <path d="M 48 30 C 36 24, 16 26, 10 36 C 24 38, 40 38, 48 36 Z" fill={color} fillOpacity={0.18} />
-    <path d="M 52 30 C 64 24, 84 26, 90 36 C 76 38, 60 38, 52 36 Z" fill={color} fillOpacity={0.18} />
-
-    {/* Hindwings (lower pair) */}
-    <path d="M 48 38 C 36 40, 18 48, 14 56 C 30 56, 42 50, 48 44 Z" fill={color} fillOpacity={0.18} />
-    <path d="M 52 38 C 64 40, 82 48, 86 56 C 70 56, 58 50, 52 44 Z" fill={color} fillOpacity={0.18} />
-
-    {/* Body segments */}
-    <line x1="46" y1="55" x2="54" y2="55" strokeWidth={0.8} />
-    <line x1="46" y1="63" x2="54" y2="63" strokeWidth={0.8} />
-    <line x1="46" y1="71" x2="54" y2="71" strokeWidth={0.8} />
-    <line x1="46" y1="79" x2="54" y2="79" strokeWidth={0.8} />
+    {/* Hindwings — lower pair, slightly shorter, swept down-and-out */}
+    <ellipse cx="28" cy="41" rx="20" ry="3.8" transform="rotate(7 28 41)" />
+    <ellipse cx="72" cy="41" rx="20" ry="3.8" transform="rotate(-7 72 41)" />
   </svg>
 );
 
@@ -1589,7 +1577,6 @@ const UniversalLanguageCard: React.FC = () => {
                   I Ching
                 </p>
               </button>
-              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-stone-100 tracking-[-0.005em] mt-7 sm:mt-8">{card.iching.hexagram_name}</h2>
             </header>
 
             {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
@@ -1602,12 +1589,15 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-label={`Read the whole hexagram, ${HEXAGRAM_CHINESE[card.number]?.char ?? ''} ${HEXAGRAM_CHINESE[card.number]?.pinyin ?? ''}, ${card.iching.hexagram_name}`}
               >
                 <span
-                  className={`font-chinese-serif text-[40px] sm:text-[48px] leading-none transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-bronze-400/75 group-hover:text-bronze-300'}`}
+                  className={`font-chinese-serif text-[40px] sm:text-[48px] leading-none transition-colors ${ichingOpen === 'hex' ? 'text-bronze-400' : 'text-bronze-400/80 group-hover:text-bronze-300'}`}
                   title={HEXAGRAM_CHINESE[card.number]?.pinyin}
                 >
                   {HEXAGRAM_CHINESE[card.number]?.char ?? `Hex ${card.number}`}
                 </span>
-                <span className={`font-serif text-[15px] sm:text-[16px] leading-[1.4] mt-2.5 transition-colors ${ichingOpen === 'hex' ? 'text-stone-200' : 'text-stone-400 group-hover:text-stone-300'}`}>
+                <span className={`font-serif text-[20px] sm:text-[22px] leading-[1.2] tracking-[-0.005em] mt-3 transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-200 group-hover:text-stone-100'}`}>
+                  {card.iching.hexagram_name}
+                </span>
+                <span className={`font-serif text-[14px] sm:text-[15px] leading-[1.4] mt-1.5 transition-colors ${ichingOpen === 'hex' ? 'text-stone-400' : 'text-stone-500 group-hover:text-stone-400'}`}>
                   {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
                 </span>
               </button>
