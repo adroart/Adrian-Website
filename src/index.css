@@ -471,6 +471,97 @@ html.dark body { background-color: #171310; }
   100% { opacity: 0.3; }
 }
 
+/* ─── Chinese serif (Mingti / Song) for hexagram glyph labels ──────────── */
+/* Loads Noto Serif TC from Google Fonts (see index.html) for consistent
+ * sharp Mingti rendering across platforms. Falls back to system Song fonts
+ * if the network fails. */
+.font-chinese-serif {
+  font-family: "Noto Serif TC", "Source Han Serif TC", "Source Han Serif SC",
+               "Noto Serif SC",
+               "PMingLiU", "MingLiU", "DFKai-SB",
+               "Songti TC", "Songti SC", "STSong",
+               "AR PL UMing TW", "AR PL UMing CN",
+               "宋體", "新細明體", serif;
+  font-weight: 600;
+  font-feature-settings: "palt";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── System overlay (full-screen system explainer) ─────────────────────── */
+/* Triggered by tapping the oversized hexagram on each system header.
+ * Entrance mirrors Oracle Gateway's slow-rise cadence; exit on outside-tap
+ * reverses it. Tapping the bottom attribution band runs sink-to-point on
+ * every text element before navigating to the deep-dive page. */
+
+@keyframes system-overlay-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes system-overlay-scrim-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes system-overlay-glyph-in {
+  from { opacity: 0; transform: scale(0.86) translateY(14px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes system-overlay-glyph-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.92) translateY(8px); }
+}
+@keyframes system-overlay-rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes system-overlay-rise-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(6px); }
+}
+/* Sink: each text element drifts toward the touch coordinate, then fades.
+ * --dx and --dy are computed in JS per element on the click event so every
+ * word converges on the exact point the user pressed. */
+@keyframes system-overlay-sink {
+  from { opacity: 1; transform: translate(0, 0); }
+  to   { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0.85); }
+}
+
+.system-overlay-scrim          { animation: system-overlay-scrim-in 320ms ease both; }
+.system-overlay-glyph          { animation: system-overlay-glyph-in 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both; }
+.system-overlay-label          { animation: system-overlay-rise-in  800ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both; }
+.system-overlay-body           { animation: system-overlay-rise-in  900ms cubic-bezier(0.22, 1, 0.36, 1) 460ms both; }
+.system-overlay-attribution    { animation: system-overlay-rise-in  900ms cubic-bezier(0.22, 1, 0.36, 1) 640ms both; }
+
+.system-overlay.is-dismissing .system-overlay-scrim       { animation: system-overlay-scrim-out 380ms ease both; }
+.system-overlay.is-dismissing .system-overlay-glyph       { animation: system-overlay-glyph-out 380ms cubic-bezier(0.4, 0, 1, 1) both; }
+.system-overlay.is-dismissing .system-overlay-label,
+.system-overlay.is-dismissing .system-overlay-body,
+.system-overlay.is-dismissing .system-overlay-attribution { animation: system-overlay-rise-out 320ms cubic-bezier(0.4, 0, 1, 1) both; }
+
+.system-overlay.is-sinking .system-overlay-scrim          { animation: system-overlay-scrim-out 600ms ease 100ms both; }
+.system-overlay.is-sinking .sink-target {
+  animation: system-overlay-sink 540ms cubic-bezier(0.5, 0, 0.75, 0) both;
+  animation-delay: calc(var(--sink-i, 0) * 22ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .system-overlay-scrim,
+  .system-overlay-glyph,
+  .system-overlay-label,
+  .system-overlay-body,
+  .system-overlay-attribution,
+  .system-overlay.is-dismissing .system-overlay-scrim,
+  .system-overlay.is-dismissing .system-overlay-glyph,
+  .system-overlay.is-dismissing .system-overlay-label,
+  .system-overlay.is-dismissing .system-overlay-body,
+  .system-overlay.is-dismissing .system-overlay-attribution,
+  .system-overlay.is-sinking .system-overlay-scrim,
+  .system-overlay.is-sinking .sink-target {
+    animation-duration: 1ms !important;
+  }
+}
+
 /* ─── Oracle card field screen ──────────────────────────────────────────── */
 
 /* Warm card surface with paper grain overlay — used for identity cluster */

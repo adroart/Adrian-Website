@@ -36,6 +36,11 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     description:
       'Sixty-four cards. Each carrying a hexagram of the I Ching, a Gene Key, and a gate from Human Design. A complete system for working with the cycle of changes. By Adrian Rasmussen.',
   },
+  '/oracle/the-systems': {
+    title: 'The Three Systems | Adrian Rasmussen',
+    description:
+      'A lineage of changes. The I Ching, the Gene Keys, and Human Design, with respect to the originators and translators whose work the Universal Language Oracle stands inside of.',
+  },
   '/writings': {
     title: 'Writings | Adrian Rasmussen',
     description:

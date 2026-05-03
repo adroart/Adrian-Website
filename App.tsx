@@ -19,6 +19,7 @@ const OracleCards = lazy(() => import('./components/OracleCards'));
 const UniversalLanguageIndex = lazy(() => import('./components/UniversalLanguageIndex'));
 const UniversalLanguageCard = lazy(() => import('./components/UniversalLanguageCard'));
 const OracleGateway = lazy(() => import('./components/OracleGateway'));
+const OracleSystems = lazy(() => import('./components/OracleSystems'));
 const Welcome = lazy(() => import('./components/Welcome'));
 const NotFound = lazy(() => import('./components/NotFound'));
 const OrderConfirmed = lazy(() => import('./components/OrderConfirmed'));
@@ -104,6 +105,7 @@ const AppInner: React.FC = () => {
             <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
             {/* Oracle gateway — QR code target */}
             <Route path="/oracle" element={<OracleGateway />} />
+            <Route path="/oracle/the-systems" element={<OracleSystems />} />
             <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
             <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
             {/* Backwards-compat redirects — old URLs still resolve */}
