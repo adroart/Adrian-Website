@@ -1570,9 +1570,12 @@ const UniversalLanguageCard: React.FC = () => {
                 className="group flex flex-col items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900 rounded-sm"
                 aria-label="About the I Ching"
               >
-                <div className="text-bronze-400/85 group-hover:text-bronze-300 transition-colors mb-5">
-                  <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="currentColor" width={72} />
-                </div>
+                <span
+                  className="font-chinese-serif text-[64px] sm:text-[72px] leading-none text-bronze-400/85 group-hover:text-bronze-300 transition-colors mb-5 sm:mb-6"
+                  title={HEXAGRAM_CHINESE[card.number]?.pinyin}
+                >
+                  {HEXAGRAM_CHINESE[card.number]?.char ?? card.number}
+                </span>
                 <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
                   I Ching
                 </p>
@@ -1581,41 +1584,34 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Interactive hexagram + trigram selector — open hairline rows, no card */}
             <div ref={ichingRef} className="border-t border-stone-700/60 -mx-4 sm:-mx-7">
-              {/* HEX block — two stacked tap zones:
-                    1. Chinese + name → opens the system overlay (about)
-                    2. Trigram formula → reads the combination */}
-              <div className="border-b border-stone-700/60">
-                <button
-                  type="button"
-                  onClick={() => setSystemOverlay('iching')}
-                  className="group flex flex-col items-center justify-center w-full text-center pt-6 sm:pt-7 pb-4 sm:pb-5 px-4 sm:px-7 transition-colors hover:bg-bronze-500/[0.04] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08]"
-                  aria-label={`About ${card.iching.hexagram_name}, ${HEXAGRAM_CHINESE[card.number]?.pinyin ?? ''}`}
-                >
-                  <span
-                    className="font-chinese-serif text-[40px] sm:text-[48px] leading-none text-bronze-400/85 group-hover:text-bronze-300 transition-colors"
-                    title={HEXAGRAM_CHINESE[card.number]?.pinyin}
-                  >
-                    {HEXAGRAM_CHINESE[card.number]?.char ?? `Hex ${card.number}`}
-                  </span>
-                  <span className="font-serif text-[20px] sm:text-[22px] leading-[1.2] tracking-[-0.005em] mt-3 text-stone-100 group-hover:text-stone-100 transition-colors">
-                    {card.iching.hexagram_name}
-                  </span>
-                </button>
-
-                <div className="mx-auto h-px w-12 bg-stone-700/50" aria-hidden="true" />
-
-                <button
-                  type="button"
-                  onClick={() => setIchingOpen('hex')}
-                  className={`group flex items-center justify-center w-full text-center pt-3 sm:pt-4 pb-5 sm:pb-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
-                  aria-pressed={ichingOpen === 'hex'}
-                  aria-label={`Read the combination, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
-                >
-                  <span className={`font-serif text-[15px] sm:text-[16px] leading-[1.4] transition-colors ${ichingOpen === 'hex' ? 'text-stone-200' : 'text-stone-400 group-hover:text-stone-300'}`}>
-                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
-                  </span>
-                </button>
-              </div>
+              {/* HEX row — matches the UPPER/LOWER format below but taller:
+                    label · hexagram glyph · name + formula (two lines) · meta */}
+              <button
+                type="button"
+                onClick={() => setIchingOpen('hex')}
+                className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-5 sm:py-6 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'hex' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
+                aria-pressed={ichingOpen === 'hex'}
+                aria-label={`Read ${card.iching.hexagram_name}, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
+              >
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hex {card.number}</span>
+                <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
+                  <HexagramSVG
+                    upper={card.iching.upper_trigram.symbol}
+                    lower={card.iching.lower_trigram.symbol}
+                    color={ichingOpen === 'hex' ? 'rgba(201,160,90,0.95)' : 'rgba(180,130,70,0.55)'}
+                    width={32}
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className={`font-serif text-[18px] leading-[1.25] tracking-[-0.005em] truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>
+                      {card.iching.hexagram_name}
+                    </span>
+                    <span className={`font-serif text-[14px] leading-[1.35] mt-0.5 truncate transition-colors ${ichingOpen === 'hex' ? 'text-stone-400' : 'text-stone-500 group-hover:text-stone-400'}`}>
+                      {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} over {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
+                    </span>
+                  </div>
+                </div>
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hexagram</span>
+              </button>
 
               <button
                 type="button"
