@@ -405,13 +405,13 @@ function useExpand(): ExpandContextValue {
 let scrollTweenFrame = 0;
 let scrollTweenAbort: (() => void) | null = null;
 
-function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
+function calmScrollToY(targetY: number): void {
   if (scrollTweenFrame) cancelAnimationFrame(scrollTweenFrame);
   scrollTweenAbort?.();
 
-  const startY  = window.scrollY;
-  const targetY = Math.max(0, startY + el.getBoundingClientRect().top - offsetPx);
-  if (Math.abs(targetY - startY) < 2) return;
+  const startY = window.scrollY;
+  const finalY = Math.max(0, targetY);
+  if (Math.abs(finalY - startY) < 2) return;
 
   const duration = 550;
   const startT   = performance.now();
@@ -430,7 +430,7 @@ function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
   const step = (now: number) => {
     if (aborted) { scrollTweenAbort?.(); scrollTweenFrame = 0; return; }
     const t = Math.min(1, (now - startT) / duration);
-    window.scrollTo(0, startY + (targetY - startY) * ease(t));
+    window.scrollTo(0, startY + (finalY - startY) * ease(t));
     if (t < 1) {
       scrollTweenFrame = requestAnimationFrame(step);
     } else {
@@ -440,6 +440,42 @@ function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
   };
   scrollTweenFrame = requestAnimationFrame(step);
 }
+
+/* Smooth height-collapse using the CSS grid `grid-template-rows: 0fr ↔ 1fr`
+   technique. The panel is always in the DOM; visibility is controlled by
+   the row size and overflow clipping. This lets the closing plate animate
+   its height down at the same time the new one animates up, so the page
+   layout shifts gracefully instead of snapping. `inert` keeps closed
+   content out of focus order. */
+const Collapsible: React.FC<{
+  id?: string;
+  open: boolean;
+  reducedMotion: boolean;
+  durationMs?: number;
+  children: React.ReactNode;
+}> = ({ id, open, reducedMotion, durationMs = 320, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open) el.removeAttribute('inert');
+    else el.setAttribute('inert', '');
+  }, [open]);
+  return (
+    <div
+      id={id}
+      ref={ref}
+      className="grid"
+      aria-hidden={!open}
+      style={{
+        gridTemplateRows: open ? '1fr' : '0fr',
+        transition: reducedMotion ? 'none' : `grid-template-rows ${durationMs}ms ease-out`,
+      }}
+    >
+      <div className="overflow-hidden">{children}</div>
+    </div>
+  );
+};
 
 const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }> = ({ storageKey, children }) => {
   const reducedMotion = usePrefersReducedMotion();
@@ -484,15 +520,48 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
   }, []);
 
   const toggle = useCallback((id: string) => {
+    const reg     = registry.current.get(id);
+    const section = reg?.section ?? 'iching';
+
+    // Read the open-state of any registered plate using the same rules as isOpen,
+    // without depending on hook closures (so the predicted-shift loop below sees
+    // consistent values).
+    const checkOpen = (r: ExpandRegistration): boolean => {
+      if (r.id in overrides) return overrides[r.id];
+      const mode = sectionMode[r.section];
+      if (mode === 'open') return true;
+      if (mode === 'closed') return r.lock ? true : false;
+      return r.defaultOpen ?? false;
+    };
+
+    const wasOpen = reg ? checkOpen(reg) : false;
+    const opening = !wasOpen;
+
+    // Predict the layout shift: when opening this plate, sibling plates above
+    // it in the same section will close. Sum their panel heights so the scroll
+    // tween can target the *post-close* position and ride along the height
+    // collapse instead of arriving at a stale spot.
+    let predictedShift = 0;
+    if (opening && typeof window !== 'undefined') {
+      const targetEl = document.getElementById(id);
+      if (targetEl) {
+        const targetTop = targetEl.getBoundingClientRect().top;
+        registry.current.forEach(other => {
+          if (other.id === id) return;
+          if (other.section !== section) return;
+          if (other.lock) return;
+          if (!checkOpen(other)) return;
+          const otherEl = document.getElementById(other.id);
+          if (!otherEl) return;
+          if (otherEl.getBoundingClientRect().top >= targetTop) return; // not above
+          const panelEl = document.getElementById(`${other.id}-panel`);
+          if (!panelEl) return;
+          predictedShift += panelEl.getBoundingClientRect().height;
+        });
+      }
+    }
+
     setOverrides(o => {
-      const reg = registry.current.get(id);
-      const section = reg?.section ?? 'iching';
-      const current = (id in o)
-        ? o[id]
-        : sectionMode[section] === 'open' ? true
-        : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
-        : reg?.defaultOpen ?? false;
-      const opening = !current;
       const next = { ...o, [id]: opening };
       // Accordion: opening one plate closes the others in the same section,
       // so the reading stays a single calm column instead of a tower of stacks.
@@ -507,30 +576,25 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
       }
       return next;
     });
-    // After the layout settles, glide the just-opened plate to the top so
-    // the reader never has to chase content. Skip when closing.
-    const reg = registry.current.get(id);
-    const section = reg?.section ?? 'iching';
-    const wasOpen = (id in overrides)
-      ? overrides[id]
-      : sectionMode[section] === 'open' ? true
-      : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
-      : reg?.defaultOpen ?? false;
-    if (!wasOpen && typeof window !== 'undefined') {
-      // Two frames: one for React to flush the toggle, one for the closing
-      // sibling's height collapse to settle, so we measure the final target
-      // position. The ~32ms wait is below human-perceptible delay.
+
+    if (opening && typeof window !== 'undefined') {
+      // One rAF so React has flushed the toggle. The CSS height transition
+      // begins on the same frame, so the scroll and the layout shift travel
+      // together — predictedShift tells us where the target will end up.
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const el = document.getElementById(id);
-          if (!el) return;
-          if (reducedMotion) {
-            el.scrollIntoView({ behavior: 'auto', block: 'start' });
-          } else {
-            // 96px matches scroll-mt-24 so the plate lands with breathing room.
-            calmScrollIntoView(el, 96);
-          }
-        });
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (reducedMotion) {
+          // No animation. Wait a beat for layout, then jump.
+          window.setTimeout(() => {
+            const r = el.getBoundingClientRect();
+            window.scrollTo(0, Math.max(0, window.scrollY + r.top - 96));
+          }, 0);
+        } else {
+          const currentTop = el.getBoundingClientRect().top;
+          // 96px matches scroll-mt-24 so the plate lands with breathing room.
+          calmScrollToY(window.scrollY + currentTop - predictedShift - 96);
+        }
       });
     }
   }, [sectionMode, overrides, reducedMotion]);
@@ -664,16 +728,12 @@ const PlateExpand: React.FC<{
           {open && meta}
         </div>
       </button>
-      {open && (
-        <div
-          id={`${id}-panel`}
-          className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7"
-          style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}
-        >
+      <Collapsible id={`${id}-panel`} open={open} reducedMotion={ctx.reducedMotion}>
+        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7">
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">{children}</div>
         </div>
-      )}
+      </Collapsible>
     </div>
   );
 };
@@ -769,7 +829,12 @@ const GeneKeyCard: React.FC<{
   useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
 
   const t = PLATE_TONE[tone];
-  const paragraphs = (open ? level.expanded.text : level.collapsed.text).split('\n\n').filter(Boolean);
+  // Always use the expanded text for the panel content. The panel is now
+  // always rendered (height-animated via Collapsible), so the natural height
+  // must not change as `open` toggles — otherwise the height transition
+  // jumps. The preview uses the shorter collapsed copy.
+  const paragraphs  = level.expanded.text.split('\n\n').filter(Boolean);
+  const previewPara = level.collapsed.text.split('\n\n').filter(Boolean)[0] ?? paragraphs[0] ?? '';
 
   return (
     <div
@@ -796,13 +861,13 @@ const GeneKeyCard: React.FC<{
               className="max-h-[7.4em] overflow-hidden"
               style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
             >
-              <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{paragraphs[0]}</p>
+              <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{previewPara}</p>
             </div>
           )}
         </div>
       </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
+      <Collapsible id={`${id}-panel`} open={open} reducedMotion={ctx.reducedMotion}>
+        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7">
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
@@ -830,7 +895,7 @@ const GeneKeyCard: React.FC<{
             )}
           </div>
         </div>
-      )}
+      </Collapsible>
     </div>
   );
 };
@@ -882,8 +947,8 @@ const SynthesisToneCard: React.FC<{
           )}
         </div>
       </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
+      <Collapsible id={`${id}-panel`} open={open} reducedMotion={ctx.reducedMotion}>
+        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7">
           <div className="hidden sm:block" />
           <div className="min-w-0 space-y-4 select-text cursor-text">
             {paragraphs.map((p, i) => (
@@ -903,7 +968,7 @@ const SynthesisToneCard: React.FC<{
             )}
           </div>
         </div>
-      )}
+      </Collapsible>
     </div>
   );
 };
