@@ -392,23 +392,53 @@ function useExpand(): ExpandContextValue {
   return ctx;
 }
 
-/* Slow, eye-trackable scroll. Native smooth-scroll covers the distance in
-   ~300ms and feels teleporty; ease-in-out has a slow start that the user
-   reads as lag. Cubic ease-out starts moving immediately on the first frame
-   and decelerates into the target so the eye can settle without a snap. */
+/* Same easing family as the browser's native smooth-scroll (cubic ease-out)
+   so the motion character is familiar, but stretched to 550ms — about 1.8×
+   native — so the eye can follow the page without losing its place.
+
+   Two implementation details that matter:
+   · A module-level rAF handle lets a new scroll cancel an in-flight one.
+     Without this, clicking a second plate mid-scroll runs two tweens at
+     once and the page judders.
+   · A wheel/touch listener bails out the tween if the reader takes over
+     manually, so the page doesn't fight their scroll. */
+let scrollTweenFrame = 0;
+let scrollTweenAbort: (() => void) | null = null;
+
 function calmScrollIntoView(el: HTMLElement, offsetPx: number): void {
+  if (scrollTweenFrame) cancelAnimationFrame(scrollTweenFrame);
+  scrollTweenAbort?.();
+
   const startY  = window.scrollY;
   const targetY = Math.max(0, startY + el.getBoundingClientRect().top - offsetPx);
   if (Math.abs(targetY - startY) < 2) return;
-  const duration = 800;
+
+  const duration = 550;
   const startT   = performance.now();
-  const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+  const ease     = (t: number) => 1 - Math.pow(1 - t, 3);
+
+  let aborted = false;
+  const onUserInput = () => { aborted = true; };
+  window.addEventListener('wheel',     onUserInput, { passive: true });
+  window.addEventListener('touchstart', onUserInput, { passive: true });
+  scrollTweenAbort = () => {
+    window.removeEventListener('wheel',     onUserInput);
+    window.removeEventListener('touchstart', onUserInput);
+    scrollTweenAbort = null;
+  };
+
   const step = (now: number) => {
+    if (aborted) { scrollTweenAbort?.(); scrollTweenFrame = 0; return; }
     const t = Math.min(1, (now - startT) / duration);
     window.scrollTo(0, startY + (targetY - startY) * ease(t));
-    if (t < 1) requestAnimationFrame(step);
+    if (t < 1) {
+      scrollTweenFrame = requestAnimationFrame(step);
+    } else {
+      scrollTweenAbort?.();
+      scrollTweenFrame = 0;
+    }
   };
-  requestAnimationFrame(step);
+  scrollTweenFrame = requestAnimationFrame(step);
 }
 
 const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }> = ({ storageKey, children }) => {
@@ -487,17 +517,20 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
       : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
       : reg?.defaultOpen ?? false;
     if (!wasOpen && typeof window !== 'undefined') {
-      // One rAF so React has flushed and the target's final position is
-      // known. Two frames felt like a stall before the scroll began.
+      // Two frames: one for React to flush the toggle, one for the closing
+      // sibling's height collapse to settle, so we measure the final target
+      // position. The ~32ms wait is below human-perceptible delay.
       requestAnimationFrame(() => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (reducedMotion) {
-          el.scrollIntoView({ behavior: 'auto', block: 'start' });
-        } else {
-          // 96px matches scroll-mt-24 so the plate lands with breathing room.
-          calmScrollIntoView(el, 96);
-        }
+        requestAnimationFrame(() => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (reducedMotion) {
+            el.scrollIntoView({ behavior: 'auto', block: 'start' });
+          } else {
+            // 96px matches scroll-mt-24 so the plate lands with breathing room.
+            calmScrollIntoView(el, 96);
+          }
+        });
       });
     }
   }, [sectionMode, overrides, reducedMotion]);
