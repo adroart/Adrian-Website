@@ -392,26 +392,33 @@ function useExpand(): ExpandContextValue {
   return ctx;
 }
 
-/* Same easing family as the browser's native smooth-scroll (cubic ease-out)
-   so the motion character is familiar, but stretched to 550ms — about 1.8×
-   native — so the eye can follow the page without losing its place.
+/* Target-tracking smooth scroll. Instead of computing a final scrollY and
+   tweening to it, we tween the target element's *viewport position* along
+   a cubic ease-out curve from where it started to where it should land
+   (offsetPx from the top). Each frame we measure where the element
+   actually is, then nudge scrollY by the difference.
 
-   Two implementation details that matter:
-   · A module-level rAF handle lets a new scroll cancel an in-flight one.
-     Without this, clicking a second plate mid-scroll runs two tweens at
-     once and the page judders.
-   · A wheel/touch listener bails out the tween if the reader takes over
-     manually, so the page doesn't fight their scroll. */
+   This matters because the page layout is shifting underneath the scroll
+   — closing plates are animating their height down. A static-target tween
+   has to guess where the element will end up; if its progress doesn't
+   match the height transition's progress, the element overshoots and
+   bounces back. Re-measuring every frame keeps the eye on a perfectly
+   smooth curve regardless of what the page is doing.
+
+   Implementation details:
+   · A module-level rAF handle lets a new scroll cancel an in-flight one,
+     so two plates tapped in quick succession don't spawn fighting tweens.
+   · A wheel/touch listener aborts the tween if the reader takes over. */
 let scrollTweenFrame = 0;
 let scrollTweenAbort: (() => void) | null = null;
 
-function calmScrollToY(targetY: number): void {
+function calmScrollToElement(el: HTMLElement, offsetPx: number): void {
   if (scrollTweenFrame) cancelAnimationFrame(scrollTweenFrame);
   scrollTweenAbort?.();
 
-  const startY = window.scrollY;
-  const finalY = Math.max(0, targetY);
-  if (Math.abs(finalY - startY) < 2) return;
+  const startViewportTop  = el.getBoundingClientRect().top;
+  const targetViewportTop = offsetPx;
+  if (Math.abs(startViewportTop - targetViewportTop) < 2) return;
 
   const duration = 550;
   const startT   = performance.now();
@@ -430,7 +437,10 @@ function calmScrollToY(targetY: number): void {
   const step = (now: number) => {
     if (aborted) { scrollTweenAbort?.(); scrollTweenFrame = 0; return; }
     const t = Math.min(1, (now - startT) / duration);
-    window.scrollTo(0, startY + (finalY - startY) * ease(t));
+    const desired = startViewportTop + (targetViewportTop - startViewportTop) * ease(t);
+    const actual  = el.getBoundingClientRect().top;
+    const delta   = actual - desired;
+    if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
     if (t < 1) {
       scrollTweenFrame = requestAnimationFrame(step);
     } else {
@@ -445,8 +455,9 @@ function calmScrollToY(targetY: number): void {
    technique. The panel is always in the DOM; visibility is controlled by
    the row size and overflow clipping. This lets the closing plate animate
    its height down at the same time the new one animates up, so the page
-   layout shifts gracefully instead of snapping. `inert` keeps closed
-   content out of focus order. */
+   layout shifts gracefully instead of snapping. A short opacity fade keeps
+   the content from looking like it's sliding-reveal during the transition.
+   `inert` keeps closed content out of focus order. */
 const Collapsible: React.FC<{
   id?: string;
   open: boolean;
@@ -472,7 +483,15 @@ const Collapsible: React.FC<{
         transition: reducedMotion ? 'none' : `grid-template-rows ${durationMs}ms ease-out`,
       }}
     >
-      <div className="overflow-hidden">{children}</div>
+      <div
+        className="overflow-hidden"
+        style={{
+          opacity: open ? 1 : 0,
+          transition: reducedMotion ? 'none' : `opacity ${durationMs - 60}ms ease-out`,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };
@@ -522,44 +541,12 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
   const toggle = useCallback((id: string) => {
     const reg     = registry.current.get(id);
     const section = reg?.section ?? 'iching';
-
-    // Read the open-state of any registered plate using the same rules as isOpen,
-    // without depending on hook closures (so the predicted-shift loop below sees
-    // consistent values).
-    const checkOpen = (r: ExpandRegistration): boolean => {
-      if (r.id in overrides) return overrides[r.id];
-      const mode = sectionMode[r.section];
-      if (mode === 'open') return true;
-      if (mode === 'closed') return r.lock ? true : false;
-      return r.defaultOpen ?? false;
-    };
-
-    const wasOpen = reg ? checkOpen(reg) : false;
+    const wasOpen = (id in overrides)
+      ? overrides[id]
+      : sectionMode[section] === 'open' ? true
+      : sectionMode[section] === 'closed' ? (reg?.lock ? true : false)
+      : reg?.defaultOpen ?? false;
     const opening = !wasOpen;
-
-    // Predict the layout shift: when opening this plate, sibling plates above
-    // it in the same section will close. Sum their panel heights so the scroll
-    // tween can target the *post-close* position and ride along the height
-    // collapse instead of arriving at a stale spot.
-    let predictedShift = 0;
-    if (opening && typeof window !== 'undefined') {
-      const targetEl = document.getElementById(id);
-      if (targetEl) {
-        const targetTop = targetEl.getBoundingClientRect().top;
-        registry.current.forEach(other => {
-          if (other.id === id) return;
-          if (other.section !== section) return;
-          if (other.lock) return;
-          if (!checkOpen(other)) return;
-          const otherEl = document.getElementById(other.id);
-          if (!otherEl) return;
-          if (otherEl.getBoundingClientRect().top >= targetTop) return; // not above
-          const panelEl = document.getElementById(`${other.id}-panel`);
-          if (!panelEl) return;
-          predictedShift += panelEl.getBoundingClientRect().height;
-        });
-      }
-    }
 
     setOverrides(o => {
       const next = { ...o, [id]: opening };
@@ -578,22 +565,22 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
     });
 
     if (opening && typeof window !== 'undefined') {
-      // One rAF so React has flushed the toggle. The CSS height transition
-      // begins on the same frame, so the scroll and the layout shift travel
-      // together — predictedShift tells us where the target will end up.
+      // One rAF so React has flushed the toggle and the height transitions
+      // have started. The tracking scroll re-measures the target every frame,
+      // so the closing plate above can shift the layout however it wants —
+      // the scroll keeps the target on a smooth eased curve to its landing
+      // spot instead of overshooting and bouncing back.
       requestAnimationFrame(() => {
         const el = document.getElementById(id);
         if (!el) return;
         if (reducedMotion) {
-          // No animation. Wait a beat for layout, then jump.
           window.setTimeout(() => {
             const r = el.getBoundingClientRect();
             window.scrollTo(0, Math.max(0, window.scrollY + r.top - 96));
           }, 0);
         } else {
-          const currentTop = el.getBoundingClientRect().top;
           // 96px matches scroll-mt-24 so the plate lands with breathing room.
-          calmScrollToY(window.scrollY + currentTop - predictedShift - 96);
+          calmScrollToElement(el, 96);
         }
       });
     }
