@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CODON_RINGS, ALL_CARDS, type OracleCard } from '../data/oracleData';
 import { FULL_ARCHIVE } from '../data/mockData';
@@ -355,6 +355,16 @@ const UniversalLanguageIndex: React.FC = () => {
   const [gridMode, setGridMode] = useState<GridMode>('cards');
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState('');
+
+  // Warm the card-detail chunk in the background while the visitor browses
+  // the 64-card grid. UniversalLanguageCard is lazy-loaded and the bundle
+  // is large (~2k lines + expanded data + synthesis data), so without this
+  // the first tap on a card has to wait for the chunk to download before
+  // even the entrance ring can render. Preloading here makes the next page
+  // — which is just SVG — render essentially instantly.
+  useEffect(() => {
+    import('./UniversalLanguageCard').catch(() => {});
+  }, []);
 
   const handleGridMode = (mode: GridMode) => {
     setGridMode(mode);
