@@ -13,8 +13,6 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ALL_CARDS, type OracleCard } from '../data/oracleData';
 import { getSynthesis } from '../data/synthesisData';
-import { FULL_ARCHIVE } from '../data/mockData';
-import { img } from '../utils/cloudinary';
 import { TRIGRAM_LINES, getHexagramLines } from '../data/trigrams';
 
 // viewBox 1100×1100 so R can grow without the 64 hexagrams colliding.
@@ -26,20 +24,6 @@ const LINE_H = 5; const LINE_GAP = 2.5;
 const HEX_W = 36; const BROKEN_GAP = 8;
 const HALF_W = (HEX_W - BROKEN_GAP) / 2;
 const HEX_H = 5 * (LINE_H + LINE_GAP) + LINE_H;
-
-function getCardImagePublicId(number: number): string | null {
-  const piece = FULL_ARCHIVE.find(a => {
-    if (a.series !== 'Universal Language') return false;
-    return parseInt(a.coverImage.split('_')[0], 10) === number;
-  });
-  return piece ? piece.coverImage : null;
-}
-
-function getCardImageUrl(number: number, size = 900): string | null {
-  const publicId = getCardImagePublicId(number);
-  if (!publicId) return null;
-  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
-}
 
 // Tightened from the original (1400/300/550/110/260) so the entrance reads
 // as a quick ritual rather than a loading state. Total time-to-fully-revealed
@@ -57,9 +41,13 @@ const EXIT_DUR    = 550;
 interface Props {
   card: OracleCard;
   onDone: () => void;
+  /** Fires the moment dismiss starts — before the exit animation runs.
+      Lets the parent begin reconciling the page underneath so the reading
+      is fully laid out by the time the entrance fades away. */
+  onDismissBegin?: () => void;
 }
 
-export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
+export const OracleCardEntrance: React.FC<Props> = ({ card, onDone, onDismissBegin }) => {
   const [exiting, setExiting] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<Element | null>(null);
@@ -70,43 +58,18 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
   const dismiss = () => {
     if (exitedRef.current) return;
     exitedRef.current = true;
+    onDismissBegin?.();
     setExiting(true);
     // Slightly longer than EXIT_DUR so the ring's exit animation finishes
     // before we tear down the portal.
     setTimeout(onDone, EXIT_DUR + 80);
   };
 
-  // Preload card imagery while the visitor reads the entrance. Load the hero
-  // (900px) first; only once it has fully resolved do we warm the 1200px
-  // lightbox variant. We don't preload other cards — the visitor may never
-  // navigate to them, and warming speculatively wastes their bandwidth.
-  useEffect(() => {
-    const hero = new window.Image();
-    let lightbox: HTMLImageElement | null = null;
-    let cancelled = false;
-
-    const warmLightbox = () => {
-      if (cancelled) return;
-      const url = getCardImageUrl(card.number, 1200);
-      if (!url) return;
-      lightbox = new window.Image();
-      lightbox.src = url;
-    };
-
-    const heroUrl = getCardImageUrl(card.number, 900);
-    if (heroUrl) {
-      hero.onload  = warmLightbox;
-      hero.onerror = warmLightbox;
-      hero.src = heroUrl;
-    }
-
-    return () => {
-      cancelled = true;
-      hero.onload = null;
-      hero.onerror = null;
-      if (lightbox) { lightbox.onload = null; lightbox.onerror = null; }
-    };
-  }, [card.number]);
+  // No image preload here. The entrance owns the main thread while it
+  // animates; the parent kicks off image loading via the body's <img>
+  // tag once the entrance has fully bloomed. This way the only network
+  // activity during the entrance is whatever the browser already had
+  // queued, and the ring stays smooth.
 
   // Focus management - trap focus on the dialog; restore on unmount.
   // Also lock body scroll so the page underneath can't peek through.
