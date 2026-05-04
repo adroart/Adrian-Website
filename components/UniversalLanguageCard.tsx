@@ -1134,6 +1134,16 @@ const UniversalLanguageCard: React.FC = () => {
   // Ritual entrance plays on every landing, including QR scans — the visitor
   // taps to begin the reading rather than having it auto-load.
   const [showIndexEntrance, setShowIndexEntrance] = useState(true);
+  // Defer rendering the heavy reading body by one frame so the entrance
+  // overlay can paint first. Without this, React reconciles the entire
+  // ~2000-line tree before the browser gets a chance to paint, which
+  // shows up as a noticeable pause between tapping a card on the index
+  // and seeing the ring bloom.
+  const [contentReady, setContentReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setContentReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   // Bridge - lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
   const expandRef = useRef<ExpandContextValue | null>(null);
@@ -1273,9 +1283,14 @@ const UniversalLanguageCard: React.FC = () => {
   const ichingHighlight = expanded?.i_ching?.reflection?.text ?? card.iching.essence;
 
   return (
+    <>
+      {/* Entrance lives outside the Provider/contentReady gate so it can
+          paint on the very first frame after navigation, before React
+          reconciles the rest of the reading. */}
+      {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
+      {!contentReady ? null : (
     <ExpandProvider storageKey={`ul-card-${cardNum}`}>
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
-      {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
       {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
       <SystemOverlay
         open={systemOverlay !== null}
@@ -2356,6 +2371,8 @@ const UniversalLanguageCard: React.FC = () => {
         </div>
       </div>
     </ExpandProvider>
+      )}
+    </>
   );
 };
 
