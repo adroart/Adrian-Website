@@ -420,7 +420,11 @@ function calmScrollToElement(el: HTMLElement, offsetPx: number): void {
   const targetViewportTop = offsetPx;
   if (Math.abs(startViewportTop - targetViewportTop) < 2) return;
 
-  const duration = 550;
+  // 400ms — close to the panel's 320ms height transition so the two
+  // motions arrive together. Long enough that the eye can track the page
+  // travelling (vs the browser's snappy ~300ms native smooth-scroll),
+  // short enough that the scroll doesn't trail the height animation.
+  const duration = 400;
   const startT   = performance.now();
   const ease     = (t: number) => 1 - Math.pow(1 - t, 3);
 
@@ -548,26 +552,29 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
       : reg?.defaultOpen ?? false;
     const opening = !wasOpen;
 
+    // Capture the scroll target *before* React commits the toggle. The
+    // plate's outer div is positioned by content above it, not by its own
+    // panel, so its top edge is the same value before and after the
+    // height transition starts. By starting the scroll tween synchronously
+    // here — instead of waiting an extra rAF — the first scroll frame
+    // lands on the same paint as the first frame of the height animation,
+    // so the page begins moving the instant the panel begins expanding.
+    const scrollEl = opening && typeof window !== 'undefined' && !reducedMotion
+      ? document.getElementById(id)
+      : null;
+
     setOverrides(o => ({ ...o, [id]: opening }));
 
-    if (opening && typeof window !== 'undefined') {
-      // One rAF so React has flushed the toggle and the height transitions
-      // have started. The tracking scroll re-measures the target every frame,
-      // so the closing plate above can shift the layout however it wants —
-      // the scroll keeps the target on a smooth eased curve to its landing
-      // spot instead of overshooting and bouncing back.
+    if (scrollEl) {
+      // 96px matches scroll-mt-24 so the plate lands with breathing room.
+      calmScrollToElement(scrollEl, 96);
+    } else if (opening && typeof window !== 'undefined' && reducedMotion) {
+      // Reduced motion: jump straight to the target after layout settles.
       requestAnimationFrame(() => {
         const el = document.getElementById(id);
         if (!el) return;
-        if (reducedMotion) {
-          window.setTimeout(() => {
-            const r = el.getBoundingClientRect();
-            window.scrollTo(0, Math.max(0, window.scrollY + r.top - 96));
-          }, 0);
-        } else {
-          // 96px matches scroll-mt-24 so the plate lands with breathing room.
-          calmScrollToElement(el, 96);
-        }
+        const r = el.getBoundingClientRect();
+        window.scrollTo(0, Math.max(0, window.scrollY + r.top - 96));
       });
     }
   }, [sectionMode, overrides, reducedMotion]);
