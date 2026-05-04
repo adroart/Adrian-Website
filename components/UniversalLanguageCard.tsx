@@ -548,21 +548,7 @@ const ExpandProvider: React.FC<{ storageKey: string; children: React.ReactNode }
       : reg?.defaultOpen ?? false;
     const opening = !wasOpen;
 
-    setOverrides(o => {
-      const next = { ...o, [id]: opening };
-      // Accordion: opening one plate closes the others in the same section,
-      // so the reading stays a single calm column instead of a tower of stacks.
-      // Locked plates (Reflection) stay open by design.
-      if (opening) {
-        registry.current.forEach(other => {
-          if (other.id === id) return;
-          if (other.section !== section) return;
-          if (other.lock) return;
-          next[other.id] = false;
-        });
-      }
-      return next;
-    });
+    setOverrides(o => ({ ...o, [id]: opening }));
 
     if (opening && typeof window !== 'undefined') {
       // One rAF so React has flushed the toggle and the height transitions

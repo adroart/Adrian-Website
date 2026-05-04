@@ -41,14 +41,18 @@ function getCardImageUrl(number: number, size = 900): string | null {
   return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
-const RING_DUR    = 1400;
-const NAME_DELAY  = 300;
-const LINE_DELAY  = 550;
-const LINE_STAGGER = 110;
-const LINE_DUR    = 260;
+// Tightened from the original (1400/300/550/110/260) so the entrance reads
+// as a quick ritual rather than a loading state. Total time-to-fully-revealed
+// drops from ~1.6s to ~0.9s; the ring still blooms gracefully but the eye
+// doesn't have to wait on it.
+const RING_DUR    = 850;
+const NAME_DELAY  = 150;
+const LINE_DELAY  = 320;
+const LINE_STAGGER = 65;
+const LINE_DUR    = 180;
 const LAST_LINE   = LINE_DELAY + 5 * LINE_STAGGER + LINE_DUR;
-const KEYS_DELAY  = LAST_LINE + 200;
-const EXIT_DUR    = 800;
+const KEYS_DELAY  = LAST_LINE + 120;
+const EXIT_DUR    = 550;
 
 interface Props {
   card: OracleCard;
@@ -67,7 +71,9 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
     if (exitedRef.current) return;
     exitedRef.current = true;
     setExiting(true);
-    setTimeout(onDone, 1120);
+    // Slightly longer than EXIT_DUR so the ring's exit animation finishes
+    // before we tear down the portal.
+    setTimeout(onDone, EXIT_DUR + 80);
   };
 
   // Preload card imagery while the visitor reads the entrance. Load the hero
