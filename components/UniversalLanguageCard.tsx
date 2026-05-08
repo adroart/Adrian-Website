@@ -11,6 +11,10 @@ import { OracleCardEntrance } from './OracleCardEntrance';
 import SystemOverlay, { type SystemKey } from './SystemOverlay';
 import { HEXAGRAM_CHINESE } from '../data/hexagramChinese';
 
+// Tracks which cards have already shown their ritual entrance in this session,
+// so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
+const seenEntrances = new Set<number>();
+
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
 type Screen = 'field' | 'iching' | 'genekeys' | 'humandesign' | 'connections';
@@ -1005,9 +1009,14 @@ const UniversalLanguageCard: React.FC = () => {
   const ichingRef    = useRef<HTMLDivElement>(null);
   const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
 
-  // Ritual entrance plays on every landing, including QR scans — the visitor
-  // taps to begin the reading rather than having it auto-load.
-  const [showIndexEntrance, setShowIndexEntrance] = useState(true);
+  // Ritual entrance plays on first landing for each card in a session. After
+  // the visitor has entered a card once, navigating away (e.g. to /creations/<id>)
+  // and back skips the animation.
+  const [showIndexEntrance, setShowIndexEntrance] = useState(() => {
+    const willShow = !seenEntrances.has(cardNum);
+    if (willShow) seenEntrances.add(cardNum);
+    return willShow;
+  });
   // Bridge - lets `go()` and the deep-link effect reach into the Expand
   // registry below the Provider without splitting this component in two.
   const expandRef = useRef<ExpandContextValue | null>(null);
