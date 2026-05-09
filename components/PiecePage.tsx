@@ -162,7 +162,9 @@ const PiecePage: React.FC = () => {
     // If the reader arrived from an oracle card (BuySheet → here), show a
     // one-tap return link that takes them straight back to where they were
     // reading, system param and all.
-    const oracleOrigin = (location.state as { oracleOrigin?: string } | null)?.oracleOrigin ?? null;
+    const navState = location.state as { oracleOrigin?: string; preferredSize?: string; openConfigurator?: boolean } | null;
+    const oracleOrigin = navState?.oracleOrigin ?? null;
+    const openConfigurator = navState?.openConfigurator === true;
 
     // Image gallery state
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -227,7 +229,7 @@ const PiecePage: React.FC = () => {
     // Set default selected size when piece loads or changes. If the reader
     // arrived from an oracle BuySheet with a specific size in mind, honor
     // that selection instead of defaulting to first-in-stock.
-    const preferredSize = (location.state as { preferredSize?: string } | null)?.preferredSize ?? null;
+    const preferredSize = navState?.preferredSize ?? null;
 
     useEffect(() => {
         if (variants.length === 0) {
@@ -244,14 +246,14 @@ const PiecePage: React.FC = () => {
         setSelectedSize(inStockVariant?.size ?? variants[0].size);
     }, [variants, preferredSize]);
 
-    // If the reader arrived from a BuySheet (preferredSize present), scroll
-    // to the configurator on mount so they land on the actual purchase
-    // controls, not on the breadcrumb. The id-reset effect above scrolls to
-    // (0, 0) first; we wait a frame for layout, then scroll into the
-    // configurator. Retry a couple of frames if the ref isn't attached yet
-    // (it lives behind a few conditional branches).
+    // If the reader arrived from a BuySheet (preferredSize OR
+    // openConfigurator), scroll to the configurator on mount so they land
+    // on the purchase controls, not on the breadcrumb. The id-reset effect
+    // above scrolls to (0, 0) first; we wait a frame for layout, then
+    // scroll into the configurator. Retry a couple of frames if the ref
+    // isn't attached yet (it lives behind a few conditional branches).
     useEffect(() => {
-        if (!preferredSize) return;
+        if (!preferredSize && !openConfigurator) return;
         let attempts = 0;
         let raf = 0;
         const attempt = () => {
@@ -266,7 +268,7 @@ const PiecePage: React.FC = () => {
         raf = requestAnimationFrame(attempt);
         return () => cancelAnimationFrame(raf);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, preferredSize]);
+    }, [id, preferredSize, openConfigurator]);
 
     // Illumination tier derived from selected size
     const illuminationTier = useMemo(() => {

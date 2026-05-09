@@ -1,30 +1,28 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import type { Artwork, SizeVariant } from '../../types';
+import type { Artwork } from '../../types';
 
 const formatPrice = (n?: number) => (typeof n === 'number' ? `$${n.toLocaleString()}` : '');
-
-const variantAvailabilityLabel = (a: SizeVariant['availability']) =>
-  a === 'IN_STOCK' ? 'Ready to ship' : 'Made to order';
 
 /**
  * Acquire pane for an oracle card's physical piece.
  *
- * Bottom sheet on mobile, centred panel on desktop. Shows the piece
- * thumbnail, brief specs, and every available size variant inline so the
- * reader can pick a size before navigating out. The actual checkout still
- * lives on the piece page (/creations/<id>) — committing to buy means
- * leaving the reading flow, but each navigation passes oracleOrigin in
- * router state so the piece page can offer a one-tap return.
+ * Two paths, no quick-buys:
+ *   1. Configure & acquire — opens the piece page where the reader picks
+ *      size, finish, illumination, gemstones, and any other add-ons before
+ *      committing. We don't surface size variants in the sheet itself
+ *      because acquiring a piece without picking the rest of the
+ *      configuration would never be a complete order.
+ *   2. Commission a custom piece — routes to /inquire so Adrian can work
+ *      with the buyer on a unique work.
  *
- * Dismissal: scrim tap, ESC, browser back (history entry pushed on open).
- * Reading position underneath is preserved.
+ * Both navigations carry oracleOrigin in router state so the destination
+ * page can offer a one-tap return to the reading.
  */
 export const BuySheet: React.FC<{
   open: boolean;
   onClose: () => void;
   piece: Artwork | null;
-  /** Cloudinary URL for the artwork thumbnail shown inside the sheet. */
   imageUrl: string;
   imageAlt: string;
   cardName: string;
@@ -33,10 +31,9 @@ export const BuySheet: React.FC<{
   const dialogRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
-  // Auto-close when the URL changes (e.g. the reader tapped a variant
-  // link). This is the safest signal — the route change is what actually
-  // unmounts the underlying card page anyway, but we also clean up our
-  // own state so we don't briefly flash the sheet open if they come back.
+  // Auto-close once the URL actually changes (the reader tapped a Link).
+  // This runs strictly *after* React Router commits the navigation, so
+  // there's no race between setBuyOpen(false) and the click handler.
   const lastPathRef = useRef(location.pathname);
   useEffect(() => {
     if (lastPathRef.current !== location.pathname) {
@@ -45,10 +42,7 @@ export const BuySheet: React.FC<{
     }
   }, [location.pathname, open, onClose]);
 
-  // ESC + body scroll lock. Browser-back dismiss removed because the
-  // pushState marker raced with React Router's navigate() when the
-  // reader tapped a variant link, swallowing the navigation. Scrim and
-  // ESC dismiss are sufficient.
+  // ESC + body scroll lock
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -64,14 +58,24 @@ export const BuySheet: React.FC<{
 
   if (!open) return null;
 
-  // Origin URL passed via router state so the piece page can render a
-  // "back to your oracle reading" link.
   const oracleOrigin = location.pathname + (location.search || '');
-
-  const variants: SizeVariant[] = piece?.sizeVariants ?? piece?.madeToOrderSizes ?? [];
-  const sold = piece?.availability === 'SOLD';
-  const ready = piece?.availability === 'READY_TO_SHIP';
   const pieceHref = piece ? `/creations/${piece.id}` : null;
+  const sold = piece?.availability === 'SOLD';
+
+  // Compose the configure-CTA's secondary line: "from $X · sizes & add-ons"
+  // when there are variants, otherwise just price + availability.
+  const variantCount = (piece?.sizeVariants?.length ?? piece?.madeToOrderSizes?.length ?? 0);
+  const lowestPrice = (() => {
+    if (typeof piece?.price === 'number') return piece.price;
+    const variants = piece?.sizeVariants ?? piece?.madeToOrderSizes ?? [];
+    const prices = variants.map(v => v.price).filter((n): n is number => typeof n === 'number');
+    return prices.length > 0 ? Math.min(...prices) : undefined;
+  })();
+  const configureSubtitle = sold
+    ? 'Sold · view archive'
+    : variantCount > 0
+      ? `From ${formatPrice(lowestPrice)} · pick size, finish, illumination`
+      : (typeof lowestPrice === 'number' ? `${formatPrice(lowestPrice)} · pick finish & options` : 'Pick finish & options');
 
   return (
     <div
@@ -86,9 +90,9 @@ export const BuySheet: React.FC<{
         onClick={onClose}
         className="absolute inset-0 bg-stone-900/65 backdrop-blur-[2px] motion-safe:animate-[buysheet-fade_180ms_ease-out]"
       />
-      {/* Sheet body — color tokens auto-invert via CSS vars in dark mode.
-          Explicit z-10 so the scrim button never wins hit-testing for
-          clicks on the variant links inside. */}
+      {/* Sheet body — explicit z-10 so the scrim never wins hit-testing
+          for the Links inside. Color tokens auto-invert in dark mode via
+          CSS vars; no `dark:` overrides needed. */}
       <div
         ref={dialogRef}
         tabIndex={-1}
@@ -100,34 +104,27 @@ export const BuySheet: React.FC<{
         </div>
 
         <div className="px-6 pt-4 pb-6">
-          {/* Header */}
           <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500">Code {cardNumber}</p>
           <h2 className="font-serif text-[26px] leading-[1.15] text-wood-900 mt-1">{cardName}</h2>
 
-          {/* Thumbnail + specs */}
+          {/* Specs row */}
           <div className="mt-5 flex gap-4">
             <img
               src={imageUrl}
               alt={imageAlt}
               className="w-24 h-24 object-cover border border-wood-300/40 flex-shrink-0"
             />
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-2">
               {piece?.dimensions && (
-                <p className="font-sans text-[13px] text-wood-700 leading-[1.45]">
+                <p className="font-sans text-[13px] text-wood-700 leading-[1.4]">
                   <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Dimensions</span>
                   <br />{piece.dimensions}
                 </p>
               )}
               {piece?.material && (
-                <p className="font-sans text-[13px] text-wood-700 leading-[1.45] mt-2">
+                <p className="font-sans text-[13px] text-wood-700 leading-[1.4]">
                   <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Material</span>
                   <br />{piece.material}
-                </p>
-              )}
-              {piece?.edition && (
-                <p className="font-sans text-[13px] text-wood-700 leading-[1.45] mt-2">
-                  <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Edition</span>
-                  <br />{piece.edition}
                 </p>
               )}
             </div>
@@ -139,71 +136,69 @@ export const BuySheet: React.FC<{
             </p>
           )}
 
-          {/* Acquisition options. Plain <Link>s with no onClick — the
-              location-change effect above closes the sheet automatically
-              once React Router actually changes the URL. This avoids the
-              setBuyOpen-during-click race that swallowed earlier attempts. */}
-          <div className="mt-6">
-            {piece && variants.length > 0 && (
-              <>
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mb-2">
-                  Available sizes
-                </p>
-                <div className="space-y-2">
-                  {variants.map((v) => (
-                    <Link
-                      key={v.size}
-                      to={pieceHref!}
-                      state={{ oracleOrigin, preferredSize: v.size }}
-                      className="group flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-700 leading-tight">
-                          {v.size}
-                          {typeof v.price === 'number' && (
-                            <span className="text-wood-500"> · {formatPrice(v.price)}</span>
-                          )}
-                        </p>
-                        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 mt-1">
-                          {variantAvailabilityLabel(v.availability)}
-                        </p>
-                      </div>
-                      <span className="font-serif text-[18px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {piece && variants.length === 0 && (
+          {/* Two paths: configure & acquire, or commission. Plain <Link>s
+              with no onClick — the location-change effect above closes the
+              sheet once React Router has committed the navigation. */}
+          <div className="mt-6 space-y-3">
+            {pieceHref && !sold && (
               <Link
-                to={pieceHref!}
-                state={{ oracleOrigin }}
-                className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
+                to={pieceHref}
+                state={{ oracleOrigin, openConfigurator: true }}
+                className="group block bg-paper-50 hover:bg-bronze-50/60 border border-bronze-400/50 hover:border-bronze-500/70 transition-colors"
               >
-                <div className="min-w-0">
-                  <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-700 leading-tight">
-                    {sold ? 'View the piece' : 'Acquire the original'}
-                  </p>
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mt-1">
-                    {sold
-                      ? 'Sold · view archive'
-                      : ready
-                        ? `Ready to ship${typeof piece.price === 'number' ? ` · ${formatPrice(piece.price)}` : ''}`
-                        : `Made to order${typeof piece.price === 'number' ? ` · from ${formatPrice(piece.price)}` : ''}`}
-                  </p>
+                <div className="h-[2px] w-full bg-bronze-500 group-hover:bg-bronze-400 motion-safe:transition-colors" aria-hidden="true" />
+                <div className="px-5 py-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 leading-tight">
+                      Configure &amp; acquire this piece
+                    </p>
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mt-1.5">
+                      {configureSubtitle}
+                    </p>
+                  </div>
+                  <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
                 </div>
-                <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
               </Link>
             )}
 
-            {/* Commission — quieter secondary option */}
+            {pieceHref && sold && (
+              <Link
+                to={pieceHref}
+                state={{ oracleOrigin }}
+                className="group block bg-paper-50 hover:bg-paper-200 border border-wood-300/60 transition-colors"
+              >
+                <div className="px-5 py-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 leading-tight">
+                      View the archived piece
+                    </p>
+                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mt-1.5">
+                      Sold · or commission a related piece below
+                    </p>
+                  </div>
+                  <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
+                </div>
+              </Link>
+            )}
+
             <Link
               to="/inquire"
-              state={{ oracleOrigin }}
-              className="group block mt-3 px-4 py-3 text-center font-serif text-[14px] text-wood-700 hover:text-bronze-700 border-t border-wood-300/40 transition-colors"
+              state={piece
+                ? { oracleOrigin, piece: piece.title, pieceId: piece.id }
+                : { oracleOrigin, piece: cardName }}
+              className="group block bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-400/60 transition-colors"
             >
-              Or commission a related piece <span className="text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
+              <div className="px-5 py-4 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 leading-tight">
+                    Commission a custom piece
+                  </p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mt-1.5">
+                    Work with Adrian on a unique work for your space
+                  </p>
+                </div>
+                <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
+              </div>
             </Link>
           </div>
         </div>
