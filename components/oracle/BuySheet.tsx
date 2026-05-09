@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Artwork, SizeVariant } from '../../types';
 
 const formatPrice = (n?: number) => (typeof n === 'number' ? `$${n.toLocaleString()}` : '');
@@ -32,6 +32,7 @@ export const BuySheet: React.FC<{
 }> = ({ open, onClose, piece, imageUrl, imageAlt, cardName, cardNumber }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ESC + body scroll lock. Browser-back dismiss removed because the
   // pushState marker raced with React Router's navigate() when the
@@ -125,7 +126,10 @@ export const BuySheet: React.FC<{
             </p>
           )}
 
-          {/* Acquisition options */}
+          {/* Acquisition options. Programmatic navigate (not <Link>) so the
+              navigation runs regardless of any onClose-driven re-render of
+              this dialog — the previous Link/onClick combo was racing the
+              setBuyOpen update and silently dropping the click. */}
           <div className="mt-6">
             {piece && variants.length > 0 && (
               <>
@@ -134,12 +138,14 @@ export const BuySheet: React.FC<{
                 </p>
                 <div className="space-y-2">
                   {variants.map((v) => (
-                    <Link
+                    <button
                       key={v.size}
-                      to={pieceHref!}
-                      state={{ oracleOrigin, preferredSize: v.size }}
-                      onClick={onClose}
-                      className="group flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
+                      type="button"
+                      onClick={() => {
+                        navigate(pieceHref!, { state: { oracleOrigin, preferredSize: v.size } });
+                        onClose();
+                      }}
+                      className="group flex items-center justify-between gap-4 px-4 py-3 w-full text-left bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
                     >
                       <div className="min-w-0">
                         <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-700 leading-tight">
@@ -153,18 +159,20 @@ export const BuySheet: React.FC<{
                         </p>
                       </div>
                       <span className="font-serif text-[18px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </>
             )}
 
             {piece && variants.length === 0 && (
-              <Link
-                to={pieceHref!}
-                state={{ oracleOrigin }}
-                onClick={onClose}
-                className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(pieceHref!, { state: { oracleOrigin } });
+                  onClose();
+                }}
+                className="group flex items-center justify-between gap-4 px-5 py-4 w-full text-left bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
               >
                 <div className="min-w-0">
                   <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-700 leading-tight">
@@ -179,18 +187,20 @@ export const BuySheet: React.FC<{
                   </p>
                 </div>
                 <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-              </Link>
+              </button>
             )}
 
             {/* Commission — quieter secondary option */}
-            <Link
-              to="/inquire"
-              state={{ oracleOrigin }}
-              onClick={onClose}
-              className="group block mt-3 px-4 py-3 text-center font-serif text-[14px] text-wood-700 hover:text-bronze-700 border-t border-wood-300/40 transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/inquire', { state: { oracleOrigin } });
+                onClose();
+              }}
+              className="group block w-full mt-3 px-4 py-3 text-center font-serif text-[14px] text-wood-700 hover:text-bronze-700 border-t border-wood-300/40 transition-colors"
             >
               Or commission a related piece <span className="text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-            </Link>
+            </button>
           </div>
         </div>
       </div>

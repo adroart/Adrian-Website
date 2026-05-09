@@ -246,15 +246,27 @@ const PiecePage: React.FC = () => {
 
     // If the reader arrived from a BuySheet (preferredSize present), scroll
     // to the configurator on mount so they land on the actual purchase
-    // controls, not on the breadcrumb.
+    // controls, not on the breadcrumb. The id-reset effect above scrolls to
+    // (0, 0) first; we wait a frame for layout, then scroll into the
+    // configurator. Retry a couple of frames if the ref isn't attached yet
+    // (it lives behind a few conditional branches).
     useEffect(() => {
         if (!preferredSize) return;
-        const t = window.setTimeout(() => {
-            purchaseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300);
-        return () => window.clearTimeout(t);
+        let attempts = 0;
+        let raf = 0;
+        const attempt = () => {
+            const el = purchaseRef.current;
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            attempts += 1;
+            if (attempts < 20) raf = requestAnimationFrame(attempt);
+        };
+        raf = requestAnimationFrame(attempt);
+        return () => cancelAnimationFrame(raf);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    }, [id, preferredSize]);
 
     // Illumination tier derived from selected size
     const illuminationTier = useMemo(() => {
