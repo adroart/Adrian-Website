@@ -12,6 +12,9 @@ Detailed task files:
 ## Summary
 
 ### Bugs (fix now)
+- [ ] **Configurator duplication** — `PieceConfigurator` (used in oracle BuySheet) duplicates the same wizard state + pricing logic that's still inline in `PiecePage`. Pricing change today means two edits. Single source of truth before launch: refactor PiecePage to use `PieceConfigurator`. Blocker is rewiring the sticky mobile bottom bar's live total readout — it currently reads the local PiecePage state.
+- [ ] **Edition-closed gate missing in `PieceConfigurator`** — when `shopEnabled` flips to true, a piece whose edition has fully sold (`editionSold >= editionSize`) can still be purchased via the BuySheet. PiecePage already has an `editionClosed` branch that hides the buy CTA; the extracted component doesn't carry that guard. Mirror the same check before shop launches.
+- [ ] **No auto-scroll on configurator step 1 → 2** — inside the BuySheet on short phones, tapping "Continue to options" leaves the new step below the fold. Same in PiecePage. Add a scroll-into-view on step change.
 - [ ] Newsletter "Join the Inner Circle" subscribe fails — ad blockers block `api.convertkit.com`. Proxy via `/api/subscribe` CF Function added but needs `KIT_FORM_ID` + `KIT_PUBLIC_API_KEY` env vars set correctly in Cloudflare Pages dashboard (no `VITE_` prefix)
 
 ### Blocks Launch (Adrian only)
