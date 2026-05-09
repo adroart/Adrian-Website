@@ -50,6 +50,12 @@ export interface Artwork {
   subcategory?: string; // Light Codes: "Frequency Foundations" | "Embodied Vibrations" | "Resonant Formations"
   relatedStorySlug?: string; // Links to Story.slug for bidirectional story linking
   isSignaturePiece?: boolean; // Multidimensional Art pieces outside any named series
+
+  // Configurator opt-in: when set, the configurator only shows these add-ons.
+  // When undefined, defaults to the full set (crystals, woodFrame, illumination
+  // — illumination still gated by size tier). Use this to hide add-ons that
+  // don't apply to a piece (e.g. jewelry shouldn't offer a wood frame).
+  availableAddOns?: Array<'crystals' | 'woodFrame' | 'illumination'>;
 }
 
 export interface Collection {

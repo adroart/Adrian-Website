@@ -25,13 +25,17 @@ interface FormState {
 
 const BUDGET_PRESETS = [
   { label: 'Under $1,000', value: 'Under $1,000' },
-  { label: '$1,000 to $3,000', value: '$1,000 to $3,000' },
-  { label: '$3,000 to $5,000', value: '$3,000 to $5,000' },
-  { label: '$5,000 to $10,000', value: '$5,000 to $10,000' },
-  { label: '$10,000 to $25,000', value: '$10,000 to $25,000' },
-  { label: '$25,000+', value: '$25,000+' },
-  { label: 'Not sure yet', value: 'Not sure yet' },
+  { label: '$1,000 to $5,000', value: '$1,000 to $5,000' },
+  { label: '$5,000 to $15,000', value: '$5,000 to $15,000' },
+  { label: '$15,000+', value: '$15,000+' },
 ];
+
+// Budget tiers at or above this floor warrant a scheduled call.
+// Below the floor, the inquiry is handled by email only.
+const CALL_BUDGET_VALUES = new Set<string>([
+  '$5,000 to $15,000',
+  '$15,000+',
+]);
 
 const TIMELINE_OPTIONS = [
   { label: 'Flexible, no rush', value: 'Flexible / No rush' },
@@ -631,8 +635,10 @@ const Inquire: React.FC = () => {
                   </p>
                   <p className="font-serif text-wood-600 leading-[1.7] mb-10">
                     {purchaseMode
-                      ? 'I will confirm the details and follow up with next steps within a couple of days.'
-                      : "I'll be in touch within a few days."
+                      ? 'I will confirm the details and follow up with next steps within a couple of days, including a separate note about shipping for your destination.'
+                      : CALL_BUDGET_VALUES.has(form.budget)
+                        ? "I'll be in touch within a few days. If the project feels like a fit, we'll schedule a call to talk it through."
+                        : "I'll be in touch within a few days by email."
                     }
                   </p>
                   <div className="border-t border-wood-200 pt-8 mb-8">
