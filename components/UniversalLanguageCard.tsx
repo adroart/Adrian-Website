@@ -517,60 +517,32 @@ const PlateExpand: React.FC<{
   variant: 'dark' | 'light';
   label: string;
   caption?: string;
-  preview: React.ReactNode;
+  preview?: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
   meta?: React.ReactNode;
-}> = ({ id, section, variant, label, caption, preview, children, defaultOpen = false, meta }) => {
+}> = ({ id, section, variant, label, caption, children, meta }) => {
+  // Flattened: now that each system lives in its own swipe panel, hiding
+  // content behind a tap is friction. Plates render fully expanded with the
+  // museum-plate header acting purely as a section marker.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, section, defaultOpen);
-  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+  useEffect(() => ctx.register({ id, section, defaultOpen: true }), [ctx, id, section]);
 
   const t = PLATE_TYPE[variant];
 
-  const previewNode = typeof preview === 'string'
-    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.55] sm:leading-[1.6]`}>{preview}</p>
-    : preview;
-
   return (
-    <div
-      id={id}
-      className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none ${open ? '' : t.rowHover} ${t.rowFocus}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-            {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
-          </div>
+    <div id={id} className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}>
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+          {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
         </div>
-        <div className="min-w-0">
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: t.maskGrad, maskImage: t.maskGrad }}
-            >{previewNode}</div>
-          )}
-          {open && meta}
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          {meta && <div className="mb-3">{meta}</div>}
+          {children}
         </div>
-      </button>
-      {open && (
-        <div
-          id={`${id}-panel`}
-          className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7"
-          style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}
-        >
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">{children}</div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -660,74 +632,49 @@ const GeneKeyCard: React.FC<{
   id: string;
   section?: SectionKey;
   defaultOpen?: boolean;
-}> = ({ tone, level, id, section = 'genekeys', defaultOpen = false }) => {
+}> = ({ tone, level, id, section = 'genekeys' }) => {
+  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, section, defaultOpen);
-  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+  useEffect(() => ctx.register({ id, section, defaultOpen: true }), [ctx, id, section]);
 
   const t = PLATE_TONE[tone];
-  const paragraphs = (open ? level.expanded.text : level.collapsed.text).split('\n\n').filter(Boolean);
+  const paragraphs = level.expanded.text.split('\n\n').filter(Boolean);
 
   return (
-    <div
-      id={id}
-      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-            <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
-          </div>
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+          <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
         </div>
-        <div className="min-w-0">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{level.name}</p>
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
-            >
-              <p className="font-sans text-[15px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{paragraphs[0]}</p>
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{level.name}</p>
+          {paragraphs.map((p, i) => (
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+          ))}
+          {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+              {level.repressive_nature && (
+                <div>
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                    Repressive · {level.repressive_nature.label}
+                  </p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.repressive_nature.description}</p>
+                </div>
+              )}
+              {level.reactive_nature && (
+                <div>
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                    Reactive · {level.reactive_nature.label}
+                  </p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.reactive_nature.description}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
-            ))}
-            {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {level.repressive_nature && (
-                  <div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                      Repressive · {level.repressive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.repressive_nature.description}</p>
-                  </div>
-                )}
-                {level.reactive_nature && (
-                  <div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                      Reactive · {level.reactive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.reactive_nature.description}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -742,65 +689,39 @@ const SynthesisToneCard: React.FC<{
   text: string;
   extras?: { label: string; text: string }[];
   defaultOpen?: boolean;
-}> = ({ tone, id, name, text, extras = [], defaultOpen = false }) => {
+}> = ({ tone, id, name, text, extras = [] }) => {
+  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, 'genekeys', defaultOpen);
-  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
+  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen: true }), [ctx, id]);
   const t = PLATE_TONE[tone];
   const paragraphs = text.split('\n\n').filter(Boolean);
-  const previewPara = paragraphs[0] ?? '';
 
   return (
-    <div
-      id={id}
-      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-          </div>
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
         </div>
-        <div className="min-w-0">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{name}</p>
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
-            >
-              <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{previewPara}</p>
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{name}</p>
+          {paragraphs.map((p, i) => (
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+          ))}
+          {extras.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+              {extras.map((ex, i) => (
+                <div key={i}>
+                  <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
+                  {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                    <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                  ))}
+                </div>
+              ))}
             </div>
           )}
         </div>
-      </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
-            ))}
-            {extras.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {extras.map((ex, i) => (
-                  <div key={i}>
-                    <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
-                    {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                      <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -1033,6 +954,13 @@ const UniversalLanguageCard: React.FC = () => {
   const jumpToChapter = useCallback((key: ChapterKey) => {
     handleChapterChange(key);
     stageHandle.current?.scrollTo(key);
+    // Also scroll the page back to the top of the reading area, so the new
+    // panel starts at its header — not at whatever vertical depth the previous
+    // panel was scrolled to. The hero sentinel sits right above the sticky
+    // chrome, so scrolling it into view positions the wordmark at the top.
+    requestAnimationFrame(() => {
+      heroSentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }, [handleChapterChange]);
 
   // Watch the hero sentinel so the chrome collapses/expands as the user scrolls.
@@ -1477,14 +1405,20 @@ const UniversalLanguageCard: React.FC = () => {
         <div className="sticky z-30" style={{ top: 'var(--nav-height, 72px)' }}>
           {/* Slim collapsed chrome — appears once the hero scrolls away.
               Always at hand: tap thumbnail to enlarge, share, or acquire. */}
-          {/* The site's color tokens auto-invert in dark mode via CSS vars,
-              so we use the base tokens only — `dark:` overrides here would
-              double-invert and produce a light band on a dark page. */}
+          {/* Slim collapsed chrome. Keeps the artwork present while the
+              reader cycles through the systems — Adrian's preference is for
+              the art to remain visible, not just a tiny indicator. The
+              thumbnail is 56×56 with a subtle bronze frame to feel like a
+              gallery placard rather than a generic UI thumbnail.
+
+              Note: the site's color tokens auto-invert in dark mode via CSS
+              vars, so we use the base tokens only — `dark:` overrides here
+              would double-invert and produce a light band on a dark page. */}
           <div
-            className={`overflow-hidden bg-paper-100 border-b border-wood-300/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
+            className={`overflow-hidden bg-paper-100 border-b border-wood-300/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}
             aria-hidden={!chromeCollapsed}
           >
-            <div className="flex items-center gap-3 max-w-2xl mx-auto h-14 px-3 sm:px-4">
+            <div className="flex items-center gap-4 max-w-2xl mx-auto h-20 px-3 sm:px-4">
               <button
                 type="button"
                 onClick={(e) => {
@@ -1492,17 +1426,17 @@ const UniversalLanguageCard: React.FC = () => {
                   openLightbox(img?.getBoundingClientRect() ?? null);
                 }}
                 aria-label="View artwork at full size"
-                className="block w-10 h-10 overflow-hidden rounded-sm border border-wood-300/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
+                className="block w-14 h-14 overflow-hidden rounded-sm border border-bronze-400/40 hover:border-bronze-500/70 shadow-[0_1px_3px_rgba(60,44,22,0.12)] motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
               >
                 <img
-                  src={cardImageUrl(card.number, 120)}
+                  src={cardImageUrl(card.number, 168)}
                   alt={imageAlt}
                   className="w-full h-full object-cover"
                 />
               </button>
               <div className="flex-1 min-w-0">
-                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-wood-500 leading-none">Code {card.number}</p>
-                <p className="font-serif text-[14px] text-wood-900 truncate leading-tight mt-1">{card.card_name}</p>
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 leading-none">Code {card.number}</p>
+                <p className="font-serif text-[16px] text-wood-900 truncate leading-tight mt-1.5">{card.card_name}</p>
               </div>
               <button
                 type="button"
@@ -1792,8 +1726,9 @@ const UniversalLanguageCard: React.FC = () => {
 
             <ContinueRail
               variant="dark"
-              label="Next — Gene Keys"
-              heading={`${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`}
+              eyebrow="Next"
+              title="Gene Keys"
+              subtitle={`${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`}
               onClick={() => jumpToChapter('genekeys')}
               ariaLabel={`Continue to Gene Keys: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
             />
@@ -1886,8 +1821,9 @@ const UniversalLanguageCard: React.FC = () => {
 
             <ContinueRail
               variant="light"
-              label="Next — Human Design"
-              heading={(synthesis?.reference?.hd_keyword ?? card.human_design.keyword) + (synthesis?.reference?.hd_center ? ` · ${synthesis.reference.hd_center} Center` : '')}
+              eyebrow="Next"
+              title="Human Design"
+              subtitle={(synthesis?.reference?.hd_keyword ?? card.human_design.keyword) + (synthesis?.reference?.hd_center ? ` · ${synthesis.reference.hd_center} Center` : '')}
               onClick={() => jumpToChapter('humandesign')}
               ariaLabel="Continue to Human Design"
             />
@@ -2016,8 +1952,9 @@ const UniversalLanguageCard: React.FC = () => {
 
             <ContinueRail
               variant="dark"
-              label="Next — Tarot"
-              heading={(synthesis?.reference?.tarot_card ?? card.ring_tarot) + ' · ' + card.ring_name}
+              eyebrow="Next"
+              title="Tarot"
+              subtitle={(synthesis?.reference?.tarot_card ?? card.ring_tarot) + ' · ' + card.ring_name}
               onClick={() => jumpToChapter('tarot')}
               ariaLabel={`Continue to Tarot: ${synthesis?.reference?.tarot_card ?? card.ring_tarot}, ${card.ring_name}`}
             />
@@ -2124,8 +2061,9 @@ const UniversalLanguageCard: React.FC = () => {
 
             <ContinueRail
               variant="light"
-              label="Next — Body"
-              heading={(synthesis?.reference?.body_physiology ?? 'The body') + (synthesis?.reference?.body_amino_acid ? ` · ${synthesis.reference.body_amino_acid}` : '')}
+              eyebrow="Next"
+              title="Body"
+              subtitle={(synthesis?.reference?.body_physiology ?? 'The body') + (synthesis?.reference?.body_amino_acid ? ` · ${synthesis.reference.body_amino_acid}` : '')}
               onClick={() => jumpToChapter('body')}
               ariaLabel="Continue to Body reading"
             />
@@ -2198,8 +2136,9 @@ const UniversalLanguageCard: React.FC = () => {
               return (
                 <ContinueRail
                   variant="light"
-                  label={`Next card — Code ${next.number}`}
-                  heading={next.card_name}
+                  eyebrow={`Next card · Code ${next.number}`}
+                  title={next.card_name}
+                  subtitle={next.iching.hexagram_name}
                   onClick={() => navigate(`/oracle/universal-language/${next.number}`, { state: { ritual: true } })}
                   ariaLabel={`Continue to Code ${next.number}, ${next.card_name}`}
                 />
