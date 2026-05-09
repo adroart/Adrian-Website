@@ -224,16 +224,37 @@ const PiecePage: React.FC = () => {
     // Resolve variants: prefer sizeVariants, fall back to legacy madeToOrderSizes
     const variants = useMemo(() => art?.sizeVariants ?? art?.madeToOrderSizes ?? [], [art]);
 
-    // Set default selected size when piece loads or changes
+    // Set default selected size when piece loads or changes. If the reader
+    // arrived from an oracle BuySheet with a specific size in mind, honor
+    // that selection instead of defaulting to first-in-stock.
+    const preferredSize = (location.state as { preferredSize?: string } | null)?.preferredSize ?? null;
+
     useEffect(() => {
-        if (variants.length > 0) {
-            // Default to the first in-stock variant if one exists, otherwise first
-            const inStockVariant = variants.find(v => ('availability' in v) && v.availability === 'IN_STOCK');
-            setSelectedSize(inStockVariant?.size ?? variants[0].size);
-        } else {
+        if (variants.length === 0) {
             setSelectedSize('');
+            return;
         }
-    }, [variants]);
+        const matchPreferred = preferredSize ? variants.find(v => v.size === preferredSize) : null;
+        if (matchPreferred) {
+            setSelectedSize(matchPreferred.size);
+            return;
+        }
+        // Default to the first in-stock variant if one exists, otherwise first
+        const inStockVariant = variants.find(v => ('availability' in v) && v.availability === 'IN_STOCK');
+        setSelectedSize(inStockVariant?.size ?? variants[0].size);
+    }, [variants, preferredSize]);
+
+    // If the reader arrived from a BuySheet (preferredSize present), scroll
+    // to the configurator on mount so they land on the actual purchase
+    // controls, not on the breadcrumb.
+    useEffect(() => {
+        if (!preferredSize) return;
+        const t = window.setTimeout(() => {
+            purchaseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+        return () => window.clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
 
     // Illumination tier derived from selected size
     const illuminationTier = useMemo(() => {

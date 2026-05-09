@@ -31,30 +31,12 @@ export const BuySheet: React.FC<{
   cardNumber: number;
 }> = ({ open, onClose, piece, imageUrl, imageAlt, cardName, cardNumber }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const wasOpen = useRef(false);
   const location = useLocation();
 
-  // Browser-back dismiss: push a marker on open, listen for popstate.
-  useEffect(() => {
-    if (!open) {
-      wasOpen.current = false;
-      return;
-    }
-    if (wasOpen.current) return;
-    wasOpen.current = true;
-    const stateMarker = { __buySheet: true, t: Date.now() };
-    try { window.history.pushState(stateMarker, ''); } catch {}
-    const onPop = () => onClose();
-    window.addEventListener('popstate', onPop);
-    return () => {
-      window.removeEventListener('popstate', onPop);
-      if ((window.history.state as any)?.__buySheet) {
-        try { window.history.back(); } catch {}
-      }
-    };
-  }, [open, onClose]);
-
-  // ESC + body scroll lock
+  // ESC + body scroll lock. Browser-back dismiss removed because the
+  // pushState marker raced with React Router's navigate() when the
+  // reader tapped a variant link, swallowing the navigation. Scrim and
+  // ESC dismiss are sufficient.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
