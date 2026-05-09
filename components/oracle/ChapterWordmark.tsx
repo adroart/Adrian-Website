@@ -78,7 +78,7 @@ export const ChapterWordmark: React.FC<{
   return (
     <div
       ref={containerRef}
-      className={`relative w-full border-t border-b ${ruleCls} bg-paper-50/95 dark:bg-stone-900/95 backdrop-blur-sm ${className}`}
+      className={`relative w-full border-t border-b ${ruleCls} bg-paper-50 dark:bg-stone-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] ${className}`}
       role="tablist"
       aria-label="Reading chapters"
     >

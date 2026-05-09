@@ -1478,7 +1478,7 @@ const UniversalLanguageCard: React.FC = () => {
           {/* Slim collapsed chrome — appears once the hero scrolls away.
               Always at hand: tap thumbnail to enlarge, share, or acquire. */}
           <div
-            className={`overflow-hidden bg-paper-50/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-wood-200/50 dark:border-stone-700/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
+            className={`overflow-hidden bg-paper-50 dark:bg-stone-900 border-b border-wood-200/50 dark:border-stone-700/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
             aria-hidden={!chromeCollapsed}
           >
             <div className="flex items-center gap-3 max-w-2xl mx-auto h-14 px-3 sm:px-4">

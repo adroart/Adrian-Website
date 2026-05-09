@@ -9,23 +9,15 @@ export interface ReadingStageHandle {
  * Horizontal scroll-snap reading stage.
  *
  * Holds 5 panels (one per system) side by side. Each panel is the full width
- * of the stage, with a 20px peek of the next panel showing on the right edge
- * to telegraph the swipe affordance.
- *
- * Built on native CSS scroll-snap so wheel, trackpad, touch, and keyboard all
- * navigate identically. An IntersectionObserver tracks which panel is most
- * visible and reports it via onActiveChange.
- *
- * `touch-action: pan-y` on inner content (set by the panel children themselves)
- * + `overscroll-behavior-x: contain` on the container ensures vertical reading
- * doesn't accidentally trigger horizontal snap, and horizontal swipe doesn't
- * leak to the browser back gesture.
+ * of the stage. Built on native CSS scroll-snap so wheel, trackpad, touch, and
+ * keyboard all navigate identically. An IntersectionObserver tracks which
+ * panel is most visible and reports it via onActiveChange.
  */
 export const ReadingStage = React.forwardRef<ReadingStageHandle, {
   chapters: ChapterKey[];
   active: ChapterKey;
   onActiveChange: (key: ChapterKey) => void;
-  children: React.ReactNode; // expects exactly chapters.length children, in order
+  children: React.ReactNode;
   className?: string;
 }>(({ chapters, active, onActiveChange, children, className = '' }, ref) => {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -41,13 +33,10 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
       const panel = panelRefs.current.get(key);
       if (!stage || !panel) return;
       isProgrammaticScroll.current = true;
-      const targetLeft = panel.offsetLeft;
       stage.scrollTo({
-        left: targetLeft,
+        left: panel.offsetLeft,
         behavior: opts?.instant ? 'auto' : 'smooth',
       });
-      // Release the lock after the smooth scroll has had time to settle so
-      // the IntersectionObserver doesn't fire intermediate active chapters.
       if (programmaticScrollTimeout.current) window.clearTimeout(programmaticScrollTimeout.current);
       programmaticScrollTimeout.current = window.setTimeout(() => {
         isProgrammaticScroll.current = false;
@@ -55,12 +44,11 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
     },
   }), []);
 
-  // Track the most-visible panel via IntersectionObserver. We use a single
-  // observer with thresholds so we know which panel crosses the 50% mark.
+  // Track the most-visible panel via IntersectionObserver.
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    let visibility = new Map<ChapterKey, number>();
+    const visibility = new Map<ChapterKey, number>();
     chapters.forEach(k => visibility.set(k, 0));
 
     const observer = new IntersectionObserver((entries) => {
@@ -69,7 +57,6 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
         if (!key) return;
         visibility.set(key, entry.intersectionRatio);
       });
-      // Pick the chapter with the highest ratio — that's the one currently in view.
       let best: ChapterKey | null = null;
       let bestRatio = 0;
       visibility.forEach((ratio, key) => {
@@ -120,10 +107,19 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
       role="region"
       aria-label="Reading by system. Swipe or arrow keys to navigate."
       onKeyDown={handleKeyDown}
-      className={`reading-stage flex w-full overflow-x-auto overflow-y-visible snap-x snap-mandatory overscroll-x-contain focus-visible:outline-none ${className}`}
+      className={`reading-stage focus-visible:outline-none ${className}`}
       style={{
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'nowrap',
+        width: '100%',
+        overflowX: 'auto',
+        overflowY: 'visible',
+        scrollSnapType: 'x mandatory',
+        overscrollBehaviorX: 'contain',
         scrollbarWidth: 'none',
         msOverflowStyle: 'none',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {chapters.map((key, idx) => (
@@ -132,10 +128,11 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
           data-chapter={key}
           ref={el => { panelRefs.current.set(key, el); }}
           aria-hidden={key !== active}
-          className="reading-stage__panel snap-start shrink-0 w-full"
+          className="reading-stage__panel"
           style={{
-            // The panel itself is 100% of the stage width. The peek effect lives
-            // in the stage's right padding so the next panel's edge slides in.
+            flex: '0 0 100%',
+            width: '100%',
+            minWidth: '100%',
             scrollSnapAlign: 'start',
             scrollSnapStop: 'always',
           }}
@@ -143,10 +140,6 @@ export const ReadingStage = React.forwardRef<ReadingStageHandle, {
           {childrenArray[idx]}
         </section>
       ))}
-      {/* Hide WebKit scrollbar without affecting layout. */}
-      <style>{`
-        .reading-stage::-webkit-scrollbar { display: none; }
-      `}</style>
     </div>
   );
 });
