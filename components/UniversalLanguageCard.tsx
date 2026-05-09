@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useRef, useContext, createContext, useCallback } from 'react';
-import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Home } from 'lucide-react';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
 import { getSynthesis } from '../data/synthesisData';
@@ -10,6 +11,11 @@ import { useMetaTags } from '../hooks/useMetaTags';
 import { OracleCardEntrance } from './OracleCardEntrance';
 import SystemOverlay, { type SystemKey } from './SystemOverlay';
 import { HEXAGRAM_CHINESE } from '../data/hexagramChinese';
+import ChapterWordmark, { type ChapterKey, type Chapter } from './oracle/ChapterWordmark';
+import ReadingStage, { type ReadingStageHandle } from './oracle/ReadingStage';
+import ContinueRail from './oracle/ContinueRail';
+import ImageViewer from './oracle/ImageViewer';
+import BuySheet from './oracle/BuySheet';
 
 // Tracks which cards have already shown their ritual entrance in this session,
 // so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
@@ -321,30 +327,6 @@ async function generateStoryBlob(
   );
 }
 
-/* ─── Lightbox ───────────────────────────────────────────────────────────── */
-
-const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handler);
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handler);
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[200] bg-stone-950/96 flex items-center justify-center cursor-zoom-out"
-      onClick={onClose}
-      role="dialog" aria-modal="true" aria-label="Full image. Click to close."
-    >
-      <img src={src} alt={alt} className="max-w-full max-h-full object-contain" onClick={e => e.stopPropagation()} />
-    </div>
-  );
-};
-
 /* ─── Reduced motion hook ────────────────────────────────────────────────── */
 
 function usePrefersReducedMotion(): boolean {
@@ -536,60 +518,32 @@ const PlateExpand: React.FC<{
   variant: 'dark' | 'light';
   label: string;
   caption?: string;
-  preview: React.ReactNode;
+  preview?: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
   meta?: React.ReactNode;
-}> = ({ id, section, variant, label, caption, preview, children, defaultOpen = false, meta }) => {
+}> = ({ id, section, variant, label, caption, children, meta }) => {
+  // Flattened: now that each system lives in its own swipe panel, hiding
+  // content behind a tap is friction. Plates render fully expanded with the
+  // museum-plate header acting purely as a section marker.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, section, defaultOpen);
-  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+  useEffect(() => ctx.register({ id, section, defaultOpen: true }), [ctx, id, section]);
 
   const t = PLATE_TYPE[variant];
 
-  const previewNode = typeof preview === 'string'
-    ? <p className={`font-serif text-[14px] ${t.body} leading-[1.55] sm:leading-[1.6]`}>{preview}</p>
-    : preview;
-
   return (
-    <div
-      id={id}
-      className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none ${open ? '' : t.rowHover} ${t.rowFocus}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-            {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
-          </div>
+    <div id={id} className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}>
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+          {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
         </div>
-        <div className="min-w-0">
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: t.maskGrad, maskImage: t.maskGrad }}
-            >{previewNode}</div>
-          )}
-          {open && meta}
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          {meta && <div className="mb-3">{meta}</div>}
+          {children}
         </div>
-      </button>
-      {open && (
-        <div
-          id={`${id}-panel`}
-          className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7"
-          style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}
-        >
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">{children}</div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -679,74 +633,49 @@ const GeneKeyCard: React.FC<{
   id: string;
   section?: SectionKey;
   defaultOpen?: boolean;
-}> = ({ tone, level, id, section = 'genekeys', defaultOpen = false }) => {
+}> = ({ tone, level, id, section = 'genekeys' }) => {
+  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, section, defaultOpen);
-  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
+  useEffect(() => ctx.register({ id, section, defaultOpen: true }), [ctx, id, section]);
 
   const t = PLATE_TONE[tone];
-  const paragraphs = (open ? level.expanded.text : level.collapsed.text).split('\n\n').filter(Boolean);
+  const paragraphs = level.expanded.text.split('\n\n').filter(Boolean);
 
   return (
-    <div
-      id={id}
-      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-            <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
-          </div>
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+          <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
         </div>
-        <div className="min-w-0">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{level.name}</p>
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
-            >
-              <p className="font-sans text-[15px] text-wood-700 leading-[1.7] sm:leading-[1.75]">{paragraphs[0]}</p>
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{level.name}</p>
+          {paragraphs.map((p, i) => (
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+          ))}
+          {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+              {level.repressive_nature && (
+                <div>
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                    Repressive · {level.repressive_nature.label}
+                  </p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
+                </div>
+              )}
+              {level.reactive_nature && (
+                <div>
+                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
+                    Reactive · {level.reactive_nature.label}
+                  </p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-            ))}
-            {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {level.repressive_nature && (
-                  <div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                      Repressive · {level.repressive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
-                  </div>
-                )}
-                {level.reactive_nature && (
-                  <div>
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                      Reactive · {level.reactive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -761,65 +690,39 @@ const SynthesisToneCard: React.FC<{
   text: string;
   extras?: { label: string; text: string }[];
   defaultOpen?: boolean;
-}> = ({ tone, id, name, text, extras = [], defaultOpen = false }) => {
+}> = ({ tone, id, name, text, extras = [] }) => {
+  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
   const ctx = useExpand();
-  const open = ctx.isOpen(id, 'genekeys', defaultOpen);
-  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
+  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen: true }), [ctx, id]);
   const t = PLATE_TONE[tone];
   const paragraphs = text.split('\n\n').filter(Boolean);
-  const previewPara = paragraphs[0] ?? '';
 
   return (
-    <div
-      id={id}
-      className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7"
-    >
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        className={`group block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors focus-visible:outline-none focus-visible:bg-wood-500/[0.06] ${open ? '' : 'hover:bg-wood-500/[0.04]'}`}
-      >
-        <div className="flex items-start justify-between gap-3 sm:block sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <div className="min-w-0">
-            <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
-            <div className={`mt-1 h-px ${ctx.reducedMotion ? '!transition-none' : 'transition-[width,background-color] duration-300 ease-out'} ${open ? 'w-full bg-bronze-500' : 'w-0 bg-bronze-500/40 group-hover:w-8 group-hover:bg-bronze-500/80'}`} aria-hidden="true" />
-          </div>
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
+      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
+          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
         </div>
-        <div className="min-w-0">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mb-2`}>{name}</p>
-          {!open && (
-            <div
-              className="max-h-[7.4em] overflow-hidden"
-              style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)' }}
-            >
-              <p className="font-serif text-[14px] text-wood-700 leading-[1.55] sm:leading-[1.6]">{previewPara}</p>
+        <div className="min-w-0 space-y-4 select-text cursor-text">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{name}</p>
+          {paragraphs.map((p, i) => (
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+          ))}
+          {extras.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+              {extras.map((ex, i) => (
+                <div key={i}>
+                  <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
+                  {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                    <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                  ))}
+                </div>
+              ))}
             </div>
           )}
         </div>
-      </button>
-      {open && (
-        <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 pb-6 sm:pb-7 px-4 sm:px-7" style={!ctx.reducedMotion ? { animation: 'plate-expand 200ms ease-out' } : undefined}>
-          <div className="hidden sm:block" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-            ))}
-            {extras.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {extras.map((ex, i) => (
-                  <div key={i}>
-                    <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
-                    {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                      <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -989,6 +892,16 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
   );
 };
 
+/* ─── Reading-stage chapters (system navigation) ─────────────────────────── */
+
+const CHAPTERS: Chapter[] = [
+  { key: 'iching',      label: 'I CHING' },
+  { key: 'genekeys',    label: 'GENE KEYS' },
+  { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
+  { key: 'tarot',       label: 'TAROT' },
+  { key: 'body',        label: 'BODY' },
+];
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageCard: React.FC = () => {
@@ -1002,12 +915,80 @@ const UniversalLanguageCard: React.FC = () => {
   const synthesis = getSynthesis(cardNum);
 
   const [lightboxOpen,   setLightboxOpen]   = useState(false);
+  const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
   const [copied,         setCopied]         = useState(false);
   const [shareOpen,      setShareOpen]      = useState(false);
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const ichingRef    = useRef<HTMLDivElement>(null);
   const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
+
+  // ── New layout state ────────────────────────────────────────────────────
+  // Active chapter in the reading stage (synced with ?system= URL param).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialChapter = (() => {
+    const s = searchParams.get('system');
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    return valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching';
+  })();
+  const [activeChapter, setActiveChapter] = useState<ChapterKey>(initialChapter);
+  const stageHandle = useRef<ReadingStageHandle>(null);
+  const heroImageRef = useRef<HTMLImageElement>(null);
+
+  // Chrome collapse state — true once the reader has scrolled past the
+  // acquire/share row. From that point the contextual card header takes over
+  // for the global site nav. Two sentinels because the swap trigger and the
+  // chapter-jump scroll target are at different document positions:
+  //   acquireShareEndRef → triggers the nav/card-header swap
+  //   heroSentinelRef    → scroll target for jumpToChapter (top of reading)
+  const [chromeCollapsed, setChromeCollapsed] = useState(false);
+  const acquireShareEndRef = useRef<HTMLDivElement>(null);
+  const acquireSectionRef = useRef<HTMLDivElement>(null);
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Buy sheet open/closed
+  const [buyOpen, setBuyOpen] = useState(false);
+
+  // Update URL when chapter changes (no history entry — replaceState semantics)
+  const handleChapterChange = useCallback((key: ChapterKey) => {
+    setActiveChapter(key);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('system', key);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const jumpToChapter = useCallback((key: ChapterKey) => {
+    handleChapterChange(key);
+    stageHandle.current?.scrollTo(key);
+    // Also scroll the page back to the top of the reading area, so the new
+    // panel starts at its header — not at whatever vertical depth the previous
+    // panel was scrolled to. The hero sentinel sits right above the sticky
+    // chrome, so scrolling it into view positions the wordmark at the top.
+    requestAnimationFrame(() => {
+      heroSentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [handleChapterChange]);
+
+  // Watch the acquire/share sentinel so the contextual card header takes
+  // over from the global nav once the reader has scrolled past the acquire
+  // and share controls — not before. The global nav stays in place while
+  // the artwork and acquire/share are still on screen.
+  useEffect(() => {
+    const sentinel = acquireShareEndRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setChromeCollapsed(!entry.isIntersecting);
+    }, { threshold: 0, rootMargin: '0px' });
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [cardNum]);
+
+  const openLightbox = useCallback((rect: DOMRect | null) => {
+    setLightboxOrigin(rect);
+    setLightboxOpen(true);
+  }, []);
 
   // Ritual entrance plays on first landing for each card in a session. After
   // the visitor has entered a card once, navigating away (e.g. to /creations/<id>)
@@ -1039,8 +1020,22 @@ const UniversalLanguageCard: React.FC = () => {
   useEffect(() => {
     setLightboxOpen(false);
     setShareOpen(false);
+    setBuyOpen(false);
     storyFileRef.current = null;
     window.scrollTo(0, 0);
+    // Reset to the system specified in URL if present, else I Ching
+    const s = searchParams.get('system');
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching');
+  }, [cardNum]);
+
+  // After mount or chapter change driven by URL, scroll the stage to the
+  // matching panel without animation so a deep link lands in place.
+  useEffect(() => {
+    stageHandle.current?.scrollTo(activeChapter, { instant: true });
+    // We want this to run only once per cardNum at mount; the stage's own
+    // IntersectionObserver handles user-driven changes thereafter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardNum]);
 
   useEffect(() => {
@@ -1124,6 +1119,80 @@ const UniversalLanguageCard: React.FC = () => {
     }
   };
 
+  // Share sheet content shared by the field section and the contextual card
+  // header. Same six options, rendered wherever the active Share button lives.
+  const renderShareSheet = (idSuffix: string) => (
+    <div id={`card-${idSuffix}-share-sheet`} className="border-t border-wood-200/40 bg-paper-100 px-5 py-4">
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={handleCopyLink}
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span className={`font-label text-[11px] uppercase tracking-[0.15em] transition-colors ${copied ? 'text-bronze-600' : 'text-wood-600'}`}>
+            {copied ? 'Copied!' : 'Copy link'}
+          </span>
+        </button>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366] flex-shrink-0">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+          </svg>
+          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">WhatsApp</span>
+        </a>
+        <a
+          href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#2AABEE] flex-shrink-0">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          </svg>
+          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Telegram</span>
+        </a>
+        <a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-wood-700 flex-shrink-0">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">X / Twitter</span>
+        </a>
+        <a
+          href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent('I wanted to share this oracle card with you:\n\n' + shareUrl)}`}
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
+        </a>
+        <button
+          onClick={handleInstagramShare}
+          disabled={storyLoading}
+          className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left disabled:opacity-50"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
+            <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">
+            {storyLoading ? 'Saving...' : 'Instagram Story'}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
   useMetaTags({
     title: card ? `${card.card_name} · Code ${cardNum} · Universal Language Oracle` : undefined,
     description: card
@@ -1159,7 +1228,22 @@ const UniversalLanguageCard: React.FC = () => {
     <ExpandProvider storageKey={`ul-card-${cardNum}`}>
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
-      {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
+      <ImageViewer
+        open={lightboxOpen}
+        src={cardImageUrl(card.number, 1200)}
+        alt={imageAlt}
+        originRect={lightboxOrigin}
+        onClose={() => setLightboxOpen(false)}
+      />
+      <BuySheet
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+        piece={piece ?? null}
+        imageUrl={cardImageUrl(card.number, 360)}
+        imageAlt={imageAlt}
+        cardName={card.card_name}
+        cardNumber={card.number}
+      />
       <SystemOverlay
         open={systemOverlay !== null}
         systemKey={systemOverlay ?? 'iching'}
@@ -1195,20 +1279,32 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="md:max-w-2xl md:mx-auto">
             <figure
               className="w-full aspect-square cursor-zoom-in"
-              onClick={() => setLightboxOpen(true)}
+              onClick={(e) => {
+                const target = e.currentTarget.querySelector('img');
+                openLightbox(target?.getBoundingClientRect() ?? null);
+              }}
               role="button" tabIndex={0} aria-label="Enlarge image"
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  const target = (e.currentTarget as HTMLElement).querySelector('img');
+                  openLightbox(target?.getBoundingClientRect() ?? null);
+                }
+              }}
             >
-              <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
+              <img ref={heroImageRef} src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
             {/* Order + Share - two-up row directly below image */}
-            <div className="border-t border-b border-wood-200/60 bg-paper-100/50">
+            <div ref={acquireSectionRef} className="border-t border-b border-wood-200/60 bg-paper-100/50">
               <div className="flex items-stretch gap-2 px-3 py-3">
-                {/* Acquire */}
-                <Link
-                  to={piece ? `/creations/${piece.id}` : '/inquire'}
-                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200"
+                {/* Acquire — opens the BuySheet so the reader doesn't lose
+                    their place in the reading. */}
+                <button
+                  type="button"
+                  onClick={() => setBuyOpen(true)}
+                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200 text-left"
+                  aria-haspopup="dialog"
                 >
                   <div>
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
@@ -1228,7 +1324,7 @@ const UniversalLanguageCard: React.FC = () => {
                       Available
                     </span>
                   )}
-                </Link>
+                </button>
 
                 {/* Hexagram symbol - decorative, sits between the two buttons */}
                 {synthesis?.reference?.hexagram_symbol && (
@@ -1254,92 +1350,17 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Share sheet - expands below */}
-              {shareOpen && (
-                <div className="border-t border-wood-200/40 bg-paper-100 px-5 py-4">
-                  <div className="grid grid-cols-2 gap-2">
-
-                    {/* Copy link */}
-                    <button
-                      onClick={handleCopyLink}
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
-                        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                      </svg>
-                      <span className={`font-label text-[11px] uppercase tracking-[0.15em] transition-colors ${copied ? 'text-bronze-600' : 'text-wood-600'}`}>
-                        {copied ? 'Copied!' : 'Copy link'}
-                      </span>
-                    </button>
-
-                    {/* WhatsApp */}
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366] flex-shrink-0">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-                      </svg>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">WhatsApp</span>
-                    </a>
-
-                    {/* Telegram */}
-                    <a
-                      href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#2AABEE] flex-shrink-0">
-                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                      </svg>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Telegram</span>
-                    </a>
-
-                    {/* X / Twitter */}
-                    <a
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-wood-700 flex-shrink-0">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">X / Twitter</span>
-                    </a>
-
-                    {/* Email */}
-                    <a
-                      href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent('I wanted to share this oracle card with you:\n\n' + shareUrl)}`}
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
-                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                      </svg>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
-                    </a>
-
-                    {/* Instagram Stories - opens native share sheet with image on mobile,
-                        falls back to download on desktop */}
-                    <button
-                      onClick={handleInstagramShare}
-                      disabled={storyLoading}
-                      className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors text-left disabled:opacity-50"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
-                        <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-                      </svg>
-                      <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">
-                        {storyLoading ? 'Saving...' : 'Instagram Story'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Share sheet — expands below the field-section share button.
+                  Hidden once the contextual card header has taken over so
+                  the dropdown only ever renders once at a time. */}
+              {shareOpen && !chromeCollapsed && renderShareSheet('field')}
             </div>
+
+            {/* Sentinel right after the acquire/share row. When this scrolls
+                past the top of the viewport, the global site nav swaps out
+                for the contextual card header. The global nav stays visible
+                while the artwork and acquire/share are still on screen. */}
+            <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
@@ -1373,191 +1394,7 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
 
-            {/* Reference strip - museum specimen plate.
-                Five systems as peers, each a facet of one energy.
-                No per-row containers; hairline dividers. Hover underline
-                communicates interactivity without arrows on every row.
-                Label column fixed so values align vertically. */}
-            {synthesis?.reference && (() => {
-              // Codon ring siblings (other cards that share this card's ring
-              // via the tarot arcana). These ARE the ring relationship shown
-              // in the Tarot row.
-              const siblingNums = (card.codon_ring_siblings ?? []).filter(n => n !== card.number);
-              const siblingCards = siblingNums
-                .map(n => CARD_BY_NUMBER.get(n))
-                .filter((c): c is NonNullable<typeof c> => !!c);
-
-              // Pair partner: the I Ching / Gene Keys structural pair
-              // (hexagram 1↔2, 3↔50, etc.). Same relationship, named in each
-              // system's own vocabulary.
-              const pairNum = synthesis.reference.programming_partner;
-              const pair = typeof pairNum === 'number' ? CARD_BY_NUMBER.get(pairNum) : undefined;
-
-              // Row is a clickable div (role="button") whose click navigates
-              // to the section. Partner/sibling Links inside use stopPropagation
-              // so they open the linked card instead of bubbling to the row.
-              const rowCls = 'group grid grid-cols-[88px_1fr] gap-x-5 px-3 -mx-3 py-3.5 border-t border-wood-200/50 w-full rounded-md cursor-pointer hover:bg-bronze-500/[0.05] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] focus-visible:ring-1 focus-visible:ring-bronze-400/40 transition-colors';
-              const labelCls = 'font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center';
-              const primaryCls = 'font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/60 decoration-[1.5px] underline-offset-[5px] group-hover:underline group-focus-visible:underline';
-              const contextCls = 'font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5';
-              const contextEmphCls = 'font-serif text-[14px] text-wood-700';
-              // Compact chip for inline cross-references (paired hexagram, codon
-              // ring siblings). Small enough to live inside a sentence, bordered
-              // bronze so it reads as a tap target in both light and dark mode.
-              const chipCls = 'inline-flex items-center whitespace-nowrap align-middle font-serif text-[13px] leading-none px-2.5 py-[5px] mx-[2px] rounded-md bg-bronze-400/10 dark:bg-bronze-400/15 text-bronze-700 dark:text-bronze-400 border border-bronze-400/40 dark:border-bronze-400/45 no-underline hover:bg-bronze-400/20 dark:hover:bg-bronze-400/25 hover:border-bronze-500/60 dark:hover:border-bronze-300/60 hover:text-bronze-800 dark:hover:text-bronze-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-400/60 transition-colors';
-              // Keyboard handler for role="button" divs
-              const keyActivate = (fn: () => void) => (e: React.KeyboardEvent) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
-              };
-              // Stop partner link clicks from bubbling to the row
-              const stop = (e: React.MouseEvent) => e.stopPropagation();
-
-              return (
-                <div className="mt-10 mb-6 max-w-md mx-auto">
-                  <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-400 mb-3 pb-3 border-b border-wood-200/50">
-                    This energy, seen through
-                  </p>
-
-                  {/* I Ching - whole row clicks scroll to the I Ching section.
-                      Paired hexagram link stops propagation to open that card. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('iching')}
-                    onKeyDown={keyActivate(() => go('iching'))}
-                    className={rowCls}
-                    aria-label={`Go to I Ching reading for ${card.iching.hexagram_name}`}
-                  >
-                    <span className={labelCls}>I Ching</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{card.iching.hexagram_name}</span>
-                      <p className={contextCls}>
-                        Hexagram {card.number} · {card.iching.upper_trigram.name} over {card.iching.lower_trigram.name}
-                      </p>
-                      {pair && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Paired</span>
-                          <Link
-                            to={`/oracle/universal-language/${pair.number}`}
-                            state={{ ritual: true }}
-                            onClick={stop}
-                            className={chipCls}
-                            aria-label={`Open Code ${pair.number}, ${pair.card_name}`}
-                          >
-                            Hexagram {pair.number} · {pair.iching.hexagram_name}
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Gene Keys - whole row scrolls to the Gene Keys section. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('genekeys')}
-                    onKeyDown={keyActivate(() => go('genekeys'))}
-                    className={rowCls}
-                    aria-label={`Go to Gene Keys reading: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
-                  >
-                    <span className={labelCls}>Gene Keys</span>
-                    <div className="min-w-0">
-                      <span className="inline-flex items-baseline flex-wrap gap-x-2 gap-y-1">
-                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.shadow}</span>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-serif text-[17px] text-bronze-700 leading-[1.3] tracking-[-0.005em] font-medium decoration-bronze-500/60 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.gift}</span>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.siddhi}</span>
-                      </span>
-                      <p className={contextCls}>
-                        Shadow, Gift, Siddhi · three frequencies of one theme
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Human Design */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('humandesign')}
-                    onKeyDown={keyActivate(() => go('humandesign'))}
-                    className={rowCls}
-                    aria-label={`Go to Human Design reading: ${synthesis.reference.hd_center} Center`}
-                  >
-                    <span className={labelCls}>Human Design</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.hd_center} Center</span>
-                      <p className={contextCls}>
-                        Gate {synthesis.reference.hd_gate} · {synthesis.reference.hd_circuit} · paired with {synthesis.reference.hd_harmonic_gate}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Tarot - arcana = ring. Sibling links open those cards. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('connections')}
-                    onKeyDown={keyActivate(() => go('connections'))}
-                    className={rowCls}
-                    aria-label={`Go to Tarot reading: ${synthesis.reference.tarot_card}, ${card.ring_name}`}
-                  >
-                    <span className={labelCls}>Tarot</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.tarot_card}</span>
-                      <p className={contextCls}>
-                        {card.ring_name}
-                        {siblingCards.length > 3 && (
-                          <>, shared with {siblingCards.length} other keys</>
-                        )}
-                      </p>
-                      {siblingCards.length > 0 && siblingCards.length <= 3 && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Ring</span>
-                          {siblingCards.map((c) => (
-                            <Link
-                              key={c.number}
-                              to={`/oracle/universal-language/${c.number}`}
-                              state={{ ritual: true }}
-                              onClick={stop}
-                              className={chipCls}
-                              aria-label={`Open Code ${c.number}, ${c.card_name}`}
-                            >
-                              Code {c.number} · {c.card_name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Body - physiology + amino acid */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('connections')}
-                    onKeyDown={keyActivate(() => go('connections'))}
-                    className={rowCls + ' border-b border-wood-200/50'}
-                    aria-label={`Go to Body reading: ${synthesis.reference.body_physiology}`}
-                  >
-                    <span className={labelCls}>Body</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.body_physiology}</span>
-                      {synthesis.reference.body_amino_acid && (
-                        <p className={contextCls}>
-                          Amino acid · <span className={contextEmphCls}>{synthesis.reference.body_amino_acid}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-
-
-
-            {/* Island 3 - Creator voice (conditional) */}
+            {/* Creator voice (conditional) */}
             {expanded?.creator_voice?.personal_reading ? (
               <div className="card-grain rounded-2xl bg-stone-100 border border-wood-200/30 px-5 py-8 shadow-[inset_0_1px_3px_rgba(60,44,22,0.06)]">
                 <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-6">From the creator</p>
@@ -1571,10 +1408,111 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
         </section>
 
-        {/* ════════════ I CHING ══════════════════════════════════════════ */}
-        {/* dark-preserve: intentionally-dark section stays dark in dark mode
-            (without it, bg-stone-900 would remap to a light tone). */}
-        <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
+        {/* ════════════ CONTEXTUAL CARD HEADER ═══════════════════════════
+            Single replacement for the global nav while the reader is in a
+            card. At the top of the page the global nav is visible; once the
+            reader scrolls past the hero (sentinel below), the card header
+            slides in from above and covers the nav — one header at a time.
+            To return to the main site, scroll all the way back up: the card
+            header retracts and the global nav comes back.
+
+            Carries everything needed while reading: brand link (way out),
+            artwork thumbnail (tap → lightbox), card identity, share +
+            acquire actions, and the chapter wordmark for system swipe. */}
+        <div
+          ref={heroSentinelRef}
+          aria-hidden="true"
+          className="h-px"
+          style={{ scrollMarginTop: '76px' }}
+        />
+
+        <div
+          className={`fixed top-0 left-0 right-0 z-[105] motion-safe:transition-transform motion-safe:duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${chromeCollapsed ? 'translate-y-0' : '-translate-y-full pointer-events-none'}`}
+          aria-hidden={!chromeCollapsed}
+        >
+          {/* Top row: home · title · actions.
+              Note: the site's color tokens auto-invert in dark mode via CSS
+              vars, so we use the base tokens only — `dark:` overrides here
+              would double-invert and produce a light band on a dark page. */}
+          <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto h-11 px-2 sm:px-3">
+
+              {/* Home — returns to the main site. Icon rather than wordmark
+                  so the bar stays compact on narrow screens. The 44×44
+                  touch target lives behind the 18px glyph for WCAG. */}
+              <Link
+                to="/"
+                className="flex items-center justify-center w-11 h-11 -ml-1 text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
+                aria-label="Back to Adrian Rasmussen home"
+              >
+                <Home strokeWidth={1.5} size={18} aria-hidden="true" />
+              </Link>
+
+              <span className="h-4 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
+
+              {/* Card title — tap to scroll the page back up to the artwork.
+                  The whole row height (44px) is the touch target. */}
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                aria-label={`Scroll up to ${card.card_name} artwork`}
+                className="font-serif text-[14px] sm:text-[15px] text-wood-900 hover:text-bronze-700 truncate leading-tight flex-1 min-w-0 text-left h-11 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm px-1"
+              >
+                {card.card_name}
+              </button>
+
+              {/* Share — drops the share menu in place beneath this row,
+                  no scroll. Aria-expanded keeps screen readers in sync. */}
+              <button
+                type="button"
+                onClick={() => setShareOpen(v => !v)}
+                aria-expanded={shareOpen}
+                aria-controls="card-header-share-sheet"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-2 h-11 flex items-center transition-colors flex-shrink-0"
+              >
+                Share
+              </button>
+              {/* Acquire — opens BuySheet AND scrolls back to the inline
+                  acquire section. Scroll happens first so by the time the
+                  reader dismisses the sheet they're at the section. */}
+              <button
+                type="button"
+                onClick={() => {
+                  acquireSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setBuyOpen(true);
+                }}
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-2 h-11 flex items-center transition-colors flex-shrink-0"
+              >
+                Acquire
+              </button>
+            </div>
+          </div>
+
+          {/* Share sheet — drops here in place when the card header's Share
+              button is tapped. Reuses the field-section dropdown content. */}
+          {shareOpen && chromeCollapsed && renderShareSheet('header')}
+
+          {/* Bottom row: chapter wordmark for system swipe */}
+          <ChapterWordmark
+            chapters={CHAPTERS}
+            active={activeChapter}
+            onSelect={jumpToChapter}
+            variant="paper"
+          />
+        </div>
+
+        {/* ════════════ READING STAGE — five system panels ═════════════════ */}
+        <ReadingStage
+          ref={stageHandle}
+          chapters={['iching', 'genekeys', 'humandesign', 'tarot', 'body']}
+          active={activeChapter}
+          onActiveChange={handleChapterChange}
+        >
+
+          {/* ────────── I CHING ────────── */}
+          {/* dark-preserve: intentionally-dark panel stays dark in dark mode
+              (without it, bg-stone-900 would remap to a light tone). */}
+          <div className={`${SCREEN_BG.iching} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -1821,11 +1759,19 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
+            <ContinueRail
+              variant="dark"
+              eyebrow="Next"
+              title="Gene Keys"
+              subtitle={`${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`}
+              onClick={() => jumpToChapter('genekeys')}
+              ariaLabel={`Continue to Gene Keys: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
-        <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
+        {/* ────────── GENE KEYS ────────── */}
+        <div className={`${SCREEN_BG.genekeys} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -1908,12 +1854,20 @@ const UniversalLanguageCard: React.FC = () => {
               </p>
             )}
 
+            <ContinueRail
+              variant="light"
+              eyebrow="Next"
+              title="Human Design"
+              subtitle={(synthesis?.reference?.hd_keyword ?? card.human_design.keyword) + (synthesis?.reference?.hd_center ? ` · ${synthesis.reference.hd_center} Center` : '')}
+              onClick={() => jumpToChapter('humandesign')}
+              ariaLabel="Continue to Human Design"
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
-        {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
-        <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
+        {/* ────────── HUMAN DESIGN ────────── */}
+        {/* dark-preserve: intentionally-dark panel stays dark in dark mode. */}
+        <div className={`${SCREEN_BG.humandesign} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -2031,20 +1985,26 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            <ContinueRail
+              variant="dark"
+              eyebrow="Next"
+              title="Tarot"
+              subtitle={(synthesis?.reference?.tarot_card ?? card.ring_tarot) + ' · ' + card.ring_name}
+              onClick={() => jumpToChapter('tarot')}
+              ariaLabel={`Continue to Tarot: ${synthesis?.reference?.tarot_card ?? card.ring_tarot}, ${card.ring_name}`}
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
-        <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
+        {/* ────────── TAROT (Tarot resonance + structural connections) ────────── */}
+        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header */}
-            <header className="mb-8 sm:mb-10">
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">Connections</p>
-              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em]">Threads in the weave</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
-                Each code lives in a wider pattern. Pairs that mirror it, partners that balance it, and the ring of related codons it belongs to.
-              </p>
+            {/* Plate header — Tarot */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Tarot</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.tarot_card ?? card.ring_tarot}</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">{card.ring_name}</p>
             </header>
 
             {expanded ? (
@@ -2134,19 +2094,44 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            <ContinueRail
+              variant="light"
+              eyebrow="Next"
+              title="Body"
+              subtitle={(synthesis?.reference?.body_physiology ?? 'The body') + (synthesis?.reference?.body_amino_acid ? ` · ${synthesis.reference.body_amino_acid}` : '')}
+              onClick={() => jumpToChapter('body')}
+              ariaLabel="Continue to Body reading"
+            />
+          </div>
+        </div>
+
+        {/* ────────── BODY (physiology + amino acid) ────────── */}
+        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
+
+            {/* Plate header — Body */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Body</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.body_physiology ?? 'Embodied'}</h2>
+              {synthesis?.reference?.body_amino_acid && (
+                <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3">Amino acid · {synthesis.reference.body_amino_acid}</p>
+              )}
+            </header>
+
             {/* Body — physiology and amino acid as separate plates */}
-            {synthesis && (
+            {synthesis ? (
               <>
                 {(() => {
                   const paragraphs = synthesis.synthesis.body.physiology.split('\n\n').filter(Boolean);
                   return (
                     <PlateExpand
-                      id="connections-physiology"
+                      id="body-physiology"
                       section="connections"
                       variant="light"
-                      label="Body · Physiology"
+                      label="Physiology"
                       caption={synthesis.reference?.body_physiology ?? undefined}
                       preview={paragraphs[0] ?? ''}
+                      defaultOpen
                     >
                       {paragraphs.map((p, i) => (
                         <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
@@ -2158,10 +2143,10 @@ const UniversalLanguageCard: React.FC = () => {
                   const paragraphs = synthesis.synthesis.body.amino_acid.split('\n\n').filter(Boolean);
                   return (
                     <PlateExpand
-                      id="connections-amino-acid"
+                      id="body-amino-acid"
                       section="connections"
                       variant="light"
-                      label="Body · Amino Acid"
+                      label="Amino Acid"
                       caption={synthesis.reference?.body_amino_acid ?? undefined}
                       preview={paragraphs[0] ?? ''}
                     >
@@ -2172,11 +2157,34 @@ const UniversalLanguageCard: React.FC = () => {
                   );
                 })()}
               </>
+            ) : (
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+                <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Body reading will be available soon.</p>
+              </div>
             )}
 
+            {/* Last panel: invite the reader to the next card */}
+            {nextCardNum !== null && (() => {
+              const next = CARD_BY_NUMBER.get(nextCardNum);
+              if (!next) return null;
+              return (
+                <ContinueRail
+                  variant="light"
+                  eyebrow={`Next card · Code ${next.number}`}
+                  title={next.card_name}
+                  subtitle={next.iching.hexagram_name}
+                  onClick={() => navigate(`/oracle/universal-language/${next.number}`, { state: { ritual: true } })}
+                  ariaLabel={`Continue to Code ${next.number}, ${next.card_name}`}
+                />
+              );
+            })()}
 
           </div>
-        </section>
+        </div>
+        {/* end Body panel */}
+
+        </ReadingStage>
 
       </div>
 
@@ -2199,7 +2207,7 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Prev</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Card {c?.number}</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
               </Link>
@@ -2224,7 +2232,7 @@ const UniversalLanguageCard: React.FC = () => {
                 className="flex items-center justify-end gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 <div className="min-w-0 text-right">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Next →</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Card {c?.number} →</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (

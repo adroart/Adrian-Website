@@ -1,7 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { img } from '../utils/cloudinary';
 
 // Detect touch/low-end devices - disable parallax to save battery and avoid jank
 const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
@@ -55,7 +54,9 @@ const Hero: React.FC = () => {
         className="absolute inset-0 z-0 will-change-transform"
         style={{ transform: `translateY(${videoTranslateY}px)` }}
       >
-          {/* #20 Decorative video gets aria-hidden */}
+          {/* #20 Decorative video gets aria-hidden.
+              No poster — the wood-900 section bg + fallback gradient below
+              provide the dark backdrop until the video frames arrive. */}
           <video
               ref={videoRef}
               autoPlay
@@ -63,7 +64,6 @@ const Hero: React.FC = () => {
               muted
               playsInline
               aria-hidden="true"
-              poster={img('adrian-website/placeholders/hero-wide-1', { w: 1920 })}
               className="w-full h-full object-cover opacity-60"
           >
               <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/adrian-website/site/hero/studio-creation-process" type="video/mp4" />

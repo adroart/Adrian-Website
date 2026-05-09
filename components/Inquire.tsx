@@ -16,39 +16,22 @@ interface FormState {
   commissionType: CommissionType;
   budget: string;
   location: string;
-  sizeRange: string;
-  timeline: string;
-  specificDate: string;
-  referral: string;
-  referralOther: string;
 }
 
 const BUDGET_PRESETS = [
   { label: 'Under $1,000', value: 'Under $1,000' },
-  { label: '$1,000 to $3,000', value: '$1,000 to $3,000' },
-  { label: '$3,000 to $5,000', value: '$3,000 to $5,000' },
-  { label: '$5,000 to $10,000', value: '$5,000 to $10,000' },
-  { label: '$10,000 to $25,000', value: '$10,000 to $25,000' },
-  { label: '$25,000+', value: '$25,000+' },
-  { label: 'Not sure yet', value: 'Not sure yet' },
+  { label: '$1,000 to $5,000', value: '$1,000 to $5,000' },
+  { label: '$5,000 to $15,000', value: '$5,000 to $15,000' },
+  { label: '$15,000+', value: '$15,000+' },
 ];
 
-const TIMELINE_OPTIONS = [
-  { label: 'Flexible, no rush', value: 'Flexible / No rush' },
-  { label: 'Within 3 months', value: 'Within 3 months' },
-  { label: 'Within 6 months', value: 'Within 6 months' },
-  { label: 'Within a year', value: 'Within a year' },
-  { label: 'Tied to a specific date', value: 'Specific date' },
-];
-
-const REFERRAL_OPTIONS = [
-  { label: 'Word of mouth', value: 'Word of mouth' },
-  { label: 'Instagram', value: 'Instagram' },
-  { label: 'Seeing a piece in person', value: 'Saw a piece in person' },
-  { label: 'Your writings', value: 'Writings / Blog' },
-  { label: 'Burning Man or a festival', value: 'Burning Man or festival' },
-  { label: 'Somewhere else', value: 'Other' },
-];
+// Budget tiers at or above this floor warrant a scheduled call.
+// Below the floor ('Under $1,000'), the inquiry is handled by email only.
+const CALL_BUDGET_VALUES = new Set<string>([
+  '$1,000 to $5,000',
+  '$5,000 to $15,000',
+  '$15,000+',
+]);
 
 const COMMISSION_PATHS = {
   personal: {
@@ -135,11 +118,6 @@ const Inquire: React.FC = () => {
     commissionType: 'personal',
     budget: '',
     location: '',
-    sizeRange: '',
-    timeline: '',
-    specificDate: '',
-    referral: '',
-    referralOther: '',
   });
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -211,8 +189,7 @@ const Inquire: React.FC = () => {
   const visionIsDirty = form.vision !== '' && !prefilled;
   const isDirty = !submitted && (
     form.name !== '' || form.email !== '' || visionIsDirty ||
-    form.location !== '' || form.sizeRange !== '' ||
-    form.timeline !== '' || form.referral !== ''
+    form.budget !== '' || form.location !== ''
   );
 
   useEffect(() => {
@@ -285,10 +262,6 @@ const Inquire: React.FC = () => {
     setForm(prev => ({ ...prev, commissionType: type }));
   };
 
-  const handlePillSelect = (field: keyof FormState, value: string) => {
-    setForm(prev => ({ ...prev, [field]: prev[field] === value ? '' : value }));
-  };
-
   /* ── Required fields ──────────────────────────────────────────────── */
   const requiredCount = [
     form.name.trim(),
@@ -335,11 +308,6 @@ const Inquire: React.FC = () => {
         ];
     if (form.budget) parts.push(`Budget: ${form.budget}`);
     if (form.location) parts.push(`Location: ${form.location}`);
-    if (form.sizeRange) parts.push(`Approximate size: ${form.sizeRange}`);
-    if (form.timeline)
-      parts.push(`Timeline: ${form.timeline}${form.specificDate ? ` (${form.specificDate})` : ''}`);
-    if (form.referral)
-      parts.push(`Found via: ${form.referral}${form.referralOther ? `, ${form.referralOther}` : ''}`);
     const body = encodeURIComponent(parts.join('\n'));
     return `mailto:hello@adrianrasmussen.com?subject=${subject}&body=${body}`;
   };
@@ -407,8 +375,7 @@ const Inquire: React.FC = () => {
     setMailtoFallback('');
     setForm({
       name: '', email: '', vision: '', commissionType: 'personal',
-      budget: '', location: '', sizeRange: '', timeline: '',
-      specificDate: '', referral: '', referralOther: '',
+      budget: '', location: '',
     });
     setCommissionType('personal');
     setTouched({});
@@ -419,42 +386,6 @@ const Inquire: React.FC = () => {
 
   /* ── Helpers ──────────────────────────────────────────────────────── */
   const chosenPath = COMMISSION_PATHS[commissionType];
-
-  const radioList = (
-    options: { label: string; value: string }[],
-    field: keyof FormState,
-  ) => (
-    <div className="space-y-0">
-      {options.map((opt) => {
-        const selected = form[field] === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => handlePillSelect(field, opt.value)}
-            className={`w-full flex items-center gap-4 py-3.5 border-b border-wood-100 text-left transition-colors duration-200 cursor-pointer group ${
-              selected ? '' : 'hover:bg-wood-50/50'
-            }`}
-          >
-            <span
-              className={`w-3 h-3 rounded-full border-2 shrink-0 transition-all duration-200 ${
-                selected
-                  ? 'border-bronze-500 bg-bronze-500'
-                  : 'border-wood-300 bg-transparent group-hover:border-wood-400'
-              }`}
-            />
-            <span
-              className={`font-sans text-base transition-colors duration-200 ${
-                selected ? 'text-wood-900' : 'text-wood-700 group-hover:text-wood-900'
-              }`}
-            >
-              {opt.label}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
 
   /* Reusable submit button - used twice (above and below optional fields) */
   const submitBtn = (
@@ -489,8 +420,6 @@ const Inquire: React.FC = () => {
       )}
     </div>
   );
-
-  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <section className="bg-paper-50 min-h-screen animate-fade-in">
@@ -631,8 +560,10 @@ const Inquire: React.FC = () => {
                   </p>
                   <p className="font-serif text-wood-600 leading-[1.7] mb-10">
                     {purchaseMode
-                      ? 'I will confirm the details and follow up with next steps within a couple of days.'
-                      : "I'll be in touch within a few days."
+                      ? 'I will confirm the details and follow up with next steps within a couple of days, including a separate note about shipping for your destination.'
+                      : CALL_BUDGET_VALUES.has(form.budget)
+                        ? "I'll be in touch within a few days. If the project feels like a fit, we'll schedule a call to talk it through."
+                        : "I'll be in touch within a few days by email."
                     }
                   </p>
                   <div className="border-t border-wood-200 pt-8 mb-8">
@@ -955,76 +886,6 @@ const Inquire: React.FC = () => {
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                               ))}
                             </select>
-                          </div>
-
-                          {/* Approximate Size */}
-                          <div className="relative pt-5">
-                            <label htmlFor="field-sizeRange" className={floatLabel('sizeRange')}>
-                              Approximate Size
-                            </label>
-                            <input
-                              type="text"
-                              name="sizeRange"
-                              id="field-sizeRange"
-                              value={form.sizeRange}
-                              onChange={handleChange}
-                              onFocus={() => handleFocus('sizeRange')}
-                              onBlur={() => handleBlur('sizeRange')}
-                              className="w-full border-b border-wood-200 focus:border-wood-700 bg-transparent py-2 font-sans text-lg text-wood-900 outline-none transition-colors"
-                            />
-                            <p className="font-sans text-sm text-wood-500 mt-1.5">
-                              Wall space, table dimensions, or a general sense of scale.
-                            </p>
-                          </div>
-
-                          {/* Timeline */}
-                          <div>
-                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-4">
-                              Timeline
-                            </label>
-                            {radioList(TIMELINE_OPTIONS, 'timeline')}
-                            {form.timeline === 'Specific date' && (
-                              <div className="mt-4">
-                                <label
-                                  htmlFor="field-specificDate"
-                                  className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2"
-                                >
-                                  Target date
-                                </label>
-                                <input
-                                  type="date"
-                                  id="field-specificDate"
-                                  value={form.specificDate}
-                                  min={todayStr}
-                                  onChange={(e) =>
-                                    setForm(prev => ({ ...prev, specificDate: e.target.value }))
-                                  }
-                                  className="w-full border-b border-wood-200 bg-transparent py-2 font-serif text-wood-900 outline-none focus:border-wood-700 transition-colors"
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Referral */}
-                          <div>
-                            <label className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-4">
-                              How did you find me?
-                            </label>
-                            {radioList(REFERRAL_OPTIONS, 'referral')}
-                            {form.referral === 'Other' && (
-                              <div className="mt-3 pl-7">
-                                <input
-                                  type="text"
-                                  id="field-referralOther"
-                                  value={form.referralOther}
-                                  onChange={(e) =>
-                                    setForm(prev => ({ ...prev, referralOther: e.target.value }))
-                                  }
-                                  placeholder="Tell me where..."
-                                  className="w-full border-b border-wood-200 bg-transparent py-2 font-sans text-base text-wood-900 outline-none focus:border-wood-700 transition-colors"
-                                />
-                              </div>
-                            )}
                           </div>
 
                           {/* Location */}

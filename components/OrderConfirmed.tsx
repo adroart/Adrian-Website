@@ -31,6 +31,9 @@ const OrderConfirmed: React.FC = () => {
         <p className="font-serif text-xl md:text-2xl text-wood-600 mb-6 leading-[1.6] font-light">
           Your piece is being prepared with the same care it was created with. You'll receive an email confirmation shortly.
         </p>
+        <p className="font-sans text-base text-wood-600 mb-6 leading-[1.7] max-w-xl mx-auto">
+          Shipping is handled separately based on your destination. You'll receive shipping details and a separate invoice within 48 hours.
+        </p>
         <p className="font-sans text-base text-wood-500 mb-12 leading-[1.7]">
           If you have any questions about your order, reach out at{' '}
           <a
