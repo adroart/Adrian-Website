@@ -1,6 +1,6 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Artwork, AvailabilityStatus, SizeVariant, Product } from '../types';
 import { FULL_ARCHIVE, SERIES_DATA, MADE_TO_ORDER_ADD_ONS } from '../data/mockData';
 import { ArrowRight, ArrowUpRight, Share2, BookOpen, ShoppingBag, Check } from 'lucide-react';
@@ -156,7 +156,13 @@ const MoreFromSeries: React.FC<{ art: Artwork; seriesLink: string | null }> = ({
 const PiecePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { addToCart } = useCart();
+
+    // If the reader arrived from an oracle card (BuySheet → here), show a
+    // one-tap return link that takes them straight back to where they were
+    // reading, system param and all.
+    const oracleOrigin = (location.state as { oracleOrigin?: string } | null)?.oracleOrigin ?? null;
 
     // Image gallery state
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -532,6 +538,23 @@ const PiecePage: React.FC = () => {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
             />
+
+            {/* Return to oracle reading — shown only when the reader arrived
+                via a card's BuySheet. One tap takes them back to the same
+                card with their active system preserved (?system=...). */}
+            {oracleOrigin && (
+                <div className="bg-paper-100 border-b border-wood-200/60">
+                    <div className="max-w-7xl mx-auto px-6 md:px-12 py-3 flex items-center justify-between gap-4">
+                        <Link
+                            to={oracleOrigin}
+                            className="inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.22em] text-bronze-700 hover:text-bronze-800 transition-colors"
+                        >
+                            <ArrowRight size={14} className="rotate-180" />
+                            Return to your oracle reading
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* Breadcrumb - Mobile: simplified (← Category), Desktop: full path */}
             {/* Mobile breadcrumb */}

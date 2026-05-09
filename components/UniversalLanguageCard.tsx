@@ -1238,8 +1238,9 @@ const UniversalLanguageCard: React.FC = () => {
       <BuySheet
         open={buyOpen}
         onClose={() => setBuyOpen(false)}
-        pieceHref={piece ? `/creations/${piece.id}` : null}
-        pieceAvailability={piece?.availability}
+        piece={piece ?? null}
+        imageUrl={cardImageUrl(card.number, 360)}
+        imageAlt={imageAlt}
         cardName={card.card_name}
         cardNumber={card.number}
       />
