@@ -79,13 +79,14 @@ export const BuySheet: React.FC<{
         type="button"
         aria-label="Dismiss"
         onClick={onClose}
-        className="absolute inset-0 bg-stone-900/65 dark:bg-stone-950/75 backdrop-blur-[2px] motion-safe:animate-[buysheet-fade_180ms_ease-out]"
+        className="absolute inset-0 bg-stone-900/65 backdrop-blur-[2px] motion-safe:animate-[buysheet-fade_180ms_ease-out]"
       />
-      {/* Sheet body */}
+      {/* Sheet body — color tokens auto-invert via CSS vars in dark mode;
+          no `dark:` overrides needed (and they would double-invert). */}
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="relative w-full sm:max-w-md mx-auto bg-paper-50 dark:bg-stone-100 border-t sm:border border-wood-200/70 sm:rounded-md shadow-[0_-12px_40px_rgba(0,0,0,0.35)] sm:shadow-[0_18px_60px_rgba(0,0,0,0.45)] motion-safe:animate-[buysheet-rise_220ms_cubic-bezier(0.22,1,0.36,1)]"
+        className="relative w-full sm:max-w-md mx-auto bg-paper-100 border-t sm:border border-wood-300/60 sm:rounded-md shadow-[0_-12px_40px_rgba(0,0,0,0.35)] sm:shadow-[0_18px_60px_rgba(0,0,0,0.45)] motion-safe:animate-[buysheet-rise_220ms_cubic-bezier(0.22,1,0.36,1)]"
       >
         {/* Drag handle (visual only — closes via scrim/back/ESC) */}
         <div className="flex justify-center pt-3 sm:hidden">
@@ -103,7 +104,7 @@ export const BuySheet: React.FC<{
               <Link
                 to={pieceHref}
                 onClick={onClose}
-                className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-100 hover:bg-bronze-50/80 border border-wood-200/70 hover:border-bronze-300/70 transition-colors"
+                className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
               >
                 <div>
                   <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-700 leading-tight">
@@ -119,7 +120,7 @@ export const BuySheet: React.FC<{
             <Link
               to="/inquire"
               onClick={onClose}
-              className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-100 hover:bg-bronze-50/80 border border-wood-200/70 hover:border-bronze-300/70 transition-colors"
+              className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
             >
               <div>
                 <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-700 leading-tight">Commission a related piece</p>

@@ -138,7 +138,7 @@ export const ImageViewer: React.FC<{
       {/* Translucent palette-tinted backdrop — not opaque black */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-stone-900/85 dark:bg-stone-950/90 backdrop-blur-[2px] motion-safe:transition-opacity motion-safe:duration-200"
+        className="absolute inset-0 bg-stone-900/85 backdrop-blur-[2px] motion-safe:transition-opacity motion-safe:duration-200"
         style={{ opacity: phase === 'open' ? 1 : 0 }}
       />
       {/* Image — shared-element morph */}

@@ -70,15 +70,19 @@ export const ChapterWordmark: React.FC<{
 
   // Variant tokens. Paper variant is for sections on light paper backgrounds;
   // mixed variant works on the chrome strip that floats over either section.
+  // Note: this site's color tokens AUTO-INVERT in dark mode via CSS variables
+  // (src/index.css). Do NOT use `dark:bg-*` overrides here — they would
+  // double-invert and produce light backgrounds in dark mode. Just use the
+  // base token; it flips correctly on its own.
   const paper = variant === 'paper';
-  const ruleCls = paper ? 'border-wood-200/60' : 'border-stone-300/60 dark:border-stone-700/60';
-  const inactiveCls = paper ? 'text-wood-500 hover:text-wood-800' : 'text-stone-500 hover:text-stone-800 dark:text-stone-500 dark:hover:text-stone-200';
-  const activeCls = 'text-bronze-700 dark:text-bronze-400';
+  const ruleCls = paper ? 'border-wood-300/60' : 'border-stone-300/60';
+  const inactiveCls = paper ? 'text-wood-500 hover:text-wood-800' : 'text-stone-500 hover:text-stone-800';
+  const activeCls = 'text-bronze-700';
 
   return (
     <div
       ref={containerRef}
-      className={`relative w-full border-t border-b ${ruleCls} bg-paper-50 dark:bg-stone-900 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] ${className}`}
+      className={`relative w-full border-t border-b ${ruleCls} bg-paper-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] ${className}`}
       role="tablist"
       aria-label="Reading chapters"
     >
@@ -112,7 +116,7 @@ export const ChapterWordmark: React.FC<{
       {/* Sliding bronze underline. Pure CSS transition — no animation library. */}
       <span
         aria-hidden="true"
-        className="absolute bottom-0 h-px bg-bronze-500 dark:bg-bronze-400 motion-safe:transition-all motion-safe:duration-[280ms] motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]"
+        className="absolute bottom-0 h-px bg-bronze-500 motion-safe:transition-all motion-safe:duration-[280ms] motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{
           transform: `translateX(${underline.left}px)`,
           width: underline.width,

@@ -1477,8 +1477,11 @@ const UniversalLanguageCard: React.FC = () => {
         <div className="sticky z-30" style={{ top: 'var(--nav-height, 72px)' }}>
           {/* Slim collapsed chrome — appears once the hero scrolls away.
               Always at hand: tap thumbnail to enlarge, share, or acquire. */}
+          {/* The site's color tokens auto-invert in dark mode via CSS vars,
+              so we use the base tokens only — `dark:` overrides here would
+              double-invert and produce a light band on a dark page. */}
           <div
-            className={`overflow-hidden bg-paper-50 dark:bg-stone-900 border-b border-wood-200/50 dark:border-stone-700/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
+            className={`overflow-hidden bg-paper-100 border-b border-wood-300/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
             aria-hidden={!chromeCollapsed}
           >
             <div className="flex items-center gap-3 max-w-2xl mx-auto h-14 px-3 sm:px-4">
@@ -1489,7 +1492,7 @@ const UniversalLanguageCard: React.FC = () => {
                   openLightbox(img?.getBoundingClientRect() ?? null);
                 }}
                 aria-label="View artwork at full size"
-                className="block w-10 h-10 overflow-hidden rounded-sm border border-wood-200/60 dark:border-stone-700/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
+                className="block w-10 h-10 overflow-hidden rounded-sm border border-wood-300/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
               >
                 <img
                   src={cardImageUrl(card.number, 120)}
@@ -1498,8 +1501,8 @@ const UniversalLanguageCard: React.FC = () => {
                 />
               </button>
               <div className="flex-1 min-w-0">
-                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-wood-500 dark:text-stone-500 leading-none">Code {card.number}</p>
-                <p className="font-serif text-[14px] text-wood-900 dark:text-stone-100 truncate leading-tight mt-1">{card.card_name}</p>
+                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-wood-500 leading-none">Code {card.number}</p>
+                <p className="font-serif text-[14px] text-wood-900 truncate leading-tight mt-1">{card.card_name}</p>
               </div>
               <button
                 type="button"
@@ -1507,14 +1510,14 @@ const UniversalLanguageCard: React.FC = () => {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                   setShareOpen(true);
                 }}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 dark:text-stone-300 hover:text-bronze-700 dark:hover:text-bronze-400 px-2 py-2 transition-colors"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-2 py-2 transition-colors"
               >
                 Share
               </button>
               <button
                 type="button"
                 onClick={() => setBuyOpen(true)}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 dark:text-bronze-400 hover:text-bronze-800 dark:hover:text-bronze-300 px-2 py-2 transition-colors"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-2 py-2 transition-colors"
               >
                 Acquire
               </button>
