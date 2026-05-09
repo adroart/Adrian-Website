@@ -215,8 +215,8 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
              top arc; the hexagram + keywords center within. */}
         <div style={{
           position: 'relative',
-          width: 'min(70vh, 612px)',
-          height: 'min(70vh, 612px)',
+          width: 'min(60vh, 520px)',
+          height: 'min(60vh, 520px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -235,7 +235,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           }}
         >
           <circle cx={CX} cy={CY} r={R} fill="none"
-            stroke="color-mix(in oklab, var(--color-wood-700) 10%, transparent)"
+            stroke="color-mix(in oklab, var(--color-wood-700) 6%, transparent)"
             strokeWidth="1" />
           <g style={{
             transformOrigin: `${CX}px ${CY}px`,
@@ -247,7 +247,7 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
                 {lines.map((solid, li) => {
                   const ly = li * (LINE_H + LINE_GAP);
                   const fill = isCurrent ? 'var(--color-bronze-400)' : 'var(--color-wood-500)';
-                  const op = isCurrent ? 1 : 0.4;
+                  const op = isCurrent ? 1 : 0.22;
                   return solid ? (
                     <rect key={li} x={0} y={ly} width={HEX_W} height={LINE_H} fill={fill} opacity={op} />
                   ) : (
@@ -371,10 +371,11 @@ export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
           right: 0,
           bottom: 'max(28px, env(safe-area-inset-bottom))',
           textAlign: 'center',
-          fontFamily: "'Lato', Helvetica, sans-serif",
-          fontSize: '14px',
-          letterSpacing: '0.26em',
-          textTransform: 'uppercase',
+          fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 'clamp(20px, 2.6vw, 26px)',
+          fontWeight: 500,
+          letterSpacing: '0.01em',
           color: 'var(--color-wood-500)',
           margin: 0,
           pointerEvents: 'none',
