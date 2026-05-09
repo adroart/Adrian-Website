@@ -485,8 +485,8 @@ const PLATE_TYPE = {
   dark: {
     border:    'border-stone-700/60',
     rule:      'border-stone-700/40',
-    label:     'text-stone-500',
-    caption:   'text-stone-500',
+    label:     'text-bronze-400',
+    caption:   'text-stone-400',
     primary:   'text-stone-100',
     body:      'text-stone-300',
     bodyOpen:  'text-stone-200',
@@ -499,8 +499,8 @@ const PLATE_TYPE = {
   light: {
     border:    'border-wood-200/50',
     rule:      'border-wood-200/40',
-    label:     'text-wood-500',
-    caption:   'text-wood-400',
+    label:     'text-bronze-700',
+    caption:   'text-wood-500',
     primary:   'text-wood-900',
     body:      'text-wood-700',
     bodyOpen:  'text-wood-800',
@@ -535,8 +535,8 @@ const PlateExpand: React.FC<{
     <div id={id} className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}>
       <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
         <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.label}`}>{label}</p>
-          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.label}`}>{label}</p>
+          <div className="mt-1.5 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
           {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
         </div>
         <div className="min-w-0 space-y-4 select-text cursor-text">
@@ -633,49 +633,67 @@ const GeneKeyCard: React.FC<{
   id: string;
   section?: SectionKey;
   defaultOpen?: boolean;
-}> = ({ tone, level, id, section = 'genekeys' }) => {
-  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
+}> = ({ tone, level, id, section = 'genekeys', defaultOpen = false }) => {
   const ctx = useExpand();
-  useEffect(() => ctx.register({ id, section, defaultOpen: true }), [ctx, id, section]);
+  const open = ctx.isOpen(id, section, defaultOpen);
+  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
 
   const t = PLATE_TONE[tone];
   const paragraphs = level.expanded.text.split('\n\n').filter(Boolean);
 
   return (
     <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
-      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+      <button
+        type="button"
+        onClick={() => ctx.toggle(id)}
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors hover:bg-wood-500/[0.04] focus-visible:outline-none focus-visible:bg-wood-500/[0.06]"
+      >
         <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor}`}>{t.label}</p>
           <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
           <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
         </div>
-        <div className="min-w-0 space-y-4 select-text cursor-text">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{level.name}</p>
-          {paragraphs.map((p, i) => (
-            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-          ))}
-          {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-              {level.repressive_nature && (
-                <div>
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                    Repressive · {level.repressive_nature.label}
-                  </p>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
-                </div>
-              )}
-              {level.reactive_nature && (
-                <div>
-                  <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
-                    Reactive · {level.reactive_nature.label}
-                  </p>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="min-w-0 flex items-start gap-4">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{level.name}</p>
+          <span
+            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
         </div>
-      </div>
+      </button>
+      {open && (
+        <div id={`${id}-panel`} className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start pb-6 sm:pb-7 px-4 sm:px-7">
+          <div className="hidden sm:block" aria-hidden="true" />
+          <div className="min-w-0 space-y-4 select-text cursor-text">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+            ))}
+            {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+                {level.repressive_nature && (
+                  <div>
+                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-2">
+                      Repressive · {level.repressive_nature.label}
+                    </p>
+                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
+                  </div>
+                )}
+                {level.reactive_nature && (
+                  <div>
+                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-2">
+                      Reactive · {level.reactive_nature.label}
+                    </p>
+                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -690,39 +708,57 @@ const SynthesisToneCard: React.FC<{
   text: string;
   extras?: { label: string; text: string }[];
   defaultOpen?: boolean;
-}> = ({ tone, id, name, text, extras = [] }) => {
-  // Flattened: always rendered in expanded form. See PlateExpand for rationale.
+}> = ({ tone, id, name, text, extras = [], defaultOpen = false }) => {
   const ctx = useExpand();
-  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen: true }), [ctx, id]);
+  const open = ctx.isOpen(id, 'genekeys', defaultOpen);
+  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
   const t = PLATE_TONE[tone];
   const paragraphs = text.split('\n\n').filter(Boolean);
 
   return (
     <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
-      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
+      <button
+        type="button"
+        onClick={() => ctx.toggle(id)}
+        aria-expanded={open}
+        aria-controls={`${id}-panel`}
+        className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors hover:bg-wood-500/[0.04] focus-visible:outline-none focus-visible:bg-wood-500/[0.06]"
+      >
         <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor}`}>{t.label}</p>
+          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor}`}>{t.label}</p>
           <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
         </div>
-        <div className="min-w-0 space-y-4 select-text cursor-text">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{name}</p>
-          {paragraphs.map((p, i) => (
-            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-          ))}
-          {extras.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-              {extras.map((ex, i) => (
-                <div key={i}>
-                  <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
-                  {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                    <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="min-w-0 flex items-start gap-4">
+          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{name}</p>
+          <span
+            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+            aria-hidden="true"
+          >+</span>
         </div>
-      </div>
+      </button>
+      {open && (
+        <div id={`${id}-panel`} className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start pb-6 sm:pb-7 px-4 sm:px-7">
+          <div className="hidden sm:block" aria-hidden="true" />
+          <div className="min-w-0 space-y-4 select-text cursor-text">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+            ))}
+            {extras.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
+                {extras.map((ex, i) => (
+                  <div key={i}>
+                    <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor} mb-2`}>{ex.label}</p>
+                    {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                      <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -833,12 +869,12 @@ const CardLink: React.FC<{
         className="w-14 h-14 object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity"
       />
       <div className="flex-1 min-w-0">
-        {label && <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 mb-1">{label}</p>}
+        {label && <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-1">{label}</p>}
         <p className="font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] group-hover:text-bronze-700 transition-colors">{sibling.card_name}</p>
         <p className="font-serif text-[14px] text-wood-600 leading-[1.55] sm:leading-[1.6] mt-0.5">{sibling.iching.hexagram_name}</p>
         {context && <p className="font-serif text-[14px] text-wood-500 mt-1 leading-[1.55] sm:leading-[1.6] line-clamp-2">{context}</p>}
       </div>
-      <span className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0">Open</span>
+      <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0">Open</span>
     </button>
   );
 };
@@ -1546,7 +1582,7 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-pressed={ichingOpen === 'hex'}
                 aria-label={`Read ${card.iching.hexagram_name}, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
               >
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Guà {card.number}</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Guà {card.number}</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <HexagramSVG
                     upper={card.iching.upper_trigram.symbol}
@@ -1563,7 +1599,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Hexagram</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Hexagram</span>
               </button>
 
               <button
@@ -1572,12 +1608,12 @@ const UniversalLanguageCard: React.FC = () => {
                 className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'upper'}
               >
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Upper</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Upper</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
                   <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.upper_trigram.name}</span>
                 </div>
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 flex-shrink-0">Trigram</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 flex-shrink-0">Trigram</span>
               </button>
 
               <button
@@ -1586,17 +1622,17 @@ const UniversalLanguageCard: React.FC = () => {
                 className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'lower'}
               >
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-center flex-shrink-0">Lower</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Lower</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
                   <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.lower_trigram.name}</span>
                 </div>
-                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 flex-shrink-0">Trigram</span>
+                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 flex-shrink-0">Trigram</span>
               </button>
 
               {/* Reading zone — updates on tap */}
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400/80 sm:self-start sm:pt-1 mb-2 sm:mb-0">
+                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-400/80 sm:self-start sm:pt-1 mb-2 sm:mb-0">
                   {ichingOpen === 'hex'
                     ? 'Combination'
                     : ichingOpen === 'upper'
@@ -1625,7 +1661,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? ''}
                 >
                   {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
 
@@ -1641,22 +1677,22 @@ const UniversalLanguageCard: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
                       {synthesis.synthesis.iching.judgement_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">The Judgement</p>
-                          <p className="font-sans text-[14px] sm:text-[15px] text-stone-500 leading-[1.45] mt-1 mb-3">the oracle's reading of this moment</p>
+                          <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-1">The Judgement</p>
+                          <p className="font-sans text-[14px] sm:text-[15px] text-stone-400 leading-[1.45] mt-1 mb-3">the oracle's reading of this moment</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
-                              <p key={i} className="font-sans text-[15px] text-wood-700 leading-[1.7] sm:leading-[1.75]">{line}</p>
+                              <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.7] sm:leading-[1.75]">{line}</p>
                             ))}
                           </div>
                         </div>
                       )}
                       {synthesis.synthesis.iching.image_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500">The Image</p>
-                          <p className="font-sans text-[14px] sm:text-[15px] text-stone-500 leading-[1.45] mt-1 mb-3">a picture from nature that mirrors the energy</p>
+                          <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-1">The Image</p>
+                          <p className="font-sans text-[14px] sm:text-[15px] text-stone-400 leading-[1.45] mt-1 mb-3">a picture from nature that mirrors the energy</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.image_lines.map((line, i) => (
-                              <p key={i} className="font-sans text-[15px] text-wood-700 leading-[1.7] sm:leading-[1.75]">{line}</p>
+                              <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.7] sm:leading-[1.75]">{line}</p>
                             ))}
                           </div>
                         </div>
@@ -1680,15 +1716,15 @@ const UniversalLanguageCard: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
-                      <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Outer</p>
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.outer.context.text}</p>
+                      <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-2">Outer</p>
+                      <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.outer.context.text}</p>
                     </div>
                     <div>
-                      <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Inner</p>
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.inner.context.text}</p>
+                      <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-2">Inner</p>
+                      <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] mt-2">
+                  <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8] mt-2">
                     {expanded.i_ching.trigrams.family_dynamic.text}
                   </p>
                 </PlateExpand>
@@ -1707,21 +1743,21 @@ const UniversalLanguageCard: React.FC = () => {
                     const stages = lines[1]?.replace(/\.$/, '').split(',').map(s => s.trim()).filter(Boolean) ?? [];
                     return (
                       <>
-                        {headline && <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{headline}</p>}
+                        {headline && <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{headline}</p>}
                         {stages.length > 0 && (
                           <div>
-                            <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Four stages of the time cycle</p>
+                            <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-3">Four stages of the time cycle</p>
                             <div className="flex gap-x-6 gap-y-1 flex-wrap">
                               {stages.map((s, i) => (
-                                <span key={i} className="font-serif text-[17px] text-stone-300">{s}</span>
+                                <span key={i} className="font-serif text-[17px] text-stone-200">{s}</span>
                               ))}
                             </div>
                           </div>
                         )}
-                        <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                        <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
                         <div className="pt-5 border-t border-stone-700/40 space-y-2">
                           {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
-                            <p key={i} className="font-sans text-[15px] text-wood-600 leading-[1.7]">{line}</p>
+                            <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.7]">{line}</p>
                           ))}
                         </div>
                       </>
@@ -1736,9 +1772,9 @@ const UniversalLanguageCard: React.FC = () => {
                   label="Patterns of Wisdom"
                   preview={expanded.i_ching.patterns_of_wisdom.nature_image}
                 >
-                  <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
-                  <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
+                  <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
+                  <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
+                  <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
                 </PlateExpand>
               </>
             )}
@@ -1746,16 +1782,16 @@ const UniversalLanguageCard: React.FC = () => {
             {/* Reflection (only when no synthesis) */}
             {!synthesis && expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
-                <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.reflection.text}</p>
+                <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
+                <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.reflection.text}</p>
               </div>
             )}
 
             {/* Fallback if no expanded data */}
             {!expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-stone-700/60 py-6 sm:py-7">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
-                <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{card.iching.essence}</p>
+                <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
+                <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{card.iching.essence}</p>
               </div>
             )}
 
@@ -1838,7 +1874,7 @@ const UniversalLanguageCard: React.FC = () => {
               </>
             ) : (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
+                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
                 <div className="space-y-4">
                   {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
                     <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
@@ -1902,7 +1938,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -1923,7 +1959,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1941,7 +1977,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1958,7 +1994,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1979,7 +2015,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -2012,7 +2048,7 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Paired Hexagram */}
                 {pairCard && (
                   <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
+                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
                     <div className="space-y-4 min-w-0">
                       <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
                       <CardLink
@@ -2027,7 +2063,7 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Programming Partner */}
                 {expanded.gene_keys.programming_partner && (
                   <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
+                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
                     <div className="space-y-4 min-w-0">
                       <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.programming_partner.relationship_context}</p>
                       <CardLink
@@ -2042,7 +2078,7 @@ const UniversalLanguageCard: React.FC = () => {
                 {/* Codon Ring */}
                 {siblings.length > 0 && (
                   <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">{expanded.gene_keys.codon_ring.name}</p>
+                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">{expanded.gene_keys.codon_ring.name}</p>
                     <div className="min-w-0">
                       <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mb-6">{expanded.gene_keys.codon_ring.relationship_context}</p>
                       <div className="grid grid-cols-4 sm:grid-cols-8 gap-x-2 gap-y-3">
@@ -2069,7 +2105,7 @@ const UniversalLanguageCard: React.FC = () => {
               </>
             ) : (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
                 <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Connection data will be available soon.</p>
               </div>
             )}
@@ -2159,7 +2195,7 @@ const UniversalLanguageCard: React.FC = () => {
               </>
             ) : (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
                 <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Body reading will be available soon.</p>
               </div>
             )}
