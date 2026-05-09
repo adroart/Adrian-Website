@@ -38,3 +38,7 @@ scripts/output/
 
 # Generated stories (rebuilt from content/stories/*.md on every build)
 data/generatedStories.ts
+
+# Playwright test artifacts
+test-results/
+playwright-report/
