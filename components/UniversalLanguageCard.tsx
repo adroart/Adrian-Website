@@ -652,7 +652,7 @@ const GeneKeyCard: React.FC<{
         <div className="min-w-0 space-y-4 select-text cursor-text">
           <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{level.name}</p>
           {paragraphs.map((p, i) => (
-            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
           ))}
           {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
@@ -661,7 +661,7 @@ const GeneKeyCard: React.FC<{
                   <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                     Repressive · {level.repressive_nature.label}
                   </p>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.repressive_nature.description}</p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
                 </div>
               )}
               {level.reactive_nature && (
@@ -669,7 +669,7 @@ const GeneKeyCard: React.FC<{
                   <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">
                     Reactive · {level.reactive_nature.label}
                   </p>
-                  <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{level.reactive_nature.description}</p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
                 </div>
               )}
             </div>
@@ -707,7 +707,7 @@ const SynthesisToneCard: React.FC<{
         <div className="min-w-0 space-y-4 select-text cursor-text">
           <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em]`}>{name}</p>
           {paragraphs.map((p, i) => (
-            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+            <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
           ))}
           {extras.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
@@ -715,7 +715,7 @@ const SynthesisToneCard: React.FC<{
                 <div key={i}>
                   <p className={`font-label text-[10px] uppercase tracking-[0.22em] ${t.labelColor} mb-2`}>{ex.label}</p>
                   {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                    <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
+                    <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
                   ))}
                 </div>
               ))}
@@ -1603,7 +1603,7 @@ const UniversalLanguageCard: React.FC = () => {
                     ? 'Upper nature'
                     : 'Lower nature'}
                 </p>
-                <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">
+                <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">
                   {ichingOpen === 'hex'
                     ? (synthesis?.synthesis.iching.trigram_combination ?? card.iching.essence)
                     : ichingOpen === 'upper'
@@ -1625,7 +1625,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean)[0] ?? ''}
                 >
                   {synthesis.synthesis.iching.reading.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
 
@@ -1645,7 +1645,7 @@ const UniversalLanguageCard: React.FC = () => {
                           <p className="font-sans text-[14px] sm:text-[15px] text-stone-500 leading-[1.45] mt-1 mb-3">the oracle's reading of this moment</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
-                              <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{line}</p>
+                              <p key={i} className="font-sans text-[15px] text-wood-700 leading-[1.7] sm:leading-[1.75]">{line}</p>
                             ))}
                           </div>
                         </div>
@@ -1656,7 +1656,7 @@ const UniversalLanguageCard: React.FC = () => {
                           <p className="font-sans text-[14px] sm:text-[15px] text-stone-500 leading-[1.45] mt-1 mb-3">a picture from nature that mirrors the energy</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.image_lines.map((line, i) => (
-                              <p key={i} className="font-sans text-[15px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{line}</p>
+                              <p key={i} className="font-sans text-[15px] text-wood-700 leading-[1.7] sm:leading-[1.75]">{line}</p>
                             ))}
                           </div>
                         </div>
@@ -1681,14 +1681,14 @@ const UniversalLanguageCard: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
                       <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Outer</p>
-                      <p className="font-sans text-[16px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.trigrams.outer.context.text}</p>
+                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.outer.context.text}</p>
                     </div>
                     <div>
                       <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-2">Inner</p>
-                      <p className="font-sans text-[16px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.trigrams.inner.context.text}</p>
+                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
-                  <p className="font-sans text-[16px] text-stone-200 leading-[1.65] sm:leading-[1.7] mt-2">
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] mt-2">
                     {expanded.i_ching.trigrams.family_dynamic.text}
                   </p>
                 </PlateExpand>
@@ -1707,7 +1707,7 @@ const UniversalLanguageCard: React.FC = () => {
                     const stages = lines[1]?.replace(/\.$/, '').split(',').map(s => s.trim()).filter(Boolean) ?? [];
                     return (
                       <>
-                        {headline && <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{headline}</p>}
+                        {headline && <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{headline}</p>}
                         {stages.length > 0 && (
                           <div>
                             <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 mb-3">Four stages of the time cycle</p>
@@ -1718,10 +1718,10 @@ const UniversalLanguageCard: React.FC = () => {
                             </div>
                           </div>
                         )}
-                        <p className="font-sans text-[16px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
+                        <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.image_of_the_situation.fields_of_meaning}</p>
                         <div className="pt-5 border-t border-stone-700/40 space-y-2">
                           {expanded.i_ching.image_tradition.text.split('\n').filter(Boolean).map((line, i) => (
-                            <p key={i} className="font-sans text-[15px] text-stone-300 leading-[1.65]">{line}</p>
+                            <p key={i} className="font-sans text-[15px] text-wood-600 leading-[1.7]">{line}</p>
                           ))}
                         </div>
                       </>
@@ -1736,9 +1736,9 @@ const UniversalLanguageCard: React.FC = () => {
                   label="Patterns of Wisdom"
                   preview={expanded.i_ching.patterns_of_wisdom.nature_image}
                 >
-                  <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
-                  <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
-                  <p className="font-sans text-[16px] text-stone-200 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
+                  <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.nature_image}</p>
+                  <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.guidance}</p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.patterns_of_wisdom.context.text}</p>
                 </PlateExpand>
               </>
             )}
@@ -1747,7 +1747,7 @@ const UniversalLanguageCard: React.FC = () => {
             {!synthesis && expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
-                <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{expanded.i_ching.reflection.text}</p>
+                <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.reflection.text}</p>
               </div>
             )}
 
@@ -1755,7 +1755,7 @@ const UniversalLanguageCard: React.FC = () => {
             {!expanded && (
               <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-stone-700/60 py-6 sm:py-7">
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-stone-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
-                <p className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{card.iching.essence}</p>
+                <p className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{card.iching.essence}</p>
               </div>
             )}
 
@@ -1841,7 +1841,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
                 <div className="space-y-4">
                   {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </div>
               </div>
@@ -1902,7 +1902,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -1923,7 +1923,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1941,7 +1941,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1958,7 +1958,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -1979,7 +1979,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-stone-100 leading-[1.65] sm:leading-[1.7]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-wood-800 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -2014,7 +2014,7 @@ const UniversalLanguageCard: React.FC = () => {
                   <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
                     <div className="space-y-4 min-w-0">
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
+                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
                       <CardLink
                         number={expanded.i_ching.hexagrams_in_pairs.pair_hexagram}
                         label={`Code ${expanded.i_ching.hexagrams_in_pairs.pair_hexagram}`}
@@ -2029,7 +2029,7 @@ const UniversalLanguageCard: React.FC = () => {
                   <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
                     <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
                     <div className="space-y-4 min-w-0">
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{expanded.gene_keys.programming_partner.relationship_context}</p>
+                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.programming_partner.relationship_context}</p>
                       <CardLink
                         number={expanded.gene_keys.programming_partner.number}
                         label={`Code ${expanded.gene_keys.programming_partner.number}`}
@@ -2088,7 +2088,7 @@ const UniversalLanguageCard: React.FC = () => {
                   preview={paragraphs[0] ?? ''}
                 >
                   {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+                    <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
                   ))}
                 </PlateExpand>
               );
@@ -2134,7 +2134,7 @@ const UniversalLanguageCard: React.FC = () => {
                       defaultOpen
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );
@@ -2151,7 +2151,7 @@ const UniversalLanguageCard: React.FC = () => {
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
-                        <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
+                        <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
                       ))}
                     </PlateExpand>
                   );

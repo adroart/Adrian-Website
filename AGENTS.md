@@ -4,7 +4,7 @@ status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
 deploy: https://adrianrasmussen.art
 family: art
-last_reviewed: 2026-05-09
+last_reviewed: 2026-05-02
 ---
 
 # Adrian Rasmussen Art Website — personal portfolio + shop
@@ -53,4 +53,4 @@ Never conflate them. Never use "oracle" in alt text or meta for art-series route
 - UL pieces are multi-dimensional wooden sculptures — use that term in marketing and oracle contexts
 
 ## Deploy
-Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Claude tasks, Adrian tasks, and future items.
+Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Codex tasks, Adrian tasks, and future items.
