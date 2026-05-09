@@ -1428,53 +1428,43 @@ const UniversalLanguageCard: React.FC = () => {
           ref={heroSentinelRef}
           aria-hidden="true"
           className="h-px"
-          style={{ scrollMarginTop: '96px' }}
+          style={{ scrollMarginTop: '76px' }}
         />
 
         <div
           className={`fixed top-0 left-0 right-0 z-[105] motion-safe:transition-transform motion-safe:duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${chromeCollapsed ? 'translate-y-0' : '-translate-y-full pointer-events-none'}`}
           aria-hidden={!chromeCollapsed}
         >
-          {/* Top row: brand · artwork · identity · actions.
+          {/* Top row: home · title · actions.
               Note: the site's color tokens auto-invert in dark mode via CSS
               vars, so we use the base tokens only — `dark:` overrides here
               would double-invert and produce a light band on a dark page. */}
           <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            <div className="flex items-center gap-3 sm:gap-4 max-w-2xl mx-auto h-14 px-3 sm:px-4">
+            <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto h-11 px-2 sm:px-3">
 
               {/* Home — returns to the main site. Icon rather than wordmark
-                  so the bar stays compact on narrow screens. */}
+                  so the bar stays compact on narrow screens. The 44×44
+                  touch target lives behind the 18px glyph for WCAG. */}
               <Link
                 to="/"
-                className="flex items-center justify-center w-9 h-9 -ml-1 text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
+                className="flex items-center justify-center w-11 h-11 -ml-1 text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
                 aria-label="Back to Adrian Rasmussen home"
               >
                 <Home strokeWidth={1.5} size={18} aria-hidden="true" />
               </Link>
 
-              <span className="h-5 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
+              <span className="h-4 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
 
-              {/* Artwork thumbnail — tap to view at full size */}
+              {/* Card title — tap to view the artwork at full size.
+                  The whole row height is the touch target (44px). */}
               <button
                 type="button"
-                onClick={(e) => {
-                  const img = (e.currentTarget as HTMLElement).querySelector('img');
-                  openLightbox(img?.getBoundingClientRect() ?? null);
-                }}
-                aria-label="View artwork at full size"
-                className="block w-9 h-9 overflow-hidden rounded-sm border border-bronze-400/40 hover:border-bronze-500/70 shadow-[0_1px_2px_rgba(60,44,22,0.1)] motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 flex-shrink-0"
+                onClick={() => openLightbox(null)}
+                aria-label={`View artwork for ${card.card_name} at full size`}
+                className="font-serif text-[14px] sm:text-[15px] text-wood-900 hover:text-bronze-700 truncate leading-tight flex-1 min-w-0 text-left h-11 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm px-1"
               >
-                <img
-                  src={cardImageUrl(card.number, 108)}
-                  alt={imageAlt}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-
-              {/* Card identity */}
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-900 truncate leading-tight flex-1 min-w-0">
                 {card.card_name}
-              </p>
+              </button>
 
               <button
                 type="button"
@@ -1482,14 +1472,14 @@ const UniversalLanguageCard: React.FC = () => {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                   setShareOpen(true);
                 }}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-1.5 py-2 transition-colors flex-shrink-0"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-2 h-11 flex items-center transition-colors flex-shrink-0"
               >
                 Share
               </button>
               <button
                 type="button"
                 onClick={() => setBuyOpen(true)}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-1.5 py-2 transition-colors flex-shrink-0"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-2 h-11 flex items-center transition-colors flex-shrink-0"
               >
                 Acquire
               </button>
