@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useRef, useContext, createContext, useCallback } from 'react';
 import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Home } from 'lucide-react';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
 import { getSynthesis } from '../data/synthesisData';
@@ -934,8 +935,14 @@ const UniversalLanguageCard: React.FC = () => {
   const stageHandle = useRef<ReadingStageHandle>(null);
   const heroImageRef = useRef<HTMLImageElement>(null);
 
-  // Chrome collapse state — true when the user has scrolled past the hero image.
+  // Chrome collapse state — true once the reader has scrolled past the
+  // acquire/share row. From that point the contextual card header takes over
+  // for the global site nav. Two sentinels because the swap trigger and the
+  // chapter-jump scroll target are at different document positions:
+  //   acquireShareEndRef → triggers the nav/card-header swap
+  //   heroSentinelRef    → scroll target for jumpToChapter (top of reading)
   const [chromeCollapsed, setChromeCollapsed] = useState(false);
+  const acquireShareEndRef = useRef<HTMLDivElement>(null);
   const heroSentinelRef = useRef<HTMLDivElement>(null);
 
   // Buy sheet open/closed
@@ -963,17 +970,16 @@ const UniversalLanguageCard: React.FC = () => {
     });
   }, [handleChapterChange]);
 
-  // Watch the hero sentinel so the contextual card header slides in/out as
-  // the reader scrolls past the hero. The rootMargin must be larger than the
-  // card header height so that programmatic scrollIntoView (which uses
-  // scrollMarginTop) lands the sentinel just below the card header without
-  // accidentally flipping chromeCollapsed back to false.
+  // Watch the acquire/share sentinel so the contextual card header takes
+  // over from the global nav once the reader has scrolled past the acquire
+  // and share controls — not before. The global nav stays in place while
+  // the artwork and acquire/share are still on screen.
   useEffect(() => {
-    const sentinel = heroSentinelRef.current;
+    const sentinel = acquireShareEndRef.current;
     if (!sentinel) return;
     const obs = new IntersectionObserver(([entry]) => {
       setChromeCollapsed(!entry.isIntersecting);
-    }, { threshold: 0, rootMargin: '-120px 0px 0px 0px' });
+    }, { threshold: 0, rootMargin: '0px' });
     obs.observe(sentinel);
     return () => obs.disconnect();
   }, [cardNum]);
@@ -1354,6 +1360,12 @@ const UniversalLanguageCard: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Sentinel right after the acquire/share row. When this scrolls
+                past the top of the viewport, the global site nav swaps out
+                for the contextual card header. The global nav stays visible
+                while the artwork and acquire/share are still on screen. */}
+            <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
@@ -1430,14 +1442,14 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             <div className="flex items-center gap-3 sm:gap-4 max-w-2xl mx-auto h-14 px-3 sm:px-4">
 
-              {/* Brand link — returns to the main site */}
+              {/* Home — returns to the main site. Icon rather than wordmark
+                  so the bar stays compact on narrow screens. */}
               <Link
                 to="/"
-                className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0"
+                className="flex items-center justify-center w-9 h-9 -ml-1 text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
                 aria-label="Back to Adrian Rasmussen home"
               >
-                <span className="hidden sm:inline">Adrian Rasmussen</span>
-                <span className="sm:hidden">Adrian</span>
+                <Home strokeWidth={1.5} size={18} aria-hidden="true" />
               </Link>
 
               <span className="h-5 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
