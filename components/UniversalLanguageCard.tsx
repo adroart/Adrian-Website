@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef, useContext, createContext, useCallback } from 'react';
-import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
 import { getSynthesis } from '../data/synthesisData';
@@ -10,6 +10,11 @@ import { useMetaTags } from '../hooks/useMetaTags';
 import { OracleCardEntrance } from './OracleCardEntrance';
 import SystemOverlay, { type SystemKey } from './SystemOverlay';
 import { HEXAGRAM_CHINESE } from '../data/hexagramChinese';
+import ChapterWordmark, { type ChapterKey, type Chapter } from './oracle/ChapterWordmark';
+import ReadingStage, { type ReadingStageHandle } from './oracle/ReadingStage';
+import ContinueRail from './oracle/ContinueRail';
+import ImageViewer from './oracle/ImageViewer';
+import BuySheet from './oracle/BuySheet';
 
 // Tracks which cards have already shown their ritual entrance in this session,
 // so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
@@ -320,30 +325,6 @@ async function generateStoryBlob(
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.92)
   );
 }
-
-/* ─── Lightbox ───────────────────────────────────────────────────────────── */
-
-const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handler);
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handler);
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[200] bg-stone-950/96 flex items-center justify-center cursor-zoom-out"
-      onClick={onClose}
-      role="dialog" aria-modal="true" aria-label="Full image. Click to close."
-    >
-      <img src={src} alt={alt} className="max-w-full max-h-full object-contain" onClick={e => e.stopPropagation()} />
-    </div>
-  );
-};
 
 /* ─── Reduced motion hook ────────────────────────────────────────────────── */
 
@@ -989,6 +970,16 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
   );
 };
 
+/* ─── Reading-stage chapters (system navigation) ─────────────────────────── */
+
+const CHAPTERS: Chapter[] = [
+  { key: 'iching',      label: 'I CHING' },
+  { key: 'genekeys',    label: 'GENE KEYS' },
+  { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
+  { key: 'tarot',       label: 'TAROT' },
+  { key: 'body',        label: 'BODY' },
+];
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageCard: React.FC = () => {
@@ -1002,12 +993,63 @@ const UniversalLanguageCard: React.FC = () => {
   const synthesis = getSynthesis(cardNum);
 
   const [lightboxOpen,   setLightboxOpen]   = useState(false);
+  const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
   const [copied,         setCopied]         = useState(false);
   const [shareOpen,      setShareOpen]      = useState(false);
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const ichingRef    = useRef<HTMLDivElement>(null);
   const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
+
+  // ── New layout state ────────────────────────────────────────────────────
+  // Active chapter in the reading stage (synced with ?system= URL param).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialChapter = (() => {
+    const s = searchParams.get('system');
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    return valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching';
+  })();
+  const [activeChapter, setActiveChapter] = useState<ChapterKey>(initialChapter);
+  const stageHandle = useRef<ReadingStageHandle>(null);
+  const heroImageRef = useRef<HTMLImageElement>(null);
+
+  // Chrome collapse state — true when the user has scrolled past the hero image.
+  const [chromeCollapsed, setChromeCollapsed] = useState(false);
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Buy sheet open/closed
+  const [buyOpen, setBuyOpen] = useState(false);
+
+  // Update URL when chapter changes (no history entry — replaceState semantics)
+  const handleChapterChange = useCallback((key: ChapterKey) => {
+    setActiveChapter(key);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('system', key);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const jumpToChapter = useCallback((key: ChapterKey) => {
+    handleChapterChange(key);
+    stageHandle.current?.scrollTo(key);
+  }, [handleChapterChange]);
+
+  // Watch the hero sentinel so the chrome collapses/expands as the user scrolls.
+  useEffect(() => {
+    const sentinel = heroSentinelRef.current;
+    if (!sentinel) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      setChromeCollapsed(!entry.isIntersecting);
+    }, { threshold: 0, rootMargin: '-80px 0px 0px 0px' });
+    obs.observe(sentinel);
+    return () => obs.disconnect();
+  }, [cardNum]);
+
+  const openLightbox = useCallback((rect: DOMRect | null) => {
+    setLightboxOrigin(rect);
+    setLightboxOpen(true);
+  }, []);
 
   // Ritual entrance plays on first landing for each card in a session. After
   // the visitor has entered a card once, navigating away (e.g. to /creations/<id>)
@@ -1039,8 +1081,22 @@ const UniversalLanguageCard: React.FC = () => {
   useEffect(() => {
     setLightboxOpen(false);
     setShareOpen(false);
+    setBuyOpen(false);
     storyFileRef.current = null;
     window.scrollTo(0, 0);
+    // Reset to the system specified in URL if present, else I Ching
+    const s = searchParams.get('system');
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching');
+  }, [cardNum]);
+
+  // After mount or chapter change driven by URL, scroll the stage to the
+  // matching panel without animation so a deep link lands in place.
+  useEffect(() => {
+    stageHandle.current?.scrollTo(activeChapter, { instant: true });
+    // We want this to run only once per cardNum at mount; the stage's own
+    // IntersectionObserver handles user-driven changes thereafter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardNum]);
 
   useEffect(() => {
@@ -1159,7 +1215,21 @@ const UniversalLanguageCard: React.FC = () => {
     <ExpandProvider storageKey={`ul-card-${cardNum}`}>
       <ExpandBridge bind={ctx => { expandRef.current = ctx; }} />
       {showIndexEntrance && <OracleCardEntrance card={card} onDone={() => setShowIndexEntrance(false)} />}
-      {lightboxOpen      && <Lightbox src={cardImageUrl(card.number, 1200)} alt={imageAlt} onClose={() => setLightboxOpen(false)} />}
+      <ImageViewer
+        open={lightboxOpen}
+        src={cardImageUrl(card.number, 1200)}
+        alt={imageAlt}
+        originRect={lightboxOrigin}
+        onClose={() => setLightboxOpen(false)}
+      />
+      <BuySheet
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+        pieceHref={piece ? `/creations/${piece.id}` : null}
+        pieceAvailability={piece?.availability}
+        cardName={card.card_name}
+        cardNumber={card.number}
+      />
       <SystemOverlay
         open={systemOverlay !== null}
         systemKey={systemOverlay ?? 'iching'}
@@ -1195,20 +1265,32 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="md:max-w-2xl md:mx-auto">
             <figure
               className="w-full aspect-square cursor-zoom-in"
-              onClick={() => setLightboxOpen(true)}
+              onClick={(e) => {
+                const target = e.currentTarget.querySelector('img');
+                openLightbox(target?.getBoundingClientRect() ?? null);
+              }}
               role="button" tabIndex={0} aria-label="Enlarge image"
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  const target = (e.currentTarget as HTMLElement).querySelector('img');
+                  openLightbox(target?.getBoundingClientRect() ?? null);
+                }
+              }}
             >
-              <img src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
+              <img ref={heroImageRef} src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
             </figure>
 
             {/* Order + Share - two-up row directly below image */}
             <div className="border-t border-b border-wood-200/60 bg-paper-100/50">
               <div className="flex items-stretch gap-2 px-3 py-3">
-                {/* Acquire */}
-                <Link
-                  to={piece ? `/creations/${piece.id}` : '/inquire'}
-                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200"
+                {/* Acquire — opens the BuySheet so the reader doesn't lose
+                    their place in the reading. */}
+                <button
+                  type="button"
+                  onClick={() => setBuyOpen(true)}
+                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200 text-left"
+                  aria-haspopup="dialog"
                 >
                   <div>
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
@@ -1228,7 +1310,7 @@ const UniversalLanguageCard: React.FC = () => {
                       Available
                     </span>
                   )}
-                </Link>
+                </button>
 
                 {/* Hexagram symbol - decorative, sits between the two buttons */}
                 {synthesis?.reference?.hexagram_symbol && (
@@ -1373,191 +1455,7 @@ const UniversalLanguageCard: React.FC = () => {
             )}
 
 
-            {/* Reference strip - museum specimen plate.
-                Five systems as peers, each a facet of one energy.
-                No per-row containers; hairline dividers. Hover underline
-                communicates interactivity without arrows on every row.
-                Label column fixed so values align vertically. */}
-            {synthesis?.reference && (() => {
-              // Codon ring siblings (other cards that share this card's ring
-              // via the tarot arcana). These ARE the ring relationship shown
-              // in the Tarot row.
-              const siblingNums = (card.codon_ring_siblings ?? []).filter(n => n !== card.number);
-              const siblingCards = siblingNums
-                .map(n => CARD_BY_NUMBER.get(n))
-                .filter((c): c is NonNullable<typeof c> => !!c);
-
-              // Pair partner: the I Ching / Gene Keys structural pair
-              // (hexagram 1↔2, 3↔50, etc.). Same relationship, named in each
-              // system's own vocabulary.
-              const pairNum = synthesis.reference.programming_partner;
-              const pair = typeof pairNum === 'number' ? CARD_BY_NUMBER.get(pairNum) : undefined;
-
-              // Row is a clickable div (role="button") whose click navigates
-              // to the section. Partner/sibling Links inside use stopPropagation
-              // so they open the linked card instead of bubbling to the row.
-              const rowCls = 'group grid grid-cols-[88px_1fr] gap-x-5 px-3 -mx-3 py-3.5 border-t border-wood-200/50 w-full rounded-md cursor-pointer hover:bg-bronze-500/[0.05] focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] focus-visible:ring-1 focus-visible:ring-bronze-400/40 transition-colors';
-              const labelCls = 'font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 self-center';
-              const primaryCls = 'font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/60 decoration-[1.5px] underline-offset-[5px] group-hover:underline group-focus-visible:underline';
-              const contextCls = 'font-serif text-[14px] text-wood-600 leading-[1.5] mt-1.5';
-              const contextEmphCls = 'font-serif text-[14px] text-wood-700';
-              // Compact chip for inline cross-references (paired hexagram, codon
-              // ring siblings). Small enough to live inside a sentence, bordered
-              // bronze so it reads as a tap target in both light and dark mode.
-              const chipCls = 'inline-flex items-center whitespace-nowrap align-middle font-serif text-[13px] leading-none px-2.5 py-[5px] mx-[2px] rounded-md bg-bronze-400/10 dark:bg-bronze-400/15 text-bronze-700 dark:text-bronze-400 border border-bronze-400/40 dark:border-bronze-400/45 no-underline hover:bg-bronze-400/20 dark:hover:bg-bronze-400/25 hover:border-bronze-500/60 dark:hover:border-bronze-300/60 hover:text-bronze-800 dark:hover:text-bronze-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-400/60 transition-colors';
-              // Keyboard handler for role="button" divs
-              const keyActivate = (fn: () => void) => (e: React.KeyboardEvent) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
-              };
-              // Stop partner link clicks from bubbling to the row
-              const stop = (e: React.MouseEvent) => e.stopPropagation();
-
-              return (
-                <div className="mt-10 mb-6 max-w-md mx-auto">
-                  <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-400 mb-3 pb-3 border-b border-wood-200/50">
-                    This energy, seen through
-                  </p>
-
-                  {/* I Ching - whole row clicks scroll to the I Ching section.
-                      Paired hexagram link stops propagation to open that card. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('iching')}
-                    onKeyDown={keyActivate(() => go('iching'))}
-                    className={rowCls}
-                    aria-label={`Go to I Ching reading for ${card.iching.hexagram_name}`}
-                  >
-                    <span className={labelCls}>I Ching</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{card.iching.hexagram_name}</span>
-                      <p className={contextCls}>
-                        Hexagram {card.number} · {card.iching.upper_trigram.name} over {card.iching.lower_trigram.name}
-                      </p>
-                      {pair && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Paired</span>
-                          <Link
-                            to={`/oracle/universal-language/${pair.number}`}
-                            state={{ ritual: true }}
-                            onClick={stop}
-                            className={chipCls}
-                            aria-label={`Open Code ${pair.number}, ${pair.card_name}`}
-                          >
-                            Hexagram {pair.number} · {pair.iching.hexagram_name}
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Gene Keys - whole row scrolls to the Gene Keys section. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('genekeys')}
-                    onKeyDown={keyActivate(() => go('genekeys'))}
-                    className={rowCls}
-                    aria-label={`Go to Gene Keys reading: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
-                  >
-                    <span className={labelCls}>Gene Keys</span>
-                    <div className="min-w-0">
-                      <span className="inline-flex items-baseline flex-wrap gap-x-2 gap-y-1">
-                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.shadow}</span>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-serif text-[17px] text-bronze-700 leading-[1.3] tracking-[-0.005em] font-medium decoration-bronze-500/60 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.gift}</span>
-                        <span className="text-wood-300" aria-hidden="true">·</span>
-                        <span className="font-serif text-[17px] text-wood-700 leading-[1.3] tracking-[-0.005em] decoration-bronze-400/40 decoration-1 underline-offset-[5px] group-hover:underline group-focus-visible:underline">{card.gene_keys.siddhi}</span>
-                      </span>
-                      <p className={contextCls}>
-                        Shadow, Gift, Siddhi · three frequencies of one theme
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Human Design */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('humandesign')}
-                    onKeyDown={keyActivate(() => go('humandesign'))}
-                    className={rowCls}
-                    aria-label={`Go to Human Design reading: ${synthesis.reference.hd_center} Center`}
-                  >
-                    <span className={labelCls}>Human Design</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.hd_center} Center</span>
-                      <p className={contextCls}>
-                        Gate {synthesis.reference.hd_gate} · {synthesis.reference.hd_circuit} · paired with {synthesis.reference.hd_harmonic_gate}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Tarot - arcana = ring. Sibling links open those cards. */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('connections')}
-                    onKeyDown={keyActivate(() => go('connections'))}
-                    className={rowCls}
-                    aria-label={`Go to Tarot reading: ${synthesis.reference.tarot_card}, ${card.ring_name}`}
-                  >
-                    <span className={labelCls}>Tarot</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.tarot_card}</span>
-                      <p className={contextCls}>
-                        {card.ring_name}
-                        {siblingCards.length > 3 && (
-                          <>, shared with {siblingCards.length} other keys</>
-                        )}
-                      </p>
-                      {siblingCards.length > 0 && siblingCards.length <= 3 && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500">Ring</span>
-                          {siblingCards.map((c) => (
-                            <Link
-                              key={c.number}
-                              to={`/oracle/universal-language/${c.number}`}
-                              state={{ ritual: true }}
-                              onClick={stop}
-                              className={chipCls}
-                              aria-label={`Open Code ${c.number}, ${c.card_name}`}
-                            >
-                              Code {c.number} · {c.card_name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Body - physiology + amino acid */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => go('connections')}
-                    onKeyDown={keyActivate(() => go('connections'))}
-                    className={rowCls + ' border-b border-wood-200/50'}
-                    aria-label={`Go to Body reading: ${synthesis.reference.body_physiology}`}
-                  >
-                    <span className={labelCls}>Body</span>
-                    <div className="min-w-0">
-                      <span className={primaryCls}>{synthesis.reference.body_physiology}</span>
-                      {synthesis.reference.body_amino_acid && (
-                        <p className={contextCls}>
-                          Amino acid · <span className={contextEmphCls}>{synthesis.reference.body_amino_acid}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-
-
-
-            {/* Island 3 - Creator voice (conditional) */}
+            {/* Creator voice (conditional) */}
             {expanded?.creator_voice?.personal_reading ? (
               <div className="card-grain rounded-2xl bg-stone-100 border border-wood-200/30 px-5 py-8 shadow-[inset_0_1px_3px_rgba(60,44,22,0.06)]">
                 <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-6">From the creator</p>
@@ -1571,10 +1469,78 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
         </section>
 
-        {/* ════════════ I CHING ══════════════════════════════════════════ */}
-        {/* dark-preserve: intentionally-dark section stays dark in dark mode
-            (without it, bg-stone-900 would remap to a light tone). */}
-        <section id="iching" className={`${SCREEN_BG.iching} scroll-mt-16 dark-preserve`}>
+        {/* ════════════ STICKY CHROME + CHAPTER WORDMARK ═══════════════════ */}
+        {/* Hero sentinel: when this leaves the viewport, the slim chrome
+            slides in. */}
+        <div ref={heroSentinelRef} aria-hidden="true" className="h-px" />
+
+        <div className="sticky z-30" style={{ top: 'var(--nav-height, 72px)' }}>
+          {/* Slim collapsed chrome — appears once the hero scrolls away.
+              Always at hand: tap thumbnail to enlarge, share, or acquire. */}
+          <div
+            className={`overflow-hidden bg-paper-50/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-wood-200/50 dark:border-stone-700/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-14 opacity-100' : 'max-h-0 opacity-0'}`}
+            aria-hidden={!chromeCollapsed}
+          >
+            <div className="flex items-center gap-3 max-w-2xl mx-auto h-14 px-3 sm:px-4">
+              <button
+                type="button"
+                onClick={(e) => {
+                  const img = (e.currentTarget as HTMLElement).querySelector('img');
+                  openLightbox(img?.getBoundingClientRect() ?? null);
+                }}
+                aria-label="View artwork at full size"
+                className="block w-10 h-10 overflow-hidden rounded-sm border border-wood-200/60 dark:border-stone-700/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
+              >
+                <img
+                  src={cardImageUrl(card.number, 120)}
+                  alt={imageAlt}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="font-label text-[9px] uppercase tracking-[0.22em] text-wood-500 dark:text-stone-500 leading-none">Code {card.number}</p>
+                <p className="font-serif text-[14px] text-wood-900 dark:text-stone-100 truncate leading-tight mt-1">{card.card_name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setShareOpen(true);
+                }}
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 dark:text-stone-300 hover:text-bronze-700 dark:hover:text-bronze-400 px-2 py-2 transition-colors"
+              >
+                Share
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuyOpen(true)}
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 dark:text-bronze-400 hover:text-bronze-800 dark:hover:text-bronze-300 px-2 py-2 transition-colors"
+              >
+                Acquire
+              </button>
+            </div>
+          </div>
+
+          <ChapterWordmark
+            chapters={CHAPTERS}
+            active={activeChapter}
+            onSelect={jumpToChapter}
+            variant="paper"
+          />
+        </div>
+
+        {/* ════════════ READING STAGE — five system panels ═════════════════ */}
+        <ReadingStage
+          ref={stageHandle}
+          chapters={['iching', 'genekeys', 'humandesign', 'tarot', 'body']}
+          active={activeChapter}
+          onActiveChange={handleChapterChange}
+        >
+
+          {/* ────────── I CHING ────────── */}
+          {/* dark-preserve: intentionally-dark panel stays dark in dark mode
+              (without it, bg-stone-900 would remap to a light tone). */}
+          <div className={`${SCREEN_BG.iching} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -1821,11 +1787,18 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
+            <ContinueRail
+              variant="dark"
+              label="Next — Gene Keys"
+              heading={`${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`}
+              onClick={() => jumpToChapter('genekeys')}
+              ariaLabel={`Continue to Gene Keys: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ GENE KEYS + CONNECTIONS ════════════════════════ */}
-        <section id="genekeys" className={`${SCREEN_BG.genekeys} scroll-mt-16`}>
+        {/* ────────── GENE KEYS ────────── */}
+        <div className={`${SCREEN_BG.genekeys} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -1908,12 +1881,19 @@ const UniversalLanguageCard: React.FC = () => {
               </p>
             )}
 
+            <ContinueRail
+              variant="light"
+              label="Next — Human Design"
+              heading={(synthesis?.reference?.hd_keyword ?? card.human_design.keyword) + (synthesis?.reference?.hd_center ? ` · ${synthesis.reference.hd_center} Center` : '')}
+              onClick={() => jumpToChapter('humandesign')}
+              ariaLabel="Continue to Human Design"
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ HUMAN DESIGN ════════════════════════════════════ */}
-        {/* dark-preserve: intentionally-dark section stays dark in dark mode. */}
-        <section id="humandesign" className={`${SCREEN_BG.humandesign} scroll-mt-16 dark-preserve`}>
+        {/* ────────── HUMAN DESIGN ────────── */}
+        {/* dark-preserve: intentionally-dark panel stays dark in dark mode. */}
+        <div className={`${SCREEN_BG.humandesign} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -2031,20 +2011,25 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            <ContinueRail
+              variant="dark"
+              label="Next — Tarot"
+              heading={(synthesis?.reference?.tarot_card ?? card.ring_tarot) + ' · ' + card.ring_name}
+              onClick={() => jumpToChapter('tarot')}
+              ariaLabel={`Continue to Tarot: ${synthesis?.reference?.tarot_card ?? card.ring_tarot}, ${card.ring_name}`}
+            />
           </div>
-        </section>
+        </div>
 
-        {/* ════════════ CONNECTIONS ═════════════════════════════════════ */}
-        <section id="connections" className={`${SCREEN_BG.connections} scroll-mt-16`}>
+        {/* ────────── TAROT (Tarot resonance + structural connections) ────────── */}
+        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header */}
-            <header className="mb-8 sm:mb-10">
-              <p className="font-label text-[10px] uppercase tracking-[0.28em] text-wood-500 mb-3">Connections</p>
-              <h2 className="font-serif text-[28px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em]">Threads in the weave</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">
-                Each code lives in a wider pattern. Pairs that mirror it, partners that balance it, and the ring of related codons it belongs to.
-              </p>
+            {/* Plate header — Tarot */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Tarot</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.tarot_card ?? card.ring_tarot}</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">{card.ring_name}</p>
             </header>
 
             {expanded ? (
@@ -2134,19 +2119,43 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            <ContinueRail
+              variant="light"
+              label="Next — Body"
+              heading={(synthesis?.reference?.body_physiology ?? 'The body') + (synthesis?.reference?.body_amino_acid ? ` · ${synthesis.reference.body_amino_acid}` : '')}
+              onClick={() => jumpToChapter('body')}
+              ariaLabel="Continue to Body reading"
+            />
+          </div>
+        </div>
+
+        {/* ────────── BODY (physiology + amino acid) ────────── */}
+        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
+
+            {/* Plate header — Body */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Body</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.body_physiology ?? 'Embodied'}</h2>
+              {synthesis?.reference?.body_amino_acid && (
+                <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3">Amino acid · {synthesis.reference.body_amino_acid}</p>
+              )}
+            </header>
+
             {/* Body — physiology and amino acid as separate plates */}
-            {synthesis && (
+            {synthesis ? (
               <>
                 {(() => {
                   const paragraphs = synthesis.synthesis.body.physiology.split('\n\n').filter(Boolean);
                   return (
                     <PlateExpand
-                      id="connections-physiology"
+                      id="body-physiology"
                       section="connections"
                       variant="light"
-                      label="Body · Physiology"
+                      label="Physiology"
                       caption={synthesis.reference?.body_physiology ?? undefined}
                       preview={paragraphs[0] ?? ''}
+                      defaultOpen
                     >
                       {paragraphs.map((p, i) => (
                         <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.6] sm:leading-[1.65]">{p}</p>
@@ -2158,10 +2167,10 @@ const UniversalLanguageCard: React.FC = () => {
                   const paragraphs = synthesis.synthesis.body.amino_acid.split('\n\n').filter(Boolean);
                   return (
                     <PlateExpand
-                      id="connections-amino-acid"
+                      id="body-amino-acid"
                       section="connections"
                       variant="light"
-                      label="Body · Amino Acid"
+                      label="Amino Acid"
                       caption={synthesis.reference?.body_amino_acid ?? undefined}
                       preview={paragraphs[0] ?? ''}
                     >
@@ -2172,11 +2181,33 @@ const UniversalLanguageCard: React.FC = () => {
                   );
                 })()}
               </>
+            ) : (
+              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
+                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+                <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Body reading will be available soon.</p>
+              </div>
             )}
 
+            {/* Last panel: invite the reader to the next card */}
+            {nextCardNum !== null && (() => {
+              const next = CARD_BY_NUMBER.get(nextCardNum);
+              if (!next) return null;
+              return (
+                <ContinueRail
+                  variant="light"
+                  label={`Next card — Code ${next.number}`}
+                  heading={next.card_name}
+                  onClick={() => navigate(`/oracle/universal-language/${next.number}`, { state: { ritual: true } })}
+                  ariaLabel={`Continue to Code ${next.number}, ${next.card_name}`}
+                />
+              );
+            })()}
 
           </div>
-        </section>
+        </div>
+        {/* end Body panel */}
+
+        </ReadingStage>
 
       </div>
 
@@ -2199,7 +2230,7 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Prev</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Card {c?.number}</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
               </Link>
@@ -2224,7 +2255,7 @@ const UniversalLanguageCard: React.FC = () => {
                 className="flex items-center justify-end gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 <div className="min-w-0 text-right">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Next →</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Card {c?.number} →</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (
