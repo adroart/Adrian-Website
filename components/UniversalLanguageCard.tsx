@@ -963,13 +963,17 @@ const UniversalLanguageCard: React.FC = () => {
     });
   }, [handleChapterChange]);
 
-  // Watch the hero sentinel so the chrome collapses/expands as the user scrolls.
+  // Watch the hero sentinel so the contextual card header slides in/out as
+  // the reader scrolls past the hero. The rootMargin must be larger than the
+  // card header height so that programmatic scrollIntoView (which uses
+  // scrollMarginTop) lands the sentinel just below the card header without
+  // accidentally flipping chromeCollapsed back to false.
   useEffect(() => {
     const sentinel = heroSentinelRef.current;
     if (!sentinel) return;
     const obs = new IntersectionObserver(([entry]) => {
       setChromeCollapsed(!entry.isIntersecting);
-    }, { threshold: 0, rootMargin: '-80px 0px 0px 0px' });
+    }, { threshold: 0, rootMargin: '-120px 0px 0px 0px' });
     obs.observe(sentinel);
     return () => obs.disconnect();
   }, [cardNum]);
@@ -1397,28 +1401,48 @@ const UniversalLanguageCard: React.FC = () => {
           </div>
         </section>
 
-        {/* ════════════ STICKY CHROME + CHAPTER WORDMARK ═══════════════════ */}
-        {/* Hero sentinel: when this leaves the viewport, the slim chrome
-            slides in. */}
-        <div ref={heroSentinelRef} aria-hidden="true" className="h-px" />
+        {/* ════════════ CONTEXTUAL CARD HEADER ═══════════════════════════
+            Single replacement for the global nav while the reader is in a
+            card. At the top of the page the global nav is visible; once the
+            reader scrolls past the hero (sentinel below), the card header
+            slides in from above and covers the nav — one header at a time.
+            To return to the main site, scroll all the way back up: the card
+            header retracts and the global nav comes back.
 
-        <div className="sticky z-30" style={{ top: 'var(--nav-height, 72px)' }}>
-          {/* Slim collapsed chrome — appears once the hero scrolls away.
-              Always at hand: tap thumbnail to enlarge, share, or acquire. */}
-          {/* Slim collapsed chrome. Keeps the artwork present while the
-              reader cycles through the systems — Adrian's preference is for
-              the art to remain visible, not just a tiny indicator. The
-              thumbnail is 56×56 with a subtle bronze frame to feel like a
-              gallery placard rather than a generic UI thumbnail.
+            Carries everything needed while reading: brand link (way out),
+            artwork thumbnail (tap → lightbox), card identity, share +
+            acquire actions, and the chapter wordmark for system swipe. */}
+        <div
+          ref={heroSentinelRef}
+          aria-hidden="true"
+          className="h-px"
+          style={{ scrollMarginTop: '96px' }}
+        />
 
+        <div
+          className={`fixed top-0 left-0 right-0 z-[105] motion-safe:transition-transform motion-safe:duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${chromeCollapsed ? 'translate-y-0' : '-translate-y-full pointer-events-none'}`}
+          aria-hidden={!chromeCollapsed}
+        >
+          {/* Top row: brand · artwork · identity · actions.
               Note: the site's color tokens auto-invert in dark mode via CSS
               vars, so we use the base tokens only — `dark:` overrides here
               would double-invert and produce a light band on a dark page. */}
-          <div
-            className={`overflow-hidden bg-paper-100 border-b border-wood-300/60 motion-safe:transition-all motion-safe:duration-300 ${chromeCollapsed ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}
-            aria-hidden={!chromeCollapsed}
-          >
-            <div className="flex items-center gap-4 max-w-2xl mx-auto h-20 px-3 sm:px-4">
+          <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center gap-3 sm:gap-4 max-w-2xl mx-auto h-14 px-3 sm:px-4">
+
+              {/* Brand link — returns to the main site */}
+              <Link
+                to="/"
+                className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0"
+                aria-label="Back to Adrian Rasmussen home"
+              >
+                <span className="hidden sm:inline">Adrian Rasmussen</span>
+                <span className="sm:hidden">Adrian</span>
+              </Link>
+
+              <span className="h-5 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
+
+              {/* Artwork thumbnail — tap to view at full size */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -1426,38 +1450,41 @@ const UniversalLanguageCard: React.FC = () => {
                   openLightbox(img?.getBoundingClientRect() ?? null);
                 }}
                 aria-label="View artwork at full size"
-                className="block w-14 h-14 overflow-hidden rounded-sm border border-bronze-400/40 hover:border-bronze-500/70 shadow-[0_1px_3px_rgba(60,44,22,0.12)] motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50"
+                className="block w-9 h-9 overflow-hidden rounded-sm border border-bronze-400/40 hover:border-bronze-500/70 shadow-[0_1px_2px_rgba(60,44,22,0.1)] motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 flex-shrink-0"
               >
                 <img
-                  src={cardImageUrl(card.number, 168)}
+                  src={cardImageUrl(card.number, 108)}
                   alt={imageAlt}
                   className="w-full h-full object-cover"
                 />
               </button>
-              <div className="flex-1 min-w-0">
-                <p className="font-label text-[10px] uppercase tracking-[0.22em] text-wood-500 leading-none">Code {card.number}</p>
-                <p className="font-serif text-[16px] text-wood-900 truncate leading-tight mt-1.5">{card.card_name}</p>
-              </div>
+
+              {/* Card identity */}
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-900 truncate leading-tight flex-1 min-w-0">
+                {card.card_name}
+              </p>
+
               <button
                 type="button"
                 onClick={() => {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                   setShareOpen(true);
                 }}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-2 py-2 transition-colors"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-1.5 py-2 transition-colors flex-shrink-0"
               >
                 Share
               </button>
               <button
                 type="button"
                 onClick={() => setBuyOpen(true)}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-2 py-2 transition-colors"
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-1.5 py-2 transition-colors flex-shrink-0"
               >
                 Acquire
               </button>
             </div>
           </div>
 
+          {/* Bottom row: chapter wordmark for system swipe */}
           <ChapterWordmark
             chapters={CHAPTERS}
             active={activeChapter}

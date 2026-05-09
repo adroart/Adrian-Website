@@ -86,7 +86,7 @@ export const ChapterWordmark: React.FC<{
       role="tablist"
       aria-label="Reading chapters"
     >
-      <div className="flex items-stretch h-11 max-w-2xl mx-auto">
+      <div className="flex items-stretch h-10 max-w-2xl mx-auto">
         {chapters.map((chapter, idx) => {
           const isActive = chapter.key === active;
           const isLast = idx === chapters.length - 1;
