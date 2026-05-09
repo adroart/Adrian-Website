@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { Artwork, SizeVariant } from '../../types';
 
 const formatPrice = (n?: number) => (typeof n === 'number' ? `$${n.toLocaleString()}` : '');
@@ -32,7 +32,18 @@ export const BuySheet: React.FC<{
 }> = ({ open, onClose, piece, imageUrl, imageAlt, cardName, cardNumber }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const navigate = useNavigate();
+
+  // Auto-close when the URL changes (e.g. the reader tapped a variant
+  // link). This is the safest signal — the route change is what actually
+  // unmounts the underlying card page anyway, but we also clean up our
+  // own state so we don't briefly flash the sheet open if they come back.
+  const lastPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (lastPathRef.current !== location.pathname) {
+      lastPathRef.current = location.pathname;
+      if (open) onClose();
+    }
+  }, [location.pathname, open, onClose]);
 
   // ESC + body scroll lock. Browser-back dismiss removed because the
   // pushState marker raced with React Router's navigate() when the
@@ -75,11 +86,13 @@ export const BuySheet: React.FC<{
         onClick={onClose}
         className="absolute inset-0 bg-stone-900/65 backdrop-blur-[2px] motion-safe:animate-[buysheet-fade_180ms_ease-out]"
       />
-      {/* Sheet body — color tokens auto-invert via CSS vars in dark mode. */}
+      {/* Sheet body — color tokens auto-invert via CSS vars in dark mode.
+          Explicit z-10 so the scrim button never wins hit-testing for
+          clicks on the variant links inside. */}
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="relative w-full sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto bg-paper-100 border-t sm:border border-wood-300/60 sm:rounded-md shadow-[0_-12px_40px_rgba(0,0,0,0.35)] sm:shadow-[0_18px_60px_rgba(0,0,0,0.45)] motion-safe:animate-[buysheet-rise_220ms_cubic-bezier(0.22,1,0.36,1)]"
+        className="relative z-10 w-full sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto bg-paper-100 border-t sm:border border-wood-300/60 sm:rounded-md shadow-[0_-12px_40px_rgba(0,0,0,0.35)] sm:shadow-[0_18px_60px_rgba(0,0,0,0.45)] motion-safe:animate-[buysheet-rise_220ms_cubic-bezier(0.22,1,0.36,1)]"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 sm:hidden">
@@ -126,10 +139,10 @@ export const BuySheet: React.FC<{
             </p>
           )}
 
-          {/* Acquisition options. Programmatic navigate (not <Link>) so the
-              navigation runs regardless of any onClose-driven re-render of
-              this dialog — the previous Link/onClick combo was racing the
-              setBuyOpen update and silently dropping the click. */}
+          {/* Acquisition options. Plain <Link>s with no onClick — the
+              location-change effect above closes the sheet automatically
+              once React Router actually changes the URL. This avoids the
+              setBuyOpen-during-click race that swallowed earlier attempts. */}
           <div className="mt-6">
             {piece && variants.length > 0 && (
               <>
@@ -138,14 +151,11 @@ export const BuySheet: React.FC<{
                 </p>
                 <div className="space-y-2">
                   {variants.map((v) => (
-                    <button
+                    <Link
                       key={v.size}
-                      type="button"
-                      onClick={() => {
-                        navigate(pieceHref!, { state: { oracleOrigin, preferredSize: v.size } });
-                        onClose();
-                      }}
-                      className="group flex items-center justify-between gap-4 px-4 py-3 w-full text-left bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
+                      to={pieceHref!}
+                      state={{ oracleOrigin, preferredSize: v.size }}
+                      className="group flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
                     >
                       <div className="min-w-0">
                         <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-700 leading-tight">
@@ -159,20 +169,17 @@ export const BuySheet: React.FC<{
                         </p>
                       </div>
                       <span className="font-serif text-[18px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </>
             )}
 
             {piece && variants.length === 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigate(pieceHref!, { state: { oracleOrigin } });
-                  onClose();
-                }}
-                className="group flex items-center justify-between gap-4 px-5 py-4 w-full text-left bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
+              <Link
+                to={pieceHref!}
+                state={{ oracleOrigin }}
+                className="group flex items-center justify-between gap-4 px-5 py-4 bg-paper-50 hover:bg-bronze-50/60 border border-wood-300/60 hover:border-bronze-300/70 transition-colors"
               >
                 <div className="min-w-0">
                   <p className="font-serif text-[16px] text-wood-900 group-hover:text-bronze-700 leading-tight">
@@ -187,20 +194,17 @@ export const BuySheet: React.FC<{
                   </p>
                 </div>
                 <span className="font-serif text-[20px] text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-              </button>
+              </Link>
             )}
 
             {/* Commission — quieter secondary option */}
-            <button
-              type="button"
-              onClick={() => {
-                navigate('/inquire', { state: { oracleOrigin } });
-                onClose();
-              }}
-              className="group block w-full mt-3 px-4 py-3 text-center font-serif text-[14px] text-wood-700 hover:text-bronze-700 border-t border-wood-300/40 transition-colors"
+            <Link
+              to="/inquire"
+              state={{ oracleOrigin }}
+              className="group block mt-3 px-4 py-3 text-center font-serif text-[14px] text-wood-700 hover:text-bronze-700 border-t border-wood-300/40 transition-colors"
             >
               Or commission a related piece <span className="text-bronze-500 group-hover:text-bronze-700" aria-hidden="true">→</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
