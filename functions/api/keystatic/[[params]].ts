@@ -1,6 +1,13 @@
 import { makeGenericAPIRouteHandler } from '@keystatic/core/api/generic'
 import config from '../../../keystatic.config'
 
+type PagesFunctionContext = {
+  request: Request
+  env: Record<string, string | undefined>
+}
+
+type PagesFunction = (context: PagesFunctionContext) => Response | Promise<Response>
+
 // Handler is created per-request so it picks up env vars from context.env
 // (Cloudflare Pages does not expose env vars via process.env)
 export const onRequest: PagesFunction = async (context) => {

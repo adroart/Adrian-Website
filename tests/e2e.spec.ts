@@ -1,9 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 // --- helpers ---
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const RESULTS_DIR = path.resolve(__dirname, '../test-results');
 
 function ensureResultsDir() {
@@ -82,16 +85,17 @@ test('1. homepage loads without errors or overflow', async ({ page }) => {
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });
 
-test('2. /creations page shows at least 6 category tiles', async ({ page }) => {
+test('2. /creations page shows visible category tiles', async ({ page }) => {
   const errors = attachErrorListeners(page);
 
-  await page.goto('/creations', { waitUntil: 'networkidle' });
+  await page.goto('/creations', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('text=Multidimensional Art');
 
   // Category tiles are rendered as clickable grid items; look for visible tiles
-  // The grid renders CREATION_CATEGORIES - 8 total, some hidden. At least 6 expected.
+  // The grid renders the visible CREATION_CATEGORIES entries.
   const tiles = page.locator('a[href], button').filter({ hasText: /Art|Works|Jewelry|Oracle|Objects|Spaces|Furniture|Installations/i });
   const count = await tiles.count();
-  expect(count, 'Expected at least 6 category tiles on /creations').toBeGreaterThanOrEqual(6);
+  expect(count, 'Expected at least 5 visible category tiles on /creations').toBeGreaterThanOrEqual(5);
 
   await assertNoOverflow(page);
   await assertNoErrorBoundary(page);

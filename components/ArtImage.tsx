@@ -127,6 +127,7 @@ const ArtImage: React.FC<ArtImageProps> = ({
             src={resolvedSrc}
             srcSet={resolvedSrcSet}
             sizes={resolvedSizes}
+            decoding={rest.decoding ?? 'async'}
             onLoad={(e) => {
                 setLoaded(true);
                 externalOnLoad?.(e);

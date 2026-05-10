@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 
 // Detect touch/low-end devices - disable parallax to save battery and avoid jank
 const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const HERO_VIDEO_MOBILE = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_960/adrian-website/site/hero/studio-creation-process';
+const HERO_VIDEO_DESKTOP = 'https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto,w_1920/adrian-website/site/hero/studio-creation-process';
 
 const Hero: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -35,6 +37,19 @@ const Hero: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'video';
+    link.href = window.matchMedia('(max-width: 767px)').matches ? HERO_VIDEO_MOBILE : HERO_VIDEO_DESKTOP;
+    link.type = 'video/mp4';
+    document.head.appendChild(link);
+    return () => {
+      link.remove();
+    };
+  }, []);
+
   const videoTranslateY = scrollY * 0.35;
   const textScale = 1 + (scrollY * 0.00008);
   const textTranslateY = scrollY * -0.15;
@@ -63,10 +78,12 @@ const Hero: React.FC = () => {
               loop
               muted
               playsInline
+              preload="auto"
               aria-hidden="true"
               className="w-full h-full object-cover opacity-60"
           >
-              <source src="https://res.cloudinary.com/dobbosnda/video/upload/f_auto,q_auto/adrian-website/site/hero/studio-creation-process" type="video/mp4" />
+              <source src={HERO_VIDEO_MOBILE} media="(max-width: 767px)" type="video/mp4" />
+              <source src={HERO_VIDEO_DESKTOP} type="video/mp4" />
           </video>
           {/* Fallback background if video fails to load */}
           <div className="absolute inset-0 bg-gradient-to-br from-wood-900 via-stone-900 to-wood-800 -z-10" />

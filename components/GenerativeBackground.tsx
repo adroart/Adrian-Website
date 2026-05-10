@@ -534,7 +534,7 @@ const GenerativeBackground: React.FC<Props> = ({ pathname, theme }) => {
 
                     // Collect lines at a few alpha buckets to minimize strokeStyle changes
                     // Use 4 alpha buckets: 0.25, 0.5, 0.75, 1.0 of the max alpha
-                    const buckets: [number, number, number, number][][] = [[], [], [], []];
+                    const buckets: number[][] = [[], [], [], []];
 
                     for (let i = 0; i < len; i++) {
                         const p1 = safeParticles[i];

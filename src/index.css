@@ -662,6 +662,18 @@ button, a, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
 
+@media (pointer: coarse) {
+  a[href]:not(.sr-only),
+  button:not(.sr-only),
+  [role="button"]:not(.sr-only),
+  [role="link"]:not(.sr-only),
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}
+
 /* Safe area insets for notched/Dynamic Island iPhones */
 @supports (padding-top: env(safe-area-inset-top)) {
   .safe-top { padding-top: env(safe-area-inset-top); }

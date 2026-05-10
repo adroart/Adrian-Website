@@ -5,6 +5,7 @@
 // Paste these entries into the FULL_ARCHIVE array in data/mockData.ts
 // (replacing the generated for-loop at lines 441-488)
 
+export const GENERATED_ARTWORKS = [
     // --- Fine Art (Universal Language + Signature Pieces) ---
     {
         id: 'UL-100',
@@ -2129,3 +2130,4 @@
         featured: false,
         isSignaturePiece: true,
     },
+];

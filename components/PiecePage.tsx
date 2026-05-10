@@ -9,7 +9,7 @@ import { LAUNCH_FLAGS } from '../launchFlags';
 import { img as cldImg } from '../utils/cloudinary';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
-import Breadcrumb from './Breadcrumb';
+import Breadcrumb, { type Crumb } from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
@@ -568,7 +568,7 @@ const PiecePage: React.FC = () => {
 
     // Breadcrumb crumbs for the Breadcrumb component (desktop)
     const breadcrumbCrumbs = (() => {
-        const crumbs = [{ label: 'Creations', to: '/creations' }];
+        const crumbs: Crumb[] = [{ label: 'Creations', to: '/creations' }];
         if (isMultidimensional) {
             crumbs.push({ label: 'Multidimensional Art', to: '/creations/multidimensional-art' });
             if (seriesLink && art.series) {
@@ -1311,27 +1311,24 @@ const PiecePage: React.FC = () => {
                     ) : (
                         <Link
                             to="/inquire"
-                            state={art.availability === 'SOLD'
-                                ? { piece: art.title, pieceId: art.id }
-                                : {
-                                    piece: art.title,
-                                    pieceId: art.id,
-                                    mode: 'purchase',
-                                    price: hasVariants ? formatPrice(mtoTotal) : (art.price != null ? formatPrice(art.price) : ''),
-                                    size: hasVariants ? selectedSize : undefined,
-                                    addOns: hasVariants ? [
-                                        ...(addCrystals ? [`Crystals (+${formatPrice(crystalsPrice)})`] : []),
-                                        ...(addWoodFrame ? [`Wood frame (+${formatPrice(woodFramePrice)})`] : []),
-                                        ...(addIllumination ? [`Illumination (+${formatPrice(illuminationPrice)})`] : []),
-                                    ] : [],
-                                    availability: hasVariants
-                                        ? (selectedIsInStock ? 'Ready to ship' : 'Made to order')
-                                        : (art.availability === 'READY_TO_SHIP' ? 'Ready to ship' : 'Made to order'),
-                                }
-                            }
+                            state={{
+                                piece: art.title,
+                                pieceId: art.id,
+                                mode: 'purchase',
+                                price: hasVariants ? formatPrice(mtoTotal) : (art.price != null ? formatPrice(art.price) : ''),
+                                size: hasVariants ? selectedSize : undefined,
+                                addOns: hasVariants ? [
+                                    ...(addCrystals ? [`Crystals (+${formatPrice(crystalsPrice)})`] : []),
+                                    ...(addWoodFrame ? [`Wood frame (+${formatPrice(woodFramePrice)})`] : []),
+                                    ...(addIllumination ? [`Illumination (+${formatPrice(illuminationPrice)})`] : []),
+                                ] : [],
+                                availability: hasVariants
+                                    ? (selectedIsInStock ? 'Ready to ship' : 'Made to order')
+                                    : (art.availability === 'READY_TO_SHIP' ? 'Ready to ship' : 'Made to order'),
+                            }}
                             className="min-h-[44px] px-8 py-3 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors flex items-center"
                         >
-                            {art.availability === 'SOLD' ? 'Commission' : 'Request to Purchase'}
+                            Request to Purchase
                         </Link>
                     )}
                 </div>

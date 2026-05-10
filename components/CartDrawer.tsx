@@ -63,8 +63,9 @@ async function startCheckout(
         }
         // Fire conversion event - Cloudflare Analytics compatible
         try {
-            if (typeof window !== 'undefined' && (window as Window & { zaraz?: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz) {
-                (window as Window & { zaraz: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz.track('purchase_initiated', {
+            if (typeof window !== 'undefined') {
+                const zaraz = (window as unknown as { zaraz?: { track: (event: string, props: Record<string, unknown>) => void } }).zaraz;
+                zaraz?.track('purchase_initiated', {
                     item_count: items.length,
                     value: items.reduce((sum, i) => sum + i.quantity, 0),
                 });

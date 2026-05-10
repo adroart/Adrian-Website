@@ -177,7 +177,14 @@ const SubcategoryPage: React.FC = () => {
             {/* Hero - with gradient fade into content */}
             {config.image && (
                 <div className="w-full h-[35vh] min-h-[280px] max-h-[460px] overflow-hidden relative">
-                    <img src={img(config.image, { w: 1600, h: 900 })} alt={subcategory === 'universal-language' ? 'Universal Language, a series of 64 multi-dimensional wooden sculptures by Adrian Rasmussen.' : config.title} className="w-full h-full object-cover" />
+                    <img
+                        src={img(config.image, { w: 1200, h: 675 })}
+                        srcSet={[640, 960, 1200, 1600].map(w => `${img(config.image!, { w, h: Math.round(w * 9 / 16) })} ${w}w`).join(', ')}
+                        sizes="100vw"
+                        alt={subcategory === 'universal-language' ? 'Universal Language, a series of 64 multi-dimensional wooden sculptures by Adrian Rasmussen.' : config.title}
+                        className="w-full h-full object-cover"
+                        decoding="async"
+                    />
                     <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper-50 to-transparent" />
                 </div>
             )}

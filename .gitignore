@@ -29,6 +29,10 @@ dist-ssr
 
 # Claude Code
 .claude/
+.codex/
+
+# Generated audit run artifacts
+audit/current/
 
 # Migration data (contains personal info)
 data/migration/

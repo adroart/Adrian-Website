@@ -240,5 +240,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/@keystatic/')) return 'admin-keystatic';
+          if (id.includes('/node_modules/@stripe/') || id.includes('/node_modules/stripe/')) return 'stripe';
+          if (id.includes('/node_modules/lucide-react/')) return 'icons';
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/react-router') ||
+            id.includes('/node_modules/scheduler/')
+          ) {
+            return 'react-vendor';
+          }
+        },
+      },
+    },
   },
 });

@@ -57,11 +57,23 @@ interface Props {
 
 export const OracleCardEntrance: React.FC<Props> = ({ card, onDone }) => {
   const [exiting, setExiting] = useState(false);
+  const [keywords, setKeywords] = useState<string[]>([]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<Element | null>(null);
   const exitedRef = useRef(false);
 
-  const keywords = useMemo(() => getSynthesis(card.number)?.keywords ?? [], [card.number]);
+  useEffect(() => {
+    let cancelled = false;
+    setKeywords([]);
+    getSynthesis(card.number).then((synthesis) => {
+      if (!cancelled) {
+        setKeywords(synthesis?.keywords ?? []);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [card.number]);
 
   const dismiss = () => {
     if (exitedRef.current) return;

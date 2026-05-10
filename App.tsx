@@ -90,7 +90,7 @@ const AppInner: React.FC = () => {
   const theme = (isHome || isDarkMode) ? 'DARK' : 'LIGHT';
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#262321]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
       <GenerativeBackground pathname={location.pathname} theme={theme} />
       {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}

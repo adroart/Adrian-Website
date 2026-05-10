@@ -72,14 +72,20 @@ export interface CardSynthesis {
 // Vite glob import - picks up every key_N.json in oracle/synthesis/ automatically.
 // No manual registration needed. Drop a new file in the folder and it's live.
 
-const modules = import.meta.glob('../oracle/synthesis/key_*.json', { eager: true });
+const modules = import.meta.glob<{ default: CardSynthesis }>('../oracle/synthesis/key_*.json');
 
-const ALL_SYNTHESIS: CardSynthesis[] = Object.values(modules) as CardSynthesis[];
+const synthesisCache = new Map<number, CardSynthesis | undefined>();
 
-const SYNTHESIS_BY_NUMBER = new Map<number, CardSynthesis>(
-  ALL_SYNTHESIS.map(s => [s.number, s])
-);
+export async function getSynthesis(cardNumber: number): Promise<CardSynthesis | undefined> {
+  if (synthesisCache.has(cardNumber)) return synthesisCache.get(cardNumber);
 
-export function getSynthesis(cardNumber: number): CardSynthesis | undefined {
-  return SYNTHESIS_BY_NUMBER.get(cardNumber);
+  const loader = modules[`../oracle/synthesis/key_${cardNumber}.json`];
+  if (!loader) {
+    synthesisCache.set(cardNumber, undefined);
+    return undefined;
+  }
+
+  const mod = await loader();
+  synthesisCache.set(cardNumber, mod.default);
+  return mod.default;
 }

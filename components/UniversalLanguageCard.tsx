@@ -4,7 +4,7 @@ import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'reac
 import { Home } from 'lucide-react';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
-import { getSynthesis } from '../data/synthesisData';
+import { getSynthesis, type CardSynthesis } from '../data/synthesisData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -948,7 +948,6 @@ const UniversalLanguageCard: React.FC = () => {
   const cardNum  = parseInt(number ?? '', 10);
   const card      = CARD_BY_NUMBER.get(cardNum);
   const expanded  = getExpandedCard(cardNum);
-  const synthesis = getSynthesis(cardNum);
 
   const [lightboxOpen,   setLightboxOpen]   = useState(false);
   const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
@@ -956,6 +955,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [shareOpen,      setShareOpen]      = useState(false);
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
+  const [synthesis,      setSynthesis]      = useState<CardSynthesis | undefined>(undefined);
   const ichingRef    = useRef<HTMLDivElement>(null);
   const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
 
@@ -1057,12 +1057,27 @@ const UniversalLanguageCard: React.FC = () => {
     setLightboxOpen(false);
     setShareOpen(false);
     setBuyOpen(false);
+    setSynthesis(undefined);
     storyFileRef.current = null;
     window.scrollTo(0, 0);
     // Reset to the system specified in URL if present, else I Ching
     const s = searchParams.get('system');
     const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
     setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching');
+  }, [cardNum]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSynthesis(cardNum)
+      .then(data => {
+        if (!cancelled) setSynthesis(data);
+      })
+      .catch(() => {
+        if (!cancelled) setSynthesis(undefined);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [cardNum]);
 
   // After mount or chapter change driven by URL, scroll the stage to the
@@ -1256,6 +1271,7 @@ const UniversalLanguageCard: React.FC = () => {
   const piece    = UL_PIECE_BY_NUMBER.get(card.number);
   const pairCard = expanded ? CARD_BY_NUMBER.get(expanded.i_ching.hexagrams_in_pairs.pair_hexagram) : undefined;
   const siblings = card.codon_ring_siblings;
+  const cardPublicId = UL_IMAGE_BY_NUMBER.get(card.number);
   const imageAlt = `${card.card_name}, Universal Language ${card.number}. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`;
 
   const ichingHighlight = expanded?.i_ching?.reflection?.text ?? card.iching.essence;
@@ -1328,7 +1344,16 @@ const UniversalLanguageCard: React.FC = () => {
                 }
               }}
             >
-              <img ref={heroImageRef} src={cardImageUrl(card.number, 900)} alt={imageAlt} className="w-full h-full object-cover" loading="eager" />
+              <img
+                ref={heroImageRef}
+                src={cardImageUrl(card.number, 900)}
+                srcSet={cardPublicId ? [480, 720, 900, 1200].map(size => `${img(cardPublicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' })} ${size}w`).join(', ') : undefined}
+                sizes="(max-width: 768px) 100vw, 672px"
+                alt={imageAlt}
+                className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+              />
             </figure>
 
             {/* Order + Share - two-up row directly below image */}
@@ -2093,7 +2118,15 @@ const UniversalLanguageCard: React.FC = () => {
                               className="group flex flex-col items-center text-center transition-colors"
                             >
                               {UL_IMAGE_BY_NUMBER.get(n) && (
-                                <img src={cardImageUrl(n, 80)} alt="" className="w-full aspect-square object-cover opacity-75 group-hover:opacity-100 transition-opacity" />
+                                <img
+                                  src={cardImageUrl(n, 80)}
+                                  alt=""
+                                  className="w-full aspect-square object-cover opacity-75 group-hover:opacity-100 transition-opacity"
+                                  loading="lazy"
+                                  decoding="async"
+                                  width={80}
+                                  height={80}
+                                />
                               )}
                               <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-wood-500 mt-1">{n}</p>
                               <p className="font-serif text-[12px] sm:text-[13px] text-wood-700 leading-tight truncate w-full">{sibling.card_name}</p>
