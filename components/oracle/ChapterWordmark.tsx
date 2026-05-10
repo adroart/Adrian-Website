@@ -76,7 +76,7 @@ export const ChapterWordmark: React.FC<{
   // base token; it flips correctly on its own.
   const paper = variant === 'paper';
   const ruleCls = paper ? 'border-wood-300/60' : 'border-stone-300/60';
-  const inactiveCls = paper ? 'text-wood-500 hover:text-wood-800' : 'text-stone-500 hover:text-stone-800';
+  const inactiveCls = paper ? 'text-wood-700 hover:text-wood-900' : 'text-stone-400 hover:text-stone-100';
   const activeCls = 'text-bronze-700';
 
   return (
@@ -86,7 +86,7 @@ export const ChapterWordmark: React.FC<{
       role="tablist"
       aria-label="Reading chapters"
     >
-      <div className="flex items-stretch h-8 max-w-2xl mx-auto">
+      <div className="flex items-stretch h-10 max-w-2xl mx-auto">
         {chapters.map((chapter, idx) => {
           const isActive = chapter.key === active;
           const isLast = idx === chapters.length - 1;
@@ -98,7 +98,7 @@ export const ChapterWordmark: React.FC<{
               role="tab"
               aria-selected={isActive}
               onClick={() => onSelect(chapter.key)}
-              className={`relative flex-1 min-w-0 flex items-center justify-center px-1.5 sm:px-3 ${!isLast ? `border-r ${ruleCls}` : ''} font-label uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-none transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.05] ${isActive ? activeCls : inactiveCls}`}
+              className={`relative flex-1 min-w-0 flex items-center justify-center px-1.5 sm:px-3 ${!isLast ? `border-r ${ruleCls}` : ''} font-label uppercase tracking-[0.16em] text-[12px] sm:text-[13px] leading-none font-semibold transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.05] ${isActive ? activeCls : inactiveCls}`}
             >
               {/* Show shortLabel on very narrow screens via the label-mobile/label-desktop pair */}
               {chapter.shortLabel ? (
