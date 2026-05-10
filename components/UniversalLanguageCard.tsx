@@ -1386,17 +1386,19 @@ const UniversalLanguageCard: React.FC = () => {
                 </button>
               </div>
 
+              {/* Sentinel sits between the button row and the share sheet so
+                  opening the share sheet doesn't shift the sentinel's
+                  document position. Otherwise the sheet pushes the sentinel
+                  off-screen on tall openings, chromeCollapsed flips, the
+                  field sheet unmounts, layout collapses, and the cycle
+                  repeats — visible as a flashing oscillation. */}
+              <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
+
               {/* Share sheet — expands below the field-section share button.
                   Hidden once the contextual card header has taken over so
                   the dropdown only ever renders once at a time. */}
               {shareOpen && !chromeCollapsed && renderShareSheet('field')}
             </div>
-
-            {/* Sentinel right after the acquire/share row. When this scrolls
-                past the top of the viewport, the global site nav swaps out
-                for the contextual card header. The global nav stays visible
-                while the artwork and acquire/share are still on screen. */}
-            <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
           </div>
 
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
