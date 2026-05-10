@@ -104,6 +104,27 @@ export interface AudioTrack {
   duration?: string;
 }
 
+export interface Stanza {
+  lines: string[];           // one entry per line; rendered with whitespace-pre-line
+  startSeconds?: number;     // optional click-to-seek anchor; absent on all stanzas → page falls back to pure tide marker
+}
+
+export interface Track {
+  id: string;                // 'river-poem-2026'
+  slug: string;              // /poetry/<slug>
+  title: string;
+  openingLine?: string;      // first line, used as the index entry (falls back to poem[0].lines[0])
+  audioUrl: string;          // https://audio.adrianrasmussen.com/<file>
+  poem: Stanza[];            // the poem as structured stanzas
+  coverImage?: string;       // Cloudinary public_id or full URL — rendered as a small seal, not a hero
+  duration?: string;         // '3:42'
+  durationSeconds?: number;
+  releaseDate: string;       // ISO
+  dedication?: string;       // optional Cormorant italic line under the title
+  themes?: string[];
+  aiNote?: string;           // optional honest credit line shown subtly at the page bottom
+}
+
 export interface Story {
   id: string;
   slug: string;

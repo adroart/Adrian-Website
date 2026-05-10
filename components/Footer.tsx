@@ -190,6 +190,7 @@ const Footer: React.FC = () => {
                 <nav className="flex flex-wrap gap-x-7 gap-y-3 mb-10">
                     <Link to="/creations" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Creations</Link>
                     <Link to="/writings" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Writings</Link>
+                    <Link to="/poetry" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Poetry</Link>
                     {LAUNCH_FLAGS.shopEnabled && <Link to="/shop" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Shop</Link>}
                     <Link to="/about" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">About</Link>
                     <Link to="/inquire" className="footer-link font-sans text-base text-wood-300 hover:text-bronze-400 transition-colors">Commissions</Link>

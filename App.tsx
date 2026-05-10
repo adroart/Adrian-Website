@@ -31,13 +31,17 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
+const Poetry = lazy(() => import('./components/Poetry'));
+const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
+import { PlayerProvider } from './PlayerContext';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
+import MiniPlayer from './components/MiniPlayer';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -120,6 +124,8 @@ const AppInner: React.FC = () => {
 
             <Route path="/writings" element={<Writings />} />
             <Route path="/writings/:slug" element={<WritingArticle />} />
+            <Route path="/poetry" element={<Poetry />} />
+            <Route path="/poetry/:slug" element={<PoetryTrack />} />
             <Route path="/about" element={<About />} />
             <Route path="/inquire" element={<Inquire />} />
             <Route path="/shop" element={LAUNCH_FLAGS.shopEnabled ? <Store /> : <Navigate to="/inquire" replace />} />
@@ -138,6 +144,7 @@ const AppInner: React.FC = () => {
 
       {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
       <CartDrawer />
+      <MiniPlayer />
     </div>
     </Suspense>
   );
@@ -146,7 +153,9 @@ const AppInner: React.FC = () => {
 const App: React.FC = () => (
   <DarkModeProvider>
     <CartProvider>
-      <AppInner />
+      <PlayerProvider>
+        <AppInner />
+      </PlayerProvider>
     </CartProvider>
   </DarkModeProvider>
 );

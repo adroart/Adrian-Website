@@ -1,13 +1,28 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Story, StoryCategory, AudioTrack } from '../types';
+import { Story, StoryCategory, AudioTrack, Track } from '../types';
 import { STORIES } from '../data/generatedStories';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { ArrowLeft, ArrowRight, ArrowUp, Share2, Feather } from 'lucide-react';
 import { img } from '../utils/cloudinary';
 import BackToTop from './shared/BackToTop';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { usePlayer, formatTime } from '../PlayerContext';
+
+// Build a synthetic Track from a Story's AudioTrack entry so it can play through the global PlayerContext.
+function trackFromAudio(audio: AudioTrack, lyrics: string[] | undefined, storySlug: string): Track {
+    const id = `story:${storySlug}:${audio.url}`;
+    return {
+        id,
+        slug: id,
+        title: audio.title,
+        audioUrl: audio.url,
+        duration: audio.duration,
+        releaseDate: '',
+        poem: lyrics ? lyrics.map(stanza => ({ lines: stanza.split('\n') })) : [],
+    };
+}
 
 // Category subtext descriptions - the soul of each section
 const CATEGORY_SUBTEXT: Record<StoryCategory, string> = {
@@ -33,53 +48,37 @@ function safeJsonLd(data: unknown): string {
         .replace(/&/g, '\\u0026');
 }
 
-// --- Music Section: player + optional lyrics ---
-const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[] }> = ({ track, lyrics }) => {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [playing, setPlaying] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [timeLabel, setTimeLabel] = useState('0:00');
+// --- Music Section: dispatches into the global PlayerContext so audio survives navigation ---
+const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[]; storySlug: string }> = ({ track, lyrics, storySlug }) => {
+    const { currentTrack, isPlaying, currentTime, duration, play, toggle, seek } = usePlayer();
 
-    const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    const synthetic = useMemo(() => trackFromAudio(track, lyrics, storySlug), [track, lyrics, storySlug]);
+    const isActive = currentTrack?.id === synthetic.id;
+    const playing = isActive && isPlaying;
+    const time = isActive ? currentTime : 0;
+    const dur = isActive && duration > 0 ? duration : 0;
+    const progress = dur > 0 ? (time / dur) * 100 : 0;
 
-    const toggle = () => {
-        const el = audioRef.current;
-        if (!el) return;
-        if (playing) {
-            el.pause();
-            setPlaying(false);
-        } else {
-            el.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-        }
+    const onToggle = () => {
+        if (isActive) toggle();
+        else play(synthetic);
     };
-
-    const handleTimeUpdate = () => {
-        const el = audioRef.current;
-        if (!el || !el.duration) return;
-        setProgress((el.currentTime / el.duration) * 100);
-        setTimeLabel(fmt(el.currentTime));
-    };
-
-    const handleEnded = () => { setPlaying(false); setProgress(0); setTimeLabel('0:00'); };
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-        const el = audioRef.current;
-        if (!el || !el.duration) return;
+        if (!isActive || !dur) return;
         const rect = e.currentTarget.getBoundingClientRect();
-        el.currentTime = ((e.clientX - rect.left) / rect.width) * el.duration;
+        seek(((e.clientX - rect.left) / rect.width) * dur);
     };
 
     return (
         <div className="mb-16 border border-wood-200 bg-white">
-            <audio ref={audioRef} src={track.url} onTimeUpdate={handleTimeUpdate} onEnded={handleEnded} preload="none" />
-
             {/* Player */}
             <div className="px-8 pt-8 pb-8">
                 <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-5">Listen</p>
                 <p className="font-serif text-2xl text-wood-900 font-medium leading-snug mb-8">{track.title}</p>
                 <div className="flex items-center gap-5">
                     <button
-                        onClick={toggle}
+                        onClick={onToggle}
                         aria-label={playing ? 'Pause' : 'Play'}
                         className="w-14 h-14 flex-shrink-0 rounded-full bg-wood-900 text-paper-50 flex items-center justify-center hover:bg-bronze-700 transition-colors"
                     >
@@ -99,7 +98,7 @@ const MusicSection: React.FC<{ track: AudioTrack; lyrics?: string[] }> = ({ trac
                             <div className="h-full bg-bronze-400 rounded transition-[width] duration-100" style={{ width: `${progress}%` }} />
                         </div>
                         <div className="flex justify-between">
-                            <span className="font-label text-[11px] text-wood-400 font-semibold">{timeLabel}</span>
+                            <span className="font-label text-[11px] text-wood-400 font-semibold tabular-nums">{formatTime(time)}</span>
                             {track.duration && <span className="font-label text-[11px] text-wood-400 font-semibold">{track.duration}</span>}
                         </div>
                     </div>
@@ -312,7 +311,7 @@ export const WritingArticle: React.FC = () => {
 
                 {/* Music: player + lyrics combined - after the story */}
                 {story.tracks && story.tracks.length > 0 && story.tracks.map((track, i) => (
-                    <MusicSection key={i} track={track} lyrics={i === 0 ? story.lyrics : undefined} />
+                    <MusicSection key={i} track={track} lyrics={i === 0 ? story.lyrics : undefined} storySlug={story.slug} />
                 ))}
 
                 {/* Related Creations - bidirectional link back to pieces */}

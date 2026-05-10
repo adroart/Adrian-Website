@@ -1,5 +1,5 @@
 
-import { Artwork, AvailabilityStatus, Collection, Product, Story } from '../types';
+import { Artwork, AvailabilityStatus, Collection, Product, Story, Track } from '../types';
 
 // --- MADE-TO-ORDER ADD-ON PRICING ---
 // All prices are [DUMMY] placeholders. Replace before going live.
@@ -3583,4 +3583,30 @@ export const STORIES: Story[] = [
         tags: ['Tea', 'Autobiography'],
         isFeatured: false
     }
+];
+
+// --- POETRY ---
+// Songs that began as poems. Audio lives in Cloudflare R2 at audio.adrianrasmussen.com.
+// Stanzas with `startSeconds` become click-to-seek anchors and drive the active-stanza glow.
+// Omit `startSeconds` everywhere to fall back to a pure tide marker.
+export const TRACKS: Track[] = [
+    {
+        id: 'first-light',
+        slug: 'first-light',
+        title: 'First Light',
+        openingLine: 'Before the morning knew its name',
+        audioUrl: 'https://audio.adrianrasmussen.com/first-light.mp3',
+        coverImage: 'adrian-website/placeholders/hero-wide-1',
+        duration: '3:42',
+        durationSeconds: 222,
+        releaseDate: '2026-04-01',
+        dedication: 'a small fragment for the morning',
+        themes: ['Stillness', 'Beginning'],
+        aiNote: 'Poem written by Adrian. Music co-created with AI as an instrument of voice.',
+        poem: [
+            { lines: ['Before the morning knew its name,', 'the river had already begun.'] },
+            { lines: ['A small bird, a small fire,', 'a small reason to keep going.'] },
+            { lines: ['I forget, then I remember,', 'then I forget the remembering,', 'and that, too, is a kind of prayer.'] },
+        ],
+    },
 ];
