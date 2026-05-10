@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { TRACKS } from '../data/mockData';
 import { usePlayer } from '../PlayerContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { img } from '../utils/cloudinary';
@@ -11,7 +10,7 @@ const openingLineFor = (track: { openingLine?: string; poem: { lines: string[] }
 };
 
 const Poetry: React.FC = () => {
-    const { currentTrack, isPlaying, play, toggle } = usePlayer();
+    const { tracks, tracksLoaded, currentTrack, isPlaying, play, toggle } = usePlayer();
 
     useMetaTags({
         title: 'Poetry',
@@ -34,7 +33,7 @@ const Poetry: React.FC = () => {
 
                 {/* Anthology */}
                 <ul className="border-t border-wood-100">
-                    {TRACKS.map((track) => {
+                    {tracks.map((track) => {
                         const isCurrent = currentTrack?.id === track.id;
                         const isCurrentlyPlaying = isCurrent && isPlaying;
                         const opening = openingLineFor(track);
@@ -111,7 +110,7 @@ const Poetry: React.FC = () => {
                     })}
                 </ul>
 
-                {TRACKS.length === 0 && (
+                {tracksLoaded && tracks.length === 0 && (
                     <p className="text-center font-serif italic text-wood-500 py-16">
                         Nothing to listen to yet. Soon.
                     </p>

@@ -29,6 +29,7 @@ const FontPreview = lazy(() => import('./components/FontPreview'));
 const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -136,6 +137,7 @@ const AppInner: React.FC = () => {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
+            <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
