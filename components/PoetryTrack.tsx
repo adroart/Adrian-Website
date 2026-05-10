@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { TRACKS } from '../data/mockData';
 import { Track, Stanza } from '../types';
 import { usePlayer, formatTime } from '../PlayerContext';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -22,13 +21,13 @@ function findActiveStanza(poem: Stanza[], time: number): number {
 
 const PoetryTrack: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { currentTrack, isPlaying, currentTime, duration, play, toggle, seek, audioRef } = usePlayer();
+    const { tracks, tracksLoaded, currentTrack, isPlaying, currentTime, duration, play, toggle, seek, audioRef } = usePlayer();
 
-    const track = useMemo<Track | undefined>(() => TRACKS.find(t => t.slug === slug), [slug]);
+    const track = useMemo<Track | undefined>(() => tracks.find(t => t.slug === slug), [tracks, slug]);
 
-    const idx = useMemo(() => (track ? TRACKS.findIndex(t => t.id === track.id) : -1), [track]);
-    const prevTrack = idx > 0 ? TRACKS[idx - 1] : null;
-    const nextTrack = idx >= 0 && idx < TRACKS.length - 1 ? TRACKS[idx + 1] : null;
+    const idx = useMemo(() => (track ? tracks.findIndex(t => t.id === track.id) : -1), [tracks, track]);
+    const prevTrack = idx > 0 ? tracks[idx - 1] : null;
+    const nextTrack = idx >= 0 && idx < tracks.length - 1 ? tracks[idx + 1] : null;
 
     const isActive = !!track && currentTrack?.id === track.id;
     const time = isActive ? currentTime : 0;
@@ -90,6 +89,9 @@ const PoetryTrack: React.FC = () => {
     });
 
     if (!track) {
+        if (!tracksLoaded) {
+            return <section className="min-h-screen bg-paper-50" />;
+        }
         return (
             <section className="min-h-screen bg-paper-50 pt-32 pb-32 px-6">
                 <div className="max-w-2xl mx-auto text-center">

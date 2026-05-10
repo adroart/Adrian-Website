@@ -8,9 +8,12 @@ import React, {
     useState,
 } from 'react';
 import { Track } from './types';
-import { TRACKS } from './data/mockData';
+import { TRACKS as SEED_TRACKS } from './data/mockData';
 
 interface PlayerContextType {
+    tracks: Track[];                            // live list, fetched from R2 (falls back to seed)
+    tracksLoaded: boolean;
+    refreshTracks: () => Promise<void>;
     currentTrack: Track | null;
     isPlaying: boolean;
     currentTime: number;
@@ -50,16 +53,38 @@ function loadPersistedState(): PersistedState | null {
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
+    const [tracks, setTracks] = useState<Track[]>(SEED_TRACKS);
+    const [tracksLoaded, setTracksLoaded] = useState(false);
     const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
 
-    // Restore last track on mount (paused, at saved position).
+    const refreshTracks = useCallback(async () => {
+        try {
+            const res = await fetch('/api/poems');
+            const data = await res.json();
+            if (data?.ok && Array.isArray(data.poems)) {
+                setTracks(data.poems.length > 0 ? data.poems : SEED_TRACKS);
+            }
+        } catch {
+            // Network failure — keep whatever we already have (seed or last good).
+        } finally {
+            setTracksLoaded(true);
+        }
+    }, []);
+
+    // Fetch live track list once on mount.
     useEffect(() => {
+        refreshTracks();
+    }, [refreshTracks]);
+
+    // Restore last track on mount once we have tracks (paused, at saved position).
+    useEffect(() => {
+        if (!tracksLoaded) return;
         const persisted = loadPersistedState();
         if (!persisted) return;
-        const track = TRACKS.find(t => t.id === persisted.trackId);
+        const track = tracks.find(t => t.id === persisted.trackId);
         if (!track) return;
         setCurrentTrack(track);
         const el = audioRef.current;
@@ -70,7 +95,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             };
             el.addEventListener('loadedmetadata', onLoaded);
         }
-    }, []);
+    }, [tracksLoaded]);
 
     // Persist on track / time change (throttled by save-on-pause + save-on-time-update).
     useEffect(() => {
@@ -143,21 +168,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const next = useCallback(() => {
         if (!currentTrack) return;
-        const idx = TRACKS.findIndex(t => t.id === currentTrack.id);
-        if (idx >= 0 && idx < TRACKS.length - 1) {
-            play(TRACKS[idx + 1]);
+        const idx = tracks.findIndex(t => t.id === currentTrack.id);
+        if (idx >= 0 && idx < tracks.length - 1) {
+            play(tracks[idx + 1]);
         }
-    }, [currentTrack, play]);
+    }, [currentTrack, play, tracks]);
 
     const prev = useCallback(() => {
         if (!currentTrack) return;
-        const idx = TRACKS.findIndex(t => t.id === currentTrack.id);
+        const idx = tracks.findIndex(t => t.id === currentTrack.id);
         if (idx > 0) {
-            play(TRACKS[idx - 1]);
+            play(tracks[idx - 1]);
         }
-    }, [currentTrack, play]);
+    }, [currentTrack, play, tracks]);
 
     const value = useMemo(() => ({
+        tracks,
+        tracksLoaded,
+        refreshTracks,
         currentTrack,
         isPlaying,
         currentTime,
@@ -170,7 +198,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         next,
         prev,
         audioRef,
-    }), [currentTrack, isPlaying, currentTime, duration, play, pause, toggle, stop, seek, next, prev]);
+    }), [tracks, tracksLoaded, refreshTracks, currentTrack, isPlaying, currentTime, duration, play, pause, toggle, stop, seek, next, prev]);
 
     return (
         <PlayerContext.Provider value={value}>

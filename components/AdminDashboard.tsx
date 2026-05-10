@@ -21,6 +21,11 @@ const TOOLS: AdminTool[] = [
     description: 'Upload audio, documents, or other files to R2 storage and copy the public URL.',
     href: '/admin/files',
   },
+  {
+    title: 'Poetry',
+    description: 'Publish and edit poems for /poetry. Pick an uploaded audio file, paste the poem, click save.',
+    href: '/admin/poetry',
+  },
 ];
 
 const COMING_SOON: AdminTool[] = [
