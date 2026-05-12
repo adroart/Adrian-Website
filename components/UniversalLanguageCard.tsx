@@ -655,13 +655,18 @@ const GeneKeyCard: React.FC<{
           <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
           <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
         </div>
-        <div className="min-w-0 flex items-start gap-4">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{level.name}</p>
-          <span
-            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
+        <div className="min-w-0">
+          <div className="flex items-start gap-4">
+            <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{level.name}</p>
+            <span
+              className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+              style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+              aria-hidden="true"
+            >+</span>
+          </div>
+          {!open && paragraphs[0] && (
+            <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] line-clamp-5 mt-3">{paragraphs[0]}</p>
+          )}
         </div>
       </button>
       {open && (
@@ -728,13 +733,18 @@ const SynthesisToneCard: React.FC<{
           <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor}`}>{t.label}</p>
           <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
         </div>
-        <div className="min-w-0 flex items-start gap-4">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{name}</p>
-          <span
-            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
+        <div className="min-w-0">
+          <div className="flex items-start gap-4">
+            <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{name}</p>
+            <span
+              className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
+              style={{ transform: open ? 'rotate(45deg)' : 'none' }}
+              aria-hidden="true"
+            >+</span>
+          </div>
+          {!open && paragraphs[0] && (
+            <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] line-clamp-5 mt-3">{paragraphs[0]}</p>
+          )}
         </div>
       </button>
       {open && (
