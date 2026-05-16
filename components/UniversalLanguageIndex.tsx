@@ -326,27 +326,6 @@ const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
   </div>
 );
 
-/* ─── Hero card preview (desktop only) ───────────────────────────────────── */
-
-const HERO_PREVIEW_NUMBERS = [1, 8, 22, 32, 48, 64];
-
-const HeroPreview: React.FC = () => (
-  <div className="hidden lg:grid grid-cols-3 gap-1.5 w-56 xl:w-64 shrink-0 self-start mt-2">
-    {HERO_PREVIEW_NUMBERS.map(num => (
-      <div key={num} className="aspect-square overflow-hidden opacity-75">
-        <img
-          src={cardImageUrl(num, 160)}
-          alt=""
-          aria-hidden
-          className="w-full h-full object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-      </div>
-    ))}
-  </div>
-);
-
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageIndex: React.FC = () => {
@@ -412,78 +391,73 @@ const UniversalLanguageIndex: React.FC = () => {
     <div className="min-h-screen bg-paper-50 text-wood-900">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="px-6 pt-32 pb-10 max-w-7xl mx-auto">
+      {/* Top padding clears the fixed nav (--nav-height) + breathing room so the
+          breadcrumb never tucks under the bar. */}
+      <div className="relative px-6 pb-6 max-w-2xl mx-auto text-center pt-[calc(var(--nav-height)+2rem)] md:pt-[calc(var(--nav-height)+2.5rem)]">
 
-        {/* Breadcrumb - Oracle middle node removed */}
-        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 gap-y-1 font-label text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.2em] text-wood-700 mb-8 sm:mb-12">
+        {/* Faint warm center glow — registers only as "the center is warmer" */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[120%] h-[120%] bg-[radial-gradient(ellipse_at_center,rgba(138,116,78,0.10),transparent_70%)]"
+        />
+
+        {/* Breadcrumb — recedes to the lightest thing on the page */}
+        <nav aria-label="Breadcrumb" className="flex flex-wrap justify-center items-center gap-2 gap-y-1 font-label text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.2em] text-wood-400 mb-7 sm:mb-8">
           <Link to="/creations" className="hover:text-wood-900 transition-colors">Creations</Link>
           <span aria-hidden className="text-wood-400">/</span>
-          <span className="text-wood-900">Universal Language</span>
+          <span className="text-wood-500">Universal Language</span>
         </nav>
 
-        <div className="relative">
-          <div
-            aria-hidden
-            className="md:hidden absolute -inset-x-6 -inset-y-6 -z-10 bg-paper-50/75 [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_82%)]"
-          />
+        {/* Title — single tone, carved feel */}
+        <h1 className="font-serif text-5xl md:text-7xl text-wood-900 font-medium leading-[0.95] tracking-[-0.01em]">
+          Universal Language
+        </h1>
+        <p className="font-serif italic text-xl md:text-2xl text-wood-500 font-light mt-2">
+          Sixty-Four Expressions
+        </p>
 
-          {/* Hero row: text left, card preview right */}
-          <div className="flex items-start gap-8 lg:gap-12 mb-10">
-            <div className="flex-1 min-w-0">
-              <p className="font-label text-[11px] uppercase tracking-[0.25em] text-bronze-700 mb-5">
-                Universal Language Oracle
-              </p>
-              <h1 aria-label="Sixty-Four Expressions" className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
-                <span aria-hidden="true">Sixty-Four<br /><span className="text-wood-500 font-light">Expressions</span></span>
-              </h1>
+        {/* One thin divider rule */}
+        <div aria-hidden className="w-12 h-px bg-bronze-600/30 mx-auto my-6" />
 
-              {/* Opening invocation — the intention the deck is read through */}
-              <div className="font-serif italic text-xl md:text-2xl text-wood-800 max-w-2xl leading-[1.6] border-l border-bronze-600/40 pl-5 md:pl-6 mb-7 space-y-2.5">
-                <p>Let this oracle be an instrument of attunement to the light within, as we move through the unfolding of this mystery.</p>
-                <p>Let it nurture harmony, clarity, and compassion in thought, word, and action.</p>
-                <p>Let us move beyond thoughts and in through the heart, in devotion and celebration of the perfection of this moment.</p>
-              </div>
+        {/* Opening invocation — the intention the deck is read through.
+            Line breaks fall on clause boundaries so each line is a whole thought;
+            the sm: break only engages once the column is wide enough to need it. */}
+        <div className="font-serif italic text-lg md:text-xl text-wood-800 leading-[1.6] max-w-2xl mx-auto space-y-3">
+          <p>
+            <span aria-hidden className="text-bronze-600 not-italic mr-1.5">❧</span>
+            Let this oracle be an instrument of attunement to the light within,
+            <br className="hidden sm:inline" />{' '}
+            as we move through the unfolding of this mystery.
+          </p>
+          <p>
+            Let it nurture harmony, clarity, and compassion
+            <br className="hidden sm:inline" />{' '}
+            in thought, word, and action.
+          </p>
+          <p>
+            Let us move beyond thoughts and in through the heart,
+            <br className="hidden sm:inline" />{' '}
+            in devotion and celebration of the perfection of this moment.
+          </p>
+        </div>
 
-              <p className="font-sans text-base text-wood-500 max-w-xl leading-[1.7] font-light mb-8">
-                Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
-                Nothing needs to be understood to speak with them.
-              </p>
-
-              {/* Primary CTA + clickable stats */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <button
-                  onClick={handleRandom}
-                  className="inline-flex items-center justify-center px-8 py-3.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] hover:bg-bronze-600 transition-colors duration-200 font-semibold"
-                >
-                  Draw at Random
-                </button>
-                <div className="flex items-center gap-4 font-label text-[11px] uppercase tracking-[0.18em] text-wood-700">
-                  <button
-                    onClick={() => { handleGridMode('cards'); setViewMode('grid'); }}
-                    className="hover:text-wood-900 transition-colors"
-                  >
-                    {ALL_CARDS.length} Cards
-                  </button>
-                  <span aria-hidden className="text-wood-400">·</span>
-                  <button
-                    onClick={() => setViewMode('rings')}
-                    className="hover:text-wood-900 transition-colors"
-                  >
-                    {CODON_RINGS.length} Codon Rings
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop card preview grid */}
-            <HeroPreview />
-          </div>
+        {/* Single centered CTA */}
+        <div className="flex justify-center mt-7">
+          <button
+            onClick={handleRandom}
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-200 hover:bg-bronze-600 motion-safe:hover:-translate-y-0.5 hover:shadow-lg hover:shadow-bronze-600/20"
+          >
+            Draw at Random
+          </button>
         </div>
       </div>
 
+      {/* Soft fade from hero into the deck — descend, don't hit a toolbar */}
+      <div aria-hidden className="h-8 -mb-8 bg-gradient-to-b from-transparent to-paper-50" />
+
       {/* ── Sticky search + tabs ───────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-paper-50 border-b border-wood-200">
-        <div className="px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      <div className="sticky top-[var(--nav-height)] z-20 bg-paper-50 border-b border-wood-200">
+        <div className="px-6 py-3 max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <SearchBar value={query} onChange={setQuery} />
           <GridToggle
             gridMode={gridMode}
@@ -510,7 +484,7 @@ const UniversalLanguageIndex: React.FC = () => {
             <>
               {/* First-time instruction */}
               <h2 className="sr-only">All cards</h2>
-              <p className="pt-5 pb-3 font-label text-[11px] uppercase tracking-[0.18em] text-wood-600">
+              <p className="pt-3 pb-3 font-label text-[11px] uppercase tracking-[0.18em] text-wood-600">
                 {gridInstruction}
               </p>
               <div className="-mx-6 px-[5px] sm:mx-0 sm:px-0">
@@ -527,6 +501,13 @@ const UniversalLanguageIndex: React.FC = () => {
                   ))}
                 </div>
               </div>
+              {/* The convergence of systems — said once, after the full deck */}
+              {!query && (
+                <p className="font-sans text-[14px] text-wood-500 max-w-md mx-auto text-center leading-[1.7] font-light tracking-wide mt-12">
+                  Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
+                  Nothing needs to be understood to speak with them.
+                </p>
+              )}
             </>
           ) : (
             <EmptyState onClear={() => setQuery('')} />

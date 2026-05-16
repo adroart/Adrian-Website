@@ -58,6 +58,10 @@ const OracleGateway: React.FC = () => {
     navigate(`/oracle/universal-language/${number}`, { state: { ritual: true } });
   };
 
+  const goToReading = () => {
+    navigate('/oracle/universal-language');
+  };
+
   return (
     <>
       <style>{`
@@ -130,9 +134,15 @@ const OracleGateway: React.FC = () => {
           aria-label="Sixty-four hexagrams. Activate one to enter its reading."
           role="group"
         >
-          <circle cx={CX} cy={CY} r={R} fill="none"
-            stroke="color-mix(in oklab, var(--color-wood-600) 12%, transparent)"
-            strokeWidth="1" />
+          {/* Whole circle is a Get a Reading target; hexagrams above keep their own links */}
+          <circle
+            cx={CX} cy={CY} r={R + 40}
+            fill="transparent"
+            style={{ cursor: 'pointer' }}
+            role="link"
+            aria-label="Get a reading"
+            onClick={goToReading}
+          />
 
           <g style={{ transformOrigin: `${CX}px ${CY}px`, animation: 'oracle-ring-spin 96s linear infinite' }}>
             {hexagrams.map(({ number, name, x, y, rotationDeg, lines }) => (

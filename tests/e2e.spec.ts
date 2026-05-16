@@ -65,6 +65,21 @@ async function screenshot(page: Page, name: string) {
   await page.screenshot({ path: path.join(RESULTS_DIR, `${name}.png`), fullPage: false });
 }
 
+/**
+ * Dismiss the oracle card's ritual entrance overlay if it is showing.
+ * The entrance is a modal dialog that intercepts pointer events; tests that
+ * interact with card content must skip past it first.
+ */
+async function skipCardEntrance(page: Page) {
+  const entrance = page.locator('[role="dialog"][aria-label*="Card entrance"]');
+  if (await entrance.isVisible().catch(() => false)) {
+    await page.keyboard.press('Escape');
+    await entrance.waitFor({ state: 'hidden', timeout: 5000 }).catch(async () => {
+      await entrance.click({ force: true });
+    });
+  }
+}
+
 // First piece ID from mockData (UL-100)
 const FIRST_PIECE_ID = 'UL-100';
 
@@ -317,6 +332,70 @@ test('10. piece detail page renders title and image', async ({ page }) => {
   expect(naturalWidth, 'First image on piece detail page should have loaded (naturalWidth > 0)').toBeGreaterThan(0);
 
   await screenshot(page, '10-piece-detail');
+
+  expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
+});
+
+test('11. I Ching coin-cast: throws, builds, shows the reading, and persists', async ({ page }) => {
+  const errors = attachErrorListeners(page);
+
+  // Open a card straight into the I Ching chapter.
+  await page.goto('/oracle/universal-language/23?system=iching', { waitUntil: 'networkidle' });
+  await skipCardEntrance(page);
+  await assertNoErrorBoundary(page);
+  await assertNo404Text(page);
+
+  // The idle casting invitation is present.
+  const castButton = page.getByRole('button', { name: /cast the coins/i });
+  await castButton.scrollIntoViewIfNeeded();
+  await expect(castButton).toBeVisible();
+
+  // Throw the coins — the build/flip/reveal animation runs on its own.
+  await castButton.click();
+
+  // After the sequence settles, the reading detail (guidance + Cast again)
+  // is shown, and the present hexagram name is on screen.
+  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText(/^Now$/i)).toBeVisible();
+
+  await assertNoOverflow(page);
+  await assertNoErrorBoundary(page);
+  await screenshot(page, '11-iching-cast-result');
+
+  // "Cast again" is available and re-rolls without error.
+  const castAgain = page.getByRole('button', { name: /cast again/i });
+  await expect(castAgain).toBeVisible();
+
+  // The cast is persisted: swiping away and back keeps the reading.
+  // Simulate a chapter change via the system param, then return.
+  await page.goto('/oracle/universal-language/23?system=genekeys', { waitUntil: 'networkidle' });
+  await skipCardEntrance(page);
+  await page.goto('/oracle/universal-language/23?system=iching', { waitUntil: 'networkidle' });
+  await skipCardEntrance(page);
+  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
+
+  expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
+});
+
+test('12. I Ching coin-cast on mobile: no overflow, reading renders', async ({ page }) => {
+  const errors = attachErrorListeners(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto('/oracle/universal-language/1?system=iching', { waitUntil: 'networkidle' });
+  await skipCardEntrance(page);
+  await assertNoErrorBoundary(page);
+
+  const castButton = page.getByRole('button', { name: /cast the coins/i });
+  await castButton.scrollIntoViewIfNeeded();
+  await expect(castButton).toBeVisible();
+  await castButton.click();
+
+  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
+
+  // The two-hexagram pairing must not introduce horizontal overflow on mobile.
+  await assertNoOverflow(page);
+  await assertNoErrorBoundary(page);
+  await screenshot(page, '12-iching-cast-mobile');
 
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });

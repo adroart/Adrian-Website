@@ -16,6 +16,9 @@ import ReadingStage, { type ReadingStageHandle } from './oracle/ReadingStage';
 import ContinueRail from './oracle/ContinueRail';
 import ImageViewer from './oracle/ImageViewer';
 import BuySheet from './oracle/BuySheet';
+import CoinCast from './oracle/CoinCast';
+import { castForHexagram, type CastResult } from '../utils/ichingCasting';
+import { saveCast, loadCast } from '../utils/ichingCastStore';
 
 // Tracks which cards have already shown their ritual entrance in this session,
 // so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
@@ -956,6 +959,10 @@ const UniversalLanguageCard: React.FC = () => {
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const [synthesis,      setSynthesis]      = useState<CardSynthesis | undefined>(undefined);
+  // I Ching coin-cast — held at card level so it survives chapter swipes,
+  // and mirrored to sessionStorage so back-navigation restores it.
+  const [cast,    setCast]    = useState<CastResult | null>(null);
+  const [casting, setCasting] = useState(false);
   const ichingRef    = useRef<HTMLDivElement>(null);
   const [systemOverlay, setSystemOverlay] = useState<SystemKey | null>(null);
 
@@ -1006,6 +1013,18 @@ const UniversalLanguageCard: React.FC = () => {
       heroSentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }, [handleChapterChange]);
+
+  // Throw the three coins for this card's hexagram, persist, and start the
+  // line-build animation. Used by both "Cast the coins" and "Cast again".
+  const handleCast = useCallback(() => {
+    if (Number.isNaN(cardNum)) return;
+    const result = castForHexagram(cardNum);
+    setCast(result);
+    saveCast(cardNum, result);
+    setCasting(true);
+  }, [cardNum]);
+
+  const handleCastingDone = useCallback(() => setCasting(false), []);
 
   // Watch the acquire/share sentinel so the contextual card header takes
   // over from the global nav once the reader has scrolled past the acquire
@@ -1059,6 +1078,9 @@ const UniversalLanguageCard: React.FC = () => {
     setBuyOpen(false);
     setSynthesis(undefined);
     storyFileRef.current = null;
+    // Restore any cast thrown earlier this session on the new card.
+    setCasting(false);
+    setCast(Number.isNaN(cardNum) ? null : loadCast(cardNum));
     window.scrollTo(0, 0);
     // Reset to the system specified in URL if present, else I Ching
     const s = searchParams.get('system');
@@ -1675,6 +1697,16 @@ const UniversalLanguageCard: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Coin-cast — the changing oracle: throw the three coins to find
+                the moving lines and the hexagram this one is becoming. */}
+            <CoinCast
+              primaryNumber={card.number}
+              cast={cast}
+              casting={casting}
+              onCast={handleCast}
+              onCastingDone={handleCastingDone}
+            />
 
             {/* Synthesis: reading + classical text */}
             {synthesis && (

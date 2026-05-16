@@ -1,5 +1,7 @@
 import { Artwork } from '../types';
 import { CARD_BY_NUMBER } from '../data/oracleData';
+import { FULL_ARCHIVE } from '../data/mockData';
+import { img } from './cloudinary';
 
 /**
  * Parse the card number from a Universal Language coverImage public ID.
@@ -50,4 +52,23 @@ export function ulMetaDescription(art: Artwork): string {
  */
 export function ulMetaTitle(art: Artwork): string {
   return `${art.title} · Universal Language · Mandala Art`;
+}
+
+/** Universal Language card number → Cloudinary public ID. */
+const UL_IMAGE_BY_NUMBER = new Map<number, string>(
+  FULL_ARCHIVE
+    .filter(a => a.series === 'Universal Language')
+    .map(a => [ulCardNumber(a.coverImage), a.coverImage] as const)
+    .filter((pair): pair is readonly [number, string] => pair[0] != null)
+);
+
+/**
+ * Square Cloudinary URL for a Universal Language card's artwork.
+ * Falls back to the oracle-card placeholder if the number is unknown.
+ * Shared by the card page, the deck index, and the cast preview modal.
+ */
+export function ulCardImageUrl(number: number, size: number): string {
+  const publicId = UL_IMAGE_BY_NUMBER.get(number);
+  if (!publicId) return img('adrian-website/placeholders/oracle-card-3', { w: size, h: size });
+  return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
