@@ -221,11 +221,6 @@ export default defineConfig({
     port: 8888,
     host: '0.0.0.0',
     strictPort: true,
-    hmr: {
-      host: 'localhost',
-      port: 8888,
-      protocol: 'ws',
-    },
     watch: {
       usePolling: true,
       interval: 500,
