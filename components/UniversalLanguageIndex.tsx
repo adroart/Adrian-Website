@@ -436,7 +436,15 @@ const UniversalLanguageIndex: React.FC = () => {
               <h1 aria-label="Sixty-Four Expressions" className="font-serif text-5xl md:text-7xl lg:text-8xl text-wood-900 font-medium leading-[0.93] mb-6">
                 <span aria-hidden="true">Sixty-Four<br /><span className="text-wood-500 font-light">Expressions</span></span>
               </h1>
-              <p className="font-sans text-lg text-wood-600 max-w-xl leading-[1.7] font-light mb-8">
+
+              {/* Opening invocation — the intention the deck is read through */}
+              <div className="font-serif italic text-xl md:text-2xl text-wood-800 max-w-2xl leading-[1.6] border-l border-bronze-600/40 pl-5 md:pl-6 mb-7 space-y-2.5">
+                <p>Let this oracle be an instrument of attunement to the light within, as we move through the unfolding of this mystery.</p>
+                <p>Let it nurture harmony, clarity, and compassion in thought, word, and action.</p>
+                <p>Let us move beyond thoughts and in through the heart, in devotion and celebration of the perfection of this moment.</p>
+              </div>
+
+              <p className="font-sans text-base text-wood-500 max-w-xl leading-[1.7] font-light mb-8">
                 Each card carries a hexagram from the I Ching, a Gene Key, and a gate from Human Design.
                 Nothing needs to be understood to speak with them.
               </p>
