@@ -1,18 +1,41 @@
 # Universal Language Oracle — Master Writing Guide
 
-The document you open first. It governs the writing of all 64 cards: what
-every written part is, the order they come in, the shared rules they all obey,
-and the workflow for taking one card from blank to finished.
+The document you open first *after* `CONCEPT.md`. `CONCEPT.md` says what the
+deck *is*; this guide governs *how the 64 cards are written* — what every
+written part is, the order they come in, the shared rules they obey, and the
+workflow for taking one card from blank to finished.
 
-Five companion documents go deeper on the harder parts:
-- `01_DESCRIPTION_SPEC.md` — the Gene Keys description (what the reader understands)
+Six companion documents go deeper on the harder parts:
+- `01_DESCRIPTION_SPEC.md` — the Gene Keys description (the Shadow-Gift-Siddhi voice)
 - `02_INVOCATION_GUIDE.md` — the whole-card invocation (what the reader embodies)
-- `03_ICHING_GUIDE.md` — the layered I-Ching section (lineage made reachable)
+- `03_ICHING_GUIDE.md` — the layered I-Ching voice (lineage made reachable)
 - `04_TRANSLATION_METHOD.md` — how the classic I-Ching text is freshly rendered
 - `05_KEYWORDS_GUIDE.md` — the keyword layer (the at-a-glance pinpoint)
+- `06_CONNECTIONS_GUIDE.md` — Relations voice (rings, channels, programming partners)
 
 These documents exist so that the 64 cards come out as one coherent body of
-work, in one voice, legally clean, and unmistakably human.
+work, legally clean, and unmistakably human.
+
+### What this guide inherits from CONCEPT.md
+
+`CONCEPT.md` is the foundation. This guide and all six companions serve it.
+The principles that govern everything here:
+
+- **The deck is an oracle that teaches.** A card is both a message for the
+  moment and a complete lesson in one of the 64 codes.
+- **The spine of a card is the code itself, not a sentence.** A code is a full
+  territory. Coherence is that every voice is faithful to the *same* code — not
+  that any voice is short. No voice is a compression of another.
+- **The card is voice-led, with a glance above.** A shared Glance (art, name,
+  keywords, invocation); below it, each voice — I-Ching, Gene Keys, Human
+  Design, Relations — opens into its *full* teaching. Every voice is a complete
+  room, taught at whatever length understanding requires.
+- **Length serves understanding.** Word-count ranges in these guides are
+  typical, not gates. A voice is never trimmed for tidiness.
+
+When this guide gives a structure or a length, read it through those
+principles. If a method here ever seems to ask a voice to shrink below what
+genuine teaching needs, `CONCEPT.md` wins — teach the code whole.
 
 ---
 
@@ -55,22 +78,22 @@ later make it true.
 
 ## 2. What the deck is
 
-64 cards. Each card is a single **code** — one unit of meaning — mapped across
-four lineages at once:
+The full account is in `CONCEPT.md`. In brief, for the writer:
 
-- **I-Ching** — the hexagram, its two trigrams, the classic text
-- **Gene Keys** — the Shadow, the Gift, the Siddhi (three frequencies)
-- **Human Design** — the gate, its center in the body, its keyword
-- **Tarot** — the Major Arcana, carried at the codon-ring level
+64 cards. Each card is one **code** — a full territory of meaning, taught by
+four distinct traditions that share the spine of the 64:
 
-The four lineages are not four topics. They are **four views of one thing**.
-For any given card, the hexagram, the gate, the Gift and the Arcana all point
-at the *same underlying energy* from different angles. The deck's job, and
-especially the invocation's job, is to speak that one energy, not to tour the
-four systems.
+- **I-Ching** — the hexagram, its trigrams, the classic text. The situation.
+- **Gene Keys** — the Shadow, the Gift, the Siddhi. The journey.
+- **Human Design** — the gate, its center in the body, its channels. The body
+  and its bonds.
+- **Tarot** — the Major Arcana, carried at the codon-ring level. The face.
 
-The deck is published as both a fine-art series and an interactive oracle.
-The writing here serves the oracle.
+These four are *not* merged into one synthesis, and *not* filed into four
+isolated boxes. Each is a **voice** that teaches the same code fully, in its
+own register, at its own necessary length. The card is voice-led with a shared
+Glance above (CONCEPT.md §3–4). The deck is an oracle that teaches: every card
+is both a message for the moment and a complete lesson in its code.
 
 ---
 

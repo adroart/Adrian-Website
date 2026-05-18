@@ -110,20 +110,45 @@ const Hexagram: React.FC<{
   );
 };
 
-/* ─── Adaptive reading guidance ──────────────────────────────────────────── */
+/* ─── Three coins ────────────────────────────────────────────────────────────
+   The traditional I Ching coin: round, with a square hole at the centre.
+   Three of them, overlapped, shown on the invitation so a reader who has
+   never met the practice sees what the gesture is. Pure vector, bronze, no
+   text — it teaches by image. */
 
-function guidanceFor(movingCount: number): string {
-  if (movingCount === 0) {
-    return 'Nothing moves. The moment is steady. Read the hexagram as it stands.';
-  }
-  if (movingCount === 1) {
-    return 'One line stirs. Read that line, then the hexagram it is becoming.';
-  }
-  if (movingCount >= 5) {
-    return 'Almost everything moves. Read the lines in order, then rest in the hexagram you are becoming.';
-  }
-  return 'Several lines stir. Read them in order, then the hexagram you are becoming.';
-}
+const ThreeCoins: React.FC<{ size?: number; color?: string }> = ({
+  size = 76,
+  color = 'rgba(200,169,106,0.9)',
+}) => {
+  // One coin: outer circle, inner square hole. Drawn at unit scale, then
+  // three are placed in an overlapped triangular cluster.
+  const Coin: React.FC<{ cx: number; cy: number; r: number }> = ({ cx, cy, r }) => {
+    const sq = r * 0.42; // half-side of the square hole
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={r * 0.13} />
+        <circle cx={cx} cy={cy} r={r * 0.66} fill="none" stroke={color} strokeWidth={r * 0.07} opacity={0.55} />
+        <rect
+          x={cx - sq}
+          y={cy - sq}
+          width={sq * 2}
+          height={sq * 2}
+          fill="none"
+          stroke={color}
+          strokeWidth={r * 0.1}
+        />
+      </g>
+    );
+  };
+  const r = size * 0.27;
+  return (
+    <svg width={size} height={size * 0.84} viewBox={`0 0 ${size} ${size * 0.84}`} fill="none" aria-hidden="true">
+      <Coin cx={size * 0.32} cy={size * 0.30} r={r} />
+      <Coin cx={size * 0.68} cy={size * 0.30} r={r} />
+      <Coin cx={size * 0.50} cy={size * 0.54} r={r} />
+    </svg>
+  );
+};
 
 /* ─── Becoming preview modal ─────────────────────────────────────────────── */
 
@@ -389,25 +414,29 @@ const CoinCast: React.FC<{
 
   /* ── Idle — the invitation ─────────────────────────────────────────────── */
   if (!cast) {
+    /* TEMPLATE: the still invitation. Shows the three coins as a vector — a
+       reader who has never met the I Ching sees what the gesture IS. The
+       language avoids the jargon "cast": this is the oracle changing. The
+       whole block is the trigger, so the coins themselves begin the ritual. */
     return (
-      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
-        <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-400/80 sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          The cast
-        </p>
-        <div className="min-w-0">
-          <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8] max-w-prose">
-            The I Ching reads two hexagrams at once: the shape of the present
-            moment, and the shape it is turning into. Cast the three coins, six
-            times, to find the moving lines and the hexagram this one becomes.
-          </p>
-          <button
-            type="button"
-            onClick={onCast}
-            className="mt-5 font-label text-[12px] uppercase tracking-[0.22em] font-semibold text-bronze-400 hover:text-bronze-300 transition-colors pb-1 border-b border-bronze-500/40 hover:border-bronze-400/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-stone-900 rounded-sm"
-          >
-            Cast the coins
-          </button>
-        </div>
+      <div className="py-9 sm:py-11 px-4 sm:px-7 border-b border-stone-700/60 flex justify-center">
+        <button
+          type="button"
+          onClick={onCast}
+          className="group flex flex-col items-center text-center rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900"
+          aria-label="Begin the changing — see how this hexagram is moving"
+        >
+          <span className="transition-transform duration-300 group-hover:-translate-y-0.5">
+            <ThreeCoins size={84} />
+          </span>
+          <span className="font-serif text-[17px] sm:text-[18px] text-stone-200 leading-[1.5] mt-5 max-w-[26rem]">
+            Every hexagram is also in motion. Throw the three coins to see how
+            this one is changing, and the hexagram it is turning into.
+          </span>
+          <span className="font-label text-[12px] uppercase tracking-[0.22em] font-semibold text-bronze-400 group-hover:text-bronze-300 transition-colors mt-5 pb-1 border-b border-bronze-500/40 group-hover:border-bronze-400/70">
+            Throw the coins
+          </span>
+        </button>
       </div>
     );
   }
@@ -423,7 +452,13 @@ const CoinCast: React.FC<{
 
   return (
     <>
-    <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
+    {/* TEMPLATE REDESIGN: the "The cast" label and the 88px side-indent are
+        gone. The parent panel already frames this as "The Changing", so a
+        second label was redundant, and the indent cramped the whole block.
+        The present/becoming pair now reads as one centered composition; the
+        hexagram names sit on a full-width row below the glyphs, with real
+        room, so a long name no longer stacks onto three cramped lines. */}
+    <div className="py-6 sm:py-8 px-4 sm:px-7 border-b border-stone-700/60">
       <style>{`
         @keyframes ul-cast-slide-in {
           from { opacity: 0; transform: translateX(-14px); }
@@ -435,129 +470,125 @@ const CoinCast: React.FC<{
         }
       `}</style>
 
-      <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-400/80 sm:self-start sm:pt-1 mb-4 sm:mb-0">
-        The cast
-      </p>
-
       <div className="min-w-0">
-        {/* ── The pairing: present and becoming, one row ─────────────────── */}
-        <div className="flex items-start justify-center sm:justify-start gap-3.5 sm:gap-8">
-          {/* Present — its moving lines flip during the cast, then settle
-              back to the original once the becoming hexagram has slid in. */}
+        {/* ── The changing — two matched stages ──────────────────────────
+            TEMPLATE: both stages share one structure — hexagram glyph on
+            the LEFT, and on the RIGHT a block: the label, the hexagram
+            title beneath it, then the detail (moving lines / the becoming
+            reading). The eye travels straight down a consistent column. */}
+
+        {/* ── Stage one — the present and its moving lines ── */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
+          {/* Glyph, with its label + hexagram number tucked beneath it */}
           <div className="flex flex-col items-center flex-shrink-0">
             <Hexagram
               bits={presentBits}
               moving={movingBits}
               flipProgress={becomingIn ? 0 : flipProgress}
               revealCount={revealCount}
-              width={78}
+              width={88}
             />
-            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-500 mt-3">
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-500 mt-3.5">
               Now
             </span>
-            <span className="font-serif text-[14px] sm:text-[15px] text-stone-300 leading-[1.25] text-center mt-1 max-w-[96px] sm:max-w-[120px]">
-              {primaryCard?.iching.hexagram_name ?? `Code ${primaryNumber}`}
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-stone-500 mt-1">
+              Hexagram {primaryNumber}
             </span>
           </div>
 
-          {/* Transition mark */}
-          {changedNumber && (
-            <div
-              className="flex-shrink-0 self-start pt-[26px] font-serif text-[14px] italic text-bronze-500/60"
-              aria-hidden="true"
-            >
-              becoming
-            </div>
-          )}
+          {/* Text block — the title at the top, aligned with the glyph's
+              top edge, then the moving lines below. */}
+          <div className="flex-1 min-w-0 w-full text-center sm:text-left">
+            <p className="font-serif text-[17px] sm:text-[19px] text-stone-100 leading-[1.3]">
+              {primaryCard?.iching.hexagram_name ?? `Code ${primaryNumber}`}
+            </p>
 
-          {/* Becoming — slides in after the flip. Clicking it opens a quiet
-              preview modal, not a navigation; it is only interactive once the
-              cast has settled (becomingIn), so the click target never moves. */}
-          {changedNumber && changedCard && (
-            <button
-              type="button"
-              onClick={() => becomingIn && setPreviewOpen(true)}
-              disabled={!becomingIn}
-              aria-label={`Preview Code ${changedNumber}, ${changedCard.iching.hexagram_name}, the hexagram this reading is becoming`}
-              className="group flex flex-col items-center flex-shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-stone-900 disabled:cursor-default cursor-pointer"
-              style={{
-                opacity: becomingIn ? 1 : 0,
-                pointerEvents: becomingIn ? 'auto' : 'none',
-                animation:
-                  becomingIn && !reduceMotion
-                    ? 'ul-cast-slide-in 460ms cubic-bezier(0.22,1,0.36,1) both'
-                    : undefined,
-              }}
-            >
+            {/* The moving lines — TEMPLATE: a close-set list. No divider,
+                just a small gap, so the lines read together as one group. */}
+            {settled && movingCount > 0 && (
+              <div
+                className="mt-4 text-left space-y-1.5"
+                style={{ animation: reduceMotion ? undefined : 'ul-cast-soft-in 420ms ease-out both' }}
+              >
+                {movingPositions.map((pos) => {
+                  const text = getLineText(primaryNumber, pos);
+                  return (
+                    <p key={pos} className="font-sans text-[16px] text-stone-200 leading-[1.7]">
+                      <span className="font-label text-[11px] uppercase tracking-[0.14em] font-semibold text-bronze-400/80 mr-2">
+                        Line {pos}
+                      </span>
+                      {text ? (
+                        text
+                      ) : (
+                        <span className="text-stone-500">
+                          Line text to be added.
+                        </span>
+                      )}
+                    </p>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Stage two — what it is becoming ────────────────────────────
+            TEMPLATE: same structure as stage one — glyph on the LEFT, the
+            label / title / reading block on the RIGHT. The two stages are
+            a consistent column down the panel. */}
+        {changedNumber && changedCard && settled && (
+          <div
+            className="mt-9 pt-7 border-t border-stone-700/50 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8"
+            style={{ opacity: becomingIn ? 1 : 0, transition: 'opacity 400ms ease-out' }}
+          >
+            {/* The becoming glyph — on the left, with its label + number
+                tucked beneath it, matching stage one. */}
+            <div className="flex flex-col items-center flex-shrink-0">
               <Hexagram
                 bits={changedBits}
                 moving={new Array(6).fill(false)}
                 flipProgress={0}
                 revealCount={6}
-                width={78}
+                width={88}
               />
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-400/70 group-hover:text-bronze-300 transition-colors mt-3">
-                Code {changedNumber}
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-400/70 mt-3.5">
+                Becoming
               </span>
-              <span className="font-serif text-[14px] sm:text-[15px] text-stone-200 group-hover:text-white leading-[1.25] text-center mt-1 max-w-[96px] sm:max-w-[120px] transition-colors underline decoration-bronze-500/40 decoration-[1.5px] underline-offset-[3px] group-hover:decoration-bronze-400">
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-400/70 mt-1">
+                Hexagram {changedNumber}
+              </span>
+            </div>
+
+            {/* Text block — title at the top, aligned with the glyph's top
+                edge, then the becoming reading and the link. */}
+            <div className="flex-1 min-w-0 w-full text-center sm:text-left">
+              <p className="font-serif text-[17px] sm:text-[19px] text-stone-100 leading-[1.3]">
                 {changedCard.iching.hexagram_name}
-              </span>
-            </button>
-          )}
-        </div>
-
-        {/* ── Reading detail — only once the cast has settled ────────────── */}
-        {settled && (
-          <div
-            style={{
-              animation: reduceMotion ? undefined : 'ul-cast-soft-in 420ms ease-out both',
-            }}
-          >
-            <p className="font-sans text-[15px] sm:text-[16px] text-stone-300 leading-[1.7] mt-7 max-w-prose">
-              {guidanceFor(movingCount)}
-            </p>
-
-            {movingCount > 0 && (
-              <div className="mt-6 pt-5 border-t border-stone-700/50">
-                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-400/80 mb-4">
-                  {movingCount === 1 ? 'The moving line' : 'The moving lines'}
-                </p>
-                <div className="space-y-4">
-                  {movingPositions.map((pos) => {
-                    const text = getLineText(primaryNumber, pos);
-                    return (
-                      <div
-                        key={pos}
-                        className="block sm:grid sm:grid-cols-[58px_1fr] sm:gap-x-4"
-                      >
-                        <p className="font-label text-[11px] uppercase tracking-[0.14em] font-semibold text-stone-400 sm:self-start sm:pt-0.5 mb-1 sm:mb-0">
-                          Line {pos}
-                        </p>
-                        {text ? (
-                          <p className="font-sans text-[15px] text-stone-200 leading-[1.7]">
-                            {text}
-                          </p>
-                        ) : (
-                          <p className="font-serif text-[14px] italic text-stone-500 leading-[1.6]">
-                            Line text to be added.
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={onCast}
-              className="mt-7 font-label text-[12px] uppercase tracking-[0.22em] font-semibold text-stone-400 hover:text-bronze-300 transition-colors pb-1 border-b border-stone-600/60 hover:border-bronze-400/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-stone-900 rounded-sm"
-            >
-              Cast again
-            </button>
+              </p>
+              {/* TEMPLATE: the becoming reading describes the quality of the
+                  change, it does not name the hexagram (the title above
+                  already names it). One sentence on what the present is
+                  moving toward. NOTE: this is a generic placeholder — the
+                  real per-becoming description is synthesis content, wired
+                  when the becoming card's reading is reachable here. */}
+              <p className="font-sans text-[15px] sm:text-[16px] text-stone-300 leading-[1.7] mt-3 text-left">
+                As the moving line settles, the present begins to give way to
+                a different shape, a new configuration the moment is travelling
+                into. Follow the changing line to see what it asks of you.
+              </p>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="group mt-4 font-label text-[12px] uppercase tracking-[0.2em] font-semibold text-bronze-400 hover:text-bronze-300 transition-colors pb-1 border-b border-bronze-500/40 hover:border-bronze-400/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-4 focus-visible:ring-offset-stone-900 rounded-sm"
+              >
+                Read Code {changedNumber}
+              </button>
+            </div>
           </div>
         )}
+
+        {/* TEMPLATE: no "throw again" — once the coins are thrown, the cast
+            stands. The reading is what it is; it is not re-rolled. */}
       </div>
     </div>
 

@@ -18,11 +18,27 @@ import ImageViewer from './oracle/ImageViewer';
 import BuySheet from './oracle/BuySheet';
 import CoinCast from './oracle/CoinCast';
 import { castForHexagram, type CastResult } from '../utils/ichingCasting';
-import { saveCast, loadCast } from '../utils/ichingCastStore';
+// TEMPLATE: cast persistence (saveCast/loadCast) intentionally not used —
+// each cast is a fresh ritual the reader performs, never restored stale.
 
 // Tracks which cards have already shown their ritual entrance in this session,
 // so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
 const seenEntrances = new Set<number>();
+
+/* ─── Label type styles — TEMPLATE ────────────────────────────────────────
+   Two uniform label tiers, used for every uppercase label on the card so the
+   typography is identical everywhere (the card had 6+ ad-hoc label styles).
+   These hold the TYPE only — size, tracking, weight, transform. Colour and
+   margin stay per-use, since a label on a dark panel vs a light one needs a
+   different colour, but the letterform must always match.
+
+   LABEL_PANEL   — the panel headers: I CHING, GENE KEYS, RELATIONS, BODY.
+   LABEL_SECTION — every section label inside a panel: THE RING OF FIRE,
+                   THE CHANGING, SHADOW, THE GATE, and so on. */
+const LABEL_PANEL = 'font-label text-[11px] uppercase tracking-[0.32em]';
+// Section labels are TITLES — they must read larger and bolder than the body
+// text beneath them (body is 16px regular). 14px, bold.
+const LABEL_SECTION = 'font-label text-[14px] uppercase tracking-[0.2em] font-bold';
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
@@ -181,8 +197,8 @@ const GateHero: React.FC<{ gate: number; size?: 'sm' | 'lg' }> = ({ gate, size =
     ? 'font-serif text-[64px] sm:text-[72px] leading-none tracking-[-0.01em]'
     : 'font-serif text-[44px] sm:text-[52px] leading-none tracking-[-0.01em]';
   const labelCls = size === 'lg'
-    ? 'font-label text-[11px] uppercase tracking-[0.32em] mb-2'
-    : 'font-label text-[10px] uppercase tracking-[0.32em] mb-1.5';
+    ? '${LABEL_PANEL} mb-2'
+    : 'font-label text-[10px] uppercase tracking-[0.2em] mb-1.5';
   return (
     <div className="flex flex-col items-center text-current">
       <span className={`${labelCls} opacity-70`}>Gate</span>
@@ -536,10 +552,14 @@ const PlateExpand: React.FC<{
 
   return (
     <div id={id} className={`scroll-mt-24 border-t ${t.border} -mx-4 sm:-mx-7`}>
-      <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start py-5 sm:py-6 px-4 sm:px-7">
-        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.label}`}>{label}</p>
-          <div className="mt-1.5 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
+      {/* TEMPLATE FIX: label sits ABOVE the content at full width, not in a
+          cramped 88px side column. The old side column overflowed for long
+          labels ("PROGRAMMING PARTNER", "COMBINATION", "THE RING OF FIRE")
+          and collided with the reading text. Stacked, every label has room,
+          uses one consistent style, and the reading runs full width. */}
+      <div className="py-5 sm:py-6 px-4 sm:px-7">
+        <div className="mb-4">
+          <p className={`${LABEL_SECTION} ${t.label}`}>{label}</p>
           {caption && <p className={`font-sans text-[14px] sm:text-[15px] ${t.caption} mt-1.5 leading-[1.45]`}>{caption}</p>}
         </div>
         <div className="min-w-0 space-y-4 select-text cursor-text">
@@ -625,9 +645,12 @@ const PLATE_TONE: Record<GeneKeyTone, {
   labelColor: string;
   primaryColor: string;
 }> = {
-  shadow: { label: 'Shadow', labelColor: 'text-stone-500',  primaryColor: 'text-wood-800' },
-  gift:   { label: 'Gift',   labelColor: 'text-bronze-600', primaryColor: 'text-wood-900' },
-  siddhi: { label: 'Siddhi', labelColor: 'text-wood-500',   primaryColor: 'text-wood-900' },
+  // TEMPLATE: all three tone labels use the same bronze/golden as every
+  // other section label on the card — Shadow / Gift / Siddhi read as the
+  // golden titles they are, uniform with Amino Acid, Physiology, etc.
+  shadow: { label: 'Shadow', labelColor: 'text-bronze-700', primaryColor: 'text-wood-800' },
+  gift:   { label: 'Gift',   labelColor: 'text-bronze-700', primaryColor: 'text-wood-900' },
+  siddhi: { label: 'Siddhi', labelColor: 'text-bronze-700', primaryColor: 'text-wood-900' },
 };
 
 const GeneKeyCard: React.FC<{
@@ -636,66 +659,50 @@ const GeneKeyCard: React.FC<{
   id: string;
   section?: SectionKey;
   defaultOpen?: boolean;
-}> = ({ tone, level, id, section = 'genekeys', defaultOpen = false }) => {
-  const ctx = useExpand();
-  const open = ctx.isOpen(id, section, defaultOpen);
-  useEffect(() => ctx.register({ id, section, defaultOpen }), [ctx, id, section, defaultOpen]);
-
+}> = ({ tone, level, id }) => {
   const t = PLATE_TONE[tone];
   const paragraphs = level.expanded.text.split('\n\n').filter(Boolean);
+  const hasNatures = tone === 'shadow' && (level.repressive_nature || level.reactive_nature);
 
+  // TEMPLATE FIX: reading always shown, no click required (was a + accordion).
+  // Repressive/Reactive natures stay as an optional deeper tuck.
   return (
-    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-        className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors hover:bg-wood-500/[0.04] focus-visible:outline-none focus-visible:bg-wood-500/[0.06]"
-      >
-        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor}`}>{t.label}</p>
-          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
-          <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1.5 leading-[1.45]">{level.contemplation_title}</p>
-        </div>
-        <div className="min-w-0 flex items-start gap-4">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{level.name}</p>
-          <span
-            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
-        </div>
-      </button>
-      {open && (
-        <div id={`${id}-panel`} className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start pb-6 sm:pb-7 px-4 sm:px-7">
-          <div className="hidden sm:block" aria-hidden="true" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-            ))}
-            {tone === 'shadow' && (level.repressive_nature || level.reactive_nature) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {level.repressive_nature && (
-                  <div>
-                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-2">
-                      Repressive · {level.repressive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
-                  </div>
-                )}
-                {level.reactive_nature && (
-                  <div>
-                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-2">
-                      Reactive · {level.reactive_nature.label}
-                    </p>
-                    <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
-                  </div>
-                )}
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7 py-6 sm:py-7 px-4 sm:px-7">
+      <div className="mb-4">
+        <p className={`${LABEL_SECTION} ${t.labelColor}`}>{t.label}</p>
+        <p className={`font-serif text-[19px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mt-2.5`}>{level.name}</p>
+        <p className="font-sans text-[14px] sm:text-[15px] text-wood-500 mt-1 leading-[1.45]">{level.contemplation_title}</p>
+      </div>
+      <div className="min-w-0 space-y-4 select-text cursor-text">
+        {paragraphs.map((p, i) => (
+          <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+        ))}
+      </div>
+      {hasNatures && (
+        <details className="mt-5 border-t border-wood-200/40 pt-4">
+          <summary className={`cursor-pointer list-none ${LABEL_SECTION} text-bronze-700 hover:text-bronze-600 transition-colors flex items-center gap-2`}>
+            <span>Repressive · Reactive</span>
+            <span className="text-stone-400" aria-hidden="true">— go deeper</span>
+          </summary>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 select-text cursor-text">
+            {level.repressive_nature && (
+              <div>
+                <p className={`${LABEL_SECTION} text-bronze-700 mb-2`}>
+                  Repressive · {level.repressive_nature.label}
+                </p>
+                <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.repressive_nature.description}</p>
+              </div>
+            )}
+            {level.reactive_nature && (
+              <div>
+                <p className={`${LABEL_SECTION} text-bronze-700 mb-2`}>
+                  Reactive · {level.reactive_nature.label}
+                </p>
+                <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{level.reactive_nature.description}</p>
               </div>
             )}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
@@ -711,56 +718,44 @@ const SynthesisToneCard: React.FC<{
   text: string;
   extras?: { label: string; text: string }[];
   defaultOpen?: boolean;
-}> = ({ tone, id, name, text, extras = [], defaultOpen = false }) => {
-  const ctx = useExpand();
-  const open = ctx.isOpen(id, 'genekeys', defaultOpen);
-  useEffect(() => ctx.register({ id, section: 'genekeys', defaultOpen }), [ctx, id, defaultOpen]);
+}> = ({ tone, id, name, text, extras = [] }) => {
   const t = PLATE_TONE[tone];
   const paragraphs = text.split('\n\n').filter(Boolean);
 
+  // TEMPLATE FIX: the Shadow/Gift/Siddhi reading is ALWAYS shown — no click
+  // required. The old version hid every tone behind a + accordion, so the
+  // reader met three closed boxes and had to click to read anything. Now the
+  // tone name, the title, and the full reading render open. The `extras`
+  // (Repressive/Reactive, Programming Partner) remain a genuine deeper layer
+  // — a quiet nested door, optional, per CONCEPT §6.
   return (
-    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7">
-      <button
-        type="button"
-        onClick={() => ctx.toggle(id)}
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-        className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start w-full text-left py-5 sm:py-6 px-4 sm:px-7 transition-colors hover:bg-wood-500/[0.04] focus-visible:outline-none focus-visible:bg-wood-500/[0.06]"
-      >
-        <div className="sm:self-start sm:pt-1 mb-3 sm:mb-0">
-          <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor}`}>{t.label}</p>
-          <div className="mt-1 h-px w-10 bg-bronze-500/70" aria-hidden="true" />
-        </div>
-        <div className="min-w-0 flex items-start gap-4">
-          <p className={`font-serif text-[17px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] flex-1`}>{name}</p>
-          <span
-            className={`text-lg ${t.labelColor} flex-shrink-0 leading-none mt-0.5 ${ctx.reducedMotion ? '' : 'transition-transform duration-200'}`}
-            style={{ transform: open ? 'rotate(45deg)' : 'none' }}
-            aria-hidden="true"
-          >+</span>
-        </div>
-      </button>
-      {open && (
-        <div id={`${id}-panel`} className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 sm:items-start pb-6 sm:pb-7 px-4 sm:px-7">
-          <div className="hidden sm:block" aria-hidden="true" />
-          <div className="min-w-0 space-y-4 select-text cursor-text">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-            ))}
-            {extras.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-wood-200/40 mt-2">
-                {extras.map((ex, i) => (
-                  <div key={i}>
-                    <p className={`font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold ${t.labelColor} mb-2`}>{ex.label}</p>
-                    {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
-                      <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
-                    ))}
-                  </div>
+    <div id={id} className="scroll-mt-24 border-t border-wood-200/50 -mx-4 sm:-mx-7 py-6 sm:py-7 px-4 sm:px-7">
+      <div className="mb-4">
+        <p className={`${LABEL_SECTION} ${t.labelColor}`}>{t.label}</p>
+        <p className={`font-serif text-[19px] ${t.primaryColor} leading-[1.3] tracking-[-0.005em] mt-2.5`}>{name}</p>
+      </div>
+      <div className="min-w-0 space-y-4 select-text cursor-text">
+        {paragraphs.map((p, i) => (
+          <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
+        ))}
+      </div>
+      {extras.length > 0 && (
+        <details className="mt-5 border-t border-wood-200/40 pt-4">
+          <summary className={`cursor-pointer list-none ${LABEL_SECTION} text-bronze-700 hover:text-bronze-600 transition-colors flex items-center gap-2`}>
+            <span>{extras.map(e => e.label).join(' · ')}</span>
+            <span className="text-stone-400" aria-hidden="true">— go deeper</span>
+          </summary>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5 pt-5 select-text cursor-text">
+            {extras.map((ex, i) => (
+              <div key={i}>
+                <p className={`${LABEL_SECTION} ${t.labelColor} mb-2`}>{ex.label}</p>
+                {ex.text.split('\n\n').filter(Boolean).map((p, j) => (
+                  <p key={j} className={`font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] ${j > 0 ? 'mt-2' : ''}`}>{p}</p>
                 ))}
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
@@ -872,12 +867,12 @@ const CardLink: React.FC<{
         className="w-14 h-14 object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity"
       />
       <div className="flex-1 min-w-0">
-        {label && <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 mb-1">{label}</p>}
+        {label && <p className={`${LABEL_SECTION} text-bronze-700 mb-1`}>{label}</p>}
         <p className="font-serif text-[17px] text-wood-900 leading-[1.3] tracking-[-0.005em] group-hover:text-bronze-700 transition-colors">{sibling.card_name}</p>
         <p className="font-serif text-[14px] text-wood-600 leading-[1.55] sm:leading-[1.6] mt-0.5">{sibling.iching.hexagram_name}</p>
         {context && <p className="font-serif text-[14px] text-wood-500 mt-1 leading-[1.55] sm:leading-[1.6] line-clamp-2">{context}</p>}
       </div>
-      <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0">Open</span>
+      <span className={`${LABEL_SECTION} text-wood-400 group-hover:text-bronze-600 transition-colors flex-shrink-0`}>Open</span>
     </button>
   );
 };
@@ -937,7 +932,9 @@ const CHAPTERS: Chapter[] = [
   { key: 'iching',      label: 'I CHING' },
   { key: 'genekeys',    label: 'GENE KEYS' },
   { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
-  { key: 'tarot',       label: 'TAROT' },
+  // TEMPLATE FIX: internal key stays 'tarot' (shared type, do not change),
+  // but the panel is the connections panel — displayed as RELATIONS.
+  { key: 'tarot',       label: 'RELATIONS' },
   { key: 'body',        label: 'BODY' },
 ];
 
@@ -1020,7 +1017,6 @@ const UniversalLanguageCard: React.FC = () => {
     if (Number.isNaN(cardNum)) return;
     const result = castForHexagram(cardNum);
     setCast(result);
-    saveCast(cardNum, result);
     setCasting(true);
   }, [cardNum]);
 
@@ -1078,9 +1074,12 @@ const UniversalLanguageCard: React.FC = () => {
     setBuyOpen(false);
     setSynthesis(undefined);
     storyFileRef.current = null;
-    // Restore any cast thrown earlier this session on the new card.
+    // TEMPLATE: the cast must never "come already loaded". Every card opens
+    // with no cast — only the still invitation. The casting is a ritual the
+    // reader performs and watches unfold; a pre-restored result is not a
+    // divination, just a stale data panel. (Was: setCast(loadCast(cardNum)).)
     setCasting(false);
-    setCast(Number.isNaN(cardNum) ? null : loadCast(cardNum));
+    setCast(null);
     window.scrollTo(0, 0);
     // Reset to the system specified in URL if present, else I Ching
     const s = searchParams.get('system');
@@ -1204,7 +1203,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
             <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
-          <span className={`font-label text-[11px] uppercase tracking-[0.15em] transition-colors ${copied ? 'text-bronze-600' : 'text-wood-600'}`}>
+          <span className={`${LABEL_SECTION} transition-colors ${copied ? 'text-bronze-600' : 'text-wood-600'}`}>
             {copied ? 'Copied!' : 'Copy link'}
           </span>
         </button>
@@ -1217,7 +1216,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366] flex-shrink-0">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
           </svg>
-          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">WhatsApp</span>
+          <span className={`${LABEL_SECTION} text-wood-600`}>WhatsApp</span>
         </a>
         <a
           href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
@@ -1228,7 +1227,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#2AABEE] flex-shrink-0">
             <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
           </svg>
-          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Telegram</span>
+          <span className={`${LABEL_SECTION} text-wood-600`}>Telegram</span>
         </a>
         <a
           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
@@ -1239,7 +1238,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-wood-700 flex-shrink-0">
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
-          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">X / Twitter</span>
+          <span className={`${LABEL_SECTION} text-wood-600`}>X / Twitter</span>
         </a>
         <a
           href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent('I wanted to share this oracle card with you:\n\n' + shareUrl)}`}
@@ -1248,7 +1247,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
             <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
           </svg>
-          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">Email</span>
+          <span className={`${LABEL_SECTION} text-wood-600`}>Email</span>
         </a>
         <button
           onClick={handleInstagramShare}
@@ -1258,7 +1257,7 @@ const UniversalLanguageCard: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
             <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
           </svg>
-          <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-600">
+          <span className={`${LABEL_SECTION} text-wood-600`}>
             {storyLoading ? 'Saving...' : 'Instagram Story'}
           </span>
         </button>
@@ -1393,7 +1392,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Acquire
                     </p>
-                    <p className="font-label text-[11px] uppercase tracking-[0.25em] text-wood-500 mt-0.5">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mt-0.5">
                       Physical piece
                     </p>
                   </div>
@@ -1426,7 +1425,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
                       Share
                     </p>
-                    <p className="font-label text-[11px] uppercase tracking-[0.25em] text-wood-500 mt-0.5">
+                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mt-0.5">
                       This card
                     </p>
                   </div>
@@ -1553,7 +1552,7 @@ const UniversalLanguageCard: React.FC = () => {
                 onClick={() => setShareOpen(v => !v)}
                 aria-expanded={shareOpen}
                 aria-controls="card-header-share-sheet"
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 px-2 h-11 flex items-center transition-colors flex-shrink-0"
+                className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-600 hover:text-bronze-700 px-2 h-11 flex items-center transition-colors flex-shrink-0"
               >
                 Share
               </button>
@@ -1566,7 +1565,7 @@ const UniversalLanguageCard: React.FC = () => {
                   acquireSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   setBuyOpen(true);
                 }}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-700 hover:text-bronze-800 px-2 h-11 flex items-center transition-colors flex-shrink-0"
+                className="font-label text-[10px] uppercase tracking-[0.2em] text-bronze-700 hover:text-bronze-800 px-2 h-11 flex items-center transition-colors flex-shrink-0"
               >
                 Acquire
               </button>
@@ -1614,7 +1613,7 @@ const UniversalLanguageCard: React.FC = () => {
                 >
                   {HEXAGRAM_CHINESE[card.number]?.char ?? card.number}
                 </span>
-                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
+                <p className={`${LABEL_PANEL} text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60`}>
                   I Ching
                 </p>
               </button>
@@ -1631,7 +1630,7 @@ const UniversalLanguageCard: React.FC = () => {
                 aria-pressed={ichingOpen === 'hex'}
                 aria-label={`Read ${card.iching.hexagram_name}, ${card.iching.upper_trigram.name} over ${card.iching.lower_trigram.name}`}
               >
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Guà {card.number}</span>
+                <span className={`${LABEL_SECTION} text-stone-500 sm:self-center flex-shrink-0`}>Guà {card.number}</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <HexagramSVG
                     upper={card.iching.upper_trigram.symbol}
@@ -1648,7 +1647,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Hexagram</span>
+                <span className={`${LABEL_SECTION} text-stone-500 sm:self-center flex-shrink-0`}>Hexagram</span>
               </button>
 
               <button
@@ -1657,12 +1656,12 @@ const UniversalLanguageCard: React.FC = () => {
                 className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'upper' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'upper'}
               >
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Upper</span>
+                <span className={`${LABEL_SECTION} text-stone-500 sm:self-center flex-shrink-0`}>Upper</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <TrigramSVG symbol={card.iching.upper_trigram.symbol} color={ichingOpen === 'upper' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
                   <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'upper' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.upper_trigram.name}</span>
                 </div>
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 flex-shrink-0">Trigram</span>
+                <span className={`${LABEL_SECTION} text-stone-500 flex-shrink-0`}>Trigram</span>
               </button>
 
               <button
@@ -1671,17 +1670,18 @@ const UniversalLanguageCard: React.FC = () => {
                 className={`group flex sm:grid sm:grid-cols-[88px_1fr_auto] sm:gap-x-5 items-center gap-3 w-full text-left py-3.5 sm:py-4 px-4 sm:px-7 border-b border-stone-700/60 transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.08] ${ichingOpen === 'lower' ? 'bg-bronze-500/[0.06]' : 'hover:bg-white/[0.025]'}`}
                 aria-pressed={ichingOpen === 'lower'}
               >
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 sm:self-center flex-shrink-0">Lower</span>
+                <span className={`${LABEL_SECTION} text-stone-500 sm:self-center flex-shrink-0`}>Lower</span>
                 <div className="min-w-0 flex-1 flex items-center gap-3 sm:gap-4">
                   <TrigramSVG symbol={card.iching.lower_trigram.symbol} color={ichingOpen === 'lower' ? '#c9a05a' : '#6b5a40'} width={24} height={16} />
                   <span className={`font-serif text-[17px] leading-[1.3] truncate transition-colors ${ichingOpen === 'lower' ? 'text-stone-100' : 'text-stone-300 group-hover:text-stone-100'}`}>{card.iching.lower_trigram.name}</span>
                 </div>
-                <span className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-stone-500 flex-shrink-0">Trigram</span>
+                <span className={`${LABEL_SECTION} text-stone-500 flex-shrink-0`}>Trigram</span>
               </button>
 
-              {/* Reading zone — updates on tap */}
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
-                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-400/80 sm:self-start sm:pt-1 mb-2 sm:mb-0">
+              {/* Reading zone — updates on tap. TEMPLATE FIX: label above
+                  the reading (was an 88px side column that overlapped). */}
+              <div className="py-6 sm:py-7 px-4 sm:px-7 border-b border-stone-700/60">
+                <p className={`${LABEL_SECTION} text-bronze-400/80 mb-2.5`}>
                   {ichingOpen === 'hex'
                     ? 'Combination'
                     : ichingOpen === 'upper'
@@ -1698,8 +1698,22 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* Coin-cast — the changing oracle: throw the three coins to find
-                the moving lines and the hexagram this one is becoming. */}
+            {/* The Changing — the coin cast.
+                TEMPLATE FIX: the cast used to appear with no framing, a
+                floating widget. It now opens with a proper plate header and
+                a framing line, so it reads as a named movement of the
+                I-Ching teaching: the panel above teaches the fixed hexagram;
+                here the reader sees it change. */}
+            <div className="border-t border-stone-700/60 -mx-4 sm:-mx-7 pt-6 sm:pt-7 px-4 sm:px-7">
+              <p className={`${LABEL_SECTION} text-bronze-400/80`}>
+                The Changing
+              </p>
+              <p className="font-sans text-[15px] text-stone-400 leading-[1.6] mt-1.5 max-w-prose">
+                The I Ching is the book of change. The hexagram above is the
+                shape of the present moment. Below, the oracle shows how it is
+                moving, and the hexagram it is turning into.
+              </p>
+            </div>
             <CoinCast
               primaryNumber={card.number}
               cast={cast}
@@ -1736,7 +1750,7 @@ const UniversalLanguageCard: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
                       {synthesis.synthesis.iching.judgement_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-1">The Judgement</p>
+                          <p className={`${LABEL_SECTION} text-bronze-400 mb-1`}>The Judgement</p>
                           <p className="font-sans text-[14px] sm:text-[15px] text-stone-400 leading-[1.45] mt-1 mb-3">the oracle's reading of this moment</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.judgement_lines.map((line, i) => (
@@ -1747,7 +1761,7 @@ const UniversalLanguageCard: React.FC = () => {
                       )}
                       {synthesis.synthesis.iching.image_lines.length > 0 && (
                         <div>
-                          <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-1">The Image</p>
+                          <p className={`${LABEL_SECTION} text-bronze-400 mb-1`}>The Image</p>
                           <p className="font-sans text-[14px] sm:text-[15px] text-stone-400 leading-[1.45] mt-1 mb-3">a picture from nature that mirrors the energy</p>
                           <div className="space-y-2">
                             {synthesis.synthesis.iching.image_lines.map((line, i) => (
@@ -1775,11 +1789,11 @@ const UniversalLanguageCard: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
-                      <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-2">Outer</p>
+                      <p className={`${LABEL_SECTION} text-bronze-400 mb-2`}>Outer</p>
                       <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.outer.context.text}</p>
                     </div>
                     <div>
-                      <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-2">Inner</p>
+                      <p className={`${LABEL_SECTION} text-bronze-400 mb-2`}>Inner</p>
                       <p className="font-sans text-[16px] text-stone-200 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.trigrams.inner.context.text}</p>
                     </div>
                   </div>
@@ -1805,7 +1819,7 @@ const UniversalLanguageCard: React.FC = () => {
                         {headline && <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{headline}</p>}
                         {stages.length > 0 && (
                           <div>
-                            <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 mb-3">Four stages of the time cycle</p>
+                            <p className={`${LABEL_SECTION} text-bronze-400 mb-3`}>Four stages of the time cycle</p>
                             <div className="flex gap-x-6 gap-y-1 flex-wrap">
                               {stages.map((s, i) => (
                                 <span key={i} className="font-serif text-[17px] text-stone-200">{s}</span>
@@ -1840,16 +1854,16 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Reflection (only when no synthesis) */}
             {!synthesis && expanded && (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
-                <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Reflection</p>
+              <div className="border-t border-bronze-700/40 py-6 sm:py-7 mt-2">
+                <p className={`${LABEL_SECTION} text-bronze-400 mb-2.5`}>Reflection</p>
                 <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.reflection.text}</p>
               </div>
             )}
 
             {/* Fallback if no expanded data */}
             {!expanded && (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-stone-700/60 py-6 sm:py-7">
-                <p className="font-label text-[12px] uppercase tracking-[0.22em] text-bronze-400 sm:self-start sm:pt-1 mb-2 sm:mb-0">Essence</p>
+              <div className="border-t border-stone-700/60 py-6 sm:py-7">
+                <p className={`${LABEL_SECTION} text-bronze-400 mb-2.5`}>Essence</p>
                 <p className="font-sans text-[16px] text-stone-100 leading-[1.75] sm:leading-[1.8]">{card.iching.essence}</p>
               </div>
             )}
@@ -1880,7 +1894,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <div className="text-bronze-700/80 group-hover:text-bronze-700 transition-colors mb-5">
                   <DragonflySVG width={72} color="currentColor" />
                 </div>
-                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 group-hover:text-bronze-700 transition-colors pb-1.5 border-b border-bronze-600/30 group-hover:border-bronze-600/60">
+                <p className={`${LABEL_PANEL} text-bronze-700/85 group-hover:text-bronze-700 transition-colors pb-1.5 border-b border-bronze-600/30 group-hover:border-bronze-600/60`}>
                   Gene Keys
                 </p>
               </button>
@@ -1932,8 +1946,8 @@ const UniversalLanguageCard: React.FC = () => {
                 <GeneKeyCard tone="siddhi" level={expanded.gene_keys.siddhi} id="genekey-siddhi" />
               </>
             ) : (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Description</p>
+              <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>Description</p>
                 <div className="space-y-4">
                   {card.gene_keys.description.split('\n\n').filter(Boolean).map((p, i) => (
                     <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
@@ -1976,7 +1990,7 @@ const UniversalLanguageCard: React.FC = () => {
                 <div className="text-bronze-400/95 group-hover:text-bronze-300 transition-colors mb-5">
                   <GateHero gate={card.human_design.gate} size="sm" />
                 </div>
-                <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60">
+                <p className={`${LABEL_PANEL} text-bronze-400/90 group-hover:text-bronze-300 transition-colors pb-1.5 border-b border-bronze-500/30 group-hover:border-bronze-400/60`}>
                   Human Design
                 </p>
               </button>
@@ -2083,31 +2097,37 @@ const UniversalLanguageCard: React.FC = () => {
             <ContinueRail
               variant="dark"
               eyebrow="Next"
-              title="Tarot"
-              subtitle={(synthesis?.reference?.tarot_card ?? card.ring_tarot) + ' · ' + card.ring_name}
+              title="Relations"
+              subtitle="The cards this code is kin to"
               onClick={() => jumpToChapter('tarot')}
-              ariaLabel={`Continue to Tarot: ${synthesis?.reference?.tarot_card ?? card.ring_tarot}, ${card.ring_name}`}
+              ariaLabel="Continue to Relations"
             />
           </div>
         </div>
 
-        {/* ────────── TAROT (Tarot resonance + structural connections) ────────── */}
+        {/* ────────── RELATIONS — how this code is kin to the other 63 ──────────
+            TEMPLATE FIX: this panel was named "Tarot", but its substance is
+            the card's connections — the paired hexagram, the programming
+            partner, the codon-ring family. The Tarot resonance is one
+            element WITHIN it (the ring's archetypal face), not the panel's
+            subject. Renamed to "Relations". The deeper-correlation layer
+            (trigrams, Eight Immortals, Golden Dawn depth) nests inside it. */}
         <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header — Tarot */}
+            {/* Plate header — Relations */}
             <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
-              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Tarot</p>
-              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.tarot_card ?? card.ring_tarot}</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">{card.ring_name}</p>
+              <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Relations</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">The Living Field</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">No code stands alone. Here are the cards this one is kin to, and what they form together.</p>
             </header>
 
             {expanded ? (
               <>
                 {/* Paired Hexagram */}
                 {pairCard && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Paired Hexagram</p>
+                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>Paired Hexagram</p>
                     <div className="space-y-4 min-w-0">
                       <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
                       <CardLink
@@ -2121,8 +2141,8 @@ const UniversalLanguageCard: React.FC = () => {
 
                 {/* Programming Partner */}
                 {expanded.gene_keys.programming_partner && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">Programming Partner</p>
+                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>Programming Partner</p>
                     <div className="space-y-4 min-w-0">
                       <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.programming_partner.relationship_context}</p>
                       <CardLink
@@ -2134,50 +2154,39 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Codon Ring */}
+                {/* Codon Ring — TEMPLATE FIX: now matches the Paired
+                    Hexagram / Programming Partner blocks exactly. The intro
+                    text is full body size (16px sans, was a smaller 14px
+                    serif), and each ring sibling is a full CardLink row (was
+                    a cramped thumbnail grid). One consistent connection
+                    treatment across the whole panel. */}
                 {siblings.length > 0 && (
-                  <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-3 sm:mb-0">{expanded.gene_keys.codon_ring.name}</p>
-                    <div className="min-w-0">
-                      <p className="font-serif text-[14px] text-wood-600 leading-[1.5] mb-6">{expanded.gene_keys.codon_ring.relationship_context}</p>
-                      <div className="grid grid-cols-4 sm:grid-cols-8 gap-x-2 gap-y-3">
-                        {siblings.map(n => {
-                          const sibling = CARD_BY_NUMBER.get(n);
-                          return sibling ? (
-                            <button
-                              key={n}
-                              onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
-                              className="group flex flex-col items-center text-center transition-colors"
-                            >
-                              {UL_IMAGE_BY_NUMBER.get(n) && (
-                                <img
-                                  src={cardImageUrl(n, 80)}
-                                  alt=""
-                                  className="w-full aspect-square object-cover opacity-75 group-hover:opacity-100 transition-opacity"
-                                  loading="lazy"
-                                  decoding="async"
-                                  width={80}
-                                  height={80}
-                                />
-                              )}
-                              <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-wood-500 mt-1">{n}</p>
-                              <p className="font-serif text-[12px] sm:text-[13px] text-wood-700 leading-tight truncate w-full">{sibling.card_name}</p>
-                            </button>
-                          ) : null;
-                        })}
+                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>{expanded.gene_keys.codon_ring.name}</p>
+                    <div className="space-y-4 min-w-0">
+                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.codon_ring.relationship_context}</p>
+                      <div className="divide-y divide-wood-200/50">
+                        {siblings.map(n => (
+                          <CardLink
+                            key={n}
+                            number={n}
+                            label={`Code ${n}`}
+                            onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+              <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                <p className={`${LABEL_SECTION} text-bronze-700 mb-2.5`}>Soon</p>
                 <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Connection data will be available soon.</p>
               </div>
             )}
 
-            {/* Tarot resonance */}
+            {/* Tarot resonance — the ring's archetypal face */}
             {synthesis && (() => {
               const text = synthesis.synthesis.tarot.ring_role + '\n\n' + synthesis.synthesis.tarot.tarot_resonance;
               const paragraphs = text.split('\n\n').filter(Boolean);
@@ -2197,6 +2206,64 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            {/* ── Deeper Correlation — TEMPLATE: a quiet nested door ──────────
+                The correlation layer (trigrams, the Eight Immortals, the
+                Tarot's Golden Dawn depth) per CONCEPT §8 / guide 06 §7.
+                Optional study depth — a door within Relations, never imposed
+                on a reader who just wants a reading. Built here as the
+                container; the synthesised prose fills in with card content. */}
+            <details className="border-t border-wood-200/50 -mx-4 sm:-mx-7 px-4 sm:px-7 py-6 sm:py-7 group">
+              <summary className="cursor-pointer list-none flex items-baseline gap-3">
+                <span className={`${LABEL_SECTION} text-bronze-700`}>
+                  Deeper Correlation
+                </span>
+                <span className="font-sans text-[14px] italic text-wood-500 group-open:hidden">
+                  how the systems interlock — open to go further
+                </span>
+              </summary>
+
+              <div className="mt-5 space-y-7">
+                {/* Trigrams — the code's two component forces */}
+                <div>
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
+                    The Trigrams
+                  </p>
+                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
+                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} above,
+                    {' '}{card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} below —
+                    the two forces this code is built from.
+                    <span className="text-wood-400"> Correlation reading to be added.</span>
+                  </p>
+                </div>
+
+                {/* The Eight Immortals — trigram-correlated */}
+                <div>
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
+                    The Eight Immortals
+                  </p>
+                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
+                    Each trigram carries one of the eight Daoist immortals — a
+                    mythic face for the force.
+                    <span className="text-wood-400"> Correlation reading to be added.</span>
+                  </p>
+                </div>
+
+                {/* Golden Dawn depth — astrology, Hebrew letter, Tree of Life */}
+                <div>
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
+                    The Golden Dawn Correspondences
+                  </p>
+                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
+                    {synthesis?.reference?.astrology && (
+                      <>The Tarot Arcana of this ring corresponds to {synthesis.reference.astrology}
+                      {synthesis.reference.hebrew_letter ? `, and the Hebrew letter ${synthesis.reference.hebrew_letter}` : ''}.{' '}</>
+                    )}
+                    <span className="text-wood-400">Correlation reading to be added.</span>
+                  </p>
+                </div>
+              </div>
+            </details>
+
             <ContinueRail
               variant="light"
               eyebrow="Next"
@@ -2214,7 +2281,7 @@ const UniversalLanguageCard: React.FC = () => {
 
             {/* Plate header — Body */}
             <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
-              <p className="font-label text-[11px] uppercase tracking-[0.32em] text-bronze-700/85 pb-1.5 border-b border-bronze-600/30">Body</p>
+              <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Body</p>
               <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{synthesis?.reference?.body_physiology ?? 'Embodied'}</h2>
               {synthesis?.reference?.body_amino_acid && (
                 <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3">Amino acid · {synthesis.reference.body_amino_acid}</p>
@@ -2261,27 +2328,18 @@ const UniversalLanguageCard: React.FC = () => {
                 })()}
               </>
             ) : (
-              <div className="block sm:grid sm:grid-cols-[88px_1fr] sm:gap-x-5 border-t border-wood-200/50 py-6 sm:py-7">
-                <p className="font-label text-[12px] sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-bronze-700 sm:self-start sm:pt-1 mb-2 sm:mb-0">Soon</p>
+              <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                <p className={`${LABEL_SECTION} text-bronze-700 mb-2.5`}>Soon</p>
                 <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Body reading will be available soon.</p>
               </div>
             )}
 
-            {/* Last panel: invite the reader to the next card */}
-            {nextCardNum !== null && (() => {
-              const next = CARD_BY_NUMBER.get(nextCardNum);
-              if (!next) return null;
-              return (
-                <ContinueRail
-                  variant="light"
-                  eyebrow={`Next card · Code ${next.number}`}
-                  title={next.card_name}
-                  subtitle={next.iching.hexagram_name}
-                  onClick={() => navigate(`/oracle/universal-language/${next.number}`, { state: { ritual: true } })}
-                  ariaLabel={`Continue to Code ${next.number}, ${next.card_name}`}
-                />
-              );
-            })()}
+            {/* TEMPLATE FIX: the "Next card" link was removed from the end of
+                the Body panel. Reading the *next card* from the Body section
+                made no narrative sense — Body is not where a card-to-card
+                transition belongs. Card-to-card movement happens through the
+                moving lines (the Cast) and the Relations panel, where it is
+                meaningful. The sticky bottom nav still offers prev/next. */}
 
           </div>
         </div>
@@ -2310,7 +2368,7 @@ const UniversalLanguageCard: React.FC = () => {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">← Card {c?.number}</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 leading-none">← Card {c?.number}</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
               </Link>
@@ -2322,7 +2380,7 @@ const UniversalLanguageCard: React.FC = () => {
             className="flex flex-col items-center justify-center px-3.5 border-x border-wood-200 flex-shrink-0 hover:bg-wood-50 transition-colors"
           >
             <span className="font-serif text-[17px] font-semibold text-wood-700 leading-none">{card.number}</span>
-            <span className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-400 mt-[3px]">All 64</span>
+            <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 mt-[3px]">All 64</span>
           </Link>
 
           {/* Next - icon inside the link */}
@@ -2335,7 +2393,7 @@ const UniversalLanguageCard: React.FC = () => {
                 className="flex items-center justify-end gap-2 px-2.5 flex-1 min-w-0 hover:bg-wood-50 transition-colors"
               >
                 <div className="min-w-0 text-right">
-                  <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-400 leading-none">Card {c?.number} →</p>
+                  <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 leading-none">Card {c?.number} →</p>
                   <p className="font-sans text-[11px] text-wood-700 leading-tight truncate mt-[3px]">{c?.card_name}</p>
                 </div>
                 {c && (
