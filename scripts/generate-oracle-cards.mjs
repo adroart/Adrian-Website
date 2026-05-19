@@ -69,7 +69,7 @@ function generate(n) {
   const iching = sub(synth, 'I-CHING VOICE');
   const gk = sub(synth, 'GENE KEYS VOICE');
   const hd = sub(synth, 'HUMAN DESIGN VOICE');
-  const web = sub(synth, 'THE WEB');
+  const web = sub(synth, 'RELATIONS');
 
   // moving lines — list items under "#### The moving lines"
   const linesBlock = (iching.match(/#### The moving lines\n([\s\S]*)$/) || [, ''])[1];
