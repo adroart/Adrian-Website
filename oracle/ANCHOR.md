@@ -136,20 +136,57 @@ decisions are recorded in full in `VISION.md`; summarised here:
 
 ---
 
+## 3b. Stage A2 — the writing method, DESIGNED AND LOCKED
+
+The writing method was designed with Adrian in the Stage A session and is now
+written in full in **`WRITING_METHOD.md`** — the field-by-field standard for
+every text slot across all six sections, with Hexagram 1 worked samples drawn
+from the real vault source. That document is canonical; where it conflicts with
+`00_MASTER_WRITING_GUIDE.md` §4–§5.4 (the older "GLANCE + voices" anatomy),
+the method wins.
+
+Locked in that session:
+
+- **Voice:** intimate teacher, warm, speaks to "you". No em dashes anywhere on
+  a card. No oracle throat-clearing ("you have drawn...", "the cards reveal").
+- **The writing IS the information, never an entrance to it.** No section
+  explains what its system is. System context (what a hexagram/codon/Shadow is)
+  lives in a **click-glossary** on first-use terms — minimal, one or two
+  sentences, the only place a system is defined.
+- The **UL N opening reading** is locked: two paragraphs, ~200–280 words. The
+  Hexagram 1 sample in `WRITING_METHOD.md` §3 is the reference for all 64.
+
+Five structure differences between the built card and `VISION.md`, resolved:
+
+1. **Section order** — nav bar `UL 1 · ICHING · KEYS · DESIGN · BODY ·
+   RELATIONS` (`KEYS` = Gene Keys, `DESIGN` = Human Design). BODY before
+   RELATIONS (VISION). The built card has them reversed; reorder in Stage B.
+2. **UL N is a real first section** — a tappable destination holding art, name,
+   keywords, invocation, and the opening reading. The built card's separate
+   "Field Section" folds into it. Add the section in Stage B.
+3. **"UL N" everywhere** — the built card says "Code N"; change all of it.
+4. **The field spec drives the JSON shape** — `WRITING_METHOD.md` §5 is the
+   single source of truth for the schema. `SCHEMA.md` and the generator are
+   both reconciled to it in Stage A3 / Stage B, not the reverse.
+5. **The trigram selector stays** — the I-Ching Hex/Upper/Lower selector is
+   kept; the method specs all three readings.
+
+---
+
 ## 4. Open questions — NOT decided
 
-Resolved since the first draft of this anchor: the card *structure* (now
-settled in `VISION.md` — six sections, the bar, Body as the DNA layer, Tarot
-nested in Relations, "UL N" naming). What remains open:
+Resolved since the first draft of this anchor: the card *structure* (settled
+in `VISION.md`) and the *writing method* (Stage A2 — see §3b, written in
+`WRITING_METHOD.md`). What remains open:
 
-- **The writing method** (Stage A) — the biggest one. The structure is set;
-  the method that fills it is not.
 - The generator's render target — a "B via adapter" approach was discussed
   but nothing is built or approved.
-- Whether the guide set's lengths/section-framing survive the Stage A work.
-- `SCHEMA.md` and the generator have **no `body` section and no `UL N`
-  identity field** — VISION.md added both to the structure; they must be added
-  to the schema/generator in Stage A3.
+- `00`–`06` guide reconciliation (Stage A3) — `00`'s §4–§5.4 anatomy predates
+  the six-section structure; `WRITING_METHOD.md` supersedes it but the guide
+  set has not yet been edited to point at the new method.
+- `SCHEMA.md` and the generator must be reconciled to `WRITING_METHOD.md` §5 —
+  add the `ul` and `body` sections, the `UL N` identity, drop the old
+  `glance`/`anchor_line` shape (Stage A3 / Stage B).
 - The 64 artwork images — never verified to exist/be correct.
 - `SCHEMA.md`'s `reading` vs `anchor_line` — the vault GLANCE has only one
   "Essence" field, so the generator duplicated them. Unresolved.
