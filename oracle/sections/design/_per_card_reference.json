@@ -1,0 +1,850 @@
+{
+  "1": {
+    "card_name": "Earth's Breath",
+    "gate": 1,
+    "keyword": "Self Expression",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "1-8"
+    ],
+    "partners": [
+      8
+    ]
+  },
+  "2": {
+    "card_name": "Beyond the Shell",
+    "gate": 2,
+    "keyword": "Direction of the Self",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "2-14"
+    ],
+    "partners": [
+      14
+    ]
+  },
+  "3": {
+    "card_name": "Messengers of the Infinite",
+    "gate": 3,
+    "keyword": "Ordering",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "3-60"
+    ],
+    "partners": [
+      60
+    ]
+  },
+  "4": {
+    "card_name": "Veils of Knowledge",
+    "gate": 4,
+    "keyword": "Formulization",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "4-63"
+    ],
+    "partners": [
+      63
+    ]
+  },
+  "5": {
+    "card_name": "The Space Between Time",
+    "gate": 5,
+    "keyword": "Fixed Patterns",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "5-15"
+    ],
+    "partners": [
+      15
+    ]
+  },
+  "6": {
+    "card_name": "Harmonious Mirage",
+    "gate": 6,
+    "keyword": "Friction",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "6-59"
+    ],
+    "partners": [
+      59
+    ]
+  },
+  "7": {
+    "card_name": "Essential Nexus",
+    "gate": 7,
+    "keyword": "The Role of the Self",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "7-31"
+    ],
+    "partners": [
+      31
+    ]
+  },
+  "8": {
+    "card_name": "Odyssey of Freedom",
+    "gate": 8,
+    "keyword": "Contribution",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "1-8"
+    ],
+    "partners": [
+      1
+    ]
+  },
+  "9": {
+    "card_name": "Ease in This",
+    "gate": 9,
+    "keyword": "Focus",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "9-52"
+    ],
+    "partners": [
+      52
+    ]
+  },
+  "10": {
+    "card_name": "Internal Treasure",
+    "gate": 10,
+    "keyword": "The Behaviour of the Self",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "10-20",
+      "10-34",
+      "10-57"
+    ],
+    "partners": [
+      20,
+      34,
+      57
+    ]
+  },
+  "11": {
+    "card_name": "Sol Star",
+    "gate": 11,
+    "keyword": "Ideas",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "11-56"
+    ],
+    "partners": [
+      56
+    ]
+  },
+  "12": {
+    "card_name": "Petals of Freedom",
+    "gate": 12,
+    "keyword": "Caution",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "12-22"
+    ],
+    "partners": [
+      22
+    ]
+  },
+  "13": {
+    "card_name": "Universal Crest",
+    "gate": 13,
+    "keyword": "The Listener",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "13-33"
+    ],
+    "partners": [
+      33
+    ]
+  },
+  "14": {
+    "card_name": "Ancestors Bloom",
+    "gate": 14,
+    "keyword": "Power Skills",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "2-14"
+    ],
+    "partners": [
+      2
+    ]
+  },
+  "15": {
+    "card_name": "Ordinary Valiance",
+    "gate": 15,
+    "keyword": "Extremes",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "5-15"
+    ],
+    "partners": [
+      5
+    ]
+  },
+  "16": {
+    "card_name": "Grand Rising",
+    "gate": 16,
+    "keyword": "Skills",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "16-48"
+    ],
+    "partners": [
+      48
+    ]
+  },
+  "17": {
+    "card_name": "Peral of Christos",
+    "gate": 17,
+    "keyword": "Opinions",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "17-62"
+    ],
+    "partners": [
+      62
+    ]
+  },
+  "18": {
+    "card_name": "Liberation of the Greater",
+    "gate": 18,
+    "keyword": "Correction",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "18-58"
+    ],
+    "partners": [
+      58
+    ]
+  },
+  "19": {
+    "card_name": "Solection",
+    "gate": 19,
+    "keyword": "Wanting",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "19-49"
+    ],
+    "partners": [
+      49
+    ]
+  },
+  "20": {
+    "card_name": "Emerging as the Code",
+    "gate": 20,
+    "keyword": "The Now",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "10-20",
+      "20-34",
+      "20-57"
+    ],
+    "partners": [
+      10,
+      34,
+      57
+    ]
+  },
+  "21": {
+    "card_name": "Beyond Binary",
+    "gate": 21,
+    "keyword": "Hunter/Huntress",
+    "centre": "Heart Center",
+    "centre_slug": "will",
+    "channels": [
+      "21-45"
+    ],
+    "partners": [
+      45
+    ]
+  },
+  "22": {
+    "card_name": "Treasure of the Way",
+    "gate": 22,
+    "keyword": "Openness",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "12-22"
+    ],
+    "partners": [
+      12
+    ]
+  },
+  "23": {
+    "card_name": "Beneath the Surface",
+    "gate": 23,
+    "keyword": "Assimilation",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "23-43"
+    ],
+    "partners": [
+      43
+    ]
+  },
+  "24": {
+    "card_name": "Frequency Flutter",
+    "gate": 24,
+    "keyword": "Rationalization",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "24-61"
+    ],
+    "partners": [
+      61
+    ]
+  },
+  "25": {
+    "card_name": "The Mysteries Play",
+    "gate": 25,
+    "keyword": "The Spirit of the Self",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "25-51"
+    ],
+    "partners": [
+      51
+    ]
+  },
+  "26": {
+    "card_name": "Lighter Than a Feather",
+    "gate": 26,
+    "keyword": "The Egoist",
+    "centre": "Ego Center",
+    "centre_slug": "will",
+    "channels": [
+      "26-44"
+    ],
+    "partners": [
+      44
+    ]
+  },
+  "27": {
+    "card_name": "Inner Majesty",
+    "gate": 27,
+    "keyword": "Caring",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "27-50"
+    ],
+    "partners": [
+      50
+    ]
+  },
+  "28": {
+    "card_name": "Becoming the Mystery",
+    "gate": 28,
+    "keyword": "The Game Player",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "28-38"
+    ],
+    "partners": [
+      38
+    ]
+  },
+  "29": {
+    "card_name": "All In",
+    "gate": 29,
+    "keyword": "Perseverance",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "29-46"
+    ],
+    "partners": [
+      46
+    ]
+  },
+  "30": {
+    "card_name": "Sparking the Blaze",
+    "gate": 30,
+    "keyword": "Feelings",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "30-41"
+    ],
+    "partners": [
+      41
+    ]
+  },
+  "31": {
+    "card_name": "Theater of Truth",
+    "gate": 31,
+    "keyword": "Leading",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "7-31"
+    ],
+    "partners": [
+      7
+    ]
+  },
+  "32": {
+    "card_name": "Art of Living",
+    "gate": 32,
+    "keyword": "Continuity",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "32-54"
+    ],
+    "partners": [
+      54
+    ]
+  },
+  "33": {
+    "card_name": "Echos of Time",
+    "gate": 33,
+    "keyword": "Privacy",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "13-33"
+    ],
+    "partners": [
+      13
+    ]
+  },
+  "34": {
+    "card_name": "Sublime Power",
+    "gate": 34,
+    "keyword": "Power",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "10-34",
+      "20-34",
+      "34-57"
+    ],
+    "partners": [
+      10,
+      20,
+      57
+    ]
+  },
+  "35": {
+    "card_name": "Navigational Star",
+    "gate": 35,
+    "keyword": "Change",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "35-36"
+    ],
+    "partners": [
+      36
+    ]
+  },
+  "36": {
+    "card_name": "Crystal Creation",
+    "gate": 36,
+    "keyword": "Crisis",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "35-36"
+    ],
+    "partners": [
+      35
+    ]
+  },
+  "37": {
+    "card_name": "Journey Home",
+    "gate": 37,
+    "keyword": "Friendship",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "37-40"
+    ],
+    "partners": [
+      40
+    ]
+  },
+  "38": {
+    "card_name": "Inner Light Symphony",
+    "gate": 38,
+    "keyword": "The Fighter",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "28-38"
+    ],
+    "partners": [
+      28
+    ]
+  },
+  "39": {
+    "card_name": "Nobel Spark",
+    "gate": 39,
+    "keyword": "Provocation",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "39-55"
+    ],
+    "partners": [
+      55
+    ]
+  },
+  "40": {
+    "card_name": "Eternal Wellspring",
+    "gate": 40,
+    "keyword": "Aloneness",
+    "centre": "Heart Center",
+    "centre_slug": "will",
+    "channels": [
+      "37-40"
+    ],
+    "partners": [
+      37
+    ]
+  },
+  "41": {
+    "card_name": "Beginning and the End",
+    "gate": 41,
+    "keyword": "Contraction",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "30-41"
+    ],
+    "partners": [
+      30
+    ]
+  },
+  "42": {
+    "card_name": "Moving to Perfection",
+    "gate": 42,
+    "keyword": "Growth",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "42-53"
+    ],
+    "partners": [
+      53
+    ]
+  },
+  "43": {
+    "card_name": "Cipher of Knowledge",
+    "gate": 43,
+    "keyword": "Insight",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "23-43"
+    ],
+    "partners": [
+      23
+    ]
+  },
+  "44": {
+    "card_name": "Sophia's Orchestra",
+    "gate": 44,
+    "keyword": "Alertness",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "26-44"
+    ],
+    "partners": [
+      26
+    ]
+  },
+  "45": {
+    "card_name": "Tribal Tapestry",
+    "gate": 45,
+    "keyword": "The Gatherer",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "21-45"
+    ],
+    "partners": [
+      21
+    ]
+  },
+  "46": {
+    "card_name": "Fountain of Light",
+    "gate": 46,
+    "keyword": "Determination of the Self",
+    "centre": "G Center",
+    "centre_slug": "identity",
+    "channels": [
+      "29-46"
+    ],
+    "partners": [
+      29
+    ]
+  },
+  "47": {
+    "card_name": "Garden of Alchemy",
+    "gate": 47,
+    "keyword": "Realization",
+    "centre": "Ajna Center",
+    "centre_slug": "ajna",
+    "channels": [
+      "47-64"
+    ],
+    "partners": [
+      64
+    ]
+  },
+  "48": {
+    "card_name": "Doorways of the Unknown",
+    "gate": 48,
+    "keyword": "Depth",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "16-48"
+    ],
+    "partners": [
+      16
+    ]
+  },
+  "49": {
+    "card_name": "Union in the Ashes",
+    "gate": 49,
+    "keyword": "Rejection",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "19-49"
+    ],
+    "partners": [
+      19
+    ]
+  },
+  "50": {
+    "card_name": "Melt Into Perfection",
+    "gate": 50,
+    "keyword": "Values",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "27-50"
+    ],
+    "partners": [
+      27
+    ]
+  },
+  "51": {
+    "card_name": "Unshakable Arrival",
+    "gate": 51,
+    "keyword": "Shock",
+    "centre": "Heart Center",
+    "centre_slug": "will",
+    "channels": [
+      "25-51"
+    ],
+    "partners": [
+      25
+    ]
+  },
+  "52": {
+    "card_name": "Timeless Blossom",
+    "gate": 52,
+    "keyword": "Stillness",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "9-52"
+    ],
+    "partners": [
+      9
+    ]
+  },
+  "53": {
+    "card_name": "Creation Oscillation",
+    "gate": 53,
+    "keyword": "Beginnings",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "42-53"
+    ],
+    "partners": [
+      42
+    ]
+  },
+  "54": {
+    "card_name": "Everlasting Bounty",
+    "gate": 54,
+    "keyword": "Ambition",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "32-54"
+    ],
+    "partners": [
+      32
+    ]
+  },
+  "55": {
+    "card_name": "Untouched Perfection",
+    "gate": 55,
+    "keyword": "Spirit",
+    "centre": "Solar Plexus",
+    "centre_slug": "solar-plexus",
+    "channels": [
+      "39-55"
+    ],
+    "partners": [
+      39
+    ]
+  },
+  "56": {
+    "card_name": "Infinite Journey",
+    "gate": 56,
+    "keyword": "Stimulation",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "11-56"
+    ],
+    "partners": [
+      11
+    ]
+  },
+  "57": {
+    "card_name": "Flight of the Tao",
+    "gate": 57,
+    "keyword": "Intuitive Clarity",
+    "centre": "Spleen Center",
+    "centre_slug": "spleen",
+    "channels": [
+      "10-57",
+      "20-57",
+      "34-57"
+    ],
+    "partners": [
+      10,
+      20,
+      34
+    ]
+  },
+  "58": {
+    "card_name": "Rhythm of Life",
+    "gate": 58,
+    "keyword": "Aliveness",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "18-58"
+    ],
+    "partners": [
+      18
+    ]
+  },
+  "59": {
+    "card_name": "Mystics Treasures",
+    "gate": 59,
+    "keyword": "Sexuality",
+    "centre": "Sacral Center",
+    "centre_slug": "sacral",
+    "channels": [
+      "6-59"
+    ],
+    "partners": [
+      6
+    ]
+  },
+  "60": {
+    "card_name": "Woven Light",
+    "gate": 60,
+    "keyword": "Acceptance",
+    "centre": "Root Center",
+    "centre_slug": "root",
+    "channels": [
+      "3-60"
+    ],
+    "partners": [
+      3
+    ]
+  },
+  "61": {
+    "card_name": "Celestial Remembrance",
+    "gate": 61,
+    "keyword": "Mystery",
+    "centre": "Head Center",
+    "centre_slug": "head",
+    "channels": [
+      "24-61"
+    ],
+    "partners": [
+      24
+    ]
+  },
+  "62": {
+    "card_name": "Voice of Nature",
+    "gate": 62,
+    "keyword": "Detail",
+    "centre": "Throat Center",
+    "centre_slug": "throat",
+    "channels": [
+      "17-62"
+    ],
+    "partners": [
+      17
+    ]
+  },
+  "63": {
+    "card_name": "Adornments of Time",
+    "gate": 63,
+    "keyword": "Doubt",
+    "centre": "Head Center",
+    "centre_slug": "head",
+    "channels": [
+      "4-63"
+    ],
+    "partners": [
+      4
+    ]
+  },
+  "64": {
+    "card_name": "Communion",
+    "gate": 64,
+    "keyword": "Confusion",
+    "centre": "Head Center",
+    "centre_slug": "head",
+    "channels": [
+      "47-64"
+    ],
+    "partners": [
+      47
+    ]
+  }
+}

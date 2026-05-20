@@ -1,0 +1,611 @@
+{
+  "gates": {
+    "1": {
+      "centre": "G Center",
+      "channels": [
+        "1-8"
+      ],
+      "partners": [
+        8
+      ]
+    },
+    "2": {
+      "centre": "G Center",
+      "channels": [
+        "2-14"
+      ],
+      "partners": [
+        14
+      ]
+    },
+    "3": {
+      "centre": "Sacral Center",
+      "channels": [
+        "3-60"
+      ],
+      "partners": [
+        60
+      ]
+    },
+    "4": {
+      "centre": "Ajna Center",
+      "channels": [
+        "4-63"
+      ],
+      "partners": [
+        63
+      ]
+    },
+    "5": {
+      "centre": "Sacral Center",
+      "channels": [
+        "5-15"
+      ],
+      "partners": [
+        15
+      ]
+    },
+    "6": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "6-59"
+      ],
+      "partners": [
+        59
+      ]
+    },
+    "7": {
+      "centre": "G Center",
+      "channels": [
+        "7-31"
+      ],
+      "partners": [
+        31
+      ]
+    },
+    "8": {
+      "centre": "Throat Center",
+      "channels": [
+        "1-8"
+      ],
+      "partners": [
+        1
+      ]
+    },
+    "9": {
+      "centre": "Sacral Center",
+      "channels": [
+        "9-52"
+      ],
+      "partners": [
+        52
+      ]
+    },
+    "10": {
+      "centre": "G Center",
+      "channels": [
+        "10-20",
+        "10-34",
+        "10-57"
+      ],
+      "partners": [
+        20,
+        34,
+        57
+      ]
+    },
+    "11": {
+      "centre": "Ajna Center",
+      "channels": [
+        "11-56"
+      ],
+      "partners": [
+        56
+      ]
+    },
+    "12": {
+      "centre": "Throat Center",
+      "channels": [
+        "12-22"
+      ],
+      "partners": [
+        22
+      ]
+    },
+    "13": {
+      "centre": "G Center",
+      "channels": [
+        "13-33"
+      ],
+      "partners": [
+        33
+      ]
+    },
+    "14": {
+      "centre": "Sacral Center",
+      "channels": [
+        "2-14"
+      ],
+      "partners": [
+        2
+      ]
+    },
+    "15": {
+      "centre": "G Center",
+      "channels": [
+        "5-15"
+      ],
+      "partners": [
+        5
+      ]
+    },
+    "16": {
+      "centre": "Throat Center",
+      "channels": [
+        "16-48"
+      ],
+      "partners": [
+        48
+      ]
+    },
+    "17": {
+      "centre": "Ajna Center",
+      "channels": [
+        "17-62"
+      ],
+      "partners": [
+        62
+      ]
+    },
+    "18": {
+      "centre": "Spleen Center",
+      "channels": [
+        "18-58"
+      ],
+      "partners": [
+        58
+      ]
+    },
+    "19": {
+      "centre": "Root Center",
+      "channels": [
+        "19-49"
+      ],
+      "partners": [
+        49
+      ]
+    },
+    "20": {
+      "centre": "Throat Center",
+      "channels": [
+        "10-20",
+        "20-34",
+        "20-57"
+      ],
+      "partners": [
+        10,
+        34,
+        57
+      ]
+    },
+    "21": {
+      "centre": "Heart Center",
+      "channels": [
+        "21-45"
+      ],
+      "partners": [
+        45
+      ]
+    },
+    "22": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "12-22"
+      ],
+      "partners": [
+        12
+      ]
+    },
+    "23": {
+      "centre": "Throat Center",
+      "channels": [
+        "23-43"
+      ],
+      "partners": [
+        43
+      ]
+    },
+    "24": {
+      "centre": "Ajna Center",
+      "channels": [
+        "24-61"
+      ],
+      "partners": [
+        61
+      ]
+    },
+    "25": {
+      "centre": "G Center",
+      "channels": [
+        "25-51"
+      ],
+      "partners": [
+        51
+      ]
+    },
+    "26": {
+      "centre": "Ego Center",
+      "channels": [
+        "26-44"
+      ],
+      "partners": [
+        44
+      ]
+    },
+    "27": {
+      "centre": "Sacral Center",
+      "channels": [
+        "27-50"
+      ],
+      "partners": [
+        50
+      ]
+    },
+    "28": {
+      "centre": "Spleen Center",
+      "channels": [
+        "28-38"
+      ],
+      "partners": [
+        38
+      ]
+    },
+    "29": {
+      "centre": "Sacral Center",
+      "channels": [
+        "29-46"
+      ],
+      "partners": [
+        46
+      ]
+    },
+    "30": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "30-41"
+      ],
+      "partners": [
+        41
+      ]
+    },
+    "31": {
+      "centre": "Throat Center",
+      "channels": [
+        "7-31"
+      ],
+      "partners": [
+        7
+      ]
+    },
+    "32": {
+      "centre": "Spleen Center",
+      "channels": [
+        "32-54"
+      ],
+      "partners": [
+        54
+      ]
+    },
+    "33": {
+      "centre": "Throat Center",
+      "channels": [
+        "13-33"
+      ],
+      "partners": [
+        13
+      ]
+    },
+    "34": {
+      "centre": "Sacral Center",
+      "channels": [
+        "10-34",
+        "20-34",
+        "34-57"
+      ],
+      "partners": [
+        10,
+        20,
+        57
+      ]
+    },
+    "35": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "35-36"
+      ],
+      "partners": [
+        36
+      ]
+    },
+    "36": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "35-36"
+      ],
+      "partners": [
+        35
+      ]
+    },
+    "37": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "37-40"
+      ],
+      "partners": [
+        40
+      ]
+    },
+    "38": {
+      "centre": "Root Center",
+      "channels": [
+        "28-38"
+      ],
+      "partners": [
+        28
+      ]
+    },
+    "39": {
+      "centre": "Root Center",
+      "channels": [
+        "39-55"
+      ],
+      "partners": [
+        55
+      ]
+    },
+    "40": {
+      "centre": "Heart Center",
+      "channels": [
+        "37-40"
+      ],
+      "partners": [
+        37
+      ]
+    },
+    "41": {
+      "centre": "Root Center",
+      "channels": [
+        "30-41"
+      ],
+      "partners": [
+        30
+      ]
+    },
+    "42": {
+      "centre": "Sacral Center",
+      "channels": [
+        "42-53"
+      ],
+      "partners": [
+        53
+      ]
+    },
+    "43": {
+      "centre": "Ajna Center",
+      "channels": [
+        "23-43"
+      ],
+      "partners": [
+        23
+      ]
+    },
+    "44": {
+      "centre": "Spleen Center",
+      "channels": [
+        "26-44"
+      ],
+      "partners": [
+        26
+      ]
+    },
+    "45": {
+      "centre": "Throat Center",
+      "channels": [
+        "21-45"
+      ],
+      "partners": [
+        21
+      ]
+    },
+    "46": {
+      "centre": "G Center",
+      "channels": [
+        "29-46"
+      ],
+      "partners": [
+        29
+      ]
+    },
+    "47": {
+      "centre": "Ajna Center",
+      "channels": [
+        "47-64"
+      ],
+      "partners": [
+        64
+      ]
+    },
+    "48": {
+      "centre": "Spleen Center",
+      "channels": [
+        "16-48"
+      ],
+      "partners": [
+        16
+      ]
+    },
+    "49": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "19-49"
+      ],
+      "partners": [
+        19
+      ]
+    },
+    "50": {
+      "centre": "Spleen Center",
+      "channels": [
+        "27-50"
+      ],
+      "partners": [
+        27
+      ]
+    },
+    "51": {
+      "centre": "Heart Center",
+      "channels": [
+        "25-51"
+      ],
+      "partners": [
+        25
+      ]
+    },
+    "52": {
+      "centre": "Root Center",
+      "channels": [
+        "9-52"
+      ],
+      "partners": [
+        9
+      ]
+    },
+    "53": {
+      "centre": "Root Center",
+      "channels": [
+        "42-53"
+      ],
+      "partners": [
+        42
+      ]
+    },
+    "54": {
+      "centre": "Root Center",
+      "channels": [
+        "32-54"
+      ],
+      "partners": [
+        32
+      ]
+    },
+    "55": {
+      "centre": "Solar Plexus",
+      "channels": [
+        "39-55"
+      ],
+      "partners": [
+        39
+      ]
+    },
+    "56": {
+      "centre": "Throat Center",
+      "channels": [
+        "11-56"
+      ],
+      "partners": [
+        11
+      ]
+    },
+    "57": {
+      "centre": "Spleen Center",
+      "channels": [
+        "10-57",
+        "20-57",
+        "34-57"
+      ],
+      "partners": [
+        10,
+        20,
+        34
+      ]
+    },
+    "58": {
+      "centre": "Root Center",
+      "channels": [
+        "18-58"
+      ],
+      "partners": [
+        18
+      ]
+    },
+    "59": {
+      "centre": "Sacral Center",
+      "channels": [
+        "6-59"
+      ],
+      "partners": [
+        6
+      ]
+    },
+    "60": {
+      "centre": "Root Center",
+      "channels": [
+        "3-60"
+      ],
+      "partners": [
+        3
+      ]
+    },
+    "61": {
+      "centre": "Head Center",
+      "channels": [
+        "24-61"
+      ],
+      "partners": [
+        24
+      ]
+    },
+    "62": {
+      "centre": "Throat Center",
+      "channels": [
+        "17-62"
+      ],
+      "partners": [
+        17
+      ]
+    },
+    "63": {
+      "centre": "Head Center",
+      "channels": [
+        "4-63"
+      ],
+      "partners": [
+        4
+      ]
+    },
+    "64": {
+      "centre": "Head Center",
+      "channels": [
+        "47-64"
+      ],
+      "partners": [
+        47
+      ]
+    }
+  },
+  "centre_slug": {
+    "G Center": "identity",
+    "Identity Center": "identity",
+    "Throat Center": "throat",
+    "Ajna Center": "ajna",
+    "Head Center": "head",
+    "Heart Center": "will",
+    "Will Center": "will",
+    "Ego Center": "will",
+    "Sacral Center": "sacral",
+    "Root Center": "root",
+    "Solar Plexus": "solar-plexus",
+    "Spleen Center": "spleen",
+    "Splenic Center": "spleen"
+  }
+}
