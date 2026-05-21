@@ -4,6 +4,16 @@ Everything that requires your hands, decisions, or creative input. Nothing here 
 
 ---
 
+## Provisioning: Oracle accounts (when ready to launch sign-in)
+
+Code for unified accounts (Clerk sign-in + Stripe Customer + D1-backed orders, cart, collections, profile sync) is fully on branch `claude/oracle-energy-birthdate-4HS3f`. Full step-by-step lives in [oracle-accounts-implementation.md](oracle-accounts-implementation.md) under "Adrian to provision". TL;DR:
+
+- [ ] Create a Clerk application; set `VITE_CLERK_PUBLISHABLE_KEY` (build var), `CLERK_SECRET_KEY` (Function secret), `CLERK_WEBHOOK_SECRET` (Function secret) in Cloudflare Pages. Point a Clerk webhook at `/api/clerk/webhook` for `user.created`, `user.updated`, `user.deleted`. Enable magic link + Google + Apple in the Clerk dashboard.
+- [ ] `wrangler d1 create adrian-website`, replace `PROVISION_ME_VIA_WRANGLER` in `wrangler.toml` with the returned id, then `wrangler d1 migrations apply adrian-website --remote`.
+- [ ] In the Stripe dashboard add a webhook at `/api/stripe/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`. Set `STRIPE_WEBHOOK_SECRET` (Function secret) to its signing secret.
+- [ ] Flip `accounts: true` in `launchFlags.ts` and merge the branch.
+- [ ] Optional: review the role copy on each of the 11 positions in `data/profilePositions.ts` and fill in the `body` field if you want anatomical anchors ("the throat", "the gut", etc.) shown alongside each position.
+
 ## Blocks Launch
 
 These must be done before the site can go live. Nothing else matters until these are handled.

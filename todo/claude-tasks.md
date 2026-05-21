@@ -4,6 +4,21 @@ Code tasks that can be done without Adrian's input. Ordered by priority.
 
 ---
 
+## In flight: Oracle birthdate + unified accounts
+
+Branch: `claude/oracle-energy-birthdate-4HS3f` (pushed). All six implementation phases are code-complete. See [oracle-accounts-implementation.md](oracle-accounts-implementation.md) for the full per-file checklist with commit hashes.
+
+What's left for a code-side agent to do once Adrian provisions the external services:
+
+- [ ] After Adrian sets the env vars in Cloudflare Pages, do a fresh preview deploy and run the smoke-test plan from `oracle-accounts-implementation.md` (verification section): gold-test the gate math, run the sign-up flow, verify the Stripe webhook delivers and writes to D1, confirm sync-on-sign-in merges local and remote profiles + carts.
+- [ ] Flip `accounts: true` in `launchFlags.ts` once the smoke test passes; keep `hologeneticProfile: true` (already on).
+- [ ] Expand the seeded `public/data/cities-index.json` by running `npx tsx scripts/build-cities-index.ts cities15000.txt` against a fresh GeoNames extract. Current 92-city seed is fine for early users but undersized long-term.
+- [ ] Optional: surface `SaveToCollectionButton` on artwork pages (`PiecePage`) and shop products (`Store` cards) — currently only wired into the Universal Language card reading. Component + provider are in place; just need the JSX insertions.
+- [ ] Optional: refactor the cart's add-on identity. Today cart rows are keyed on `(user_id, product_id, configurator_json)` server-side but the client cart only stores `product.id` + qty. If you ship configurator state in the cart (add-ons, frame, illumination), thread `configurator` through `lib/cart/sync.ts` so the unique-row semantics hold.
+- [ ] Pre-launch only: consider moving Clerk to a lazy import inside `AuthButton` so the home-page bundle does not carry it for guests. Index chunk currently includes ~18 KB gz from Clerk's SDK even when accounts are off.
+
+---
+
 ## Bugs (fix immediately)
 
 - [ ] **Configurator duplication between `PiecePage` and `PieceConfigurator`** — the inline wizard on `PiecePage` (the variant branch with size step + add-ons + total + buy) and the `PieceConfigurator` component used inside the oracle BuySheet hold separate copies of the same state, the same pricing math, the same `getIlluminationTier` / `getAddOnSizeTier` / `getEditionDisplay` helpers, and the same buy handler. Any pricing change, any new add-on, any availability rule must be edited in both places — easy to drift, easy to miss. **Refactor:** delete the wizard JSX + state from `PiecePage` and render `<PieceConfigurator art={art} initialSize={preferredSize} />` in its place. **Blocker to bypass:** the sticky mobile bottom bar at the bottom of `PiecePage` reads the live total (`mtoTotal`) and live `selectedSize` from PiecePage's own state to render the persistent CTA when the configurator scrolls offscreen. Either (a) lift state up — make `PieceConfigurator` controlled, with PiecePage owning the state — or (b) simplify the sticky bar for variant pieces to "From $X · View options" that scrolls back to `purchaseRef` (no live total). Option (b) is smaller and removes the cross-component coupling.
