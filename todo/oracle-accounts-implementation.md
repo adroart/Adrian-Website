@@ -19,7 +19,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `launchFlags.ts` — add `hologeneticProfile`, `accounts` flags
 - [x] Verify: Gate 41 transit found exactly for 2024-2027; design-time round-trip error 2.6e-5°
 - [x] `scripts/verify-astrology.ts` — sanity check script (`tsx scripts/verify-astrology.ts`)
-- [ ] Commit + push
+- [x] Commit + push (commit 2339ac5)
 
 ## Phase 2 — Account foundation (Clerk + D1) ✓
 
@@ -39,7 +39,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `components/AccountDashboard.tsx` — `/account` shell page with tiles for Profile, Orders, Collections
 - [x] `App.tsx` — wrap with `AccountProvider`, route for `/account`
 - [x] Build clean; index chunk +18 KB gz (Clerk SDK statically imported via Navigation → AuthButton)
-- [ ] Commit + push
+- [x] Commit + push (commit d60a654)
 
 ## Phase 3 — Hologenetic Profile ✓
 
@@ -61,7 +61,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `functions/api/profile/get.js`, `put.js`, `delete.js` — D1-backed with input validation
 - [x] Verified pipeline: sample birth produces 11 valid {gate, line} pairs; stable across re-runs
 - [x] `scripts/verify-profile.ts` — sanity script (`tsx scripts/verify-profile.ts`)
-- [ ] Commit + push
+- [x] Commit + push (commit 20c3ed3)
 
 ## Phase 4 — Card overlay (YourPositionCallout) ✓
 
@@ -69,7 +69,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `components/UniversalLanguageCard.tsx` — embed callout in Field section under the title block
 - [x] Multi-position match handling ("This is your Life's Work and your Core")
 - [x] No-op when no profile saved
-- [ ] Commit + push
+- [x] Commit + push (commit 20c3ed3)
 
 ## Phase 5 — Orders + synced cart ✓
 
@@ -85,7 +85,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `components/account/SaveOrderPrompt.tsx` — auto-claims on sign-in via /api/orders/claim
 - [x] `components/OrderConfirmed.tsx` — embeds SaveOrderPrompt
 - [x] `App.tsx` — `/account/orders` route
-- [ ] Commit + push
+- [x] Commit + push (commit 549625f)
 
 ## Phase 6 — Collections + save buttons ✓
 
@@ -96,7 +96,7 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `components/UniversalLanguageCard.tsx` — surface "Save to a collection" near acquire/share row
 - [ ] (Optional, future) Surface on artwork pages + shop products
 - [x] `App.tsx` — `/account/collections` route + CollectionsProvider
-- [ ] Commit + push
+- [x] Commit + push (commit 549625f)
 
 ---
 
