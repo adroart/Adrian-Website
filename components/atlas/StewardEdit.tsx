@@ -211,9 +211,9 @@ const StewardEdit: React.FC = () => {
   if (loading) {
     return (
       <section className="min-h-screen bg-paper-50 flex items-center justify-center">
-        <span className="font-label text-xs uppercase tracking-[0.2em] text-wood-500 font-semibold">
-          Loading...
-        </span>
+        <p className="font-serif italic text-base text-stone-600">
+          loading your piece
+        </p>
       </section>
     );
   }

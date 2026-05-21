@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 interface SeoConfig {
   title: string;
   description: string;
+  robots?: string; // when set, written to <meta name="robots">. Use 'noindex, nofollow' to hide from search engines.
 }
 
 const SEO_BY_ROUTE: Record<string, SeoConfig> = {
@@ -70,6 +71,22 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     title: 'Atlas | Adrian Rasmussen',
     description:
       'A world map of every piece by Adrian Rasmussen and where it has come to rest. City-level only.',
+    robots: 'noindex, nofollow',
+  },
+  '/atlas/claim': {
+    title: 'Claim your piece | Adrian Rasmussen',
+    description: 'Anchor your piece on the atlas.',
+    robots: 'noindex, nofollow',
+  },
+  '/atlas/edit': {
+    title: 'Your piece | Adrian Rasmussen',
+    description: 'Update where your piece lives.',
+    robots: 'noindex, nofollow',
+  },
+  '/admin/atlas': {
+    title: 'Atlas admin',
+    description: 'Atlas admin.',
+    robots: 'noindex, nofollow',
   },
   '/privacy': {
     title: 'Privacy Policy | Adrian Rasmussen',
@@ -141,6 +158,16 @@ function resolveCanonical(pathname: string): string {
   return `${SITE_ORIGIN}${pathname === '/' ? '' : pathname}`;
 }
 
+function setRobots(content: string) {
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'robots');
+    document.head.appendChild(meta);
+  }
+  meta.content = content;
+}
+
 export function useSeoMeta(pathname: string) {
   useEffect(() => {
     const config = resolveConfig(pathname);
@@ -154,5 +181,6 @@ export function useSeoMeta(pathname: string) {
     setMeta('meta[name="twitter:description"]', config.description);
     setCanonical(canonicalUrl);
     setOgUrl(canonicalUrl);
+    setRobots(config.robots ?? 'index, follow');
   }, [pathname]);
 }
