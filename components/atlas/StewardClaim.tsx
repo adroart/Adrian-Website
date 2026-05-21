@@ -70,22 +70,24 @@ const StewardClaim: React.FC = () => {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full border border-wood-300 bg-white px-4 py-3 font-mono text-base text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400 tracking-wide"
+            aria-invalid={error != null}
+            aria-describedby={error ? 'steward-key-error' : undefined}
+            className="w-full min-h-[44px] border border-wood-300 bg-white px-4 py-3 font-mono text-base text-wood-900 placeholder:text-wood-400 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 focus:border-bronze-400 tracking-wide"
           />
           {error === 'unrecognized' && (
-            <p className="font-serif italic text-base text-stone-600">
+            <p id="steward-key-error" className="font-serif italic text-base text-stone-600">
               That key was not recognized.
             </p>
           )}
           {error === 'generic' && (
-            <p className="font-serif italic text-base text-stone-600">
+            <p id="steward-key-error" className="font-serif italic text-base text-stone-600">
               Something went wrong, please try again.
             </p>
           )}
           <button
             onClick={submit}
             disabled={!rawKey.trim() || loading}
-            className="w-full bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 transition-colors disabled:opacity-40"
+            className="w-full min-h-[44px] bg-wood-900 text-paper-50 font-label text-xs uppercase tracking-[0.2em] font-semibold py-3 hover:bg-bronze-700 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 transition-colors disabled:opacity-40"
           >
             {loading ? 'Checking...' : 'Continue'}
           </button>

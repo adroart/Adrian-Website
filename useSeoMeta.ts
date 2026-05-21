@@ -69,7 +69,7 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
   '/atlas': {
     title: 'Atlas | Adrian Rasmussen',
     description:
-      'A world map of every artwork Adrian Rasmussen has made and where it now lives. City-level only.',
+      'A world map of every piece by Adrian Rasmussen and where it has come to rest. City-level only.',
   },
   '/privacy': {
     title: 'Privacy Policy | Adrian Rasmussen',

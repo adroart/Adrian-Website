@@ -332,7 +332,7 @@ export default function Globe({
           cursor: onSelect ? 'pointer' : 'default',
           contain: 'layout paint size',
         }}
-        aria-label="Globe showing where each piece by Adrian Rasmussen has come to rest"
+        aria-label="Interactive globe showing where Adrian Rasmussen's artworks are placed in the world."
         role="img"
       />
     </div>

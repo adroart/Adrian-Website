@@ -60,9 +60,9 @@ const formatNow = (): string => {
 };
 
 const formatRelative = (iso: string | null | undefined): string => {
-    if (!iso) return '—';
+    if (!iso) return '-';
     const ts = new Date(iso).getTime();
-    if (Number.isNaN(ts)) return '—';
+    if (Number.isNaN(ts)) return '-';
     const diff = Date.now() - ts;
     const s = Math.round(diff / 1000);
     if (s < 60) return 'just now';
@@ -640,10 +640,10 @@ const StewardRoster: React.FC<{
                                         )}
                                     </td>
                                     <td className="font-sans text-sm text-wood-700 py-3 pr-4">
-                                        {s.name ?? '—'}
+                                        {s.name ?? '-'}
                                     </td>
                                     <td className="font-sans text-sm text-wood-700 py-3 pr-4">
-                                        {s.email ?? '—'}
+                                        {s.email ?? '-'}
                                     </td>
                                     <td className="font-sans text-sm text-wood-700 py-3 pr-4">
                                         {s.outreachStatus}
@@ -654,7 +654,7 @@ const StewardRoster: React.FC<{
                                     <td className="font-sans text-sm text-wood-500 py-3">
                                         {s.lastClaimAt
                                             ? formatRelative(s.lastClaimAt)
-                                            : '—'}
+                                            : '-'}
                                     </td>
                                 </tr>
                             ))}

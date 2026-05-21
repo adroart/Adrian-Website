@@ -227,7 +227,7 @@ const StewardEdit: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/atlas/claim', { replace: true })}
-            className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 font-semibold"
+            className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 font-semibold"
           >
             Return to claim
           </button>
@@ -276,7 +276,7 @@ const StewardEdit: React.FC = () => {
               }}
               onFocus={() => setCityOpen(true)}
               placeholder={currentCity ? formatCityLabel(currentCity) : 'Search a city or country'}
-              className="w-full border border-wood-300 bg-white px-4 py-3 font-sans text-base text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400"
+              className="w-full min-h-[44px] border border-wood-300 bg-white px-4 py-3 font-sans text-base text-wood-900 placeholder:text-wood-400 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 focus:border-bronze-400"
             />
             {cityOpen && filteredCities.length > 0 && (
               <ul
@@ -326,9 +326,10 @@ const StewardEdit: React.FC = () => {
             type="button"
             role="switch"
             aria-checked={piece.isPublic}
+            aria-label="Show this piece on the atlas"
             onClick={handleVisibilityToggle}
             disabled={saving}
-            className="group flex items-center gap-4 font-sans text-base text-wood-800 disabled:opacity-60"
+            className="group flex items-center gap-4 min-h-[44px] font-sans text-base text-wood-800 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 disabled:opacity-60"
           >
             <span
               aria-hidden="true"
@@ -344,7 +345,7 @@ const StewardEdit: React.FC = () => {
                 }`}
               />
             </span>
-            <span>{piece.isPublic ? 'Public on Atlas' : 'Private'}</span>
+            <span>{piece.isPublic ? 'Show on the atlas' : 'Keep this private'}</span>
           </button>
         </div>
 
@@ -369,7 +370,7 @@ const StewardEdit: React.FC = () => {
           <button
             type="button"
             onClick={handleSignOut}
-            className="font-label text-xs uppercase tracking-[0.15em] text-stone-500 hover:text-wood-900 hover:underline transition-colors"
+            className="font-label text-xs uppercase tracking-[0.15em] text-stone-500 hover:text-wood-900 hover:underline focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 transition-colors"
           >
             Sign out
           </button>
