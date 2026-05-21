@@ -66,6 +66,11 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
     description:
       'Multidimensional art between Bali and California. Explore creations, writings, and commissions.',
   },
+  '/atlas': {
+    title: 'Atlas | Adrian Rasmussen',
+    description:
+      'A world map of every artwork Adrian Rasmussen has made and where it now lives. City-level only.',
+  },
   '/privacy': {
     title: 'Privacy Policy | Adrian Rasmussen',
     description: 'Privacy policy for adrianrasmussen.com.',
