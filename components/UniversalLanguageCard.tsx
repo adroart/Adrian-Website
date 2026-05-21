@@ -13,7 +13,6 @@ import SystemOverlay, { type SystemKey } from './SystemOverlay';
 import { HEXAGRAM_CHINESE } from '../data/hexagramChinese';
 import ChapterWordmark, { type ChapterKey, type Chapter } from './oracle/ChapterWordmark';
 import ReadingStage, { type ReadingStageHandle } from './oracle/ReadingStage';
-import ContinueRail from './oracle/ContinueRail';
 import ImageViewer from './oracle/ImageViewer';
 import BuySheet from './oracle/BuySheet';
 import CoinCast from './oracle/CoinCast';
@@ -932,10 +931,12 @@ const CHAPTERS: Chapter[] = [
   { key: 'iching',      label: 'I CHING' },
   { key: 'genekeys',    label: 'GENE KEYS' },
   { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
-  // TEMPLATE FIX: internal key stays 'tarot' (shared type, do not change),
+  // VISION.md order: BODY before RELATIONS. Inward journey deepens into the
+  // body; RELATIONS is the final section, the doorway out to kin cards.
+  { key: 'body',        label: 'BODY' },
+  // Internal key stays 'tarot' (shared type, do not change),
   // but the panel is the connections panel — displayed as RELATIONS.
   { key: 'tarot',       label: 'RELATIONS' },
-  { key: 'body',        label: 'BODY' },
 ];
 
 /* ─── Main component ─────────────────────────────────────────────────────── */
@@ -968,7 +969,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialChapter = (() => {
     const s = searchParams.get('system');
-    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'body', 'tarot'];
     return valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching';
   })();
   const [activeChapter, setActiveChapter] = useState<ChapterKey>(initialChapter);
@@ -1083,7 +1084,7 @@ const UniversalLanguageCard: React.FC = () => {
     window.scrollTo(0, 0);
     // Reset to the system specified in URL if present, else I Ching
     const s = searchParams.get('system');
-    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'tarot', 'body'];
+    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'body', 'tarot'];
     setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching');
   }, [cardNum]);
 
@@ -1514,35 +1515,48 @@ const UniversalLanguageCard: React.FC = () => {
           className={`fixed top-0 left-0 right-0 z-[105] motion-safe:transition-transform motion-safe:duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${chromeCollapsed ? 'translate-y-0' : '-translate-y-full pointer-events-none'}`}
           aria-hidden={!chromeCollapsed}
         >
-          {/* Top row: home · title · actions.
+          {/* Top row: artwork anchor · identity · actions · all cards.
+              The artwork sits on the left as a 56px stamp — small enough to
+              share a row with the chapter strip below, large enough to
+              recognise. Tapping it scrolls back to the full-size artwork
+              hero (the card-as-object view). To its right: card name +
+              number. Then Share + Acquire. Far right: All Cards (the way
+              back to the index of all 64).
               Note: the site's color tokens auto-invert in dark mode via CSS
               vars, so we use the base tokens only — `dark:` overrides here
               would double-invert and produce a light band on a dark page. */}
           <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto h-11 px-2 sm:px-3">
+            <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto px-2 sm:px-3 py-1.5">
 
-              {/* Home — returns to the main site. Icon rather than wordmark
-                  so the bar stays compact on narrow screens. The 44×44
-                  touch target lives behind the 18px glyph for WCAG. */}
-              <Link
-                to="/"
-                className="flex items-center justify-center w-11 h-11 -ml-1 text-wood-600 hover:text-bronze-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
-                aria-label="Back to Adrian Rasmussen home"
+              {/* Artwork anchor — 56px stamp, tap to return to the artwork
+                  hero at the top of the card. This is the "back to the
+                  card-as-object" affordance. */}
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                aria-label={`Return to ${card.card_name} artwork`}
+                className="flex-shrink-0 w-14 h-14 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm transition-opacity hover:opacity-90"
               >
-                <Home strokeWidth={1.5} size={18} aria-hidden="true" />
-              </Link>
+                <img
+                  src={cardImageUrl(card.number, 168)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                />
+              </button>
 
-              <span className="h-4 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
-
-              {/* Card title — tap to scroll the page back up to the artwork.
-                  The whole row height (44px) is the touch target. */}
+              {/* Card identity — name + code number. Tap also scrolls to
+                  the artwork (matches the anchor's behaviour so the whole
+                  left half of the row is one consistent target). */}
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 aria-label={`Scroll up to ${card.card_name} artwork`}
-                className="font-serif text-[14px] sm:text-[15px] text-wood-900 hover:text-bronze-700 truncate leading-tight flex-1 min-w-0 text-left h-11 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm px-1"
+                className="flex-1 min-w-0 text-left h-14 flex flex-col justify-center px-1 transition-colors hover:text-bronze-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm"
               >
-                {card.card_name}
+                <span className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-500 leading-none">Code {card.number}</span>
+                <span className="font-serif text-[14px] sm:text-[15px] text-wood-900 leading-tight truncate mt-1">{card.card_name}</span>
               </button>
 
               {/* Share — drops the share menu in place beneath this row,
@@ -1569,6 +1583,18 @@ const UniversalLanguageCard: React.FC = () => {
               >
                 Acquire
               </button>
+
+              <span className="h-4 w-px bg-wood-300/60 flex-shrink-0" aria-hidden="true" />
+
+              {/* All Cards — the escape to the index of all 64. Quiet,
+                  rightmost, doesn't compete with Acquire. */}
+              <Link
+                to="/oracle/universal-language"
+                aria-label="All 64 cards"
+                className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-600 hover:text-bronze-700 px-2 h-11 flex items-center transition-colors flex-shrink-0"
+              >
+                All Cards
+              </Link>
             </div>
           </div>
 
@@ -1588,7 +1614,7 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ READING STAGE — five system panels ═════════════════ */}
         <ReadingStage
           ref={stageHandle}
-          chapters={['iching', 'genekeys', 'humandesign', 'tarot', 'body']}
+          chapters={['iching', 'genekeys', 'humandesign', 'body', 'tarot']}
           active={activeChapter}
           onActiveChange={handleChapterChange}
         >
@@ -1868,14 +1894,6 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            <ContinueRail
-              variant="dark"
-              eyebrow="Next"
-              title="Gene Keys"
-              subtitle={`${card.gene_keys.shadow} · ${card.gene_keys.gift} · ${card.gene_keys.siddhi}`}
-              onClick={() => jumpToChapter('genekeys')}
-              ariaLabel={`Continue to Gene Keys: Shadow ${card.gene_keys.shadow}, Gift ${card.gene_keys.gift}, Siddhi ${card.gene_keys.siddhi}`}
-            />
           </div>
         </div>
 
@@ -1963,14 +1981,6 @@ const UniversalLanguageCard: React.FC = () => {
               </p>
             )}
 
-            <ContinueRail
-              variant="light"
-              eyebrow="Next"
-              title="Human Design"
-              subtitle={(synthesis?.reference?.hd_keyword ?? card.human_design.keyword) + (synthesis?.reference?.hd_center ? ` · ${synthesis.reference.hd_center} Center` : '')}
-              onClick={() => jumpToChapter('humandesign')}
-              ariaLabel="Continue to Human Design"
-            />
           </div>
         </div>
 
@@ -2017,7 +2027,8 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
-            {/* Synthesis HD reading — three plates (Gate / Channel / Circuit) */}
+            {/* Bridge HD reading — three plates in reading order:
+                Gate (the drive) / Centre (where it lives) / Channel (what it reaches for) */}
             {synthesis && (
               <>
                 {(() => {
@@ -2038,15 +2049,15 @@ const UniversalLanguageCard: React.FC = () => {
                   );
                 })()}
                 {(() => {
+                  // Plate 2: adapter puts the bridge's centre_field content in this slot.
                   const paragraphs = synthesis.synthesis.human_design.channel.split('\n\n').filter(Boolean);
-                  const cap = synthesis.reference?.hd_harmonic_gate ? `Gate ${card.human_design.gate} · ${synthesis.reference.hd_harmonic_gate}` : undefined;
                   return (
                     <PlateExpand
-                      id="hd-channel"
+                      id="hd-centre"
                       section="humandesign"
                       variant="dark"
-                      label="The Channel"
-                      caption={cap}
+                      label="The Centre"
+                      caption={synthesis.reference?.hd_center ?? undefined}
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
@@ -2056,14 +2067,16 @@ const UniversalLanguageCard: React.FC = () => {
                   );
                 })()}
                 {(() => {
+                  // Plate 3: adapter puts the bridge's channel content in this slot.
                   const paragraphs = synthesis.synthesis.human_design.circuit.split('\n\n').filter(Boolean);
+                  const cap = synthesis.reference?.hd_harmonic_gate ? `Gate ${card.human_design.gate} · ${synthesis.reference.hd_harmonic_gate}` : undefined;
                   return (
                     <PlateExpand
-                      id="hd-circuit"
+                      id="hd-channel"
                       section="humandesign"
                       variant="dark"
-                      label="The Circuit"
-                      caption={synthesis.reference?.hd_circuit ?? undefined}
+                      label="The Channel"
+                      caption={cap}
                       preview={paragraphs[0] ?? ''}
                     >
                       {paragraphs.map((p, i) => (
@@ -2094,184 +2107,6 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
-            <ContinueRail
-              variant="dark"
-              eyebrow="Next"
-              title="Relations"
-              subtitle="The cards this code is kin to"
-              onClick={() => jumpToChapter('tarot')}
-              ariaLabel="Continue to Relations"
-            />
-          </div>
-        </div>
-
-        {/* ────────── RELATIONS — how this code is kin to the other 63 ──────────
-            TEMPLATE FIX: this panel was named "Tarot", but its substance is
-            the card's connections — the paired hexagram, the programming
-            partner, the codon-ring family. The Tarot resonance is one
-            element WITHIN it (the ring's archetypal face), not the panel's
-            subject. Renamed to "Relations". The deeper-correlation layer
-            (trigrams, Eight Immortals, Golden Dawn depth) nests inside it. */}
-        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
-          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
-
-            {/* Plate header — Relations */}
-            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
-              <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Relations</p>
-              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">The Living Field</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">No code stands alone. Here are the cards this one is kin to, and what they form together.</p>
-            </header>
-
-            {expanded ? (
-              <>
-                {/* Paired Hexagram */}
-                {pairCard && (
-                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>Paired Hexagram</p>
-                    <div className="space-y-4 min-w-0">
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.i_ching.hexagrams_in_pairs.context.text}</p>
-                      <CardLink
-                        number={expanded.i_ching.hexagrams_in_pairs.pair_hexagram}
-                        label={`Code ${expanded.i_ching.hexagrams_in_pairs.pair_hexagram}`}
-                        onClick={() => navigate(`/oracle/universal-language/${expanded.i_ching.hexagrams_in_pairs.pair_hexagram}`, { state: { ritual: true } })}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Programming Partner */}
-                {expanded.gene_keys.programming_partner && (
-                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>Programming Partner</p>
-                    <div className="space-y-4 min-w-0">
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.programming_partner.relationship_context}</p>
-                      <CardLink
-                        number={expanded.gene_keys.programming_partner.number}
-                        label={`Code ${expanded.gene_keys.programming_partner.number}`}
-                        onClick={() => navigate(`/oracle/universal-language/${expanded.gene_keys.programming_partner!.number}`, { state: { ritual: true } })}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Codon Ring — TEMPLATE FIX: now matches the Paired
-                    Hexagram / Programming Partner blocks exactly. The intro
-                    text is full body size (16px sans, was a smaller 14px
-                    serif), and each ring sibling is a full CardLink row (was
-                    a cramped thumbnail grid). One consistent connection
-                    treatment across the whole panel. */}
-                {siblings.length > 0 && (
-                  <div className="border-t border-wood-200/50 py-6 sm:py-7">
-                    <p className={`${LABEL_SECTION} text-bronze-700 mb-3`}>{expanded.gene_keys.codon_ring.name}</p>
-                    <div className="space-y-4 min-w-0">
-                      <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{expanded.gene_keys.codon_ring.relationship_context}</p>
-                      <div className="divide-y divide-wood-200/50">
-                        {siblings.map(n => (
-                          <CardLink
-                            key={n}
-                            number={n}
-                            label={`Code ${n}`}
-                            onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="border-t border-wood-200/50 py-6 sm:py-7">
-                <p className={`${LABEL_SECTION} text-bronze-700 mb-2.5`}>Soon</p>
-                <p className="font-sans text-[16px] text-wood-500 leading-[1.7]">Connection data will be available soon.</p>
-              </div>
-            )}
-
-            {/* Tarot resonance — the ring's archetypal face */}
-            {synthesis && (() => {
-              const text = synthesis.synthesis.tarot.ring_role + '\n\n' + synthesis.synthesis.tarot.tarot_resonance;
-              const paragraphs = text.split('\n\n').filter(Boolean);
-              return (
-                <PlateExpand
-                  id="connections-tarot"
-                  section="connections"
-                  variant="light"
-                  label={`Tarot · ${card.ring_name}`}
-                  caption={synthesis.reference?.tarot_card ?? card.ring_tarot}
-                  preview={paragraphs[0] ?? ''}
-                >
-                  {paragraphs.map((p, i) => (
-                    <p key={i} className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8]">{p}</p>
-                  ))}
-                </PlateExpand>
-              );
-            })()}
-
-            {/* ── Deeper Correlation — TEMPLATE: a quiet nested door ──────────
-                The correlation layer (trigrams, the Eight Immortals, the
-                Tarot's Golden Dawn depth) per CONCEPT §8 / guide 06 §7.
-                Optional study depth — a door within Relations, never imposed
-                on a reader who just wants a reading. Built here as the
-                container; the synthesised prose fills in with card content. */}
-            <details className="border-t border-wood-200/50 -mx-4 sm:-mx-7 px-4 sm:px-7 py-6 sm:py-7 group">
-              <summary className="cursor-pointer list-none flex items-baseline gap-3">
-                <span className={`${LABEL_SECTION} text-bronze-700`}>
-                  Deeper Correlation
-                </span>
-                <span className="font-sans text-[14px] italic text-wood-500 group-open:hidden">
-                  how the systems interlock — open to go further
-                </span>
-              </summary>
-
-              <div className="mt-5 space-y-7">
-                {/* Trigrams — the code's two component forces */}
-                <div>
-                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
-                    The Trigrams
-                  </p>
-                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
-                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} above,
-                    {' '}{card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()} below —
-                    the two forces this code is built from.
-                    <span className="text-wood-400"> Correlation reading to be added.</span>
-                  </p>
-                </div>
-
-                {/* The Eight Immortals — trigram-correlated */}
-                <div>
-                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
-                    The Eight Immortals
-                  </p>
-                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
-                    Each trigram carries one of the eight Daoist immortals — a
-                    mythic face for the force.
-                    <span className="text-wood-400"> Correlation reading to be added.</span>
-                  </p>
-                </div>
-
-                {/* Golden Dawn depth — astrology, Hebrew letter, Tree of Life */}
-                <div>
-                  <p className={`${LABEL_SECTION} text-wood-500 mb-2`}>
-                    The Golden Dawn Correspondences
-                  </p>
-                  <p className="font-sans text-[15px] text-wood-600 leading-[1.7]">
-                    {synthesis?.reference?.astrology && (
-                      <>The Tarot Arcana of this ring corresponds to {synthesis.reference.astrology}
-                      {synthesis.reference.hebrew_letter ? `, and the Hebrew letter ${synthesis.reference.hebrew_letter}` : ''}.{' '}</>
-                    )}
-                    <span className="text-wood-400">Correlation reading to be added.</span>
-                  </p>
-                </div>
-              </div>
-            </details>
-
-            <ContinueRail
-              variant="light"
-              eyebrow="Next"
-              title="Body"
-              subtitle={(synthesis?.reference?.body_physiology ?? 'The body') + (synthesis?.reference?.body_amino_acid ? ` · ${synthesis.reference.body_amino_acid}` : '')}
-              onClick={() => jumpToChapter('body')}
-              ariaLabel="Continue to Body reading"
-            />
           </div>
         </div>
 
@@ -2334,16 +2169,249 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
-            {/* TEMPLATE FIX: the "Next card" link was removed from the end of
-                the Body panel. Reading the *next card* from the Body section
-                made no narrative sense — Body is not where a card-to-card
-                transition belongs. Card-to-card movement happens through the
-                moving lines (the Cast) and the Relations panel, where it is
-                meaningful. The sticky bottom nav still offers prev/next. */}
 
           </div>
         </div>
         {/* end Body panel */}
+        {/* ────────── RELATIONS — the correspondence sheet ──────────────────
+            v2 layout: a fixed-seat correspondence card (think the back of a
+            TCG / comic stat block, but in the deck's own typographic
+            language). Every kin has a known position; the reader learns the
+            geography once and scans by glance after that.
+
+            Top-to-bottom:
+              · Header band  — the pair-as-unity line (the spine)
+              · Pair plate   — two hexagram glyphs side by side, the visual
+                               anchor of the section
+              · Inverse plate (smaller, dimmer) — same lines flipped
+              · Kinship row  — three seats: PROGRAMMING PARTNER · CODON RING
+                                                          · TAROT RESONANCE
+              · Correspondence grid (2×2) — TRIGRAMS · ZODIAC · IMMORTAL
+                                                                 · HEBREW LETTER
+              · Footer band (optional) — also-kin links
+
+            Pieces marked "to be written" mean the prose field doesn't exist
+            in the data yet; the seat is held so the layout is whole. */}
+        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
+
+            {/* Plate header — Relations */}
+            <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+              <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Relations</p>
+              <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">The Living Field</h2>
+              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">No code stands alone. Here are the cards this one is kin to, and what they form together.</p>
+            </header>
+
+            {/* ── Header band: the pair-as-unity line ─────────────────────
+                The spine of the section. One italic sentence across the
+                full width, bordered top and bottom with a hairline. Uses
+                the paired-hexagram context text as the unity teaching for
+                now; can be replaced with a dedicated "with its pair, this
+                code becomes…" field when written. */}
+            {expanded && pairCard && (
+              <div className="border-y border-bronze-600/25 py-6 sm:py-7 mb-10 sm:mb-12">
+                <p className="font-serif italic text-[18px] sm:text-[20px] text-wood-800 leading-[1.55] text-center max-w-prose mx-auto">
+                  {expanded.i_ching.hexagrams_in_pairs.context.text}
+                </p>
+              </div>
+            )}
+
+            {/* ── Pair plate: the visual anchor ───────────────────────────
+                Two hexagram glyphs side by side. Each is clickable and
+                navigates to that card. Names and numbers sit below in
+                small caps. A thin connecting rule between them, like a
+                bridge. */}
+            {pairCard && (
+              <div className="mb-12 sm:mb-14">
+                <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-6`}>The Pair</p>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-6">
+                  {/* This card */}
+                  <div className="flex flex-col items-center text-center">
+                    <HexagramSVG
+                      upper={card.iching.upper_trigram.symbol}
+                      lower={card.iching.lower_trigram.symbol}
+                      color="#8a6f3d"
+                      width={56}
+                    />
+                    <p className="font-serif text-[16px] text-wood-900 leading-[1.3] mt-4">{card.iching.hexagram_name}</p>
+                    <p className={`${LABEL_SECTION} text-wood-500 mt-1`}>Code {card.number}</p>
+                  </div>
+                  {/* Connecting rule */}
+                  <div className="flex flex-col items-center gap-1.5" aria-hidden="true">
+                    <span className="block w-8 sm:w-12 h-px bg-bronze-600/40" />
+                    <span className="font-label text-[10px] uppercase tracking-[0.3em] text-bronze-700/70">pair</span>
+                    <span className="block w-8 sm:w-12 h-px bg-bronze-600/40" />
+                  </div>
+                  {/* The pair */}
+                  <button
+                    onClick={() => navigate(`/oracle/universal-language/${expanded!.i_ching.hexagrams_in_pairs.pair_hexagram}`, { state: { ritual: true } })}
+                    className="group flex flex-col items-center text-center transition-colors focus-visible:outline-none"
+                  >
+                    <HexagramSVG
+                      upper={pairCard.iching.upper_trigram.symbol}
+                      lower={pairCard.iching.lower_trigram.symbol}
+                      color="#8a6f3d"
+                      width={56}
+                    />
+                    <p className="font-serif text-[16px] text-wood-900 leading-[1.3] mt-4 group-hover:text-bronze-700 transition-colors">{pairCard.iching.hexagram_name}</p>
+                    <p className={`${LABEL_SECTION} text-wood-500 mt-1 group-hover:text-bronze-600 transition-colors`}>Code {pairCard.number}</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── Inverse plate (placeholder seat) ─────────────────────────
+                The same hexagram turned upside down. Smaller, dimmer than
+                the pair plate. Glyph + name + one-line teaching.
+                Data not yet wired — placeholder until inverse-hexagram
+                field is added. */}
+            <div className="mb-12 sm:mb-14 flex flex-col items-center text-center">
+              <p className={`${LABEL_SECTION} text-wood-500/80 mb-4`}>The Inverse</p>
+              <div className="opacity-50">
+                <HexagramSVG
+                  upper={card.iching.lower_trigram.symbol}
+                  lower={card.iching.upper_trigram.symbol}
+                  color="#8a6f3d"
+                  width={40}
+                />
+              </div>
+              <p className="font-serif text-[14px] italic text-wood-500 mt-3 max-w-prose">
+                The same lines turned, the situation seen from the other side. To be written.
+              </p>
+            </div>
+
+            {/* ── Kinship row: three seats (programming partner / codon
+                ring / tarot) ─────────────────────────────────────────────
+                Three equal seats in a row. Each holds a label, a value,
+                and a one-line gloss. The eye learns the row across cards. */}
+            <div className="mb-12 sm:mb-14">
+              <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-6`}>The Kin</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-wood-200/50 border border-wood-200/50">
+                {/* Programming Partner */}
+                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Programming Partner</p>
+                  {expanded?.gene_keys.programming_partner ? (
+                    <>
+                      <button
+                        onClick={() => navigate(`/oracle/universal-language/${expanded.gene_keys.programming_partner!.number}`, { state: { ritual: true } })}
+                        className="group text-left transition-colors focus-visible:outline-none"
+                      >
+                        <p className="font-serif text-[22px] sm:text-[24px] text-wood-900 leading-[1.15] group-hover:text-bronze-700 transition-colors">Code {expanded.gene_keys.programming_partner.number}</p>
+                      </button>
+                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{expanded.gene_keys.programming_partner.relationship_context}</p>
+                    </>
+                  ) : (
+                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                  )}
+                </div>
+
+                {/* Codon Ring */}
+                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Codon Ring</p>
+                  {expanded && siblings.length > 0 ? (
+                    <>
+                      <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.2]">{expanded.gene_keys.codon_ring.name}</p>
+                      <p className="font-sans text-[13px] tracking-wide text-wood-600 mt-1">
+                        {siblings.map((n, i) => (
+                          <React.Fragment key={n}>
+                            <button
+                              onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
+                              className="hover:text-bronze-700 transition-colors focus-visible:outline-none"
+                            >Code {n}</button>
+                            {i < siblings.length - 1 ? <span className="text-wood-400"> · </span> : null}
+                          </React.Fragment>
+                        ))}
+                      </p>
+                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{expanded.gene_keys.codon_ring.relationship_context}</p>
+                    </>
+                  ) : (
+                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                  )}
+                </div>
+
+                {/* Tarot Resonance */}
+                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Tarot Resonance</p>
+                  {synthesis ? (
+                    <>
+                      <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.2]">{synthesis.reference?.tarot_card ?? card.ring_tarot}</p>
+                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{synthesis.synthesis.tarot.tarot_resonance}</p>
+                    </>
+                  ) : (
+                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Correspondence grid (2×2): trigrams / zodiac / immortal /
+                hebrew letter ──────────────────────────────────────────────
+                The deeper esoteric layer. Smaller text than the kinship
+                row; one short gloss per seat. The reader who wants the
+                full correspondence map lands here; the reader who doesn't
+                lets it pass. */}
+            <div>
+              <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-6`}>The Correspondences</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-wood-200/50 border border-wood-200/50">
+                {/* Trigrams */}
+                <div className="bg-paper p-5 sm:p-6">
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2.5`}>Trigrams</p>
+                  <p className="font-serif text-[16px] text-wood-900 leading-[1.3]">
+                    {card.iching.upper_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
+                    <span className="text-wood-500"> over </span>
+                    {card.iching.lower_trigram.name.replace(/\s*\([^)]*\)\s*/g, '').trim()}
+                  </p>
+                  <p className="font-serif text-[14px] italic text-wood-500 mt-2 leading-[1.55]">The two forces this code is built from.</p>
+                </div>
+
+                {/* Zodiac */}
+                <div className="bg-paper p-5 sm:p-6">
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2.5`}>Zodiac</p>
+                  {synthesis?.reference?.astrology ? (
+                    <>
+                      <p className="font-serif text-[16px] text-wood-900 leading-[1.3]">{synthesis.reference.astrology}</p>
+                      <p className="font-serif text-[14px] italic text-wood-500 mt-2 leading-[1.55]">The slice of the wheel this code sits in.</p>
+                    </>
+                  ) : (
+                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                  )}
+                </div>
+
+                {/* Immortal */}
+                <div className="bg-paper p-5 sm:p-6">
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2.5`}>The Immortal</p>
+                  <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                </div>
+
+                {/* Hebrew Letter */}
+                <div className="bg-paper p-5 sm:p-6">
+                  <p className={`${LABEL_SECTION} text-wood-500 mb-2.5`}>Hebrew Letter</p>
+                  {synthesis?.reference?.hebrew_letter ? (
+                    <>
+                      <p className="font-serif text-[16px] text-wood-900 leading-[1.3]">
+                        {synthesis.reference.hebrew_letter}
+                        {synthesis.reference.hebrew_meaning ? <span className="text-wood-500"> · {synthesis.reference.hebrew_meaning}</span> : null}
+                      </p>
+                      {synthesis.reference.path_connects ? (
+                        <p className="font-serif text-[14px] italic text-wood-500 mt-2 leading-[1.55]">{synthesis.reference.path_connects}</p>
+                      ) : (
+                        <p className="font-serif text-[14px] italic text-wood-500 mt-2 leading-[1.55]">The letter this code carries on the Tree.</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RELATIONS is the final section (BODY moved before it). No
+                "next" rail. Card-to-card movement happens through the kin
+                links inside RELATIONS itself, and through the sticky
+                bottom nav. */}
+          </div>
+        </div>
+
 
         </ReadingStage>
 
