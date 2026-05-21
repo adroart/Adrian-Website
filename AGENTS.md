@@ -54,3 +54,6 @@ Never conflate them. Never use "oracle" in alt text or meta for art-series route
 
 ## Deploy
 Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Codex tasks, Adrian tasks, and future items.
+
+## MCP servers
+- **Exa** (web search, code context, company research, crawling, LinkedIn search, deep researcher) is configured in `.mcp.json` as a remote HTTP server. It reads the API key from `$EXA_API_KEY`. To enable it locally, export `EXA_API_KEY=...` in your shell (or your Claude Code environment config) before starting a session. Without the env var set, the server will fail to authenticate but will not break other tools.

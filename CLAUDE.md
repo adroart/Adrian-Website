@@ -54,3 +54,6 @@ Never conflate them. Never use "oracle" in alt text or meta for art-series route
 
 ## Deploy
 Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Claude tasks, Adrian tasks, and future items.
+
+## MCP servers
+- **Exa** is configured in `.mcp.json` as a remote HTTP server. URL: `https://mcp.exa.ai/mcp?exaApiKey=${EXA_API_KEY}`. Export `EXA_API_KEY` in the session environment to enable it. Provides web search, code context, company research, crawling, LinkedIn search, and deep researcher tools.
