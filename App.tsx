@@ -30,6 +30,7 @@ const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -40,6 +41,7 @@ import { LAUNCH_FLAGS } from './launchFlags';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import { PlayerProvider } from './PlayerContext';
+import { AccountProvider } from './lib/account/AccountProvider';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
@@ -139,6 +141,7 @@ const AppInner: React.FC = () => {
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
+            <Route path="/account" element={<AccountDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -153,13 +156,15 @@ const AppInner: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <DarkModeProvider>
-    <CartProvider>
-      <PlayerProvider>
-        <AppInner />
-      </PlayerProvider>
-    </CartProvider>
-  </DarkModeProvider>
+  <AccountProvider>
+    <DarkModeProvider>
+      <CartProvider>
+        <PlayerProvider>
+          <AppInner />
+        </PlayerProvider>
+      </CartProvider>
+    </DarkModeProvider>
+  </AccountProvider>
 );
 
 export default App;

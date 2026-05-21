@@ -21,21 +21,25 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] `scripts/verify-astrology.ts` — sanity check script (`tsx scripts/verify-astrology.ts`)
 - [ ] Commit + push
 
-## Phase 2 — Account foundation (Clerk + D1)
+## Phase 2 — Account foundation (Clerk + D1) ✓
 
-- [ ] Add `@clerk/clerk-react`, `@clerk/backend`, `svix` to package.json
-- [ ] `wrangler.toml` — add D1 binding `DB` (database id placeholder)
-- [ ] `migrations/001_init.sql` — schema for users, profiles, orders, order_items, cart_items, collections, collection_items
-- [ ] `App.tsx` — wrap in `<ClerkProvider>` (publishableKey from env, graceful no-op if missing so site still builds)
-- [ ] `components/account/AuthButton.tsx` — Clerk SignedIn/SignedOut + UserButton
-- [ ] `components/Navigation.tsx` — slot AuthButton
-- [ ] `functions/api/_lib/clerk.js` — helper to verify Clerk token, return 401 on failure
-- [ ] `functions/api/_lib/db.js` — D1 helper (env.DB binding)
-- [ ] `functions/api/auth/sync-user.js` — upsert user + create Stripe Customer
-- [ ] `functions/api/clerk/webhook.js` — svix-verified, handle user.created/updated/deleted, re-link guest orders by email
-- [ ] `components/AccountDashboard.tsx` — `/account` shell page
-- [ ] `App.tsx` — route for `/account`
-- [ ] Commit + push (gated by `accounts` flag in UI; site still builds without Clerk keys)
+- [x] Add `@clerk/clerk-react`, `@clerk/backend`, `svix` to package.json
+- [x] `wrangler.toml` — add D1 binding `DB` (database id is `PROVISION_ME_VIA_WRANGLER`, see Adrian to provision)
+- [x] `migrations/001_init.sql` — schema for users, profiles, orders, order_items, cart_items, collections, collection_items + indexes
+- [x] `lib/account/AccountProvider.tsx` — conditional ClerkProvider mount (only when VITE_CLERK_PUBLISHABLE_KEY is set); guest mode otherwise
+- [x] `lib/account/useAccount.ts` — unified `useAccount()` hook with stub fallback so the rest of the app doesn't branch
+- [x] `components/account/AuthButton.tsx` — renders nothing when accounts unavailable, else SignedIn/SignedOut + UserButton
+- [x] `components/Navigation.tsx` — slot AuthButton
+- [x] `functions/api/_lib/clerk.js` — verify token, requireUser helper, jsonResponse with CORS
+- [x] `functions/api/_lib/db.js` — D1 helpers (getUserByClerkId, upsertUser, setUserStripeCustomer, relinkOrdersByEmail, deleteUserByClerkId)
+- [x] `functions/api/_lib/stripe.js` — ensureStripeCustomer (idempotent by email), verifyStripeWebhook (HMAC SHA-256)
+- [x] `functions/api/auth/sync-user.js` — upsert user + ensure Stripe Customer + relink guest orders
+- [x] `functions/api/clerk/webhook.js` — svix-verified, user.created/updated/deleted
+- [x] `components/account/AccountLayout.tsx` — shared sidebar nav for /account/*
+- [x] `components/AccountDashboard.tsx` — `/account` shell page with tiles for Profile, Orders, Collections
+- [x] `App.tsx` — wrap with `AccountProvider`, route for `/account`
+- [x] Build clean; index chunk +18 KB gz (Clerk SDK statically imported via Navigation → AuthButton)
+- [ ] Commit + push
 
 ## Phase 3 — Hologenetic Profile
 

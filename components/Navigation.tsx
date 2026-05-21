@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useDarkMode } from '../DarkModeContext';
 import { LAUNCH_FLAGS } from '../launchFlags';
+import AuthButton from './account/AuthButton';
 
 interface NavigationProps {
   theme?: 'LIGHT' | 'DARK';
@@ -147,8 +148,9 @@ const Navigation: React.FC<NavigationProps> = ({ theme = 'LIGHT' }) => {
             ))}
           </div>
 
-          {/* Right-side controls: dark mode + cart + mobile hamburger */}
+          {/* Right-side controls: auth + dark mode + cart + mobile hamburger */}
           <div className="flex items-center gap-0">
+            <AuthButton />
             <button
               onClick={toggleDarkMode}
               className={`px-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity font-label text-[11px] uppercase tracking-[0.2em] font-semibold ${textPrimary}`}

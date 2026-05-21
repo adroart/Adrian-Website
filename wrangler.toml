@@ -5,3 +5,13 @@ pages_build_output_dir = "dist"
 [[r2_buckets]]
 binding = "MUSIC_BUCKET"
 bucket_name = "adrian-music"
+
+# D1 database for user accounts, profiles, orders, cart, and collections.
+# Provision once with: wrangler d1 create adrian-website
+# Then copy the returned database_id over the placeholder below and run:
+# wrangler d1 migrations apply adrian-website --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "adrian-website"
+database_id = "PROVISION_ME_VIA_WRANGLER"
+migrations_dir = "migrations"
