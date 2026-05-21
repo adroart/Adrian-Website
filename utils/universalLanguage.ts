@@ -1,5 +1,6 @@
 import { Artwork } from '../types';
 import { CARD_BY_NUMBER } from '../data/oracleData';
+import { FULL_ARCHIVE } from '../data/mockData';
 
 /**
  * Parse the card number from a Universal Language coverImage public ID.
@@ -50,4 +51,23 @@ export function ulMetaDescription(art: Artwork): string {
  */
 export function ulMetaTitle(art: Artwork): string {
   return `${art.title} · Universal Language · Mandala Art`;
+}
+
+let ulArtworkByGate: Map<number, Artwork> | null = null;
+
+/**
+ * Look up the Universal Language artwork whose card number matches the
+ * given Human Design gate. UL pieces are 1:1 with the 64 gates, so gate
+ * 41 → card 41 → the artwork in FULL_ARCHIVE with that card number.
+ */
+export function findUlArtworkForGate(gate: number): Artwork | null {
+  if (!ulArtworkByGate) {
+    ulArtworkByGate = new Map();
+    for (const art of FULL_ARCHIVE) {
+      if (art.series !== 'Universal Language') continue;
+      const n = ulCardNumber(art.coverImage);
+      if (n != null) ulArtworkByGate.set(n, art);
+    }
+  }
+  return ulArtworkByGate.get(gate) ?? null;
 }
