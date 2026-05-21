@@ -26,6 +26,7 @@
     "@fontsource/lora": "^5.2.8",
     "@keystatic/core": "^0.5.50",
     "@stripe/stripe-js": "^8.7.0",
+    "cobe": "^2.0.1",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
