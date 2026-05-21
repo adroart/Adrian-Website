@@ -16,6 +16,8 @@ import { projectAll } from '../../../utils/ledgerProjection';
 import { toPublicState } from '../../../utils/ledgerProjection';
 import { CITIES } from '../../../data/cities';
 import { FULL_ARCHIVE } from '../../../data/mockData';
+import { mirrorPublicState } from './_mirror';
+import type { MirrorEnv } from './_mirror';
 
 // ---------- R2 keys ----------
 
@@ -30,7 +32,7 @@ export const STEWARD_COOKIE = 'steward_session';
 
 // ---------- Env typing ----------
 
-export interface AtlasEnv {
+export interface AtlasEnv extends MirrorEnv {
   MUSIC_BUCKET: R2Bucket;
   UPLOAD_SECRET: string;
 }
@@ -192,7 +194,14 @@ export async function regeneratePublicState(
   const records = projectAll(events);
   const meta = buildArtworkMeta();
   const state = toPublicState(records, meta, CITIES);
-  await writePublicState(env, state);
+  const json = JSON.stringify(state, null, 2);
+  await env.MUSIC_BUCKET.put(KEY_PUBLIC, json, {
+    httpMetadata: { contentType: 'application/json' },
+  });
+  // Public mirror to GitHub for durability. No-ops unless the three
+  // GITHUB_MIRROR_* env vars are set; failures never throw. Result is
+  // intentionally ignored — the ledger write must not depend on it.
+  void mirrorPublicState(env, json).catch(() => undefined);
   return state;
 }
 
