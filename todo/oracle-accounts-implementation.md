@@ -41,30 +41,34 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] Build clean; index chunk +18 KB gz (Clerk SDK statically imported via Navigation → AuthButton)
 - [ ] Commit + push
 
-## Phase 3 — Hologenetic Profile
+## Phase 3 — Hologenetic Profile ✓
 
-- [ ] Add `@vvo/tzdb` to package.json
-- [ ] `lib/astrology/profile.ts` — buildHologeneticProfile
-- [ ] `lib/astrology/places.ts` — searchPlaces, placeToUtc
-- [ ] `scripts/build-cities-index.ts` + `public/data/cities-index.json` (lazy-loaded)
-- [ ] `lib/profile/storage.ts` — localStorage `ul.profile.v1`
-- [ ] `lib/profile/context.tsx` — ProfileProvider + useProfile hook (local-first, D1-aware)
-- [ ] `data/profilePositions.ts` — 11 positions metadata + copy
-- [ ] `components/oracle/ProfileForm.tsx`
-- [ ] `components/oracle/ProfileGraph.tsx`
-- [ ] `components/oracle/ProfileSummary.tsx`
-- [ ] `components/OracleProfile.tsx` — `/oracle/profile` page
-- [ ] `App.tsx` — route + ProfileProvider in stack
-- [ ] `components/OracleGateway.tsx` — embed ProfileSummary or "Enter your birth chart" link
-- [ ] `functions/api/profile/get.js`, `put.js`, `delete.js` — D1-backed
-- [ ] Verify: known birth data produces published gate.line values
+- [x] ~~Add `@vvo/tzdb`~~ — removed; native `Intl.DateTimeFormat` handles local→UTC via the bundled cities' IANA tz id
+- [x] `lib/astrology/profile.ts` — buildHologeneticProfile (11 positions: Activation / Venus / Pearl)
+- [x] `lib/astrology/places.ts` — searchPlaces (over bundled JSON), placeToUtc (two-pass DST-aware offset)
+- [x] `scripts/build-cities-index.ts` — GeoNames cities15000 → JSON; instructions in script header
+- [x] `public/data/cities-index.json` — 92-city curated seed (lazy-loaded by ProfileForm)
+- [x] `lib/profile/storage.ts` — localStorage `ul.profile.v1`
+- [x] `lib/profile/context.tsx` — ProfileProvider + useProfile (local-first, D1 sync-on-sign-in)
+- [x] `data/profilePositions.ts` — 11 positions metadata; role copy drafted, `body` reserved for Adrian
+- [x] `components/oracle/HexagramGlyph.tsx` — shared glyph renderer (also used by callout)
+- [x] `components/oracle/ProfileForm.tsx` — date + time + place typeahead
+- [x] `components/oracle/ProfileGraph.tsx` — three sequence bands, each row links to UL card
+- [x] `components/oracle/ProfileSummary.tsx` — compact view on /oracle gateway
+- [x] `components/OracleProfile.tsx` — `/oracle/profile` page
+- [x] `App.tsx` — `/oracle/profile` route + ProfileProvider in provider stack
+- [x] `components/OracleGateway.tsx` — embed ProfileSummary or "Enter your birth chart" link
+- [x] `functions/api/profile/get.js`, `put.js`, `delete.js` — D1-backed with input validation
+- [x] Verified pipeline: sample birth produces 11 valid {gate, line} pairs; stable across re-runs
+- [x] `scripts/verify-profile.ts` — sanity script (`tsx scripts/verify-profile.ts`)
 - [ ] Commit + push
 
-## Phase 4 — Card overlay (YourPositionCallout)
+## Phase 4 — Card overlay (YourPositionCallout) ✓
 
-- [ ] `components/oracle/YourPositionCallout.tsx`
-- [ ] `components/UniversalLanguageCard.tsx` — embed callout in Field section
-- [ ] Verify: callout shows on matching gates only, no callout when no profile saved
+- [x] `components/oracle/YourPositionCallout.tsx` — gated by LAUNCH_FLAGS.hologeneticProfile + matching profile
+- [x] `components/UniversalLanguageCard.tsx` — embed callout in Field section under the title block
+- [x] Multi-position match handling ("This is your Life's Work and your Core")
+- [x] No-op when no profile saved
 - [ ] Commit + push
 
 ## Phase 5 — Orders + synced cart

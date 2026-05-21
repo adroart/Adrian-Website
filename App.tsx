@@ -31,6 +31,7 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
+const OracleProfile = lazy(() => import('./components/OracleProfile'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -42,6 +43,7 @@ import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import { PlayerProvider } from './PlayerContext';
 import { AccountProvider } from './lib/account/AccountProvider';
+import { ProfileProvider } from './lib/profile/context';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
@@ -112,6 +114,7 @@ const AppInner: React.FC = () => {
             <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
             {/* Oracle gateway — QR code target */}
             <Route path="/oracle" element={<OracleGateway />} />
+            <Route path="/oracle/profile" element={LAUNCH_FLAGS.hologeneticProfile ? <OracleProfile /> : <Navigate to="/oracle" replace />} />
             <Route path="/oracle/the-systems" element={<OracleSystems />} />
             <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
             <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
@@ -160,7 +163,9 @@ const App: React.FC = () => (
     <DarkModeProvider>
       <CartProvider>
         <PlayerProvider>
-          <AppInner />
+          <ProfileProvider>
+            <AppInner />
+          </ProfileProvider>
         </PlayerProvider>
       </CartProvider>
     </DarkModeProvider>

@@ -14,6 +14,8 @@ import { ALL_CARDS } from '../data/oracleData';
 import { LAUNCH_FLAGS } from '../launchFlags';
 import TodayEnergyPanel from './oracle/TodayEnergyPanel';
 import YearEnergyPanel from './oracle/YearEnergyPanel';
+import ProfileSummary from './oracle/ProfileSummary';
+import { useProfile } from '../lib/profile/context';
 
 /* ─── Trigram → line pattern ─────────────────────────────────────────────── */
 
@@ -43,6 +45,7 @@ const HEX_H      = 5 * (LINE_H + LINE_GAP) + LINE_H;
 
 const OracleGateway: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   const hexagrams = useMemo(() =>
     ALL_CARDS.map((card, i) => {
@@ -277,6 +280,18 @@ const OracleGateway: React.FC = () => {
               <TodayEnergyPanel />
               <YearEnergyPanel />
             </div>
+          )}
+
+          {LAUNCH_FLAGS.hologeneticProfile && (
+            profile ? (
+              <div style={{ width: '100%', maxWidth: 360, marginBottom: 18, display: 'flex', justifyContent: 'center' }}>
+                <ProfileSummary />
+              </div>
+            ) : (
+              <Link to="/oracle/profile" className="og-link" style={{ borderTop: '1px solid color-mix(in oklab, var(--color-wood-600) 25%, transparent)' }}>
+                Enter your birth chart
+              </Link>
+            )
           )}
 
           <Link to="/oracle/universal-language" className="og-link">Get a Reading</Link>
