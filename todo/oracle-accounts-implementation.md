@@ -71,29 +71,31 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
 - [x] No-op when no profile saved
 - [ ] Commit + push
 
-## Phase 5 — Orders + synced cart
+## Phase 5 — Orders + synced cart ✓
 
-- [ ] `functions/api/stripe/webhook.js` — HMAC-verified, persist orders on checkout.session.completed
-- [ ] `functions/api/orders/list.js` — list user's orders
-- [ ] `functions/api/orders/claim.js` — link guest orders to user by email
-- [ ] `functions/api/checkout.js` — attach Stripe Customer ID when Authorization header present
-- [ ] `functions/api/cart/get.js`, `put.js` — D1-synced cart
-- [ ] `lib/cart/sync.ts` — adapter merged into CartContext
-- [ ] `CartContext.tsx` — extend with sync-on-sign-in + debounced PUT
-- [ ] `components/CartDrawer.tsx` — send Clerk token on checkout if signed in
-- [ ] `components/account/OrdersList.tsx`
-- [ ] `components/account/SaveOrderPrompt.tsx` — on /order-confirmed for guests
-- [ ] `App.tsx` — `/account/orders` route
+- [x] `functions/api/stripe/webhook.js` — HMAC-verified, idempotent on stripe_session_id, fetches line items via Stripe API
+- [x] `functions/api/orders/list.js` — list user's orders + items
+- [x] `functions/api/orders/claim.js` — links guest order to user; verifies session.customer_details.email matches user's email
+- [x] `functions/api/checkout.js` — attach Stripe Customer ID when Authorization header present (best-effort; never blocks guests)
+- [x] `functions/api/cart/get.js`, `put.js` — D1-synced cart, max 64 rows, qty clamped 1-10
+- [x] `lib/cart/sync.ts` — serializeCart, hydrateCart, mergeCarts
+- [x] `CartContext.tsx` — sync-on-sign-in + debounced (350ms) PUT
+- [x] `components/CartDrawer.tsx` — sends Clerk bearer token via account.fetchAuthed
+- [x] `components/account/OrdersList.tsx` — fetches /api/orders/list, renders timeline
+- [x] `components/account/SaveOrderPrompt.tsx` — auto-claims on sign-in via /api/orders/claim
+- [x] `components/OrderConfirmed.tsx` — embeds SaveOrderPrompt
+- [x] `App.tsx` — `/account/orders` route
 - [ ] Commit + push
 
-## Phase 6 — Collections + save buttons
+## Phase 6 — Collections + save buttons ✓
 
-- [ ] `functions/api/collections/list.js`, `create.js`, `update.js`, `delete.js`, `add-item.js`, `remove-item.js`
-- [ ] `lib/collections/context.tsx` — useCollections hook
-- [ ] `components/account/CollectionsManager.tsx`
-- [ ] `components/account/SaveToCollectionButton.tsx`
-- [ ] Surface SaveToCollectionButton on `UniversalLanguageCard`, artwork pages, shop products
-- [ ] `App.tsx` — `/account/collections` route
+- [x] `functions/api/collections/{list,create,update,delete,add-item,remove-item}.js`
+- [x] `lib/collections/context.tsx` — CollectionsProvider + useCollections hook
+- [x] `components/account/CollectionsManager.tsx` — list, create, rename, delete, remove items
+- [x] `components/account/SaveToCollectionButton.tsx` — inline picker + create-new
+- [x] `components/UniversalLanguageCard.tsx` — surface "Save to a collection" near acquire/share row
+- [ ] (Optional, future) Surface on artwork pages + shop products
+- [x] `App.tsx` — `/account/collections` route + CollectionsProvider
 - [ ] Commit + push
 
 ---

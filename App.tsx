@@ -31,6 +31,8 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
+const OrdersList = lazy(() => import('./components/account/OrdersList'));
+const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
 const OracleProfile = lazy(() => import('./components/OracleProfile'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
@@ -44,6 +46,7 @@ import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import { PlayerProvider } from './PlayerContext';
 import { AccountProvider } from './lib/account/AccountProvider';
 import { ProfileProvider } from './lib/profile/context';
+import { CollectionsProvider } from './lib/collections/context';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
@@ -145,6 +148,8 @@ const AppInner: React.FC = () => {
             <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
             <Route path="/account" element={<AccountDashboard />} />
+            <Route path="/account/orders" element={<OrdersList />} />
+            <Route path="/account/collections" element={<CollectionsManager />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -164,7 +169,9 @@ const App: React.FC = () => (
       <CartProvider>
         <PlayerProvider>
           <ProfileProvider>
-            <AppInner />
+            <CollectionsProvider>
+              <AppInner />
+            </CollectionsProvider>
           </ProfileProvider>
         </PlayerProvider>
       </CartProvider>

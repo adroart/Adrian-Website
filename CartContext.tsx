@@ -1,6 +1,8 @@
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Product, CartItem } from './types';
+import { useAccount } from './lib/account/useAccount';
+import { serializeCart, hydrateCart, mergeCarts } from './lib/cart/sync';
 
 export type { CartItem };
 
@@ -65,6 +67,10 @@ const CartContext = createContext<CartContextType | null>(null);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>(() => loadCartFromStorage());
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const account = useAccount();
+  const syncedFor = useRef<string | null>(null);
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const justPushed = useRef<string | null>(null);
 
   // Persist cart to localStorage whenever it changes
   useEffect(() => {
@@ -74,6 +80,57 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // localStorage unavailable (e.g. private browsing quota exceeded) — fail silently
     }
   }, [items]);
+
+  // Sync-on-sign-in: merge local + remote, then keep them in step thereafter.
+  useEffect(() => {
+    if (!account.available || !account.isLoaded || !account.isSignedIn || !account.userId) return;
+    if (syncedFor.current === account.userId) return;
+    syncedFor.current = account.userId;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await account.fetchAuthed('/api/cart/get');
+        const remoteRows = res.ok ? await res.json() : [];
+        const remote = hydrateCart(Array.isArray(remoteRows) ? remoteRows : []);
+        if (cancelled) return;
+        setItems((local) => {
+          const merged = mergeCarts(local, remote);
+          // Push merged back so the remote reflects the new state.
+          const payload = JSON.stringify(serializeCart(merged));
+          justPushed.current = payload;
+          account.fetchAuthed('/api/cart/put', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+          }).catch(() => {});
+          return merged;
+        });
+      } catch {
+        // Non-fatal; local cart unchanged.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [account]);
+
+  // Debounced push of any cart change while signed in.
+  useEffect(() => {
+    if (!account.available || !account.isSignedIn) return;
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    pushTimer.current = setTimeout(() => {
+      const payload = JSON.stringify(serializeCart(items));
+      if (justPushed.current === payload) return;
+      justPushed.current = payload;
+      account.fetchAuthed('/api/cart/put', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      }).catch(() => {});
+    }, 350);
+    return () => {
+      if (pushTimer.current) clearTimeout(pushTimer.current);
+    };
+  }, [items, account]);
 
   const addToCart = useCallback((product: Product) => {
     const max = getMaxQuantity(product);

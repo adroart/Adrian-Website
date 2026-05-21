@@ -17,6 +17,7 @@ import ContinueRail from './oracle/ContinueRail';
 import ImageViewer from './oracle/ImageViewer';
 import BuySheet from './oracle/BuySheet';
 import YourPositionCallout from './oracle/YourPositionCallout';
+import SaveToCollectionButton from './account/SaveToCollectionButton';
 
 // Tracks which cards have already shown their ritual entrance in this session,
 // so navigating away (e.g. to /creations/<id>) and back doesn't replay it.
@@ -1419,6 +1420,10 @@ const UniversalLanguageCard: React.FC = () => {
                   field sheet unmounts, layout collapses, and the cycle
                   repeats — visible as a flashing oscillation. */}
               <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
+
+              <div className="flex justify-center py-2 px-3">
+                <SaveToCollectionButton kind="card" itemRef={String(card.number)} label="Save to a collection" />
+              </div>
 
               {/* Share sheet — expands below the field-section share button.
                   Hidden once the contextual card header has taken over so

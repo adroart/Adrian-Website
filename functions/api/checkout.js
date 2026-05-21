@@ -155,28 +155,49 @@ export async function onRequestPost(context) {
     ])
   );
 
+  // If the request carries a Clerk bearer token AND we have the bindings
+  // to verify it, attach the user's Stripe Customer ID so the order rolls
+  // up into a single Stripe customer record per Adrian's customer.
+  let stripeCustomerId = null;
+  if (env.CLERK_SECRET_KEY && env.DB) {
+    try {
+      const { verifyRequest } = await import('./_lib/clerk.js');
+      const { getUserByClerkId } = await import('./_lib/db.js');
+      const auth = await verifyRequest(request, env);
+      if (auth) {
+        const user = await getUserByClerkId(env.DB, auth.userId);
+        if (user?.stripe_customer_id) stripeCustomerId = user.stripe_customer_id;
+      }
+    } catch {
+      // Authed-checkout is a best-effort enhancement; never block guests.
+    }
+  }
+
+  const stripeParams = {
+    mode: 'payment',
+    // Build line_items[N][price] and line_items[N][quantity]
+    ...Object.fromEntries(
+      items.flatMap((item, i) => [
+        [`line_items[${i}][price]`, item.stripePriceId],
+        [`line_items[${i}][quantity]`, String(item.quantity)],
+      ])
+    ),
+    // Collect shipping address for all orders (ships internationally from Bali)
+    ...shippingParams,
+    success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/shop?checkout=cancelled`,
+    // Allow promo codes
+    allow_promotion_codes: 'true',
+  };
+  if (stripeCustomerId) stripeParams.customer = stripeCustomerId;
+
   const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      mode: 'payment',
-      // Build line_items[N][price] and line_items[N][quantity]
-      ...Object.fromEntries(
-        items.flatMap((item, i) => [
-          [`line_items[${i}][price]`, item.stripePriceId],
-          [`line_items[${i}][quantity]`, String(item.quantity)],
-        ])
-      ),
-      // Collect shipping address for all orders (ships internationally from Bali)
-      ...shippingParams,
-      success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/shop?checkout=cancelled`,
-      // Allow promo codes
-      allow_promotion_codes: 'true',
-    }),
+    body: new URLSearchParams(stripeParams),
   });
 
   const session = await stripeRes.json();
