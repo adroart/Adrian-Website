@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CODON_RINGS, ALL_CARDS, type OracleCard } from '../data/oracleData';
+import { CODON_RINGS, ALL_CARDS, CARD_BY_NUMBER, type OracleCard } from '../data/oracleData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 
@@ -118,15 +118,15 @@ const CardThumbnail: React.FC<{
           type="button"
           onClick={onFlip}
           aria-label={`Reveal Card ${card.number}: ${card.iching.hexagram_name}`}
-          className="absolute inset-0 [backface-visibility:hidden] bg-transparent flex flex-col items-center justify-center gap-1.5 cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
+          className="absolute inset-0 [backface-visibility:hidden] bg-transparent flex flex-col items-center justify-center gap-2 cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]"
         >
-          <span className="w-[42%] max-w-[48px] text-wood-900">
+          <span className="w-[55%] max-w-[62px] text-wood-900">
             <HexagramSVG
               upper={card.iching.upper_trigram.symbol}
               lower={card.iching.lower_trigram.symbol}
             />
           </span>
-          <span className="font-label font-bold text-[11px] text-wood-900 leading-none">
+          <span className="font-label font-bold text-[14px] text-wood-900 leading-none">
             {card.number}
           </span>
         </button>
@@ -326,6 +326,137 @@ const EmptyState: React.FC<{ onClear: () => void }> = ({ onClear }) => (
   </div>
 );
 
+/* ─── Featured row: today, this year, your grid ──────────────────────────── */
+
+// Stable string hash → 1..64. Same input always returns the same card.
+function hashTo64(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return ((Math.abs(h) % 64) + 1);
+}
+
+function cardForToday(now = new Date()): OracleCard {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return CARD_BY_NUMBER.get(hashTo64(`day:${y}-${m}-${d}`))!;
+}
+
+function cardForYear(now = new Date()): OracleCard {
+  return CARD_BY_NUMBER.get(hashTo64(`year:${now.getFullYear()}`))!;
+}
+
+const FeaturedTile: React.FC<{
+  eyebrow: string;
+  number: number;
+  numberAlign: 'left' | 'right';
+  title: string;
+  meta?: string;
+  to: string;
+}> = ({ eyebrow, number, numberAlign, title, meta, to }) => {
+  const navigate = useNavigate();
+  const onClick = () => navigate(to, { state: { ritual: true } });
+  const numStr = String(number).padStart(2, '0');
+
+  // Eyebrow row: "CARD OF THE DAY · 28" or "34 · CARD OF THE YEAR"
+  const eyebrowRow = numberAlign === 'left'
+    ? <><span>{eyebrow}</span><span aria-hidden className="mx-2 text-bronze-700/60">·</span><span className="text-wood-900 font-bold">{numStr}</span></>
+    : <><span className="text-wood-900 font-bold">{numStr}</span><span aria-hidden className="mx-2 text-bronze-700/60">·</span><span>{eyebrow}</span></>;
+
+  const justify = numberAlign === 'left' ? 'justify-start' : 'justify-end';
+  const textAlign = numberAlign === 'left' ? 'text-left' : 'text-right';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${eyebrow}, number ${number}: ${title}`}
+      className={`group ${textAlign} px-5 py-4 transition-colors duration-200 hover:bg-paper-100 cursor-pointer focus:outline-2 focus:outline-bronze-700 focus:outline-offset-[-2px]`}
+    >
+      <p className={`flex items-baseline ${justify} font-label text-[10px] uppercase tracking-[0.2em] text-bronze-700`}>
+        {eyebrowRow}
+      </p>
+      <div className={`flex items-baseline ${justify} gap-3 mt-1.5`}>
+        <p className="font-serif text-lg sm:text-xl text-wood-900 font-medium leading-tight">
+          {title}
+        </p>
+      </div>
+      {meta && (
+        <p className="font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 mt-1">
+          {meta}
+        </p>
+      )}
+      <p className={`flex ${justify} mt-3`}>
+        <span
+          aria-hidden
+          className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-700 group-hover:text-wood-900 transition-colors"
+        >
+          Enter →
+        </span>
+      </p>
+    </button>
+  );
+};
+
+const FeaturedRow: React.FC = () => {
+  const now = new Date();
+  const today = cardForToday(now);
+  const year = cardForYear(now);
+
+  const dateLabel = now.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const yearLabel = String(now.getFullYear());
+
+  return (
+    <section
+      aria-label="Featured readings"
+      className="px-6 pt-10 pb-2 max-w-7xl mx-auto"
+    >
+      <div className="border border-wood-200 bg-paper-100/40">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x divide-wood-200 divide-y sm:divide-y-0">
+          <FeaturedTile
+            eyebrow="Card of the Day"
+            number={today.number}
+            numberAlign="left"
+            title={today.card_name}
+            meta={dateLabel}
+            to={`/oracle/universal-language/${today.number}`}
+          />
+          <FeaturedTile
+            eyebrow="Card of the Year"
+            number={year.number}
+            numberAlign="right"
+            title={year.card_name}
+            meta={yearLabel}
+            to={`/oracle/universal-language/${year.number}`}
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        <button
+          type="button"
+          disabled
+          aria-label="Your astrology grid, link your birthday to the oracle, coming soon"
+          className="flex flex-col items-center text-center border border-wood-400 px-6 py-3 cursor-not-allowed opacity-80"
+        >
+          <span className="font-label text-xs uppercase tracking-[0.22em] text-wood-700">
+            Your Astrology Grid
+          </span>
+          <span className="font-sans text-[12px] text-wood-500 leading-snug mt-1">
+            Link your birthday to the oracle · coming soon
+          </span>
+        </button>
+      </div>
+    </section>
+  );
+};
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 
 const UniversalLanguageIndex: React.FC = () => {
@@ -454,6 +585,9 @@ const UniversalLanguageIndex: React.FC = () => {
 
       {/* Soft fade from hero into the deck — descend, don't hit a toolbar */}
       <div aria-hidden className="h-8 -mb-8 bg-gradient-to-b from-transparent to-paper-50" />
+
+      {/* ── Featured: today, this year, your grid ─────────────────────────── */}
+      <FeaturedRow />
 
       {/* ── Sticky search + tabs ───────────────────────────────────────────── */}
       <div className="sticky top-[var(--nav-height)] z-20 bg-paper-50 border-b border-wood-200">

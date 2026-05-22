@@ -866,8 +866,13 @@ const ExpandCard: React.FC<{
 
 const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
   const paras = essence.split('\n\n').filter(Boolean);
+  // No bubble: the essence is the artist's voice on the page, not data
+  // in a container. Just typography breathing on paper. No border, no
+  // background, no shadow, no rounded corner. The wrapper div above
+  // (in the card) supplies the horizontal padding so we don't double-
+  // pad on mobile.
   return (
-    <div className="mt-6 rounded-xl border border-wood-200/70 bg-paper-100 shadow-[0_2px_12px_rgba(60,44,22,0.06)] px-6 py-7">
+    <div className="mt-6 py-2">
       <div className="space-y-5">
         {paras.map((p, i) => (
           <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
@@ -876,6 +881,35 @@ const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
     </div>
   );
 };
+
+/** A "Next: [section]" button placed at the bottom of each reading
+ *  panel. Lets the reader move linearly through the deck without
+ *  reaching for the chapter strip. Styled in the Acquire/Share button
+ *  family (paper-toned at rest, bronze on hover, defined border, drop
+ *  shadow, press depression) so the visual register is consistent
+ *  across all the deck's tap affordances. */
+const NextSectionButton: React.FC<{
+  label: string;       // The destination's display name, e.g. "I Ching"
+  onClick: () => void;
+}> = ({ label, onClick }) => (
+  <div className="mt-12 sm:mt-14 flex justify-center px-4">
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex items-center justify-between gap-6 min-w-[240px] max-w-full px-6 py-4 bg-paper-100 hover:bg-bronze-50/60 border border-wood-300 hover:border-bronze-400/70 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.08),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_3px_8px_rgba(60,44,22,0.1),inset_0_1px_0_rgba(255,255,255,0.5)] hover:-translate-y-px active:translate-y-[1px] active:shadow-[0_1px_2px_rgba(60,44,22,0.1),inset_0_1px_3px_rgba(60,44,22,0.08)] active:bg-bronze-50/80 transition-all duration-150 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-50"
+    >
+      <div>
+        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mt-0.5">
+          Next
+        </p>
+        <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 transition-colors duration-200 leading-tight">
+          {label}
+        </p>
+      </div>
+      <span className="font-serif text-[20px] text-wood-500 group-hover:text-bronze-700 group-hover:translate-x-0.5 transition-all duration-200" aria-hidden="true">→</span>
+    </button>
+  </div>
+);
 
 const CardLink: React.FC<{
   number: number;
@@ -960,16 +994,26 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
 const CHAPTERS: Chapter[] = [
   // Universal Language — Adrian's own system, the entry to the reading.
   // Holds the invocation, the intro, the keywords. Always first.
+  //
+  // Labels are Title Case to match the editorial chapter strip's serif-
+  // italic typography. They read as a typeset list of section names,
+  // not as a tab bar — "UL · I Ching · Gene Keys · Human Design · Body
+  // · Relations" — with the same dot-separator pattern as the keyword
+  // row in the title card.
   { key: 'ul',          label: 'UL' },
-  { key: 'iching',      label: 'I CHING' },
-  { key: 'genekeys',    label: 'GENE KEYS' },
-  { key: 'humandesign', label: 'HUMAN DESIGN' },
+  // Thin space (U+2009) between "I" and "Ching" so the visual gap
+  // between the one-letter first word and "Ching" doesn't read as two
+  // separate labels in the chapter strip. The label still says "I Ching"
+  // canonically; the spacing is just tighter on screen.
+  { key: 'iching',      label: 'I Ching' },
+  { key: 'genekeys',    label: 'Gene Keys' },
+  { key: 'humandesign', label: 'Human Design' },
   // VISION.md order: BODY before RELATIONS. Inward journey deepens into the
   // body; RELATIONS is the final section, the doorway out to kin cards.
-  { key: 'body',        label: 'BODY' },
+  { key: 'body',        label: 'Body' },
   // Internal key stays 'tarot' (shared type, do not change),
-  // but the panel is the connections panel — displayed as RELATIONS.
-  { key: 'tarot',       label: 'RELATIONS' },
+  // but the panel is the connections panel — displayed as Relations.
+  { key: 'tarot',       label: 'Relations' },
 ];
 
 /* ─── Main component ─────────────────────────────────────────────────────── */
@@ -1535,8 +1579,34 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
+          {/* Inline chapter strip — sits between the Acquire/Share
+              band and the title card, so the navigation is the first
+              thing the reader sees after the action affordances and
+              before the card's named identity. Pulling it higher on
+              the page makes it discoverable without any scrolling and
+              gives it more visual weight in the hero area.
+
+              Mobile: stretches truly edge-to-edge (no horizontal
+              padding) so the six labels can distribute across the
+              full viewport width with comfortable tap targets.
+              Desktop (>= 640px): becomes a contained rounded pill
+              that centers within max-w-2xl with the rest of the
+              hero.
+
+              The sticky chapter strip (in the collapsed contextual
+              header) takes over automatically when the reader scrolls
+              past this inline one. */}
+          <div className="sm:max-w-2xl sm:mx-auto px-0 sm:px-4 pt-6 pb-0 bg-paper-50">
+            <ChapterWordmark
+              chapters={CHAPTERS}
+              active={activeChapter}
+              onSelect={jumpToChapter}
+              variant="paper"
+            />
+          </div>
+
           {/* Title card — its own dignified framed object. Sits below
-              the actions band with its own breathing room. The bronze
+              the chapter strip with its own breathing room. The bronze
               accent bar is the strongest visual signal in the hero
               area, marking this as the named, labeled artwork. */}
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
@@ -1559,27 +1629,17 @@ const UniversalLanguageCard: React.FC = () => {
             </div>
           </div>
 
-          {/* Inline chapter strip — sits directly below the title
-              card so readers can jump to any section without having to
-              scroll first to discover the navigation. The existing
-              sticky chapter strip (inside the collapsed contextual
-              header) takes over automatically when the reader scrolls
-              past this inline one. Two appearances of the same
-              component: one in-flow for discoverability, one sticky
-              for persistence during reading. */}
-          <div className="md:max-w-2xl md:mx-auto px-4 pt-6 pb-2 bg-paper-50">
-            <ChapterWordmark
-              chapters={CHAPTERS}
-              active={activeChapter}
-              onSelect={jumpToChapter}
-              variant="paper"
-            />
-          </div>
-
           <div className="max-w-3xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
 
+            {/* "The Reading" — the felt summary of this card, set as
+                a named section above the essence prose. Uses the same
+                panel-label typography as the system panels so the
+                whole page reads with consistent section headers. */}
             {synthesis?.essence && (
-              <EssenceBlock essence={synthesis.essence} />
+              <>
+                <p className={`${LABEL_PANEL} text-bronze-700/85 text-center pb-1.5 mb-2 max-w-fit mx-auto border-b border-bronze-600/30`}>The Reading</p>
+                <EssenceBlock essence={synthesis.essence} />
+              </>
             )}
 
 
@@ -1707,12 +1767,15 @@ const UniversalLanguageCard: React.FC = () => {
               button is tapped. Reuses the field-section dropdown content. */}
           {shareOpen && chromeCollapsed && renderShareSheet('header')}
 
-          {/* Bottom row: chapter wordmark for system swipe */}
+          {/* Sticky chapter wordmark — sticky shape, edge-to-edge
+              band on all viewports, no rounded corners. Sits BELOW
+              the "All In" identity row in the contextual header. */}
           <ChapterWordmark
             chapters={CHAPTERS}
             active={activeChapter}
             onSelect={jumpToChapter}
             variant="paper"
+            shape="sticky"
           />
         </div>
 
@@ -1747,10 +1810,26 @@ const UniversalLanguageCard: React.FC = () => {
 
               {/* Invocation — the ritual opening of this code. Set in
                   plain serif (not italic). Each line breaks naturally,
-                  centred, like a small prayer. */}
+                  centred, like a small prayer.
+
+                  The "Invocation" heading uses the same panel-label
+                  typography as "The Reading" on the opening page so
+                  the deck reads with one consistent section-header
+                  vocabulary. */}
               {invocation ? (
                 <section>
-                  <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>Invocation</p>
+                  <p className={`${LABEL_PANEL} text-bronze-700/85 text-center pb-1.5 mb-6 max-w-fit mx-auto border-b border-bronze-600/30`}>Invocation</p>
+                  {/*
+                    Optional info paragraph below the heading — explains
+                    what an invocation is, how to use it. Left commented
+                    out until we have the canonical copy. When ready,
+                    uncomment and replace the placeholder text below.
+
+                    <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.6] text-center max-w-prose mx-auto mb-6">
+                      [Short paragraph framing the invocation — what
+                      it is, how to use it, generic to all 64 cards.]
+                    </p>
+                  */}
                   <div className="border-y border-bronze-600/25 py-8 sm:py-10 max-w-prose mx-auto">
                     {invocation.split('\n').filter(Boolean).map((line, i) => (
                       <p key={i} className="font-serif text-[17px] sm:text-[18px] text-wood-800 leading-[1.75] text-center">
@@ -1766,6 +1845,8 @@ const UniversalLanguageCard: React.FC = () => {
                   </p>
                 </section>
               )}
+
+              <NextSectionButton label="I Ching" onClick={() => jumpToChapter('iching')} />
 
             </div>
           </div>
@@ -2045,6 +2126,8 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
+            <NextSectionButton label="Gene Keys" onClick={() => jumpToChapter('genekeys')} />
+
           </div>
         </div>
 
@@ -2131,6 +2214,8 @@ const UniversalLanguageCard: React.FC = () => {
                 <a href="https://genekeys.com" target="_blank" rel="noopener noreferrer" className="underline decoration-wood-300 underline-offset-[3px] hover:text-bronze-700 hover:decoration-bronze-500 transition-colors">genekeys.com</a>.
               </p>
             )}
+
+            <NextSectionButton label="Human Design" onClick={() => jumpToChapter('humandesign')} />
 
           </div>
         </div>
@@ -2258,6 +2343,8 @@ const UniversalLanguageCard: React.FC = () => {
               );
             })()}
 
+            <NextSectionButton label="Body" onClick={() => jumpToChapter('body')} />
+
           </div>
         </div>
 
@@ -2320,6 +2407,7 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             )}
 
+            <NextSectionButton label="Relations" onClick={() => jumpToChapter('tarot')} />
 
           </div>
         </div>
@@ -2569,10 +2657,14 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* RELATIONS is the final section (BODY moved before it). No
-                "next" rail. Card-to-card movement happens through the kin
-                links inside RELATIONS itself, and through the sticky
-                bottom nav. */}
+            {/* RELATIONS is the final section. The "next" button loops
+                back to UL (the reading's entry) so the reader can
+                return to the opening if they want to start the reading
+                cycle again. Card-to-card movement (to other UL numbers)
+                happens through the kin links inside RELATIONS itself
+                and through the sticky bottom nav. */}
+            <NextSectionButton label="Back to UL" onClick={() => jumpToChapter('ul')} />
+
           </div>
         </div>
 

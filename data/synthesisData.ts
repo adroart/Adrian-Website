@@ -107,8 +107,33 @@ type DesignSection = {
   channel: string;
 };
 
+type IchingSection = {
+  number: number;
+  hexagram_name: string;
+  combination: string;
+  upper_nature: string;
+  lower_nature: string;
+  reading: string;
+  judgement_lines: string[];
+  image_lines: string[];
+  lines: Array<{
+    line: number;
+    image: string;
+    reading: string;
+    becomes: { hexagram: number; name: string };
+  }>;
+};
+type BodySection = {
+  number: number;
+  physiology: string;
+  amino_acid: string;
+  meta?: { organ?: string; amino_acid_name?: string; codon_ring?: string };
+};
+
 const keysModules = import.meta.glob<{ default: KeysSection }>('../oracle/sections/keys/*.json');
 const designModules = import.meta.glob<{ default: DesignSection }>('../oracle/sections/design/*.json');
+const ichingModules = import.meta.glob<{ default: IchingSection }>('../oracle/sections/iching/*.json');
+const bodyModules = import.meta.glob<{ default: BodySection }>('../oracle/sections/body/*.json');
 
 /* Main Reading data lives in oracle/generated/NN.json under glance.
  * Currently only UL 1 has this populated; other cards return undefined
@@ -177,6 +202,39 @@ export async function getSynthesis(cardNumber: number): Promise<CardSynthesis | 
       gate: design.gate,
       channel: design.centre_field,  // plate 2 slot
       circuit: design.channel,        // plate 3 slot
+    };
+  }
+
+  // ICHING overlay. Section file provides combination + main reading +
+  // judgement_lines + image_lines + six moving lines. The card UI currently
+  // reads trigram_combination / reading / judgement_lines / image_lines off the
+  // shared synthesis shape, so we map directly. The six moving-line readings
+  // are dropped on the overlay's `lines[]` for the trigram selector to render
+  // (UI hookup pending; data is there).
+  const ichingPath = `../oracle/sections/iching/${pad2(cardNumber)}.json`;
+  const ichingLoader = ichingModules[ichingPath];
+  if (ichingLoader) {
+    const iching = (await ichingLoader()).default;
+    merged.synthesis.iching = {
+      trigram_combination: iching.combination,
+      reading: iching.reading,
+      judgement_lines: iching.judgement_lines ?? [],
+      image_lines: iching.image_lines ?? [],
+    };
+    // Stash the extended ICHING data for any consumer that wants the moving
+    // lines or per-trigram natures. Card UI can opt-in later.
+    (merged as unknown as Record<string, unknown>).iching_extended = iching;
+  }
+
+  // BODY overlay. Section file provides physiology + amino_acid as locked
+  // prose. The card UI already reads body.physiology / body.amino_acid.
+  const bodyPath = `../oracle/sections/body/${pad2(cardNumber)}.json`;
+  const bodyLoader = bodyModules[bodyPath];
+  if (bodyLoader) {
+    const body = (await bodyLoader()).default;
+    merged.synthesis.body = {
+      physiology: body.physiology,
+      amino_acid: body.amino_acid,
     };
   }
 
