@@ -866,16 +866,19 @@ const ExpandCard: React.FC<{
 
 const EssenceBlock: React.FC<{ essence: string }> = ({ essence }) => {
   const paras = essence.split('\n\n').filter(Boolean);
-  // No bubble: the essence is the artist's voice on the page, not data
-  // in a container. Just typography breathing on paper. No border, no
-  // background, no shadow, no rounded corner. The wrapper div above
-  // (in the card) supplies the horizontal padding so we don't double-
-  // pad on mobile.
+  // The Reading prose is the felt summary of the card — the deck's
+  // voice speaking to the reader directly. Set in Cormorant Garamond
+  // (the deck's serif body face) at 18-19px with generous leading so
+  // the prose reads as editorial / literary rather than as web body
+  // copy. No bubble container — the prose flows on the paper page;
+  // no border, background, shadow, or rounded corner. The wrapper div
+  // above supplies horizontal padding so we don't double-pad on
+  // mobile.
   return (
     <div className="mt-6 py-2">
       <div className="space-y-5">
         {paras.map((p, i) => (
-          <p key={i} className="font-sans text-[15px] text-wood-800 leading-[1.9]">{p}</p>
+          <p key={i} className="font-serif text-[18px] sm:text-[19px] text-wood-800 leading-[1.65]">{p}</p>
         ))}
       </div>
     </div>
@@ -1801,12 +1804,12 @@ const UniversalLanguageCard: React.FC = () => {
           <div className={`${SCREEN_BG.ul} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
             <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-              {/* Plate header — Universal Language. Just the panel
-                  label, no duplicated card title/code (those are in the
-                  hero above). */}
-              <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
-                <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Universal Language</p>
-              </header>
+              {/* The chapter strip above ("UL") already labels this
+                  panel. No need for a redundant "Universal Language"
+                  header here — it would create two stacked labels
+                  competing with the Invocation heading below. Drop
+                  the panel header entirely; let the Invocation be
+                  the only labeled content block in this panel. */}
 
               {/* Invocation — the ritual opening of this code. Set in
                   plain serif (not italic). Each line breaks naturally,
