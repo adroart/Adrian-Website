@@ -10,6 +10,9 @@ export interface AtlasFiltersProps {
   onStatusChange: (next: AtlasStatusFilter) => void;
   placedCount: number;
   seekingCount: number;
+  /** Kinship arcs visible. Only meaningful when at least one UL piece is placed. */
+  kinshipVisible: boolean;
+  onKinshipChange: (next: boolean) => void;
 }
 
 const btnBase =
@@ -32,10 +35,13 @@ const AtlasFilters: React.FC<AtlasFiltersProps> = ({
   onStatusChange,
   placedCount,
   seekingCount,
+  kinshipVisible,
+  onKinshipChange,
 }) => {
   const total = placedCount + seekingCount;
 
   return (
+    <div className="flex flex-col gap-4">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       {/* Series filter — native select keeps it light and accessible. */}
       <div className="flex items-center gap-3">
@@ -95,6 +101,27 @@ const AtlasFilters: React.FC<AtlasFiltersProps> = ({
           {total} {total === 1 ? 'piece' : 'pieces'} · {placedCount} placed ·{' '}
           {seekingCount} seeking ground
         </p>
+      </div>
+    </div>
+
+      {/* Kinship toggle — text-only, paired with a small affordance on the right. */}
+      <div className="flex items-center justify-end gap-3">
+        <span
+          id="atlas-kinship-label"
+          className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-700"
+        >
+          Show kinship threads
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={kinshipVisible}
+          aria-labelledby="atlas-kinship-label"
+          onClick={() => onKinshipChange(!kinshipVisible)}
+          className={`${btnBase} ${kinshipVisible ? active : inactive}`}
+        >
+          {kinshipVisible ? 'On' : 'Off'}
+        </button>
       </div>
     </div>
   );

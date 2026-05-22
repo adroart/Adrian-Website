@@ -1,12 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Globe, { type GlobeNode } from './atlas/Globe';
 import AtlasFilters, { type AtlasStatusFilter } from './atlas/AtlasFilters';
-import PieceSidePanel, { type SelectedPiece } from './atlas/PieceSidePanel';
+import PieceSidePanel, { type KinEntry, type SelectedPiece } from './atlas/PieceSidePanel';
 import SeekingGround, { type SeekingPiece } from './atlas/SeekingGround';
+import KinshipLayer from './atlas/KinshipLayer';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { CITIES_BY_ID } from '../data/cities';
+import { buildKinshipIndex, MAX_KINSHIP_ARCS } from '../utils/kinship';
 import type { PublicAtlasState } from '../types';
+
+const MAX_KIN_PER_PIECE = 6;
 
 /* ─── State machine ────────────────────────────────────────────────────────── */
 type FetchState =
@@ -46,6 +50,12 @@ const AtlasPage: React.FC = () => {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [status, setStatus] = useState<AtlasStatusFilter>('all');
+  const [kinshipVisible, setKinshipVisible] = useState<boolean>(true);
+
+  /* Globe container size — KinshipLayer needs CSS pixels to render the SVG
+     overlay at the same dimensions cobe is drawing into. */
+  const globeBoxRef = useRef<HTMLDivElement | null>(null);
+  const [globeSize, setGlobeSize] = useState({ width: 0, height: 0 });
 
   /* Fetch on mount. No retry, no spinner — quiet copy only. */
   useEffect(() => {
@@ -166,6 +176,56 @@ const AtlasPage: React.FC = () => {
     if (!stillVisible) setSelectedKey(null);
   }, [selectedKey, seriesFiltered]);
 
+  /* Mirror cobe's square sizing — Globe sets width=height=min(box.w,box.h). The
+     SVG overlay reads the same dimensions so arcs land on the canvas pixels. */
+  useEffect(() => {
+    const el = globeBoxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        const d = Math.max(120, Math.min(cr.width, cr.height));
+        setGlobeSize({ width: d, height: d });
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /* Kinship index — built off the raw atlas state, never the filtered slice.
+     The map shows kinship as a property of the ledger, not of UI filters. */
+  const kinshipIndex = useMemo(() => {
+    if (state.kind !== 'ready') return null;
+    return buildKinshipIndex(state.data, CITIES_BY_ID, FULL_ARCHIVE);
+  }, [state]);
+
+  useEffect(() => {
+    if (kinshipIndex?.capped) {
+      // Surface the cap in the architecture log per the spec.
+      // eslint-disable-next-line no-console
+      console.info(
+        `[atlas/kinship] pair count exceeded MAX_KINSHIP_ARCS (${MAX_KINSHIP_ARCS}); rendering shortest arcs only.`,
+      );
+    }
+  }, [kinshipIndex]);
+
+  /* Kin list for the selected piece — only for UL pieces with kindred peers. */
+  const kinForSelected: KinEntry[] = useMemo(() => {
+    if (!selectedKey || !kinshipIndex) return [];
+    const node = kinshipIndex.nodes.get(selectedKey);
+    if (!node) return [];
+    const pairs = kinshipIndex.pairsByKey.get(selectedKey) ?? [];
+    return pairs
+      .slice()
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, MAX_KIN_PER_PIECE)
+      .map((pair) => {
+        const otherKey = pair.aKey === selectedKey ? pair.bKey : pair.aKey;
+        const other = kinshipIndex.nodes.get(otherKey);
+        return { key: otherKey, title: other?.title ?? otherKey };
+      });
+  }, [selectedKey, kinshipIndex]);
+
   /* ─── Render ─────────────────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900">
@@ -227,6 +287,8 @@ const AtlasPage: React.FC = () => {
                 onStatusChange={setStatus}
                 placedCount={placedCount}
                 seekingCount={seekingCount}
+                kinshipVisible={kinshipVisible}
+                onKinshipChange={setKinshipVisible}
               />
             </div>
 
@@ -234,7 +296,8 @@ const AtlasPage: React.FC = () => {
                 Globe takes ~60vh; side panel sits beside on lg+, below on smaller. */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               <div
-                className="lg:col-span-2 w-full max-w-full overflow-hidden"
+                ref={globeBoxRef}
+                className="lg:col-span-2 w-full max-w-full overflow-hidden relative"
                 style={{ height: '60vh', minHeight: 360 }}
               >
                 <Globe
@@ -243,9 +306,22 @@ const AtlasPage: React.FC = () => {
                   onSelect={(id) => setSelectedKey(id)}
                   className="w-full h-full"
                 />
+                {kinshipIndex && (
+                  <KinshipLayer
+                    index={kinshipIndex}
+                    width={globeSize.width}
+                    height={globeSize.height}
+                    selectedId={selectedKey}
+                    visible={kinshipVisible}
+                  />
+                )}
               </div>
               <div className="lg:col-span-1">
-                <PieceSidePanel piece={selectedPiece} />
+                <PieceSidePanel
+                  piece={selectedPiece}
+                  kin={kinForSelected}
+                  onSelectKin={(key) => setSelectedKey(key)}
+                />
               </div>
             </div>
 

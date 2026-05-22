@@ -11,8 +11,16 @@ export interface SelectedPiece {
   placedAt?: string;      // ISO of most recent placed/moved event
 }
 
+export interface KinEntry {
+  key: string;            // piece key — same shape AtlasPage uses to select
+  title: string;
+}
+
 export interface PieceSidePanelProps {
   piece: SelectedPiece | null;
+  /** Kindred pieces, already sorted nearest-first, capped to ~6. Empty for non-UL pieces. */
+  kin?: readonly KinEntry[];
+  onSelectKin?: (key: string) => void;
 }
 
 function formatPlacedYear(iso?: string): string | null {
@@ -23,7 +31,7 @@ function formatPlacedYear(iso?: string): string | null {
   return String(d.getUTCFullYear());
 }
 
-const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece }) => {
+const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece, kin, onSelectKin }) => {
   if (!piece) {
     return (
       <aside
@@ -91,6 +99,27 @@ const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece }) => {
           {statusLine}
         </p>
       </div>
+
+      {kin && kin.length > 0 && (
+        <div className="border-t border-wood-200 pt-5 mt-5">
+          <p className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 mb-2">
+            Kin
+          </p>
+          <ul className="space-y-1.5">
+            {kin.map((k) => (
+              <li key={k.key}>
+                <button
+                  type="button"
+                  onClick={() => onSelectKin?.(k.key)}
+                  className="font-serif text-base text-wood-900 hover:text-bronze-700 transition-colors text-left leading-snug"
+                >
+                  {k.title}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </aside>
   );
 };
