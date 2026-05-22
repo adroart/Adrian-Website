@@ -30,6 +30,10 @@ const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
+const OrdersList = lazy(() => import('./components/account/OrdersList'));
+const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
+const OracleProfile = lazy(() => import('./components/OracleProfile'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -44,6 +48,9 @@ import { LAUNCH_FLAGS } from './launchFlags';
 import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import { PlayerProvider } from './PlayerContext';
+import { AccountProvider } from './lib/account/AccountProvider';
+import { ProfileProvider } from './lib/profile/context';
+import { CollectionsProvider } from './lib/collections/context';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
@@ -114,6 +121,7 @@ const AppInner: React.FC = () => {
             <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
             {/* Oracle gateway — QR code target */}
             <Route path="/oracle" element={<OracleGateway />} />
+            <Route path="/oracle/profile" element={LAUNCH_FLAGS.hologeneticProfile ? <OracleProfile /> : <Navigate to="/oracle" replace />} />
             <Route path="/oracle/the-systems" element={<OracleSystems />} />
             <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
             <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
@@ -147,6 +155,9 @@ const AppInner: React.FC = () => {
             <Route path="/atlas/claim" element={<StewardClaim />} />
             <Route path="/atlas/edit" element={<StewardEdit />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
+            <Route path="/account" element={<AccountDashboard />} />
+            <Route path="/account/orders" element={<OrdersList />} />
+            <Route path="/account/collections" element={<CollectionsManager />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
@@ -161,13 +172,19 @@ const AppInner: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <DarkModeProvider>
-    <CartProvider>
-      <PlayerProvider>
-        <AppInner />
-      </PlayerProvider>
-    </CartProvider>
-  </DarkModeProvider>
+  <AccountProvider>
+    <DarkModeProvider>
+      <CartProvider>
+        <PlayerProvider>
+          <ProfileProvider>
+            <CollectionsProvider>
+              <AppInner />
+            </CollectionsProvider>
+          </ProfileProvider>
+        </PlayerProvider>
+      </CartProvider>
+    </DarkModeProvider>
+  </AccountProvider>
 );
 
 export default App;

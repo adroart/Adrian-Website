@@ -4,11 +4,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useMetaTags } from '../hooks/useMetaTags';
+import SaveOrderPrompt from './account/SaveOrderPrompt';
 
 const OrderConfirmed: React.FC = () => {
   const [searchParams] = useSearchParams();
-  // Stored for future order lookup - not currently used in the UI
-  const _sessionId = searchParams.get('session_id');
+  const sessionId = searchParams.get('session_id');
 
   const { clearCart } = useCart();
 
@@ -51,6 +51,7 @@ const OrderConfirmed: React.FC = () => {
             Continue Exploring <ArrowRight size={14} />
           </Link>
         </div>
+        <SaveOrderPrompt sessionId={sessionId} />
       </div>
     </section>
   );

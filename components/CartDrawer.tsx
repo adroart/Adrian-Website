@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { X, Minus, Plus, ArrowRight, Loader2, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart, getMaxQuantity } from '../CartContext';
 import { formatPrice } from '../utils/formatPrice';
+import { useAccount } from '../lib/account/useAccount';
 
 // Validate that a URL is a legitimate Stripe checkout URL before redirecting
 function isValidStripeUrl(url: string): boolean {
@@ -27,7 +28,8 @@ function isValidStripePaymentLink(url: string): boolean {
 }
 
 async function startCheckout(
-    items: Array<{ stripePriceId?: string; stripeUrl?: string; addOnPriceIds?: string[]; quantity: number; title: string }>
+    items: Array<{ stripePriceId?: string; stripeUrl?: string; addOnPriceIds?: string[]; quantity: number; title: string }>,
+    fetchAuthed: (input: string, init?: RequestInit) => Promise<Response> = fetch
 ): Promise<void> {
     // If every item (and its add-ons) has a real Stripe Price ID, use the Checkout Session API
     const allHavePriceId = items.every(
@@ -51,7 +53,7 @@ async function startCheckout(
             }
         }
 
-        const res = await fetch('/api/checkout', {
+        const res = await fetchAuthed('/api/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: lineItems }),
@@ -92,6 +94,7 @@ async function startCheckout(
 
 const CartDrawer: React.FC = () => {
     const { items, removeFromCart, updateQuantity, totalItems, totalPrice, isCartOpen, closeCart } = useCart();
+    const account = useAccount();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [swipeOffset, setSwipeOffset] = useState(0);
@@ -174,7 +177,8 @@ const CartDrawer: React.FC = () => {
                     addOnPriceIds: product.addOnPriceIds,
                     quantity,
                     title: product.title,
-                }))
+                })),
+                account.fetchAuthed,
             );
             // Dispatch custom event for any analytics listeners
             window.dispatchEvent(new CustomEvent('checkout_initiated', {

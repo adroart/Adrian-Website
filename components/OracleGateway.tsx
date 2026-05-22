@@ -11,6 +11,11 @@
 import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ALL_CARDS } from '../data/oracleData';
+import { LAUNCH_FLAGS } from '../launchFlags';
+import TodayEnergyPanel from './oracle/TodayEnergyPanel';
+import YearEnergyPanel from './oracle/YearEnergyPanel';
+import ProfileSummary from './oracle/ProfileSummary';
+import { useProfile } from '../lib/profile/context';
 
 /* ─── Trigram → line pattern ─────────────────────────────────────────────── */
 
@@ -40,6 +45,7 @@ const HEX_H      = 5 * (LINE_H + LINE_GAP) + LINE_H;
 
 const OracleGateway: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   const hexagrams = useMemo(() =>
     ALL_CARDS.map((card, i) => {
@@ -104,6 +110,78 @@ const OracleGateway: React.FC = () => {
         }
         .og-hex:hover rect.og-hex-hit {
           fill: color-mix(in oklab, var(--color-bronze-400) 8%, transparent);
+        }
+
+        .ul-energy-row {
+          display: flex;
+          gap: 12px;
+          margin: 18px 0 24px;
+          width: 100%;
+          max-width: 440px;
+          justify-content: center;
+        }
+        @media (max-width: 480px) {
+          .ul-energy-row { flex-direction: column; gap: 10px; }
+        }
+        .ul-energy-panel {
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          grid-template-areas: "label label" "thumb body";
+          column-gap: 12px;
+          row-gap: 4px;
+          align-items: center;
+          flex: 1 1 0;
+          min-width: 0;
+          padding: 12px 14px;
+          background: color-mix(in oklab, var(--color-paper-100) 80%, transparent);
+          border: 1px solid color-mix(in oklab, var(--color-wood-600) 18%, transparent);
+          border-radius: 4px;
+          text-decoration: none;
+          color: inherit;
+          transition: border-color 0.25s, background 0.25s;
+          outline: 2px solid transparent;
+          outline-offset: 4px;
+        }
+        .ul-energy-panel:hover {
+          border-color: color-mix(in oklab, var(--color-bronze-600) 45%, transparent);
+          background: color-mix(in oklab, var(--color-paper-100) 95%, transparent);
+        }
+        .ul-energy-panel:focus-visible { outline-color: var(--color-bronze-500); }
+        .ul-energy-panel__label {
+          grid-area: label;
+          font-family: Cinzel, Palatino, serif;
+          font-size: 9px;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: var(--color-bronze-600);
+        }
+        .ul-energy-panel__thumb {
+          grid-area: thumb;
+          width: 44px;
+          height: 44px;
+          border-radius: 2px;
+          object-fit: cover;
+          display: block;
+        }
+        .ul-energy-panel__body { grid-area: body; min-width: 0; }
+        .ul-energy-panel__title {
+          font-family: 'Cormorant Garamond', Cormorant, Palatino, serif;
+          font-size: 16px;
+          line-height: 1.2;
+          color: var(--color-wood-900);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .ul-energy-panel__meta {
+          font-family: 'Lato', Helvetica, sans-serif;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          color: var(--color-wood-600);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-top: 2px;
         }
       `}</style>
 
@@ -196,6 +274,25 @@ const OracleGateway: React.FC = () => {
           }}>
             Universal Language
           </p>
+
+          {LAUNCH_FLAGS.hologeneticProfile && (
+            <div className="ul-energy-row">
+              <TodayEnergyPanel />
+              <YearEnergyPanel />
+            </div>
+          )}
+
+          {LAUNCH_FLAGS.hologeneticProfile && (
+            profile ? (
+              <div style={{ width: '100%', maxWidth: 360, marginBottom: 18, display: 'flex', justifyContent: 'center' }}>
+                <ProfileSummary />
+              </div>
+            ) : (
+              <Link to="/oracle/profile" className="og-link" style={{ borderTop: '1px solid color-mix(in oklab, var(--color-wood-600) 25%, transparent)' }}>
+                Enter your birth chart
+              </Link>
+            )
+          )}
 
           <Link to="/oracle/universal-language" className="og-link">Get a Reading</Link>
           <Link to="/creations/multidimensional-art/universal-language" className="og-link">View the Artwork</Link>

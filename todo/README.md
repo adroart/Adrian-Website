@@ -6,6 +6,13 @@ Detailed task files:
 - [claude-tasks.md](claude-tasks.md) - Code tasks (Claude can do independently)
 - [adrian-tasks.md](adrian-tasks.md) - Content, decisions, accounts (only Adrian)
 - [future.md](future.md) - Post-launch and long-term ideas
+- [oracle-accounts-implementation.md](oracle-accounts-implementation.md) - **Oracle Hologenetic Profile + unified accounts** (6 phases, all code-complete on branch `claude/oracle-energy-birthdate-4HS3f`; waiting on Adrian-side provisioning before the accounts flag flips on)
+
+---
+
+## In flight
+
+**Oracle birthdate + accounts** — branch `claude/oracle-energy-birthdate-4HS3f`. Today's + year's energy panels on `/oracle`, full Hologenetic Profile at `/oracle/profile`, in-card "Your position" callout, unified Clerk sign-in, D1-backed orders + synced cart + saved collections. All six phases committed and pushed; details and outstanding handoff items in [oracle-accounts-implementation.md](oracle-accounts-implementation.md). The `accounts` launch flag stays off until Adrian provisions Clerk, D1, and the Stripe webhook (see that file's "Adrian to provision" section).
 
 ---
 
