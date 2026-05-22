@@ -1,12 +1,13 @@
 # SEO And AI Search Research Index
 
-Last updated: 2026-05-20
+Last updated: 2026-05-22
 
 This folder contains the current SEO and AI-search research files for Adrian Rasmussen's art website. The files are written so future agents can continue the work without asking Adrian for more context.
 
 ## Start Here
 
 - `index.html`: Human-facing SEO guidance dashboard. Open this file in a browser for the strategy overview, route map, file map, agent runbook, and next steps.
+- `../../WORK_INDEX.md`: Durable map of the recent SEO, AI search, crystal-search, laser-cut art, mandala, and oracle work.
 
 ## Files
 
