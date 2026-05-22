@@ -1,0 +1,59 @@
+{
+  "number": 13,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Fellowship",
+  "combination": "Heaven above, Fire below. The flame leaps upward toward the sky it cannot reach, and the sky receives the light without consuming it. Five strong lines and a single yielding line at the second place, the one opening through which everyone in the hexagram is drawn together. The picture is people gathered around a fire under the open sky, far from any house. Not the family. Not the faction. Just the warmth and the wide view, shared.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion, ceaseless and untiring, reaching up and outward. Above this hexagram it is the wide unowned air, the open ground where strangers can meet without anyone having to be the host. Strength that does not press down.",
+  "lower_nature": "Fire, Li. A yielding line cradled between two strong ones. Fire that clings to what it burns on and gives off light by clinging. Below this hexagram it is the inner brightness, the seeing that lets you recognize your own kind across a crowd. Warmth at the centre. Clarity from the centre.",
+  "reading": "The situation this code names is the gathering. Not the family you were born into. Not the clan you were given. The wider circle, where people who recognize each other find each other, and the warmth is built between them, not inherited.\n\nThe image is a fire in the open field, with the sky above it. Notice where this fire is not. It is not indoors. It is not at the ancestral hearth. It is out past the houses, in the open ground, where anyone walking by can join. That is the whole teaching. Fellowship that holds is fellowship built in the open. The minute you take the fire inside, lock the door, and only let your own people in, the warmth narrows and the light dims, and the hexagram tells you so with the only line that brings regret: fellowship in the clan.\n\nWhat the code is really asking of you is harder than friendship. It is asking you to stay loyal to a shared thing without making the sharing exclusive. To love your people without using them as a wall. The strength to do this comes from the upper trigram, the open sky that does not grasp. The clarity to do it comes from the lower trigram, the fire that sees who belongs by the light it throws.\n\nThere will be struggle. The hexagram does not pretend otherwise. The fifth line weeps before it laughs, and an army has to be raised before the meeting happens. What is being said is that real fellowship is worth that, and the joining at the end is the thing the whole hexagram has been climbing toward. Out in the field. Under the sky. Open.",
+  "judgement_lines": [
+    "Fellowship in the open field. It moves through.",
+    "Good to cross the great water.",
+    "Good for one who holds the true way."
+  ],
+  "image_lines": [
+    "Heaven above, Fire reaching up to meet it.",
+    "So the wise one sorts kinds without dividing the people.",
+    "The light tells like from like, without shutting any out."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "stepping out of your own gate to meet others.",
+      "reading": "The first move of fellowship is the move outside. You leave the house, you stand on the path where anyone could pass, and you greet what comes. No selecting yet. No history with these people. Just an open beginning, and no fault in it. The gate behind you stays open too.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    },
+    {
+      "line": 2,
+      "image": "fellowship kept inside the clan.",
+      "reading": "Only with your own. Only with the people who already share the name. This is where the hexagram puts its one warning. The warmth becomes a wall, and what was meant to be opening becomes shrinking. There is no shame in loving your people. The shame is in stopping there.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    },
+    {
+      "line": 3,
+      "image": "weapons hidden in the grass, watching from the high mound.",
+      "reading": "You want the union but you are trying to take it by force or by stealth, watching from above with something concealed. Three years pass and nothing rises. Fellowship will not be forced into being. The counsel is to stop the watching, drop the strategy, and meet whoever is in front of you plainly.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    },
+    {
+      "line": 4,
+      "image": "climbing the wall but not attacking.",
+      "reading": "You are up on the wall, in position, and you could press the conflict. You choose not to. The choice not to attack is the good fortune here. Something in you recognizes that what you wanted to take cannot be taken this way, and you return to ground without spending the strike.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    },
+    {
+      "line": 5,
+      "image": "first the weeping, then the laughter.",
+      "reading": "The meeting was kept apart by what stood between you. There was grief in that, real grief. Then the obstacle gives way and you find each other, and the weeping turns into laughter without losing what the weeping was. This is the centre of the hexagram. The reunion the whole thing was for.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    },
+    {
+      "line": 6,
+      "image": "fellowship out in the countryside, past the suburbs.",
+      "reading": "The gathering has moved all the way out, past the town, into the quiet ground. Mild. Unforced. No one is being recruited and no cause is being pressed. Something in the aspiration is not yet finished, and the hexagram says so. But there is no regret. The fire is still warm in the open.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/13", "generated": "iching-brief-v1" }
+}

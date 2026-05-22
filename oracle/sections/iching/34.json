@@ -1,0 +1,58 @@
+{
+  "number": 34,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Great Power",
+  "combination": "Thunder rolls in the open sky above heaven. Four solid lines rise from the bottom, pressing upward, with two yielding lines at the top thinning out. The picture is of strength that has accumulated and is now breaking into the open, loud, visible, hard to ignore. It is the second-month hexagram, the moment when spring's force becomes undeniable and the ground itself starts to shake.",
+  "upper_nature": "Thunder, Zhen. The eldest son. Sudden movement breaking out of stillness, the first crash that announces a season has turned. When this trigram is on top, the force is showing itself outwardly, startling whatever was sleeping.",
+  "lower_nature": "Heaven, Qian. Pure originating strength, untiring, unbroken. Below, it is the engine: the deep, steady drive that has been gathering for a long time before any sound was heard. The thunder above only exists because of what is solid here.",
+  "reading": "The situation this code names is the moment your strength has actually arrived. Not the wish for it, not the rehearsal of it. The thing itself, in your hands, ready to be used. Four lines of accumulated yang are pushing up out of the body of the hexagram, and there is thunder rolling in the sky to announce it. The retreat is over. The discipline of the lean years is over. You can now do the thing.\n\nThat is the easy half of the teaching. The harder half is the warning baked into every line: a strength this real is almost impossible to handle correctly. The hexagram keeps returning to one image, a ram charging a fence, horns getting stuck. The ram is not weak. The ram is strong, which is exactly why it tries to crash through the fence instead of going around. Power that has just become great is the most dangerous power, because it has not yet learned the difference between what it can do and what it should do.\n\nSo the counsel here is strange. It is not, push harder. It is, slow down inside the surge. Apply only the strength the moment actually asks for. Stay on a path your own conscience would defend. The two great images of right use that the lines hand you are an axle, not the wheel: the hidden thing that turns the visible thing. And the fence opening on its own, so you walk through without breaking anything. That is what great power looks like when it has finally grown up.",
+  "judgement_lines": [
+    "Great Power.",
+    "It serves those who hold steady, and stay correct.",
+    "Force without that holding is not greatness, only noise."
+  ],
+  "image_lines": [
+    "Thunder rolls in the open sky.",
+    "So the one who would grow does not step where the ground is not right."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "strength shown in the toes.",
+      "reading": "The force has reached your feet and you can feel it. You want to move. Do not. From the lowest place, with nothing yet behind you, an advance now is a stumble. The strength is real, the moment is not. Hold the charge. The work here is restraint, not motion.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    },
+    {
+      "line": 2,
+      "image": "strong at the centre, quiet about it.",
+      "reading": "The power is full, the place is balanced, and nothing in you needs to prove it. This is the calm yang inside the surge: strong enough to act, settled enough not to. Hold to what is right and the situation rewards you. No drama. The good fortune here is almost boring, which is the sign.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    },
+    {
+      "line": 3,
+      "image": "the ram butting the fence, horns caught.",
+      "reading": "The petty person uses every bit of strength they have. The wise person, here, uses almost none. You are exactly at the place where charging through would feel justified, and exactly where it traps you. Do not test the fence with your head. Even being right, in this position, is dangerous.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    },
+    {
+      "line": 4,
+      "image": "the fence opens, the axle holds.",
+      "reading": "The obstruction gives way without you having to break it. What carries you forward now is not the loud part of your strength but the hidden part, the axle under the cart that no one sees. Stay correct and any regret you brought with you disappears. Go, but go as the axle, not the wheel.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    },
+    {
+      "line": 5,
+      "image": "the ram lost, easily, in the open field.",
+      "reading": "The butting-headed part of your strength has slipped away. You did not lose it, exactly. You just stopped needing it. This place does not call for force, and the absence of force here is not weakness. Let the ram go. There is no regret. Borrow what the moment offers instead.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    },
+    {
+      "line": 6,
+      "image": "the ram stuck in the fence, no way out.",
+      "reading": "You went one charge too far and now you cannot retreat and cannot advance. Nothing here favours you. The turn comes only when you see the trap clearly, sit down inside it, and stop adding to the error. The good fortune in this line is small and hard-earned. Notice the difficulty. That is the door.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/34", "generated": "iching-brief-v1" }
+}

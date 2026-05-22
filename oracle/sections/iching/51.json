@@ -1,0 +1,58 @@
+{
+  "number": 51,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Arousing Thunder",
+  "combination": "Thunder over thunder, the same shock doubled. One yang line buried under two yin lines, the held charge ready to break upward, and then the whole figure repeated above it so the break happens twice. This is the hexagram of the jolt that arrives and the jolt that follows it, of springtime cracking the winter ground open. The sound carries for a hundred miles. The figure is the noise itself.",
+  "upper_nature": "Thunder, Zhen. Broken, broken, unbroken at the bottom. The eldest son. Arousing, the first stir that wakes hibernating things. When this trigram is on top, the shock has reached the surface and is heard by everyone within range.",
+  "lower_nature": "Thunder, Zhen, again. The same arousing power held lower, closer to the ground. Below, it is the rumble before the crack, the rising charge in the dark soil. Pure yang trapped under yin and about to make its move.",
+  "reading": "The situation this code names is the shock that arrives without warning. The phone call at the wrong hour, the news that shifts the ground, the loud spring crack that says the season has turned and nothing is going to go back to how it was. The hexagram doubles this, because shocks of this size do not come singly. There is the first one, and then there is the aftershock, and then there is the noise that keeps going inside you long after the air has gone quiet.\n\nThe picture given is the priest at the altar holding the sacrificial spoon and the cup of wine. The thunder breaks overhead, terrifying for a hundred miles. The priest does not let the spoon fall. That is the whole teaching. The shock is real. The fear is real. But the hand stays steady, and the rite goes on. The first response, the involuntary one, is alarm. Oh, oh. The second response, once the body realises it is still alive and the world has not ended, is laughter. Ha, ha. The hexagram counts on both. It is not asking you to feel nothing.\n\nWhat it is asking is that the shock be allowed to do its work. Thunder wakes what was sleeping. The shake is fertilising. Something is supposed to break open. The mistake at this code is to scramble after what was lost, or to freeze into a paralysed gaze. The counsel is to stay near the centre of yourself, attend to what needs attending to, and let the bigger storm pass through.",
+  "judgement_lines": [
+    "Thunder comes, and the way opens.",
+    "First the cry of alarm, then the cheerful talk.",
+    "The shock carries for a hundred miles, and the spoon is not dropped."
+  ],
+  "image_lines": [
+    "Thunder doubled. The image of Shock.",
+    "So the one who would grow takes the fear inward, sets the life in order, and looks honestly at the self."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the first crack of thunder, then laughter.",
+      "reading": "The shock arrives and the body answers before the mind does. First the alarm, the small involuntary sound. Then, once it has passed, the easy laugh of someone who has remembered they are still here. This is the line that has the whole hexagram in it. Let the fear teach you. Then let it go.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    },
+    {
+      "line": 2,
+      "image": "running uphill, leaving the coins behind.",
+      "reading": "The shock costs you something. A treasure goes. Climb to higher ground and do not turn back for the dropped things. Do not chase. They come back on their own when the seven days are up and the storm has moved on. Your work right now is not recovery. It is altitude.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    },
+    {
+      "line": 3,
+      "image": "the rumble from a distance, hands shaking anyway.",
+      "reading": "The shock is far off, not even meant for you, and still it has made you shaky. The position itself is uneasy. The way through is to let the disturbance push you into motion rather than into a freeze. Move carefully, but move. The trembling becomes harmless the moment it becomes action.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    },
+    {
+      "line": 4,
+      "image": "lightning going dull in the mud.",
+      "reading": "The energy is there, but the ground is wrong. What should be arousing has been swallowed by a soft, sticky place that does not let anything ring out. Bad company, lazy days, low company kept too long. The fire does not refuse you. It cannot shine through this much wet.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 5,
+      "image": "thunder coming and going, coming and going.",
+      "reading": "The shocks keep arriving from different directions. There is no still moment to plan from. Stay near the centre. Do not try to take the whole storm on at once. The thing that matters here is that nothing essential gets lost. There is still work in front of you, real work. Do it.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 6,
+      "image": "the panicked gaze, the storm just next door.",
+      "reading": "The shock has not even hit you yet, only your neighbour, and already the eyes are darting and the limbs will not settle. To act from this place is to make trouble where there was none. Watch what the storm does to others. Take the warning. The mistake here would be to rush forward as if you had already been struck.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/51", "generated": "iching-brief-v1" }
+}

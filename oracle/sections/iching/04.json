@@ -1,0 +1,59 @@
+{
+  "number": 4,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Youthful Folly",
+  "combination": "A mountain sits on top, a spring rises in the dark beneath it. The water has only just left the rock and does not yet know where it is going. The mountain above will not move for it. This is the picture of something young: a knowing that has begun but has not found its shape, surrounded by ground that does not care which way it turns. The covered thing is real. It just has not been opened yet.",
+  "upper_nature": "Mountain, Gen. Still, settled, the line that says here and no further. The thing already shaped. When this trigram sits above, it gives the situation a ceiling: a limit you cannot argue with, a stop the world has placed at the top of the matter.",
+  "lower_nature": "Water, Kan. The flowing thing in the deep place, moving without a clear road. Inside the situation there is a current that does not yet know the country it will become. Risk lives here, and so does the first true motion, the spring before it has carved a bed.",
+  "reading": "The situation this code names is the moment you do not know enough yet. Not failure, not lack. Just the early stage, where the knowing is real but uncovered, and the shape it will take has not yet been cut. A spring at the foot of the mountain. The water is clean. It has only just come out.\n\nThis is the place where a teacher matters, and where the work of being taught matters more. The old text says it plainly: I do not seek out the young fool. The young fool comes to me. The current is in you. The mountain above is not going to come down. You have to climb. You have to bring the question.\n\nAnd then there is the second piece, which is harder: you ask once, with sincerity, and you listen. You do not ask three times to get a softer answer. The first answer is the answer. Pushing past it muddies the water.\n\nThis is also the line on patience with not-knowing yet. A child does not learn by being shamed for being a child. The discipline that helps here is the kind that clears a path, not the kind that punishes for being on the path. Stay close to one good source. Drink slowly. Let the spring run long enough to find its own way down. The mistake people make at this card is moving too fast in too many directions at once. Settle. Ask the real question.",
+  "judgement_lines": [
+    "The covered thing carries through.",
+    "I do not seek the young one. The young one seeks me.",
+    "The first asking is the asking. The second muddies it.",
+    "Steady is the way."
+  ],
+  "image_lines": [
+    "Under the mountain, a spring comes up.",
+    "So the one who would grow follows through on small acts, and feeds the root."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the chains beginning to come off.",
+      "reading": "First firmness is a kindness. Discipline at the start is what loosens the mind, not what binds it. Set the boundary, hold it once, then ease. The error here is staying in punishment past its use. The cage was for opening, not for living in.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    },
+    {
+      "line": 2,
+      "image": "the steady one in the middle of the household.",
+      "reading": "You are the one who can hold the room. Carry the unknowing of the others with patience, the way a strong floor carries a noisy house. This is the line where the second son takes charge: not because he is loudest, but because he can stay. Receive what comes to be taught.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    },
+    {
+      "line": 3,
+      "image": "the one who runs at the first shine of gold.",
+      "reading": "Someone, maybe you, is being pulled by the look of power instead of the substance of it. The bond formed this way will not hold. Do not chase. Do not be chased toward. Wait until the meeting is between two who can stand on their own ground. Nothing useful comes from this hurry.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 4,
+      "image": "stuck in the dark with no one nearby.",
+      "reading": "The hardest position in the hexagram. Cut off from the teacher, cut off from a clear companion, sealed inside your own not-knowing. There is regret here, but the regret is the door. Notice that you have wandered. Real teachers do not refuse you. You have been refusing them. Turn back toward one.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 5,
+      "image": "the child still able to be a child.",
+      "reading": "The good fortune of this line is openness that has not yet been spoiled. You do not know, and you know that you do not know, and you are willing to learn. That is the whole of it. Stay near someone who can actually see. Ask the simple question. Receive the simple answer.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    },
+    {
+      "line": 6,
+      "image": "the hand raised to strike, lowered to guard.",
+      "reading": "At the top of the hexagram the force has gone hard. The temptation now is to crush the folly out of someone, including yourself. That makes a robber of the teacher. The work here is to ward off the harm, not to deliver more of it. Defend the path. Do not become the thing you are clearing.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/04", "generated": "iching-brief-v1" }
+}

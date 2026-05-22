@@ -1,0 +1,58 @@
+{
+  "number": 32,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Duration",
+  "combination": "Thunder sits over Wind. The storm above, the long current below. Thunder rouses and breaks, wind keeps moving and reaching in. Set together like this they make a weather that does not pass: the shock at the top is renewed by the steady breath beneath, and the breath below is given direction by what answers it above. This is the picture of something that lasts because two natures keep feeding each other.",
+  "upper_nature": "Thunder, Zhen. The eldest son. One strong line under two yielding, the charge breaking upward out of the earth. Its action is to rouse, to startle the sleeping, to clear the road. It does not stay quiet. When it is on top, the whole figure is being kept awake.",
+  "lower_nature": "Wind, Xun. The eldest daughter. One yielding line under two strong, the breath that goes in everywhere. Its action is to enter, to penetrate gently, to keep moving without effort. At the base, it is the inner steady current that the upper noise rides on.",
+  "reading": "The situation this code names is the long marriage of a thing. Not the start of it, not its peak, the part that keeps going. A relationship that has stopped being new. A practice you have been at for years. A vow, a craft, a body of work, a self. The question is no longer whether you can begin. The question is what makes something hold its shape through weather.\n\nThe image tells you. Thunder and wind, together. Wind reaches in below and never stops; thunder breaks open above and renews the charge. What endures is not still. It is a steady motion that keeps its direction while everything inside it changes. The four seasons last because they keep turning. The sun lasts because it keeps moving. Nothing stands by gripping its place. It stands by walking the same path daily.\n\nWhich means the danger here is the wrong kind of holding. Clenching. Forcing yourself to stay the same. Dredging up depth that has not arrived yet. The opening line of this hexagram is a warning against exactly that: trying to be deeply constant before you have understood what you are being constant about. And the closing line warns the other way, the restless agitation that calls itself perseverance and is only its own anxiety.\n\nSo the counsel is unflashy. Stand firm in your direction, not your method. Let the practice change while the aim does not. Adjust the route, not the destination. The body of a long thing is flexible inside a fixed orientation. Keep going. Adjust as you go. The lasting one is the one who can keep walking when the day stops being interesting.",
+  "judgement_lines": [
+    "Duration carries through.",
+    "There is no fault here.",
+    "Hold to what is true, and it is favorable to have somewhere to go."
+  ],
+  "image_lines": [
+    "Thunder and wind, together.",
+    "So the one who would last stands firm in direction, and does not change the aim."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "dredging for depth at the beginning.",
+      "reading": "You are reaching down for a depth that the season has not given yet. The wish to be already deep is itself the trouble. Even if you are right in your aim, forcing the bottom up brings no gain. Stay shallow a while longer. The deep comes by living, not by digging for it.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    },
+    {
+      "line": 2,
+      "image": "holding the centre, the regret falling off.",
+      "reading": "Strength here is balanced. You are neither leaning into the work nor backing away from it. Constancy at this place is not stubbornness; it is a quiet, central holding that adjusts to what comes. What you used to regret stops mattering. The middle is the safest ground a long thing can have.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    },
+    {
+      "line": 3,
+      "image": "starting strong, then breaking faith with yourself.",
+      "reading": "The character is good and the start was real. Then somewhere in the middle the resolve slipped, and others noticed. This is the embarrassment of inconstancy. Even when you are right, you will be doubted. The fix is not louder beginning. It is finishing what you said you would, in small ways, today.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    },
+    {
+      "line": 4,
+      "image": "a field with no game in it.",
+      "reading": "You are hunting the wrong field. The persistence is real, the effort is real, the place is empty. Patience here is not virtue, it is misplacement. Notice that nothing answers. Move. Constancy does not mean staying where the work cannot meet you; it means staying with the work, in a field that has game.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    },
+    {
+      "line": 5,
+      "image": "constancy in one virtue, no more.",
+      "reading": "Faithful to one note, one practice, one role, played the same way forever. This is good when your task is to follow, to keep, to hold. It fails when the task asks you to decide, to lead, to break new ground. Ask which the day is asking of you. Single-mindedness is a tool, not a way to be.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    },
+    {
+      "line": 6,
+      "image": "restlessness mistaken for endurance.",
+      "reading": "At the top, the engine has run out and the body keeps shaking. The motion looks like perseverance and is only agitation, the buzz of a thing that does not know how to stop. Nothing is built here. The remedy is to sit down. Endurance is not constant motion. It is the capacity to be still without falling apart.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/32", "generated": "iching-brief-v1" }
+}

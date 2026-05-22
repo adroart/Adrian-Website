@@ -1,0 +1,58 @@
+{
+  "number": 58,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Joyous Lake",
+  "combination": "Lake rests on lake, two open surfaces touching where their edges meet. Water collected in the low place, doubled, mirror over mirror. The yielding line sits on top of each trigram with the two strong lines below, soft outside and firm at the root. This is the hexagram of exchange, of mouths open in speech and song, of two pools sharing their water so neither runs dry.",
+  "upper_nature": "Lake, Dui. Two yang at the root, one yin opening on top. The youngest daughter in the trigram family. Open mouth, smiling face, the vapor rising off still water. Outwardly soft and pleasant, inwardly firm. When this trigram is up, the joy is what the world sees.",
+  "lower_nature": "Lake, Dui, again. The same nature in the inner seat: the source of the gladness, not its display. Strength held quietly at the bottom, with one soft line above letting the feeling out. Below, this is the open heart before it speaks, the spring under the marsh.",
+  "reading": "The situation this code names is the joy of exchange. Two lakes lying side by side, sharing their water, each kept full by the other. A lake on its own evaporates. Joined, they replenish. This is the teaching: real joy is not a thing you hoard inside yourself, and it is not a thing you stage for others. It moves between people, the way water finds its level between two pools.\n\nThe hexagram is soft on the surface and strong underneath. That is the order it asks for. The smile is on the outside, but the truthfulness is at the root, and if you flip that order the whole thing turns sour. Flattery is lake water with no spring under it. It runs out fast, and what comes back is dislike. The image of the open mouth is here for a reason. Speech, conversation, study with a friend who has walked further, the practice of saying a thing out loud and hearing it answered. The Image puts it plainly: lakes resting on each other, and so the one who would grow studies with companions.\n\nThe counsel is to find your joy in what is real. In honest exchange, in the company you keep, in the talk that goes somewhere. Be careful of joy that has to be induced, joy you pull toward yourself from outside, joy you perform to win people over. The hexagram likes pleasure. It does not like the chase for pleasure. Stay open. Keep the spring under the lake clean.",
+  "judgement_lines": [
+    "The Joyous comes through, and reaches success.",
+    "It is favorable to stay firm and true.",
+    "Joy that is correct, develops."
+  ],
+  "image_lines": [
+    "Lakes resting on each other, joined at the rim.",
+    "So the one who would grow studies and practices with friends."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "harmonious joy at the lake's edge.",
+      "reading": "Strong at the root and quiet about it, the joy here comes up by itself. No one is being courted, no one is being impressed. You are simply in good order, and the gladness follows. There is nothing to doubt in this. Act without second-guessing. Good fortune.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    },
+    {
+      "line": 2,
+      "image": "the lake clear all the way through.",
+      "reading": "The joy comes from sincerity, what is inside showing on the outside without distortion. Whatever you were going to regret falls away here. Trust your aim. When the heart is truthful the world feels it, and the people you need to reach will reach back. Good fortune.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 3,
+      "image": "going out to fetch the pleasure home.",
+      "reading": "Hunting around outside for what should be welling up from within. You are pulling stimulation toward yourself because the inside feels empty, and the more you gather the emptier it gets. The position you are in does not fit you. Stop reaching for it. This way leads nowhere good.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    },
+    {
+      "line": 4,
+      "image": "weighing a pleasure, sleep gone restless.",
+      "reading": "You are near something that looks like joy but is not, and you can feel the wrongness. The unease is the teaching. Do not slide into it just because giving it up is hard. Decide cleanly and move. When you cut the tie there is real cause for celebration.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 5,
+      "image": "the lake taking in what would wear it down.",
+      "reading": "There is something corroding nearby, and you are open to it. Trust placed in what is falling apart is dangerous in the obvious way. The position is right, the sincerity is real, but sincerity poured into the wrong vessel still drains. Keep your warmth. Watch what you are pouring it into.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    },
+    {
+      "line": 6,
+      "image": "joy drawn out, performed for an audience.",
+      "reading": "The joy here is not arising, it is being induced. Stretched, prolonged, kept going past its natural end with clever speech and a winning face. The light inside it has gone out, even if the show is still bright. This is the hexagram's own warning against itself.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/58", "generated": "iching-brief-v1" }
+}

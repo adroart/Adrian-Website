@@ -1,0 +1,58 @@
+{
+  "number": 29,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Abysmal Water",
+  "combination": "Water sits over water, the same hazard doubled. Not the bright surface but the gorge, the defile, the pit cut into the rock where the stream runs through and the light does not reach. Two yin lines hold a strong yang line between them, twice. The shape of risk repeating. A second pit waiting in the floor of the first. The hexagram does not promise dry ground. It teaches you how to be in the water.",
+  "upper_nature": "Water, Kan. The middle son. A strong line caught between two yielding ones, the way a stream runs between its banks. In the outer position, the danger is the one others see: the gorge in front of you, the thing that has to be crossed.",
+  "lower_nature": "Water, Kan, again. The same shape doubled into the inner position. Here the peril is interior, the one you carry. The pit underneath the pit. Heart hemmed in on both sides by softness with a sharp drop at the centre. Trust is what runs through it.",
+  "reading": "The situation this code names is danger that repeats. Not one obstacle to clear and then daylight, but a pit you climb out of into the floor of another pit. Water on water. The teaching does not pretend you can step around it. The teaching is in how water itself moves through the gorge.\n\nWater fills the hole before it goes on. It does not skip the low place. It does not argue with the shape of the stone. It pours in, levels, finds the lip, and only then keeps moving. That is the whole instruction. You are inside a difficulty that has another difficulty inside it, and the way through is to keep something steady at the centre of you while the outside stays hard. The strong line in the middle of each trigram is your heart, held fast. Trust is not optimism here. Trust is the thing that does not break when the second pit opens.\n\nThe small actions are the ones that count. Small gains. Plain vessels. A jug of wine, an earthen bowl, an honest offering through a window when the door is shut. Grand gestures drown in this hexagram. What survives is sincerity, kept simple, kept moving. Fill the hole and pass on.\n\nThere is a warning folded into the shape too. The pit can become habit. You can fall once, then learn to fall, then live there. The hexagram is naming that risk plainly. Doubled water is also doubled danger of staying. Do not arrange a life inside the gorge. Pass through.",
+  "judgement_lines": [
+    "The gorge, repeated.",
+    "Hold the heart steady, and the way opens.",
+    "What is done in sincerity carries through."
+  ],
+  "image_lines": [
+    "Water flows on, and reaches its place.",
+    "So the one who would teach moves in steady virtue, and does the work again, and again."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a pit dug into the floor of the pit.",
+      "reading": "You are already in the hard place, and now you are digging. The first error became habit, and habit is deepening it. This line is not punishment. It is the plain naming of a pattern. Stop the small repetition. The way out begins by no longer hollowing the floor.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 2,
+      "image": "the pit, and a small handhold in the wall.",
+      "reading": "The danger is real and you are not getting out of it yet. A strong centre keeps you from sinking further, and a small gain is honestly available. Take the small thing. Do not strain for the whole rescue. A handhold in the wall is not the open field, and it is enough for now.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 3,
+      "image": "pit before, pit behind, the floor opening.",
+      "reading": "Whichever way you turn, another drop. Forward is danger, back is danger, and the impulse to act is the trap. This is a line that asks for stillness. Lie back against the rock. Wait. Any motion now adds to the fall. The counsel is plain: do not act in this way.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    },
+    {
+      "line": 4,
+      "image": "a jug of wine, a bowl of rice, plain earthen cups, passed through the window.",
+      "reading": "The door is closed. The grand offering is impossible. What you have is simple: a clay vessel, an honest gift, sincerity passed in through the only opening left. This is enough. Do not dress it up. The plainness is what makes it land. In the end there is no fault.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    },
+    {
+      "line": 5,
+      "image": "the pit filled to the rim, not yet spilling.",
+      "reading": "The water has risen to level. Not overflowing, not yet free, but level. Balance has been reached at the centre of the danger. This is the line of coming relief. No blame here. Stay in the centre, do not push the water past its edge, and the way will open of itself.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    },
+    {
+      "line": 6,
+      "image": "bound with cords, set down in a thicket of thorns.",
+      "reading": "The top of the danger. Tied up in the very habits that were meant to be temporary, hedged in by what now cuts at every move. Three years and still no way found. This is the warning the whole hexagram has been pointing at. Do not arrange a life inside the gorge.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/29", "generated": "iching-brief-v1" }
+}

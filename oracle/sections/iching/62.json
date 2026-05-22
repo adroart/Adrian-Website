@@ -1,0 +1,59 @@
+{
+  "number": 62,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Small Preponderance",
+  "combination": "Thunder sits on top of the mountain. The sound that would normally roll out across the open sky is muffled, bent low, held close to the rock. Two strong lines at the centre, four soft lines on the outside, the shape of a bird with wide wings and a small body. This is a season where the small things carry weight and the large things will not, where what wants to soar should walk for a while.",
+  "upper_nature": "Thunder, Zhen. The arousing, the sudden crack that comes up out of the ground and shakes whatever is on it. Movement, startle, the energy that gets things going. Placed on top here, it is movement above stillness, and so the movement is constrained.",
+  "lower_nature": "Mountain, Gen. Stopping, keeping still, the shape that does not budge. The boundary that gives everything else its scale. Below the thunder, it is the steady base, the part of you that will not move no matter how loud the upper noise becomes.",
+  "reading": "The situation this code names is the one where you can feel the urge to do something big, and the time will only support something small. The shape of it is a bird with the kind of body that flies short distances, not long ones. The teaching is not that the bird is weak. It is that the bird knows its altitude. Down where it can perch, it can rest and it can be heard. Up where the air thins, the cry goes silent and the wings start to tire.\n\nMost of the warnings in this hexagram are warnings against ascending. Against the speech that gets louder than the thought behind it. Against the move that gets ahead of the strength behind it. Against the gesture that is larger than the situation can hold. In a small-exceeding season, the corrective is to lean toward the lower side of every choice. More reverence than usual. More grief at the funeral than the room expects. More thrift in the spend. Excess in the direction of humility, never in the direction of display.\n\nThis does not mean shrink. It means choose where the excess goes. Pay attention to details that others pass over. Do the small thing better than anyone else is doing the small thing, and watch what accumulates. The mountain is your foundation right now. Stay close to it. The thunder above is real, but its job in this season is to roll along the ridgeline, not break the sky open. A bird that descends gets heard. A bird that climbs gets lost.",
+  "judgement_lines": [
+    "The small exceeds, and gets through.",
+    "Steadiness helps. Small matters yes, great matters no.",
+    "The flying bird leaves its call: better to come down than go up.",
+    "Coming down, great good fortune."
+  ],
+  "image_lines": [
+    "Thunder on the mountain.",
+    "The wise one tilts conduct toward reverence, mourning toward grief, spending toward thrift."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a bird that takes off before it is ready.",
+      "reading": "The wings open too early. There is an urge to rise into something the season cannot hold, and rising into it brings harm. This is not the moment to be the one who flies first. Stay on the branch. The strength is real but the air is not yet there to carry it.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    },
+    {
+      "line": 2,
+      "image": "passing the grandfather, meeting the grandmother.",
+      "reading": "You set out aiming at one figure and arrive at a different one, lower in rank and closer in. Approach the one you reach as a servant approaches a ruler, not as a rival. No fault here. The reach falls short of what you imagined and is exactly correct for what is.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    },
+    {
+      "line": 3,
+      "image": "the strong one who does not look behind.",
+      "reading": "Strength here assumes it does not need to guard itself. The small enemies that gather are the ones strength always underestimates. Take the extra precaution. Lock the door you would normally leave open. The error this position invites is not weakness, it is the contempt strength has for caution.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    },
+    {
+      "line": 4,
+      "image": "meeting the moment without going past it.",
+      "reading": "You arrive at the encounter and you do not overreach inside it. Hold there. To press forward from here is dangerous, and to keep grinding on with firmness past its hour is wrong. Caution, not force. Stop when stopping is the work. Do not fix yourself in this posture forever.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    },
+    {
+      "line": 5,
+      "image": "dense clouds, no rain yet.",
+      "reading": "Everything is gathered and nothing has broken. The conditions for the rain are present, but the rain will not come from this side, and not on this hour. Send the string arrow into the cave. Reach quietly for what is already close. The big release is not here. The small precise act is.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    },
+    {
+      "line": 6,
+      "image": "the bird that climbed too high.",
+      "reading": "Past the limit. The flight that was always meant to be a short hop has been pushed into the high air, and the air is no longer there. This is the line the whole hexagram was trying to warn its way out of. The calamity here is self-made. The bird is gone before you see it leave.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/62", "generated": "iching-brief-v1" }
+}

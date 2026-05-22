@@ -1,0 +1,58 @@
+{
+  "number": 40,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Deliverance",
+  "combination": "Thunder sits above Water. The storm that had been building inside the dark finally breaks, and the rain comes. After the long pressure of the previous hexagram, the obstruction, this is the moment the air clears. The knot loosens. The hostage walks out. Nothing in nature stays jammed forever, and the picture here is the exact second the held weather lets go.",
+  "upper_nature": "Thunder, Zhen. The eldest son. Sudden movement breaking out of stillness, the seed splitting its shell, the first crack of sound after a long silence. When this trigram is on top, the release is heard. It is the outward shock that announces what was already shifting beneath.",
+  "lower_nature": "Water, Kan. The middle son. The pit, the gorge, the abyss, the rushing stream that finds its way through anything. Below, it is the difficulty itself, the danger that the upper movement is escaping from. Yet water is also what flows once the dam gives.",
+  "reading": "The situation this code names is the moment a hard thing ends. Not the long inside of the trouble, not the slow climb out, but the snap of release itself, the second the pressure drops and the body remembers it can breathe.\n\nThe image is the thunderstorm. For days the air has been thick and pressing, and then in a single afternoon the sky cracks, the rain comes down, and afterward everything is washed and quiet and the seeds in the ground burst their husks. That is the teaching. Release is not earned by force, and it is not waited out passively. It arrives when the weather turns, and the work is to read the turn correctly.\n\nThe Judgement gives two routes and the test is which one you are in. If there is nowhere left to go, go back. Return to the ordinary. Do not stay keyed up in the posture of the crisis once the crisis has passed. But if there is still somewhere to go, move fast. Do not linger. The window for clean release is short, and a delayed release becomes a new tangle.\n\nThe other note this hexagram strikes is forgiveness. Thunder and rain wash the ground; the one who has come through hard weather pardons what was done in it. You do not carry the grudge into the new air. The wise person here lets the small offences go, lets the mistakes be mistakes, and does not turn the relief into a long settling of accounts. The whole thing wants to flow.",
+  "judgement_lines": [
+    "Deliverance. The southwest brings advantage.",
+    "If there is nowhere to go, return brings good fortune.",
+    "If there is somewhere to go, move at once, and the going is fortunate."
+  ],
+  "image_lines": [
+    "Thunder and rain set in.",
+    "So the one who would lead pardons mistakes, and forgives what was done wrong."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the border where the trouble ends.",
+      "reading": "You are at the seam between the hard thing and what comes after, and the seam itself does not ask anything of you. No blame. You did not cause it, and you cannot still be carrying it. Set the burden down. The next move has not arrived yet, and that is fine.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    },
+    {
+      "line": 2,
+      "image": "three foxes caught in the open field.",
+      "reading": "What was sly and slipping around the edges has been brought into the light. You catch what was undermining the work, and you receive a straight arrow for your trouble: the path of plainness. Hold to the middle. Do not over-strike. The cleanness of the hunt is the whole reward.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    },
+    {
+      "line": 3,
+      "image": "a porter, his sack still on his back, riding in a fine carriage.",
+      "reading": "Something does not fit. You are dressed for a station you have not earned and carrying the old load anyway. People will notice the mismatch and come for what you carry. Even if your intent is honest, the picture is wrong, and the wrong picture invites the wrong company. Get off the carriage.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    },
+    {
+      "line": 4,
+      "image": "untangle your toe.",
+      "reading": "Something small is keeping you in something small. A tie at the foot, a hanger-on, a relationship that was useful in the dark and has no place in the open. Release it. Once it is gone, the friend who was waiting can finally come, and that one you can trust. Trust comes in only after the toe is free.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    },
+    {
+      "line": 5,
+      "image": "the one who carries it lets it go.",
+      "reading": "Real release is internal. The leader who can release in themselves teaches release to everyone watching. You stop gripping. The small voices that were arguing in your head withdraw, because they have nothing left to push against. This is the line where the whole hexagram comes home.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    },
+    {
+      "line": 6,
+      "image": "the prince on the rampart, shooting the hawk.",
+      "reading": "One last thing is circling. It is high up and it is fast and it has been watching the situation for a while. This is not the moment for patience with it. Take the shot. The line is the hexagram's permission to be decisive about the final obstacle. Everything that follows flows because this was cut clean.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/40", "generated": "iching-brief-v1" }
+}

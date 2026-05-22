@@ -1,0 +1,81 @@
+{
+  "number": 34,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Sublime Power",
+
+  "unity_line": "Standing opposite Code 33, this is the great force that surges forward, answered by the wisdom that knows the hour to step back.",
+
+  "pair": {
+    "number": 33,
+    "card_name": "Echos of Time",
+    "hexagram_name": "Retreat (Tun)",
+    "teaching": "Sublime Power and Echos of Time, Retreat, are the two halves of one strategic intelligence. One is the strength that breaks through when the moment is finally ripe, the other is the dignified withdrawal that preserves strength for that moment. Real power is both, and the I Ching places them next to each other so the reader cannot forget it."
+  },
+
+  "inverse": {
+    "number": 33,
+    "card_name": "Echos of Time",
+    "hexagram_name": "Retreat (Tun)",
+    "is_self_inverse": false,
+    "teaching": "Reverse the lines and the surging force becomes Code 33, Echos of Time. The same six lines read downward are no longer the breakthrough but the careful giving of ground, the same strength shown by what it chooses not to spend."
+  },
+
+  "programming_partner": {
+    "number": 20,
+    "card_name": "Emerging as the Code",
+    "teaching": "Across the genetic code, the partner here is Code 20, Emerging as the Code. Raw strength is held by the long, still witnessing that watches the field before anything moves. Together they know that great power is only sublime when the seeing has come first and the action arrives at exactly the hour the seeing pointed to."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Destiny",
+    "tarot": "10 - The Wheel of Fortune",
+    "siblings": [43],
+    "teaching": "The Ring of Destiny holds only this code and Code 43, the breakthrough insight. A small family with a large remit. One is the force that moves through the body when fate turns; the other is the knowing that cuts through the mind at the same instant. This code is the body half of the wheel."
+  },
+
+  "tarot": {
+    "card": "X , The Wheel of Fortune",
+    "teaching": "The Wheel of Fortune carries this code's Tarot face, the great turning that no one steers and everyone rides. What the arcana shows is the moment the wheel comes up underneath you and the strength is suddenly there to meet it. Sublime power is what happens when the rider and the turning are one motion."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Heaven",
+    "teaching": "Thunder breaking out above Heaven, the sudden arousing force erupting from a still and open sky, strength that arrives like weather."
+  },
+
+  "sky": {
+    "value": "Jupiter",
+    "type": "planet",
+    "teaching": "Jupiter rules this ring, the planet of expansion and good fortune, the force that grows what it touches and times its own arrival."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu rises above, the noble who walked out of the palace, and Zhongli Quan sits below, the general whose campaigns are finished. Together they teach that sublime strength belongs to those who have already let go of the positions strength is usually used to win."
+  },
+
+  "hebrew_letter": {
+    "letter": "Kaph",
+    "meaning": "The Palm — the open hand, cycles turning, fate received",
+    "path_number": "21",
+    "path_connects": "Chesed to Netzach",
+    "teaching": "Kaph is the letter, the open palm, and the ring's path runs from mercy down into the field of victory. The letter teaches that this power is received rather than seized, an open hand catching the turn of the wheel at exactly the moment it comes round."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 34",
+    "generated": "relations-v1"
+  }
+}

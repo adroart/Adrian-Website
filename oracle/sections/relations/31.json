@@ -1,0 +1,81 @@
+{
+  "number": 31,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Theater of Truth",
+
+  "unity_line": "Held with Code 32, this is the spark that calls and the steady fire that keeps, the first wooing and the long stay that follows.",
+
+  "pair": {
+    "number": 32,
+    "card_name": "Art of Living",
+    "hexagram_name": "Duration (Heng)",
+    "teaching": "Beside Art of Living, these two are the I Ching's portrait of how feeling becomes a life. One is the moving touch that opens the meeting, attraction that knows how to speak; the other is the constancy that lets the meeting last. Courtship and continuation are the same gesture stretched over time."
+  },
+
+  "inverse": {
+    "number": 32,
+    "card_name": "Art of Living",
+    "hexagram_name": "Duration (Heng)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you arrive at Code 32, Art of Living. The same six lines read from the other end stop being the first calling out and become the patient keeping of what was already called, the same flame seen from inside the long burn."
+  },
+
+  "programming_partner": {
+    "number": 41,
+    "card_name": "Beginning and the End",
+    "teaching": "Across the genetic code, this pairing runs with Code 41, Beginning and the End. The voice that calls and the seed that contains every imagined future programme each other. What they know together is that influence without imagination has nothing to summon, and imagination without a voice never reaches anyone's ear."
+  },
+
+  "codon_ring": {
+    "name": "Ring of No Return",
+    "tarot": "20 - Judgement",
+    "siblings": [62],
+    "teaching": "Inside the Ring of No Return, this code sits with only one other, Code 62, Voice of Nature. Two cards bound by what cannot be unspoken once it has been heard. This one leads by feel and influence, the other by the precise word, and together they carry the sound from which the listener cannot walk back unchanged."
+  },
+
+  "tarot": {
+    "card": "XX, The Aeon",
+    "teaching": "Resonant here is XX, The Aeon, the call that wakes the dead and ends the old age. In the Thoth deck the trumpet sounds and every sleeping form rises into a new world. This code carries that same quality, the influence that does not persuade but summons, and what it summons cannot return to who it was before."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Mountain",
+    "teaching": "Lake resting on Mountain, the open bowl of feeling held by the stillness underneath, joy made trustworthy because the ground does not move."
+  },
+
+  "sky": {
+    "value": "Fire",
+    "type": "element",
+    "teaching": "Fire keys this ring, the element whose nature is to leap from one place to another and ignite what it touches without ever spending itself."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai stands above with his gourd of medicine, joy inseparable from what he has suffered, and Zhang Guolao rests below on his backwards donkey, watching the road already walked. Together they teach that real influence flows from a broken-open heart and a mind that remembers everything."
+  },
+
+  "hebrew_letter": {
+    "letter": "Shin",
+    "meaning": "The Tooth, fire, the transforming flame of a new age",
+    "path_number": "31",
+    "path_connects": "Hod to Malkuth",
+    "teaching": "Shin, the Tooth, names this ring's path, the fire running from intellect down into the kingdom of form. The letter teaches that the influence this code carries is purifying fire, the kind that burns away whatever in the body was not yet true."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 31",
+    "generated": "relations-v1"
+  }
+}

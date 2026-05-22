@@ -1,0 +1,81 @@
+{
+  "number": 38,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Inner Light Symphony",
+
+  "unity_line": "Read beside Code 37, this is the lone fighter and the household discovering they have been guarding the same fire from opposite walls.",
+
+  "pair": {
+    "number": 37,
+    "card_name": "Journey Home",
+    "hexagram_name": "The Family (Chia Jen)",
+    "teaching": "Held with Journey Home, these two are the I Ching's pairing of opposition and family. One stands outside, refusing what does not ring true; the other binds those who do belong into a working whole. The boundary that excludes and the bond that includes are written on the same six lines, one drawing the line and one drawing the circle."
+  },
+
+  "inverse": {
+    "number": 37,
+    "card_name": "Journey Home",
+    "hexagram_name": "The Family (Chia Jen)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and they become Code 37, Journey Home. The pair and the inverse are the same card, and the lesson is plain. Standing against and standing among are one motion read from either side of the threshold."
+  },
+
+  "programming_partner": {
+    "number": 39,
+    "card_name": "Nobel Spark",
+    "teaching": "Across the genetic code, the partner is Code 39, Nobel Spark. One pushes against what is false until the room can no longer ignore it; the other provokes until the deeper feeling in another person has to surface. Together they know that something living often has to be cornered before it will show its face."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [10, 17, 21, 25, 51],
+    "teaching": "Inside the Ring of Humanity, this code rides with 10, 17, 21, 25, and 51, the family of behaviour, opinions, control, innocence, and shock. The Chariot's ring carries the full breadth of being human, and this seat is the friction that keeps the team honest, the holdout who will not let the group settle on a lesser truth."
+  },
+
+  "tarot": {
+    "card": "VII , The Chariot",
+    "teaching": "The Chariot is driven by a figure who holds two opposing beasts in a single yoke and steers them by the strength of will. This code carries the same posture, the willingness to feel pulled in two directions and to keep the wheels true anyway. Forward motion here is born of tension, not of agreement."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Lake",
+    "teaching": "Fire above Lake, the bright flame burning over still water, two natures that refuse to mix and yet light each other from across the gap."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer keys this ring, cardinal water, the sign of the protective shell, the feeling life that pushes back against what would intrude on what it loves."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Lan Caihe walks above, the minstrel who fits no category, and Li Tieguai stands below, the broken beggar who holds wound and remedy in one hand. Together they teach that the one who refuses every false role is also the one who knows where the world hurts."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence — the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "On the Tree, the path of this code's ring is Cheth, the Fence, running from understanding down to severity. The letter teaches that the opposition this code carries is not refusal for its own sake but the boundary line a chariot needs in order to gather speed, the wall that makes the run possible."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 38",
+    "generated": "relations-v1"
+  }
+}

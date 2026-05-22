@@ -1,0 +1,81 @@
+{
+  "number": 45,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Tribal Tapestry",
+
+  "unity_line": "Set beside Code 46, this is the people gathering and the single life rising, the circle that forms and the body that grows tall inside it.",
+
+  "pair": {
+    "number": 46,
+    "card_name": "Fountain of Light",
+    "hexagram_name": "Pushing Upward (Sheng)",
+    "teaching": "With Fountain of Light, the pair holds the two motions of belonging. One is the tribe drawing itself together around what it loves, the other is the single life rising up through that gathering like a sapling through warm soil. Communion and growth are the same event read at two scales."
+  },
+
+  "inverse": {
+    "number": 46,
+    "card_name": "Fountain of Light",
+    "hexagram_name": "Pushing Upward (Sheng)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines end for end and the gathering becomes Code 46, Fountain of Light. The same six lines read from the other direction stop describing the circle forming around the centre and begin tracing the upward journey of what the circle was holding all along."
+  },
+
+  "programming_partner": {
+    "number": 26,
+    "card_name": "Lighter Than a Feather",
+    "teaching": "Across the genetic code, this pairing runs with Code 26, Lighter Than a Feather. The gift of drawing people together is held by the trained restraint that knows what to ask of them and what to leave alone. Without the discipline, the gathering becomes a marketplace; without the gathering, the discipline has no one to serve."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Prosperity",
+    "tarot": "21 - The World",
+    "siblings": [16],
+    "teaching": "Inside the Ring of Prosperity, this code sits with one other, Code 16, the skill that delights in being useful. Two cards bound by what makes a life wealthy in the old sense, the capacity to gather and the capacity to give freely. The family teaches that true abundance is what passes through a person back into the whole."
+  },
+
+  "tarot": {
+    "card": "XXI, The Universe",
+    "teaching": "The Universe is the Tarot face this code carries, the final arcana of the Major sequence. The image shows the dance completed, every element woven back into the figure at the centre, the long journey finally arriving where it began. This code is the gathering that makes that completion visible, the tribe that closes the circle."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Earth",
+    "teaching": "Lake resting on Earth, the open water of shared joy held by the wide ground that can carry any weight, gladness given a place to pool."
+  },
+
+  "sky": {
+    "value": "Saturn",
+    "type": "planet",
+    "teaching": "Saturn keys this ring, the planet of structure and time, the slow force that builds something durable enough for a whole people to stand inside."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai stands above with his gourd of medicine, the wounded healer whose joy is inseparable from what he has carried, and He Xiangu rests below, the maiden whose nourishment was given freely from the sky. Together they teach that the tribe gathers most truly around those who have suffered openly and received without grasping."
+  },
+
+  "hebrew_letter": {
+    "letter": "Tau",
+    "meaning": "The Cross, the completion of the journey, matter as sacred",
+    "path_number": "32",
+    "path_connects": "Yesod to Malkuth",
+    "teaching": "Tau, the Cross, is the final letter, and the path runs from Yesod down into Malkuth, foundation arriving at last in the kingdom of form. The letter teaches that this code is where the long inner journey becomes a visible people, where the work of becoming is finished in being seen together."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 45",
+    "generated": "relations-v1"
+  }
+}

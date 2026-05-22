@@ -1,0 +1,81 @@
+{
+  "number": 57,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Flight of the Tao",
+
+  "unity_line": "Carried beside Code 58, this is the breath that enters without knocking and the joy that answers from the room it finds.",
+
+  "pair": {
+    "number": 58,
+    "card_name": "Rhythm of Life",
+    "hexagram_name": "The Joyous, Lake (Tui)",
+    "teaching": "Beside Rhythm of Life, the pair holds the I Ching's portrait of gentleness and gladness. One is the wind that slips through every gap and quietly rearranges what it touches; the other is the lake that sparkles when something finally arrives. The teaching is that subtle entry and open delight belong to the same weather."
+  },
+
+  "inverse": {
+    "number": 58,
+    "card_name": "Rhythm of Life",
+    "hexagram_name": "The Joyous, Lake (Tui)",
+    "is_self_inverse": false,
+    "teaching": "Flip these lines end for end and the hexagram becomes Code 58, Rhythm of Life. The same six lines, read from the other side, are no longer the patient breath finding its way in but the bright surface answering once it has been entered."
+  },
+
+  "programming_partner": {
+    "number": 51,
+    "card_name": "Unshakable Arrival",
+    "teaching": "Across the genetic code, this card runs with Code 51, Unshakable Arrival. Wind and thunder programme each other, the slow penetration paired with the sudden strike. What one accomplishes by patience, the other accomplishes by shock, and a real change in a life asks for both the long entry and the moment that wakes the room."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Matter",
+    "tarot": "4 - The Emperor",
+    "siblings": [18, 46, 48],
+    "teaching": "Inside the Ring of Matter, this code sits with Codes 18, 46, and 48, the family that governs the physical plane. Correction, embodied delight, the hidden well, and here the patient breath that orders things from within. The ring teaches that the body and the world it stands in are shaped by quiet, persistent influence, not by force."
+  },
+
+  "tarot": {
+    "card": "IV, The Emperor",
+    "teaching": "IV The Emperor is the Tarot face this code carries. He sits on the stone throne, the one who has learned that real authority is steady and almost invisible, the rule kept by presence rather than display. This code carries the same quality, the soft persistence that becomes the structure of a room without ever raising its voice."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Wind",
+    "teaching": "Wind over Wind, the same gentle force doubled, the breath above and the breath below moving as one current that finds every crack and enters."
+  },
+
+  "sky": {
+    "value": "Aries",
+    "type": "sign",
+    "teaching": "Aries keys this ring, cardinal fire, the first push of spring that sends green through every closed seam and reorders the ground without asking."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams here carry the same Daoist Immortal, Han Xiangzi, the flute-playing youth whose music settles whatever it enters. Doubled, his presence teaches that this code works only through atmosphere, the long tone that changes a room before anyone notices the room has changed."
+  },
+
+  "hebrew_letter": {
+    "letter": "Heh",
+    "meaning": "The Window, the frame through which vision orders the world",
+    "path_number": "15",
+    "path_connects": "Chokmah to Tiphareth",
+    "teaching": "Heh is the ring's letter, the window, and the path runs from Chokmah to Tiphareth, wisdom into the heart of the Tree. The letter teaches that this code orders the world by what it lets in, the steady frame through which a clearer light passes and shapes the day."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 57",
+    "generated": "relations-v1"
+  }
+}

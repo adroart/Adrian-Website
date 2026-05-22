@@ -1,0 +1,81 @@
+{
+  "number": 55,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Untouched Perfection",
+
+  "unity_line": "Paired with Code 56, this is the noon sun and the long road, fullness at its peak and the wanderer walking out from under it.",
+
+  "pair": {
+    "number": 56,
+    "card_name": "Infinite Journey",
+    "hexagram_name": "The Wanderer (Lu)",
+    "teaching": "With Infinite Journey, the pair is the I Ching's portrait of abundance and its aftermath. One is the sun at zenith, so bright it casts no shadow; the other is the traveller who knows nothing held at noon can stay, and picks up the road again. Together they teach that fullness is meant to be walked through."
+  },
+
+  "inverse": {
+    "number": 56,
+    "card_name": "Infinite Journey",
+    "hexagram_name": "The Wanderer (Lu)",
+    "is_self_inverse": false,
+    "teaching": "Read these lines from the other end and you arrive at Code 56, Infinite Journey. The same arrangement turned over stops being the room flooded with noonday light and becomes the figure who carries that light away, abundance read as the courage to leave it behind."
+  },
+
+  "programming_partner": {
+    "number": 59,
+    "card_name": "Mystics Treasures",
+    "teaching": "Across the genetic code, this card runs with Code 59, Mystics Treasures. The fullness that shines without effort is held by the intimacy that knows how to dissolve a barrier between two people. What one offers as light, the other receives as union. Abundance becomes communion only when something inside it has agreed to be opened."
+  },
+
+  "codon_ring": {
+    "name": "Ring of the Whirlwind",
+    "tarot": "16 - The Tower",
+    "siblings": [49],
+    "teaching": "Inside the Ring of the Whirlwind, this code sits with one sibling, Code 49, the revolution that overturns what no longer serves. Two cards bound by the same fire, the lightning that purifies and the order it leaves standing. The family teaches that nothing kept by force survives the strike."
+  },
+
+  "tarot": {
+    "card": "XVI. The Tower",
+    "teaching": "The Tower is the assigned arcana, the image of the lightning bolt that breaks the false structure so the true ground can show through. This code carries the same gesture from the other side of the strike, the brightness that was hidden behind the walls now standing clear, perfection revealed by the very flash that exposed it."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Fire",
+    "teaching": "Thunder above Fire, the bright flash announcing itself across the inner blaze, sudden noise over steady light, arousal and clarity moving as one event."
+  },
+
+  "sky": {
+    "value": "Mars",
+    "type": "planet",
+    "teaching": "Mars keys this ring, the planet of decisive force, the bright striking energy that does not negotiate with what it has come to clear."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu stands above, the courtier who walked away from inherited power; Lan Caihe sings below, the minstrel who refuses any single form. Together they teach that true abundance belongs to those who have loosened their grip on its outer signs."
+  },
+
+  "hebrew_letter": {
+    "letter": "Peh",
+    "meaning": "The Mouth, the word that shatters, revelation through rupture",
+    "path_number": "27",
+    "path_connects": "Netzach to Hod",
+    "teaching": "Peh is the letter, the mouth that breaks silence with a word strong enough to crack a wall, and the path runs from Netzach to Hod. The letter teaches that this code's fullness arrives as revelation, the spoken flash that ruins what was false and leaves the room lit."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 55",
+    "generated": "relations-v1"
+  }
+}

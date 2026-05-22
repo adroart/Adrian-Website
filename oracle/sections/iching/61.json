@@ -1,0 +1,59 @@
+{
+  "number": 61,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Inner Truth",
+  "combination": "Wind moves over the open surface of a lake. The wind cannot be seen, only the marks it leaves on the water, and the water answers everything that touches it. Two firm lines below, two firm lines above, and at the very center the figure opens: two yielding lines, a hollow in the heart of the shape. A boat hollowed from wood floats because of what is missing from it. This is a code about being empty at the center so that what is true can pass through.",
+  "upper_nature": "Wind, Xun. The gentle one. It enters everywhere by being soft enough to fit. Wind has no edge of its own. It takes the shape of what it moves through, and by taking that shape it reaches in. Above, it is the touch that arrives without announcing itself.",
+  "lower_nature": "Lake, Dui. The open surface. Joyful, responsive, the place where water gathers and shows the sky back to itself. Lake speaks easily, takes the print of the wind without resistance, lets the visitor in. Below, it is a heart willing to be moved.",
+  "reading": "The life-situation this code names is the moment when an unforced agreement passes between two beings. A wind crosses a lake, and the lake answers in ripples without trying. A crane calls from somewhere hidden in the reeds, and its young, who cannot see it, answer back. Sincerity is a frequency, and the frequency carries.\n\nThe hexagram is hollow at its center. Two yielding lines in the middle, with strong lines holding the outside. Read it as a boat: a log made into a vessel by what was carved out of it. The boat crosses the great water because it is empty inside. Pretend nothing. Want nothing extra. The emptiness is what lets you carry the load.\n\nThe oldest layer of this teaching is a small offering. A peasant brings pigs and fish, the ordinary food of an ordinary table, not the bullocks and rams of state ceremony. The blessing comes anyway. The blessing came because the giver was not posturing. Heaven reads what the ceremony tries to hide.\n\nThe counsel is to drop the performance and stay close to what you actually know. Do not try to be more convincing. Be the thing, and let the thing be seen. When you have to decide a difficult case, slow down. Hear the person out. Postpone the heavy judgement until you understand what was inside the act. Inner truth meets inner truth. The work is mostly listening.\n\nA wind you cannot see. A water that answers everything.",
+  "judgement_lines": [
+    "Inner Truth reaches even the pigs and fishes.",
+    "Good fortune.",
+    "It is right to cross the great water.",
+    "Steadiness carries through."
+  ],
+  "image_lines": [
+    "Wind moves over the lake.",
+    "So the one who would rule weighs each case carefully, and is slow to bring the sentence down."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "resting in your own ground.",
+      "reading": "Sincerity starts here, before anyone is watching. Stay with what you have already settled in yourself. If your eye drifts to some other place or person to confirm you, the rest goes out of it. Be prepared, be quiet, do not look elsewhere. Good fortune.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    },
+    {
+      "line": 2,
+      "image": "the crane calling from the shade.",
+      "reading": "Hidden in the reeds, the crane calls. Its young, who cannot see it, answer. What is sincere in you carries on a frequency you do not control. Speak the true thing softly. Whoever is of your kind hears it. You do not have to be seen to be heard.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    },
+    {
+      "line": 3,
+      "image": "now the drum, now silence; now weeping, now song.",
+      "reading": "You have hitched your inner weather to someone else. When they are near you drum, when they pull away you stop, and the moods come and go on a current that is not yours. This is not bad faith. It is faith that has forgotten its own center. Come back to the inside.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    },
+    {
+      "line": 4,
+      "image": "the moon almost full; the team-mate gone from the harness.",
+      "reading": "The light in you is nearly at its height. To reach it you have to let an old companion go, the one who travelled alongside you up to here but cannot come further. There is no fault in the parting. The horse leaves the team. The moon keeps rising. Look up, not back.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    },
+    {
+      "line": 5,
+      "image": "the centre that holds others to it.",
+      "reading": "Sincerity at the centre, firm, unwavering. Because you are not performing, others fasten to you of their own accord. You become the binding without trying. No need to gather them. The clarity gathers them. No fault here, only the quiet weight of being a place people can trust.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    },
+    {
+      "line": 6,
+      "image": "the cock crowing up at the sky.",
+      "reading": "The sound goes up, the bird cannot. This is the voice that has outrun its substance, the conviction louder than the life behind it. Even if the position is technically correct, the trajectory ends badly. A rooster is not a flying creature. Climb down. Stop crowing. Return to the ground.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/61", "generated": "iching-brief-v1" }
+}

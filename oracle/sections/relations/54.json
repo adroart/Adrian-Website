@@ -1,0 +1,81 @@
+{
+  "number": 54,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Everlasting Bounty",
+
+  "unity_line": "Beside Code 53, this is the ambitious leap held inside the slow climb, the wanting that gives the long walk its hour.",
+
+  "pair": {
+    "number": 53,
+    "card_name": "Creation Oscillation",
+    "hexagram_name": "Gradual Progress (Chien)",
+    "teaching": "Creation Oscillation is the patient step by step rise, the tree slowly finding the cliff. This code is the desire underneath that climb, the hunger that asked for the heights in the first place. The pair teaches that real ascent needs both the long pace and the bright wish that keeps it walking."
+  },
+
+  "inverse": {
+    "number": 53,
+    "card_name": "Creation Oscillation",
+    "hexagram_name": "Gradual Progress (Chien)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and the marrying maiden becomes Code 53, Creation Oscillation. The same arrangement read the other way stops being the urgent reaching toward and becomes the measured arriving at, the same ambition slowed into footsteps."
+  },
+
+  "programming_partner": {
+    "number": 53,
+    "card_name": "Creation Oscillation",
+    "teaching": "Across the genetic code, the partner is again Code 53, Creation Oscillation. What pairs in the I Ching also programmes in the body. Together they know how to want a high thing and how to walk the long road to it, and neither half on its own gets anywhere worth standing."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [15, 39, 52, 53, 58],
+    "teaching": "Inside the Ring of Seeking, this code walks with five siblings, the family of the seeker on the path. Modesty, friction, stillness, gradual rise, and joy all stand around it. This seat is the ambition that gives the search its forward lean, the bounty the seeker is reaching for even when the road is quiet."
+  },
+
+  "tarot": {
+    "card": "IX. The Hermit",
+    "teaching": "The Tarot face is IX, The Hermit, the figure walking by lantern light along a narrow ridge. The image is the one who has accepted that the climb is solitary and that the light he carries is small but enough. This code is the steady wanting that keeps the lantern lit through the long night."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Lake",
+    "teaching": "Thunder above the Lake, the sudden urge breaking over the joyous water, desire stirring the still surface into reaching."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "The ring is keyed to Virgo, mutable earth, the careful labour that tends each detail of the road and never confuses the longing with the work."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu rises above, the noble who left the palace to seek a truer ground, and Li Tieguai stands below, the beggar with medicine in his gourd. Together they teach that this ambition belongs to those willing to leave the given room and to carry healing for the road."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "On the Tree, the ring's path is Yod, the closed hand around the seed, running from mercy up into the heart of beauty. The letter teaches that this wanting is small at the source, a single grain held in the fist, and only the long climb opens the hand."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 54",
+    "generated": "relations-v1"
+  }
+}

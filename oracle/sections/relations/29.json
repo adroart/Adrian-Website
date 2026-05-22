@@ -1,0 +1,81 @@
+{
+  "number": 29,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "All In",
+
+  "unity_line": "Held against Code 30, this is the depth that commits all the way through, while its pair is the light that catches and burns on the other side.",
+
+  "pair": {
+    "number": 30,
+    "card_name": "Sparking the Blaze",
+    "hexagram_name": "The Clinging, Fire (Li)",
+    "teaching": "Held with Sparking the Blaze, the pair is water meeting fire across the same six lines, the two doubled trigrams that hold the deepest commitments. One sinks all the way through what it is given; the other catches and clings to what feeds it. Together they teach that depth and light need each other to stay honest."
+  },
+
+  "inverse": {
+    "number": 29,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn these lines upside down and nothing changes. This code is one of the eight in the deck that meets its own reflection, and here the meaning is precise. Water doubled has no other side to be read from, only further depth."
+  },
+
+  "programming_partner": {
+    "number": 30,
+    "card_name": "Sparking the Blaze",
+    "teaching": "Across the genetic code, the same pairing runs as programming partners. One goes all in by going under, the other goes all in by burning bright, and what they know together is that real commitment is not a halfway gesture in either direction. Going through is the only way out."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Union",
+    "tarot": "6 - The Lovers",
+    "siblings": [4, 7, 59],
+    "teaching": "Inside the Ring of Union, this code sits with three siblings, Codes 4, 7, and 59. The family is held by the Lovers principle, the meeting of two that becomes a third. This code is the ring's dissolving member, the one whose total commitment is what makes intimacy possible at all."
+  },
+
+  "tarot": {
+    "card": "VI, The Lovers",
+    "teaching": "The Tarot face here is VI, The Lovers, the arcana of choice and union. The card shows two figures standing under a presence that blesses what they have already given to each other. This code carries the same quality, the giving of self that no longer holds anything in reserve."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Water",
+    "teaching": "Water over Water, the same force doubled, the abyss meeting the abyss with nothing above it and nothing below."
+  },
+
+  "sky": {
+    "value": "Gemini",
+    "type": "sign",
+    "teaching": "Gemini keys this ring, mutable air, the sign of choice and exchange, and this code is the moment when the two voices stop bargaining and choose each other for real."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams here carry the same Daoist Immortal, Lü Dongbin, the scholar-warrior whose sword is discernment rather than violence. Doubled, his presence speaks of one who has gone into the depths twice over, and what he brings back is the cutting clarity that only total immersion can yield."
+  },
+
+  "hebrew_letter": {
+    "letter": "Zain",
+    "meaning": "The Sword — the blade of discrimination that forces a choice",
+    "path_number": "17",
+    "path_connects": "Binah to Tiphareth",
+    "teaching": "On the Tree, the path of this code's ring is Zain, the Sword, running from the great mother down to the heart. The letter teaches that the depth of this code is not formless drift but a clean blade, the cut that makes a true commitment possible because it refuses the half-measure."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 29",
+    "generated": "relations-v1"
+  }
+}

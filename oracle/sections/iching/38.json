@@ -1,0 +1,58 @@
+{
+  "number": 38,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Opposition",
+  "combination": "Fire sits over Lake. The flame wants up, the water wants down, and the two pull away from each other inside the same body. Two sisters under one roof who will not marry into the same family. The hexagram names a time when what should belong together is turned back to back. Only small things move well here. The great matter waits.",
+  "upper_nature": "Fire, Li. Broken in the middle, solid outside. Light that clings to what it burns, brightness that sees and discriminates. When this trigram is on top, the seeing is outward, attention has gone to the surface, and the inner mirror has gone dim.",
+  "lower_nature": "Lake, Dui. Open at the top, two firm lines below. A flat body of water that takes the sky into it, the youngest daughter, an easy mouth. Below, it is joy turned toward whatever it wants, pleasure as the engine, the soft surface that pulls downward by its own weight.",
+  "reading": "The situation this code names is the kind of estrangement that happens between people who once stood close. Not a fight. A drift. The lines of sight no longer cross. You look one way, the other looks another, and the room you used to share has split down the middle without anyone deciding it should.\n\nThe image is fire above a lake. Two natures sharing a frame and refusing to mix. The flame climbs into its own brightness. The water settles into its own quiet. Neither is wrong. They were never meant to dissolve into each other. The teaching here is not that the difference should be erased.\n\nWhat the hexagram counsels is the smaller thing. Do not try to repair the whole field at once. Do not chase the horse that wandered off, do not force the meeting that has gone cold, do not stand in the middle of the room and demand that the two halves come back together. Small matters carry good fortune now. A side conversation in a corridor. An honest exchange about something minor. One quiet agreement that did not exist this morning.\n\nThe other counsel sits underneath that one. Stay yourself. Inside a time of division, the work is to hold your own shape without sharpening it into a weapon. Stay among the others. Eat with them. Do not let the alienation become your identity. The estrangement is real. The estrangement is not the last word. Rain is on its way, and rain washes things.",
+  "judgement_lines": [
+    "Opposition. In small matters, good fortune.",
+    "The great work waits.",
+    "The small work can be done now."
+  ],
+  "image_lines": [
+    "Above, fire. Below, the lake.",
+    "So the one who would grow stays among others, and stays themselves."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the horse wandering off on its own.",
+      "reading": "Regret falls away on its own. Do not chase what has left. The horse that knows the way home will find it. The bad person you cross does not have to be turned into an enemy. Meet them, watch carefully, say little. Loss and meeting are both passing weather.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 2,
+      "image": "meeting the one who matters in a side alley.",
+      "reading": "The formal door is closed. The person you needed to see is met by accident in a passage between buildings. This is not improper. In a time of estrangement, the small path is the real path. Speak briefly. Let the corridor be enough. No mistake comes from that.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    },
+    {
+      "line": 3,
+      "image": "the cart dragged back, the ox pulled up short.",
+      "reading": "The position is exposed and the start has gone badly. Your work is hindered, your dignity bruised, your face cut. None of that began with you. Hold the line through the worst of it. What looks like ruin at the opening turns. There is no good beginning here. There is an end.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 4,
+      "image": "alone in the estrangement, finding one of the same kind.",
+      "reading": "You are the outsider in this room. The hexagram has cut you off from your matched pair, and the loneliness is real. Look for the one whose grain runs the same way as yours. Meet them honestly. Even with danger around the edges, that meeting carries you through without fault.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    },
+    {
+      "line": 5,
+      "image": "biting through soft skin to reach the meat.",
+      "reading": "Regret falls away. Your true ally is close, and the bond opens as easily as biting through skin. Do not stand on ceremony. Go to them. The cooperation does the work of the time, and going forward from this meeting is not a mistake but a small celebration.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    },
+    {
+      "line": 6,
+      "image": "a pig caked in mud, a wagon full of ghosts.",
+      "reading": "Estrangement has built into hallucination. The person across from you looks filthy, demonic, monstrous. The bow comes up. Then you look again. It is not an attacker. It is a relative coming to be matched. The bow goes down. As you go forward, rain falls. Doubt washes off.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/38", "generated": "iching-brief-v1" }
+}

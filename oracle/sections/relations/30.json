@@ -1,0 +1,81 @@
+{
+  "number": 30,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Sparking the Blaze",
+
+  "unity_line": "Across from Code 29, this is the bright face of the same plunge, the flame that catches once the depths have committed all the way through.",
+
+  "pair": {
+    "number": 29,
+    "card_name": "All In",
+    "hexagram_name": "The Abysmal, Water (K'an)",
+    "teaching": "All In is the dark plunge that goes all the way down; this code is the fire that rises from what survived it. One pair pours itself into the chasm, the other ignites on what comes back. Water and Fire are the deck's two great trials, teaching one lesson from opposite ends: life is refined only by entering it fully."
+  },
+
+  "inverse": {
+    "number": 30,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn these lines and the fire still burns. This code is one of the eight that meets its own reflection, and the meaning lives in the doubling. Pure clinging luminous force has no back side, only the same light shining whichever way you read it."
+  },
+
+  "programming_partner": {
+    "number": 29,
+    "card_name": "All In",
+    "teaching": "The same pair runs through the genetic code, where these two programme each other at the level of the body. Fire and Water bound together, the longing that lights and the depth that holds it. What this code wants to burn for, its partner has already tested in the dark."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Purification",
+    "tarot": "15 - The Devil",
+    "siblings": [13],
+    "teaching": "The Ring of Purification holds only this code and Code 13, Universal Crest. A small family that purifies by fire, one by listening for kin until the false ones drop away, the other by burning openly with desire until what is true is all that is left. This code is the family's flame, the heat that does the work."
+  },
+
+  "tarot": {
+    "card": "XV, The Devil",
+    "teaching": "XV The Devil is the assigned arcana, and the fit is honest. The card is not evil but binding, the chain that desire wears and is shaped by. This code carries that same charge, the longing that drives a life forward and that can fasten it to one shape too long. The teaching is in the rapture, not the chain."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Fire",
+    "teaching": "Fire over Fire, the same flame doubled, undivided. This code is one light, one clinging, the blaze meeting itself with nothing in between."
+  },
+
+  "sky": {
+    "value": "Capricorn",
+    "type": "sign",
+    "teaching": "Capricorn keys the ring, cardinal earth, the patient mountain that only honours a fire that has proved it can keep burning through the long climb."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams carry the same Daoist Immortal, Lan Caihe, the wandering minstrel of no fixed gender or form. Doubled, the figure becomes the whole of this code, a fire that lights and warms and refuses to be pinned to any one shape it has worn."
+  },
+
+  "hebrew_letter": {
+    "letter": "Ayin",
+    "meaning": "The Eye, the limiting vision, matter as the ground of play",
+    "path_number": "26",
+    "path_connects": "Tiphareth to Hod",
+    "teaching": "Ayin is the letter, the Eye, and the path runs from the heart of the Tree down to Hod. The letter teaches that this code looks straight at matter and finds the spark inside it, the bound shape that becomes the very ground its fire is free to play on."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 30",
+    "generated": "relations-v1"
+  }
+}

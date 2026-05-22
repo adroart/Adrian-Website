@@ -1,0 +1,58 @@
+{
+  "number": 60,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Limitation",
+  "combination": "Water sits over Lake. The lake is the shape that holds, the bowl in the ground that a body of water can settle into. The stream comes down and the lake catches it, and the only reason the catching works is that the lake has an edge. Too little water and the lake goes stale. Too much and it overspills. The whole hexagram lives in that narrow band between drought and flood, in the line drawn where the water is allowed to come to rest.",
+  "upper_nature": "Water, Kan. Broken, unbroken, broken. The middle son. Water finds its way down, runs through whatever opening is offered, and waits in the low places. In the upper position it is the stream arriving from above, the danger that has to be received and held without spilling.",
+  "lower_nature": "Lake, Dui. Unbroken, unbroken, broken. The youngest daughter. The open surface where the air meets the water, where exchange happens, where things are spoken. Below, it is the vessel: the bowl that the upper water pours into, the edge that gives the moving thing a place to settle.",
+  "reading": "The situation this code names is the one where you have learned that you cannot let yourself run in every direction at once. Energy without an edge dissipates. A life without limits empties itself into whatever calls it next, and at the end of the week there is nothing held, nothing accumulated, nothing the next move can stand on. Limitation is what makes a life into a shape.\n\nThe image is the joint of the bamboo. The bamboo is hollow and could simply be a long open tube, but instead it grows in segments, each one sealed off from the next, and that is what lets the stalk stand tall. A stalk all hollow would split under its own weight. The joints are not the bamboo's loss of freedom. They are the bamboo's way of getting tall enough to flower.\n\nSo the counsel here is to draw the edge. Choose what you will not do this season, what you will not spend, what you will not let in. The choice is not a punishment, and it is not a vow. It is the rim of the lake. Water that has a rim becomes still enough to reflect. Water without one becomes a wet field.\n\nThere is one warning the hexagram keeps coming back to. The edge can be drawn too tight. Limits that hurt to keep, that grind on you, that leave no sweetness in them, do not last and should not last. A bitter discipline collapses. Draw the line where you can actually live behind it.",
+  "judgement_lines": [
+    "Limitation comes through.",
+    "But a limit that is bitter cannot be held to.",
+    "Do not draw the edge so sharp it cuts."
+  ],
+  "image_lines": [
+    "Water over the lake. The lake gives the water a shape.",
+    "So the wise one sets the measures, and weighs what counts as right."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "not stepping past the inner door.",
+      "reading": "The way is blocked just past your threshold, and you can feel it. So you stay in. This is not timidity. It is reading the season correctly and choosing not to push against what will not give. Keep the door shut today. Nothing is lost. The discipline of waiting is its own kind of strength.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    },
+    {
+      "line": 2,
+      "image": "the gate is open, and you are still inside.",
+      "reading": "The first line's stillness was wisdom. This is the same posture one beat too late. The moment to move has come and you are still arranging the room you were supposed to leave. Discipline turned into hesitation. The opportunity will close. Go.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    },
+    {
+      "line": 3,
+      "image": "no edge anywhere, and then the sighing.",
+      "reading": "You moved as if no rule applied to you, and now the regret has arrived. There is no one to blame for it. The lament here is the kind that teaches: the line is being shown what an edge would have done. Notice the lesson. Draw the line next time before, not after.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    },
+    {
+      "line": 4,
+      "image": "the limit you do not have to force.",
+      "reading": "A discipline that has stopped feeling like discipline. You have settled into the shape of your own restraint, and it carries you now instead of you carrying it. This is what a limit looks like when it has become a way of life. It moves with you. Things open.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    },
+    {
+      "line": 5,
+      "image": "sweet on the tongue, like water from a clean well.",
+      "reading": "The limits you keep have a flavor others want. You are not forcing anyone, and you are not punishing yourself, and somehow this is exactly what draws people in. Restraint that has become natural is the most contagious thing in the room. Walk forward. Honor will follow you.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    },
+    {
+      "line": 6,
+      "image": "a limit that grinds, and grinds, and grinds.",
+      "reading": "The discipline has gone past what a body can carry. It hurts now, and you are still holding to it because you mistake the hurting for proof that it is right. It is not right. Hold this line, and it will break you. The remedy is to repent the rule itself. Loosen. The regret only ends when the bitterness does.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/60", "generated": "iching-brief-v1" }
+}

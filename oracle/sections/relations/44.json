@@ -1,0 +1,81 @@
+{
+  "number": 44,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Sophia's Orchestra",
+
+  "unity_line": "Held against Code 43, this is the quiet recognition that follows the cutting insight, the body knowing the pattern the mind has just broken open.",
+
+  "pair": {
+    "number": 43,
+    "card_name": "Cipher of Knowledge",
+    "hexagram_name": "Breakthrough (Kuai)",
+    "teaching": "Cipher of Knowledge is the sudden cut, the instant the truth becomes plain to the mind. This code is what comes after, the long careful seeing of how that truth fits the rest of the field. One breaks the seal; the other reads what the seal was hiding and arranges it back into the room."
+  },
+
+  "inverse": {
+    "number": 43,
+    "card_name": "Cipher of Knowledge",
+    "hexagram_name": "Breakthrough (Kuai)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you arrive at Code 43, Cipher of Knowledge. The same six lines read upward are no longer the meeting of a pattern but the breakthrough that revealed it, one hexagram carrying the cut and the recognition as a single motion seen from either end."
+  },
+
+  "programming_partner": {
+    "number": 24,
+    "card_name": "Frequency Flutter",
+    "teaching": "In the genetic code, the partner here is Code 24, Frequency Flutter. The orchestral ear is held by the pulse that brings the old pattern back around at the moment the room is ready for it. Together they know recognition is rhythm, and the gift is reading which return is the one to answer."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Illuminati",
+    "tarot": "8 - Justice",
+    "siblings": [50],
+    "teaching": "Inside the Ring of Illuminati, this code sits with one other, Code 50, the keeper of values. A small family that carries cosmic order. This seat is the alertness that recognises the pattern; its sibling is the vessel that holds whatever order has been recognised, the law and the lawkeeper of the deck."
+  },
+
+  "tarot": {
+    "card": "VIII, Adjustment",
+    "teaching": "VIII Adjustment is the Thoth name for Justice, and the older sense fits here. The image is the woman with the sword and the scales, weighing every motion until the field settles into truth. This code carries that same rebalancing, the ear that hears when one instrument has drifted and quietly retunes the room."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Wind",
+    "teaching": "Heaven above and Wind below, the open sky met by the soft penetrating breath, the highest order coming in through the smallest opening it can find."
+  },
+
+  "sky": {
+    "value": "Libra",
+    "type": "sign",
+    "teaching": "Libra carries this ring, cardinal air, the weighing intelligence that initiates relationship by holding two things in the same balance until both are seen fairly."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Zhongli Quan rests above, the general whose campaigns are over and his attention turned to refinement, and Han Xiangzi moves below, the youth whose flute steadies whatever wildness it enters. The ear that arranges the room belongs to one who has finished fighting and one who knows the steadying breath."
+  },
+
+  "hebrew_letter": {
+    "letter": "Lamed",
+    "meaning": "The Ox-Goad — consequence, the precise adjustment of forces",
+    "path_number": "22",
+    "path_connects": "Geburah to Tiphareth",
+    "teaching": "Lamed is the letter, the ox-goad, and the path runs from severity up into the heart of the Tree. The letter teaches that recognition is corrective, the small accurate touch that brings the wandering ox back to the row, adjustment moving quietly toward the centre."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 44",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "number": 18,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Work on the Decayed",
+  "combination": "Mountain over Wind. A bowl set out and left too long. The wind sifts low along the foot of the mountain, stirring what has gone quiet underneath, and what is in the bowl has turned. Something useful was abandoned, and the abandonment, not the use, is what spoiled it. The figure points squarely at the work of getting in there and dealing with what the long silence let grow.",
+  "upper_nature": "Mountain, Gen. The youngest son, solid at the top and still at the base. It stops things. When this trigram is above, it is the lid: what should have moved up could not, and so the air below it began to thicken and the contents below began to go off.",
+  "lower_nature": "Wind, Xun. Eldest daughter, the trigram that enters under doors and along the floor. Beneath, it is the breath finding its way back into a room that was closed. Subtle, persistent, willing to take its time. The thing that finally notices the smell.",
+  "reading": "The situation this code names is what happens when a thing has been left too long. Not a sudden break, not a betrayal, just slow rot in a place no one was looking. A family pattern that nobody named. Work your parents did not finish. A vow you made to yourself five years ago and quietly let lapse. The hexagram does not blame the rot. It assumes the rot. It is interested in what you are going to do about it now that you have walked into the room and finally smelled it.\n\nThe old word is Gu, three worms in a sealed jar, and the image is exact. Containers that go unused breed things. The teaching is not to panic and not to scour. It is to face the thing and begin the slow correction. Three days of careful thought before you act. Three days of careful watching after. The bracketing matters. Most decay was made by haste in the first place, or by a refusal to look, and rushing the cleanup repeats the original error in a louder voice.\n\nWhat the hexagram quietly promises is that this is good work. Not pleasant work. Good. Crossing the great water is favorable here, which means the change you have been afraid to make is exactly the change available to you now. The mess is the doorway. You inherited some of this. Some of it you made. None of that matters once you are standing inside it with your sleeves up. The wind has reached the foot of the mountain. The stir has already begun.",
+  "judgement_lines": [
+    "Work on the Decayed. Great progress, great success.",
+    "Favorable to cross the great water.",
+    "Three days before the start, three days after."
+  ],
+  "image_lines": [
+    "Wind moves low along the foot of the mountain.",
+    "So the wise one rouses the people, and grows what is true in them."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the child setting right what the father left undone.",
+      "reading": "The rot is still young here. You can see what went wrong in the generation before yours, and you are the one positioned to mend it. The position carries real danger, because correcting an elder, even a dead one, is delicate work. Be careful, be steady. The ending of this is good.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    },
+    {
+      "line": 2,
+      "image": "tending the mother's slow neglect.",
+      "reading": "This decay is softer, more tangled, more loved. You cannot meet it with rigid correction without breaking something that matters. The strength has to bend. Stay strong inside, soft on the outside. Do not press your rightness all the way to its edge. The middle path is the only path that holds here.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still Mountain" }
+    },
+    {
+      "line": 3,
+      "image": "scrubbing too hard at an old stain.",
+      "reading": "You are correcting with force where care would do. The work is real, the intent is right, but the hand is heavier than the situation needs. A small regret comes of this. No real harm. Notice the heaviness, ease the grip, and the work still finishes clean. Strength is not the same as the right tool.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    },
+    {
+      "line": 4,
+      "image": "looking past the smell, pretending the room is fine.",
+      "reading": "The decay is in front of you and you are choosing not to see it. Comfort, fatigue, a wish that someone else would handle it. If you keep walking past, the shame catches up. This line does not punish you. It just tells you the truth: going on this way leads nowhere you want to be. Turn around.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    },
+    {
+      "line": 5,
+      "image": "doing the work, and being seen for it.",
+      "reading": "You set right what the predecessors left wrong, and you do it without making yourself the hero. The credit comes anyway, not because you took it, but because the people around you can feel the air in the room change. Use praise the way a wise ruler does. Pass it along. The work was never only yours.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    },
+    {
+      "line": 6,
+      "image": "the one who steps out of the court and onto the mountain.",
+      "reading": "Above the work of repair sits the one who no longer needs to be inside it. Not serving kings, not serving lords, not chasing the next post. The concern has risen to something higher: cultivation, lineage, the long quiet purpose that does not need an audience. This is allowed. Some lives finish there.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/18", "generated": "iching-brief-v1" }
+}

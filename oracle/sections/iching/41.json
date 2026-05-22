@@ -1,0 +1,59 @@
+{
+  "number": 41,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Decrease",
+  "combination": "Mountain sits over Lake. The still peak above, the open water at its foot. The lake is drawn upward, evaporating into the mountain, lowering its own surface to lift what is already high. This is the hexagram of what gets given away on purpose. The small grain in the sacrificial bowl. The willing thinning of the lower so the upper can be fed, and the quiet faith that the loss is part of how the whole thing balances.",
+  "upper_nature": "Mountain, Gen. Still, settled, the line that says here and no further. The boundary at the top of the situation, the thing already shaped, already at rest. When this trigram is above, the outer position has stopped moving. It will not bend to ask for more.",
+  "lower_nature": "Lake, Dui. Two solid lines under a broken one, the open surface, water gathered in a low place. Pleasant, willing, the mouth that speaks. Below, it is the part of the situation that gives, that lets itself be drawn off, that does not grip what is asked of it.",
+  "reading": "The situation this code names is the one where something has to be given up, and the giving up is not loss. It is a chosen reduction, willingly done, for the sake of a higher balance the situation needs. The lake at the foot of the mountain knows this. Its water rises into the air, into the slopes above. Its surface drops. What looks like depletion is the climb.\n\nThe old text is clear about the spirit of this: two small bowls of grain, offered sincerely, are enough. The sacrifice that matters is not measured by what was on the plate. It is measured by whether the heart that brought it was true. This is the hexagram that breaks the equation between size and worth. A small thing given with the whole of you outweighs a great thing given to look generous.\n\nThe other half of the teaching is internal. The Image says: at the foot of the mountain, a lake, and the one who would grow uses this to curb anger and block appetite. The same gesture that thins the lake thins the wanting inside you. Decrease is not a punishment. It is the work of pulling back from the parts of yourself that have grown loud. The anger that flares. The hunger that insists. Reduce them and the higher thing in you rises by the exact amount that the lower one drops.\n\nDo not try to give from a place that is empty. And do not hold back from a place that is full.",
+  "judgement_lines": [
+    "Decrease, held with sincerity, brings the deepest fortune.",
+    "There is no fault. One may keep at this.",
+    "It is good to have somewhere to go.",
+    "What is the offering? Two small bowls are enough."
+  ],
+  "image_lines": [
+    "At the foot of the mountain, a lake.",
+    "The one who would grow holds back anger and stills the wanting."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "dropping your own work to hurry to another.",
+      "reading": "You set aside what you were doing and go quickly to help. That hurry is not a fault. But before you give, weigh how much. Help that empties the helper is no help at all. Move fast, and measure as you move. Care is part of the speed.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    },
+    {
+      "line": 2,
+      "image": "holding the centre, lifting from where you stand.",
+      "reading": "Stay where you are. Do not march out to fix it. From a steady centre you can lift another without spending yourself, and the spending was never what they needed. To press forward here turns help into harm. Hold your position. The right kind of giving is the kind that does not deplete.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    },
+    {
+      "line": 3,
+      "image": "three walking, then two, then one finds a friend.",
+      "reading": "Three walk together and one drops away. One walks alone and finds a companion. Two is the number that matches here. Three is the number that breeds doubt. If you are crowded, thin the crowd. If you are alone, the road will bring the right person. Go single.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    },
+    {
+      "line": 4,
+      "image": "the ailment thinning, joy hurrying in.",
+      "reading": "There is something in you that has been making you sick. A habit, a grudge, a small rot you have not named. Reduce it. The help you need is already moving toward you, but it cannot land while the illness is still in the room. Make the room ready, and the joy comes quickly.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    },
+    {
+      "line": 5,
+      "image": "ten pairs of tortoise shells, the gift you cannot refuse.",
+      "reading": "Someone is bringing you something so plainly meant for you that the whole field of fate is behind it. Ten pairs of tortoise shells. No one can stop it, and you cannot decline it. This is not earned in the way you are used to. It was already on its way. Receive it.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    },
+    {
+      "line": 6,
+      "image": "giving without losing, the well that refills as it pours.",
+      "reading": "At the top of the work you find the strange place: you can keep giving and nothing in you goes down. The well refills as you pour. People come to serve a person who lives this way, and they come from everywhere, without needing a house to keep them. Go where you are needed. The fire stays lit.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/41", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 10,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Internal Treasure",
+
+  "unity_line": "Held beside Code 9, this becomes the inner conduct that small accumulating influences shape into a way of walking through the world.",
+
+  "pair": {
+    "number": 9,
+    "card_name": "Ease in This",
+    "hexagram_name": "Taming Power of the Small (Hsiao Ch'u)",
+    "teaching": "Beside Ease in This, this code is the steady tread that the small gathering force in Code 9 makes possible. One is the quiet accumulating of influence, the other is the conduct that grows out of it. The way you walk and what you have been quietly storing are the same story."
+  },
+
+  "inverse": {
+    "number": 9,
+    "card_name": "Ease in This",
+    "hexagram_name": "Taming Power of the Small (Hsiao Ch'u)",
+    "is_self_inverse": false,
+    "teaching": "Flip these lines and you arrive at Code 9, Ease in This. The same hexagram read from the other end becomes the small influence working on you rather than the tread you carry outward."
+  },
+
+  "programming_partner": {
+    "number": 15,
+    "card_name": "Ordinary Valiance",
+    "teaching": "This pairing runs through the genetic code with Code 15, Ordinary Valiance. Inner conduct is held by ordinary kindness, and what they know together is that how you walk only matters because it is the visible shape of how you treat what is in front of you."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [17, 21, 25, 38, 51],
+    "teaching": "The family here is the Ring of Humanity, and this code is its conduct seat, the way a person carries themselves between others. Its siblings, 17, 21, 25, 38, and 51, hold opinion, control, innocence, struggle, and shock. The ring as a whole is what it costs and yields to be among other humans."
+  },
+
+  "tarot": {
+    "card": "VII · The Chariot",
+    "teaching": "VII The Chariot is the Tarot card here, the figure who stands upright in a vehicle drawn by forces that would pull apart without him. The image is composure under tension, the inner posture that keeps opposing currents moving in one direction. This code carries that same upright walk."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Lake",
+    "teaching": "Heaven over Lake, the high open sky standing above the still water that mirrors it, conduct meeting the joy of clear reflection."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer carries this ring, cardinal water, the protective tide that knows the shape of what it holds and will not let it spill."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Zhongli Quan stands above as the retired general who has finished his fighting, Li Tieguai below as the crippled beggar carrying his iron crutch and gourd of medicine. Together they teach that true conduct is power that has stopped striving and woundedness that knows how to heal."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence — the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "This code's ring stands on the path of Cheth, the fence, running between Binah and Geburah. The letter teaches that conduct is an enclosure, the bounded shape that lets understanding become disciplined force without leaking away."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 10",
+    "generated": "relations-v1"
+  }
+}

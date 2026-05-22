@@ -1,0 +1,81 @@
+{
+  "number": 36,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Crystal Creation",
+
+  "unity_line": "Held against Code 35, this becomes the night side of the same sun, the light that has gone underground to do its slow forming work.",
+
+  "pair": {
+    "number": 35,
+    "card_name": "Navigational Star",
+    "hexagram_name": "Progress (Chin)",
+    "teaching": "Paired with Navigational Star, these two are day and night of one cycle. Its pair is fire rising into open sky, visible progress and outward arrival; this code is the same fire pressed into the earth, the dark hours where what was learned in the light is finally metabolised. Neither half is a whole life alone."
+  },
+
+  "inverse": {
+    "number": 35,
+    "card_name": "Navigational Star",
+    "hexagram_name": "Progress (Chin)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and the dark turns to light: Code 35, Navigational Star, looks back from the other end. The same six lines read the other way show that every darkening is also somewhere else a dawn, one motion seen from underneath instead of above."
+  },
+
+  "programming_partner": {
+    "number": 6,
+    "card_name": "Harmonious Mirage",
+    "teaching": "Through the genetic code, the partner here is Code 6, Harmonious Mirage. The slow forming under pressure is held by the one who knows how friction between bodies can be tuned into intimacy. Together they understand that what looks like collision on the surface is often the exact heat that grows the crystal underneath."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Divinity",
+    "tarot": "5 - The Hierophant",
+    "siblings": [22, 37, 63],
+    "teaching": "Inside the Ring of Divinity, this code sits with Codes 22, 37, and 63, four cards bound by the sacred teachings. The family carries grace, family alchemy, and the inquiry that reaches the source; this code is the dark night seat, the long pressure that earns what the rest of the ring later wears openly."
+  },
+
+  "tarot": {
+    "card": "V, The Hierophant",
+    "teaching": "The Hierophant is the assigned arcana, and the deeper face of that card lives here. Beneath the public office and the spoken doctrine sits the older teacher, the one whose authority comes from having walked through what cannot be spoken aloud. This code carries that interior lineage, the knowing that only the dark passage confers."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Fire",
+    "teaching": "Earth above, Fire below, the bright flame buried under the patient field, light gone inside the ground to do its quiet alchemy out of sight."
+  },
+
+  "sky": {
+    "value": "Taurus",
+    "type": "sign",
+    "teaching": "The ring is keyed to Taurus, fixed earth, the body that takes its time and trusts nothing it has not slowly tested through its own bones."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "He Xiangu rests above as the maiden who fed on moonlight; Lan Caihe sings below, the minstrel who refuses any single shape. Together they teach that crystal forms inside the one who can live on very little and still keep a small flame singing under all that ground."
+  },
+
+  "hebrew_letter": {
+    "letter": "Vav",
+    "meaning": "The Nail — the pin that connects heaven to earth",
+    "path_number": "16",
+    "path_connects": "Chokmah to Chesed",
+    "teaching": "Vav is the letter, the Nail, and the path runs from Chokmah to Chesed, wisdom into mercy. The letter teaches that this code is the pin driven deep into the dark, fastening a higher knowing to the kindness it will one day need to become, holding the two worlds together through the long underground hour."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 36",
+    "generated": "relations-v1"
+  }
+}

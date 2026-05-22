@@ -1,0 +1,58 @@
+{
+  "number": 49,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Revolution",
+  "combination": "Lake sits over Fire. Water above flame, the two elements that will not let each other be. One cooks the other away, one drowns the other out, and yet here they share the same body. This is the moment an old form has to go. The skin is too tight, the system is too old, the inner fire is already burning the outer container. Something must molt, and the calendar must be set new.",
+  "upper_nature": "Lake, Dui. The open surface, the place where water gathers and vapor lifts off it. Mouth, exchange, the willingness to speak. When this trigram is on top, the outer face of the situation is responsive and articulate, the part that announces the change to the world.",
+  "lower_nature": "Fire, Li. The inner flame, consciousness clinging to its own awareness. Below, this trigram is the heat already at work inside the old shape, the bright clarity that sees the obsolescence before anyone else does, the burn that makes the molt necessary.",
+  "reading": "The situation this code names is the moment a skin has to be shed. Something that was once a fit is no longer one. The form has hardened around a body that has kept growing, or a fire has built up inside a container that can no longer hold it. Either way, the old arrangement has run out of life, and the cost of keeping it is now higher than the cost of breaking it.\n\nThe picture is fire under water, in the same vessel. Two things that destroy each other made to live in one place. This is not a small change. It is the kind of change a society makes when its calendar no longer matches its sky, or a person makes when the version of themselves they were defending stops being true. The teaching is that revolution is real, and necessary, and dangerous, and that the timing of it is almost everything.\n\nThe counsel is patient. Do not move on the first heat. Wait until the proper day, the day when the inner fire and the outer conditions agree that the old form is finished. Speak the change clearly, more than once, until it is believed. Then act. The tiger does not announce its new stripes; it shows up wearing them. What carries this is sincerity in the change itself. A revolution that is only on the surface, only a new face on the old self, will not hold. The molt has to reach the heart.",
+  "judgement_lines": [
+    "Revolution is believed only after it has been made.",
+    "When the day is right, the change carries through.",
+    "Stay firm and true, and regret falls away."
+  ],
+  "image_lines": [
+    "Fire inside the lake. The image of Revolution.",
+    "So the one who would lead sets the calendar in order, and makes the seasons clear."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "wrapped in the hide of a yellow ox.",
+      "reading": "The skin of a yellow ox, wrapped tight around what wants to move. Power is here, but the season has not arrived and the position has no help above. This is not the time to break out. Bind yourself instead. Hold the form steady, make yourself firm, and do not act on the impulse to change yet.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    },
+    {
+      "line": 2,
+      "image": "the proper day arrives.",
+      "reading": "The proper day has come. The conditions outside and the readiness inside have finally agreed, and the change can now be made without harm. Move when this alignment opens. Action taken on the right day brings good fortune and no blame. Do not delay further out of caution; the moment is the gift.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    },
+    {
+      "line": 3,
+      "image": "the words of change spoken three times.",
+      "reading": "Pushing forward here invites misfortune, even when the cause is correct. The line is strong and a step too far from the centre. Speak the change instead. Say it once, twice, a third time, until the words have gone the rounds and trust has built underneath them. Only after that does action carry.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 4,
+      "image": "the fate itself is amended.",
+      "reading": "Regret falls away. You stand at the seam where the old form meets the new, close enough to the centre of power that real change can begin, and your sincerity is what carries it. The fate itself can be amended now. Believe in the aim, change the form, and good fortune follows the conviction.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 5,
+      "image": "the great person changes like a tiger.",
+      "reading": "The great person changes the way a tiger changes its coat. The new stripes show, bright and unmistakable, and no divination is needed for others to know what has happened. This is the inner revolution displayed without effort. Trust arrives before the announcement does. You do not have to argue for the change you are.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    },
+    {
+      "line": 6,
+      "image": "the leopard's new spots, the small one's new face.",
+      "reading": "The superior person transforms the way a leopard does, the new pattern coming through from inside. Lesser ones only rearrange their faces, look obedient, keep the old heart. Both will appear to be on board with the new order. Do not push further now. Hold the correct position, and let the slow patterning finish.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/49", "generated": "iching-brief-v1" }
+}

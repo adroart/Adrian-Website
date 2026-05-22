@@ -1,0 +1,58 @@
+{
+  "number": 2,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Receptive",
+  "combination": "Earth sits over Earth, the same yielding doubled, with no sky reaching down through it and no fire warming it from above. This is the one hexagram made entirely of broken lines, and it is second because it is pure answer: the ground that takes the seed, the room that takes the shape, the surface that receives what the sky originates. Nothing here invents. Everything here completes.",
+  "upper_nature": "Earth, Kun. Broken, broken, broken. The surface of the world, low and wide, holding whatever falls onto it. When this trigram is on top, the yielding is the outward face: the way the situation meets you, soft, available, asking only to be moved through.",
+  "lower_nature": "Earth, Kun, again. The same yielding underneath: the bed. Below, this trigram is the deep capacity, not its surface. Pure yin at the root, the ground that was already there before anything chose to land on it, holding without needing to know what it holds.",
+  "reading": "The situation this code names is the one where the work is not to start something, it is to be the place where something can land. Hexagram 1 is the seed and the season. This is the field. The teaching is harder than it looks, because the field has to be ready before the seed arrives, and readiness is not a feeling, it is a shape: open, level, soft enough to receive, firm enough to hold.\n\nThe picture the hexagram gives is the mare. Not the stallion, which leads. The mare, which follows the stallion and goes as far as he goes, and farther, because her stamina is the kind that does not break. She does not pick the direction. She does not refuse it either. She moves with the herd, and the ground keeps coming up to meet her hooves.\n\nThe counsel is not to be passive, which is a different thing. Passive is empty and slack. Receptive is full and quiet. You are being asked to carry, not to push. To make yourself wide enough that the thing you are tending can grow inside you without being forced into a shape you chose for it. This is the position of the mother, the apprentice, the host, the one whose name will not be on the work but whose presence made the work possible. Find your friends in the soft country. Lose the ones who only know how to lead. The southwest, where the same yielding gathers. Stay there a while.",
+  "judgement_lines": [
+    "The Receptive answers, and reaches through everything.",
+    "It follows the mare, and finds the way.",
+    "Held in the soft country, it carries the deepest fortune."
+  ],
+  "image_lines": [
+    "The earth holds, and does not refuse.",
+    "So the one who would grow makes the self wide, and carries the world."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "frost underfoot, ice still coming.",
+      "reading": "The first cold has touched the ground. It is only frost, but the frost is the beginning of the ice. A small thing has started that will harden if it is allowed to. Watch the small thing. Do not dismiss it. The whole winter is folded inside the first cool morning.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 2,
+      "image": "straight, square, wide.",
+      "reading": "The ground here does not strain. It is upright on its own, square on its own, wide on its own, and what is right comes out of it without effort. Stop trying to be good at this. The yielding is already correct. Stand in your own ground, and the work happens.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    },
+    {
+      "line": 3,
+      "image": "the gift kept under the cloak.",
+      "reading": "You have something good. The time is not to show it. Serve the work in front of you, finish what was asked, and let the name on the credit be someone else's. The ground does not announce the harvest. The gift does its job whether or not anyone sees who carried it in.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    },
+    {
+      "line": 4,
+      "image": "the sack tied shut.",
+      "reading": "The room has closed. Nothing is moving in, nothing is moving out. This is not failure, it is weather. Tie the sack. Keep what you have, say less than you want to, and wait. No one will praise you for the silence, and no one will blame you either. That is the whole point.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    },
+    {
+      "line": 5,
+      "image": "the yellow garment, worn underneath.",
+      "reading": "The deepest fortune of this hexagram. Yellow is the colour of the centre, and the garment is the inner one, not the outer one. Worth held quietly at the centre, dressed in the colour of the earth itself. Nothing has to be announced. The presence does the teaching, and the room steadies around it.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 6,
+      "image": "dragons fighting in the open field.",
+      "reading": "The yielding has gone past its limit, and now it is trying to lead. Two dragons meet in the field where neither belongs, and the blood that spills is the colour of heaven and the colour of earth at once. There is no winner here. The receptive that forgets it was the ground harms itself before it harms anyone.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/02", "generated": "iching-brief-v1" }
+}

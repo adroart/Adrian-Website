@@ -1,0 +1,57 @@
+{
+  "number": 21,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Biting Through",
+  "combination": "Fire over Thunder. Lightning above, the rumble beneath it. The hexagram itself is the picture: two firm lines top and bottom like jaws, the open lines like teeth, and one stubborn line lodged between them keeping the mouth from closing. Something is in the way, and the way home is to bite. Not around it, not past it. Through it. The light up top lets you see the thing clearly. The thunder below gives you the force to move on what you saw.",
+  "upper_nature": "Fire, Li. Broken, unbroken, broken. Brightness that clings to what it burns on, the lamp, the flame, the eye. Up here it is the seeing: the lightning flash that shows what is actually in the mouth, what the obstruction is, who is doing what to whom.",
+  "lower_nature": "Thunder, Zhen. Unbroken at the base, opened above. The shock that rises from the deep earth, the first movement, the jolt. Below, this trigram is the force that finally acts: a body that has decided it has had enough and moves.",
+  "reading": "The code names the moment when something has wedged itself into the middle of your life and will not work itself out on its own. A grievance that keeps coming up at dinner. A clause in a contract everyone agreed to ignore. A person on the team whose conduct the room keeps quietly absorbing. The jaws cannot close because the thing is still in there. You feel it every time you try to chew.\n\nThe image is plain. You bite. Not theatrically, not in anger, but with the seeing of the lightning and the force of the thunder behind it. Eradicate the obstruction. Then the mouth closes, the body eats, the high and the low come back together. The hexagram is sometimes called the law hexagram for a reason: when an obstruction is structural, the cure is structural too. Make the rule clear. Apply the consequence. Be exact about it.\n\nThe danger in this code is not weakness. It is two errors of the strong hand. Either you wait too long, hoping the thing will dissolve, and the dried meat gets harder to bite. Or you swing too hard, and the punishment overshoots the offence, and now you are the obstruction. Read the line you are on. Early, restraint is enough. Late, the cangue arrives whether you wanted it to or not.\n\nWhat the lightning shows is not the enemy. It is the shape of the thing in the way. Bite where the shape tells you to bite.",
+  "judgement_lines": [
+    "Biting Through has its way.",
+    "It is favorable to let the law be applied."
+  ],
+  "image_lines": [
+    "Thunder and lightning together.",
+    "So the early kings made the penalties clear, and the law plain."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "feet locked in the stocks.",
+      "reading": "A small wrong, caught early. The restraint at the ankle is not a punishment of your life, it is the thing that stops the next, larger step from happening. You feel constrained and you should. Sit with it. The cost of this correction is tiny compared to the cost of the move it prevents.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    },
+    {
+      "line": 2,
+      "image": "biting through soft flesh into the nose.",
+      "reading": "The thing in the way is easy to bite, almost too easy, and you go further than you meant to. The face takes a mark. Even so, no fault: the resistance below was strong, and correction this firm was what the moment asked for. Just notice the overreach for next time.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    },
+    {
+      "line": 3,
+      "image": "gnawing dried meat, striking something poisonous.",
+      "reading": "You took on a problem older than you knew. The bite turns up something tainted: corruption, a hidden grudge, an injury someone has been carrying. Small regret, no real fault. The position is awkward and you are not the perfect one to fix it. Keep going anyway. Honesty about the difficulty is the work here.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    },
+    {
+      "line": 4,
+      "image": "gnawing meat dried on the bone, finding the metal arrow.",
+      "reading": "The hardest bite. Meat fused to bone, sinew, history. But inside the gristle is the arrow: clarity, evidence, the thing that lets you proceed. It is favorable to work hard and stay straight. This is the line that decides whether the whole judgement holds. Stay with the difficulty.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    },
+    {
+      "line": 5,
+      "image": "biting dried meat, finding yellow gold.",
+      "reading": "You are the one judging now. The position is high, the line is yielding: lean toward mercy, but stay correct. Yellow gold is the right measure, neither lenient nor severe, the colour at the centre. Stay aware that the seat is dangerous. The judgement that comes from balance leaves no blame on the one who made it.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    },
+    {
+      "line": 6,
+      "image": "the cangue around the neck, deaf to counsel.",
+      "reading": "The warning of the hexagram, spoken last. The one who would not be corrected early is corrected late, and the late correction is heavier. The wood around the neck reaches the ears now. There is nothing more to say to this person. Misfortune. Hear this one for yourself, while the bite is still small.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/21", "generated": "iching-brief-v1" }
+}

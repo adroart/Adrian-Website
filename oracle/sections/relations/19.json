@@ -1,0 +1,81 @@
+{
+  "number": 19,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Solection",
+
+  "unity_line": "Set beside Code 20, this is the touch and the seeing of it, one motion drawing near while the other watches it arrive.",
+
+  "pair": {
+    "number": 20,
+    "card_name": "Emerging as the Code",
+    "hexagram_name": "Contemplation (Kuan)",
+    "teaching": "With Emerging as the Code, the pair holds approach and witness as a single rhythm. One moves toward, sensing for warmth and welcome; the other stays still and sees what is moving. Closeness only becomes real when something is awake enough to recognise it."
+  },
+
+  "inverse": {
+    "number": 20,
+    "card_name": "Emerging as the Code",
+    "hexagram_name": "Contemplation (Kuan)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you find Code 20, Emerging as the Code. The same approach turned end for end becomes the quiet attention that catches the approach as it happens, the watcher inside the welcomed touch."
+  },
+
+  "programming_partner": {
+    "number": 33,
+    "card_name": "Echos of Time",
+    "teaching": "Across the genetic code, the partner here is Code 33, Echos of Time. The sensitive approach is held by the one who carries the long memory of what such approaches have meant before, and what they know together is that every true nearing is a return."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Gaia",
+    "tarot": "3 - The Empress",
+    "siblings": [60, 61],
+    "teaching": "The Ring of Gaia holds only three cards, this one with Code 60 and Code 61. A small family woven into the body of the Earth herself, carrying sensitivity, structure, and inner truth as one living intelligence. This code is the ring's organ of touch, the place where Gaia reaches out to greet what comes."
+  },
+
+  "tarot": {
+    "card": "III, The Empress",
+    "teaching": "The Empress carries this code in the Tarot, and the resonance is the body of the world made tender. Her arcana is nourishment offered without condition, ground that knows what every living thing needs from it. This code carries the same opened hand."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Lake",
+    "teaching": "Earth over Lake, the receptive ground above the open water, warmth gathered in a low place and rising as quiet welcome."
+  },
+
+  "sky": {
+    "value": "Venus",
+    "type": "planet",
+    "teaching": "Venus keys this ring, the planet of relating itself, drawing what loves toward what loves and softening the field between them."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "He Xiangu stands above, the maiden who lives on moon-stone and asks nothing of anyone; Li Tieguai sits below with his crutch and his gourd of medicine. Together they teach that true approach comes from those who need little and carry healing for whoever they meet."
+  },
+
+  "hebrew_letter": {
+    "letter": "Daleth",
+    "meaning": "The Door, the opening, abundance pouring through",
+    "path_number": "14",
+    "path_connects": "Chokmah to Binah",
+    "teaching": "Daleth is the letter, the Door, and the path runs high across the Tree between Chokmah and Binah. The letter teaches that this code is the threshold itself, the opening where wisdom and understanding lean toward one another and pour through."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 19",
+    "generated": "relations-v1"
+  }
+}

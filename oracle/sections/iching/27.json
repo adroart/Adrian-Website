@@ -1,0 +1,59 @@
+{
+  "number": 27,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Nourishment",
+  "combination": "Mountain sits over Thunder. The whole hexagram is shaped like an open mouth: two firm lines at top and bottom, four broken lines between them, the upper jaw still and the lower jaw moving. Below, thunder stirs in the depths; above, the mountain holds steady and watches what is taken in. This is the hexagram of the mouth itself, and of everything that passes through it. Food, words, attention, company, knowledge. What you feed on becomes you.",
+  "upper_nature": "Mountain, Gen. The fixed upper jaw. Stillness, the line that holds. Gen brings stopping, the ridge that decides what crosses and what does not. As the outer trigram it is the watcher at the gate, calm, deliberate, slow to be moved.",
+  "lower_nature": "Thunder, Zhen. The moving lower jaw. The first stir under the ground, hunger waking up, the body wanting. Zhen is appetite as a force of nature: real, undeniable, the engine that brings the mouth to the food in the first place.",
+  "reading": "The teaching of this code is the mouth. Watch what goes in and watch what comes out. Both are nourishment, and both shape the one doing the eating.\n\nThe image is the open jaws, upper still, lower moving. That is how a body eats: the top stays, the bottom works. The same shape governs everything else that nourishes you. The food on the plate. The voices you let in. The reading you do at night. The work you spend your hours on. The people you sit with. All of it is being chewed, all of it is becoming you.\n\nThe hexagram does not say eat less or speak less. It says be careful. Pay attention to what you are reaching for and why. A person with their own quiet source can lose it in a single afternoon by staring at someone else's plate. Hunger is not the problem; misplaced hunger is. The first line of the hexagram is the warning: you had your own tortoise, the creature that lives on air, and you put it down to watch another mouth move.\n\nThe upper half of the hexagram turns the question outward. Once you are fed, you feed. The mouth that took in is the same mouth that speaks. What you nourish in others, by word, by money, by the door you open or close, is the second half of this work. The mountain at the top is not just guarding the entrance. It is the place from which the rain eventually falls. Be careful of your words. Be moderate at the table. Notice what you are made of, and what you are making of others."
+,
+  "judgement_lines": [
+    "The mouth. Held steady, this brings good fortune.",
+    "Look at what you are nourishing.",
+    "Look at what you are filling your own mouth with."
+  ],
+  "image_lines": [
+    "At the foot of the mountain, thunder.",
+    "So the one who would grow is careful of words, and moderate in food and drink."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the tortoise put down, the mouth watering at another's plate.",
+      "reading": "You have your own quiet source, the creature that lives on air. And you set it down to watch someone else chew. That is the misfortune here. Not the hunger. The forgetting. Pick the tortoise back up. What you envy is smaller than what you already carry.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    },
+    {
+      "line": 2,
+      "image": "reaching up the hill for food that should come the other way.",
+      "reading": "You are looking for nourishment in the wrong direction. Asking the weaker to feed you, or chasing a height that has nothing to give. The pattern is upside down. To keep pushing forward on this errand brings only loss. Sit. Eat what is in front of you. Stop walking toward the empty hilltop.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    },
+    {
+      "line": 3,
+      "image": "the mouth turned away from real food.",
+      "reading": "You are refusing the nourishment that is actually offered, and feeding yourself on what only looks like food. Even firmness will not save this. The counsel is unusually hard: stop. Do not act on this for ten years if that is what it takes. Nothing here advances anything.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    },
+    {
+      "line": 4,
+      "image": "the tiger watching, low and steady, eyes on what feeds it.",
+      "reading": "This time the reaching is right. You are looking downward, asking from below, no shame in it. Hold the tiger's gaze: focused, patient, hungry without being hasty. Want the thing fully and clearly, and you will not miss. The asking is allowed. Just keep the attention clean.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    },
+    {
+      "line": 5,
+      "image": "the one who cannot feed others, holding the centre anyway.",
+      "reading": "You are in a position that asks more than you can give. The honest move is to lean on something steadier than yourself and stay put. Do not start the long crossing. Do not launch the great work. Hold quietly, follow what is above you, and the season passes well enough.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    },
+    {
+      "line": 6,
+      "image": "the source from which the nourishment flows.",
+      "reading": "Many are eating from your hand now. The position carries weight, and the weight is the danger. Take it seriously, stay awake to the risk, and the great crossing becomes possible. The one who has truly learned to feed self and others can move the whole country. Do the work. Do not flinch from it.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/27", "generated": "iching-brief-v1" }
+}

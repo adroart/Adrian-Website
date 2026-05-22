@@ -1,0 +1,58 @@
+{
+  "number": 53,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Development",
+  "combination": "Wind sits over Mountain. A tree, rooted on a mountainside, putting out its years of growth at the pace the mountain allows. The mountain is still and the wind moves through the branches, which is the whole image: an unhurried thing that nevertheless keeps going. Development means slow advance through a fixed series of stations, each one held until the next is ready.",
+  "upper_nature": "Wind, Xun. Broken at the base, unbroken above. The gentle force that enters everywhere a crack will admit it. Above, it is the tree's crown moving in the air, the influence that spreads without pushing. Steady, patient, infiltrating.",
+  "lower_nature": "Mountain, Gen. Unbroken at the top, broken below. The stopping place. Below, it is the ground that holds the tree's roots, the still base that lets slow growth happen at all. It does not move and that is why it can be built on.",
+  "reading": "The situation this code names is the long unfolding. A real thing is making its way into being, and it is doing so by stages, each one taking the time it takes. Engagement before marriage, a tree's first decade before its canopy, an apprentice before the work. The energy is forward, but the speed is set by something older than the person inside it. You cannot hurry this. You can only stay with it.\n\nThe picture the hexagram gives is the wild goose moving from station to station: the shore, the rocks, the plateau, the trees, the summit, the heights. Each landing is a particular kind of ground with its own rules. Some of the stations are fertile and some are dry. Some will hold you and some will not. The teaching is not that the journey is always upward. It is that the order is what matters. Skip a station, jump to the height before the lower work is in, and the whole thing comes apart in ways the line readings spell out plainly.\n\nWhat the image asks of you is two things at once. Move, because the season is moving. But move at the pace of roots, not branches. A tree on a mountain grows down as much as it grows up, and that downward work is what keeps the upper reach from snapping in the first strong wind. The temptation, when something is finally underway, is to skip ahead. The counsel is to refuse that temptation and stay at the station you are actually at, until what is supposed to happen there has happened.",
+  "judgement_lines": [
+    "Gradual advance.",
+    "The young woman is given in marriage. Good fortune.",
+    "It serves to stay firm and true."
+  ],
+  "image_lines": [
+    "A tree growing on the mountain.",
+    "So the one who is becoming abides in worth and quiet virtue, and the common ways improve."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the wild goose at the shoreline.",
+      "reading": "The first station. You have only just arrived at the edge of the thing, and you are unsupported and visible. There will be talk. Some of it will sting. None of it is the real issue. The work here is to stay diligent in the small position, speak plainly when you must, and not mistake the criticism for proof that you are wrong.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    },
+    {
+      "line": 2,
+      "image": "the wild goose on the boulders, eating and drinking at ease.",
+      "reading": "You have reached stable ground. Food, company, a settled rhythm. The good fortune of this line is real, but it is good fortune you earn by not consuming it carelessly. Eat and drink with the others. Share what came to you. Rest here for the right length of time, and not a day longer.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    },
+    {
+      "line": 3,
+      "image": "the wild goose on the dry plateau.",
+      "reading": "You have advanced too fast, into ground that cannot hold you. A husband leaves and does not come back. A pregnancy that does not become a child. Misfortune, because the order was broken. What helps here is defense, not advance. Stop trying to push forward. Hold what you have. Wait until the proper season returns.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    },
+    {
+      "line": 4,
+      "image": "the wild goose in the branches, finding one flat enough to perch.",
+      "reading": "An exposed station. Your feet were not made for these branches. Still, there is a level place if you look for it, and you may rest there for a while. No error. The counsel is to yield, follow what is steady above you, and do not try to make this a permanent home. It is a pause, not the destination.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    },
+    {
+      "line": 5,
+      "image": "the wild goose on the high summit.",
+      "reading": "You have reached the centre of your own power, but the fruit is delayed. For three years the conception does not come. Slander and obstruction keep what is yours from arriving. Hold. The line of arrival is the line of patience at the top. In the end nothing can prevent the proper outcome. Good fortune.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still Mountain" }
+    },
+    {
+      "line": 6,
+      "image": "the wild goose risen into the cloud heights, feathers used in the sacred dance.",
+      "reading": "The whole sequence is finished. You are no longer climbing, because there is no further station. What is left is what falls from you: the feathers, the legacy, the example others will arrange themselves by. Good fortune. The order you walked cannot now be disordered. Your work has become a thing the world keeps.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/53", "generated": "iching-brief-v1" }
+}

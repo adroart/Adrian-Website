@@ -1,0 +1,81 @@
+{
+  "number": 40,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Eternal Wellspring",
+
+  "unity_line": "Read against Code 39, this is the release that follows the long blockage, the thaw arriving once the obstruction has finally given way.",
+
+  "pair": {
+    "number": 39,
+    "card_name": "Nobel Spark",
+    "hexagram_name": "Obstruction (Chien)",
+    "teaching": "Nobel Spark is the lines locked, the river met by the dam, the friction that gathers force at the held edge. This code is what happens on the far side, the breaking open and the loosening that lets the gathered water run again. Pressure and the easing of pressure belong to the same weather."
+  },
+
+  "inverse": {
+    "number": 39,
+    "card_name": "Nobel Spark",
+    "hexagram_name": "Obstruction (Chien)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and you arrive at Code 39, Nobel Spark. The same six lines read from the other side stop being the relief that arrives and become the resistance that built the relief in the first place."
+  },
+
+  "programming_partner": {
+    "number": 37,
+    "card_name": "Journey Home",
+    "teaching": "Across the genetic code, the partner here is Code 37, Journey Home. The thawing release is held by the steady tending of the hearth, the people and the food and the keeping of the room. What they know together is that real deliverance lands in the everyday, in a kitchen with the kettle on, not in an abstract sky."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Alchemy",
+    "tarot": "1 - The Magician",
+    "siblings": [6, 47, 64],
+    "teaching": "Inside the Ring of Alchemy, this code sits with Codes 6, 47, and 64, the family that turns difficult matter into something usable. Conflict softens, exhaustion finds will, oppression opens, confusion clears. This seat is the moment the work releases its result, the bound thing letting go."
+  },
+
+  "tarot": {
+    "card": "I , The Magician",
+    "teaching": "The Tarot face here is I The Magician, the figure at the table with all four elements laid out and a hand raised between sky and ground. The image is the one who finds the path open at the right instant and moves the materials through. This code carries the same quality, the keen sense of the moment the blockage gives."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Water",
+    "teaching": "Thunder above, Water below, the strike that splits the held sky and the rain that finally falls from the broken cloud."
+  },
+
+  "sky": {
+    "value": "Mercury",
+    "type": "planet",
+    "teaching": "Mercury carries this ring, the planet of quick passage and the messenger who slips through any door, opening what looked sealed by knowing the right small move."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu stands above, the noble who walked out of the inherited palace to find a truer ground, and Lü Dongbin stands below, the scholar whose sword cuts illusion clean. Together they teach that release comes from leaving the wrong room and from naming what was holding the door shut."
+  },
+
+  "hebrew_letter": {
+    "letter": "Beth",
+    "meaning": "The House — the vessel that focuses will",
+    "path_number": "12",
+    "path_connects": "Kether to Binah",
+    "teaching": "On the Tree, the ring's path is Beth, the house, running from the crown across to the understanding mother. The letter teaches that real deliverance is not a scattering but a homecoming, force gathered into a vessel small enough to be lived in, will finding its room."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 40",
+    "generated": "relations-v1"
+  }
+}

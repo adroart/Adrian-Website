@@ -1,0 +1,59 @@
+{
+  "number": 48,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Well",
+  "combination": "Water sits over Wind, and wind in the lower place is also wood: the roots of a tree reaching down, and the water rising through them. The image the old commentators saw in this stacking is a well. A shaft sunk into the earth, a rope let down, water drawn up. The village above changes. The well below does not. That stillness in the middle of the moving world is the whole hexagram.",
+  "upper_nature": "Water, Kan. A broken line, a solid line, a broken line. The trigram of streams, of the abyss, of what flows downward and fills whatever shape holds it. Above, it is the cold spring kept in the dark, the source that does not announce itself, the depth a rope is lowered into.",
+  "lower_nature": "Wind, Xun. Two solid lines, a broken line at the foot. Gentle, penetrating, a thing that goes in and keeps going in. Below, the trigram is wood as much as wind: the long taproot, the well-shaft itself, the slow patient reach down through the ground to where the water sits waiting.",
+  "reading": "The situation this code names is the source. The thing in your life that does not move while everything around it moves. Friendships dissolve, addresses change, the work you were sure of becomes work you no longer recognise. And underneath all of that, there is something that has not changed at all. The deep water. The taste that has been the same since you were a child. The hexagram is asking you to remember it is there, and to lower the rope.\n\nThe image is precise. A well is dug, not poured. It does not produce water. It reaches water that was already there. So the work this code asks of you is not making. It is digging. Slow downward attention through layers you would rather have skipped. The rope has to be long enough. The bucket has to hold. If either fails right at the surface of the water, you come back up dry, and that is the one misfortune the hexagram warns about: the work that almost reached.\n\nThe well is also for everyone. Whoever comes to it can drink. Once you have done the inward labor, the source is not yours to hoard. It feeds the town that happens to be built around it that year, and the next town that comes after, and never empties. The teaching is to keep digging until the water is clean, and then to leave the top uncovered. What was found in the dark is meant for the open. Don't cover it.",
+  "judgement_lines": [
+    "The town may move. The well does not move.",
+    "It neither empties nor fills.",
+    "Whoever comes to it drinks.",
+    "If the rope falls short, or the jug breaks at the lip, it is misfortune."
+  ],
+  "image_lines": [
+    "Water above the wood. The well.",
+    "So the one who would lead sets the people to their work, and asks them to help one another."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "mud at the bottom, the old well no bird visits.",
+      "reading": "What you are drawing from has gone stale. The source you are still lowering your rope into is not actually a source any more. Even small creatures know to look elsewhere. This is not a moment to keep dipping. The honest move is to admit the well has been abandoned, and find ground where the water is still live.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    },
+    {
+      "line": 2,
+      "image": "the spring keeps a fish alive, and the jug leaks.",
+      "reading": "There is water here, but only a thin trickle, and the vessel you are using will not hold it. Your gift is real, the well is not dry, but you are aimed sideways. You are spending what little you have on something it was not meant for. Mend the jug before drawing again.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    },
+    {
+      "line": 3,
+      "image": "the well cleaned out, and no one comes to drink.",
+      "reading": "You did the work. The water is clear. And the people who could be nourished by it are walking past. This is a real grief, not a small one. The line does not tell you to chase them. It tells you the water keeps. Stay clear. The one who can recognise what you have will come, and then everyone drinks.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    },
+    {
+      "line": 4,
+      "image": "the well being lined with stone.",
+      "reading": "Quiet maintenance. No water is being drawn here, no one is being fed, but the walls are getting tiled so the spring stays clean. This is the season to repair the container. It is not failure to spend a stretch of your life on yourself this way. It is what makes the next pouring possible. No blame.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    },
+    {
+      "line": 5,
+      "image": "the clear cold spring at the centre, drunk from freely.",
+      "reading": "The well is at its best. Water cold enough to wake you, clean enough to give to a child. This is the line of fully ripened nourishment, and it has arrived. Drink. Let others drink. There is no warning here, only the rare moment when source and vessel and drinker are all in their right place.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    },
+    {
+      "line": 6,
+      "image": "the well drawn from openly, the top uncovered.",
+      "reading": "The work is finished. The water is at the lip, the cover is off, and anyone who is thirsty can come. Don't cover it now. Don't hoard what was never yours in the first place. The deepest good fortune of this code lives here, in the moment the source becomes public and keeps giving without running out.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/48", "generated": "iching-brief-v1" }
+}

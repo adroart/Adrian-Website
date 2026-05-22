@@ -1,0 +1,58 @@
+{
+  "number": 10,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Treading",
+  "combination": "Heaven sits over the lake. The strongest force in the system rides directly above the softest, the most yielding, the most joyous. The lake is open water with its surface turned up to the sky, and the sky's whole weight presses down on that open surface. This is the situation of the small thing walking under the large one, a single yielding line moving among five solid ones, a tiger somewhere very close.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's ceaseless motion, dynamic and untiring. In the upper position the force is reaching down with its full weight, the strength that does not soften and does not stop, and it stands directly over what is small and bright.",
+  "lower_nature": "Lake, Dui. Solid, solid, broken at the top. Standing water with its surface open to the sky, the smiling face of the youngest daughter, the joyous one. Below, this trigram is the yielding nature inside the situation, the one who walks where the heavy thing rests.",
+  "reading": "The situation this code names is conduct under pressure. You are walking somewhere the ground is alive. The thing above you is much stronger than you are, much older, much more dangerous, and it does not have to like you. Yet here you are, treading. The old image is the tiger's tail. Not the tiger's face, not the tiger's open mouth, the tail. You are close enough to step on it, and what happens next depends on how you step.\n\nThe teaching the hexagram gives is propriety, which is a word the modern ear hears wrong. It does not mean stiff manners. It means the way a smaller, lighter creature moves around a larger, heavier one without provoking it. Quiet feet. Eyes open. No sudden noise. The lake below the sky is joyous, and the joy is not stupid. It comes from knowing that something larger is overhead, and walking anyway, with care.\n\nWhat the hexagram warns against is the bravo: the one who, knowing the danger is there, decides to perform strength he does not actually have. The squinting man who claims he sees clearly. The lame man who claims he can keep pace. That posture is what gets bitten.\n\nStay small in the situation that is bigger than you. Do not posture. Notice where the tail is. Move the way a guest moves in a house that is not yet hers. The danger is real and it does not need to harm you. Walk with care, and the tiger sleeps on.",
+  "judgement_lines": [
+    "Treading on the tail of the tiger.",
+    "It does not bite.",
+    "There is growth."
+  ],
+  "image_lines": [
+    "Heaven above, the lake below.",
+    "So the one who would walk well sorts what is high from what is low, and steadies the people's purpose."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the plain shoe, going forward.",
+      "reading": "You walk in shoes nobody notices. No costume, no announcement, just the path under you and the foot that takes the next step. There is no quarrel to be had here yet. Move forward as you are. The simplicity is the protection.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    },
+    {
+      "line": 2,
+      "image": "the level road, walked alone.",
+      "reading": "The road is smooth and you are by yourself on it. Nobody is watching, nobody is praising. That is the gift. Stay quiet in your own mind. The fortune in this line belongs to the one who does not need an audience to keep her steps straight.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    },
+    {
+      "line": 3,
+      "image": "the one-eyed man sure he can see.",
+      "reading": "This is the line that gets bitten. The one who half sees and says he sees fully. The one who limps and says he can run. He treads on the tail and the tiger turns. The error is not weakness. The error is the lie about the weakness.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    },
+    {
+      "line": 4,
+      "image": "the foot already on the tail.",
+      "reading": "You are nearer the danger than you meant to be. The shoe is already touching what could turn and bite. This is not the moment for bravado, and it is not the moment for panic either. Soft breath. Slow step. Carefulness, not fear, is what carries you through.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    },
+    {
+      "line": 5,
+      "image": "the resolute stride at the centre.",
+      "reading": "From here the way is clear and the stride is firm. You see what to do and you do it. The peril this line names is the peril hidden inside being right. Being correct does not remove the tiger from the room. Stay sharp at the top of your decision.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    },
+    {
+      "line": 6,
+      "image": "looking back over the whole walk.",
+      "reading": "The end of the path. Turn and look at the steps you have taken. If the line of footprints is clean, if no step was a lie, the fortune here is large. This is not a reward you earn at the finish. It is what the finish shows you was already true.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/10", "generated": "iching-brief-v1" }
+}

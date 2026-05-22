@@ -1,0 +1,58 @@
+{
+  "number": 59,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Dispersion",
+  "combination": "Wind moves over water. The wind reaches the surface and the surface gives way, the held shape breaks into spray, what was one body becomes ten thousand droplets carried outward. This is the picture of something coming apart. Not violently. The way mist lifts off a lake at sunrise. The hexagram names the moment when whatever was clenched, frozen, or hoarded inside finally loosens, and the loosening is the cure, not the wound.",
+  "upper_nature": "Wind, Xun. The gentle penetrating one. Wind does not push, it enters. It finds the crack and goes through. In the upper position the wind is moving over the surface of things, carrying them, breaking the still face of the water, dissolving what was solid back into motion.",
+  "lower_nature": "Water, Kan. Flowing, dangerous, deep. Inside, water is the held thing: feeling pooled and gone still, energy that has sunk and stopped circulating. Below, this trigram is the inner stagnation, the ice the wind has come to thaw. The danger is in staying frozen.",
+  "reading": "The situation this code names is the breakup of something that had hardened inside you. A grudge, a guarded patch of self, an alliance held tight past its season, a belief you kept stiff so the rest of life would not tip over. Something has gone still and the stillness has started to rot. The wind is what comes to move it.\n\nThe image is the spring thaw. Water that was ice begins to flow again, and as it flows it scatters, breaks into spray, loses the shape it had been holding. That losing is the whole teaching. You will feel it as dispersion, as things falling away from you, as a kind of softening you did not ask for. The old translators call it dissolution, and the word is honest. Something is being undone.\n\nThe counsel is not to resist the breakup but to give it a centre. The kings of old, in the same hour, went to the temple. When everything is loosening at once, you need a still point: a place of devotion, an act of sincerity, a fixed care. Without that, dispersion becomes scattering, and the energy is wasted. With it, the breakup is generous. The same force that disperses your defenses can be ridden across the great water. Cross now. The wind is at your back, the boat is wood on water, and the things that needed to come apart in you are already coming apart. Bring sincerity. Let the rest go.",
+  "judgement_lines": [
+    "Dispersion. There is a way through.",
+    "The king goes to the temple.",
+    "Cross the great water. Hold steady. Stay true."
+  ],
+  "image_lines": [
+    "The wind moves over the water.",
+    "So the old kings made offerings, and built temples to gather the people's heart."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a strong horse arriving early.",
+      "reading": "The breakup has only just started. The ice is thin, the rot is small, and help has come while help is still enough. Act on the early sign. Do not wait for the situation to demand more than you have. A strong ally, met now, carries the whole weight forward.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    },
+    {
+      "line": 2,
+      "image": "running for the bench when the floor breaks.",
+      "reading": "Something is dissolving under you and there is one steady place to reach. Go to it. This is not flight, it is finding the thing in your life that still holds, the bench, the friend, the practice, the truth, and putting your weight on it. The regret you were carrying lifts.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    },
+    {
+      "line": 3,
+      "image": "the self scattered into the work.",
+      "reading": "The place to disperse first is your own grip on yourself. Set aside the part that wants credit, protection, recognition. Pour into the task. When the self is the thing that goes into the wind, nothing is wasted and nothing comes back as regret. The aim is outside you.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    },
+    {
+      "line": 4,
+      "image": "the flock scattered, a hill rising.",
+      "reading": "Break up the small group you belong to. Loyalties you thought were sacred turn out to be a faction. Disperse them, and what gathers afterward is bigger than anything the small group could have built: a crowd standing like a hill. This is hard to see in advance. Trust the loosening.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    },
+    {
+      "line": 5,
+      "image": "the king's voice, like sweat that cannot be called back.",
+      "reading": "From the centre, speak the thing that cannot be unsaid. A real announcement, a real decree, made not from calculation but from the body, the way sweat is made. Open the granary at the same time. Whatever you have been hoarding, spend it now into the public good. No fault here.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    },
+    {
+      "line": 6,
+      "image": "blood washed off, harm walked away from.",
+      "reading": "At the end, the dispersing is of the wound itself. Whatever was bleeding in you, let it run clear. Then go. Distance is the medicine. You do not have to stay near the thing that hurt you to prove you have healed from it. Step out and far. No blame.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/59", "generated": "iching-brief-v1" }
+}

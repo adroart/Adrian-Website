@@ -1,0 +1,58 @@
+{
+  "number": 31,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Influence",
+  "combination": "Lake sits on Mountain. A pool of still water held in the rock of a high peak, the stone bearing the water, the water softening the stone. Neither moves toward the other, and yet they shape each other constantly. This is the picture of mutual feeling: two natures meeting without intention, each responsive at the place where they touch, the influence running both ways without anyone pushing.",
+  "upper_nature": "Lake, Dui. Yang, yang, yin at the top. An open surface, water gathered and held, vapor rising off it. Its action is to delight, to draw out, to exchange. Lake speaks. It is the youngest daughter, joy, the mouth of the trigrams, soft above and full beneath.",
+  "lower_nature": "Mountain, Gen. Yin, yin, yang at the top. Stillness with a hard cap, a thing that has come to rest and stays. Its action is to stop. Mountain is the youngest son, the keeping-still, settled at the base, firm where it meets what it carries above.",
+  "reading": "The situation this code names is the one where you are being moved by another and moving them back, without either of you forcing it. Influence here is not persuasion. It is not strategy. It is what happens when two natures are placed side by side and one of them goes still enough for the other to register.\n\nThe image is precise. A lake on a mountain. The mountain does not climb up to meet the water; it simply stops, and the water can rest there. The water does not push down into the rock; it simply sits, and the rock is slowly changed by it. What looks like passivity is the whole mechanism. If the mountain moved, the lake would spill. If the lake forced anything, it would run off down the slope. The whole arrangement works because both are willing to be still where they are and let the contact do its own work.\n\nThe counsel hidden inside this is older than romance, though romance is its clearest case. Influence corrupts the moment it gets purposeful. A heart that wants something from another stops being able to be felt by them. So the teaching is to empty out first. Receive without prejudice. Let the other approach. Stay porous. The lake on the mountain is open to the whole sky. It does not choose what it receives. It just holds the shape it is and lets weather happen on it. From there, slowly, the rock is shaped, and the water is renewed by what falls into it. Stillness is what makes the sensitivity possible. Don't argue your way in. Be the place a lake could rest.",
+  "judgement_lines": [
+    "Influence reaches through, when it is real.",
+    "Hold to what is true, and it carries.",
+    "Take the maiden as wife. Good fortune."
+  ],
+  "image_lines": [
+    "A lake rests on the mountain.",
+    "So the one who would draw others empties the self, and receives them as they come."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the moving of the big toe.",
+      "reading": "The feeling has reached the very edge of you, the toe, and that is all. A first stir. Real, but too small to walk on. The aim has gone out ahead of the strength that would carry it. Do not act yet. Notice what is moving in you, and let the rest of you catch up.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    },
+    {
+      "line": 2,
+      "image": "the moving of the calves.",
+      "reading": "The calves want to walk before the feet have decided. An impulse running up from below, not your own balance. Going now is bad. Staying is good. There is nothing weak about holding the place where you are. The pull will pass through, and what remains will be yours to move on.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    },
+    {
+      "line": 3,
+      "image": "the moving of the thighs, gripping what they follow.",
+      "reading": "Sensation has climbed into the thighs and they are already taking off after someone else. You are being pulled along, and you are gripping the pull as if it were yours. To go on this way humiliates. Stop. The thighs cannot lead. Find your own ground before you move toward anyone.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    },
+    {
+      "line": 4,
+      "image": "the unsettled heart, friends following its thought.",
+      "reading": "This is the seat of the matter, the place where influence is decided. Steady here, and good fortune follows; regret falls away. But if the heart is wavering, coming and going, then only the few who already share your thoughts will move with you. Influence outside the circle wants a quiet centre.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    },
+    {
+      "line": 5,
+      "image": "the flesh of the back, above the heart.",
+      "reading": "The feeling is held in the back, near the heart but not the heart. Not detachment, exactly. More like a sensing that does not grasp. You are responsive without being swept. There is no remorse in this. The aim has come to rest. Influence at this height is quiet and barely needs to act.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    },
+    {
+      "line": 6,
+      "image": "the moving of the jaws, cheeks, and tongue.",
+      "reading": "Influence has climbed all the way up into the mouth, and now it is only talk. Words that move the air and not the listener. This is the warning at the top: charm without ground, eloquence without weight. If the talk is teaching that comes from real stillness below, it can carry. If it is only the mouth moving, it will not.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/31", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 25,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "The Mysteries Play",
+
+  "unity_line": "Read with Code 26, this is the wild innocence that runs and the patient strength that knows when to hold it back.",
+
+  "pair": {
+    "number": 26,
+    "card_name": "Lighter Than a Feather",
+    "hexagram_name": "Taming Power of the Great (Ta Ch'u)",
+    "teaching": "With Lighter Than a Feather, the pair holds the two ways a great force learns to behave. One is the spontaneous life that moves without calculation; the other is the trained restraint that keeps such a life from harming what it loves. Innocence and discipline reading each other across the same six lines."
+  },
+
+  "inverse": {
+    "number": 26,
+    "card_name": "Lighter Than a Feather",
+    "hexagram_name": "Taming Power of the Great (Ta Ch'u)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines end for end and innocence becomes the great taming, Code 26. The same energy read from the other direction is no longer the open run of the heart but the bridle that the heart has learned to wear, the same animal seen from inside the practice."
+  },
+
+  "programming_partner": {
+    "number": 46,
+    "card_name": "Fountain of Light",
+    "teaching": "Across the genetic code, this pairing runs with Code 46, Fountain of Light. Innocence is held by the body's pleasure in being alive, and together they teach that what is spontaneous in the heart only stays true when the body underneath it is at ease. Joy and unconditioned action belong to each other."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [10, 17, 21, 38, 51],
+    "teaching": "The Ring of Humanity holds six cards that name what it is to be a person, Codes 10, 17, 21, 38, 51, and this one. Behaviour, opinion, control, the warrior's purpose, the lightning that wakes us, and innocence. This code is the family's untaught member, the one who has not yet been shaped by the others."
+  },
+
+  "tarot": {
+    "card": "VII · The Chariot",
+    "teaching": "The Chariot carries this code's Tarot face. The arcana shows a rider steering two opposing beasts by will alone, holding the line of a vow through every pull and counter-pull of the road. This code is what the rider was before the chariot, the unmixed motion that the discipline of the Chariot was built to honour."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Thunder",
+    "teaching": "Heaven above, Thunder below, the creative force breaking open under sudden movement, the sky meeting the first wild surge of life."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer keys this ring, cardinal water, the tender beginning that protects what is newly alive and trusts the tide to do the rest."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Zhongli Quan stands above, the general who laid down strategy and turned inward, and Cao Guojiu stands below, the noble who walked out of the palace. Together they teach that innocence is what the strong and the courtly arrive at once they stop performing."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence — the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "Cheth, the fence, marks the ring's path from Binah to Geburah. The letter teaches that innocence is not an open field but an enclosed one, a freedom protected by the right limit so that the wild life inside it can run without being lost."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 25",
+    "generated": "relations-v1"
+  }
+}

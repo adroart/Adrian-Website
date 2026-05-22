@@ -1,0 +1,59 @@
+{
+  "number": 20,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Contemplation",
+  "combination": "Wind moves over the earth, touching every blade of grass without changing shape itself. Four yielding lines at the base, two firm lines above, watching from the height. The hexagram shows the moment between the washing of the hands and the offering, when nothing has yet been performed but everything is already being seen. A pause held long enough to become a teaching.",
+  "upper_nature": "Wind, Xun. The gentle that goes everywhere, slipping under doors, brushing the tops of grasses, finding the shape of whatever it crosses. Above, it is the seeing that travels: not loud, not still, but present across every surface at once.",
+  "lower_nature": "Earth, Kun. The ground that receives, the field that yields, the surface that holds whatever falls on it without complaint. Below, it is the openness being witnessed, the broad plain over which the wind passes. Receptive, patient, slow to move.",
+  "reading": "The situation this code names is the pause before the act. The ritual moment when the hands are washed and the offering has not yet been laid down. Everything is poised, everything is being watched, and the watching is the work. This is not the time for performance. It is the time when the inner state of the person is doing all the speaking, and the outer act has not begun.\n\nThe picture the hexagram gives is wind over a wide plain. The wind does not strike the earth, does not break it. It moves across, touches everything, leaves no mark, and yet the grasses bend in its passing and the trees know which way it came from. That is how influence works in this code. Not by force. By presence carried so steadily that those below can read it without being told.\n\nThe other half of the teaching is the looking back. While the wind contemplates the earth, the earth contemplates the wind. There is no one-way watching here. To live well inside this code, you have to know that you are being seen at the same time you are seeing, and let both happen without flinching. The child watches naively. The peeper watches through a crack. The one who is at home in this code watches their own life as if from a small distance, calmly, and lets the seeing change them. Sincerity built up inside shows on the surface without needing to be announced. Stand in the pause. Let it do the work.",
+  "judgement_lines": [
+    "The hands have been washed.",
+    "The offering has not been brought.",
+    "There is a sincerity that is already showing.",
+    "Those below look up, and are steady."
+  ],
+  "image_lines": [
+    "Wind moves over the earth.",
+    "So the old rulers visited every region, watched the people, and from that watching set the teaching."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a child looking up.",
+      "reading": "The view here is small and unformed, the seeing of someone who has not yet learned to look further than the next thing. For one who is not yet expected to know, this is no failure. For one already given the work of seeing clearly, it is a quiet shame. Look further before you move.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    },
+    {
+      "line": 2,
+      "image": "peering through a crack in the door.",
+      "reading": "A narrow strip of light, a sliver of the room. The view is partial and the body is hidden. This kind of seeing keeps the watcher safe, and for some lives that is enough. But the work in front of you needs the door opened. Go out. Stand where the full view can reach you.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    },
+    {
+      "line": 3,
+      "image": "watching the shape of your own days.",
+      "reading": "You look at the line your life has been drawing, and you read whether it has been climbing or sinking. From that reading comes the decision: step forward, or step back. Neither is wrong here. The error is to move without having looked. Look first. The motion follows from what you see.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    },
+    {
+      "line": 4,
+      "image": "seeing the shine of the kingdom from close to the throne.",
+      "reading": "You have come near enough to the centre to see how its light falls. This is the place of the guest, not the host. Stay in the role. A guest carries what they see back outward, becomes the bridge. Use the closeness, but do not mistake yourself for the source of the brightness.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    },
+    {
+      "line": 5,
+      "image": "watching your own life by watching the people.",
+      "reading": "The way you can tell the shape of your life is by reading the faces of those your life has touched. They are the mirror. A leader at this height does not look inward in isolation. They look outward at the work their being has done, and from that, take the measure of themselves. No fault.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    },
+    {
+      "line": 6,
+      "image": "the one watched from every side.",
+      "reading": "You stand above the work now, no longer inside it, and everyone is looking. The eye that holds you steady is your own. Watch the life you have made as if it belonged to someone else, calmly. The mind does not get to be at rest here. Being seen is part of the post. Carry it with care.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/20", "generated": "iching-brief-v1" }
+}

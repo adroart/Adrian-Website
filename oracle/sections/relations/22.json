@@ -1,0 +1,81 @@
+{
+  "number": 22,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Treasure of the Way",
+
+  "unity_line": "Turned toward Code 21, this is the beauty that follows the bite, the fire at the foot of the mountain lighting what justice has already cut clean.",
+
+  "pair": {
+    "number": 21,
+    "card_name": "Beyond Binary",
+    "hexagram_name": "Biting Through (Shih Ho)",
+    "teaching": "Beyond Binary cuts through what is in the way; this code is what shines afterward in the cleared space. One pair acts, the other adorns. The teaching is that grace is not decoration laid on top of life, it is the natural radiance of a life that has already done the hard work of clearing."
+  },
+
+  "inverse": {
+    "number": 21,
+    "card_name": "Beyond Binary",
+    "hexagram_name": "Biting Through (Shih Ho)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and grace becomes the bite itself, Code 21, Beyond Binary. The same six lines read from the other end show that the cleared field and the clearing act are one motion, one looking forward, one looking back."
+  },
+
+  "programming_partner": {
+    "number": 47,
+    "card_name": "Garden of Alchemy",
+    "teaching": "Across the genetic code, the partner here is Code 47, Garden of Alchemy. Grace is held alongside the long pressure that turns hardship into wisdom. What this code radiates outward, its partner has refined inward, and neither is honest without the other's labour behind it."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Divinity",
+    "tarot": "5 - The Hierophant",
+    "siblings": [36, 37, 63],
+    "teaching": "The Ring of Divinity gathers this code with Codes 36, 37, and 63, four cards bound by sacred teaching. The family carries grace under pressure, the dark night, the alchemy of family, and the inquiry that reaches the source. This code is the family's radiance, the way the teaching shows on the outside."
+  },
+
+  "tarot": {
+    "card": "V, The Hierophant",
+    "teaching": "The Hierophant is the assigned arcana, and the fit is exact. Where the High Priestess keeps the secret, the Hierophant transmits it, lineage spoken aloud and made visible. This code carries the same office, the way of the way made beautiful enough that the next person can find it."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Fire",
+    "teaching": "Mountain above, Fire below, the still summit lit from underneath by a flame at its foot, the whole peak glowing in soft light."
+  },
+
+  "sky": {
+    "value": "Taurus",
+    "type": "sign",
+    "teaching": "The ring is keyed to Taurus, fixed earth, the patient body that loves what is durable and only honours what has proved itself worth keeping."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao stands above, the hermit who rides facing where he has been; Lan Caihe sings below, the minstrel of no fixed form. Together they teach that grace is the meeting of long memory and free play, stillness lit by a fire that will not be owned."
+  },
+
+  "hebrew_letter": {
+    "letter": "Vav",
+    "meaning": "The Nail — the pin that connects heaven to earth",
+    "path_number": "16",
+    "path_connects": "Chokmah to Chesed",
+    "teaching": "Vav is the letter, the Nail, and the path runs from Chokmah to Chesed, wisdom into mercy. The letter teaches that this code is the pin that fastens the higher teaching to the kindness that carries it, holding heaven and earth together at the place where grace becomes visible."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 22",
+    "generated": "relations-v1"
+  }
+}

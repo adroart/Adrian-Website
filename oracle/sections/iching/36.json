@@ -1,0 +1,58 @@
+{
+  "number": 36,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Darkening of the Light",
+  "combination": "Earth sits over Fire, the bright flame buried under the soil. The sun has gone down, and the field has closed over it. This is a hexagram of intelligence forced underground, of a clear inner light surrounded on the outside by something dull, heavy, or unfriendly. The brightness is not gone. It is hidden, by necessity, so that it can survive a season that would otherwise put it out.",
+  "upper_nature": "Earth, Kun. Broken, broken, broken. Wide, low, yielding. When this trigram is on top, the outer world is heavy and soft at once, opaque to the light underneath. It does not strike. It simply covers, and what is bright must learn to live under it for a while.",
+  "lower_nature": "Fire, Li. Yang, yin, yang. The inner flame, the clarity that knows. Below, this trigram is awareness still burning, still seeing accurately, even though nothing about the surface above suggests there is anything alight in here at all. The fire is real. It is just covered.",
+  "reading": "The situation this code names is the time when the room you are in cannot hold what you see. The light is yours, the seeing is accurate, and the world around it is not interested. Maybe it is a workplace that punishes clarity. Maybe it is a family that needs you smaller. Maybe it is a whole epoch tilted the wrong way. The code does not pretend it isn't happening. It teaches you how to stay alive inside it.\n\nThe picture is the sun gone under the horizon, light buried in the earth. The brightness is not destroyed. It has been driven down, into the ground, into the body, into private notebooks, into the long patient work no one is watching. The teaching is to veil what shines without putting it out. Cover the lamp with your sleeve. Walk through the dark country with your wings folded. Keep the flame at the hearth and not in the window.\n\nThis is not cowardice and it is not collusion. The hexagram is built around two old figures, a king imprisoned for seven years who wrote his way through the dark, and a brother of a tyrant who feigned madness so his clarity could outlive the throne. Their teaching is the same: when the time is wrong, you do not argue with the time. You become hard to see, and you keep working. The light that survives a season like this is the light that finds, at the end of it, that everything important is still intact. Stay correct on the inside. Do not let the outside teach you to dim what you actually know.",
+  "judgement_lines": [
+    "The light has gone under the earth.",
+    "In hard country, it helps to be steadfast.",
+    "Hide the brightness, and keep it true."
+  ],
+  "image_lines": [
+    "The light has sunk into the earth.",
+    "So the wise one moves among the crowd, veiling the light, and still shines."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the bird in flight with its wings drooping.",
+      "reading": "You see the harm coming before anyone else does, and the right move is to leave early. Withdraw before the wound lands. There will be hunger on the road and people will speak against you, but the hurry is honest. You have somewhere to go. Do not stop to explain.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    },
+    {
+      "line": 2,
+      "image": "wounded in the left thigh, the strong horse arriving.",
+      "reading": "The harm reached you, but it did not disable you. The leg can still carry weight, the work can still go on. Help comes, and it comes with strength. Accept the rescue. Stay flexible, stay central, do not rebel openly. Good fortune comes to the one who endures without breaking.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    },
+    {
+      "line": 3,
+      "image": "hunting in the south, taking the great chief.",
+      "reading": "A real chance to overturn the source of the darkness. The hunt goes well, the head of the trouble falls. But do not try to set everything right at once. The old rot took years to settle in and it will take more than one stroke to clear. Restrain the cleanup. Move slowly.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 4,
+      "image": "entering the left belly of the dark house.",
+      "reading": "You have gone deep enough inside the dark country to understand its heart. You see how it thinks, what it wants, where it is weak. Once you have that, leave. Take what you learned and walk out through the gate. Do not stay to fix it. The seeing was the gift.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    },
+    {
+      "line": 5,
+      "image": "the wise one under a tyrant, playing the fool.",
+      "reading": "Close to the centre of the trouble, too close to leave. The only correct move is to hide the light completely. Feign less than you are. Carry the clarity inside without showing it. This is not surrender. It is the kind of steadiness that lets understanding outlive the regime that tried to crush it.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 6,
+      "image": "the sun climbed too high, then fell into the ground.",
+      "reading": "This is the position of the one who caused the darkening. They rose, lit the four quarters, lost their way, and now drop into the earth they themselves dimmed. The hexagram's own warning to itself: a light that forgets its source becomes the dark it set out to dispel.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/36", "generated": "iching-brief-v1" }
+}

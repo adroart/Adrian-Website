@@ -1,0 +1,58 @@
+{
+  "number": 1,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Creative",
+  "combination": "Heaven sits over Heaven, the same force doubled, with no earth beneath it to receive it and no water to cool it. This is the one hexagram made entirely of unbroken lines, and it is first because it is pure beginning: the charged moment before the first move, when the energy is wholly active and wholly originating, and nothing has yet taken form.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion: ceaseless, untiring, originating. It does not soften and it does not stop. When this trigram is on top, the force is reaching up and outward, expressing itself into the open.",
+  "lower_nature": "Heaven, Qian, again. The same nature in the inner position: the engine. Below, this trigram is the source of the motion, not its display. Pure yang at the root, the force that is already moving before anything outside has noticed.",
+  "reading": "The situation this code names is the moment before. Before the first word, before the first move, when there is only the force that will make the thing and not yet the thing. It is a situation of immense available power and no finished shape, and that is exactly its difficulty. A force this strong, left unchecked, burns through its own creations before they have had time to set.\n\nThe picture the hexagram gives is the dragon, and the dragon is shown moving through six positions, from hidden in the deep, to appearing in the field, to flying in the sky, to risen one step too far. That arc is the teaching. Originating power is not a thing you hold. It is a motion you are briefly inside of. The counsel is not to make more, push harder, create faster. It is to become strong and untiring, the way the motion of heaven is untiring: it never strains, and it never stops.\n\nYou ride the force. You do not mistake yourself for it. The whole hexagram bends around that one warning, because the same power that originates a life is the power that will overreach if it forgets where it came from. Stay close to the source. Move when the season moves. The fire was never yours.",
+  "judgement_lines": [
+    "The Creative originates, and reaches through everything.",
+    "It serves what is true, and holds.",
+    "Kept steady, it carries the deepest fortune."
+  ],
+  "image_lines": [
+    "Heaven moves, and does not stop.",
+    "So the one who would grow makes the self strong, and does not tire."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the dragon still hidden under the water.",
+      "reading": "The power is real, but the season has not come. This is not failure. It is the deep, the kindling before the spark, the held charge in something the world has not yet noticed. Build strength where no one is watching. Do not move yet. The waiting is its own work.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 2,
+      "image": "the dragon appearing in the field.",
+      "reading": "What was hidden now shows. The gift has stepped out into the open where others can see it. This is the moment to seek out someone who has walked further, and let their seeing steady yours. Visibility is its own kind of work.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    },
+    {
+      "line": 3,
+      "image": "working by day, wary by night.",
+      "reading": "The position is exposed and the work is real. Labor fully through the day, and stay awake to the danger through the night. The error this place invites is the error of forgetting that strength alone is not enough. Care, not force, holds the line. No mistake.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    },
+    {
+      "line": 4,
+      "image": "leaping from the abyss, or staying in it.",
+      "reading": "A real fork. Rise into the open, or remain a while longer in the deep. Either is allowed here. The mistake is to act from certainty you do not have. Act from care. Test the water. The leap that is honest about being a leap brings no harm.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    },
+    {
+      "line": 5,
+      "image": "the dragon on the wing in the open sky.",
+      "reading": "The force has reached its proper flight. This is the line of arrival, the height the whole hexagram has been climbing toward. From here it is favorable to meet a great person: like meets like, influence meets influence. You are at the centre of your own power now.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 6,
+      "image": "the proud dragon, one step too high.",
+      "reading": "The force has gone past its limit. What was originating power becomes arrogance the moment it forgets it was only ever carrying the fire, not making it. There will be cause for repentance. This line is the hexagram's warning to itself: even heaven has a top.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/01", "generated": "iching-brief-v1" }
+}

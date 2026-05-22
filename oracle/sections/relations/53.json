@@ -1,0 +1,81 @@
+{
+  "number": 53,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Creation Oscillation",
+
+  "unity_line": "Read alongside Code 54, this is the slow climbing tree answering the sudden wedding, patience and arrival turning around one trunk.",
+
+  "pair": {
+    "number": 54,
+    "card_name": "Everlasting Bounty",
+    "hexagram_name": "The Marrying Maiden (Kuei Mei)",
+    "teaching": "Creation Oscillation meets Everlasting Bounty, and the two carry the whole question of how a life enters its place. One advances by inches over years, every step seasoned; the other arrives all at once into a position not of its choosing. Together they teach that nothing built only by speed will keep."
+  },
+
+  "inverse": {
+    "number": 54,
+    "card_name": "Everlasting Bounty",
+    "hexagram_name": "The Marrying Maiden (Kuei Mei)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines and gradual climb becomes Code 54, Everlasting Bounty. The same six lines read from the other end show that the patient ascent and the sudden marriage are one structure, the slow growth and the abrupt threshold sharing a single shape."
+  },
+
+  "programming_partner": {
+    "number": 54,
+    "card_name": "Everlasting Bounty",
+    "teaching": "The same pairing runs through the genetic code, where these two programme each other across the body. What this code earns by long steady increment, its partner must learn to receive in a single binding moment. Together they hold the timing of every commitment, the slow and the sudden working as one mechanism."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [15, 39, 52, 54, 58],
+    "teaching": "Inside the Ring of Seeking this code sits with Codes 15, 39, 52, 54, and 58, six cards on the long path of the one who walks alone. Modesty, provocation, stillness, ambition, aliveness, and here the patient climb. The family teaches that the seeker's road is made of small honest moves, and this code keeps the moves coming."
+  },
+
+  "tarot": {
+    "card": "IX. The Hermit",
+    "teaching": "The Hermit is the assigned arcana, and the resonance is in the pace. He carries his lamp into the dark by walking, not by running, trusting that the light reaches only as far as the next step. This code carries the same trust, the willingness to advance only as fast as the ground can be felt."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Mountain",
+    "teaching": "Wind above the Mountain, the slow breath that shapes the high tree, gentle penetration working on what cannot be hurried."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "Virgo keys this ring, mutable earth, the patient intelligence that refines a thing by attending to it day after day until the work is whole."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays above, the youth whose music settles wild things into listening; Zhang Guolao sits below on his backward donkey, the hermit who learns from the road already crossed. Together they teach that real progress is the slow music of one who watches where he has come from."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "Yod is the letter, the small hand that holds the seed, and the path runs from Chesed down to Tiphareth, mercy into the heart. The letter teaches that this code's life is one point that opens slowly, the seed becoming a tree because the hand kept holding."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 53",
+    "generated": "relations-v1"
+  }
+}

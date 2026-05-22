@@ -1,0 +1,60 @@
+{
+  "number": 25,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Innocence",
+  "combination": "Heaven sits above, and thunder rolls beneath it. The sky does not arrange the thunder. The thunder does not consult the sky. It simply moves, and what it moves through is already open. That is the picture of this hexagram: arousing power coming out of the ground, the open sky letting it through, no second thought layered over the first one. A response without scheming. A motion that has not yet been edited.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The open sky above, ceaseless and untiring. Above this hexagram, it is the wide field of permission, the space that does not interfere. Pure yang on the outside, letting whatever rises rise.",
+  "lower_nature": "Thunder, Zhen. One yang underneath two yins, the first stir at the bottom of the trigram. Sudden arousal from the dark, the shock that has not asked anyone's leave. Below this hexagram, it is the impulse before the second thought, the move that comes from the root.",
+  "reading": "The situation this code names is what happens when a real impulse moves through you and you do not put yourself between it and the world. The thunder is already under heaven. It did not need your help to be there. What it needs from you is the absence of meddling.\n\nThis is not naivety, and it is not strategy. Innocence here is closer to a kind of accuracy. The motion in you is true. The intention has not been bent toward a result. You plough because the season says plough, not because you are counting the harvest. You speak because the thing wants saying, not because you are watching the room.\n\nThe danger is small but exact. The moment you fold a calculation into the motion, you become wang, the entangled one, the reckless one. The motion still goes, but now it is going somewhere you bent it toward, and that bend is where the trouble enters. A tethered ox left in a village street belongs to whichever stranger passes. Calculate too much, and what you tried to hold gets taken anyway.\n\nThere is also a stranger note inside this hexagram. Sometimes the innocent get hit. Sickness comes that you did not earn. A loss arrives that no virtue prevented. The counsel is unusually quiet on this. Do not reach for a medicine. Do not pile a response onto something that will pass on its own. Sit. Let the season turn through you. The recovery is in the not-grabbing.\n\nMove when the move is already moving. Do not add anything.",
+  "judgement_lines": [
+    "Innocence reaches through, and ripens.",
+    "It is helped by staying correct.",
+    "If the intent is bent, trouble enters.",
+    "Nothing is gained by forcing a direction."
+  ],
+  "image_lines": [
+    "Under heaven, thunder moves.",
+    "All things meet their own true nature.",
+    "So the ancient kings nourished what was alive, in the season for it."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the first step taken without a second thought.",
+      "reading": "Move. The impulse is clean, the ground is right, and you have not yet had time to spoil it with strategy. This is the rare line where going is the whole counsel. You will not regret a step taken in this state. Go before the calculation catches up.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    },
+    {
+      "line": 2,
+      "image": "ploughing without counting the harvest.",
+      "reading": "Do the work in front of you. Do not lean the work toward an outcome you can already taste. The field is ploughed because it is the time for ploughing. The harvest, if it comes, is its own event. Loosen the grip on the result, and the road opens.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    },
+    {
+      "line": 3,
+      "image": "the tethered ox and the passing stranger.",
+      "reading": "Trouble lands on someone who did nothing to call it. An ox left at the post is gone by morning, and the village wakes up to the loss. You are not at fault, and you are still inside the consequence. Do not invent a sin to explain it. Innocence does not always shield you. Stay upright anyway.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    },
+    {
+      "line": 4,
+      "image": "a held line at the edge of strength.",
+      "reading": "Hold what is already yours. You do not need to prove the nature you have, and you do not need to advance it. Stay where you are, stay correct, and there is no error. The temptation is to do something with the strength. The line says: keep it. That is the work.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    },
+    {
+      "line": 5,
+      "image": "an illness that came uninvited.",
+      "reading": "Something is wrong, and you did not cause it. The instinct is to reach for a remedy, any remedy, to feel like you are responding. Do not. This kind of sickness is the body or the situation passing something through. Add no medicine. It moves on its own, and joy is on the other side.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    },
+    {
+      "line": 6,
+      "image": "one more step, after the season has closed.",
+      "reading": "The motion has finished, and you have not. Even a true impulse becomes a mistake at the top of its own arc. The line is sincere, the action is still wrong. Stop. There is no direction left that helps here. Sit with the strange feeling of nothing further to do, and let that be the end of it.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/25", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 28,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Becoming the Mystery",
+
+  "unity_line": "Read alongside Code 27, this is what nourishment is finally for, the bearing of a great weight that only a well fed life can carry without breaking.",
+
+  "pair": {
+    "number": 27,
+    "card_name": "Inner Majesty",
+    "hexagram_name": "Nourishment (I)",
+    "teaching": "With Inner Majesty, the pair is the long cycle of taking in and being asked to bear. One code is the patient feeding of what is true, the other is the moment the beam is loaded and tested. To eat well and to carry a real burden are the same arc, the slow filling and the sudden weight."
+  },
+
+  "inverse": {
+    "number": 28,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn these lines end for end and the hexagram does not change. This code is one of only eight that meets its own reflection, and the meaning is structural. A great weight has no other side. The risk you are inside is the same risk seen from any other angle."
+  },
+
+  "programming_partner": {
+    "number": 27,
+    "card_name": "Inner Majesty",
+    "teaching": "Across the genetic code, the partner is again Inner Majesty. The biology of these two together is simple. What one stores and tends, the other spends in a single decisive act, and what one risks in the spending, the other must replenish on the way back. Neither functions without the other's labour."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Illusion",
+    "tarot": "18 - The Moon",
+    "siblings": [32],
+    "teaching": "Inside the Ring of Illusion, this code shares the family with one other, Code 32. The ring is small and its work delicate, navigating what is not as it appears. Where the sibling holds the patient duration that outlasts the trick, this code is the willing step into the dark side of the game."
+  },
+
+  "tarot": {
+    "card": "XVIII, The Moon",
+    "teaching": "XVIII The Moon carries this code's face. The arcana shows the path between the towers, the howling dogs, the crayfish climbing from the pool, the dreaming country where nothing is fully what it seems. This code is the one who walks that road anyway, knowing the lit certainties are behind and the next solid ground is still far ahead."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Wind",
+    "teaching": "Lake above, Wind below, the joyous surface held up by the gentle penetrating breath, delight floating on a current that could withdraw at any moment."
+  },
+
+  "sky": {
+    "value": "Pisces",
+    "type": "sign",
+    "teaching": "Pisces keys this ring, mutable water, the dissolving tide that loosens edges and asks whether the shore was ever where you thought it was."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai sits above with iron crutch and the gourd that holds wound and remedy at once. Han Xiangzi plays the flute below, his breath taming the wild without raising a hand. Together they teach that great risk is bearable with medicine in one hand and a steady song beneath."
+  },
+
+  "hebrew_letter": {
+    "letter": "Qoph",
+    "meaning": "The Back of the Head, the dreaming, what lies below consciousness",
+    "path_number": "29",
+    "path_connects": "Netzach to Malkuth",
+    "teaching": "The ring's path is Qoph, the back of the head, running from Netzach into Malkuth where dreaming meets the body. The letter teaches that this code works at the edge of waking, where the conscious mind cannot quite reach, and that entering is also the art of return."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 28",
+    "generated": "relations-v1"
+  }
+}

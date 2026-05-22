@@ -1,0 +1,81 @@
+{
+  "number": 24,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Frequency Flutter",
+
+  "unity_line": "Set against Code 23, this becomes the turn after the long stripping, the first warm pulse returning to ground that has been emptied down to its truth.",
+
+  "pair": {
+    "number": 23,
+    "card_name": "Beneath the Surface",
+    "hexagram_name": "Splitting Apart (Po)",
+    "teaching": "Paired with Beneath the Surface, these two are the deck's emptying and refilling, one full cycle of letting go and coming back. Its pair is the slow stripping away of what no longer holds; this code is the single new pulse arriving in the cleared space. Loss and return are not two events but one rhythm."
+  },
+
+  "inverse": {
+    "number": 23,
+    "card_name": "Beneath the Surface",
+    "hexagram_name": "Splitting Apart (Po)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines upside down and you arrive at Code 23, Beneath the Surface. The same hexagram read from the other end is the long thinning out that this code's return answers, one shape carrying both the going and the coming back."
+  },
+
+  "programming_partner": {
+    "number": 44,
+    "card_name": "Sophia's Orchestra",
+    "teaching": "Across the genetic code, this pairing runs with Code 44, Sophia's Orchestra. The flutter of returning frequency is held by the one who can read which patterns from the past are ready to come around again. Together they know that nothing truly new arrives, only the right old thing meeting the right new moment."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [3, 20, 23, 27, 42],
+    "teaching": "Inside the Ring of Life and Death, this code is the seat of return, the moment the cycle turns and warmth begins again. Its siblings, 3, 20, 23, 27, and 42, hold the breakthrough, the long present, the stripping, the nourishing, and the increase. The ring carries the full span of incarnation, and this code is its hinge."
+  },
+
+  "tarot": {
+    "card": "XIII, Death",
+    "teaching": "XIII Death is the assigned arcana, and the older reading of that card lives here. The image is not ending but the scythe that clears a field for the next planting. This code carries the same quiet promise, the small green thing rising in the bare row once the harvest has been taken."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Thunder",
+    "teaching": "Earth over Thunder, the still field above the first stir of the seed waking, the quiet ground that has been waiting and the small shock that begins the year again."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "Scorpio carries this ring, fixed water, the depth that knows how to die and how to rise from its own dark with the next thing already forming."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "He Xiangu rests above as the maiden who took only moon-stone for food, and Cao Guojiu rises below as the noble who walked out of the inherited palace. Together they teach that return belongs to those who live on little and have left the place they were supposed to be."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish — transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "Nun is the letter, the Fish, and the path runs from the heart of the Tree down toward Netzach where feeling lives. The letter teaches that what comes back is never lost in the going, the same life moving through different water, the pulse continuous beneath every apparent end."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 24",
+    "generated": "relations-v1"
+  }
+}

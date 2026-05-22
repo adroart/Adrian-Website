@@ -1,0 +1,59 @@
+{
+  "number": 63,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "After Completion",
+  "combination": "Water sits over Fire. The kettle on the stove, the steam already rising. Every line of this hexagram is in its correct place, yang in the odd seats and yin in the even ones, the most settled arrangement the sixty-four can make. It is the one moment when everything is in order, and because everything is in order, the only thing it can do next is slip.",
+  "upper_nature": "Water, Kan. The middle son. A pit, a ford, the sound of moving water at the bottom of a gorge. Above, water flows downward, sinks, finds the low place. It is danger held in motion, the cold weight that wants to fall onto whatever burns under it.",
+  "lower_nature": "Fire, Li. The middle daughter. Clinging brightness, the lit thing that needs something to cling to. Below, fire climbs. It throws its heat up into the water it cannot reach, working the cycle that boils the kettle and, given long enough, puts itself out.",
+  "reading": "The situation this code names is the one moment when the work is done. The river crossed, the campaign finished, the project shipped, the love confessed and answered. Every piece is where it should be. The hexagram is unique in that: a perfect lattice, yang on yang seats, yin on yin seats, and a quiet that has the shape of accomplishment.\n\nAnd this is where the I-Ching grows very serious. Because the moment of completion is not the stable peak the mind reaches for. It is a peak, and peaks tilt. Water sitting on fire keeps the kettle hot for a while, then the water boils over and the fire goes out, or the fire burns through and the water dries away. The image holds heat and motion only as long as someone tends it. Left alone, completion unmakes itself.\n\nThe counsel runs against the grain of how success usually feels. At the start of this, when the thing was unfinished, you were alert. Now that it is done you want to relax, and relaxing is the door disorder walks through. The teaching is to keep the same attention that got you here. Stay small. Do not start a vast new thing on the strength of the one just finished. Tend what you have. Patch the leak the day you see it, not the day after. The fortune sits at the beginning of this. The disorder waits at the end. Both are already in the room.",
+  "judgement_lines": [
+    "After Completion. The small reaches through.",
+    "It serves the one who holds steady.",
+    "The beginning is fortunate.",
+    "The end falls into disorder."
+  ],
+  "image_lines": [
+    "Water over fire. The kettle warms.",
+    "So the one who has finished thinks ahead to the trouble, and lays in for it now."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the driver drags his wheel, the fox wets its tail.",
+      "reading": "Just across, and already eager to push on. Don't. The wheel that drags and the tail still wet are the right answer here. Pull back, rest the team, let the moment of arrival actually settle. No blame in the slowness. Blame in the pushing.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    },
+    {
+      "line": 2,
+      "image": "the woman who has lost the curtain of her carriage.",
+      "reading": "Something that covered you is gone. The instinct is to chase it down, reclaim the screen, restore the picture. Do not chase. In seven days the cycle turns and it returns of itself, or it stops mattering. Sit central, stay quiet, let the loss do its small work.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    },
+    {
+      "line": 3,
+      "image": "the old emperor, three years subduing the Demon Country.",
+      "reading": "The work the moment asks for is real and long. Three years of campaign to put down what was disturbing the border. It can be done, but not by the wrong hands. Don't put weak or unprincipled people on a task this serious. The cost is high enough that you choose your help with care.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    },
+    {
+      "line": 4,
+      "image": "the fine silks turn to rags. Caulking ready against the leak.",
+      "reading": "What was elegant is showing wear. The boat is sound for now, but the planks are starting to weep. Keep the rags close, keep watch all day. This isn't paranoia, it is the upkeep that completion demands of anyone who has it. The leak comes. You see it first.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    },
+    {
+      "line": 5,
+      "image": "the eastern neighbor slaughtering the great ox.",
+      "reading": "The east kills the bull, the lavish offering. The west, with only a small spring sacrifice, receives the blessing. The size of the gesture isn't the point now. The sincerity is. Show up plain. The bigger and louder the offering, the less it actually carries. The smaller and truer one lands.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    },
+    {
+      "line": 6,
+      "image": "the head goes under.",
+      "reading": "The last seat. The water that was supposed to stay over the fire has risen to the head. This is what the whole hexagram has been warning about: overstaying the success, riding it past the place it could carry you. There is danger here, and it does not last long.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/63", "generated": "iching-brief-v1" }
+}

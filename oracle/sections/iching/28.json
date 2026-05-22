@@ -1,0 +1,58 @@
+{
+  "number": 28,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Great Preponderance",
+  "combination": "Lake sits over Wind, which here is wood, and the picture is a marsh risen high enough to drown the trees beneath it. Four solid lines between two yielding ones, a heavy load resting on weak ends. The image the old commentators kept returning to is the ridgepole of a house, thick in the middle and thin at the supports, sagging under its own weight. Something at the centre of your life has grown too great for the structure that holds it.",
+  "upper_nature": "Lake, Dui. The open marsh, the youngest daughter, joy that pools on the surface and reflects the sky. When this trigram is on top, the situation shows its face as gladness, exchange, the pleasure of a thing finally arrived. Easy on the eye. Heavy underneath.",
+  "lower_nature": "Wind, Xun, here read as wood. The eldest daughter, the gentle penetrating force, also the tree with its roots. Below, this trigram is what enters quietly and what bears the weight, the woody frame holding the marsh up. Flexible. Already bowing.",
+  "reading": "This code names the moment a load has outgrown the thing carrying it. The work has succeeded, the responsibility has accumulated, the structure that was put up in a leaner season is still the structure in use, and the beam is bending. You can hear it bend. Nothing has snapped yet.\n\nThe image is precise about where the weakness sits. The middle is strong, four solid lines stacked, all force and weight. The ends, top and bottom, are thin. So the danger is not in the centre of the thing, where you might look for it; the danger is at the supports, the places that were small from the start and were never made to hold what the centre eventually became.\n\nWhat the I-Ching counsels here is not retreat and not push. Both fail. The counsel is to find somewhere to go with the load, to move, to redistribute. The Judgement says it furthers one to have somewhere to go: you cannot stay still under a sagging roof and you cannot also keep adding to the pile. Move the weight before it moves you.\n\nThere is the second teaching, the one carried in the Image. The lake rises above the trees, the world is out of its proper order, and in such a season the person who lives by the old measure stands alone. Unconcerned if no one stands with them. Undaunted if they have to step out of the world for a while to keep what matters intact. The extraordinary time asks for an extraordinary stillness inside the one who meets it.",
+  "judgement_lines": [
+    "Great Preponderance. The ridgepole sags.",
+    "It furthers one to have somewhere to go.",
+    "There is success."
+  ],
+  "image_lines": [
+    "The lake rises above the trees.",
+    "So the one who would stand, stands alone without fear, and steps out of the world without sorrow."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "white grass spread under the offering.",
+      "reading": "Before you place the heavy thing down, lay something soft beneath it. The position is low and the weight is great, and the only safety here is in care. Move slowly. Cushion what you set down. There is no blame in a prudence this extreme; the time itself asks it.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    },
+    {
+      "line": 2,
+      "image": "the withered willow puts out a shoot.",
+      "reading": "Something that looked finished is sending up new growth. An old man finds a young companion, the dead wood greens at the root. What the line is showing you is that mismatched pairings can revive each other in this season. The strong has met the soft, and life moves again. Everything furthers.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    },
+    {
+      "line": 3,
+      "image": "the ridgepole bending in the middle.",
+      "reading": "Strong, alone, sure of yourself, with no one to brace you. The position is exposed and the load is too much for one beam. This is the line that pushes on through stiffness and breaks. The counsel is the inverse of what your nature is telling you. Soften. Take help. Refusal here is the misfortune.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    },
+    {
+      "line": 4,
+      "image": "the ridgepole holding, curved upward.",
+      "reading": "The beam is strong enough, in the right place, and the roof holds. Good fortune. The warning under the good fortune is small but real: if you lean on the weak helper below to make yourself feel safer, you spoil what was sound. Trust the strength already in place. Adding props from beneath brings shame.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    },
+    {
+      "line": 5,
+      "image": "the withered willow puts out flowers.",
+      "reading": "Beautiful, brief, and not real. The dead tree blooms; the old wife finds a young husband. There is no fruit in it. The pairing is correct, the appearance is good, and nothing comes of it. No blame, because nothing wrong was done. No praise, because nothing was begotten. A line that asks you to see what you already half know.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    },
+    {
+      "line": 6,
+      "image": "wading through, the water above the head.",
+      "reading": "You took the crossing the moment asked for, and the water was too deep. You went under. The reading is not condemnation, because the motive was real; the reading is misfortune, because the body cannot breathe under water. The line is the hexagram's final warning to itself. Extraordinary courage is not the same as the ability to survive what you set out to do.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/28", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,58 @@
+{
+  "number": 44,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Coming to Meet",
+  "combination": "Heaven above, Wind below. A single yin line has slipped in under five strong yangs, the way a draft slides in under a door no one heard open. The wind moves under heaven and reaches everywhere it has not been invited, which is the picture: a meeting that arrives before anyone agreed to meet. Something small, soft, and not innocent has just made first contact with the whole field, and the whole field will have to decide what to do with it.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion: ceaseless, untiring, originating. Above this hexagram, the strong field that the meeting is happening inside. Five yangs in a row, and one of them is about to feel the breeze.",
+  "lower_nature": "Wind, Xun. Two unbroken lines over one broken line at the root. The gentle that gets everywhere, penetrating without being seen. Below this hexagram, the wind is what carries the unexpected guest in. A soft thing, and a strong thing, because softness with patience is how the door gets opened.",
+  "reading": "The situation this code names is the unbidden encounter. Not the planned introduction, the engineered alliance, the partner you went looking for. The one that turns up. A person, an influence, a craving, a thought that walks into the room and the room is suddenly not the same room. The hexagram does not say the meeting is evil. It says the meeting is strong, and that the small thing entering has more power than its size suggests.\n\nThe picture is the wind moving under the open sky. You cannot fence the wind out. You cannot decide that what just arrived will not affect you. It already has. The teaching is not refusal, which is impossible at this point, and not surrender, which would be a mistake. The teaching is recognition. See the meeting for what it is. Notice how easily it slid in, and stay awake to that ease, because the ease is the warning.\n\nThere is real attraction here, and real risk. Five strong lines and one yielding line below them is the shape of a thing the whole structure will be tempted to bend toward. Hexagram 44 is asking you to keep your own ground while the new factor is present. Not to push it away, not to marry it. To meet it, name what is happening, and not extend hospitality past what is wise.\n\nThe ancient text says the maiden is strong, do not take such a one as wife. Read past the gender. What it means is: this is not for keeping. Encounter is its own event. Some meetings are for meeting, and that is all.",
+  "judgement_lines": [
+    "The maiden is strong.",
+    "Such a one is not for marrying.",
+    "Meet the meeting, and let it pass."
+  ],
+  "image_lines": [
+    "Wind moves under heaven.",
+    "So the ruler sends word in all four directions, and lets the proclamation travel."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the carriage tied to a metal brake.",
+      "reading": "The new influence has just slipped in at the root. Stop it here, while stopping is still cheap. Lash the wheel to something solid, refuse the small movement, hold correct. A lean pig left to itself will leap and keep leaping, and a thing barely begun is the easiest thing to end.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    },
+    {
+      "line": 2,
+      "image": "a fish kept inside the bag.",
+      "reading": "You have the slippery thing contained, and that is enough. Hold it close, do not parade it, do not pass it around to the guests. The work here is yours alone. Some catches are not for the table. Quiet stewardship now, no announcements.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    },
+    {
+      "line": 3,
+      "image": "walking with skin stripped from the thighs.",
+      "reading": "Exposed, sore, and the way forward is hard. You are too far from the influence to use it and too caught in the situation to leave it cleanly. Move slowly. Stay awake to the danger and do not pretend it is not there. Awareness is what keeps this from becoming a real mistake.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    },
+    {
+      "line": 4,
+      "image": "the bag, opened, and no fish.",
+      "reading": "What you thought you had has slipped out. You held the position from a distance, did not stay close enough to keep the bond alive, and now the connection is gone. This brings real trouble. The lesson is the cost of remoteness. You cannot govern from too far off.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    },
+    {
+      "line": 5,
+      "image": "willow branches wrapping the melon.",
+      "reading": "Strong, balanced, in the centre. You do not need to grasp, push, or impose. Keep what is brilliant in you hidden under the willow leaves. The ripening is happening. When the time comes, something will fall to you out of the sky, and it will look like luck, and it will be the long quiet work paying out.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    },
+    {
+      "line": 6,
+      "image": "meeting only with the horns.",
+      "reading": "At the top, gone hard, no flexibility left. You meet the world the way a stag meets it, head down. There is some shame in this, and not much harm. You are out of the disorder below, but you are also out of the meeting. No blame, but no warmth either. Stiffness, this high up, costs.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/44", "generated": "iching-brief-v1" }
+}

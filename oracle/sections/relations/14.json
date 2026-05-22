@@ -1,0 +1,81 @@
+{
+  "number": 14,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Ancestors Bloom",
+
+  "unity_line": "Turned to face Code 13, this is the harvest of fellowship, the household that fire builds once it has found the people it warms.",
+
+  "pair": {
+    "number": 13,
+    "card_name": "Universal Crest",
+    "hexagram_name": "Fellowship with Men (T'ung Jen)",
+    "teaching": "Ancestors Bloom stands beside Universal Crest, Fellowship with Men, and the two complete one motion. Where the pair listens for kin by the warmth they give off, this code is what that gathered warmth grows into, the fire become a home."
+  },
+
+  "inverse": {
+    "number": 13,
+    "card_name": "Universal Crest",
+    "hexagram_name": "Fellowship with Men (T'ung Jen)",
+    "is_self_inverse": false,
+    "teaching": "Reverse the lines and you find Code 13, Universal Crest. The same fire read from below is the seeking that finds the kin; read from above it is the abundance those kin have ripened into together."
+  },
+
+  "programming_partner": {
+    "number": 8,
+    "card_name": "Odyssey of Freedom",
+    "teaching": "Across the genetic code, the partner here is Code 8, Odyssey of Freedom. The abundance that gathers is held by the code that contributes from being itself. Together they know a true harvest is shared by each one bringing what only they can bring."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Fire",
+    "tarot": "14 - Temperance",
+    "siblings": [1],
+    "teaching": "The Ring of Fire holds only this code and Code 1, the pure creative spark. Where the other is the flame at first strike, this code is what that flame becomes once it has found wood, kin, and time enough to burn into a life."
+  },
+
+  "tarot": {
+    "card": "XIV · The Art",
+    "teaching": "The Thoth deck names this card The Art, the alchemical work of blending until a third thing arises. Here the third thing is the gathered life itself, the household and the heritage. What this code carries is the long mixing that turns a spark into something worth passing on."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Heaven",
+    "teaching": "Fire over Heaven, the bright flame held aloft in open sky, warmth visible to everyone and shining from a place that cannot be reached."
+  },
+
+  "sky": {
+    "value": "Sagittarius",
+    "type": "sign",
+    "teaching": "Sagittarius keys the ring, mutable fire flying outward, and here the arrow has landed and lit the hearth at the place it found."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "At the top dances Lan Caihe, the minstrel of no fixed form; below sits Zhongli Quan, the general whose striving is done. Together they teach that abundance arrives where the warmth no longer needs to prove itself."
+  },
+
+  "hebrew_letter": {
+    "letter": "Samech",
+    "meaning": "The Prop — the spine, the staff that steadies the ascending",
+    "path_number": "25",
+    "path_connects": "Tiphareth to Yesod",
+    "teaching": "Samech is the letter, the Prop, and the path runs from the heart of the Tree to the foundation. The letter teaches that this abundance is a spine, the steady support life leans on once fire has come into form."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 14",
+    "generated": "relations-v1"
+  }
+}

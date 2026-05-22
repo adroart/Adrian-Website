@@ -1,0 +1,58 @@
+{
+  "number": 52,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Keeping Still Mountain",
+  "combination": "Mountain sits over Mountain. The same shape twice, one solid line resting on top of two yielding lines, and then the whole thing again. Two peaks side by side, going nowhere. This is the hexagram of stopping that has become a whole landscape: not a pause inside a motion, but stillness as the situation itself. Nothing is happening, and that is the teaching.",
+  "upper_nature": "Mountain, Gen. The eldest yang at the top with two yins beneath it. Outward stopping. The face of a mountain seen from below: massive, fixed, refusing onward. When this trigram is above, the outside world has hit a wall and gone quiet.",
+  "lower_nature": "Mountain, Gen, again. The same shape inside. Inward stopping. The yang has reached the top of its climb and rests there; nothing more is rising from below. When this trigram is below, even the motion that would have started has already stopped at the root.",
+  "reading": "The situation this code names is the full stop. Not the pause between two breaths, not the lull before the next move, but the whole landscape gone still. You came in expecting to push, and the road has ended. There is a wall in front of you that does not argue, does not negotiate, does not give. Sit down with it.\n\nThe picture the hexagram gives is the human body, vertebra by vertebra, from toes to calves to waist to torso to jaw to crown, each part being asked to come to rest. The teaching climbs that body. Stop the feet before they walk you somewhere you have not yet thought about. Stop the calves before they follow someone else's movement. Do not force the waist still, because forcing the back breaks it. Let the torso settle. Let the jaw close, so the words that come out have order. And at the top, the still mountain itself, where stopping has become so complete it is no longer something you do.\n\nThe phrase the old text keeps using is keeping still at the back. The back is the one part of you that does not look outward, does not crave, does not chase. When you can sit with your back, you can walk through a courtyard full of people and not see them, not because you are cold but because you are no longer reaching. The work here is not to leave the world. It is to stop reaching into it. Let the mountain be a mountain. Let the thinking stop at the edge of what is actually yours.",
+  "judgement_lines": [
+    "Keep still at the back, and the body falls quiet.",
+    "Walk through the courtyard, and do not see the people.",
+    "No blame."
+  ],
+  "image_lines": [
+    "Mountains standing close together. Keeping still.",
+    "So the one who would grow lets thought rest at the edge of its place."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the toes coming to rest.",
+      "reading": "Stop before the first step. The motion has not yet begun, and that is the moment to refuse it. There is no blame in this; the danger is that yielding without conviction does not hold. Be steady about it. The pause is real, not a hesitation you will undo in an hour.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    },
+    {
+      "line": 2,
+      "image": "the calves still, the one ahead walking on.",
+      "reading": "You have stopped, but someone you were following has not. You cannot reach them, cannot pull them back, cannot make them turn. The heart is unhappy with this. Let it be unhappy. The stopping is right even though it costs something. Not every following can be rescued.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 3,
+      "image": "the waist forced still, the back beginning to break.",
+      "reading": "This is the wrong way to stop. Stillness held by clenching is not stillness; it is a body bent against itself. The spine cracks, the heart fills with smoke. If the only way you can sit still is to grit your teeth and force it, you are not stopping. You are fighting. Loosen first.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    },
+    {
+      "line": 4,
+      "image": "the trunk settled, the body composed.",
+      "reading": "Now the stopping has reached the centre. You are not reaching outward, not pulling at others, not foisting your weight on the people around you. Govern only yourself. The fault you were about to make does not happen, because the body that would have made it has come to rest. No blame.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 5,
+      "image": "the jaws still, the words finding their order.",
+      "reading": "The mouth closes, and when it opens again the sentences come out clean. Speech that does not pour at random. Speech that has been weighed. This is the line of speaking only what is true and only when it is time. Whatever there was to regret about your words begins to fade.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    },
+    {
+      "line": 6,
+      "image": "the mountain itself, stillness all the way through.",
+      "reading": "At the top the stopping has gone all the way in. Nothing is held by effort anymore. Inside and outside are one quiet thing. This is the kind of stillness that does not need anyone to see it to be still. Good fortune. The whole hexagram has been climbing toward this single, unforced rest.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/52", "generated": "iching-brief-v1" }
+}

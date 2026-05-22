@@ -1,0 +1,58 @@
+{
+  "number": 7,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Army",
+  "combination": "Earth sits over Water, and the water has gone underground. The reserves are out of sight, held in the body of the land. One firm line stands alone in the second place, with five yielding lines around it. That is the whole image: a single committed centre, and a wide field that goes with it. The hexagram names the situation in which scattered force must become one body and follow one command.",
+  "upper_nature": "Earth, Kun. Broken, broken, broken. The receptive ground, the wide field that holds whatever is placed in it. When this trigram is on top, the outer shape is yielding. It accepts, it covers, it carries the masses on its back, and it does not push back.",
+  "lower_nature": "Water, Kan. Broken, unbroken, broken. The deep stream inside the earth, the danger that runs underground. One firm line at the centre, two yielding around it. Below, this trigram is the hidden risk and the gathered force, both at once. It runs where it cannot be seen.",
+  "reading": "The situation this code names is the moment when a scattered group has to become one body. There is danger in the lower position, and a wide quiet field above, and somewhere inside that field the water is moving. It has not surfaced yet. The picture is an army hidden in the country, peasants by day who become soldiers when called, the force already there in the people and not in a separate camp.\n\nThe one firm line is the general. He is not in the high seat. He sits low and inside, surrounded by the multitude, and that is exactly why he can move them. Authority that lives inside the body it leads. The whole hexagram bends around this. Force on its own is danger. Yielding on its own is a crowd. What turns a crowd into a body is a single committed centre that the rest can follow.\n\nThe counsel is not to push harder, recruit faster, raise more. It is to find the one true line inside what you already have, and let everything else order itself around it. Discipline first, before any moving. The cause has to be defensive, the kind of cause people will spend themselves on without being driven. And the leader has to be old enough to know when to act and when to hold. A young hand on this kind of force is the failure mode the hexagram returns to again and again. Get the centre right. The rest follows the centre.",
+  "judgement_lines": [
+    "The army holds, when the cause is true.",
+    "It asks for a steady, seasoned hand.",
+    "Good fortune. No fault."
+  ],
+  "image_lines": [
+    "Water held inside the earth.",
+    "So the one who would lead gathers the people by caring for them, and grows strong through them."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the host setting out, the first step taken.",
+      "reading": "The opening move sets the shape of everything that follows. Discipline now is not punishment, it is the form that makes later strength possible. If you set out loose, even a good intention will come apart on the road. Take the trouble at the start. The order you build here is what carries you later.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    },
+    {
+      "line": 2,
+      "image": "the general in the middle of the host.",
+      "reading": "This is the strong line of the hexagram, low and inside, trusted from above. Lead from within the body you lead. Do not climb out of it. The authority comes to you because you stand with them, not over them. Honors will come three times. Hold the centre and keep the cause true.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    },
+    {
+      "line": 3,
+      "image": "the wagon comes back loaded with the dead.",
+      "reading": "Someone weak is trying to lead, or there are too many trying to lead, and the work is taking the wrong shape. This is what happens when ambition runs ahead of capacity. Stop the advance. Do not put another body in front. Sort the chain of command before any further step. The cost of pushing on is visible already.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    },
+    {
+      "line": 4,
+      "image": "the army falling back to safe ground.",
+      "reading": "The position will not hold. Retreat here is not defeat, it is the right reading of the ground. Camp, regroup, wait. Knowing when you do not have the field is part of leading. There is no blame in stepping back from a fight you were not placed to win. The constancy is kept by the pulling back.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    },
+    {
+      "line": 5,
+      "image": "birds in the fields, plain cause to act.",
+      "reading": "Something has come onto your ground that should not be there. Acting against it is clean. Only the cause must be defensive, never the chase for plunder. And the seasoned hand has to lead. If the young or the wrong one takes command of this, even a right cause turns to loss. Let the elder walk in front.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    },
+    {
+      "line": 6,
+      "image": "the great leader at the end of the campaign, distributing the charges.",
+      "reading": "The work is done. Now the harder part, who is trusted with what. Reward by merit. Place the ones who carried the weight into the seats that match. Keep the petty out of any post that touches the country, no matter what they did in the war. What you build now lasts past you, or it does not, and the choice is in who you raise.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/07", "generated": "iching-brief-v1" }
+}

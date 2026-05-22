@@ -1,0 +1,81 @@
+{
+  "number": 11,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Sol Star",
+
+  "unity_line": "Held with Code 12, this is the season of openness that knows its own ending, peace ripe enough to feel the standstill on the other side.",
+
+  "pair": {
+    "number": 12,
+    "card_name": "Petals of Freedom",
+    "hexagram_name": "Standstill / Stagnation (P'i)",
+    "teaching": "The pairing with Petals of Freedom is the I Ching's clearest seasonal swing, Peace giving way to Standstill and back again. One is earth resting on heaven, everything circulating; the other is heaven pulled away from earth, the channels closed. Together they teach that openness and closure are one rhythm, not two opposed states."
+  },
+
+  "inverse": {
+    "number": 12,
+    "card_name": "Petals of Freedom",
+    "hexagram_name": "Standstill / Stagnation (P'i)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you arrive at Code 12, Petals of Freedom. The same arrangement read from the other end becomes the moment communication closes, the same forces that were mingling now standing apart and waiting."
+  },
+
+  "programming_partner": {
+    "number": 12,
+    "card_name": "Petals of Freedom",
+    "teaching": "In the genetic code, this same pair runs as programming partners. What one opens, the other knows when to close, and the partnership holds the wisdom that keeping the channels of meeting alive forever would burn them out. Peace and pause programme each other."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Light",
+    "tarot": "19 - The Sun",
+    "siblings": [5, 9, 26],
+    "teaching": "The Ring of Light gathers four cards under the sun principle, this one alongside Codes 5, 9, and 26, patience, the focused detail, and the sacred trickster who tests the gift. Together they carry the light that nourishes everything it falls on without preference. This code is the ring's centre of warmth."
+  },
+
+  "tarot": {
+    "card": "XIX · The Sun",
+    "teaching": "The Sun shows children playing under an unguarded sky, the world made simple again because the light is enough. This code carries that same quality, an ease so complete it asks nothing of those it shines on. Peace as the natural state of a heart unafraid to be seen."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Heaven",
+    "teaching": "Earth above, Heaven below, the receptive resting on top of the creative so that everything between them rises and falls, mingles, becomes alive."
+  },
+
+  "sky": {
+    "value": "Sun",
+    "type": "planet",
+    "teaching": "The Sun keys this ring, the central body of the sky whose force is simply to give light steadily, without strain or condition, to all that turns toward it."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "He Xiangu sits above with her quiet self-nourishing presence, Zhongli Quan below having turned his whole strength inward. Together they teach that true peace is the meeting of one who needs nothing from outside and one who has finished trying to take it from outside."
+  },
+
+  "hebrew_letter": {
+    "letter": "Resh",
+    "meaning": "The Head — the sovereign light, clarity that vitalises",
+    "path_number": "30",
+    "path_connects": "Hod to Yesod",
+    "teaching": "Resh, the Head, names this ring's path, running from the splendour of intellect down to the foundation. The letter teaches that the light this code carries is sovereign light, the kind that clarifies and enlivens whatever it touches without needing to argue for itself."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 11",
+    "generated": "relations-v1"
+  }
+}

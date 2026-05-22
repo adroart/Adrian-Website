@@ -1,0 +1,58 @@
+{
+  "number": 54,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Marrying Maiden",
+  "combination": "Thunder rolls above a lake, and the lake's surface answers the noise without quite knowing what made it. The eldest son is on top, the youngest daughter beneath. The lines fall in the wrong houses: the soft ride on the firm, nothing sits where it should. This is the picture of entering a relation that is real, binding, and already a little crooked. A union you did not draft.",
+  "upper_nature": "Thunder, Zhen. Broken, broken, solid at the base. The shock that rises out of the dark earth and makes things move. When this trigram is above, the rousing is felt from outside: an arrival, a summons, an event that lands on you before you decide.",
+  "lower_nature": "Lake, Dui. Solid, solid, open at the top. The still water that takes any shape pressed into it, the mouth that wants to please. Below, this is the inward feeling of joy and yielding, the part of you that says yes before the rest of you has weighed the cost.",
+  "reading": "The situation this code names is the one you walked into already mid-sentence. A marriage, a contract, a role, a household, a placement inside someone else's order, and the terms were drawn up before you got there. The old commentary calls it the younger sister marrying as a junior wife, and the picture is harsh on purpose. You are not the principal. You are not who the seat was made for. And you are here anyway, expected to function inside it.\n\nThunder over lake is shock landing on something that yields. The lake does not push back. It absorbs the strike and keeps its shape. That is the teaching the image carries. When the position is not what you would have chosen, the work is not to argue with the position. The work is to be exact about who you actually are inside it. The princess in the fifth line walks to her own wedding wearing plainer sleeves than the serving girl, and the hexagram calls her the moon nearly full. Her power is that she does not need the dress.\n\nThe warning runs the other way too. The text keeps saying nothing furthers, no profit, going on brings misfortune. Push to redraw the terms by force and the rite goes hollow: the basket empty, the sacrifice bloodless, the gestures performed without their substance. The wrong move inside a crooked situation is to fake the right one. Stay in your real size. Hold the inner ground without making a show of it. Whatever endures from this season will be what was honest inside it, not what got promoted.",
+  "judgement_lines": [
+    "The marrying maiden.",
+    "To push forward brings misfortune.",
+    "There is nothing the force can favor."
+  ],
+  "image_lines": [
+    "Thunder over the lake.",
+    "Seeing what passes, the noble one keeps faith with what lasts."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the junior wife, the lame foot that still walks.",
+      "reading": "You enter in a small position. Not the seat you wanted, not the one your worth deserves. The line says go anyway. A limp is not a stop. Quiet usefulness in a low place builds a kind of credit no public role would have given you. Do the work that is actually in front of you.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    },
+    {
+      "line": 2,
+      "image": "one eye, and still seeing.",
+      "reading": "Half the picture is hidden, and you can still steer. The counsel here is the chastity of a hermit: stay loyal to what you know inside, even when the partner, the office, the situation gives you almost nothing to work with. Do not trade your inner sight for a fuller view bought cheap.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    },
+    {
+      "line": 3,
+      "image": "the bride who waited, returning as a junior wife.",
+      "reading": "You held out for the place you thought you were owed, and the offer did not come. Now there is the smaller place, and a temptation to take it ungenerously, with bitterness as the dowry. The line warns against the bitter version. Accept the lesser seat cleanly, or do not accept it. Half-acceptance corrodes.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    },
+    {
+      "line": 4,
+      "image": "the marriage put off past its season.",
+      "reading": "You are letting the deadline pass on purpose. Good. The right hour has not arrived, and arriving early would have cost more than waiting. The line is telling you that delay here is not failure or fear. It is timing. The match that is yours will still be yours when the time comes round.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    },
+    {
+      "line": 5,
+      "image": "the princess, in plainer sleeves than her servant. The moon almost full.",
+      "reading": "You hold the high seat and you do not need to dress it up. The line is the hexagram's quiet centre: nobility that does not advertise itself, marrying down without losing height, light just before fullness. Good fortune comes from inner worth showing without ornament. Let your station be carried by your character.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    },
+    {
+      "line": 6,
+      "image": "the basket empty, the sheep bled white with no blood.",
+      "reading": "The form was kept and the substance was missing. A rite went through the motions while the heart of it was already gone. Going on from here brings nothing. Stop pretending the bond is alive. The line is not punishing you. It is asking you to notice what has already ended, and to stop spending on it.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/54", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 39,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Nobel Spark",
+
+  "unity_line": "Answered by Code 40, this is the friction that calls the breakthrough, the obstruction and the release that finally arrives held as one motion.",
+
+  "pair": {
+    "number": 40,
+    "card_name": "Eternal Wellspring",
+    "hexagram_name": "Deliverance (Hsieh)",
+    "teaching": "Beside Eternal Wellspring, the pair carries the whole arc of pressure and relief. One is the wall that will not move, the provocation that wakes everything up; the other is the moment the wall gives way and the held breath lets out. Neither half makes sense without the other."
+  },
+
+  "inverse": {
+    "number": 40,
+    "card_name": "Eternal Wellspring",
+    "hexagram_name": "Deliverance (Hsieh)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and the obstruction reads as Code 40, Eternal Wellspring. The same lines flipped become the deliverance that comes through, the friction read from the far side where the spark has caught and the pressure begins to flow."
+  },
+
+  "programming_partner": {
+    "number": 38,
+    "card_name": "Inner Light Symphony",
+    "teaching": "Across the genetic code, the partner here is Code 38, Inner Light Symphony. Provocation is held alongside the fighter who knows what is worth fighting for, and what they know together is that the spark serves nothing on its own. It only matters when the heart it strikes already carries a purpose worth the friction."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [15, 52, 53, 54, 58],
+    "teaching": "Six cards belong to the Ring of Seeking, this one with Codes 15, 52, 53, 54, and 58. A family of seekers walking the long path, each carrying a different facet of the slow inward work. This code is the ring's friction, the stone in the boot that keeps the seeker honest about what they are actually walking toward."
+  },
+
+  "tarot": {
+    "card": "IX , The Hermit",
+    "teaching": "The Hermit carries the Tarot face here, the figure who walks alone with a small lamp held out into the dark. What the arcana shows is provocation turned inward, the willingness to be slowed by what is hard so that the light finds something true to land on. This code is the lamp catching on the wall."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Mountain",
+    "teaching": "Water above Mountain, the deep current pressing against the still slope, force meeting form and finding nowhere to go but inward."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "Virgo keys this ring, mutable earth, the sign of careful refinement and patient discernment, and this code is the grit that the work polishes against."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with his sword of discernment, and Zhang Guolao sits below on his donkey facing backwards, seeing the road already travelled. Together they teach that the friction in this code is not a punishment but a teacher, the cut and the long backward look meeting in the same hour."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand — the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "Yod is the letter, the closed hand cradling the seed, and the ring's path runs from mercy down into the heart. The letter teaches that this code's obstruction is a withholding with purpose, the small fist that will not open until what it carries is ready to be given to the centre."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 39",
+    "generated": "relations-v1"
+  }
+}

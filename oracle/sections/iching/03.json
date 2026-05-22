@@ -1,0 +1,58 @@
+{
+  "number": 3,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Difficulty at the Beginning",
+  "combination": "Water sits over Thunder. Storm clouds gathered overhead, the first roll of thunder breaking under them, and the rain not yet fallen. The Chinese character for the hexagram is itself a picture of a blade of grass pushing against hard soil from underneath. That is the situation: a real new thing trying to come up through a crust that resists it. The energy is there. The opening is not.",
+  "upper_nature": "Water, Kan. The abyss, the gorge, the dangerous middle son. A single firm line caught between two yielding ones, the way a river hides force inside a hollow. On top, this trigram is the difficulty the situation runs into, the unclear weather above the work.",
+  "lower_nature": "Thunder, Zhen. The arousing, the eldest son. A single firm line struck under two yielding ones, the way the first shock of thunder rises out of the ground in spring. Below, this trigram is the new motion itself, alive at the root and pressing upward without yet having a path.",
+  "reading": "The situation this code names is the moment just after a thing has begun and before it has found its shape. A child pushing through the long labour of being born. A sprout that has cracked the seed coat and is now bearing the whole weight of the soil above it. The energy is real and the opposition is real, and the two of them meet inside you at the same time. That is the difficulty. Not that the new thing is wrong. That a new thing always arrives this way.\n\nThe picture is clouds and thunder. The storm has gathered, the first sound has come, and the rain still has not fallen. Everything is charged and nothing is released. To force the rain is to mistake yourself for the weather. To freeze is to waste the charge. What the hexagram counsels instead is the slow, patient work of setting things in order while the storm builds. Sort the threads. Find the people who will hold the four corners of the work with you. Establish the structure that will be in place when the rain finally comes, because the rain is coming.\n\nMost of the line readings are some version of horses ready and not yet moving. That image is the whole teaching. The chariot is hitched. The horses are willing. The road is not yet clear. Do not whip them forward into the fog. Do not unhitch them either. Stand in the held moment and prepare. The first growth is always crooked. The first dynasty is always small. What you are doing right now is the root, and the root has to go further down than you would like before any of it shows above the ground.",
+  "judgement_lines": [
+    "Difficulty at the beginning reaches through to great growth.",
+    "It serves what is true, and holds.",
+    "Do not move yet. It is good to appoint helpers."
+  ],
+  "image_lines": [
+    "Clouds and thunder gather. The rain has not yet fallen.",
+    "So the one who would grow sorts the threads, and orders the work."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a stone pillar set in the ground.",
+      "reading": "The first move is not a move. It is the planting of something that will not be shifted. Stand where you are and let your standing become the foundation. Find the people who will stand with you. Do not try to advance yet. The whole structure of what is coming rests on whether this first base is true.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 2,
+      "image": "horse and chariot turning back.",
+      "reading": "Someone comes toward you who looks like trouble and is not. The offer is real, but the timing is not yours yet. Hold your own ground. Refuse the early union. The wait is long, longer than feels reasonable, ten full years in the old image. When it finally arrives it will be the right one.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 3,
+      "image": "chasing a deer without the forester.",
+      "reading": "You can see what you want and you do not know the ground it is on. To run after it now is to end up alone in the forest with no way out. The wiser move is to stop the chase. Not forever. Just until you have someone who knows the country. Going on from here only brings regret.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 4,
+      "image": "horses ready, the alliance sought.",
+      "reading": "This time the union is the right one. Reach out for the help that is offered. Bring together the parts of yourself, and the people, that you have been keeping separate. The horses that stood still before are the same horses that move now. The difference is that you stopped trying to do it alone. Go.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 5,
+      "image": "abundance pooled, not yet flowing out.",
+      "reading": "The good thing is here, and it cannot yet reach the people it is meant for. Do not try to push the whole gift through a channel that is still too narrow. Small acts done well will land. Grand gestures will not. Stay correct in the small things and let the channel widen on its own time.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 6,
+      "image": "the horses turning back, blood in the tears.",
+      "reading": "At the top of the difficulty, the strength to come through it has run out. The horses will not go. The grief is real and the situation is real. This is the line that asks how long any of this can hold, and answers honestly. Sometimes you have arrived at the end of an effort. Mourn it. Then begin again from a smaller place.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/03", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,59 @@
+{
+  "number": 56,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Wanderer",
+  "combination": "Fire sits above Mountain. The mountain does not move. The fire on its slope does. Flame catches one patch of grass, eats it, and is somewhere else by the time the eye finds it again. That is the picture of a life passing through a country it does not own. The ground stays. You do not. You are the bright thing on the ridge that the locals see for one season, and then the slope is dark.",
+  "upper_nature": "Fire, Li. Broken between two unbroken. The bright clinging thing: lamp, sunlight, the flame that needs fuel and direction and cannot live without something to burn on. Above, it is the showing of light, the visible heat, the part of you the new place sees first.",
+  "lower_nature": "Mountain, Gen. Unbroken at the top, broken below. Stillness that knows where it ends. The mountain stops walking. It is the ground that does not chase the fire and does not envy it. Below, it is the part of you that is steady while everything outside is moving.",
+  "reading": "The situation this code names is being a stranger somewhere. Not just travel as a holiday, but the life of someone whose feet are not on their own dirt. New country, new room, new circle of people, new job where nobody knows yet what you are good for. Smallness is the whole counsel of the hexagram, and it is not insult, it is instruction. Small means you adapt to what crosses your path instead of pushing your shape onto it. You are a guest. The shape of the place was here before you.\n\nThe image is fire moving across a mountain. The fire is bright and brief. It lights a patch, then is gone. A traveler is exactly that bright brief thing. Seen, then not seen. The mistake the hexagram keeps pointing at is forgetting you are a guest and acting like a host. Flaunting, lording, burning the inn that took you in. The line where the wanderer sets his own lodging on fire is the centre of the warning, and the line where the bird burns its nest at the top is the end of the warning lived out.\n\nThe other half of the teaching is quieter. Keep your means with you. Be modest about what you carry. Stay close to the people who will help, and treat them well, because in a strange place a young servant's loyalty is more valuable than gold. Carry a small fire, not a big one. Do not light up the whole hillside. Be the kind of guest the place tells stories about kindly. The wanderer who survives is the one who knew it was not theirs.",
+  "judgement_lines": [
+    "The Wanderer. A little can be reached, and a little gained.",
+    "If the traveler holds steady and stays true,",
+    "good fortune follows."
+  ],
+  "image_lines": [
+    "Fire on the mountain. The Wanderer.",
+    "So the wise one is careful and clear in setting penalties,",
+    "and does not let the case drag on."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the traveler fussing with small things at the door.",
+      "reading": "You have arrived somewhere new and you are already shrinking the moment to the size of a complaint. The petty fuss at the threshold is what draws the trouble in. Lift your eyes. The aim is too low, and that is the whole of it.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    },
+    {
+      "line": 2,
+      "image": "reaching the inn with money still in the belt.",
+      "reading": "A good rest. You have found the proper lodging, your means are intact, and a younger helper has chosen to be loyal to you. Do not let the place know everything you carry. Quiet competence is what holds the inn. Stay modest, and the welcome holds.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    },
+    {
+      "line": 3,
+      "image": "the inn burning behind you.",
+      "reading": "Force where flexibility was needed. The shelter that took you in has gone up, and the young helper is lost. Even being right does not undo this. The danger is in the manner. Soften. There is still time to be different in the next place, but only if you see what your stiffness cost.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    },
+    {
+      "line": 4,
+      "image": "a resting place, with provisions and an axe.",
+      "reading": "You have made it to somewhere safe, with what you need, and a weapon at hand. And yet the heart is not glad. The shelter is not yet a home. The axe says you are still on guard. Acknowledge the loneliness. It is not failure. It is the cost of being early in a place that has not opened to you yet.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still Mountain" }
+    },
+    {
+      "line": 5,
+      "image": "one arrow, one pheasant.",
+      "reading": "A single clean act, witnessed. You spend something, the arrow is gone, but what you do is seen and remembered. From here the place itself raises you. Recognition comes from above and from the people around you both. This is the line of the stranger becoming wanted.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    },
+    {
+      "line": 6,
+      "image": "the bird burning its own nest.",
+      "reading": "You have climbed too high in a country that is not yours and started treating it like a throne. First the laughing, then the wailing. The docile, useful part of you, the part that could be led, slips away unnoticed. The fire eats its own roost. This is the warning the whole hexagram has been giving, arriving as fact.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/56", "generated": "iching-brief-v1" }
+}

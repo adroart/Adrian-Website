@@ -1,0 +1,81 @@
+{
+  "number": 56,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Infinite Journey",
+
+  "unity_line": "Turned toward Code 55, this is the road walking away from the noon, the traveller carrying what cannot stay put inside any fullness.",
+
+  "pair": {
+    "number": 55,
+    "card_name": "Untouched Perfection",
+    "hexagram_name": "Abundance (Feng)",
+    "teaching": "Held against Untouched Perfection, the pair is the I Ching's portrait of fullness and what follows it. Its pair is the sun at its zenith, light at the height of a life; this code is the figure who knows that height cannot be held, and picks up the staff to walk."
+  },
+
+  "inverse": {
+    "number": 55,
+    "card_name": "Untouched Perfection",
+    "hexagram_name": "Abundance (Feng)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and the road folds back into the great room, Code 55, Untouched Perfection. The same six lines read from above stop being the wanderer's long horizon and become the noon brightness that the wanderer has just stepped out from under."
+  },
+
+  "programming_partner": {
+    "number": 60,
+    "card_name": "Woven Light",
+    "teaching": "Through the genetic code, the partner here is Code 60, Woven Light. The wanderer's long road is held by the one who knows which limits to accept and which to refuse. Together they understand that real journeying is not the absence of boundaries but the patient art of finding which fence is a wall and which is a door."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Trials",
+    "tarot": "12 - The Hanged Man",
+    "siblings": [33],
+    "teaching": "Inside the Ring of Trials, this code sits with one sibling, Code 33, the retreat that turns inward when the world has grown too loud. Two cards bound by the tests that refine a soul, the standstill and the long walk. The family teaches that some passages cannot be skipped, only walked through."
+  },
+
+  "tarot": {
+    "card": "XII. The Hanged Man",
+    "teaching": "The Hanged Man is the assigned arcana, and the resonance is exact in a way the surface picture hides. The figure suspended by one foot is not stuck but seeing, the world turned over so its hidden shape can be read. This code carries the same office on the moving side, the wanderer whose every dislocation is a fresh angle."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Mountain",
+    "teaching": "Fire above Mountain, the bright flame travelling across the still ridge, light that cannot stay where it lands, ridgeline that watches the burning pass."
+  },
+
+  "sky": {
+    "value": "Water",
+    "type": "element",
+    "teaching": "The ring is keyed to Water, the element of surrender and reversal, the still deep that takes the shape of whatever holds it and keeps moving when nothing does."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Lan Caihe sings above, the minstrel who slips through every category the road offers them; Zhang Guolao rides below, the hermit whose donkey faces backward so he sees where he has come from. Together they teach that the long journey belongs to those who refuse to be pinned."
+  },
+
+  "hebrew_letter": {
+    "letter": "Mem",
+    "meaning": "Water, the element of surrender, reversal, the still deep",
+    "path_number": "23",
+    "path_connects": "Geburah to Hod",
+    "teaching": "Mem is the letter, the still water that takes any shape and clings to none, and the path runs from Geburah to Hod, severity into the intellect that lets it land. The letter teaches that this code's wandering is surrender, the willingness to be moved by the harder truth."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 56",
+    "generated": "relations-v1"
+  }
+}

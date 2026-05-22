@@ -1,0 +1,58 @@
+{
+  "number": 12,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Standstill",
+  "combination": "Heaven sits above and earth sits below, each in its own apparent place, and that is exactly the problem. Heaven's nature is to rise, earth's nature is to settle. With one going up and the other going down, the two never meet. Nothing crosses between them. The picture is correct and the picture is dead. This is the season when the flow that made everything grow has quietly turned off, and no one announced it.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion, ceaseless and untiring. Here it stays high. It lifts away from what is below instead of bending down to meet it. The force is real, but it is leaving the room rather than entering it.",
+  "lower_nature": "Earth, Kun. Opened, opened, opened. The receiving ground, soft, yielding, the place where seeds set. Here it sinks. It settles further into itself instead of reaching up. Patient and obedient, but the patience has become inertia and no shoot is coming through.",
+  "reading": "The situation this code names is the dead season. Not catastrophe, not war, not even visible decline at first. Just the moment when the channels between things have closed and nothing is travelling through them. The conversation has gone formal. The agreement is technically intact and quietly meaningless. Above goes on being above, below goes on being below, and the line where they used to touch is now a line where they don't.\n\nThe image is heaven and earth refusing each other, and once you see it you cannot unsee it. The roof of the world lifting off the floor. The rain that doesn't fall, the smoke that doesn't rise, the petitions that go nowhere because no one is listening on the other end. In a life this looks like the project that has all the right people and is going nowhere. The relationship that still has the form and none of the warmth. The country that still calls itself a country.\n\nThe counsel is harsh in its plainness. Do not try to force the channels open. The pushing only confirms the blockage. Pull back into what is yours, the inner worth, the unspectacular daily virtue, and let the season be what it is. Refuse the honors that come now, because the honors come from the wrong source and will tie you to a sinking thing. The great is leaving. The small is arriving. Match the moment by becoming small. Frugal, careful, quiet, and intact. The cycle has a bottom and the bottom turns, but it does not turn for the one who tried to stop it turning.",
+  "judgement_lines": [
+    "Standstill. The wrong people are in the room.",
+    "It does not help the upright one to hold the course.",
+    "The great is leaving. The small is arriving."
+  ],
+  "image_lines": [
+    "Heaven and earth do not meet. Standstill.",
+    "So the one who would grow falls back on inner worth, and refuses the honors that would tie them in."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "pulling a reed, the connected roots come with it.",
+      "reading": "The blockage is just beginning, and the roots of the people around you are tangled with yours. When you move, you do not move alone. Stay correct in this earliest moment and the whole cluster lifts together. Holding the line here is the easy version of work that gets very hard later.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    },
+    {
+      "line": 2,
+      "image": "the small enduring, the great keeping their distance.",
+      "reading": "Compliance now is rewarded if you are small, and it is a trap if you are large. The patience of the small person inside the impasse passes for virtue. The same patience in the great person becomes complicity. Endure the impasse, but do not let the crowd's mood become your own.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    },
+    {
+      "line": 3,
+      "image": "carrying shame folded in the chest.",
+      "reading": "You know the purpose you are hiding, and the hiding is the disgrace. The place you stand is not the place for what you are quietly planning. No one needs to scold you. The shame is already inside, doing its slow work. The exit is to drop the concealed intention, not to defend it.",
+      "becomes": { "hexagram": 33, "name": "Retreat" }
+    },
+    {
+      "line": 4,
+      "image": "moving under a higher order.",
+      "reading": "Something has shifted. There is now an order to act on, and acting from that order brings no blame. You are not improvising your way out of the standstill, you are responding to something that has come to meet you. Those whose minds match yours will arrive too, and the blessing is shared.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    },
+    {
+      "line": 5,
+      "image": "tying the fortune to a clump of mulberry roots.",
+      "reading": "The standstill is breaking. This is the moment for the great person, and it is also the most dangerous moment. Say it out loud: it could still fail, it could still fail. That sentence is the rope. Tie what you have just won to the deep roots of a mulberry grove and it will hold. Forget the danger and lose everything you just recovered.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    },
+    {
+      "line": 6,
+      "image": "the standstill turned over like an empty bowl.",
+      "reading": "What had no flow in it cannot last forever, and the moment comes when it simply tips. First standstill, then joy. Do not mistake the relief for your own doing. The season turned, the way seasons turn. Receive the opening with the same calm you held in the closing.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/12", "generated": "iching-brief-v1" }
+}

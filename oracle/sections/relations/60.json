@@ -1,0 +1,81 @@
+{
+  "number": 60,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Woven Light",
+
+  "unity_line": "Held with Code 59, this is the rim that gives the water a shape, the wise limit that lets the dispersing current become a usable flow.",
+
+  "pair": {
+    "number": 59,
+    "card_name": "Mystics Treasures",
+    "hexagram_name": "Dispersion (Huan)",
+    "teaching": "Mystics Treasures is the breaking up of what has frozen, the held thing scattered back into circulation. This code is the answering motion, the chosen banks that catch the scattered water and turn it into something a life can drink from. Dispersal and containment are two halves of the same weather, and a culture needs both to stay alive."
+  },
+
+  "inverse": {
+    "number": 59,
+    "card_name": "Mystics Treasures",
+    "hexagram_name": "Dispersion (Huan)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and you arrive at Code 59, Mystics Treasures. The same six lines read from the other side stop being the careful rim that contains the flow and become the gust that breaks the rim open when it has grown too tight."
+  },
+
+  "programming_partner": {
+    "number": 56,
+    "card_name": "Infinite Journey",
+    "teaching": "Across the genetic code, the partner here is Code 56, Infinite Journey. The traveller who carries only what fits in one bag is paired with the one who knows where to set the bag down. Together they teach that the road and the rim of the cup belong to the same wisdom."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Gaia",
+    "tarot": "3 - The Empress",
+    "siblings": [19, 61],
+    "teaching": "Inside the Ring of Gaia, this code sits with Codes 19 and 61, three woven into the body of the Earth Mother. Sensitivity, structure, and inner truth, the planet expressed through approach, limit, and mystery. This seat carries the structure, the wise edge that lets the living intelligence of the Earth take a shape that can be inhabited."
+  },
+
+  "tarot": {
+    "card": "III, The Empress",
+    "teaching": "The Empress is the Tarot face of this code, the great mother seated in her garden, fruitful within walls she has agreed to. The image teaches that abundance is not the absence of edge but the cultivation of it. This code carries the same quality, the knowing of which rim makes the fruit possible."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Lake",
+    "teaching": "Water above Lake, the deep current pouring down into the held basin, the moving force met by the shaped bowl that lets it be drunk."
+  },
+
+  "sky": {
+    "value": "Venus",
+    "type": "planet",
+    "teaching": "Venus keys this ring, the planet of beauty and right relationship, the force that knows the proportion at which a thing becomes loveable and lasting."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with the sword that names what to let in and what to refuse, and Li Tieguai rests below with his gourd, the wounded one who has tasted excess and chosen the small dose. Together they teach that wise limit is grown in the body."
+  },
+
+  "hebrew_letter": {
+    "letter": "Daleth",
+    "meaning": "The Door, the opening, abundance pouring through",
+    "path_number": "14",
+    "path_connects": "Chokmah to Binah",
+    "teaching": "Daleth is the letter, the door, and the path runs from Chokmah across to Binah, wisdom meeting the mother who gives it form. The letter teaches that a true limit is a doorway, not a wall, the chosen frame through which the abundant thing can enter the world."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 60",
+    "generated": "relations-v1"
+  }
+}

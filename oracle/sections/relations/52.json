@@ -1,0 +1,81 @@
+{
+  "number": 52,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Timeless Blossom",
+
+  "unity_line": "Across from Code 51, this is the stillness that answers the shock, the mountain that does not move when the thunder finally arrives.",
+
+  "pair": {
+    "number": 51,
+    "card_name": "Unshakable Arrival",
+    "hexagram_name": "The Arousing, Thunder (Chen)",
+    "teaching": "Unshakable Arrival is the sudden waking, the strike that no one schedules. This code is the ground that the strike lands on without splitting, the seat that can hold the shock long enough to learn from it. One rouses, the other steadies, and a real life needs both."
+  },
+
+  "inverse": {
+    "number": 51,
+    "card_name": "Unshakable Arrival",
+    "hexagram_name": "The Arousing, Thunder (Chen)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and the stillness becomes Code 51, Unshakable Arrival. The same six lines read from the other direction stop describing the held mountain and begin describing the lightning the mountain was made to survive."
+  },
+
+  "programming_partner": {
+    "number": 58,
+    "card_name": "Rhythm of Life",
+    "teaching": "In the genetic code, this code's partner is Code 58, Rhythm of Life. Deep stillness is held alongside the body's own gladness, the aliveness that hums whether anyone is listening. Together they teach that real quiet is not the absence of life but the room in which life can be felt at its own pace."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [15, 39, 53, 54, 58],
+    "teaching": "The Ring of Seeking gathers six cards, this one beside Codes 15, 39, 53, 54, and 58. Each sibling is a different gait of the long walk inward. This seat is the pause inside the walking, the place where the seeker stops and lets the ground catch up to the legs."
+  },
+
+  "tarot": {
+    "card": "IX. The Hermit",
+    "teaching": "IX The Hermit is the Tarot face this code carries, an old figure on a snowy peak with one small lamp. What the arcana shows is not retreat but vantage, the height reached by no longer hurrying. This code is the moment the climbing stops and the seeing begins."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Mountain",
+    "teaching": "Mountain over Mountain, the same stillness doubled, range answering range. This code is one weight, one keeping, the ground refusing to perform."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "Virgo carries this ring, mutable earth, the sign that returns again and again to the small true task, and this code is the steady seat from which the task is seen clearly."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": true,
+    "teaching": "The same Daoist Immortal stands above and below, Zhang Guolao on his donkey turned backwards, watching the road he has already walked. Doubled, his presence becomes the whole of this code, a stillness that takes its bearings from where it has come rather than where it thinks it is going."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "On the Tree, the letter is Yod, the closed hand cradling the seed, and the ring's path runs from mercy down into the heart. The letter teaches that this code's stillness is not empty but full, a small fist holding something precious until the right hour to open."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 52",
+    "generated": "relations-v1"
+  }
+}

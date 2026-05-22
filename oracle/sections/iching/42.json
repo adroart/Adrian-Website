@@ -1,0 +1,58 @@
+{
+  "number": 42,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Increase",
+  "combination": "Wind sits over Thunder. The thunder rolls up out of the ground and the wind carries it outward, and the two feed each other until the whole sky is alive with the same motion. The picture is a vessel being filled from above while the bud in the soil splits open below. What is high pours down, what is low surges up to meet it, and the meeting is itself the increase.",
+  "upper_nature": "Wind, Xun. The eldest daughter. Gentle, penetrating, the breath that gets in everywhere without forcing. Above, the wind is the spreading: it takes whatever is good and carries it out to the corners. It does not announce itself. It works by entering, and the entering does the work.",
+  "lower_nature": "Thunder, Zhen. The eldest son. The first crack of sound out of the deep, the seed splitting, the body waking up. Below, it is the impulse that starts the whole movement, the surge that has just made its first noise. Pure yang at the root, stirring upward.",
+  "reading": "The situation this code names is a season of pouring. Something above is opening its hand, and what is below is exactly the shape that can hold it. The hexagram is the moment those two meet. The current is real, the timing is real, and the only mistake available is to mishandle the gift.\n\nThe picture is water tipping into a vessel that is already brimming. The vessel does not strain to fill itself; it just stays open and the water comes. The same picture is wind picking up the thunder and carrying it for miles. Increase here is not effort. It is alignment. Something larger has tilted toward you, and the work is to stay aligned long enough for the pour to reach the bottom.\n\nThe Judgement says it is favorable to undertake something, favorable to cross the great water. This is the season for the big move. Not the cautious one, the big one. But the whole hexagram bends around one warning: increase that is kept for the self goes bad fast. The wind and the thunder both pass through. Neither holds. What comes in must come out, redistributed, or the channel closes and the next pour does not arrive.\n\nThis is also the code of correction. Wind sweeping good through the world, thunder shaking faults loose. When you see something good in another, move toward it. When you see a fault in yourself, cut it. The two motions are the same motion. Both make more room. The vessel that keeps emptying is the vessel that keeps filling.",
+  "judgement_lines": [
+    "Increase.",
+    "It is favorable to have somewhere to go.",
+    "It is favorable to cross the great water."
+  ],
+  "image_lines": [
+    "Wind and thunder, feeding each other.",
+    "So the one who would grow follows the good as fast as the wind, and corrects faults as firmly as thunder."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the ground giving permission for a great work.",
+      "reading": "The current is with you at the start, and the start is the place to spend it. Do not save the strength for later. Begin the large thing. From this low position the venture looks too big, but the season has tipped, and a big move now finds its own backing. Move while the door is open.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    },
+    {
+      "line": 2,
+      "image": "ten pairs of tortoise shells, given.",
+      "reading": "An unrefusable gift arrives, the kind that is also a sign. You did not chase it and you cannot turn it down. Hold steady and stay correct, and the gift becomes ground rather than spectacle. Pass some of it upward as offering, some outward as use. Kept for yourself, it spoils.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    },
+    {
+      "line": 3,
+      "image": "increase coming through the hard event.",
+      "reading": "The gain on this line walks in wearing the face of a setback. Loss, criticism, a blow you did not see, and inside the blow is the thing that makes you usable. Stay sincere. Walk the middle. Speak plainly to the one with authority over the matter. The unfortunate event is the increase. No blame.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    },
+    {
+      "line": 4,
+      "image": "carrying the message to the centre.",
+      "reading": "You are the go-between now, the one who walks the middle and reports faithfully. Speak so the one above will hear, and the move that follows can be a large one, on the scale of relocating a capital. The line is not for personal gain. It is for being the channel through which the larger benefit travels.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    },
+    {
+      "line": 5,
+      "image": "a heart that means it.",
+      "reading": "Sincerity at the centre. Whatever you offer here, you do not need to ask whether it lands; it lands. The kindness does not perform itself and does not look back to check. People recognize it without you naming it, and what comes back to you is the same kindness in their own voice. No question. Supreme good fortune.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    },
+    {
+      "line": 6,
+      "image": "the one who only takes.",
+      "reading": "At the top of increase, the danger is keeping it. You stop giving outward, and the channel closes behind you. No one feeds the one who feeds no one. Strikes come from outside, not as punishment but as physics. The heart has lost its rule. There is misfortune here, and the misfortune is the natural shape of the closure.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/42", "generated": "iching-brief-v1" }
+}

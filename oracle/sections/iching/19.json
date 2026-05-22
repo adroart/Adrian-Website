@@ -1,0 +1,58 @@
+{
+  "number": 19,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Approach",
+  "combination": "Earth above lake, and the bank of the lake touches the water with no gap between them. Two strong lines have risen at the base, and the four yielding lines above are open to them, waiting. The whole hexagram is the picture of something coming nearer. A force is rising into a season that wants it, and the meeting is just beginning. This is the twelfth month, the first light after the longest night, when winter has not ended but spring is on the way.",
+  "upper_nature": "Earth, Kun. Yielding, yielding, yielding. The body of the world, broad and bearing. When this trigram sits on top, the situation is held by something that does not push back. It receives. It carries what comes. Its work is patience and room.",
+  "lower_nature": "Lake, Dui. Two yielding lines over a held opening at the rim. The lake is the youngest daughter in the family of trigrams, the one who delights, who speaks, who draws others toward her. Below, this trigram is the joy that pulls a thing forward without forcing it.",
+  "reading": "The situation this code names is the moment before the season turns. The cold has not lifted, but underground the sap is already moving. You can feel something coming and you cannot yet name it. The light is returning. The work you have been doing in the dark is about to be seen.\n\nThe image is the bank of a lake touching the water. No gap. The earth comes right up to the surface of the joy below it and rests there. That is what approach looks like from inside. Something rises from underneath, something opens to receive it, and the two meet without strain. The hexagram is one of the most auspicious in the book, but its counsel is not to celebrate. Its counsel is timing.\n\nBecause everything that grows must also wane, the Judgement adds a warning. In the eighth month there will be misfortune. The rising thing has its summer and then its autumn, and the strength you feel now is exactly the strength that will need to be set down later, in its own time. Do not mistake the arrival for permanence. Do not push the season past where it wants to go.\n\nThe right answer to approach is to meet it. Stay close to what is coming, and let it teach you what it is. The wise person here is a teacher with no end in their teaching, a protector with no edge to their care. Move when the warmth moves. Stop where the warmth stops. The light is coming. You did not have to make it.",
+  "judgement_lines": [
+    "Approach. The great moves forward, and it reaches.",
+    "It serves what is true, and holds.",
+    "When the eighth month comes, there will be loss."
+  ],
+  "image_lines": [
+    "Earth rests above the lake.",
+    "So the one who would guide teaches without end, and protects without limit."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the rising in good company.",
+      "reading": "Something good is moving with you, not just toward you. You are not the only force in the room. Stay close to what is rising at your side, and keep the work honest at the root. The fortune here is in not breaking from your companion early.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    },
+    {
+      "line": 2,
+      "image": "the rising still gathering.",
+      "reading": "The momentum is real, but the moment is not yet. Strength has met softness and the two are still finding each other. Do not ride the wave to prove the wave. Hold steady at the centre. What is favorable will become favorable everywhere, in its own time.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 3,
+      "image": "the sweet, easy approach.",
+      "reading": "Arrival is pleasant and you are pleased with it. That is the danger. Sweetness becomes complacency, and you begin to coast. There is no benefit in this position as it stands. But the moment you grow uneasy about it, the moment you notice, the fault begins to dissolve. Trouble yourself.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    },
+    {
+      "line": 4,
+      "image": "the meeting at the rim.",
+      "reading": "The approach has reached its proper place. Nothing presumed, nothing pushed, nothing wasted. You are exactly where the long season has been bringing you, in the position that fits the work. The line carries no fanfare, only the quiet of a thing arriving on time. No blame.",
+      "becomes": { "hexagram": 54, "name": "The Marrying Maiden" }
+    },
+    {
+      "line": 5,
+      "image": "the wise one looking out from a height.",
+      "reading": "From this position you can see further than the work below. The way to lead now is not to do everything yourself. It is to know who to send. Trust the strong people in the field, and let your knowing be how you hold the centre. The fortune is in the seeing.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 6,
+      "image": "the elder returning with open hands.",
+      "reading": "Someone who has already gone all the way and stepped back from the world is coming nearer again. Generous, sincere, not needing anything from this. The teaching at the top of approach is the teaching of one who has nothing left to prove. Good fortune. No blame.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/19", "generated": "iching-brief-v1" }
+}

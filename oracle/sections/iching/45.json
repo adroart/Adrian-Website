@@ -1,0 +1,59 @@
+{
+  "number": 45,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Gathering Together",
+  "combination": "Lake sits over Earth. Water that has found the low places and pooled there, held by the ground that received it. The hexagram is mostly broken lines with two unbroken lines rising in the upper half, a ruler and a minister standing inside the gathered crowd. What makes the gathering is not the people who came. It is the basin that held them, and the centre they all turned to face.",
+  "upper_nature": "Lake, Dui. Broken on top, unbroken, unbroken. The open surface where water has collected and now reflects the sky. Joy, exchange, the mouth, the meeting place. When this trigram is above, the situation shows itself outwardly through pleasure and easy contact between people.",
+  "lower_nature": "Earth, Kun. Broken, broken, broken. The receiving ground, the mother, the field that holds whatever is placed on it without resistance. Below, this trigram is yielding service, the patience that lets the gathering form on its own time, and the basin that keeps it from running off.",
+  "reading": "The situation this code names is the one where people come together and a body forms that is larger than any of them. A nation, a movement, a tribe, a congregation. The image is water collecting in the low ground, and the teaching is that water only gathers where the earth makes room for it. The crowd is the easy part. The basin is the work.\n\nA gathering of this size needs a centre. The hexagram puts two unbroken lines in the upper half, a leader and a second, and around them four yielding lines that come because the centre is true. The old reading shows the king going to the ancestral temple, bringing the largest offering he can, because a gathering this size will not hold on charisma alone. It needs something the crowd is gathering toward, something older than the leader, that the leader is also bowing to. Without that, the assembly is a mob.\n\nThe counsel is double. Find the great person, or be one. And renew your weapons. The Image says the wise person, seeing water pool on the earth, repairs the tools of defence against the unforeseen, because anything that gathers also draws what would scatter it. Joy on the surface, ground beneath, vigilance kept quietly to one side. That is how a gathering lasts. The fire of belonging is real. So is the responsibility for the basin.",
+  "judgement_lines": [
+    "Gathering Together carries through.",
+    "The king goes to the temple. It helps to see the great person.",
+    "Steady offering brings fortune.",
+    "There is somewhere worth going."
+  ],
+  "image_lines": [
+    "Over the earth, the lake gathers.",
+    "So the wise one renews the weapons, ready for what is not yet seen."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a sincere call, lost in the noise of the crowd.",
+      "reading": "You want to belong, but the heart is not steady and the gathering around you is confused. Cry out to the one you trust. One grasp of the hand and the tears turn to laughter. Do not stay tangled in the disorder. Move toward your true correlate, and the going carries no blame.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 2,
+      "image": "drawn forward by someone who already sees you.",
+      "reading": "Let yourself be pulled. A bond from above is reaching down, and your part is to respond to it openly. Even a small offering, brought sincerely, lands. This is not the time for grand display. The thread between you and the centre is enough. Trust the draw.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    },
+    {
+      "line": 3,
+      "image": "circling the gathering with a sigh.",
+      "reading": "You want in, and no one is opening the door. The ones beside you turn away. There is no clean advantage in this position. Go anyway, toward the one at the top who is also alone. The meeting will be awkward, a little shamed, but it will not be a mistake.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    },
+    {
+      "line": 4,
+      "image": "the minister standing close to the king.",
+      "reading": "Great fortune is possible here, but the place is not strictly yours. You hold real influence near the centre without being the centre. The only way through is to be useful without claiming the seat. Stay impeccable in the service, and there will be no blame at all.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 5,
+      "image": "the centre of the gathering, not yet shining.",
+      "reading": "You hold the position. People have come, and the place is yours by right. Some still do not trust you, and that is not yet your failure. Stay great, long, and correct over time. Do not press for the doubters. Sustained rightness is the only thing that will finally clear the regret.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    },
+    {
+      "line": 6,
+      "image": "weeping at the edge after the crowd has formed.",
+      "reading": "The gathering happened without you. You sigh, tears come, and there is real grief in being left outside what you wanted to belong to. The grief itself is honest, and that honesty keeps you from fault. But the time has closed. Mourn it, and let the body of it go.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/45", "generated": "iching-brief-v1" }
+}

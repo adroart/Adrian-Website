@@ -1,0 +1,58 @@
+{
+  "number": 30,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Clinging Fire",
+  "combination": "Fire sits over Fire, the same brightness doubled, two flames stacked with no water to cool them and no earth to root them. A flame has no body of its own. It only burns by clinging to what it feeds on, and that is the whole teaching of this code: brightness exists by attachment. Doubled, it can illumine the four corners of a life, or it can consume the very thing it depends on.",
+  "upper_nature": "Fire, Li. Yang, yin, yang. The outer flame, the light that reaches outward and is seen. Its way is to ascend, to cling, to show. When this trigram is on top, the brightness is on display, lighting the room rather than the hearth.",
+  "lower_nature": "Fire, Li, again. The inner flame, the source from which the outer light is fed. Below, this trigram is consciousness clinging to its own awareness, the heart's own brightness, the fire that has to be tended before it can be shown.",
+  "reading": "The situation this code names is the life of a person whose work is to give light. Teacher, artist, leader, healer, any soul whose nature it is to be seen and to clarify. The fire only burns because it clings to fuel. You only shine because you are attached, to a craft, to a people, to the source that feeds you. Forget that, and the flame eats itself.\n\nThe picture the hexagram gives is double brightness. The sun and the moon, hung in the sky because they cling to it. Plants, vivid because they cling to the earth. Your light is real, and it is borrowed. That is not a smaller truth, it is the truth that lets the light last.\n\nThe counsel is the one line that has puzzled translators for centuries: raise the cow. Tend the docile, slow, receptive thing in yourself. Concentration before insight, patience before performance, the quiet inner cultivation before the public glow. A fire that has nothing patient under it flares up and is gone. A fire fed by something steady becomes the lantern that lights four directions.\n\nThe danger of this code is the danger of any bright thing: overuse. To trade on charisma until there is nothing behind it. To mistake the heat you put out for the source that made it. The whole hexagram bends around that warning. Stay close to what feeds the flame. The light is not yours. It is passing through.",
+  "judgement_lines": [
+    "Brightness clings, and so it burns.",
+    "Held to what is true, it carries far.",
+    "Raise the cow, the docile thing, and there is good fortune."
+  ],
+  "image_lines": [
+    "Brightness rises twice, and the world is lit.",
+    "So the one who would give light feeds it from within, and never lets it go out."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "footprints crossing back over themselves at the start.",
+      "reading": "The fire has just been lit, and the steps go in confused directions. Excitement wants to move you fast. Don't. Tread reverently here, with the awareness that the beginning is fragile. The faltering is not failure. It is a warning to slow down, honor what you are entering, and there will be no mistake.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 2,
+      "image": "yellow light at the centre.",
+      "reading": "The flame has found its middle, the steady glow that does not flare or gutter. Yellow is the colour of the centre, of the balanced way. You are in your right place now, neither pushing the brightness out nor withholding it. Stay there. From the centre, the light reaches every direction without effort. Great good fortune.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 3,
+      "image": "the sun low on the horizon.",
+      "reading": "The light of one chapter is going down. The natural response is to drum on a clay pot and sing the day out, to meet the close with some grace. The error is to refuse the cycle, to clutch at what is leaving and curse the dark. Old age laments while youth keeps singing. Let the sun set. Misfortune lives in the clinging.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    },
+    {
+      "line": 4,
+      "image": "a flare bursting up and gone.",
+      "reading": "Something arrives all at once, blazes hot, dies, gets thrown away. This is the flame with nothing under it, the talent or impulse or visitor that came on too fast to last. No place will hold it. The teaching is not to grieve the flare. It is to be more than a flare. Build a hearth before you light another match.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    },
+    {
+      "line": 5,
+      "image": "tears falling, the heart breaking open.",
+      "reading": "You are in the high place and you are weeping. The position would seem to call for poise, but the truth here is grief, and the grief is what saves you. Tears mean you have not gone numb, have not turned the light into spectacle. Cleaving to what is right while feeling its weight, this is good fortune. The softening is the strength.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    },
+    {
+      "line": 6,
+      "image": "the king sets out on a measured expedition.",
+      "reading": "The light has reached its full height and now goes to work in the world. The action is decisive but not vengeful. Break only the leaders of what corrupts, spare the rest, take no captives out of cruelty. Justice with restraint. This is brightness used cleanly at last, the fire that burns away the rot and leaves the people standing. No blame.",
+      "becomes": { "hexagram": 55, "name": "Abundance" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/30", "generated": "iching-brief-v1" }
+}

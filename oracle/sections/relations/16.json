@@ -1,0 +1,81 @@
+{
+  "number": 16,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Grand Rising",
+
+  "unity_line": "Set beside Code 15, this is the morning that finally sings, lifted on the steady ground its pair has spent so long keeping level.",
+
+  "pair": {
+    "number": 15,
+    "card_name": "Ordinary Valiance",
+    "hexagram_name": "Modesty (Ch'ien)",
+    "teaching": "Paired with Ordinary Valiance, these two are the quiet labour and the bright lift it earns. One walks low through the world, keeping the field even by sheer humility; the other rises out of that field as the music it was always going to make. Modesty is the soil; enthusiasm is the bloom."
+  },
+
+  "inverse": {
+    "number": 15,
+    "card_name": "Ordinary Valiance",
+    "hexagram_name": "Modesty (Ch'ien)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and Code 15, Ordinary Valiance, looks back at you. The same arousal of life read from the other end becomes the unshowy carrying, the rising heard from underneath rather than above."
+  },
+
+  "programming_partner": {
+    "number": 9,
+    "card_name": "Ease in This",
+    "teaching": "Through the genetic code, the partner here is Code 9, Ease in This. The morning that lifts off is held by the small, patient refinements that prepared the ground for it. What they know together is timing, the way enthusiasm only sounds true when the quiet work has already been done."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Prosperity",
+    "tarot": "21 - The World",
+    "siblings": [45],
+    "teaching": "Inside the Ring of Prosperity, this code stands with one sibling, Code 45, Gathering Together. The family is small and exact: mastery that becomes music, and the community that gathers to hear it. Real prosperity, in this ring, is the skill made for the whole and the whole answering back."
+  },
+
+  "tarot": {
+    "card": "XXI · The Universe",
+    "teaching": "The arcana here is XXI The Universe, the final card of the Major Arcana, the dance that completes the cycle. Its image is the figure moving freely inside the wreath of all things. This code carries that same finished joy, the rising that knows it belongs to everything else that is already singing."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Earth",
+    "teaching": "Thunder over Earth, the first crack of the storm above the patient field, sound bursting out of the ground that has been waiting in silence to make it."
+  },
+
+  "sky": {
+    "value": "Saturn",
+    "type": "planet",
+    "teaching": "The ring is keyed to Saturn, the slow planet that asks for time, and this code carries that ripening, the long wait whose payoff is the morning that finally arrives."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Above sounds Cao Guojiu, who walked out of inherited power to find truer ground; below sits He Xiangu, the maiden fed by moonlight. Together they teach that real rising belongs to those who have let go of what was given and learned to live on what is freely offered."
+  },
+
+  "hebrew_letter": {
+    "letter": "Tau",
+    "meaning": "The Cross — the completion of the journey, matter as sacred",
+    "path_number": "32",
+    "path_connects": "Yesod to Malkuth",
+    "teaching": "The path of this code's ring is Tau, the Cross, the final letter, running from the foundation down into the world itself. The letter teaches that this rising is not an escape upward but a completion downward, music coming all the way home into matter."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 16",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "number": 37,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Family",
+  "combination": "Wind sits over Fire. The fire burns inside the hearth, and the wind that lifts from it is warm, scented, carrying the household's particular smell out into the world. That is what this hexagram pictures: an inner flame, a shared space around it, and the breath that goes out from that space and reaches further than anyone in the room intends. Inside makes outside. The whole hexagram is built on that one fact.",
+  "upper_nature": "Wind, Xun. Broken at the bottom, unbroken above. Soft, penetrating, gentle in its method but tireless. It enters wherever there is an opening, and it carries whatever it touched last. As the outer trigram, it is the air that leaves the room and crosses the threshold.",
+  "lower_nature": "Fire, Li. Unbroken outside, broken at the heart. Bright, clinging, dependent on what it burns. It does not move by itself, it gathers and gives off light. As the inner trigram, it is the hearth at the centre of the dwelling, the warmth that makes the room a room.",
+  "reading": "The situation this code names is the inner circle, and what it does to everything else. A house, a partnership, a small team, a few people who eat in the same place and know each other's voices through the wall. That is the unit the hexagram cares about. Not the wider world yet. The wider world is downstream.\n\nThe image is wind from fire. The hearth is lit inside, and the air that leaves the room carries the temperature of what is happening at the centre of it. People who walk past the house can feel the difference without being told. This is the teaching. What you tend in the small enclosed place travels further than you think, and it travels in its actual condition, not the condition you would like to claim for it. A warm hearth gives warm air. A bitter one gives bitter air. There is no separating the two.\n\nThe counsel sits in two places. One, the inside has to be ordered. Roles understood, words meant, the small daily things actually done. Not heavy, not theatrical. Just real. Two, the woman's steadiness is named as the load-bearing element, and even read past the old language, the point holds: the patient, gathering, inward-facing strength is what keeps the centre alive. Without it, the fire scatters. Strict where it has to be. Tender most of the time. And consistent between the words spoken at the table and the actions taken in the hallway.\n\nGet the centre right. The wind takes care of the rest.",
+  "judgement_lines": [
+    "The Family.",
+    "The steadfastness of the woman carries it.",
+    "What is true inside, holds outside."
+  ],
+  "image_lines": [
+    "Wind comes from fire.",
+    "So the one who would lead the household keeps the word matched to the deed,",
+    "and the way of life steady."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a fence set around the home at the start.",
+      "reading": "Set the rules early, while the shape is still soft. A boundary placed now is barely felt, while later it has to be argued for. Decide what the house is for, what comes in, what stays out. Done at the beginning, regret does not have room to gather.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    },
+    {
+      "line": 2,
+      "image": "the kitchen at the centre of the house.",
+      "reading": "Do not strain to act outward. The work of this position is inward and small: feeding people, keeping the fire alive, holding the centre while others come and go. It is not lesser. The whole household runs on what happens here. Stay with it. Quiet steadiness is the gift.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    },
+    {
+      "line": 3,
+      "image": "raised voices at the table.",
+      "reading": "Tempers have flared and the discipline has gone sharp. There is regret in that, and some danger, but the sharpness is not the worst outcome. The worst is the other house, the one where everyone is laughing and no one is steering. Better the conflict that means something than the ease that means nothing.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    },
+    {
+      "line": 4,
+      "image": "the storeroom is full.",
+      "reading": "The house grows wealthy, in the wide sense: warmth, supplies, goodwill, the trust that comes of years. Great good fortune. The position is held quietly from inside, and the increase shows on the outside. Be steady with what is arriving. Wealth that holds is wealth tended without showing off.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    },
+    {
+      "line": 5,
+      "image": "the king walks into his own house.",
+      "reading": "The one with real authority comes home, and what they bring is not force but presence. No need to worry. The mood softens because the centre is in the room again. Influence here is mutual affection, not command. Be the one whose arrival makes the household easier, not the one whose arrival makes it brace.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    },
+    {
+      "line": 6,
+      "image": "the elder, dignified, trusted.",
+      "reading": "At the top of the hexagram, the work has matured into character. Authority no longer needs to be enforced. The bearing of the person speaks for itself, and the household trusts it. Hold sincerity. Hold dignity. Do not slip into severity now that the years have given you weight. Good fortune in the end.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/37", "generated": "iching-brief-v1" }
+}

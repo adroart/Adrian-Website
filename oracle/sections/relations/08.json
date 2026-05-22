@@ -1,0 +1,81 @@
+{
+  "number": 8,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Odyssey of Freedom",
+
+  "unity_line": "Held beside Code 7, this is the freedom of one voice carried inside the discipline of the many, the wanderer and the army moving as one.",
+
+  "pair": {
+    "number": 7,
+    "card_name": "Essential Nexus",
+    "hexagram_name": "The Army (Shih)",
+    "teaching": "With Essential Nexus, the pairing is the army and the bond that makes an army possible. One code is the gathering of many around a true axis; this code is the lone life finding its way back to the others. Discipline and individuality discovered to be the same loyalty."
+  },
+
+  "inverse": {
+    "number": 7,
+    "card_name": "Essential Nexus",
+    "hexagram_name": "The Army (Shih)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and the same hexagram becomes Code 7, Essential Nexus. The wanderer turned end for end is the gathering itself, the same belonging read from inside the company rather than from the road home."
+  },
+
+  "programming_partner": {
+    "number": 14,
+    "card_name": "Ancestors Bloom",
+    "teaching": "Across the genetic code, this pairing runs with Code 14, Ancestors Bloom. The lone contribution is held by the abundance that the ancestors have already grown, and what they know together is that no single gift arrives empty. The inheritance is always there to meet it."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Water",
+    "tarot": "17 - The Star",
+    "siblings": [2],
+    "teaching": "Within the Ring of Water, this code shares the family with Code 2, the pure receptive ground. Where the sibling is the field that holds everything, this code is the single life that flows through that field. The ring teaches reception and the quiet contribution that comes of being only oneself."
+  },
+
+  "tarot": {
+    "card": "XVII · The Star",
+    "teaching": "The Star carries this code's face in the Tarot. The arcana shows what shines because it cannot help shining, light kept by no effort other than being what one is. This code is that same uncoerced offering, the gift that flows because it has nowhere else to be."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Earth",
+    "teaching": "Water over Earth, the moving current sinking into the patient ground, depth finding depth and softening into it without resistance."
+  },
+
+  "sky": {
+    "value": "Aquarius",
+    "type": "sign",
+    "teaching": "Aquarius keys this ring, fixed air, the steady current that carries each individual signal without forcing it to look like any other."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with his sword that cuts what is false, He Xiangu below who lives on moon-stone and asks for nothing. Together they teach that the lone life is honest only when it both discerns clearly and needs little."
+  },
+
+  "hebrew_letter": {
+    "letter": "Tzaddi",
+    "meaning": "The Fish-hook — the lure of return, hope drawn out of the deep",
+    "path_number": "28",
+    "path_connects": "Netzach to Yesod",
+    "teaching": "Tzaddi, the fish-hook, marks the ring's path from Netzach to Yesod. The letter teaches that this code's freedom is not flight but a quiet pull upward, the way a true offering draws what it needs without ever having to chase it."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 8",
+    "generated": "relations-v1"
+  }
+}

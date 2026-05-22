@@ -1,0 +1,81 @@
+{
+  "number": 58,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Rhythm of Life",
+
+  "unity_line": "Paired with Code 57, this is aliveness meeting the gentle wind, the joy that bubbles up answered by the breath that knows how to move with it.",
+
+  "pair": {
+    "number": 57,
+    "card_name": "Flight of the Tao",
+    "hexagram_name": "The Gentle, Wind (Sun)",
+    "teaching": "Held with Flight of the Tao, the pair carries the I Ching's image of joy and gentleness, the two soft forces. One is the lake's open delight, water laughing in the sun; the other is the wind's patient persistence, the breath that finds every opening. Together they teach that what is light enough also goes everywhere."
+  },
+
+  "inverse": {
+    "number": 57,
+    "card_name": "Flight of the Tao",
+    "hexagram_name": "The Gentle, Wind (Sun)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines end for end and the joy becomes Code 57, Flight of the Tao. The same arrangement read from the other side stops being the surface that ripples with delight and becomes the unseen current that has been moving underneath the whole time."
+  },
+
+  "programming_partner": {
+    "number": 52,
+    "card_name": "Timeless Blossom",
+    "teaching": "Across the genetic code, the partner here is Code 52, Timeless Blossom. The one who shakes with aliveness is held by the one who knows how to be utterly still. Without the stillness, the joy spends itself; without the joy, the stillness has nothing to listen to. The partnership is how a body becomes a kept instrument."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [15, 39, 52, 53, 54],
+    "teaching": "Inside the Ring of Seeking, this code walks with 15, 39, 52, 53, and 54, the family of modesty, provocation, stillness, gradual progress, and ambition. The Hermit's family is six lone walkers whose steps each serve the whole road, and this seat is the one who finds joy in the walking itself, the seeker who arrives by being glad."
+  },
+
+  "tarot": {
+    "card": "IX, The Hermit",
+    "teaching": "The Hermit is the Tarot face this code carries, the lantern bearer walking the high path by himself. The figure looks austere but the lantern is lit, and the light is the joy of the search itself. This code is what keeps the Hermit's step buoyant, the inner gladness that makes the long road bearable."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Lake",
+    "teaching": "Lake above Lake, the same joyous water doubled, one open surface resting on another with nothing between them but more of itself."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "Virgo keys this ring, mutable earth, the sign of careful service and devotion to the work, the steady ground that lets aliveness be useful instead of wasted."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams carry Li Tieguai, the broken beggar with his iron crutch and his gourd of medicine. Doubled, he speaks of a joy that has come through real wounding, the gladness of the one who has lost enough to know that what is left in the gourd is for sharing."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "On the Tree, this code's ring stands on Yod, the closed hand holding the seed, running from mercy to the heart of the Tree. The letter teaches that the aliveness here is not poured out at random; it is a small kept thing, given only when the moment is ready."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 58",
+    "generated": "relations-v1"
+  }
+}

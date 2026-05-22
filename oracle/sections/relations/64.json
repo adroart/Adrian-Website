@@ -1,0 +1,81 @@
+{
+  "number": 64,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Communion",
+
+  "unity_line": "Read with Code 63, this is the threshold the deck closes on, the unfinished crossing answered by the river already reached.",
+
+  "pair": {
+    "number": 63,
+    "card_name": "Adornments of Time",
+    "hexagram_name": "After Completion (Chi Chi)",
+    "teaching": "Adornments of Time is fire under water, every line in its proper seat, the moment after the crossing has been made. This code is the same lines inverted, fire above water, the moment just before. The pair closes the I Ching by holding completion and its brink together, teaching that the deck itself is a river still being crossed."
+  },
+
+  "inverse": {
+    "number": 63,
+    "card_name": "Adornments of Time",
+    "hexagram_name": "After Completion (Chi Chi)",
+    "is_self_inverse": false,
+    "teaching": "Turn these six lines end for end and the unfinished crossing becomes Code 63, Adornments of Time. The same lines read the other way show that arrival and almost-arrival are one continuous motion, one bank seen from each side of the same water."
+  },
+
+  "programming_partner": {
+    "number": 63,
+    "card_name": "Adornments of Time",
+    "teaching": "Across the genetic code, the partner here is the same Code 63. The mind that suspects every settled answer is paired with the mind that knows almost every question has already been asked. Together they keep the deck honest, refusing both premature closure and the avoidance of ever being finished."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Alchemy",
+    "tarot": "1 - The Magician",
+    "siblings": [6, 40, 47],
+    "teaching": "The Ring of Alchemy carries four codes that turn one substance into another, Codes 6, 40, 47, and this one. Conflict becomes peace, exhaustion becomes will, pressure becomes light, and confusion becomes illumination. This seat is the last of the four, the unfinished mixing where every previous transformation is still being held together at once."
+  },
+
+  "tarot": {
+    "card": "I, The Magician",
+    "teaching": "The assigned arcana is the Magician, the figure who stands over the four tools with one hand drawing down and one hand pointing into the work. Whatever has been gathered through the deck is now on this table. This code carries the alertness of the hand still hovering above the elements, the work not yet declared finished."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Water",
+    "teaching": "Fire above Water, the flame rising and the river falling, two forces leaving each other in opposite directions and asking the field between them to hold."
+  },
+
+  "sky": {
+    "value": "Mercury",
+    "type": "planet",
+    "teaching": "Mercury keys this ring, the quick intelligence that runs between worlds and carries the message across a gap that has not yet closed."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Lan Caihe sings above, the wanderer who never settled into one shape, and Lü Dongbin reads below, the swordsman whose discernment was sharpened in the depths. Together they teach that the last crossing is made by a song that will not finish and a blade that knows what remains unfinished."
+  },
+
+  "hebrew_letter": {
+    "letter": "Beth",
+    "meaning": "The House, the vessel that focuses will",
+    "path_number": "12",
+    "path_connects": "Kether to Binah",
+    "teaching": "Beth is the letter, the House, and the path runs from the crown down into understanding. The letter teaches that even at the brink of completion the work needs a vessel, a roof and four walls inside which the unfinished can keep being tended without scattering."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 64",
+    "generated": "relations-v1"
+  }
+}

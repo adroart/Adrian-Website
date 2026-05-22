@@ -1,0 +1,81 @@
+{
+  "number": 47,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Garden of Alchemy",
+
+  "unity_line": "Set against Code 48, this is the dry season and the deep well, exhaustion drinking from the source that was waiting beneath it.",
+
+  "pair": {
+    "number": 48,
+    "card_name": "Doorways of the Unknown",
+    "hexagram_name": "The Well (Ching)",
+    "teaching": "Held with Doorways of the Unknown, the pair is the I Ching's portrait of a soul squeezed dry and the hidden water that keeps it alive. One is the constriction that empties everything outward; the other is the well that has never stopped offering itself. They teach that the bottom of any oppression is the lip of a source."
+  },
+
+  "inverse": {
+    "number": 48,
+    "card_name": "Doorways of the Unknown",
+    "hexagram_name": "The Well (Ching)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end over end and you arrive at Code 48, Doorways of the Unknown. The same six lines, read from the other side, show that the squeeze and the spring are one structure, the place of no water and the well of unfailing water sharing a single shape."
+  },
+
+  "programming_partner": {
+    "number": 22,
+    "card_name": "Treasure of the Way",
+    "teaching": "Across the genetic code, this card runs with Code 22, Treasure of the Way. Pressure and grace programme each other, so that the long contraction is met by the bearing that does not break under it. What one is asked to endure, the other knows how to wear with dignity. Suffering becomes carriage rather than collapse."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Alchemy",
+    "tarot": "1 - The Magician",
+    "siblings": [6, 40, 64],
+    "teaching": "The Ring of Alchemy gathers four cards around the same transformative fire, with Codes 6, 40, and 64 as siblings. Conflict becoming peace, exhaustion becoming will, confusion becoming light, and here, oppression becoming the garden. The family works only with what is at hand and trusts that the base material is enough."
+  },
+
+  "tarot": {
+    "card": "I, The Magician",
+    "teaching": "The Magician is the assigned arcana, and the fit is precise. He stands at the table with the four elements before him, asking nothing extra, transmuting what is already there. This code carries the same gesture, the willingness to begin the work inside the very pressure that seemed to forbid it."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Water",
+    "teaching": "Lake above Water, the still pool resting on the abyssal current, joy seated atop the deep, a clear face over an ungovernable depth."
+  },
+
+  "sky": {
+    "value": "Mercury",
+    "type": "planet",
+    "teaching": "Mercury keys this ring, the planet of the messenger and the alchemist, quicksilver intelligence that turns conditions over until each one yields its other face."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai stands above with his crutch and his gourd of medicine, suffering and remedy held in the same body; Lü Dongbin moves below with the sword that cuts illusion learned in the depths. Together they teach that the alchemist is the one who has been broken and refuses to call the breaking the end."
+  },
+
+  "hebrew_letter": {
+    "letter": "Beth",
+    "meaning": "The House, the vessel that focuses will",
+    "path_number": "12",
+    "path_connects": "Kether to Binah",
+    "teaching": "Beth is the letter, the house, and the path runs from Kether down to Binah, crown into understanding. The letter teaches that this code is the vessel where the highest spark is given a wall to press against, oppression itself becoming the room in which the will learns its true shape."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 47",
+    "generated": "relations-v1"
+  }
+}

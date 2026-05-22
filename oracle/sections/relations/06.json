@@ -1,0 +1,81 @@
+{
+  "number": 6,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Harmonious Mirage",
+
+  "unity_line": "Held next to Code 5, this becomes the long art of waiting before a thing is forced, conflict softened by the patience that precedes it.",
+
+  "pair": {
+    "number": 5,
+    "card_name": "The Space Between Time",
+    "hexagram_name": "Waiting (Hsu)",
+    "teaching": "Side by side with The Space Between Time, these two teach the same crossing from opposite shores. One is the patient pause that lets the right moment ripen, the other is the friction that arrives when patience is missing. Waited well, conflict does not reach the door."
+  },
+
+  "inverse": {
+    "number": 5,
+    "card_name": "The Space Between Time",
+    "hexagram_name": "Waiting (Hsu)",
+    "is_self_inverse": false,
+    "teaching": "Flipped end over end, the lines become Code 5 again, The Space Between Time. The pair and the inverse are the same card here, which is its own teaching. Waiting and conflict are two ends of one line, read up or down."
+  },
+
+  "programming_partner": {
+    "number": 36,
+    "card_name": "Crystal Creation",
+    "teaching": "Through the genetic code, this pairing runs with Code 36, Crystal Creation. The friction that arises when something is out of place is held by the code that knows how to find a new pattern through crisis. Together they know that conflict is the body searching for a better arrangement."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Alchemy",
+    "tarot": "1 - The Magician",
+    "siblings": [40, 47, 64],
+    "teaching": "Inside the Ring of Alchemy, this code is the raw friction the work begins from. Its siblings, 40, 47, and 64, carry the rest of the transmutation: exhaustion turned to deliverance, oppression turned to transfiguration, confusion turned to clarity. The Magician's ring works with what is already at hand, nothing brought in from outside."
+  },
+
+  "tarot": {
+    "card": "I · The Magician",
+    "teaching": "The Magician stands at a table with the four tools of the elements laid before him, working only with what is already there. Conflict, read at its highest, is exactly that work. The harsh material on the table is the start of the operation, not the end of it."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Water",
+    "teaching": "Heaven over Water, the bright sky above the moving depth, two motions that pull in different directions and rub where they meet."
+  },
+
+  "sky": {
+    "value": "Mercury",
+    "type": "planet",
+    "teaching": "Mercury keys this ring, the swift planet of crossing and translation, the messenger that moves between worlds and reconciles what does not yet agree."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Above sits Zhongli Quan, the general who stopped fighting and turned his strength inward; below moves Lü Dongbin with his sword of discernment. Together they teach that conflict is resolved by the one who has already laid down arms and the one who still knows where to cut."
+  },
+
+  "hebrew_letter": {
+    "letter": "Beth",
+    "meaning": "The House — the vessel that focuses will",
+    "path_number": "12",
+    "path_connects": "Kether to Binah",
+    "teaching": "The path of this code's ring is Beth, the House, running from the crown down to understanding on the Tree. The letter teaches that the work here is to build a vessel that can hold opposing forces without breaking, the house where conflict becomes form."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 6",
+    "generated": "relations-v1"
+  }
+}

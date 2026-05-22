@@ -1,0 +1,81 @@
+{
+  "number": 20,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Emerging as the Code",
+
+  "unity_line": "Set against Code 19, this is the long looking that follows the close approach, the wind passing over the field that was just walked into.",
+
+  "pair": {
+    "number": 19,
+    "card_name": "Solection",
+    "hexagram_name": "Approach (Lin)",
+    "teaching": "Paired with Solection, these two are the I Ching's study of how presence arrives and how it is then seen. One is the warmth that walks in close and makes contact, the other is the still attention that takes in the whole field afterwards. Drawing near and beholding belong to the same act."
+  },
+
+  "inverse": {
+    "number": 19,
+    "card_name": "Solection",
+    "hexagram_name": "Approach (Lin)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and you arrive at Code 19, Solection. The same six lines read from the other end become the moving toward rather than the standing back, the same encounter felt from inside the meeting instead of from above it."
+  },
+
+  "programming_partner": {
+    "number": 34,
+    "card_name": "Sublime Power",
+    "teaching": "Across the genetic code, this pairing runs with Code 34, Sublime Power. The quiet attentiveness of seeing is partnered with the strength that moves once it has been seen. What they know together is that real power waits for the long look first, and that the look on its own is not yet the deed."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [3, 23, 24, 27, 42],
+    "teaching": "Inside the Ring of Life and Death, this code sits with Codes 3, 23, 24, 27, and 42, the family that holds the entire arc of incarnation. Birth, decay, return, nourishment, growth, and the patient witness. This code carries the family's stillness, the one who watches the whole cycle without flinching."
+  },
+
+  "tarot": {
+    "card": "XIII, Death",
+    "teaching": "Resonant here is XIII Death, the most misread card in the deck. What the image really shows is the harvest figure walking through the field, returning everything to the cycle. This code carries the same quality, the witness who can stand at the edge of any ending and see it as part of a longer movement."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Earth",
+    "teaching": "Wind moving across Earth, the breath passing over the open field, touching every blade without lifting a single one from its root."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "Scorpio carries this ring, fixed water, the deep gaze that does not look away from what is dying or what is being born underneath."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays his flute above, the small music that moves through everything without forcing it, and He Xiangu rests below, needing nothing from outside herself. Together they teach that the deepest seeing comes from a self already fed and a touch that does not seize."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish, transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "On the Tree, the ring's path is Nun, the Fish, running from the heart down into the field of feeling. The letter teaches that the witnessing this code carries is not cold, it moves through the water of emotion and changes form again and again without ever losing itself."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 20",
+    "generated": "relations-v1"
+  }
+}

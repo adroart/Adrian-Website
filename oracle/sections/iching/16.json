@@ -1,0 +1,58 @@
+{
+  "number": 16,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Enthusiasm",
+  "combination": "Thunder over Earth. The first crack of spring thunder comes up out of the soil, and the soil meets it with its whole flat surface, the way a body meets a sound that wakes it. One strong line, the fourth, stands among five soft ones, and the whole figure leans toward that one note. This is what readiness sounds like when it finally arrives. The ground was waiting. Now it stirs.",
+  "upper_nature": "Thunder, Zhen. The shock from below, the sudden rising sound, the eldest son of the trigrams. It startles, then it moves things. When this trigram is on top, the energy is breaking out into the open, audible at a distance, the thing that announces itself.",
+  "lower_nature": "Earth, Kun. Wholly yielding, wholly receptive. The dark ground that holds what is planted and lets what is rising come up through it. Beneath, this trigram is the willing field: it does not push back, it gives way, and by giving way it lets the force above have its full reach.",
+  "reading": "The situation this code names is the moment a held charge breaks into the open and finds people ready to move with it. Thunder has been gathering inside the earth all winter. Now it rolls up out of the ground, and everything that has been dormant feels it. The hexagram is not the slow build, and not the aftermath. It is the first audible note, and the willingness underneath that lets the note carry.\n\nThe danger of this moment is exactly its pleasure. Enthusiasm is real here. It opens doors, it gathers people, it lets one clear voice draw a crowd around itself like a hair clasp gathers hair. But the same energy will boast if you let it. It will get loud about itself, attach to the wrong people, mistake the rush for the work. The hexagram bends six different warnings around its one good line, because the lesson is not how to start the music. It is how to keep the music honest once it has started.\n\nWhat the image teaches is preparation. The old reading of the word yu means both delight and getting ready. When thunder finally comes, you do not chase it. You install the helpers, you set the army in motion, you do the unglamorous things that turn a feeling into a structure that lasts past the feeling. Move with the season. Stay close to the source of the sound. The crowd will arrive on its own.",
+  "judgement_lines": [
+    "Enthusiasm. It is favorable to install helpers,",
+    "And to set the army in motion."
+  ],
+  "image_lines": [
+    "Thunder rises out of the earth, ringing.",
+    "So the ancient kings made music to honor what is true,",
+    "And offered it up, and called the ancestors in."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "trumpeting the joy out loud.",
+      "reading": "The energy is real, but you are already making noise about it. The first instinct of this position is to broadcast the excitement, to be seen having it. That is the misstep. What was a true charge gets spent in the announcement. Keep the sound inside a little longer. Let the thing build before it speaks.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    },
+    {
+      "line": 2,
+      "image": "firm as a rock, seeing before the day is out.",
+      "reading": "In the middle of all this rising sound, this position is still. Not stuck, still. The stillness is what lets you read the room: who is honest, what is starting to tip, where the moment is actually going. You see it before others see it, and you do not wait. You move once, cleanly, and that is enough.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    },
+    {
+      "line": 3,
+      "image": "wide eyes turned upward, mouth a little open.",
+      "reading": "Looking up at someone else's enthusiasm, hoping a little of it lands on you. It is a small failure of nerve, the kind that hesitates because it would rather be carried. The longer you wait to notice you are doing this, the more it will cost. The repair is fast if you see it now. Late, it is regret.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    },
+    {
+      "line": 4,
+      "image": "the one clear note the others gather around.",
+      "reading": "This is the line the whole hexagram bends toward. You are the source the others are moving with, whether you wanted that role or not. Do not pick at it with doubt. Trust the people who are arriving. The image is a hair clasp pulling loose strands into one bunch: not force, just a center holding.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    },
+    {
+      "line": 5,
+      "image": "a long illness that does not finish you.",
+      "reading": "Something here is chronic. A drag, a low fever, a condition that will not lift. But it will not end you either. The teaching of this position is that you are not asked to flourish right now. You are asked to stay. Hold the center. Persistence here is not heroic, it is just the work.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    },
+    {
+      "line": 6,
+      "image": "dimmed by pleasure, going dark at the top.",
+      "reading": "The enthusiasm has rolled past its peak and you are still inside it, eyes glazed, not noticing the air has changed. The line is forgiving, though. Even this late, a real change of course costs you nothing. Turn now. The fact that you stayed too long does not have to become the next mistake.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/16", "generated": "iching-brief-v1" }
+}

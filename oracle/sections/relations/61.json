@@ -1,0 +1,81 @@
+{
+  "number": 61,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Celestial Remembrance",
+
+  "unity_line": "Crossed with Code 62, this is the inner knowing and the right outer note, the silent centre learning to sing itself into the world.",
+
+  "pair": {
+    "number": 62,
+    "card_name": "Voice of Nature",
+    "hexagram_name": "Preponderance of the Small (Hsiao Kuo)",
+    "teaching": "Beside Voice of Nature, the pair is Inner Truth meeting the careful music of small things. One is the still centre that hears what cannot be argued; the other is the modest, exact voice that gets the small note right. Together they teach that the deepest truths are carried by the smallest sounds."
+  },
+
+  "inverse": {
+    "number": 61,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn these lines end for end and the shape does not move. This code is one of only eight that meets its own reflection, and the meaning is precise. A heart at the centre has no other side; what is true here is true read from any angle."
+  },
+
+  "programming_partner": {
+    "number": 62,
+    "card_name": "Voice of Nature",
+    "teaching": "Across the genetic code, the partner is also Code 62, Voice of Nature, the pair running twice through the body. What one knows in silence, the other has to phrase aloud for the world to recognise. The work of the partnership is the careful translation of an inward certainty into the smallest accurate word."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Gaia",
+    "tarot": "3 - The Empress",
+    "siblings": [19, 60],
+    "teaching": "Inside the Ring of Gaia, this code sits with Code 19 and Code 60, three cards woven into the body of the Earth Mother. Approach, limitation, and inner truth, held as one living intelligence. This is the ring's still heart, the centre where Gaia listens to herself and knows the field from the inside."
+  },
+
+  "tarot": {
+    "card": "III, The Empress",
+    "teaching": "The Empress is the assigned arcana, and the resonance is the truth that lives in the body of the world. Her arcana is the seated mother who needs no proof, who knows by presence what is so. This code carries the same authority, knowing fastened to the heart rather than to the argument."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Lake",
+    "teaching": "Wind above Lake, a quiet breath moving across the still surface, the outer air just barely touching the inner water until the whole pool agrees."
+  },
+
+  "sky": {
+    "value": "Venus",
+    "type": "planet",
+    "teaching": "Venus keys this ring, the planet of relating and resonance, the force that recognises like by like and lets the true note find its answer in another body."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays above with the flute that quiets the wild things; Li Tieguai stands below, gourd of medicine in hand, joy and suffering held together. Together they teach that inner truth is heard by the broken as readily as the wise, and answered by music rather than by argument."
+  },
+
+  "hebrew_letter": {
+    "letter": "Daleth",
+    "meaning": "The Door, the opening, abundance pouring through",
+    "path_number": "14",
+    "path_connects": "Chokmah to Binah",
+    "teaching": "Daleth is the letter, the Door, and the path runs high across the Tree from Chokmah to Binah, wisdom into understanding. The letter teaches that this code is the opening between the two great knowings, the threshold at which inner truth becomes the doorway abundance walks through."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 61",
+    "generated": "relations-v1"
+  }
+}

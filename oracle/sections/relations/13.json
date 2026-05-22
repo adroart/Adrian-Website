@@ -1,0 +1,81 @@
+{
+  "number": 13,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Universal Crest",
+
+  "unity_line": "Held next to Code 14, this is the listener and the spark together, the quiet fellowship that finds its kin by the warmth they give off.",
+
+  "pair": {
+    "number": 14,
+    "card_name": "Ancestors Bloom",
+    "hexagram_name": "The Great Possessing (Ta Yu)",
+    "teaching": "Universal Crest meets Ancestors Bloom, The Great Possessing, and the two make one full breath of belonging. This code listens for the people who share its fire; its pair gathers what that fire has grown into a household. Fellowship outward, abundance inward."
+  },
+
+  "inverse": {
+    "number": 14,
+    "card_name": "Ancestors Bloom",
+    "hexagram_name": "The Great Possessing (Ta Yu)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you find Code 14, Ancestors Bloom. The same fire read from the other end becomes the harvest that fellowship grows into, the gathered abundance of a life lived among true company."
+  },
+
+  "programming_partner": {
+    "number": 7,
+    "card_name": "Essential Nexus",
+    "teaching": "In the genetic code, the partner here is Code 7, Essential Nexus. The listener who finds its people is held by the steady authority that knows where the group is heading. Together they know what a true company is and where it walks."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Purification",
+    "tarot": "15 - The Devil",
+    "siblings": [30],
+    "teaching": "The Ring of Purification holds only this code and Code 30, Bonfire of Desire. Two cards that burn clean, one by listening for kin until the false ones fall away, the other by the heat of longing itself. The family teaches that fire is how truth is found."
+  },
+
+  "tarot": {
+    "card": "XV · The Devil",
+    "teaching": "XV The Devil is the assigned arcana, and the resonance asks for honesty. The card is not evil but binding, the chain that desire and belonging both wear. This code carries that same charge, the way fellowship can be the truest fire or the tightest knot."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Fire",
+    "teaching": "Heaven over Fire, the open sky above the clinging flame, vast belonging held aloft by the warmth that draws kin together."
+  },
+
+  "sky": {
+    "value": "Capricorn",
+    "type": "sign",
+    "teaching": "Capricorn keys the ring, cardinal earth, the patient mountain that builds slowly and keeps only what stays true through the long climb."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Above sits Zhongli Quan, the retired general whose work is done; below dances Lan Caihe, the wandering minstrel of no fixed form. Together they teach that true fellowship is found by those who have stopped striving and those who refuse to be pinned."
+  },
+
+  "hebrew_letter": {
+    "letter": "Ayin",
+    "meaning": "The Eye — the limiting vision, matter as the ground of play",
+    "path_number": "26",
+    "path_connects": "Tiphareth to Hod",
+    "teaching": "Ayin is the letter, the Eye, and the path runs from the heart of the Tree down to Hod. The letter teaches that this code sees through matter to the spark it carries, finding its kin by the same light shining behind every face."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 13",
+    "generated": "relations-v1"
+  }
+}

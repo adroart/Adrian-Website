@@ -1,0 +1,59 @@
+{
+  "number": 55,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Abundance",
+  "combination": "Thunder rolls over Fire, the storm sitting on top of the flame. Lightning is already inside the cloud, brightness already inside the noise. This is the moment a thing reaches its peak: the noon, the full vessel, the harvest in. What the image will not let you forget is that the same sky which has gone this bright is the sky that will tilt. The sun at the top of its arc is already starting to come down.",
+  "upper_nature": "Thunder, Zhen. Broken, broken, solid at the root. The shock that comes up out of the earth and breaks the air. Action, movement, the start that you cannot un-start. On top, it is the moving force of the situation, the thing carrying everything else forward.",
+  "lower_nature": "Fire, Li. Solid, broken, solid. Brightness that needs something to cling to. Clarity, seeing, the flame that warms while it burns through its fuel. Below, it is the seeing inside the situation, the lit centre that knows what the storm above is doing.",
+  "reading": "The code names a high noon. The work is done, the light is at its strongest, the room is full. This is the moment the I-Ching tells you to enjoy without bracing. Do not, the text says, be sad. Be the sun in the middle of the sky.\n\nAnd then immediately the picture starts to darken. Almost every line of this hexagram talks about screens, curtains, eclipses, stars showing up at midday because the light is being blocked. That is the strange teaching here. At the peak, the thing that ends a peak is already arriving. The fullness itself is what casts the shadow. The dragon is on the wing, and the cloud is forming under it.\n\nSo the counsel is two-sided and a little uncomfortable. Use the noon. Radiate. Decide the cases that need deciding, finish the work that the height of light makes possible, let the people who are drawn to brightness gather. This is not a season to hoard or to hide. The king reaches this point, and the king's job is to give the light away.\n\nUnder that, a steadier note. The fullest moon is the moon that has started to wane. The arrival is the turn. You are not being told this so you grieve through your own good hour. You are being told so that when the light begins to tilt, you do not mistake the tilt for failure. It is the shape of fullness. Nothing this lit was ever meant to stay still.",
+  "judgement_lines": [
+    "Abundance reaches through.",
+    "The king arrives here.",
+    "Do not grieve.",
+    "Stand like the sun at noon."
+  ],
+  "image_lines": [
+    "Thunder and lightning come together.",
+    "So the wise one judges what is in front of them, and acts on it cleanly."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "meeting your equal on the road.",
+      "reading": "Someone of your own kind shows up, and the meeting is good even though you are made of the same stuff. Move with them. The usual rule about needing your opposite does not apply at this peak. Two of the same fire burn brighter. Do not linger long, though. Go while the meeting is fresh.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    },
+    {
+      "line": 2,
+      "image": "stars visible at noon.",
+      "reading": "The light is blocked. Something between you and the centre has thickened until the day looks like dusk. Do not push toward the one in power. Pushing now reads as suspicion. Stay where you are and let the truth in you ring loud enough to be felt without being argued. Sincerity moves what force cannot.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    },
+    {
+      "line": 3,
+      "image": "the small star seen through the curtain, the broken right arm.",
+      "reading": "The screen has gotten heavier. Even smaller stars are visible at midday. In this dimness you reach to act and the right arm breaks. The big move is not available to you. That is not your fault. The fault belongs to the darkening, not to you. Wait this dark patch out.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    },
+    {
+      "line": 4,
+      "image": "meeting the hidden master in the tent.",
+      "reading": "Still inside the same eclipse, you encounter someone like yourself, plain in appearance, carrying real fire. They are not at the top of any chart. That is why they can help you. Go with this one. The favored move here is quiet partnership in the shade, not display in the light.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    },
+    {
+      "line": 5,
+      "image": "bright people gathering around the open door.",
+      "reading": "The host of the hexagram. You are soft in a strong seat and the room around you fills with talent because you did not crowd it out. Praise comes. The harvest belongs to everyone who showed up. Receive it openly. This is the line the whole hexagram has been building toward.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    },
+    {
+      "line": 6,
+      "image": "the grand house, the gate quiet, no one at the door.",
+      "reading": "Abundance turned inward and screened off. The roof is high, the walls thick, and the household is hidden behind them. You peer out and no one is there. Three years pass and you see no one. This is the picture of wealth used to wall off, not to share. Misfortune. Open the door.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/55", "generated": "iching-brief-v1" }
+}

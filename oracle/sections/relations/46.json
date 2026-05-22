@@ -1,0 +1,81 @@
+{
+  "number": 46,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Fountain of Light",
+
+  "unity_line": "Set alongside Code 45, this is the one who rises because a whole people has gathered underneath them and lifted.",
+
+  "pair": {
+    "number": 45,
+    "card_name": "Tribal Tapestry",
+    "hexagram_name": "Gathering Together (Ts'ui)",
+    "teaching": "With Tribal Tapestry, the pair is the tribe and the one the tribe raises. Gathering Together is the people drawing into a single weave; Pushing Upward is the figure that the weave then lifts into view. The lifting is not effort on the lifted one's part, it is the natural rising of what the whole field has agreed to carry."
+  },
+
+  "inverse": {
+    "number": 45,
+    "card_name": "Tribal Tapestry",
+    "hexagram_name": "Gathering Together (Ts'ui)",
+    "is_self_inverse": false,
+    "teaching": "Reverse the lines and the rising becomes Code 45, Tribal Tapestry. The same six lines read downward are no longer the figure ascending but the people closing ranks beneath them, one motion seen from inside the gathering instead of from the rising stem."
+  },
+
+  "programming_partner": {
+    "number": 25,
+    "card_name": "The Mysteries Play",
+    "teaching": "Across the genetic code, this pairing runs with Code 25, The Mysteries Play. The good fortune that lifts a life upward is held by the unconditioned innocence that never bargains for it. Together they teach that real ascent only finds those who have stopped trying to deserve it, hearts still open to the wild side of grace."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Matter",
+    "tarot": "4 - The Emperor",
+    "siblings": [18, 48, 57],
+    "teaching": "Inside the Ring of Matter, this code keeps company with Codes 18, 48, and 57, four cards that govern the body and the structures it lives in. The family carries correction, depth, and the intuition that reads the room before the mind does. This seat is the family's vertical, the rising that the other three foundations make possible."
+  },
+
+  "tarot": {
+    "card": "IV, The Emperor",
+    "teaching": "Here the assigned arcana is the Emperor, the figure on the cubic throne who orders the world by the clarity of his seeing. His authority arrives because the field has recognised it, not because it has been seized. This code is the moment of that recognition, the upward turn when the ground itself decides to elevate."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Wind",
+    "teaching": "Earth above Wind, the field of soil sitting on top of the gentle penetrating breath, ground that rises because something patient is pressing upward from within it."
+  },
+
+  "sky": {
+    "value": "Aries",
+    "type": "sign",
+    "teaching": "Keyed to Aries, the ring carries cardinal fire, the first green stem breaking the crust of the year and answering only to the season's own pull upward."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Above sits He Xiangu, the maiden whose food is moonlight; below stands Han Xiangzi, whose flute coaxes plants into the open. Together they teach that what rises here is called upward by music and fed by a light no one had to grow."
+  },
+
+  "hebrew_letter": {
+    "letter": "Heh",
+    "meaning": "The Window, the frame through which vision orders the world",
+    "path_number": "15",
+    "path_connects": "Chokmah to Tiphareth",
+    "teaching": "Heh is the letter, the window, and the ring's path runs from Chokmah down to Tiphareth, wisdom into the heart. The letter teaches that this ascent is a window opening between the high knowing and the heart where it can finally be lived."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 46",
+    "generated": "relations-v1"
+  }
+}

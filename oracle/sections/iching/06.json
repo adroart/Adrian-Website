@@ -1,0 +1,59 @@
+{
+  "number": 6,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Conflict",
+  "combination": "Heaven sits above, climbing. Water sits below, sinking. The two are moving in opposite directions at the same moment, and the gap between them is widening. That widening is the hexagram. Nothing here is wrong on its own. The trouble is purely in the direction of travel, two natures that share a place but not a course, pulling at each other until something has to give.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion, untiring and reaching upward. Above this lower trigram it stands aloof, certain of itself, not coming down to meet what is below. The force is real. It just keeps rising away.",
+  "lower_nature": "Water, Kan. A single firm line caught between two yielding lines: a heart of truth, but held inside danger. Water finds the low place and sinks toward it. Below, this trigram is the inward feeling of risk, of being held in a hard spot and quietly meaning it.",
+  "reading": "The situation this code names is the moment a disagreement is about to turn into a fight. You feel right. You probably are right. And the other side has closed the door on hearing it. That is the picture: your truth held inside the water, and the other party already gone upward, leaving you with the choice of how loud to be about it.\n\nThe teaching is not that you are wrong. The teaching is that pushing through to the end of this contention is the part that ruins you. Even if you win, what you win will be taken back. The hexagram keeps repeating the warning. Halt halfway. Settle at the middle. The end is where the loss lives.\n\nWhat helps is a third figure, someone fair and central, who can hear both sides without owning either. The text calls this the great person. In ordinary terms, it is anyone clear enough to name what is actually being argued about, so the argument can stop being about pride and go back to being about the thing.\n\nWhat hurts is the great river. Now is not the season to launch the new venture, the move, the big gamble. The energy in the room is contradicting itself. Wait it out.\n\nUnderneath all of this is the quiet counsel the Image gives: when you start anything, plan the beginning carefully. Most conflicts were preventable two steps back. The work is upstream.",
+  "judgement_lines": [
+    "Conflict. You are sincere, and the door is closed.",
+    "Stop halfway, and the season turns.",
+    "Push to the end, and you lose what you came for.",
+    "Helpful to see the fair one. Not the time to cross the great water."
+  ],
+  "image_lines": [
+    "Heaven climbs. Water sinks. They part.",
+    "So the wise one plans the beginning before any move."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "letting the small quarrel drop.",
+      "reading": "Do not let this one grow. There will be a little gossip, a few small barbs, and that is the whole price. Pay it. Walk away from the dispute before it becomes a structure. The end of this is good, but only if you stop now, while stopping is still cheap.",
+      "becomes": { "hexagram": 10, "name": "Treading" }
+    },
+    {
+      "line": 2,
+      "image": "the smaller party going home.",
+      "reading": "The other side is stronger. You cannot win this on force, and trying will pull others down with you. Turn around, go back to the small place you came from, the three hundred families. Make yourself quietly low. The trouble passes over the house that does not stand up to meet it.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    },
+    {
+      "line": 3,
+      "image": "living on what was already given.",
+      "reading": "Stay inside the portion already yours. Do not reach for new ground in the middle of a dispute. The position is exposed, and quietness is what protects it. If a larger work asks for your hand, give the hand, do not claim the credit. The danger passes and the end is good.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 4,
+      "image": "the urge to fight, set down.",
+      "reading": "You could fight. The strength is there. Set it down anyway. Return to what was given to you to do, to the steady plain work, and the heat goes out of the wanting. This is not surrender. It is a change of mind. From here, peace is possible, and the outcome is good.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    },
+    {
+      "line": 5,
+      "image": "the fair judge in the centre.",
+      "reading": "The one line in the hexagram where pressing the case is allowed. It is allowed because the figure is balanced and central, with no private stake. If you are in this seat, settle it. If you are not, this is the figure to bring the matter to. Truth lands clean here. Great good fortune.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 6,
+      "image": "the belt of honour, stripped before noon.",
+      "reading": "You pushed it all the way. They gave you the prize. Now watch how fast it leaves your hands, three times before the morning is over. What was won by force will not stay. The win is hollow because the cost was the relationship the win was supposed to settle. Repent.",
+      "becomes": { "hexagram": 47, "name": "Oppression" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/06", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 50,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Melt Into Perfection",
+
+  "unity_line": "Held against Code 49, this is what the fire is for, the vessel where the burned material becomes something the people can be fed by.",
+
+  "pair": {
+    "number": 49,
+    "card_name": "Union in the Ashes",
+    "hexagram_name": "Revolution (Ko)",
+    "teaching": "Union in the Ashes is the moment the old order is broken open and burned down; this code is the cauldron that catches what survives the burning and slowly cooks it into something nourishing. One pair tears the structure apart, the other refines the salvaged matter into food. Revolution without the cauldron is only wreckage."
+  },
+
+  "inverse": {
+    "number": 49,
+    "card_name": "Union in the Ashes",
+    "hexagram_name": "Revolution (Ko)",
+    "is_self_inverse": false,
+    "teaching": "Flip these lines end for end and the cauldron becomes Code 49, Union in the Ashes. The same six lines read from the other direction stop describing the slow cooking and become the sudden breaking that made the cooking necessary."
+  },
+
+  "programming_partner": {
+    "number": 3,
+    "card_name": "Messengers of the Infinite",
+    "teaching": "Across the genetic code, the partner here is Code 3, Messengers of the Infinite. The cauldron's patient refinement is held by the messy first ordering of new life. What they know together is that nothing arrives polished, that the form which finally feeds the room had to be cooked out of unsettled matter."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Illuminati",
+    "tarot": "8 - Justice",
+    "siblings": [44],
+    "teaching": "Inside the Ring of Illuminati, this code sits with one other, Code 44, the alertness that recognises a familiar face in a stranger. A small family bound by the principle of cosmic order, the pattern that organises itself and the eye that sees the pattern. This seat is the slow vessel where the order becomes edible."
+  },
+
+  "tarot": {
+    "card": "VIII. Adjustment",
+    "teaching": "The Tarot face is VIII Adjustment, the Thoth name for Justice. The image is the figure standing with scales and sword, weighing what enters and what is released. This code carries the same office, the careful tasting of the pot, the measured adjustment of heat and salt that decides what the meal will finally be."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Wind",
+    "teaching": "Fire above, Wind below, the flame fed steadily from beneath, the breath that keeps the cauldron burning at the temperature the work requires."
+  },
+
+  "sky": {
+    "value": "Libra",
+    "type": "sign",
+    "teaching": "Libra keys the ring, cardinal air, the weighing intelligence that holds two pans level until the right balance for the moment becomes obvious."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Lan Caihe stands above, the minstrel of no fixed form, and Han Xiangzi stands below, the flute-player whose music gentles whatever it enters. Together they teach that the cauldron works through both the lit flame and the soft breath that keeps it lit."
+  },
+
+  "hebrew_letter": {
+    "letter": "Lamed",
+    "meaning": "The Ox-Goad, consequence, the precise adjustment of forces",
+    "path_number": "22",
+    "path_connects": "Geburah to Tiphareth",
+    "teaching": "Lamed is the letter, the Ox-Goad, and the path runs from severity into the heart of the Tree. The letter teaches that this code refines by small precise corrections, the tap that brings the team back into line, consequence applied gently enough that the work can keep moving toward beauty."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 50",
+    "generated": "relations-v1"
+  }
+}

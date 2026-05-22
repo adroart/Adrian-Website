@@ -1,0 +1,81 @@
+{
+  "number": 42,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Moving to Perfection",
+
+  "unity_line": "Read alongside Code 41, this is the in-breath of the year answering the out-breath, the slow filling of the cup that the other has carefully emptied.",
+
+  "pair": {
+    "number": 41,
+    "card_name": "Beginning and the End",
+    "hexagram_name": "Diminishing (Sun)",
+    "teaching": "Beginning and the End is the deliberate emptying, the careful taking away; this code is the increase that flows back into the place once it has been made ready. Together the two are the oldest economy in the I Ching, the lesson that nothing grows in a vessel that has not first been hollowed out, and nothing stays empty for long once the work of emptying is honest."
+  },
+
+  "inverse": {
+    "number": 41,
+    "card_name": "Beginning and the End",
+    "hexagram_name": "Diminishing (Sun)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and increase becomes decrease, Code 41, Beginning and the End. The same six lines read from the other end show that filling and emptying are one motion, and which one you are inside depends only on where the eye begins."
+  },
+
+  "programming_partner": {
+    "number": 32,
+    "card_name": "Art of Living",
+    "teaching": "Across the genetic code, the partner here is Code 32, Art of Living. The leap of expansion is held by the long endurance that knows what is built to last. Together they understand that real growth is the kind that can be carried, and that anything which arrives faster than the body can become it will be lost again by morning."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [3, 20, 23, 24, 27],
+    "teaching": "Inside the Ring of Life and Death this code sits with Codes 3, 20, 23, 24, and 27, six cards that hold the whole span of incarnation. Around them are ordering at the beginning, the still witnessing, the splitting and the returning, the nourishing body. This code is the ring's growth seat, the place where the great cycle begins to expand outward into a new shape."
+  },
+
+  "tarot": {
+    "card": "XIII, Death",
+    "teaching": "Death is the assigned arcana, and the resonance is more honest than the name suggests. What the card actually shows is transformation that nothing survives unchanged, the harvest that ends one season so the next can begin. This code carries the same office on the growing side, the increase that only comes because something else has been allowed to finish."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Thunder",
+    "teaching": "Wind above, Thunder below, gentle penetration riding on top of sudden movement, a quiet breath spreading outward from the place where the ground has just shifted."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "The ring is keyed to Scorpio, fixed water, the depth that knows how to die into one form and surface again wearing another."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays above, the youth whose flute settles the wild things into listening; Cao Guojiu stands below, the noble who walked out of the palace to find a truer life. Together they teach that real growth follows the one who leaves the old position and then breathes a music gentle enough for the new shape to gather around."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish — transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "Nun is the letter, the Fish that moves through dark water and surfaces still itself, and the path runs from Tiphareth down into Netzach, heart into the field of feeling. The letter teaches that this code's increase is continuity through change, the part of the life that goes on growing because it has learned how to move underneath whatever is breaking on the surface."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 42",
+    "generated": "relations-v1"
+  }
+}

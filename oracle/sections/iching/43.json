@@ -1,0 +1,59 @@
+{
+  "number": 43,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Breakthrough",
+  "combination": "Lake sits over Heaven. Water has been climbing into the sky for a long time and has reached the place where it can no longer be held. Five strong lines press up against a single yielding one at the top, and the cloud is about to burst. This is the hexagram of the third month, the moment a long winter finally gives way. The pressure is not new. What is new is that it has nowhere left to go.",
+  "upper_nature": "Lake, Dui. Open at the top, gathering, the surface where water collects and the vapour rises. Speech, exchange, the youngest daughter. Above the strong lines, the lake is the place the pressure finally meets air. Pleasing on the surface, but full underneath.",
+  "lower_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The same untiring force you met in the first hexagram, here driving from below. Five yang lines stacked into the lake. The strength is real and it is going somewhere; the question is only whether it goes cleanly.",
+  "reading": "The situation this code names is the long pressure that has finally come to a head. Something inside you, or inside a relationship, or inside the situation you live in, has been quietly accumulating for a long time. Today it cannot be held back any more. A decision is wanting to be made, and you can feel that it is going to be made one way or another, with you or in spite of you.\n\nThe image is the lake risen up to heaven. The cloud cannot hold what is in it. The rain is coming. The teaching is in the manner of the breakthrough, not the fact of it.\n\nThere is the wrong way and the right way. The wrong way is force. To rush at the thing with armed will, jaw set, certain you are the righteous one and the thing in your way is simply the enemy. The hexagram is unusually direct about this. It says: do not reach for arms. Force misreads the moment. What is corrupt in a situation is not removed by violence; it is removed by being named, openly and clearly, where everyone can see it.\n\nThe right way is announcement. You bring it into the open. You say what is wrong, in plain words, to the people who need to hear it. You speak from your own ground, your own city, not from a campaign. And you stay aware that you are in a real situation with a real edge, not a story where the brave hero wins by being loudest. Lake over Heaven also gives the second teaching, which is what you do with the strength once it breaks. The cloud gives its water downward. The breakthrough is not a victory you keep. It is something you spend on what is below you.",
+  "judgement_lines": [
+    "Break through. Name the thing openly, in the court of the king.",
+    "Speak it true, and know the danger.",
+    "Tell your own people. Do not reach for arms.",
+    "There is somewhere to go."
+  ],
+  "image_lines": [
+    "The lake has risen up to heaven.",
+    "So the one of true conduct sends wealth downward, and does not rest on virtue."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "strength in the forward toes.",
+      "reading": "The first move wants to leap. You are eager, the energy is real, but the foot is not yet ready for the road. If you push from here you will not prevail, and the failure will be a fault you brought on yourself. Wait. Build the rest of the body before you trust the toes.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    },
+    {
+      "line": 2,
+      "image": "a cry of alarm in the night.",
+      "reading": "You are awake. The danger is real and it is moving in the dark, but because you have stayed alert, it cannot reach you the way it intended. Sound the cry. Stay armed inwardly through the night. The watchfulness is the protection. No need to be anxious about what comes next.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    },
+    {
+      "line": 3,
+      "image": "resolve hardening in the face, caught in the rain.",
+      "reading": "The decision is showing in your jaw and that is the danger. You are right about what has to be cut, but wearing it on the face costs you company. You will walk alone for a stretch, get soaked, get muttered about. Keep walking. Carry the resolve quietly and the fault will not be yours.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    },
+    {
+      "line": 4,
+      "image": "skin gone from the seat, walking with a limp.",
+      "reading": "You cannot sit still and you cannot move forward cleanly. The position is wrong for the strength you are bringing. Someone is offering to lead you the way a sheep is led. If you let yourself be led, the regret lifts. The trouble is you will hear the advice and not believe it.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    },
+    {
+      "line": 5,
+      "image": "a bed of weeds on the high ground, dig, dig.",
+      "reading": "What is rotten has spread close to where you stand, and it looks more harmless than it is. Uproot it. Do not be lulled by how ordinary it has come to seem. Stay on the middle path while you do it, no theatre, no excess. Cleanly done, balanced action, and there is no blame.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    },
+    {
+      "line": 6,
+      "image": "the cry that meets no answer.",
+      "reading": "The last yin at the top. You are isolated now, with no one left to call to and no one calling back. If the decision is not finally made here, the silence completes itself and there is misfortune. The hexagram closes the way it warned at the start: what stays unspoken at the end does not get to grow.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/43", "generated": "iching-brief-v1" }
+}

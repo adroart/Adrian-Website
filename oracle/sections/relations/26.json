@@ -1,0 +1,81 @@
+{
+  "number": 26,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Lighter Than a Feather",
+
+  "unity_line": "Turned toward Code 25, this is the trained hand that knows exactly when to release the wild thing it has been holding.",
+
+  "pair": {
+    "number": 25,
+    "card_name": "The Mysteries Play",
+    "hexagram_name": "Innocence (Wu Wang)",
+    "teaching": "With The Mysteries Play, the pair shows the same great force from two angles. One is the unconditioned life that runs without thinking; the other is the long discipline that has learned to hold such a life without crushing it. The taming and the innocent run are written on the same six lines, read up or down."
+  },
+
+  "inverse": {
+    "number": 25,
+    "card_name": "The Mysteries Play",
+    "hexagram_name": "Innocence (Wu Wang)",
+    "is_self_inverse": false,
+    "teaching": "Flip these lines end for end and you arrive at Code 25, The Mysteries Play. The disciplined containment seen from the other side is the unconditioned heart that the discipline was always serving, the rider and the animal exchanging seats."
+  },
+
+  "programming_partner": {
+    "number": 45,
+    "card_name": "Tribal Tapestry",
+    "teaching": "Through the genetic code, this pairing runs with Code 45, Tribal Tapestry. Patient personal restraint is matched by the one who knows how to gather and hold a whole people. Together they teach that great strength, in a body or in a tribe, only becomes useful once someone has learned to govern it without forcing it."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Light",
+    "tarot": "19 - The Sun",
+    "siblings": [5, 9, 11],
+    "teaching": "Inside the Ring of Light, this code walks with Codes 5, 9, and 11, patience, the small detail well held, and the idealist's open peace. The ring carries what the sun does in a day, nourishing what is in front of it without preference. This seat is the family's stored strength, the warmth that has been gathered before it shines."
+  },
+
+  "tarot": {
+    "card": "XIX, The Sun",
+    "teaching": "The Sun is the Tarot face here, the radiant disc above two children at play. The arcana carries the clarity that warms without burning and shows without shaming. This code carries the same light, a power that has tamed its own glare and learned to give itself to ordinary things."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Heaven",
+    "teaching": "Mountain over Heaven, the still peak sitting on top of the creative force, an immense energy quietly contained by the shape that has agreed to carry it."
+  },
+
+  "sky": {
+    "value": "Sun",
+    "type": "planet",
+    "teaching": "The Sun keys this ring, the steady centre that gives without depleting, the body of light around which everything orbits and warms."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "Above sits Zhang Guolao on his backward donkey, keeping his eyes on the road already travelled; below stands Zhongli Quan, the general who left the field to refine what was left. Together they teach that real taming is done by those who remember everything and are no longer trying to win."
+  },
+
+  "hebrew_letter": {
+    "letter": "Resh",
+    "meaning": "The Head — the sovereign light, clarity that vitalises",
+    "path_number": "30",
+    "path_connects": "Hod to Yesod",
+    "teaching": "Resh, the head, lights the ring's path from Hod down to Yesod. The letter teaches that the great taming is not suppression but sovereignty, a clear head presiding over the body's foundation so that vast power can move without breaking what holds it."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 26",
+    "generated": "relations-v1"
+  }
+}

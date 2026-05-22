@@ -1,0 +1,81 @@
+{
+  "number": 5,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "The Space Between Time",
+
+  "unity_line": "Beside Code 6, this is the patience that knows what is coming and the trust that lets it ripen at its own speed.",
+
+  "pair": {
+    "number": 6,
+    "card_name": "Harmonious Mirage",
+    "hexagram_name": "Conflict (Sung)",
+    "teaching": "With Harmonious Mirage, the pair holds the two halves of what happens when a thing is not yet ready. One waits inside the storm without forcing; the other meets the disagreement when waiting alone is no longer enough. They are the same situation seen from before and after the strain breaks."
+  },
+
+  "inverse": {
+    "number": 6,
+    "card_name": "Harmonious Mirage",
+    "hexagram_name": "Conflict (Sung)",
+    "is_self_inverse": false,
+    "teaching": "Flipped end for end, this code becomes Conflict, Code 6, Harmonious Mirage. The patience held inside the waiting turns into the friction that surfaces when waiting alone has gone on too long, the other end of the same pressure."
+  },
+
+  "programming_partner": {
+    "number": 35,
+    "card_name": "Navigational Star",
+    "teaching": "In the genetic code, this code's programming partner is 35, Navigational Star. Patient waiting is held by the one who has crossed many thresholds and knows the route, and together they teach that the right move arrives only when the inner clock and the outer way line up."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Light",
+    "tarot": "19 - The Sun",
+    "siblings": [9, 11, 26],
+    "teaching": "This code sits inside the Ring of Light with Codes 9, 11, and 26. The family is lit by the sun principle, each card a different way of carrying steady illumination. This one is the patience of the light, the willingness to wait for the right moment to shine."
+  },
+
+  "tarot": {
+    "card": "XIX · The Sun",
+    "teaching": "The Tarot face here is XIX The Sun, the open daylight under which children play and growing things grow. The card carries the certainty that nourishment is on the way, and this code carries the same certainty, holding the field bright while what is becoming finishes becoming."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Heaven",
+    "teaching": "Water over Heaven, the deep pooling above the creative force, danger and strength meeting in the same instant, the storm cloud waiting to release its rain."
+  },
+
+  "sky": {
+    "value": "Sun",
+    "type": "planet",
+    "teaching": "The ring is keyed to the Sun, the planet whose light arrives without being asked and whose patience is measured in the slow ripening of every living thing."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "Above the line stands Lü Dongbin with his sword of discernment, and below sits Zhongli Quan with the strength of the general who has stopped fighting. Together they teach that waiting well is an active discipline, cutting false urgency and refining the force that remains."
+  },
+
+  "hebrew_letter": {
+    "letter": "Resh",
+    "meaning": "The Head — the sovereign light, clarity that vitalises",
+    "path_number": "30",
+    "path_connects": "Hod to Yesod",
+    "teaching": "On the Tree, the path of this code's ring is Resh, the Head, running between intellect and the foundation. The letter teaches that this code is a sovereign light held steady in the mind until the body is ready to act on it."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 5",
+    "generated": "relations-v1"
+  }
+}

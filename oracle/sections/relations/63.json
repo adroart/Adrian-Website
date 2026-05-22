@@ -1,0 +1,81 @@
+{
+  "number": 63,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Adornments of Time",
+
+  "unity_line": "Crossed by Code 64, this is the work just finished meeting the work not yet begun, completion and its mirror keeping the world in motion.",
+
+  "pair": {
+    "number": 64,
+    "card_name": "Communion",
+    "hexagram_name": "Before Completion (Wei Chi)",
+    "teaching": "With Communion, the pair is the I Ching's last two hexagrams, the cycle ending and the cycle about to start. One holds the satisfaction of arrangement, every line in its proper place; the other holds the readiness of the unsettled moment. The deck closes on both at once because life does."
+  },
+
+  "inverse": {
+    "number": 64,
+    "card_name": "Communion",
+    "hexagram_name": "Before Completion (Wei Chi)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines over and they become Code 64, Communion. The same six rearrange from the picture of perfect order into the picture of everything still to be sorted, which is how completion always feels the day after."
+  },
+
+  "programming_partner": {
+    "number": 64,
+    "card_name": "Communion",
+    "teaching": "Across the genetic code, this pairing also runs with Code 64, Communion. The one who has finished a piece of work and the one who is gathering the next question programme each other. Together they hold the rhythm by which one cycle is allowed to close so the next can open."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Divinity",
+    "tarot": "5 - The Hierophant",
+    "siblings": [22, 36, 37],
+    "teaching": "This code belongs to the Ring of Divinity, carried by the Hierophant. Its siblings are Code 22's grace under pressure, Code 36's dark night, and Code 37's family alchemy. Four cards bound by the sacred teachings, and this is where the teachings come together as a finished ornament of a life."
+  },
+
+  "tarot": {
+    "card": "V, The Hierophant",
+    "teaching": "The Tarot face is V, The Hierophant, the keeper of inherited teaching, the figure who stands between heaven and the students gathered below. This code carries the same role at the end of a cycle, the one in whom the long lesson has settled into form precise enough to be passed on."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Fire",
+    "teaching": "Water above Fire, the kettle on the flame, every element finally in its right seat for the work to come to a boil."
+  },
+
+  "sky": {
+    "value": "Taurus",
+    "type": "sign",
+    "teaching": "Taurus keys this ring, the fixed earth that knows how to finish, the patient body that holds its ground until the long arrangement is complete."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with the sword of discernment forged in the depths, and Lan Caihe sits below, the wandering singer who refuses fixed form. Together they teach that completion belongs to the one who has cut clean and the one who still will not be pinned."
+  },
+
+  "hebrew_letter": {
+    "letter": "Vav",
+    "meaning": "The Nail, the pin that connects heaven to earth",
+    "path_number": "16",
+    "path_connects": "Chokmah to Chesed",
+    "teaching": "On the Tree, the ring stands on Vav, the nail, the path running from Chokmah down into Chesed, wisdom fastened to mercy. The letter teaches that this code's completion is a pin, the small fixed point that holds two great things together so the arrangement can endure."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 63",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "number": 57,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Gentle Wind",
+  "combination": "Wind sits over Wind, the same soft current doubled, with nothing solid above it and nothing solid beneath. It is the one hexagram made of two of the same flexible trigram, and what it shows is influence that has no edges. A long, steady breath of the same thing, blowing twice in the same direction, finding its way into rooms a stronger force could not enter.",
+  "upper_nature": "Wind, Xun. Soft, soft, broken at the root with two firm lines above. The trigram of penetration that does not push. Above, it is the breeze still moving across the open field, the instruction already sent, the direction in the air before anyone has named it.",
+  "lower_nature": "Wind, Xun, again. The same nature held in the inner position, working on the ground rather than across the open. Below, it is the slow loosening of the soil from underneath, the small steady pressure inside the situation, working before anything outside has shifted.",
+  "reading": "The situation this code names is one that will not yield to force. There is something to move, something to change, and the direct push has already failed or is obviously going to. What the hexagram offers in its place is the wind. Not the gust that throws a tree down, but the breath that keeps moving for a season and a season after that, until the same tree is leaning the way the wind goes.\n\nThe picture is air entering. Through the gap under a door, through the seam in a wall, through whatever opening the situation has left for it. The wind does not announce itself and it does not insist. It simply keeps coming, in the same direction, over time, and the world rearranges itself slightly to accommodate that. That is the teaching here. Small effects, repeated, become the shape of the room.\n\nThe counsel is to choose a direction and stop changing it. The advancing and retreating of the first line, the violent repeated attempt of the third, these are the failures the hexagram is warning against. Both look like effort. Neither is wind. Wind is the one steady current that the obstacle eventually accepts as a fact about its weather. You will only see a little progress at first. That is the honest thing the Judgement says. There will be small gains. Take them. They are how this works. The thing that needs to move will move, but not on the day you push it.",
+  "judgement_lines": [
+    "The wind enters by being small.",
+    "There is somewhere to go, and going helps.",
+    "Find the one who can see further, and see them."
+  ],
+  "image_lines": [
+    "Wind following wind across the field.",
+    "So the one who would lead repeats the word, and lets the work be carried by what keeps blowing."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the soldier who steps forward, then back, then forward again.",
+      "reading": "The mind is wavering. The body follows. Half of you wants to go and half of you is already turning home. This is the place where the wind has not yet decided which way it is blowing. Borrow the warrior's straight back. Pick a direction, and walk it without re-asking.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    },
+    {
+      "line": 2,
+      "image": "kneeling under the bed, asking the scribe and the shaman.",
+      "reading": "Whatever is wrong with the situation is hidden under it, not lying on top of it. Get low. Call in the ones who can read what you cannot. Diviners, advisors, dreams, the part of yourself that knows by sense and not by argument. Humility here is not weakness. It is method.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    },
+    {
+      "line": 3,
+      "image": "the same gust hitting the same wall, again, again.",
+      "reading": "You have already tried this. Trying it harder is not the next move. The repetition has become the problem. There is shame in this place, and the shame is the signal. Stop pushing the same door. Either change the angle, or wait for the wind to shift on its own.",
+      "becomes": { "hexagram": 59, "name": "Dispersion" }
+    },
+    {
+      "line": 4,
+      "image": "the hunt that brings back game of three grades.",
+      "reading": "The patient pressure has done its work. What you doubted you could carry, you carried. The yield is enough for the altar, enough for the guests, enough for the kitchen. Honor all three uses. Past regret has nothing left to feed on. This is the line where steady gentleness finally shows what it was building.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 5,
+      "image": "three days before the change, three days after.",
+      "reading": "The change is real, and the timing of it is the whole craft. Announce it before it lands, so the field is ready. Hold steady after it lands, so the field can settle. There may have been no clean beginning to this. There will be a clean end. The wind that knows when to blow harder is the wind that finishes the work.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 6,
+      "image": "still under the bed, and the axe is gone.",
+      "reading": "Yielding has gone past its season. What was humility has become hiding, and the tool you needed for decision is no longer in your hand. The wind has dispersed the thing it should have shaped. Even if your heart is still in the right place, the position is wrong now. Stand up. Take the cut you have been refusing to make.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/57", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 4,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Veils of Knowledge",
+
+  "unity_line": "Held against Code 3, this is the long apprenticeship after the storm, the bewildered student finding shape for what just broke in.",
+
+  "pair": {
+    "number": 3,
+    "card_name": "Messengers of the Infinite",
+    "hexagram_name": "Difficulty at the Beginning (Chun)",
+    "teaching": "Paired with Messengers of the Infinite, these two carry the deck's opening passage of new life. Where its pair is the breakthrough crashing in, this code is the slow learning that follows. Arrival and not-yet-understanding are the same event, only the timing differs."
+  },
+
+  "inverse": {
+    "number": 3,
+    "card_name": "Messengers of the Infinite",
+    "hexagram_name": "Difficulty at the Beginning (Chun)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you arrive at Code 3, Messengers of the Infinite. The same difficulty turned over becomes the strain of what is pushing through rather than the confusion of the one receiving it."
+  },
+
+  "programming_partner": {
+    "number": 49,
+    "card_name": "Union in the Ashes",
+    "teaching": "Through the genetic code, this pairing runs with Code 49, Union in the Ashes. The student of veiled knowledge is held by the one who knows when an old form must burn, and what they know together is that real understanding only comes once the borrowed answers have been let go."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Union",
+    "tarot": "6 - The Lovers",
+    "siblings": [7, 29, 59],
+    "teaching": "Inside the Ring of Union, this code stands as the first encounter, the meeting that does not yet understand itself. Its siblings, 7, 29, and 59, carry the rest of the work: the discipline of virtue, the leap into depth, and the dissolution that lets intimacy form. Coming together is learned the long way through this family."
+  },
+
+  "tarot": {
+    "card": "VI · The Lovers",
+    "teaching": "Resonant here is VI The Lovers, and the choice it pictures is the heart of this code. The card shows a figure standing between possibilities, an inner choosing that no teacher can make for them. Veiled knowledge is exactly that moment, the one where the student must finally decide for themselves."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Water",
+    "teaching": "Mountain over Water, the still peak above the spring at its foot, what is held quiet above what is still finding its way."
+  },
+
+  "sky": {
+    "value": "Gemini",
+    "type": "sign",
+    "teaching": "Gemini carries this ring, mutable air, the twinned mind that learns by holding two answers at once until the truer one declares itself."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao sits above on his backward donkey, seeing where things came from more clearly than where they go, and Lü Dongbin moves below with his sword that cuts illusion. Together they teach that understanding asks both the long look back and the willingness to cut what no longer holds."
+  },
+
+  "hebrew_letter": {
+    "letter": "Zain",
+    "meaning": "The Sword — the blade of discrimination that forces a choice",
+    "path_number": "17",
+    "path_connects": "Binah to Tiphareth",
+    "teaching": "The ring's path is Zain, the Sword, running from the great mother of form down to the heart of the Tree. The letter teaches that veiled knowledge is unveiled only by a choice made cleanly, the cut that separates what is borrowed from what is truly known."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 4",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 41,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Beginning and the End",
+
+  "unity_line": "Read with Code 42, this is the seed thinking its first whole life, the unspent point that opens out into everything afterwards.",
+
+  "pair": {
+    "number": 42,
+    "card_name": "Moving to Perfection",
+    "hexagram_name": "Increase (I)",
+    "teaching": "Beside Moving to Perfection, the pair shows how a cycle starts and how it grows. This code is the contained spark that imagines the whole arc before a single move is made; its pair is the steady increase that turns the imagining into a lived shape. Diminishing into a point, then growing outward, is one breath."
+  },
+
+  "inverse": {
+    "number": 42,
+    "card_name": "Moving to Perfection",
+    "hexagram_name": "Increase (I)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and you stand inside Code 42, Moving to Perfection. The same six lines read the other way stop being the inward narrowing that holds a future whole and become the outward unfolding that gives that future its days."
+  },
+
+  "programming_partner": {
+    "number": 31,
+    "card_name": "Theater of Truth",
+    "teaching": "Across the genetic code, the partner here is Code 31, Theater of Truth. Imagination that contains every possible life is held by the voice that can call those lives into someone else's hearing. What they know together is that a vision kept private stays a seed, and a voice with nothing to summon is only noise looking for a body."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Origin",
+    "tarot": "0 - The Fool",
+    "siblings": [],
+    "teaching": "This is the only card in its ring, the single seat at the beginning and ending of the whole cycle. The ouroboros, the round that closes on itself. Standing alone means being the point no family explains, the unspent breath before the deck divides, and the silence it returns to once every other code has spoken."
+  },
+
+  "tarot": {
+    "card": "0, The Fool",
+    "teaching": "0 The Fool is the Tarot face here, the figure stepping off the cliff with nothing in the pack but the whole journey folded small. The image is the moment before anything has happened, when every road is still possible because none has been chosen. This code carries that same charge, the unspent beginning that contains its own ending already."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Lake",
+    "teaching": "Mountain above Lake, the still peak resting over the open bowl of feeling, a small held space where everything later in the cycle is quietly being dreamed."
+  },
+
+  "sky": {
+    "value": "Air",
+    "type": "element",
+    "teaching": "Air keys this ring, the element of breath and imagination, the medium in which a thing can exist whole before it has any weight at all."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao sits above on his backwards donkey, the elder who sees the road already walked; Li Tieguai rests below, joy and suffering in one hand. Together they teach that the seed of a life holds the memory of every cycle behind it and the medicine for the wound ahead."
+  },
+
+  "hebrew_letter": {
+    "letter": "Aleph",
+    "meaning": "The Ox, primal breath, the beginningless beginning",
+    "path_number": "11",
+    "path_connects": "Kether to Chokmah",
+    "teaching": "Aleph is the letter, the primal breath, and the path runs from Kether to Chokmah, the crown into the first wisdom. The letter teaches that this code is the silent inhale before any word, the unspoken point where pure source first leans toward becoming an idea of itself."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 41",
+    "generated": "relations-v1"
+  }
+}

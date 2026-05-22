@@ -1,0 +1,81 @@
+{
+  "number": 12,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Petals of Freedom",
+
+  "unity_line": "Held against Code 11, this is the long winter that makes the spring honest, the held breath that gives the next exhale its meaning.",
+
+  "pair": {
+    "number": 11,
+    "card_name": "Sol Star",
+    "hexagram_name": "Peace (T'ai)",
+    "teaching": "Sol Star is heaven and earth meeting in the middle and pouring into each other. This code is the same two forces standing apart, the sky above and the ground below with no traffic between them. Peace and stagnation share the same materials; only the direction of flow is different."
+  },
+
+  "inverse": {
+    "number": 11,
+    "card_name": "Sol Star",
+    "hexagram_name": "Peace (T'ai)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and you find Code 11, Sol Star. The same six lines read from the other end become the season of communion, which is why this code carries no despair in it. The standstill is already on its way to becoming peace."
+  },
+
+  "programming_partner": {
+    "number": 11,
+    "card_name": "Sol Star",
+    "teaching": "Across the genetic code, this pairing also runs with Code 11. The two are bound at every level, biological and symbolic, as a single rhythm of contraction and release. What this code holds back, its partner lets bloom, and neither knows its own work without the other."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Secrets",
+    "tarot": "2 - The High Priestess",
+    "siblings": [],
+    "teaching": "Only this code carries the Ring of Secrets, no siblings, no family to share the weight with. To stand alone in a ring is to be the whole keeping of a thing. Here, the thing kept is what cannot be said directly, carried in silence until the right hour arrives."
+  },
+
+  "tarot": {
+    "card": "II · The High Priestess",
+    "teaching": "The High Priestess sits between the two pillars with the scroll half-hidden in her lap. She does not explain, she withholds, and the withholding is the teaching. This code carries her stillness, the knowing that ripens precisely because it is not spoken."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Earth",
+    "teaching": "Heaven above, Earth below, each in its own place with no traffic between them, two forces present and entirely unmingled."
+  },
+
+  "sky": {
+    "value": "Moon",
+    "type": "planet",
+    "teaching": "The ring is keyed to the Moon, the planet of veiled knowing, of cycles that ripen in the dark and only show themselves when they are ready."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Zhongli Quan stands above, the general who stepped out of the field of action; He Xiangu stands below, the maiden who lived on moon-stone and asked for nothing. Together they teach that the standstill is not failure but withdrawal, two figures who chose silence and were nourished by it."
+  },
+
+  "hebrew_letter": {
+    "letter": "Gimel",
+    "meaning": "The Camel — the crossing, memory bridging worlds",
+    "path_number": "13",
+    "path_connects": "Kether to Tiphareth",
+    "teaching": "On the Tree, the path of this code's ring is Gimel, the Camel, running from the crown down to the heart. The letter teaches that this code carries something across a long dry stretch, holding its water inside until it reaches the place where speech is possible again."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 12",
+    "generated": "relations-v1"
+  }
+}

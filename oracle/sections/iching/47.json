@@ -1,0 +1,58 @@
+{
+  "number": 47,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Oppression",
+  "combination": "Lake sits over Water, but the water has drained out of the lake bed and gone down into the gorge below. What should hold has lost what it was holding. The trigrams that ought to feed each other are pulled apart: joy on the surface with nothing in it, danger underneath with nowhere to go. This is the shape of being hemmed in. A tree inside a wall, a body with the energy used up, a life with the channels closed.",
+  "upper_nature": "Lake, Dui. The youngest daughter. An open surface, mouth and vapor, the place where waters gather and where speech and laughter rise. Lake is exchange and ease. In this hexagram the lake bed shows because the water has gone, and the joy has become brittle on top.",
+  "lower_nature": "Water, Kan. The middle son. A ravine, a pit, a flow that moves through narrow places. Water is venture and risk, the deep where the test is. Below in this hexagram the water has dropped out of the lake and run down into the gorge, the danger sunk under the dryness above.",
+  "reading": "The situation this code names is the dry season of a life. The shape of it is a lake with no water in it, and the teaching is in that picture. The vessel that should be full is empty. The energy that should be moving is used up. You can see the lake bed now, every stone in it, and there is nowhere for anything to swim.\n\nThis is not the small tiredness of a long week. It is the larger kind. The kind where the things that used to nourish you do not, where speech does not reach the ear it was meant for, where you press on a door that does not open. The old ideogram is a tree inside a square, a tree that cannot put its branches out. Something in you knows that feeling. The walls are real. The constriction is real. Do not pretend otherwise.\n\nThe counsel here is not to break the wall by force. Force is what gets the third line into thorns. The counsel is inward. Become correct, become quiet, hold the inner thread. When the lake is dry, the well underneath it is still there, and the next hexagram is the well. This one is the going down to find it. Speak less. Trust the speech you do make to the few who can hear it, because most cannot, and that is part of the test. Live out your will from the inside, not from the outside. Stake your life on what you actually believe. The way through Oppression is not a way around it. It is straight down the middle of it, with your integrity intact.",
+  "judgement_lines": [
+    "Oppression. The way through is still open.",
+    "Held steady, the great person finds fortune, and is blameless.",
+    "Words spoken now will not be believed."
+  ],
+  "image_lines": [
+    "The lake holds no water.",
+    "So the one who would grow stakes the whole life on the will, and lives it out."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "sitting under a bare tree, gone into a dark valley.",
+      "reading": "The pressure is barely on yet and you are already going down. Three long years in the shade because you sat instead of stood. The exhaustion here is mostly given to itself. Do not resign so early. The hardship is small. What you do with it is what makes it large.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    },
+    {
+      "line": 2,
+      "image": "hemmed in among wine and food.",
+      "reading": "The table is full and you are still starving. Help is on its way, the red sash of the one who can move things. Receive it the way you would receive an offering, with quiet. Do not lunge for the change. Lunging now turns the rescue into a wound. Stay, and let the help arrive.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    },
+    {
+      "line": 3,
+      "image": "leaning on stone, gripping thorns.",
+      "reading": "An impasse you made yourself by reaching for the wrong things. Stone in front, thistles in the hand. You go home and the one you love is not there. This is the self-made oppression, the one where reason cannot find the heart it abandoned. The omen is poor. Stop reaching.",
+      "becomes": { "hexagram": 28, "name": "Great Preponderance" }
+    },
+    {
+      "line": 4,
+      "image": "coming slowly in a metal carriage.",
+      "reading": "You want to help and you cannot move quickly. The vehicle that should carry you is heavy and the road is long. There is shame in the slowness. There is also an end. Keep coming. The one you are coming toward is still waiting. The pace is the price, not the failure.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    },
+    {
+      "line": 5,
+      "image": "nose and feet cut off, hemmed in by officials.",
+      "reading": "Wounded above and below, blocked by the very people you serve. The strength is real and the position is right and still nothing moves. This is the great impasse. Do not try to break it. Dress in humility. Make the offering. Joy comes in slowly, a little at a time, the way light returns to a cold room.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    },
+    {
+      "line": 6,
+      "image": "bound by creeping vines on a high place.",
+      "reading": "Tangled in the vines of your own doubt, perched too high to climb down easily. Every move looks like the one you will regret. Regret it anyway. The repentance is the move. The thing that has held you here is finally something you can name, and naming is what lets you step. Go forward. It will be well.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/47", "generated": "iching-brief-v1" }
+}

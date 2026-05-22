@@ -1,0 +1,60 @@
+{
+  "number": 8,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Holding Together",
+  "combination": "Water rests on the earth. Rain has fallen and the ground has taken it in, and the water gathers in the low places, finding the rivers, finding the seas. Five broken lines and one whole one at the fifth place, a single firm centre with everything else yielding toward it. This is the shape of people coming into one body. Not forced. Drawn by the natural pull of low ground toward water, and water toward the low ground that holds it.",
+  "upper_nature": "Water, Kan. Broken, whole, broken. The middle son. Water moves where it is led and dissolves what stands in its way, but in the upper position here it is the visible outer life of the hexagram: the flow that finds its bed, the people gathering around what they trust.",
+  "lower_nature": "Earth, Kun. Broken, broken, broken. The mother. Pure yielding, the ground that takes whatever falls on it without refusing. Below, it is the inner condition of the hexagram: a willingness to receive, to be the basin, to hold what arrives without trying to hold it tighter than it wants to be held.",
+  "reading": "The situation this code names is the binding of a group around something true. A leader and a circle. A community finding its centre. A friendship deepening into trust. The image is water on earth, and the teaching is in that image: water does not announce itself. It runs to where the ground is lowest, and the ground does not grab. It opens, and the water comes.\n\nSo the question is never how to make people gather. It is whether the ground at the centre is sound. Whether what they would be gathering around is real. The Judgement says to ask again, to look at yourself the way you would look at an oracle, and check that the thing offered is steady, lasting, true. If it is, the uncertain ones drift in of their own accord. If it is not, no amount of pulling will hold them.\n\nThere is a warning folded into the picture too. The one who arrives last meets misfortune. Some windows close. A group forms, and the shape it takes hardens, and the person who hesitated until it was safe finds the door already shut. So the work is two-sided. Be the ground worth gathering on. And when the time is ripe, move.\n\nLook at the king on his hunt at line five. He drives the game on three sides and leaves the fourth side open. Whoever wants to run is allowed to run. Whoever wants to stay, stays. That is how a real bond is made. Voluntary. The moment you have to chase someone to keep them in the circle, the circle is already broken.",
+  "judgement_lines": [
+    "Holding Together is good fortune.",
+    "Look again, the way you would consult the oracle, and see if what is at the centre is steady, lasting, and true.",
+    "Then there is no fault.",
+    "The uncertain ones come in.",
+    "Whoever arrives too late finds the door shut."
+  ],
+  "image_lines": [
+    "On the earth is water.",
+    "So the wise ruler set up many cities, and stayed close to those who governed them."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a plain clay bowl filled to the brim.",
+      "reading": "What you bring to the gathering is sincerity, and that is enough. No ornament. No clever offering. Just an unadorned cup with the truth poured in. Hold to the other with honesty at the start, and what comes back, in the end, will be more than you asked for.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    },
+    {
+      "line": 2,
+      "image": "the bond rising from the inside.",
+      "reading": "The pull toward the other is real, but it has to come from your own centre, not from a wish to please. Before you reach outward, settle inward. Know what is yours. Then the holding-together you offer is not a giving-away of yourself. It is a meeting.",
+      "becomes": { "hexagram": 29, "name": "The Abysmal Water" }
+    },
+    {
+      "line": 3,
+      "image": "leaning on the wrong shoulders.",
+      "reading": "You have gathered with people who are not yours to gather with. Their direction is not your direction. It will not become your direction by force of how much time you spend together. There is no scolding in the line, only the picture. Notice. Then loosen the grip.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    },
+    {
+      "line": 4,
+      "image": "stepping outward toward the one above.",
+      "reading": "The bond is openly declared now, with someone outside your immediate circle who is further along than you. There is no shame in following the worthy. The flexibility in you finds the firmness in them, and both are made stronger by the meeting. Hold the line straight and it goes well.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    },
+    {
+      "line": 5,
+      "image": "the king's hunt with one side left open.",
+      "reading": "The centre of the whole hexagram, and the whole teaching turns on this line. The good leader drives the game on three sides and leaves the fourth side open. Those who wish to come, come. Those who wish to go, go. Bonds made without coercion are the only bonds that hold.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    },
+    {
+      "line": 6,
+      "image": "arriving with no head, no first step.",
+      "reading": "The wish to belong has come too late, or it has come without the start that any real belonging needs. There was a moment when the move would have been welcomed, and that moment is past. The line does not say cruel things. It just says the door is shut.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/08", "generated": "iching-brief-v1" }
+}

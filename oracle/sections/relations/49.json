@@ -1,0 +1,81 @@
+{
+  "number": 49,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Union in the Ashes",
+
+  "unity_line": "Set beside Code 50, this is the revolution that burns the old form down and the vessel that cooks a new one from what remains.",
+
+  "pair": {
+    "number": 50,
+    "card_name": "Melt Into Perfection",
+    "hexagram_name": "The Cauldron (Ting)",
+    "teaching": "With Melt Into Perfection, the pair is the I Ching's overturning of the old order and the sacred vessel that follows it. One throws down what can no longer hold the life inside it; the other receives the raw material and slowly cooks it into nourishment. A revolution without a cauldron is only wreckage."
+  },
+
+  "inverse": {
+    "number": 50,
+    "card_name": "Melt Into Perfection",
+    "hexagram_name": "The Cauldron (Ting)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines upside down and they become Code 50, Melt Into Perfection. The same arrangement read from the other end stops being the moment of overthrow and becomes the long patient work of refining what the fire has left behind."
+  },
+
+  "programming_partner": {
+    "number": 4,
+    "card_name": "Veils of Knowledge",
+    "teaching": "Through the genetic code, this card runs with Code 4, Veils of Knowledge. The one who burns the false structure down and the one who admits not yet knowing programme each other. What they hold together is the honesty that revolution requires, the willingness to overturn what no longer serves before any new certainty has arrived."
+  },
+
+  "codon_ring": {
+    "name": "Ring of the Whirlwind",
+    "tarot": "16 - The Tower",
+    "siblings": [55],
+    "teaching": "This code sits in the Ring of the Whirlwind with one sibling, Code 55. The family is the lightning that strikes the tower and the abundance that rises from the cleared ground. Here, this code is the strike itself, the necessary fire that makes room for what the ring's other half can then bring forth."
+  },
+
+  "tarot": {
+    "card": "XVI. The Tower",
+    "teaching": "The Tarot face here is XVI, The Tower, lightning splitting a structure that had grown too rigid to live in. The image is not catastrophe for its own sake but the sudden honesty that frees what was trapped inside the walls. This code carries the same shape, the strike that liberates by collapsing what was already false."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Fire",
+    "teaching": "Lake above Fire, joy meeting flame, water that has caught the heat and turned into steam, pressure rising until the lid will not hold."
+  },
+
+  "sky": {
+    "value": "Mars",
+    "type": "planet",
+    "teaching": "Mars carries this ring, the planet of direct action and the cut that decides, and this code is the moment Mars draws the line and refuses to keep negotiating with what is already dead."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai stands above, the wounded beggar whose gourd carries medicine for his own wound, and Lan Caihe sits below, the singer who refuses fixed shape. Together they teach that real change is led by those who know suffering already and will not be pinned by the form being broken."
+  },
+
+  "hebrew_letter": {
+    "letter": "Peh",
+    "meaning": "The Mouth — the word that shatters, revelation through rupture",
+    "path_number": "27",
+    "path_connects": "Netzach to Hod",
+    "teaching": "On the Tree, the ring stands on Peh, the mouth, running between Netzach and Hod across the horizontal path of breaking and re-speaking. The letter teaches that this code's revolution is not silent collapse but a word said clearly enough that the old structure cannot survive being named."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 49",
+    "generated": "relations-v1"
+  }
+}

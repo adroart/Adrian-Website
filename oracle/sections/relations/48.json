@@ -1,0 +1,81 @@
+{
+  "number": 48,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Doorways of the Unknown",
+
+  "unity_line": "Set beside Code 47, this is the deep source answering the long thirst, the well already there beneath the ground that nothing has reached.",
+
+  "pair": {
+    "number": 47,
+    "card_name": "Garden of Alchemy",
+    "hexagram_name": "Oppression (K'un)",
+    "teaching": "Garden of Alchemy is the exhaustion that comes from being pressed by what will not give. This code is the well dug below that pressure, the water table that has been waiting the whole time. The pair teaches that the way out of being squeezed is downward, not sideways, into a depth the surface never showed."
+  },
+
+  "inverse": {
+    "number": 47,
+    "card_name": "Garden of Alchemy",
+    "hexagram_name": "Oppression (K'un)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and the well becomes the squeeze of Code 47, Garden of Alchemy. The same six lines read the other way show that drawing from the source and being pressed by lack are one motion seen from above and from below."
+  },
+
+  "programming_partner": {
+    "number": 21,
+    "card_name": "Beyond Binary",
+    "teaching": "Across the genetic code, the partner is Code 21, Beyond Binary. The deep resourcefulness of this code is held by the one who can hold a clean authority over what belongs to them. Together they know that bringing something up from underneath only matters if there is also the strength to govern what gets done with it once it surfaces."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Matter",
+    "tarot": "4 - The Emperor",
+    "siblings": [18, 46, 57],
+    "teaching": "Inside the Ring of Matter, this code sits with Codes 18, 46, and 57, four cards that order the physical plane. Where the siblings carry correction, the body's delight, and the intuition that reads a room, this code is the well at the centre of the household, the source the other three are built around."
+  },
+
+  "tarot": {
+    "card": "IV, The Emperor",
+    "teaching": "The Emperor is the assigned arcana, and the version of that figure that lives here is not the conquerer but the keeper of the source. The throne sits over a well, and the rulership that matters is whether the water still rises clean for whoever comes asking. This code carries the office that is measured by what flows from underneath."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Wind",
+    "teaching": "Water above, Wind below, the gentle penetrating reach that goes down into the depths and brings the water back up through the wood of the bucket."
+  },
+
+  "sky": {
+    "value": "Aries",
+    "type": "sign",
+    "teaching": "Aries keys this ring, cardinal fire, the first push that breaks new ground and trusts the digging before the water shows."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with the sword that cuts through what the depths return; Han Xiangzi plays below, the breath that reaches hidden places without forcing. Together they teach that the source is reached by gentleness, and what rises is then sorted by a clear edge."
+  },
+
+  "hebrew_letter": {
+    "letter": "Heh",
+    "meaning": "The Window, the frame through which vision orders the world",
+    "path_number": "15",
+    "path_connects": "Chokmah to Tiphareth",
+    "teaching": "Heh is the letter, the Window, and the path runs from Chokmah to Tiphareth, raw wisdom into the heart that makes it usable. The letter teaches that the well is also a window, a frame cut into the ground through which higher knowing comes into a drinkable form."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 48",
+    "generated": "relations-v1"
+  }
+}

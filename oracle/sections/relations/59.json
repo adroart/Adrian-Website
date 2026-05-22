@@ -1,0 +1,81 @@
+{
+  "number": 59,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Mystics Treasures",
+
+  "unity_line": "Drawn close to Code 60, this is the wall between two people dissolving and the new vessel that forms to hold what crosses through.",
+
+  "pair": {
+    "number": 60,
+    "card_name": "Woven Light",
+    "hexagram_name": "Limitation (Chieh)",
+    "teaching": "Woven Light is the chosen bank, the edge that decides where a thing begins and ends. This code is the mist that drifts across the edge, the dissolving that lets two separate weathers become one. Without the limit there is only fog, and without the dispersing only a closed room. The pair is how intimacy actually happens."
+  },
+
+  "inverse": {
+    "number": 60,
+    "card_name": "Woven Light",
+    "hexagram_name": "Limitation (Chieh)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and dissolution reads as Code 60, Woven Light. The same six lines flipped show the other half of the same motion, the boundary that forms in the place where the dispersing has done its work, the shape that closeness takes once the wall has come down."
+  },
+
+  "programming_partner": {
+    "number": 55,
+    "card_name": "Untouched Perfection",
+    "teaching": "Across the genetic code, the partner here is Code 55, Untouched Perfection. The drive to dissolve the distance between two people is held by the mood that knows what it actually feels. Together they understand that real closeness only lands in someone not pretending, and the held-back inch goes nowhere until the heart is honest."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Union",
+    "tarot": "6 - The Lovers",
+    "siblings": [4, 7, 29],
+    "teaching": "Four cards weave the Ring of Union, this one with Codes 4, 7, and 29. The youthful asking, the discipline of belonging, the leap into depth, and here the dissolving that lets two finally become one room. This code is the family's threshold seat, the place where the wall between people comes down so intimacy can arrive."
+  },
+
+  "tarot": {
+    "card": "VI, The Lovers",
+    "teaching": "The Tarot face here is VI The Lovers, the arcana of meeting and choice. Two figures stand beneath a presence that blesses their bond, and the air between them no longer separates them. This code carries the same quality, the willingness to let the small distance go so what each one holds can pass to the other."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Water",
+    "teaching": "Wind above Water, the breath moving over the depth, the gentle force that scatters mist and lets the deep currents underneath find one another."
+  },
+
+  "sky": {
+    "value": "Gemini",
+    "type": "sign",
+    "teaching": "Gemini keys this ring, mutable air, the sign of the bridge and the doubled mind, and this code is the warmth that crosses the bridge before any word has been spoken."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays above, the youth whose flute settles wild things into listening, and Lü Dongbin stands below, the scholar whose sword cuts what is not true. Together they teach that closeness is gentle but never naive, music that opens the room and an eye for what is worth meeting."
+  },
+
+  "hebrew_letter": {
+    "letter": "Zain",
+    "meaning": "The Sword, the blade of discrimination that forces a choice",
+    "path_number": "17",
+    "path_connects": "Binah to Tiphareth",
+    "teaching": "Zain is the letter, the sword that asks which path the heart will take, and the path runs from the deep mother into the heart. The letter teaches that dissolving the distance between two is itself a choice, a cut made cleanly between staying closed and letting the other in."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 59",
+    "generated": "relations-v1"
+  }
+}

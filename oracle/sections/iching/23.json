@@ -1,0 +1,58 @@
+{
+  "number": 23,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Splitting Apart",
+  "combination": "Mountain rests on Earth. The peak is broad at its base and narrow at its crown, and here even that one peak is wearing down toward the ground that holds it. Five yielding lines have crept up from below and only one firm line is left at the top. The picture is late autumn, the year going thin, the form falling away from itself. What was built is being unbuilt, quietly, from underneath.",
+  "upper_nature": "Mountain, Gen. A still shape on the skyline. Stop, limit, the place where motion ends. Above, this trigram is the thing that has risen as high as it can. It does not push further. It holds its position, and waits, and watches the ground.",
+  "lower_nature": "Earth, Kun. Receptive, yielding, the ground itself. Below, this trigram is the wide soft base under everything. Here it is also the slow erosion working at the foundation. The earth carries the mountain, and the earth is what the mountain finally returns to.",
+  "reading": "The situation this code names is the time when a thing you built is coming undone from below. Not a clean ending. A wearing. Pieces of the foundation go first, so quietly you mistake the sound for nothing. Then a little more. The structure still looks like itself for a while after it has stopped being itself, which is the part that hurts.\n\nThe natural image is a mountain that has stood too long, with the soil at its base loosening. Or late autumn, when the leaves are gone and the year is thinning toward winter and there is no stopping it. The hexagram does not ask you to stop it. The counsel is the opposite. Stand still. Do not start anything. Do not push back against the going. Forces are moving against you that are not personal and not punishable, and meeting them with effort just feeds them.\n\nThere is one place where the teaching becomes practical. What is above stays in place by being generous to what is below. The mountain holds because the earth holds it. So if you are the one in the higher position here, the work is to share down. Give to your base. Make the ground under you wider. The way you survive a stripping season is to be the kind of thing the ground wants to keep.\n\nAnd the secret of this hexagram is the one line still standing. A seed in the fruit. The whole long season of loss is also a saving of one thing for what comes after.",
+  "judgement_lines": [
+    "Splitting Apart.",
+    "It does not help to go anywhere.",
+    "Stand where you are."
+  ],
+  "image_lines": [
+    "The mountain rests on the earth.",
+    "Those above hold their place by giving to those below."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the legs of the bed are gnawed.",
+      "reading": "It has begun at the floor. The damage is small enough to ignore, and that is the danger. Do not push your work forward from a base that is already going. The first cracks are not the failure. They are the warning. Notice. Do not yet act.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    },
+    {
+      "line": 2,
+      "image": "the frame of the bed cracks.",
+      "reading": "It has climbed. What held the shape of the thing is splitting now, and you have no one standing with you. To insist, to assert, to try and force the structure back into trueness from here is the wrong move. Yield. Stay low. Make no claim the situation cannot hold.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    },
+    {
+      "line": 3,
+      "image": "standing alone among those pulling it down.",
+      "reading": "You are placed inside the breaking, but your loyalty is upward, to what is still firm. You side, quietly, with the part that lasts. The others around you will not understand the move. They will read it as betrayal of them. No blame.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still" }
+    },
+    {
+      "line": 4,
+      "image": "the bed splits up to the skin.",
+      "reading": "The harm has reached the body. There is no more buffer. The thing you were resting on is gone and the wound is on you. This is not the moment to dignify with words like courage. Get out from under it. Quickly. Without performance.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    },
+    {
+      "line": 5,
+      "image": "a string of fishes led into the palace.",
+      "reading": "A turn. The yielding line at the center steps into order, and the rest follow as one threaded line. What was scattered force becomes a procession. Where there is a place to lead the falling, lead it. Bring it into form. Everything is helped.",
+      "becomes": { "hexagram": 20, "name": "Contemplation" }
+    },
+    {
+      "line": 6,
+      "image": "the great fruit left uneaten.",
+      "reading": "One yang at the top, the last firm line, the seed inside the fruit no one took. The whole stripping season was carrying this. From here the people gather under it again, and what was working against it strips its own house bare. Survival was the work.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/23", "generated": "iching-brief-v1" }
+}

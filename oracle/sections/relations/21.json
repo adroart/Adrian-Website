@@ -1,0 +1,81 @@
+{
+  "number": 21,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Beyond Binary",
+
+  "unity_line": "Set against Code 22, this is the lightning that cuts the knot and the grace that dresses the wound it leaves behind.",
+
+  "pair": {
+    "number": 22,
+    "card_name": "Treasure of the Way",
+    "hexagram_name": "Grace (Pi)",
+    "teaching": "With Treasure of the Way, the pair holds the two halves of how something gets done well. One bites cleanly through what is in the way; the other carries the bearing that makes the cutting beautiful instead of brutal. Decisive force on one side, the form that dignifies it on the other."
+  },
+
+  "inverse": {
+    "number": 22,
+    "card_name": "Treasure of the Way",
+    "hexagram_name": "Grace (Pi)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and you arrive at Code 22, Treasure of the Way. The same hexagram read from the other direction softens from biting through into the grace that holds composure once the obstacle is gone."
+  },
+
+  "programming_partner": {
+    "number": 48,
+    "card_name": "Doorways of the Unknown",
+    "teaching": "In the genetic code, the partner here is Code 48, Doorways of the Unknown. Decisive cutting is held by the depth that knows what was always beneath the obstruction. Together they teach that the right cut is only possible when the field beneath it has been thoroughly known."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [10, 17, 25, 38, 51],
+    "teaching": "Inside the Ring of Humanity, this code sits with 10, 17, 25, 38, and 51. The family carries the full human spectrum, and this seat is the decisive one, the willingness to bite through what no longer belongs. Where the others walk, opine, love, fight, and startle awake, this one severs."
+  },
+
+  "tarot": {
+    "card": "VII, The Chariot",
+    "teaching": "VII The Chariot is the Tarot face here, the upright driver pulled forward by opposing forces. The image is decisive movement that does not break apart under tension. This code carries the same charge, the moment when divided pressures are resolved by one clean act of will."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Thunder",
+    "teaching": "Fire over Thunder, the lightning above the rolling drum, illumination and shock arriving in the same instant as the strike that severs what was tangled."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer carries this ring, cardinal water, the tide that knows what to protect and what to release, decisive in defence of what it truly holds."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Above flickers Lan Caihe, the minstrel who refuses to be pinned to one shape; below stands Cao Guojiu, the noble who walked away from inherited power. Together they teach that the clean cut is made by those who will not be claimed and those who have already let go of what was supposed to be theirs."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence — the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "This code's ring stands on the path of Cheth, the fence, running from Binah down to Geburah. The letter teaches that decisive action is bounded action, understanding finding the exact shape it must take when it becomes severing force."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 21",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "number": 15,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Modesty",
+  "combination": "Earth above, Mountain below. The picture is strange on purpose. The mountain, which by every other reckoning stands taller than the field around it, is shown here as the inner thing, with the flat earth resting over it. A whole peak, hidden under the ground. That is the image of this code: a real strength tucked low, not erased, not displayed, simply not on top. The keeping still of the mountain becomes the engine, and the yielding earth becomes what others see.",
+  "upper_nature": "Earth, Kun. Three broken lines, the most yielding shape in the eight. It receives, carries, nourishes. It does not announce. When this trigram is on top, what the world meets first is softness, accommodation, the surface that gives way and supports at the same time.",
+  "lower_nature": "Mountain, Gen. Two broken lines under a single solid one. Stillness that has come to rest. It is steady, it does not move, it knows its own outline. Beneath, it is the unmoving core, the strength that has stopped trying to prove it is strength.",
+  "reading": "The situation this code names is the one where you have something real and the right move is to keep it low. Not hide it, not pretend it isn't there. Lower it. Stand it under the level of the ground around you and let the people walking across the field not even notice they are walking over a mountain.\n\nThe whole hexagram bends around that picture. There is a peak in you, and the teaching is that the peak rises further the lower it carries itself. This is the one hexagram where every line, all six, is read as good. That is rare. The I-Ching is usually warier than this. Something about modesty, in the old sense, hits the structure of how things actually work, and so the code reads through cleanly at every position.\n\nThe counsel is not self-erasure. Self-erasure is a different code, and it does not work. The counsel is to let the strength be the engine and the yielding be the face. Carry what you have without raising it. Finish what you start without making a show of finishing. When others come close, they should feel the steadiness before they ever see its size.\n\nThe old image is of a person who weighs things. They take from where there is too much and give to where there is not enough. They are not trying to be small. They are trying to make the field level. That is the real work this hexagram names, and the lowness is just the position you have to be in to do it. From above you cannot weigh anything fairly. You have to be in it."
+,
+  "judgement_lines": [
+    "Modesty gets through.",
+    "The one who carries it does not stop short.",
+    "There is a finish."
+  ],
+  "image_lines": [
+    "A mountain inside the earth.",
+    "So the one who would balance the field takes from where there is too much, and adds where there is too little."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the mountain beneath the mountain.",
+      "reading": "Modesty already, and then modesty under that. Held this low, the strength can cross the great river. The water that would have stopped a louder version of you does not even notice you have gone through it. Stay where the eye does not land. Begin from there.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    },
+    {
+      "line": 2,
+      "image": "the quiet bird that is heard anyway.",
+      "reading": "Something genuine has begun to make a sound on its own. You did not call attention to it. It carried. Hold the line you have been holding. Do not start performing the thing now that others have noticed. The good fortune here is in keeping the source true while the call goes out.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    },
+    {
+      "line": 3,
+      "image": "the strong one who keeps working and keeps low.",
+      "reading": "This is the line the whole hexagram leans on. You have done real work, and people have noticed the work, and the test is what you do next. Keep going. Do not collect the praise. The success is in carrying the same effort all the way to the end without changing posture once the field starts to listen.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    },
+    {
+      "line": 4,
+      "image": "modesty extended outward.",
+      "reading": "Everything you do here moves in the right direction, but only if you keep reaching the humility further. Toward the one above you, toward the one below you, toward the work itself. Do not stop at the kind of modesty that has already been seen. Push it past the place where it would have been enough.",
+      "becomes": { "hexagram": 62, "name": "Small Preponderance" }
+    },
+    {
+      "line": 5,
+      "image": "the leader who is not rich, and the neighbors come anyway.",
+      "reading": "You do not have to be the wealthiest, the loudest, the most furnished. People come because of what you actually are. There may be a moment here where you have to act with force against what will not bend on its own. That is allowed. Do not mistake softness for surrender.",
+      "becomes": { "hexagram": 39, "name": "Obstruction" }
+    },
+    {
+      "line": 6,
+      "image": "modesty announced, and the work turned inward.",
+      "reading": "At the top of the hexagram, the call of modesty has gone out further than the inner reality has gone. If force is to be used now, it can only be used on your own ground. Set your own house in order. Do not march on anyone else's. The teaching is to come back to the place that is actually yours, and start there.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still Mountain" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/15", "generated": "iching-brief-v1" }
+}

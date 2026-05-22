@@ -1,0 +1,58 @@
+{
+  "number": 11,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Peace",
+  "combination": "Earth sits over Heaven, which is upside down from the way the world looks. The heavy element is on top and the light element is below, so what is light rises and what is heavy settles, and the two pass through each other in the middle. This is the picture of communion. The small departs, the great arrives, and for a while everything that was meant to meet is meeting.",
+  "upper_nature": "Earth, Kun. Three broken lines. The receptive ground, the body of things, the dark soil that holds what is given. When this trigram is on top, the receiving surface is above, opened like a field waiting for the rising warmth to reach it.",
+  "lower_nature": "Heaven, Qian. Three unbroken lines. The originating force, the warmth, the upward push. When this trigram is below, the force is set under the world like a fire under a pot, and what it makes is not its own light but the steam that lifts.",
+  "reading": "The situation this code names is the season when things meet. The yang has worked its way underneath, the yin has settled overhead, and the natural exchange between them is happening on its own. You did not have to force this. You walked into a room and the air was already warm. The crops came in. The conversation went well without you steering it. This is what the old text calls the first month, the first breath of spring, when the cold ground finally takes the heat that has been gathering.\n\nThe teaching is not to confuse the gift with your own doing. Peace is a confluence. Heaven and earth are doing the work; you are inside the work. The counsel is to use the season well. Plant what needs planting. Bring people in. Make the alliances that only become possible when the air is open like this.\n\nAnd hold the second teaching at the same time, because it is in the hexagram from the first line on. No plain stays level. The wall that protects the city was built from the earth of the moat, and one day it will fall back into the moat. That is not a threat. It is the shape of all seasons. The wise thing while the warmth is here is to do the harvesting and the building and the reaching out, knowing that the same cycle that opened the door will close it. The work of peace is to use peace, not to defend it.",
+  "judgement_lines": [
+    "The small goes, the great comes.",
+    "Good fortune. Things move through.",
+    "Heaven and earth are meeting."
+  ],
+  "image_lines": [
+    "Heaven and earth commune, and there is Peace.",
+    "So the one who would lead measures out the gifts of heaven and earth, and helps the people live."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "pulling up a reed, and the connected roots come with it.",
+      "reading": "When you move now, you do not move alone. The roots are linked under the soil and your action draws others along by their own readiness. Go. The will here is not for yourself; it reaches further than your own house. This is the right hour for the first step.",
+      "becomes": { "hexagram": 46, "name": "Pushing Upward" }
+    },
+    {
+      "line": 2,
+      "image": "crossing the river on foot, holding what is rough.",
+      "reading": "Make room for the unrefined. Do not flinch from the crossing. Do not forget the ones who are far off, and do not bend toward the friends who are close. Walking the middle here means a wide heart and a firm step at once. Both, in the same body.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    },
+    {
+      "line": 3,
+      "image": "no flat ground without its slope, no going without a return.",
+      "reading": "The turn is in the season. You feel it under the good weather. Do not grieve the truth of it. Stay upright through what comes, eat the food in front of you, keep faith with what you know is real. Difficulty here is not punishment. It is the border showing itself.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    },
+    {
+      "line": 4,
+      "image": "fluttering down, not rich, with the neighbours.",
+      "reading": "The wealth has thinned. What you have now is the people beside you, and they come without being called, because their hearts already wanted what yours wants. No warning. No bargain. Just the same wish moving through several lives at once. Trust that.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    },
+    {
+      "line": 5,
+      "image": "the sovereign gives his sister in marriage.",
+      "reading": "The high one steps down to meet the lower one as an equal, and a real alliance is made. Not a treaty. A binding. This is how peace becomes generative: when rank lays itself aside long enough to make a true pair. Great good fortune, because the centre is willing to move.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    },
+    {
+      "line": 6,
+      "image": "the wall falls back into the moat it was dug from.",
+      "reading": "The season has run. The earth of the rampart returns to the ditch, and force cannot rebuild what time has already turned. Do not call up an army. Do not push your orders out past your own gate. Speak inside your house, accept the regret, and let the next season come.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/11", "generated": "iching-brief-v1" }
+}

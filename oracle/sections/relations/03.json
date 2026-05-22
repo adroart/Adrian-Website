@@ -1,0 +1,81 @@
+{
+  "number": 3,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Messengers of the Infinite",
+
+  "unity_line": "Read alongside Code 4, this is the whole arc of first arrival, the breakthrough and the long apprenticeship that comes after.",
+
+  "pair": {
+    "number": 4,
+    "card_name": "Veils of Knowledge",
+    "hexagram_name": "Youthful Folly (Meng)",
+    "teaching": "Together with Veils of Knowledge, these two are the deck's opening drama of new life. One is the messenger crashing in through the storm, the other is the bewildered student who must now learn what just arrived. Beginning and not-yet-knowing are the same moment, seen from two sides."
+  },
+
+  "inverse": {
+    "number": 4,
+    "card_name": "Veils of Knowledge",
+    "hexagram_name": "Youthful Folly (Meng)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and you find Code 4, Veils of Knowledge. The same difficulty read from the other end becomes the confusion of the receiver rather than the strain of the one breaking through."
+  },
+
+  "programming_partner": {
+    "number": 50,
+    "card_name": "Melt Into Perfection",
+    "teaching": "Across the genetic code, this pairing runs with Code 50, Melt Into Perfection. The messenger that arrives in difficulty is held by the keeper of inherited form, and what they know together is that every new transmission must pass through what was already cooking, or it dissolves."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [20, 23, 24, 27, 42],
+    "teaching": "Within the Ring of Life and Death, this code stands as the moment of arrival. Its siblings, 20, 23, 24, 27, and 42, carry the rest of the cycle: presence, the speaking through, the return, the nourishing, and the finishing. Together they hold the whole span from first breath to last."
+  },
+
+  "tarot": {
+    "card": "XIII · Death",
+    "teaching": "The Tarot card here is XIII Death, and the resonance is exact in a way that surprises. The card is not ending but passage, the threshold every new thing crosses to enter the world. This code is what is being born on the other side of that crossing."
+  },
+
+  "trigrams": {
+    "upper": "Water",
+    "lower": "Thunder",
+    "teaching": "Water over Thunder, the deep flood above the first crack of arousing force, pressure and breakthrough meeting in one motion."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "Scorpio carries this ring, the fixed water that holds death and rebirth as a single substance, depth that does not let go."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Lü Dongbin stands above with his sword of discernment, Cao Guojiu below having walked away from the inherited court. Together they teach that a true messenger cuts illusion and renounces borrowed authority before what arrives can be trusted."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish — transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "The ring's path is Nun, the Fish, running from the heart of the Tree to Netzach. The letter teaches that this code's message survives every change of form, as a fish keeps its life inside moving water."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 3",
+    "generated": "relations-v1"
+  }
+}

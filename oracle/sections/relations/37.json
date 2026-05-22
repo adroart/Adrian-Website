@@ -1,0 +1,81 @@
+{
+  "number": 37,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Journey Home",
+
+  "unity_line": "Held alongside Code 38, this is the warm hearth that gathers its people and the lone voice that argues for them from outside the door.",
+
+  "pair": {
+    "number": 38,
+    "card_name": "Inner Light Symphony",
+    "hexagram_name": "Opposition (K'uei)",
+    "teaching": "Beside Inner Light Symphony, the pair holds the human picture of belonging. One is the family circle that knows itself and the bonds it lives by; the other is the soul who must stand at odds with the room to find what it is here to fight for. Inside and outside the family, one teaching from two seats."
+  },
+
+  "inverse": {
+    "number": 38,
+    "card_name": "Inner Light Symphony",
+    "hexagram_name": "Opposition (K'uei)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines over and they become Code 38, Inner Light Symphony. The same six lines read from the other end are no longer the hearth that holds its own but the lone struggle of the one who cannot rest inside what is given."
+  },
+
+  "programming_partner": {
+    "number": 40,
+    "card_name": "Eternal Wellspring",
+    "teaching": "Across the genetic code, this pairing runs with Code 40, Eternal Wellspring. The family-builder and the one who knows when to withdraw from the family programme each other, and what they hold together is the rhythm of belonging. A bond is only kept alive by the right to step out of it and return."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Divinity",
+    "tarot": "5 - The Hierophant",
+    "siblings": [22, 36, 63],
+    "teaching": "This code sits in the Ring of Divinity with Codes 22, 36, and 63. The family is small and exact, holding grace, the long passage through the dark, the sacred bond of kin, and the first inquiry toward source. Here, this code is the warmth at the centre, the table the ring's other teachings gather around."
+  },
+
+  "tarot": {
+    "card": "V , The Hierophant",
+    "teaching": "V The Hierophant carries this code's Tarot face. The figure is the one who keeps the inner teaching alive through lineage, who blesses what passes between hands across generations. This code is that same transmission lived at human scale, the way a family quietly hands its real instruction down at the kitchen table."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Fire",
+    "teaching": "Wind over Fire, the gentle breath above feeding the warmth below, the air of the room keeping the hearth alive without ever crowding the flame."
+  },
+
+  "sky": {
+    "value": "Taurus",
+    "type": "sign",
+    "teaching": "Taurus keys this ring, fixed earth, the steady body that builds a home slowly and trusts what it can taste, touch, and return to."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi stands above with his flute, the gentle music that settles whatever it enters, and Lan Caihe sits below, the wandering singer who refuses every fixed shape. Together they teach that a family is held by music more than rule, by an atmosphere everyone recognises."
+  },
+
+  "hebrew_letter": {
+    "letter": "Vav",
+    "meaning": "The Nail — the pin that connects heaven to earth",
+    "path_number": "16",
+    "path_connects": "Chokmah to Chesed",
+    "teaching": "Vav is the ring's letter, the nail, running on the Tree from Chokmah down into Chesed. The letter teaches that family is the pin between what is wise and what is kind, the small hinge through which the higher teaching is fastened into the daily love that lives it out."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 37",
+    "generated": "relations-v1"
+  }
+}

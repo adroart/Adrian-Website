@@ -1,0 +1,81 @@
+{
+  "number": 18,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Liberation of the Greater",
+
+  "unity_line": "Set beside Code 17, this becomes the long quiet work of mending what was inherited, the repair that lets a clear thing be followed again.",
+
+  "pair": {
+    "number": 17,
+    "card_name": "Peral of Christos",
+    "hexagram_name": "Following (Sui)",
+    "teaching": "Held with Peral of Christos, these two are the I Ching's pairing of leading and repairing. One offers something worth being followed; the other returns to what was broken in earlier lines and slowly restores it. A line clear enough to follow is always a line that has been mended somewhere upstream."
+  },
+
+  "inverse": {
+    "number": 17,
+    "card_name": "Peral of Christos",
+    "hexagram_name": "Following (Sui)",
+    "is_self_inverse": false,
+    "teaching": "Read end to end the other way, the lines become Code 17, Peral of Christos. The pair and the inverse are the same card here, which is its own teaching. Repair and right following are one motion, read from either side of the work."
+  },
+
+  "programming_partner": {
+    "number": 17,
+    "card_name": "Peral of Christos",
+    "teaching": "Through the genetic code, this same pairing runs as programming partners. One sees what is worth following forward; the other returns to clear the residue still clinging from before. Together they know that a clean future cannot be led from a past that has not yet been faced."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Matter",
+    "tarot": "4 - The Emperor",
+    "siblings": [46, 48, 57],
+    "teaching": "Inside the Ring of Matter, this code is the patient correction that the body itself asks for. Its siblings are 46, the delight of being in form, 48, the depth that feeds, and 57, the intuition that listens through the bones. The Emperor's ring tends the physical foundation, and this code is the part that does the unglamorous repair."
+  },
+
+  "tarot": {
+    "card": "IV, The Emperor",
+    "teaching": "The Emperor sits on a stone seat, ordering his domain not by force but by attending to what has fallen out of place. This code carries the same quality, the willingness to take responsibility for what others left unfinished. Sovereignty here is the work of restoration, not conquest."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Wind",
+    "teaching": "Mountain above, Wind below, the still summit pressed onto the gentle current, an old weight settling into what is supple enough to be reshaped."
+  },
+
+  "sky": {
+    "value": "Aries",
+    "type": "sign",
+    "teaching": "Aries keys this ring, cardinal fire, the spark that initiates new work, here turned toward the labour of beginning again where another stopped."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao sits above, the hermit who faces backward to see where the road came from, and Han Xiangzi moves below, his flute coaxing the wild into shape. Together they teach that repair needs both the long look behind and the gentle breath that can enter a stiff place without forcing it open."
+  },
+
+  "hebrew_letter": {
+    "letter": "Heh",
+    "meaning": "The Window — the frame through which vision orders the world",
+    "path_number": "15",
+    "path_connects": "Chokmah to Tiphareth",
+    "teaching": "On the Tree, the path of this code's ring is Heh, the Window, running from wisdom down to the heart of the Tree. The letter teaches that the repair this code carries begins with seeing clearly through the frame of what is, not with reaching for what should have been."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 18",
+    "generated": "relations-v1"
+  }
+}

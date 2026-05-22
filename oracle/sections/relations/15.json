@@ -1,0 +1,81 @@
+{
+  "number": 15,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Ordinary Valiance",
+
+  "unity_line": "Beside Code 16, this is humility ripening into the moment it sings, the bowed head and the rising voice as one gesture.",
+
+  "pair": {
+    "number": 16,
+    "card_name": "Grand Rising",
+    "hexagram_name": "Enthusiasm (Yu)",
+    "teaching": "Grand Rising is what this code becomes when modesty has finally gathered enough to move. One is the patient lowering that makes greatness possible; the other is the burst of music when the ground itself begins to dance. Quietness and exuberance share a single root."
+  },
+
+  "inverse": {
+    "number": 16,
+    "card_name": "Grand Rising",
+    "hexagram_name": "Enthusiasm (Yu)",
+    "is_self_inverse": false,
+    "teaching": "Turn this code end for end and you find Code 16, Grand Rising. The same arrangement read upward becomes the burst of celebration that follows long quiet labour, modesty showing its other face as music."
+  },
+
+  "programming_partner": {
+    "number": 10,
+    "card_name": "Internal Treasure",
+    "teaching": "Through the genetic code this pairing runs with Code 10, Internal Treasure. The one who keeps stature low is matched by the one who walks each step in a way only theirs, and together they know humility is not smallness but loyalty to the inner shape."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Seeking",
+    "tarot": "9 - The Hermit",
+    "siblings": [39, 52, 53, 54, 58],
+    "teaching": "Six cards walk this ring as fellow seekers, this one beside Codes 39, 52, 53, 54, and 58, provocation, stillness, gradual progress, ambition, and aliveness. Each is a step taken alone that quietly serves the whole. This code is the ring's bow before the road begins."
+  },
+
+  "tarot": {
+    "card": "IX · The Hermit",
+    "teaching": "The Hermit walks at his own pace with a lantern that throws only enough light to see the next stone. The arcana carries the same quality this code carries, a strength that does not advertise itself and a wisdom that becomes visible only to those willing to slow down."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Mountain",
+    "teaching": "Earth resting over Mountain, the open ground lying above the still peak, the highest thing in the land choosing to keep itself low."
+  },
+
+  "sky": {
+    "value": "Virgo",
+    "type": "sign",
+    "teaching": "Virgo holds this ring, mutable earth refining through small careful labour, the sign that finds its dignity in doing the ordinary thing well."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Above sits He Xiangu, living on moon-stone and asking for nothing; below rides Zhang Guolao on his donkey turned backwards, keeping his eyes on where he came from. Together they teach that valiance asks little and remembers everything."
+  },
+
+  "hebrew_letter": {
+    "letter": "Yod",
+    "meaning": "The Hand — the closed fist holding the seed in withdrawal",
+    "path_number": "20",
+    "path_connects": "Chesed to Tiphareth",
+    "teaching": "The path here is Yod, the closed hand holding the seed in withdrawal, running from Chesed down to Tiphareth. The letter teaches that this code's strength is gathered, not spent, kept small in the palm until its season arrives."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 15",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "number": 26,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Great Taming",
+  "combination": "Mountain sits over Heaven. The whole sky and all its weather is held inside the bowl of a mountain range, the way clouds bank between peaks and rain accumulates before it falls. The greater force is below, still climbing. The stiller, smaller form is above, holding it in. Nothing is being stopped here in the sense of cancelled. The motion is being stored. What is gathered in this image is not stillness but pressure, a strength growing under cover.",
+  "upper_nature": "Mountain, Gen. The youngest son. A solid line above two yielding, the shape of something that has come to rest at the top. Quiet, dense, immovable, the limit a thing meets and stops at. When this trigram is on top, it makes a lid, a holding edge, a boundary the inner force runs up under.",
+  "lower_nature": "Heaven, Qian. Three unbroken lines. The originating force, ceaseless, untiring, the same engine the first hexagram is made of. Below, in this code, that motion is the inner pressure. It does not slow because a mountain sits on it. It keeps moving, and the moving is what gets stored.",
+  "reading": "The situation this code names is the long containment of a great power. Not its suppression. Its keeping. There is a force in you that wants to ride out into the world, and the time for that ride has not yet come. The whole hexagram is the lesson of what to do in the meantime.\n\nThe image is heaven inside the mountain. Sky weather, lightning, sun, rain, the whole vast atmosphere, all of it sitting inside a single peak. That is the picture of you in this season. The outside looks still. The inside is everything. What is happening under the surface is the slow accumulation of substance, character, knowledge, ability, virtue. The old word for it is taming, but taming here does not mean breaking. It means the way a young animal is raised before it has to do its work, the way a horse is trained before it carries a rider into difficult country.\n\nThree counsels run through this code. Hold the impulse that would spend the power too soon. Practice the daily disciplines, the unglamorous ones, that make a person ready. And do not eat at home. That last phrase is the strange one and it matters. It means do not stay sealed inside your own household, your own circle, your own self. Take the gathered strength out into the wider world and let it be used by something larger than your own kitchen. The mountain is for storing the fire. It is not for hiding it.",
+  "judgement_lines": [
+    "Great Taming. It furthers one to be firm.",
+    "Do not eat at home. Good fortune.",
+    "It furthers one to cross the great water."
+  ],
+  "image_lines": [
+    "Heaven inside the mountain. The image of Great Taming.",
+    "So the one who would grow studies the words and deeds of those who came before, and builds the self that way."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "danger at the gate, and a wise foot that does not step.",
+      "reading": "The pressure to move is on you, and the conditions are wrong. Stop. There is no shame in this halt. It is the first act of the whole code, the moment the held strength learns it is held. Do not test the door. Step back, take the time, and let the season turn under you.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 2,
+      "image": "the carriage with its axle pin removed.",
+      "reading": "The wheels and the cart are still there, but the part that lets them move has been quietly taken out. Something in you knew not to go. There is no resentment in this. The stop is the wisdom of the position, not a failure. Sit with the unmoving cart. The road is not finished being made.",
+      "becomes": { "hexagram": 22, "name": "Grace" }
+    },
+    {
+      "line": 3,
+      "image": "a good horse giving chase down a hard road.",
+      "reading": "Now the moving is allowed, and the moving is fast. Two strong things race together and the way is rough. Train daily. Practice the driving and the defending. The risk is not the speed. It is forgetting that speed without preparation breaks at the first turn. Carry the discipline with the gallop.",
+      "becomes": { "hexagram": 41, "name": "Decrease" }
+    },
+    {
+      "line": 4,
+      "image": "the headboard set on the horns of a young bull, before the horns have come in.",
+      "reading": "A small piece of wood, attached early, before there is anything to gore with. This is the cleanest line in the hexagram. Catch the strength while it is still incipient and shape its limit then. What is restrained before it becomes dangerous never has to be fought. Great good fortune. There is joy in this.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 5,
+      "image": "the tusks of a gelded boar.",
+      "reading": "The tusks are still there, sharp and hard. The aggression behind them is gone. You do not have to break a strong thing to make it safe. You can change the heat that drives it and leave the form intact. This is taming at its subtlest, the kind that does not look like taming from outside.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    },
+    {
+      "line": 6,
+      "image": "the open road of heaven.",
+      "reading": "The long containment is over. What was stored is released, and the way ahead opens out wide as the sky. The mountain has done its work. The fire is ready and the road will hold it. This is the line the whole hexagram has been building toward, the quiet years cashed in at last.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/26", "generated": "iching-brief-v1" }
+}

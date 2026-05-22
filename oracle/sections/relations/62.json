@@ -1,0 +1,81 @@
+{
+  "number": 62,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Voice of Nature",
+
+  "unity_line": "Sounded against Code 61, this is the small true voice carrying the inner certainty out into the world where it can be heard.",
+
+  "pair": {
+    "number": 61,
+    "card_name": "Celestial Remembrance",
+    "hexagram_name": "Inner Truth (Chung Fu)",
+    "teaching": "Celestial Remembrance is the truth held in the heart, the quiet certainty before any word is spoken. This code is what carries that truth out across the open air, the small precise sound that crosses the valley because the silence behind it is honest."
+  },
+
+  "inverse": {
+    "number": 62,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn these lines and the shape holds. This code is one of the eight that meets its own reflection, and the meaning sits in the picture. A small true voice crossing a great stillness sounds the same coming or going."
+  },
+
+  "programming_partner": {
+    "number": 61,
+    "card_name": "Celestial Remembrance",
+    "teaching": "In the genetic code the partner is again Code 61, Celestial Remembrance. The pairing is functional. Inner certainty alone has no way out of the chest, and a small voice with nothing to say carries nothing across. Together they do the actual work of making truth audible."
+  },
+
+  "codon_ring": {
+    "name": "Ring of No Return",
+    "tarot": "20 - Judgement",
+    "siblings": [31],
+    "teaching": "Inside the Ring of No Return this code sits with one other, Code 31, the one who leads by quiet influence. The ring is small because the threshold it names is absolute. Once a truth has been sounded, or once a leader has been answered, the room cannot return to the version of itself that came before."
+  },
+
+  "tarot": {
+    "card": "XX, The Aeon",
+    "teaching": "The Aeon is the Thoth name for Judgement, and the picture is the trumpet sounding across the field of the dead, calling what is finished to rise into a new age. This code carries that same office at intimate scale, the small clear note that names what has changed and asks the room to stand up to it."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Mountain",
+    "teaching": "Thunder above and Mountain below, the sudden rolling sound breaking out over the great stillness, movement crossing what does not move."
+  },
+
+  "sky": {
+    "value": "Fire",
+    "type": "element",
+    "teaching": "The ring is keyed to Fire, the element of sudden transforming light, the heat that ends one age and begins another in the same instant."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu rolls above, the noble who left the court because the truth he carried did not fit it. Zhang Guolao rests below, the old hermit who rides backward and reads the country plainly. The small honest voice belongs to one who walked out, sounding over one who looks back."
+  },
+
+  "hebrew_letter": {
+    "letter": "Shin",
+    "meaning": "The Tooth, fire, the transforming flame of a new age",
+    "path_number": "31",
+    "path_connects": "Hod to Malkuth",
+    "teaching": "Shin is the letter, the Tooth of fire, and the path runs from Hod down into Malkuth, intellect into the ground where the body actually lives. The letter teaches that the small true voice is a transforming flame, the word that lands in the world and changes what it touches."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 62",
+    "generated": "relations-v1"
+  }
+}

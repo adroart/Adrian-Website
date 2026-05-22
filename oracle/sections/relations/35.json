@@ -1,0 +1,81 @@
+{
+  "number": 35,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Navigational Star",
+
+  "unity_line": "Held against Code 36, this is the sunrise that keeps climbing and the dusk that keeps faith, one light arc lived from both ends.",
+
+  "pair": {
+    "number": 36,
+    "card_name": "Crystal Creation",
+    "hexagram_name": "Darkening of the Light (Ming I)",
+    "teaching": "With Crystal Creation, the pair is the I Ching's day and night of the same journey. One is the sun rising above the ground, growing brighter as it advances; the other is the sun gone underground, keeping its light alive through the long darkening. Together they say a true course is walked in both weathers."
+  },
+
+  "inverse": {
+    "number": 36,
+    "card_name": "Crystal Creation",
+    "hexagram_name": "Darkening of the Light (Ming I)",
+    "is_self_inverse": false,
+    "teaching": "Read these lines from the other end and you arrive at Code 36, Crystal Creation. The same arrangement turned over stops being progress in clear daylight and becomes the discipline of holding inner brightness while the outer world goes dim."
+  },
+
+  "programming_partner": {
+    "number": 5,
+    "card_name": "The Space Between Time",
+    "teaching": "Through the genetic code, this card runs with Code 5, The Space Between Time. The forward star is held by the rhythm that waits well, and what the two know together is that real advance is not a sprint but a cadence. Movement and patience programme each other so that progress arrives without exhausting itself."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Miracles",
+    "tarot": "11 - Strength",
+    "siblings": [],
+    "teaching": "This code stands alone inside the Ring of Miracles, no siblings, the whole family carried on one back. The ring is the hunger that, met fully, opens into boundlessness, and this card is its single seat. To carry a ring by oneself is to be the entire teaching, the spark and the field both."
+  },
+
+  "tarot": {
+    "card": "XI , Lust",
+    "teaching": "In the Thoth deck this card is named Lust rather than Strength, and the older Thoth title fits better. The image is a woman riding the great beast without subduing it, appetite and life-force gathered into a single forward motion. This code carries the same shape, hunger as fuel for the rising arc."
+  },
+
+  "trigrams": {
+    "upper": "Fire",
+    "lower": "Earth",
+    "teaching": "Fire above Earth, the sun cresting the horizon line, brightness rising clear of the ground it has just been hidden inside."
+  },
+
+  "sky": {
+    "value": "Leo",
+    "type": "sign",
+    "teaching": "Leo carries this ring, fixed fire, the sign that knows its light is meant to be seen and walks forward without dimming itself to be smaller."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Fire",
+      "name": "Lan Caihe",
+      "virtue": "The wandering minstrel of uncertain gender"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Above moves Lan Caihe, the minstrel singing forward and never pinned to one shape; below sits He Xiangu, sustained by moon-stone and content to want nothing else. Together they teach that the bright climb is held by quiet sufficiency, song above an unhurried ground."
+  },
+
+  "hebrew_letter": {
+    "letter": "Teth",
+    "meaning": "The Serpent — the creative fire coiled at the base, courage",
+    "path_number": "19",
+    "path_connects": "Geburah to Chesed",
+    "teaching": "The ring stands on the path of Teth, the coiled serpent of base-fire, running from Geburah across to Chesed. The letter teaches that this code's forward motion is courage uncoiled, severity opening into mercy as the climb itself, fire that has chosen to rise rather than strike."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 35",
+    "generated": "relations-v1"
+  }
+}

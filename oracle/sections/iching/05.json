@@ -1,0 +1,58 @@
+{
+  "number": 5,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Waiting",
+  "combination": "Water sits over Heaven. The clouds have already gathered above, but the rain has not yet fallen. Below, the creative force is fully assembled, ready to go, and ahead of it lies a stretch of danger it cannot push through. The hexagram holds that exact moment: everything is in place, nothing has dropped. What this code names is the patience that belongs to the strong, the kind that knows the rain is coming and does not run out into the field to summon it.",
+  "upper_nature": "Water, Kan. Broken, unbroken, broken. The stream, the abyss, the place where the ground gives way. When this trigram sits on top, the outer situation is risky and uncertain. Something has to be passed through, and it cannot be forced. The water knows the way down.",
+  "lower_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The same originating force from the first hexagram, now in the inner position. It is the engine, the readiness, the strength already gathered. Below, this trigram is a charged stillness, the muscle waiting under the skin for a season it has not yet been given.",
+  "reading": "The situation this code names is the gap between the storm and its breaking. The clouds are there. You can see them. The work is done, the strength is assembled, the thing wants to happen. And the rain has not come. The mistake the strong make in this place is to think their strength is the answer. It is not. The answer is the sky, and the sky moves on its own time.\n\nThe picture the hexagram gives is a person at a banquet, waiting. Not pacing, not anxious, not bargaining with the weather. Eating, drinking, of good cheer. That image is the whole teaching. Real patience is not the absence of motion. It is the body kept fed and the spirit kept warm while the outer world finishes its own work. The danger ahead is real. You will have to cross it. But you cross when the water is ready to be crossed, not when your impatience says so.\n\nThe counsel is to stay where the ground is firm. Do not creep closer to the edge thinking that nearness is progress. The fifth line, the heart of the hexagram, is the one who waits with food and wine. Steady, centred, sincere. From that place the great river can be crossed. From the mud at the brink it cannot. Your faith is what holds the line, not your effort. The rain knows the way down. You only have to be there when it comes.",
+  "judgement_lines": [
+    "Waiting, with sincerity in it, comes through clear and bright.",
+    "Held steady, it turns to good fortune.",
+    "It favours the crossing of the great water."
+  ],
+  "image_lines": [
+    "Clouds rise to heaven. Waiting.",
+    "So the one who knows the time eats, drinks, and keeps good cheer."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "waiting out on the open ground, far from the river.",
+      "reading": "You are nowhere near the danger yet. Stay there. The work right now is to hold to what you were already doing, the daily thing, the constant thing. Do not move closer to test the water. Keep to your own ground, keep your purpose true, and no error finds you.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    },
+    {
+      "line": 2,
+      "image": "waiting on the sand near the stream.",
+      "reading": "Closer now. The water is in sight. Voices start. A little gossip, a small criticism, the small injury of being spoken against. Do not answer it. The sand is not yet the mud. Hold the inner centre, let the talk pass over you, and the end of this turns out well.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 3,
+      "image": "waiting in the mud at the brink.",
+      "reading": "You moved too soon. The ground is no longer solid. From here, every push forward sinks you and draws what wants to harm you. The trouble was not waiting for you. You walked it in. Be careful and respectful now. Do not add force. Caution is the only door out.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 4,
+      "image": "waiting in the place of blood.",
+      "reading": "You are inside the danger. There has been a wound, real or coming. This is not the place for fight. Yield. Listen. Follow the one who is stronger and clearer than you here. There is a way out of the pit, but only for the one who stops insisting on their own strength.",
+      "becomes": { "hexagram": 43, "name": "Breakthrough" }
+    },
+    {
+      "line": 5,
+      "image": "waiting at meat and drink.",
+      "reading": "The line at the heart of the whole code. Centred, correct, fed. You are inside the danger and you are eating at the table. Not in denial of the trouble, just no longer ruled by it. From this composure the great water is crossed. Stay sincere. The fortune is already moving toward you.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    },
+    {
+      "line": 6,
+      "image": "fallen into the cave, and three unhurried guests arrive.",
+      "reading": "You went deeper than you meant to. The waiting is over and the help is not the help you imagined. Three figures come without being called. They look like an intrusion. Honour them. Receive them as if they belonged in your house. The end of this is good, but only if you bow first.",
+      "becomes": { "hexagram": 9, "name": "Small Taming" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/05", "generated": "iching-brief-v1" }
+}

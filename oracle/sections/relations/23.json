@@ -1,0 +1,81 @@
+{
+  "number": 23,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Beneath the Surface",
+
+  "unity_line": "Paired with Code 24, this is the long letting fall and the soft turning back, the work of distilling and the first warm breath of return.",
+
+  "pair": {
+    "number": 24,
+    "card_name": "Frequency Flutter",
+    "hexagram_name": "Return (Fu)",
+    "teaching": "Set beside Frequency Flutter, these two are the I Ching's image of the turn at the bottom of the year. One is the slow shedding of everything that cannot stay, the other is the single new shoot returning through frozen ground. Letting fall and coming back are the same act, sensed from either side of the lowest point."
+  },
+
+  "inverse": {
+    "number": 24,
+    "card_name": "Frequency Flutter",
+    "hexagram_name": "Return (Fu)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and you land in Code 24, Frequency Flutter. The same six lines read from the other end stop being the long peeling away and become the quiet return of what was kept underground while the rest fell."
+  },
+
+  "programming_partner": {
+    "number": 43,
+    "card_name": "Cipher of Knowledge",
+    "teaching": "Across the genetic code, this pairing runs with Code 43, Cipher of Knowledge. The distiller and the one who finally hears the inner answer programme each other, and what they know together is that insight only lands when there is room for it. Empty the drawer, then the breakthrough has somewhere to sit."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [3, 20, 24, 27, 42],
+    "teaching": "Inside the Ring of Life and Death, this code carries the work of refining. Its siblings, 3, 20, 24, 27, and 42, hold arrival, presence, return, nourishing, and finishing, while this one is the slow burn between them that strips away what was never essential. The ring needs this fire or nothing in it would ripen."
+  },
+
+  "tarot": {
+    "card": "XIII, Death",
+    "teaching": "The Tarot card here is XIII Death, and it fits this code exactly. The image is not annihilation but the patient stripping of form, the skeleton walking through what falls away. This code is what happens inside that walking, the quiet work of finding out what is left when nothing extra is being held."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Earth",
+    "teaching": "Mountain wearing down onto Earth, the standing form softening grain by grain into the ground that will receive it, splitting apart as a gentle, geological act."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "Scorpio keys this ring, the fixed water that does its work underground, dissolving and concentrating until what surfaces is more itself than before."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao rides above on his backwards donkey, watching the road he has already travelled, while He Xiangu rests below, sustained by what she can quietly absorb from the moon. Together they teach that the work of distilling needs both a long memory and a body content with very little."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish, transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "The ring's path is Nun, the Fish, swimming from the heart of the Tree out toward Netzach. The letter teaches that what is essential in this code does not die in the stripping, it only changes water, the way a fish keeps its life through every current."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 23",
+    "generated": "relations-v1"
+  }
+}

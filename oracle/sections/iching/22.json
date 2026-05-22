@@ -1,0 +1,58 @@
+{
+  "number": 22,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Grace",
+  "combination": "Mountain over Fire. A small fire burning at the foot of a great mountain, throwing flickering light up the rock face and lighting only what is near it. The fire does not move the mountain. It dresses it. This is the figure of beauty as a finishing layer: surface light against a deeper mass, the mass still in charge, the light making the mass visible. A small thing made fitting, not a large thing made.",
+  "upper_nature": "Mountain, Gen. The youngest son among the trigrams, but the one that holds the form. Stillness, limit, the line where one thing ends and another begins. Above, this trigram is the body that does not move, the boundary that the light plays across without changing.",
+  "lower_nature": "Fire, Li. Brightness clinging to what it burns on. Beautiful, articulate, the trigram of clarity and of pattern. Below, this trigram is the inner light, the warmth at the base of the form, the thing that lets the shape of the mountain be seen at all before dawn.",
+  "reading": "The situation this code names is a small, real moment of beauty. Not the grand transformation, not the answer to the deep question. The small thing. The fire that throws light on the mountain at dusk and makes the mountain briefly luminous, while the mountain itself stays exactly what it has always been. That is the whole teaching. Beauty is allowed. Adornment is allowed. The warning sits underneath: do not mistake the light for the rock.\n\nThis is why the hexagram says it is favorable for small undertakings and not for large ones. Grace can carry you through a meeting, a gesture, a piece of work that wants polish. Grace cannot carry you through a controversy, a verdict, a decision that has to hold weight on its own. For those, you need the mountain, not the firelight on the mountain. The text is honest about this. Clarify what is in front of you. Do not let the clarity flatter itself into thinking it can settle the deep questions.\n\nThere is a quiet thread through the six lines that says: the more honest the adornment, the smaller it gets. It begins with feet still being adorned and the carriage being left behind. It ends in pure white, no color at all, ornament returning to plainness. The arc of the hexagram is the slow undressing of its own first impulse. You begin wanting to be seen well. You end wanting only to be seen true. The fire was always smaller than the mountain.",
+  "judgement_lines": [
+    "Grace carries through.",
+    "In small matters, it is favorable to have somewhere to go."
+  ],
+  "image_lines": [
+    "Fire at the foot of the mountain.",
+    "So the one who governs clarifies the small business of the day,",
+    "And does not pretend to settle what is heavy."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "adorning the feet, leaving the carriage to walk.",
+      "reading": "The carriage was offered. You step down and walk on your own feet. The feet are still beautifully shod, the dignity is intact, but the privilege is set aside. This is the adornment that knows where it sits in the world. Honest about the body, honest about the work. The walk is the point.",
+      "becomes": { "hexagram": 52, "name": "Keeping Still Mountain" }
+    },
+    {
+      "line": 2,
+      "image": "adorning the beard.",
+      "reading": "A beard moves only because a chin moves under it. The adornment here has no engine of its own. It rises by attaching to what is rising, and that is allowed, even useful, as long as you know that is what you are doing. Borrow the strength. Do not claim it. The line is small on purpose.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    },
+    {
+      "line": 3,
+      "image": "adorned and glistening, bedewed with favor.",
+      "reading": "You are richly seen right now. Favor is settling on you, and the light is good. The risk is that the praise becomes the project. Stay correct, stay quiet inside it, and the good fortune holds. Keep doing the work that earned the light in the first place. No one will be able to slight you.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    },
+    {
+      "line": 4,
+      "image": "the white horse coming on as if winged.",
+      "reading": "Something approaches at speed, plain rather than ornamented, and at first it looks like trouble. It is not. The rider is a partner, not a thief. The teaching of this place is that real grace often arrives stripped down, and the doubt you feel about it is part of the test. Wait one breath. Then receive.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    },
+    {
+      "line": 5,
+      "image": "adornment in the hills and gardens, a small roll of silk.",
+      "reading": "You retreat to a simpler ground. The ceremonial gift you can offer is meager, almost embarrassing, just a small roll of silk where a great one was expected. You will look stingy. Let it look that way. Sincerity weighed less than display in the room, and you chose sincerity. The end of the story is joy.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    },
+    {
+      "line": 6,
+      "image": "white as the only ornament.",
+      "reading": "All the color has come off. What is left is unpainted, plain, complete in itself. This is what the whole hexagram was walking toward: adornment that no longer adds anything, because the thing has become beautiful by being itself. No fault here. The aspiration is fulfilled, and the silence around it is also fulfilled.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/22", "generated": "iching-brief-v1" }
+}

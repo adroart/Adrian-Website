@@ -1,0 +1,58 @@
+{
+  "number": 64,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Before Completion",
+  "combination": "Fire sits on top of Water, the flame reaching up and the stream falling down, the two natures pulling away from each other so they never meet to do their work. This is the last hexagram of the sixty four, and yet not one line is in its proper seat. The crossing is almost done. The far bank is in sight, and the fox in the middle of the ford still has its tail to bring across.",
+  "upper_nature": "Fire, Li. Broken between two solid lines. The flame that clings to what burns, throwing light outward and showing the shape of things. Above, it is the brightness, the seeing, the clarity that arranges what it touches. It rises. It does not look back at what it is leaving.",
+  "lower_nature": "Water, Kan. Solid between two broken lines. The stream in the gorge, the dangerous middle, the place that holds the risk inside it. Below, it is what has to be crossed. It falls. It carries the season's whole weight in a current that does not pause for the one trying to ford.",
+  "reading": "The situation this code names is the last mile. You can see the far bank. The work is almost done, and that is precisely where the trouble lives, because almost is not yet, and the part that remains is the part where attention slips. The whole book of the I-Ching ends here, on purpose. Not on the finished thing but on the crossing not yet completed, because completion was never the point. The cycle is.\n\nThe picture the hexagram gives is the small fox at the ford. It has waded most of the way through cold water. It is tired, and it is close, and in that closeness it lifts its head a little too soon and lets its tail drop into the current. A drag of wet fur, a small loss of balance, a fox that has to start over. Nothing dramatic. Just enough to undo the crossing.\n\nThe counsel is what the second line says without saying it. Drag the wheel. Hold yourself back from the rush the near shore invites. You are not safe yet, and the fire above does not warm the water below, and the lines beneath you are all out of position even though they correspond to each other in pairs. Order is possible. It is not present. To bring the order in, you have to discern carefully what belongs where, which thing is fire and which is water, and put each in its proper place before you step out onto the bank. The reward is not the bank. It is having crossed without losing the tail.",
+  "judgement_lines": [
+    "Before completion. There is a way through.",
+    "The small fox crosses, and lets its tail dip in the water.",
+    "Nothing is gained by pushing on now."
+  ],
+  "image_lines": [
+    "Fire over water, each pulling its own way.",
+    "So the one who would arrive sorts each thing carefully, and gives it its place."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the fox at the start of the crossing, tail already wet.",
+      "reading": "You have moved before the moment was ripe and the cold of the stream is already on you. There is no disaster here, only a small shame at the impatience. Step back. Refuse the next step. The error was thinking the ford was shorter than it is. Sit down on the near bank a while.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    },
+    {
+      "line": 2,
+      "image": "the cart driver dragging the wheel against the slope.",
+      "reading": "Strength is in your hand and the slope is open in front of you, and the right move is to slow yourself down. Drag the wheel. Hold the carriage back from the rush. This is not weakness, it is the centred move of someone who knows the time is not yet, and good fortune follows the holding back.",
+      "becomes": { "hexagram": 35, "name": "Progress" }
+    },
+    {
+      "line": 3,
+      "image": "the unfinished crossing at its hardest middle.",
+      "reading": "You are in the part of the water where the ground gives way and pushing forward as you are now will not end well. And yet a great river is still asked of you. The way through is not your strength alone. Look for the boat, the teacher, the other hand. Crossing in company, you cross.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    },
+    {
+      "line": 4,
+      "image": "the long campaign into the demon country.",
+      "reading": "The work in front of you is real, and it will take three years and not the weekend you hoped. Stir yourself up. Keep going. The regret you carried in dissolves the moment you commit to the long version, and the reward, when it comes, is the size of a kingdom. Stay correct through the length of it.",
+      "becomes": { "hexagram": 4, "name": "Youthful Folly" }
+    },
+    {
+      "line": 5,
+      "image": "the steady light of the one who has done the inner work.",
+      "reading": "The light here is not borrowed. It comes from the work you did when no one was watching, and now the work shows as a quiet kind of brightness that other people can see by. Sincerity is doing the holding. No more striving is needed. The good fortune of this line is already in the room.",
+      "becomes": { "hexagram": 6, "name": "Conflict" }
+    },
+    {
+      "line": 6,
+      "image": "wine at the table after the crossing, the fox's head going under.",
+      "reading": "The crossing is done and there is a cup to be raised, and that is allowed. The danger is the second cup, and the third, the slow forgetting that the river was real. Trust is fine until it stops watching. The fox that wets its head at the end loses everything it just earned. Drink, then stop.",
+      "becomes": { "hexagram": 40, "name": "Deliverance" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/64", "generated": "iching-brief-v1" }
+}

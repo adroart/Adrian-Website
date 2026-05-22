@@ -1,0 +1,58 @@
+{
+  "number": 35,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Progress",
+  "combination": "Fire sits over Earth, and the image is exact: the sun lifting off the horizon at dawn. Nothing forced, nothing hurried, only the slow widening of light over open ground. This is the hexagram of natural ascent, the kind that comes when the thing you have been quietly becoming is finally met by a season that can see it. The ground does not strain. The sun does not strain. The brightness simply rises.",
+  "upper_nature": "Fire, Li. Broken between two unbroken. Clinging brightness, the flame that needs something to burn on. Up here it is the sun in the sky, the visible part of the day. When this trigram is on top, the light is shown and others can see by it.",
+  "lower_nature": "Earth, Kun. All yielding, all receptive, the ground that holds without pushing back. Below, this trigram is the dark soil at dawn, patient, already in position. It does not initiate. It carries. The light is rising off something that has been waiting a long time.",
+  "reading": "The situation this code names is recognition that arrives in its own time. Not a breakthrough you forced, not a leap. The slow appearing of a quality that has been ripening in you for years, finally meeting people who can see it and a season that can use it. The old story for this hexagram is a feudal lord whose service to his country has built up so quietly that the king, almost startled, gives him horses and grants him audience three times in a single day. That is the texture. The reward looks sudden from the outside. From inside, it is just the morning the work finally shows.\n\nThe counsel is to let the rising be a rising, and to keep doing what brought you here. The sun does not lunge into the sky. It comes up the way it comes up. The danger in this code is not the obvious one. It is not failure. It is the small clever shortcut, the squirrel move, the impulse to scurry now that something is finally moving for you. Stay slow. Stay clean. The light that shows your work also shows your hurry.\n\nThere is one other thing carried in the image. The brightness is yours, but it is also of the morning, and mornings end. Be at ease in the daylight. Take the audiences. Accept the horses. Do not start mistaking the favor for the source.",
+  "judgement_lines": [
+    "A lord serving quietly is given many horses.",
+    "In a single day he is received three times.",
+    "Progress, and the light rises with him."
+  ],
+  "image_lines": [
+    "The sun comes up over the earth.",
+    "So the one who would grow brightens their own light, from within."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "advancing, and turned back at the door.",
+      "reading": "You move, and the door does not open. Trust is not yet given. The mistake here is to push, or to read the closed door as a verdict on you. It is not. Stay correct, stay generous in mind, do not narrow. The favor will come, but it does not come from forcing.",
+      "becomes": { "hexagram": 21, "name": "Biting Through" }
+    },
+    {
+      "line": 2,
+      "image": "rising in sorrow, blessed from the line behind you.",
+      "reading": "You are moving forward and grieving at the same time. Something is heavy. Hold your line anyway. The blessing in this place comes from further back than you can see, the grandmother line, the patient yin above. What you inherit is not yours to refuse. Receive it.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 3,
+      "image": "the crowd around you turning, finally, the same way.",
+      "reading": "The people you walk with are with you now. The shared aim is real. What looked like a private effort has become a group's motion, and the regret that was building in solitary work falls off. Move forward in the company you have. The collective consent is itself the next step.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 4,
+      "image": "advancing the way a squirrel advances, quick and low.",
+      "reading": "Skittish progress. Darting forward, looking sideways, hoarding what you grab. Even if your intention is correct, this is the dangerous position in the hexagram. The light is rising and you are scurrying. Stop. Stand up. Move plainly or do not move. The squirrel way is what loses the trust you have.",
+      "becomes": { "hexagram": 23, "name": "Splitting Apart" }
+    },
+    {
+      "line": 5,
+      "image": "the sun at the height of its rising, regret gone.",
+      "reading": "You have arrived where the light is. From here, gain and loss are no longer the measure. Stop tracking the score. Go forward in what you came to do, and every direction returns something. This is the ruling line of the hexagram. The place the whole image was climbing toward.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    },
+    {
+      "line": 6,
+      "image": "advancing with the horns down, lowered against your own town.",
+      "reading": "The force has gone past the brightness. You are still pushing when the season has already given you what it had. If horns must be used, use them only against what is yours to discipline, your own house. Even then, there is regret in it. The light has risen. You do not need to ram.",
+      "becomes": { "hexagram": 16, "name": "Enthusiasm" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/35", "generated": "iching-brief-v1" }
+}

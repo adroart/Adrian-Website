@@ -1,0 +1,58 @@
+{
+  "number": 9,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Small Taming",
+  "combination": "Wind sits above Heaven. Heaven's full force rises, and a thin layer of moving air is all that stands between it and the open sky. The clouds gather, the sky goes dark and low, the air thickens with what wants to come, and still no rain falls. One soft thing, in the right place, is holding back something much larger than itself. This is the situation the hexagram names: a small restraint, doing real work.",
+  "upper_nature": "Wind, Xun. Broken at the base, whole above. Gentle, penetrating, slow. The wind does not push; it enters. It works by being everywhere and not visible, threading between things until what was stuck begins to move. Here it is the soft layer, the one that holds.",
+  "lower_nature": "Heaven, Qian. Three unbroken lines. The originating force, untiring, already in motion before anything has noticed. Below the wind, it is the great mass that wants to surge up. Strong, dynamic, full of intent. The whole pressure of the hexagram is this engine, pressing into a softer thing.",
+  "reading": "The situation this code names is the moment of dense clouds without rain. Something has gathered. The pressure is in the air. The release has not come, and you cannot make it come. You can feel that you are close, and that closeness is its own kind of restless ache.\n\nThe teaching is that the holding is being done by something small. A thin band of wind. A single soft line in a stack of strong ones. It is not a wall. It is not a refusal. It is the lightest possible check, and it is enough, because the season is not yet ripe. The force below is real and right, and it wants to move. The wind above is not stopping it forever. It is shaping the moment, gently, until the time turns.\n\nWhat this asks of you is the harder discipline: not to wait passively, but to use the holding. Refine the work where no one is looking. Tend the small things that get neglected when the big ones are surging. Strengthen a relationship, finish a draft, clean an edge. Cultivate gently, by little degrees. The rain will fall when the rain falls. Your job is what you do while the clouds are still building.\n\nThe error this hexagram warns against is the error of trying to break through. Forcing the rain. Pushing past the soft thing because it looks weak. The soft thing is not weak. It is on time, and you are early. Small restraint, met well, becomes the slow accumulation that lets the next thing be possible.",
+  "judgement_lines": [
+    "Small Taming has its way through.",
+    "Dense clouds gather, and no rain comes.",
+    "From the western fields, where the holding begins."
+  ],
+  "image_lines": [
+    "Wind moves across the face of heaven.",
+    "So the one who would grow refines the small parts of the work."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "turning back to your own road.",
+      "reading": "You have wandered a little, or considered wandering, and something in you turns. This is not a defeat. It is the strong line remembering its own course before the course is lost. Come back to the path you actually walk. No mistake follows from a return like this. Good fortune.",
+      "becomes": { "hexagram": 57, "name": "The Gentle Wind" }
+    },
+    {
+      "line": 2,
+      "image": "led back in good company.",
+      "reading": "Someone closer to the centre is already turning, and you turn with them. You are not pulled against your nature; you are drawn into a shared current that fits it. Lean toward the steadying influence. The return is easier when more than one of you is making it.",
+      "becomes": { "hexagram": 37, "name": "The Family" }
+    },
+    {
+      "line": 3,
+      "image": "the cart that has lost its spokes, the couple looking away.",
+      "reading": "Strength acting alone, without the small care that holds a thing together. The wheels come off. The two who should be looking at each other are turned aside. The error is force without coordination. The fix is not more force. Stop, look across, repair the small fitting that was missing.",
+      "becomes": { "hexagram": 61, "name": "Inner Truth" }
+    },
+    {
+      "line": 4,
+      "image": "blood and fear leaving the room.",
+      "reading": "You are the soft line, the one holding back something much larger. You feared bloodshed. It does not come. What carries you through is plain truthfulness, the kind that does not posture and does not hide. Be honest, stay steady. The strong forces above sense it and ease. No blame.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    },
+    {
+      "line": 5,
+      "image": "wealth shared across the fence.",
+      "reading": "Sincerity at the centre, and the neighbours feel it. What you have spills sideways, into the people standing nearby, and the standing-together is the thing that prospers. Do not enjoy the abundance alone. The line teaches that the small accumulation, when shared, stops being small.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    },
+    {
+      "line": 6,
+      "image": "the rain finally falling, the moon nearly full.",
+      "reading": "The release has come. The clouds have given what they were holding. Now the warning: do not press on as if the pressure were still there. The moon at this brightness is one night from waning. Sit with what has arrived. Going further now, by force of habit, turns the gift into trouble.",
+      "becomes": { "hexagram": 5, "name": "Waiting" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/09", "generated": "iching-brief-v1" }
+}

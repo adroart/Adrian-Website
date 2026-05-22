@@ -1,0 +1,81 @@
+{
+  "number": 33,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Echos of Time",
+
+  "unity_line": "Folded into Code 34, this is the step back that gathers strength, retreat and the great power it ripens into moving as one breath.",
+
+  "pair": {
+    "number": 34,
+    "card_name": "Sublime Power",
+    "hexagram_name": "The Power of the Great (Ta Chuang)",
+    "teaching": "Echos of Time meets Sublime Power, and the two carry the whole rhythm of force in time. One withdraws to remember; the other arrives full of what has been remembered. Nothing strong in the world is built by pressing forward alone, and nothing is wasted in the pause that listens behind."
+  },
+
+  "inverse": {
+    "number": 34,
+    "card_name": "Sublime Power",
+    "hexagram_name": "The Power of the Great (Ta Chuang)",
+    "is_self_inverse": false,
+    "teaching": "Flip the lines and the retreat becomes Code 34, Sublime Power. The same six lines read from the other end show that the stepping away and the breaking through are one motion seen from different ends of the same arc."
+  },
+
+  "programming_partner": {
+    "number": 19,
+    "card_name": "Solection",
+    "teaching": "Across the genetic code, the partner here is Code 19, Solection. The long memory that knows when to step back is held by the tender approach that knows how to draw near. What one withdraws to protect, the other reaches out to greet. Together they keep the timing of every closeness honest."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Trials",
+    "tarot": "12 - The Hanged Man",
+    "siblings": [56],
+    "teaching": "The Ring of Trials carries this code alongside Code 56, two cards bound by the tests that cannot be hurried. The family teaches that some passages are made of waiting, and the soul is refined by what it agrees to sit through. This code is the trial of knowing when to stop."
+  },
+
+  "tarot": {
+    "card": "XII , The Hanged Man",
+    "teaching": "The Hanged Man is the assigned arcana, and the fit runs deep. He hangs upside down by his own choice, suspended in a stillness the world cannot rush. This code carries the same posture, the willingness to be useless for a season so that the deeper sight has time to come."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Mountain",
+    "teaching": "Heaven above the Mountain, vast openness resting on a still summit, the wide sky teaching the high ground how to wait."
+  },
+
+  "sky": {
+    "value": "Water",
+    "type": "element",
+    "teaching": "Water keys this ring, the element of surrender and the long memory, slow current that wears its lessons into stone and never loses its way."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "same_trigram": false,
+    "teaching": "Zhongli Quan stands above, the general whose campaigns are finished and whose strength has turned inward; Zhang Guolao sits below on his backward donkey, watching where he has been. Together they teach that retreat is the posture of those who have already learned what hurry cannot teach."
+  },
+
+  "hebrew_letter": {
+    "letter": "Mem",
+    "meaning": "Water — the element of surrender, reversal, the still deep",
+    "path_number": "23",
+    "path_connects": "Geburah to Hod",
+    "teaching": "Mem is the letter, Water, and the path runs from Geburah to Hod, severity into splendour. The letter teaches that this code is the still deep where force agrees to rest, where sharp judgement is reversed and refined into the quiet glory of knowing when to stop."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 33",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "number": 27,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Inner Majesty",
+
+  "unity_line": "Held against Code 28, this is the bowl that knows what to take in and the vessel that knows what to bear, nourishment and burden answering each other.",
+
+  "pair": {
+    "number": 28,
+    "card_name": "Becoming the Mystery",
+    "hexagram_name": "Preponderance of the Great (Ta Kuo)",
+    "teaching": "Beside Becoming the Mystery, these two are the teaching on what enters the body and what the body is asked to carry. One is the mouth choosing its food with care; the other is the ridgepole straining under too much weight. The pair asks one question from opposite ends, what feeds you and what would break you."
+  },
+
+  "inverse": {
+    "number": 27,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Flip this code end to end and the lines hold their shape, one of only eight that meets its own reflection. The meaning is plain in the image. The hexagram is a bowl, two firm rims and the hollow between, the same vessel whichever way the world tips it."
+  },
+
+  "programming_partner": {
+    "number": 28,
+    "card_name": "Becoming the Mystery",
+    "teaching": "The pair is also the programming partner, running with this code through the body's own code. What nourishes and what overburdens are the same question asked of every living thing. Together they know that majesty is not about how much you can take on, it is about being honest enough to refuse what would break you."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Life and Death",
+    "tarot": "13 - Death",
+    "siblings": [3, 20, 23, 24, 42],
+    "teaching": "Six cards make up the Ring of Life and Death, and this code is the eating that keeps the cycle turning. Its siblings carry the first ordering, the watching, the falling away, the returning, and the small increase. The family holds the whole arc of incarnation, and this code is the daily act that feeds the arc along."
+  },
+
+  "tarot": {
+    "card": "XIII, Death",
+    "teaching": "Death is the assigned arcana, and the resonance is exact. The image is not an ending but a passing through, the harvester at work in the field where everything must change to keep living. This code carries the same office, the slow turning of one form into another by the simple fact of taking in and letting go."
+  },
+
+  "trigrams": {
+    "upper": "Mountain",
+    "lower": "Thunder",
+    "teaching": "Mountain above, Thunder below, the still summit resting on the storm that wakes the seed, a quiet rim holding the rising life beneath it."
+  },
+
+  "sky": {
+    "value": "Scorpio",
+    "type": "sign",
+    "teaching": "The ring sits under Scorpio, fixed water, the deep current that knows what must die for what is to be kept, and chooses without flinching."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Mountain",
+      "name": "Zhang Guolao",
+      "virtue": "The old hermit who rides his donkey backwards"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Zhang Guolao watches from above, the hermit who rides facing where he has been; Cao Guojiu wakes the ground below, the noble who left inherited power for truer food. Together they teach that real nourishment is looking back to know what fed you, refusing what was given from habit."
+  },
+
+  "hebrew_letter": {
+    "letter": "Nun",
+    "meaning": "The Fish, transformation without loss, continuity through change",
+    "path_number": "24",
+    "path_connects": "Tiphareth to Netzach",
+    "teaching": "Nun, the fish, is the letter, on the path running from the heart of the Tree out toward victory. The letter teaches that this code is the long swimming through change, the body that passes through every loss and arrives still itself, fed by what it dared to take in."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 27",
+    "generated": "relations-v1"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "number": 39,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Obstruction",
+  "combination": "Water sits on top of Mountain. A pool collected at a height it cannot pour off, a slope too steep to climb without slipping back. The going is blocked from above and refused from below. This is the hexagram of the limp, the foot that cannot carry the body across, the path that closes in front of you and asks you to come back the way you came. The image teaches by not moving. The obstruction is the teacher.",
+  "upper_nature": "Water, Kan. The middle son. A pit, a gorge, the deep place where you can fall. Above, it is the danger you can see in front of you, the river you have not yet figured out how to cross. It flows, but here it has collected and it waits.",
+  "lower_nature": "Mountain, Gen. The youngest son. Stillness, boundary, the thing that does not move when you push against it. Below, it is the inner refusal to take the next step, the body's own halt. A foot that has stopped walking. The standstill underneath the worry.",
+  "reading": "The situation this code names is the impasse. The road in front of you is genuinely blocked, and the harder you push at it the worse it gets. Every account of this hexagram across the translations agrees on the same blunt teaching: going forward leads to trouble, coming back earns praise. That is unusual. The I-Ching does not often counsel reversal so plainly.\n\nThe image is water collected on a mountain. The pool cannot drain the way it wants to, and the climber cannot climb the way they want to. So the hexagram does what feels counterintuitive. It tells you to stop. Not give up, stop. The Chinese name carries the picture of a lame leg, a foot that has lost its circulation. You are not being asked to push through that. You are being asked to sit with the limp until the cause of it is clear.\n\nThe direction the text gives is southwest, the open country. The wrong direction is northeast, the mountains. Translate that any way you need to. Choose the ground where movement is possible. Refuse the ground that demands you climb something that will not let you climb it.\n\nThere is one more piece. Twice the judgement says it is favorable to see the great person. Whoever that is for you, the elder, the one who has been in this exact stuck place and made it through, the friend whose seeing is steadier than yours right now. You are not meant to solve this alone. Turn the attention inward, and let the right help reach you.",
+  "judgement_lines": [
+    "Obstruction. The open country favors you. The mountain does not.",
+    "It is good to see the great person.",
+    "Hold steady, and the difficulty turns."
+  ],
+  "image_lines": [
+    "Water on the mountain. Obstruction.",
+    "So the one who would grow turns the attention inward, and shapes the character there."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the first step into a closing path.",
+      "reading": "Going now meets the block. Coming back earns honest praise. This is the earliest signal, before you have committed, before the climb has started in earnest. The work here is to see the danger and stop. Wait. Build the inner ground. The right time is not this one.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 2,
+      "image": "the king's servant, obstruction upon obstruction.",
+      "reading": "You are caught in this not for yourself but for what you serve. The obstacles come, and another comes, and you keep going. This line is the exception. The duty is real and the cost is yours to bear. No bitterness at the end. The struggle was not personal, and that is what carries it.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    },
+    {
+      "line": 3,
+      "image": "going out, then turning home.",
+      "reading": "You step forward, you find the block, you come back. And the people who were already on your side are glad to see you. This is the strength of knowing when to reverse. Not retreat, return. The ones inside rejoice. The going was the lesson. The coming back is where the work is.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 4,
+      "image": "going meets the wall, coming meets the ally.",
+      "reading": "Alone, you cannot get past this. So do not. Come back, and the right company arrives. The position is made solid by who stands beside you. This is the line of pairing up. Borrow strength. Form the alliance. Then the next move becomes possible, and not before.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    },
+    {
+      "line": 5,
+      "image": "the worst of it, and friends arriving.",
+      "reading": "This is the deepest point, the great obstruction at the centre. And it is here, exactly here, that the companions come. Not because you called for them but because what you are holding to is steady, and steadiness draws its own. Stay in the middle of yourself. Help is already on its way.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    },
+    {
+      "line": 6,
+      "image": "at the top of it, looking back.",
+      "reading": "Going further has nowhere to go. The hexagram is finished. The return now carries great good fortune, and the meeting with the great person is the door. Come back, not because you failed, but because the merit was always in the turning. Find the teacher. Follow what is genuinely worth following.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/39", "generated": "iching-brief-v1" }
+}

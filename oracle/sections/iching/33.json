@@ -1,0 +1,58 @@
+{
+  "number": 33,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Retreat",
+  "combination": "Heaven sits above the Mountain. The sky keeps pulling further up while the peak, however tall, stays put on the ground. Two yin lines have come in at the bottom and the four yang lines above are quietly drawing back. It is the hexagram of the sixth month, the first cool turn after the long heat, the moment the light begins to give ground without making a noise about it.",
+  "upper_nature": "Heaven, Qian. Unbroken, unbroken, unbroken. The sky's own motion, ceaseless and untiring. In this position it is the part of the situation that withdraws upward, lifting away from what is rising underneath. It does not fight the climb. It moves further off.",
+  "lower_nature": "Mountain, Gen. A still trigram, two broken lines and one solid at the top. It is the place where the foot stops walking. Here in the lower position it is the ground that holds firm under a pulling sky, the stillness that lets the withdrawal happen without panic.",
+  "reading": "The situation this code names is the moment the season turns against you and you can feel it. Nothing has broken yet. Nothing has been said. But the small forces underfoot are getting their footing, and the air above you is already lifting further off, the way heat lifts out of a room after the door has been opened on the cold. This is not defeat. It is the recognition that the time has tipped, and that holding the ground you have been holding is no longer the work.\n\nWithdraw, but not as flight. Flight is the small one's instinct, the tail running first while the body is still where the danger is. The teaching here is the opposite. You leave on your own time. You leave with your dignity intact, your resources intact, your purpose intact. The mountain does not move because the sky has gone higher. It simply stays itself, and lets the distance grow.\n\nThe hardest part is not the going. It is leaving what you were fond of. Some of the people, some of the work, some of the small daily attachments belong to a season that is ending, and they will try, without meaning any harm, to keep you in it. Honour them and step back anyway. The counsel is to be strict without being cold. Distance, not contempt. Reserve, not refusal.\n\nThe one who knows how to retreat carries forward the strength that the one who stays will spend. That is the small advantage the Judgement names. Small only because the time itself is small. Held correctly, it is enough.",
+  "judgement_lines": [
+    "Retreat. There is a way through.",
+    "In what is small, holding steady serves you.",
+    "Leave on your own terms, and the going carries you."
+  ],
+  "image_lines": [
+    "Mountain under heaven, the distance growing between them.",
+    "So the wise one keeps the petty at a distance, reserved, never angry."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the tail still in the burning house.",
+      "reading": "You have waited too long, and now you are at the back of the retreat with the danger already on you. Do not bolt. Bolting from this position is what gets you caught. Stay still. Be small where you are. The way out is not a sprint, it is holding the breath until the stampede has passed.",
+      "becomes": { "hexagram": 13, "name": "Fellowship" }
+    },
+    {
+      "line": 2,
+      "image": "bound with yellow oxhide, no one can pull it loose.",
+      "reading": "Your purpose to withdraw is so settled that nothing outside can shake it. Flattery, threat, the appeal of an old loyalty. None of it gets in. This is not stubbornness. It is the inner quiet that comes when the decision is already made. Hold to it without explaining it.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 3,
+      "image": "a withdrawal pulled back by the sleeve.",
+      "reading": "You are trying to leave but something has hold of you, an attachment, a person, a fondness you have not finished with. The drag is real, and the affliction is real. You cannot do the large work from inside it. You can still do the small one. Tend to those who depend on you. Keep that house in order. That is the door out.",
+      "becomes": { "hexagram": 12, "name": "Standstill" }
+    },
+    {
+      "line": 4,
+      "image": "stepping back though the heart still leans in.",
+      "reading": "You can feel the pull of what you are leaving. You go anyway. The mature one walks away from what they love when the time has come for it, and the going is what makes it good fortune. The small inside a person, the part that bargains and clings, cannot do this. It is the line of grown choosing.",
+      "becomes": { "hexagram": 53, "name": "Development" }
+    },
+    {
+      "line": 5,
+      "image": "the leaving done well, with both hands open.",
+      "reading": "A clean withdrawal, made at the right moment, in the right manner, for the right reasons. Nothing dramatic. No farewell speech. The work was done, the time was up, and you stepped away from the position before the position turned on you. Holding to that correctness is what makes the fortune.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 6,
+      "image": "a rich retreat, carrying everything you came with.",
+      "reading": "The highest line. You leave with the wealth still on you, the inner kind. No regret, no tug, no last look. Outside cannot move you anymore and inside has nothing left to defend. This is the freedom the whole hexagram has been climbing toward. Beneficial in every direction. No further doubt.",
+      "becomes": { "hexagram": 31, "name": "Influence" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/33", "generated": "iching-brief-v1" }
+}

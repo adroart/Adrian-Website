@@ -1,0 +1,61 @@
+{
+  "number": 24,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Return",
+  "combination": "Earth sits over Thunder, the heavy quiet of the field with one stir of lightning waking up at the very bottom. Five broken lines, and a single unbroken line at the root. This is the hexagram of the solstice, the longest night with a first warmth already moving under the cold. The world above has gone still. Something has turned. The light is on its way back, faintly, from underneath.",
+  "upper_nature": "Earth, Kun. Yielding, soft, the dark ground that holds. When this trigram is on top the surface of the situation is quiet, receptive, willing to be entered. It does not push back. It opens, and it lets the new motion come up through it.",
+  "lower_nature": "Thunder, Zhen. The first jolt. One yang line waking under five layers of yin, the spring stirring before the spring is visible. As the lower trigram it is the engine here, the small electric pulse at the base that the rest of the hexagram is built on top of.",
+  "reading": "The situation this code names is the turn at the bottom of a long descent. Something in your life has been losing light for a while. The energy has been draining, the days getting shorter, the room getting colder. And then, without ceremony, the curve bends. There is no announcement. The day is still cold and still mostly dark. But the bottom has happened.\n\nThe image is winter solstice. The first faint warmth under the deepest snow. A single green shoot beneath frozen ground that nobody yet sees. Thunder under the earth, a low rumble of something coming back. This is not the spring. This is the moment the spring begins, while it still looks like the worst of the winter.\n\nThe counsel here is unusual, and people miss it. It is not to throw open the gates and run out to meet the new light. It is to close them. The old kings, the text says, sealed the passes at the solstice. The merchants stayed home. The ruler did not travel. The return is real, but it is faint, and a faint thing has to be protected. The work is to rest, to gather, to stop spending. The body needs to stop, so the small ember can grow.\n\nMost of all, do not lose the turn by overshooting it. The way back is not far. As soon as you feel the warmth, return. Do not wait until you are deep into the next error to turn around. The earliest return is the easiest one.",
+  "judgement_lines": [
+    "Return. The way opens.",
+    "Going out and coming in without harm.",
+    "A friend comes, and there is no fault.",
+    "In seven days, the return.",
+    "There is benefit in having somewhere to go."
+  ],
+  "image_lines": [
+    "Thunder inside the earth. The turning point.",
+    "So the old kings closed the passes at the solstice,",
+    "and the merchants did not travel, and the ruler stayed home."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the return that has barely gone any distance.",
+      "reading": "You have only just stepped off the path. Three steps, maybe four. Turning around now costs almost nothing. This is the most fortunate of the six lines because the error is still small and the way home is still in sight. Do not wait to make it bigger. Turn now.",
+      "becomes": { "hexagram": 2, "name": "The Receptive" }
+    },
+    {
+      "line": 2,
+      "image": "the quiet return, made in good company.",
+      "reading": "The return is easy here because of who is below you. There is a steadier one nearby, and you have the humility to let their light correct yours. Going home is not a private heroism. It is the willingness to walk beside someone who already knows the way back.",
+      "becomes": { "hexagram": 19, "name": "Approach" }
+    },
+    {
+      "line": 3,
+      "image": "the one who keeps returning, keeps slipping, returns again.",
+      "reading": "You go back, you fall out, you go back again. It looks unsteady from the outside and it feels unsteady from the inside. The danger is real. The thing that saves it is that you keep returning. A hundred clumsy returns will do. The fault is not in the slipping.",
+      "becomes": { "hexagram": 36, "name": "Darkening of the Light" }
+    },
+    {
+      "line": 4,
+      "image": "walking in the middle of the crowd, turning back alone.",
+      "reading": "You are surrounded by people heading the other way. None of them are going to come with you. The return here is solitary, and it has to be. You walk with them as far as the centre of the road, and then quietly you turn. No speech. No argument. Just the turn.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    },
+    {
+      "line": 5,
+      "image": "the return made with the whole heart.",
+      "reading": "Honest, generous, unwavering. The return at this line has weight to it. There is no self-bargaining, no half-step, no looking back to see who noticed. You sit with yourself, see clearly what is owed, and turn. Nothing here for the future to regret.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    },
+    {
+      "line": 6,
+      "image": "the one who missed the turn.",
+      "reading": "The moment came and went, and you stayed on the wrong road. From here the loss is real and it will take a long time to repair. If you act now from where you are, especially if you act with force, the defeat is total. Ten years before the field is workable again. Do not march. Sit.",
+      "becomes": { "hexagram": 27, "name": "Nourishment" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/24", "generated": "iching-brief-v1" }
+}

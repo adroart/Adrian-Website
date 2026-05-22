@@ -1,0 +1,58 @@
+{
+  "number": 50,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Cauldron",
+  "combination": "Fire sits over Wood. The wood is fed into the flame and the flame cooks what the vessel holds. The whole hexagram is the shape of a bronze ting: a yielding line for the feet, three solid lines for the belly, a broken line for the rim, a solid line laid across for the handle. A working vessel. The image is a thing made to transform raw matter into food fit to offer.",
+  "upper_nature": "Fire, Li. Broken in the middle, solid above and below. Clinging brightness. Fire cannot stand on its own, it lives on what it burns, and that is why it gives light. As the outer trigram, it is what shines from this situation: clarity, refinement, the look of a thing transformed.",
+  "lower_nature": "Wind and wood, Xun. Broken at the base, solid above. Gentle and entering. Wood is the slow stuff that feeds fire, the root the breath enters by. As the inner trigram, it is what is happening beneath the visible: a steady offering up of the fuel that lets the cooking happen at all.",
+  "reading": "The situation this code names is the work after the revolution. Something old has been broken down, and now a new order has to be built out of better material. Cauldron is the vessel where that material is gathered, cleaned, set on the fire, and slowly turned into something that can feed others. It is not the destruction. It is the long, careful cooking that comes after.\n\nThe image is exact. A heavy bronze pot stands over wood, and the fire below is fed by what is offered to it. What goes in raw comes out nourishing. The teaching is that you are now the vessel. Whatever you have lived through, whatever was burned away in the last turn, has become fuel and ingredient. Your work is to hold the heat steady and let the cooking do its slow thing.\n\nThe counsel sits in two places. First, clean the pot. Before anything new can be cooked here, the old residue has to be tipped out. Stale stuff, stale loyalties, stale framings. They will spoil whatever you try to make next. Second, mind what you carry. A vessel this important does not nourish only you. The food in the ting was always for the ancestors, the gods, and the people of worth, and only afterwards for the household. If you have been given a strong vessel, you have been given it for the table, not for yourself.\n\nThe whole hexagram tilts toward great good fortune, but the line teachings are mostly warnings about how the pot tips, breaks, or loses its handles. The vessel is real. The handling of it is yours.",
+  "judgement_lines": [
+    "The Cauldron. Supreme good fortune.",
+    "The new is being established.",
+    "Things go through."
+  ],
+  "image_lines": [
+    "Fire over wood. The cauldron.",
+    "So the one who would lead makes the position correct, and lets fate settle."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the cauldron tipped upside down, feet in the air.",
+      "reading": "Looks like disaster. It is not. The pot is being emptied of the stale stuff that collected in the last regime, and that has to happen before anything good can be cooked in it. Turn it over without shame. What is humble in the position becomes the line that bears the heir.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 2,
+      "image": "the cauldron full of good food.",
+      "reading": "The work is done well and the vessel holds real substance. Someone close to you is sour about it and would block the table if they could, but they cannot reach you here. Stay where you are. Do not chase the resentment. Just keep tending the fire.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 3,
+      "image": "the cauldron's handles altered, the rich pheasant going uneaten.",
+      "reading": "You have made something good and there is no way to lift it to the table. The handles do not match. Progress stops here for a stretch. Do not force it. The blocked weather breaks, rain comes, the regret thins out. What was held back gets eaten in the end.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 4,
+      "image": "the legs of the cauldron snap, the duke's meal on the floor.",
+      "reading": "Too much loaded onto too weak a base. The position was beyond what you could carry, and you knew it, and you carried it anyway. The spilled food stains the robe of the one you were serving. There is no honest dressing this up. Misfortune.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 5,
+      "image": "yellow handles, gold carrying rings.",
+      "reading": "The vessel can now be lifted. Yellow is the middle colour, the colour of holding the centre, and the metal rings mean the handles will not give. Receptive in the highest seat, with firm support coming up from below. Stay single-minded. The blessing is in the steadiness, not the display.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 6,
+      "image": "the cauldron carried by a handle of jade.",
+      "reading": "Jade is the rare material that is hard and soft at once. At the top of the hexagram, strength has softened just enough to be useful, and softness has firmed just enough to bear weight. The pot can be carried anywhere now. Great good fortune. Nothing here that does not move things forward.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/50", "generated": "iching-brief-v1" }
+}

@@ -1,0 +1,59 @@
+{
+  "number": 46,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Pushing Upward",
+  "combination": "Earth sits over Wind, and the wind here is the wind that has gone underground: the slow, patient pressure of a tree's roots inside the soil. Above is the dark, yielding ground. Below is the wood that wants to grow. The hexagram is the moment of the sprout pressing up through the earth, not yet visible, already on its way. Small thing becoming big thing. The motion is upward, but it is patient.",
+  "upper_nature": "Earth, Kun. Broken, broken, broken. The yielding ground that takes everything and gives back everything in its time. When Earth is on top, the situation is held inside something soft. The way is open. Nothing above is fighting you. The medium itself is willing.",
+  "lower_nature": "Wind, Xun. Broken at the root, then two unbroken. The gentle that penetrates, the wind that finds every crack. Underneath, this trigram is wood: roots, slow growth, the will that bores into stone without ever pushing. The motion is mild and the motion does not stop.",
+  "reading": "The situation this code names is a real ascent, but a quiet one. Something in your life is growing the way a tree grows, root by root, day by day, with the work mostly happening where no one can see it. You are not climbing a ladder. You are not making a leap. You are accumulating, and the accumulation is starting to show.\n\nThe picture the hexagram gives is wood under earth. A seed under the soil already on the move. The pressure of growth against the soft weight of the ground above it. That pressure wins, every time, but only by being patient and by being constant. The tree does not argue with the earth. It just keeps going. Night and day. Whether it is being watched or not.\n\nWhat this asks of you is the long form of effort. Not the heroic push, not the breakthrough moment, but the daily stack of small things done well. The vernal offering is small and is enough. The seed is small and is enough. Sincerity, more than force, is what carries this one. The ground above you is willing. The season is on your side. South, toward the light, is the direction.\n\nOne caution, only one. Somewhere near the top of this rise, when it is going easily, the temptation will be to keep going past where you should stop. Trees do not climb the sky forever. There is a height that is yours, and a height that is not. Hear when you are at yours.",
+  "judgement_lines": [
+    "Pushing Upward carries the deepest growth.",
+    "Seek out the one who has gone further.",
+    "No need for worry.",
+    "Move toward the south. Fortune."
+  ],
+  "image_lines": [
+    "Inside the earth, the tree grows.",
+    "So the one who would rise heaps small things, and reaches what is high."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the root taking hold in the dark.",
+      "reading": "What begins here begins well. The ones above you are with you, even if you cannot see them yet. Trust the welcome. This is not the moment to prove anything. It is the moment to put the root down where the soil is soft, and let the rising follow.",
+      "becomes": { "hexagram": 11, "name": "Peace" }
+    },
+    {
+      "line": 2,
+      "image": "a small offering, given with a true heart.",
+      "reading": "You do not have much to bring. Bring it anyway. What carries this line is not the size of the gift but the sincerity inside it. A modest sacrifice, honestly made, will be received as if it were great. Strength below, softness above, communion across the gap. No blame.",
+      "becomes": { "hexagram": 15, "name": "Modesty" }
+    },
+    {
+      "line": 3,
+      "image": "stepping into an empty city.",
+      "reading": "The way ahead is open. No one is guarding the gate, no resistance, no obstacle. It feels too easy, and that feeling is the warning. Walk in, but walk carefully. Is the place empty because you are welcome, or because something has already passed through? Move, but stay awake.",
+      "becomes": { "hexagram": 7, "name": "The Army" }
+    },
+    {
+      "line": 4,
+      "image": "the king's offering on the mountain.",
+      "reading": "You are entrusted with a ceremony bigger than you. Someone above has named you for it. Do the rite simply, as the position asks. Honor the place, honor the lineage of the place, and the fortune comes through you rather than from you. No mistake.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    },
+    {
+      "line": 5,
+      "image": "climbing the steps in order.",
+      "reading": "The ascent is real and the ascent is steady. Step by step, in due ceremony, you are arriving where this rise was always going. Keep correct. Do not skip stairs. What is given easily is also lost easily. Slow promotion holds. Fortune.",
+      "becomes": { "hexagram": 48, "name": "The Well" }
+    },
+    {
+      "line": 6,
+      "image": "still climbing, after the light has gone.",
+      "reading": "You have reached the top of this rise and have not noticed. Now the climbing is in the dark, and it is climbing for its own sake. Stop, or at least stop driving. The only thing that helps here is unbroken correctness: small, daily, honest acts that keep the self from spending itself on more height.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/46", "generated": "iching-brief-v1" }
+}

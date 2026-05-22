@@ -1,0 +1,81 @@
+{
+  "number": 7,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Essential Nexus",
+
+  "unity_line": "Brought together with Code 8, this is the multitude finding its centre, the army that gathers around the one it trusts.",
+
+  "pair": {
+    "number": 8,
+    "card_name": "Odyssey of Freedom",
+    "hexagram_name": "Holding Together (Pi)",
+    "teaching": "With Odyssey of Freedom, these two are the I Ching's teaching on collective force and the bond that holds it. This code is the disciplined many, the army moving as one body. Its pair is the union that draws them, the centre worth following. Neither stands without the other."
+  },
+
+  "inverse": {
+    "number": 8,
+    "card_name": "Odyssey of Freedom",
+    "hexagram_name": "Holding Together (Pi)",
+    "is_self_inverse": false,
+    "teaching": "Invert the hexagram and you arrive at Code 8, Odyssey of Freedom. The same six lines read from the other end become the magnetic figure others gather toward, rather than the gathered multitude itself."
+  },
+
+  "programming_partner": {
+    "number": 13,
+    "card_name": "Universal Crest",
+    "teaching": "In the body's own code, this pairing runs with Code 13, Universal Crest. The disciplined company is held by the listener who keeps the long story straight. What they know together is that no movement of many holds its shape unless someone is willing to remember why they began."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Union",
+    "tarot": "6 - The Lovers",
+    "siblings": [4, 29, 59],
+    "teaching": "Four cards make up the Ring of Union, and this code is the gathered body inside it. Its siblings, 4, 29, and 59, carry the youthful asking, the leap into the depth, and the dissolving of the wall between two. The family is the whole arc of coming together, from first question to final intimacy."
+  },
+
+  "tarot": {
+    "card": "VI · The Lovers",
+    "teaching": "Two figures stand beneath a blessing in this arcana, at the moment a choice is made and a bond is formed. This code carries the same threshold inside the larger body. A company is only an army when each one inside it has chosen, quietly, to belong."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Water",
+    "teaching": "Earth over Water, the ground above and the hidden river below, the multitude on the surface and the deep current that moves them as one."
+  },
+
+  "sky": {
+    "value": "Gemini",
+    "type": "sign",
+    "teaching": "This ring sits under Gemini, mutable air, the quick exchange between two that lets a company speak with one voice across many mouths."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Water",
+      "name": "Lü Dongbin",
+      "virtue": "The scholar-warrior who carries the sword of discernment"
+    },
+    "same_trigram": false,
+    "teaching": "Two Immortals meet across this code. He Xiangu sits above, the maiden who asks for nothing and holds the company in her quiet. Lü Dongbin moves below with his sword of discernment. Together they teach that a true gathering is held by silence at the top and clear cutting underneath."
+  },
+
+  "hebrew_letter": {
+    "letter": "Zain",
+    "meaning": "The Sword — the blade of discrimination that forces a choice",
+    "path_number": "17",
+    "path_connects": "Binah to Tiphareth",
+    "teaching": "Zain, the sword, is the letter carried by this code's ring, on the path running from understanding down to the heart. The letter teaches that union is not soft. A company is forged by the cut that decides who is in, and the choice each one makes to stay."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 7",
+    "generated": "relations-v1"
+  }
+}

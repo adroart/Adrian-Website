@@ -1,0 +1,81 @@
+{
+  "number": 43,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Cipher of Knowledge",
+
+  "unity_line": "Set against Code 44, this is the inner answer surfacing and the outer encounter that carries it forward, breakthrough learning to meet the world.",
+
+  "pair": {
+    "number": 44,
+    "card_name": "Sophia's Orchestra",
+    "hexagram_name": "Coming to Meet (Kou)",
+    "teaching": "Beside Sophia's Orchestra, the pair is the I Ching's image of insight and meeting. One is the answer that arrives suddenly from within, breaking the surface alone; the other is the encounter that delivers the same knowing through people, timing, and the patterns of the world. Inner certainty and outer arrival are two faces of one truth."
+  },
+
+  "inverse": {
+    "number": 44,
+    "card_name": "Sophia's Orchestra",
+    "hexagram_name": "Coming to Meet (Kou)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines over and you land in Code 44, Sophia's Orchestra. The same arrangement read from the other end stops being the lone breakthrough and becomes the world coming to meet you with the very thing you had just figured out for yourself."
+  },
+
+  "programming_partner": {
+    "number": 23,
+    "card_name": "Beneath the Surface",
+    "teaching": "Across the genetic code, the partner here is Code 23, Beneath the Surface. The breakthrough that finally hears the answer is held by the patient distiller that has been quietly stripping away what was never essential. Insight arrives only because room was made for it; the partnership is the long burn and the bright spark working as one craft."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Destiny",
+    "tarot": "10 - The Wheel of Fortune",
+    "siblings": [34],
+    "teaching": "Inside the Ring of Destiny, this code sits with one sibling, Code 34, the sublime power that moves through the body. The ring is small and weighted, two cards holding the whole turning of fate. One is the knowing that breaks through the mind, the other is the force that breaks through the form. Together they are how destiny lands."
+  },
+
+  "tarot": {
+    "card": "X, The Wheel of Fortune",
+    "teaching": "The assigned arcana is X, The Wheel of Fortune, and the resonance is exact. The card shows the turning that no one steers, the cycle that brings the answer at its own hour. This code is what happens at the top of the wheel, the instant when the pattern becomes visible and the long arrangement underneath suddenly reads as meaning."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Heaven",
+    "teaching": "Lake above Heaven, the still surface holding the open sky, water reflecting the vastness until the picture comes clear all at once."
+  },
+
+  "sky": {
+    "value": "Jupiter",
+    "type": "planet",
+    "teaching": "Jupiter keys this ring, the planet of expansion and good fortune, the force that widens the field until the answer that was always there has room to be seen."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "Above stands Li Tieguai with his iron crutch and gourd of medicine; below sits Zhongli Quan, the general whose battles are finished. Together they teach that breakthrough belongs to those who have known both the wound and the long retreat, and who carry the cure where others can reach it."
+  },
+
+  "hebrew_letter": {
+    "letter": "Kaph",
+    "meaning": "The Palm, the open hand, cycles turning, fate received",
+    "path_number": "21",
+    "path_connects": "Chesed to Netzach",
+    "teaching": "The ring stands on the path of Kaph, the open palm, running from Chesed to Netzach, mercy reaching into victory. The letter teaches that this code's knowing is not seized but received, a hand turned upward at the right moment of the wheel for the answer to settle there."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 43",
+    "generated": "relations-v1"
+  }
+}

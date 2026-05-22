@@ -1,0 +1,59 @@
+{
+  "number": 14,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Great Possession",
+  "combination": "Fire sits over Heaven. The sun is high in the open sky, and its light reaches everything beneath it without taking hold of any of it. Five strong lines stand around one yielding line in the place of the ruler, and they all turn toward her. This is the picture of a great holding: abundance arrived, sun at noon, the field full, and the one who carries it staying soft at the centre.",
+  "upper_nature": "Fire, Li. Broken in the middle, whole at the edges. The flame that clings to what it burns, the light that has to rest on something to keep shining. Clarity, brightness, the seeing eye. When this trigram is on top, the situation is being lit up and read.",
+  "lower_nature": "Heaven, Qian. Three unbroken lines, the engine. Ceaseless motion, the source that does not tire. Below the fire, it is the fuel the brightness rests on: a deep, untiring strength feeding the light overhead without ever being seen itself.",
+  "reading": "The situation this code names is the moment of arrival. The harvest is in, the work has paid, the room turns toward you. Heaven is below, doing its quiet untiring work, and the fire is high in the sky, lighting everything you have made. This is not the moment before, like Hexagram 1. This is the moment of having. And the danger of having is its own thing.\n\nThe weak line in the fifth place is the whole teaching. The one who holds the great possession is not the strongest line in the figure. She is the soft one, the open one, the line that yields. Everyone else is strong, and they all turn toward her because she does not grasp. Real abundance, in this picture, is held by something that has stopped trying to own it. The sun does not keep the light. It gives the light, and that is why it stays a sun.\n\nThe counsel here is harder than it sounds. When you are full, you are most likely to spill. When the field has come in, pride climbs in beside the harvest and asks to be fed. The hexagram says the same thing in six different ways: stay soft at the centre. Do not mistake the gift for the giver. Curb what is small in you, and let what is generous show. The flame above heaven is bright because there is nothing under it but sky. Keep your room that empty, and the light keeps coming.",
+  "judgement_lines": [
+    "Great Possession.",
+    "Supreme success.",
+    "The held thing reaches through everything when the holder does not hold it tight."
+  ],
+  "image_lines": [
+    "Fire stands above heaven.",
+    "So the one who would grow puts down what is small in them, and lifts up what is good.",
+    "This is how heaven's kindness moves through a life."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "no contact yet with what would harm.",
+      "reading": "The harvest is fresh and you have not yet been tested by it. Nothing harmful has reached you, and the way to keep it that way is to stay aware that something could. Hold the difficulty in mind even while the good is arriving. That awareness is the work. No blame.",
+      "becomes": { "hexagram": 50, "name": "The Cauldron" }
+    },
+    {
+      "line": 2,
+      "image": "a great wagon, loaded, ready to roll.",
+      "reading": "You have the capacity to carry a real load. The strength is balanced and the cargo is fairly stacked. Move it. There is somewhere to take this, and the journey will hold. The point is not to stand still admiring the wagon. Load up, and go in the direction the work asks for.",
+      "becomes": { "hexagram": 30, "name": "The Clinging Fire" }
+    },
+    {
+      "line": 3,
+      "image": "a noble laying his offering before the king.",
+      "reading": "What you have been given is not only yours. The one in your place sets the gift down in service of something larger, and that act is what makes the gift good. A small person cannot do this, because a small person has to keep things. You can. So do.",
+      "becomes": { "hexagram": 38, "name": "Opposition" }
+    },
+    {
+      "line": 4,
+      "image": "the drum left unbeaten.",
+      "reading": "You are near the centre of power, and the temptation is to swell. Do not. Keep the strength in, do not pound your own arrival. Clear seeing knows the difference between yourself and the place you are standing in. Refuse the swelling, and the work stays clean. No blame.",
+      "becomes": { "hexagram": 26, "name": "Great Taming" }
+    },
+    {
+      "line": 5,
+      "image": "open trust, met by trust, with quiet authority around it.",
+      "reading": "This is the ruling line, the soft one at the centre of all the strength. Your sincerity is met by the sincerity of everyone you meet, because you went first. Add a fitting weight to it. Trust without dignity collapses. Trust with dignity holds the room. Good fortune.",
+      "becomes": { "hexagram": 1, "name": "The Creative" }
+    },
+    {
+      "line": 6,
+      "image": "help reaching down from heaven itself.",
+      "reading": "At the top of the figure, where another hexagram would warn of overreach, this one says blessing. Why. Because the line above has obeyed the soft fifth, and respected what was true, and not made itself the source. Help comes from heaven. Good fortune. Nothing here that does not further.",
+      "becomes": { "hexagram": 34, "name": "Great Power" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/14", "generated": "iching-brief-v1" }
+}

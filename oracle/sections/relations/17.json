@@ -1,0 +1,81 @@
+{
+  "number": 17,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Peral of Christos",
+
+  "unity_line": "Set beside Code 18, this is the inner yes that finds what is worth following and the careful hands that mend what following has cost.",
+
+  "pair": {
+    "number": 18,
+    "card_name": "Liberation of the Greater",
+    "hexagram_name": "Work on What Has Been Spoiled (Ku)",
+    "teaching": "With Liberation of the Greater, the pair holds the full arc of allegiance. One is the willing step into a current that feels true; the other is the long labour of repairing what an earlier following damaged. To follow well and to correct what was followed badly are the same instinct turned in opposite directions."
+  },
+
+  "inverse": {
+    "number": 18,
+    "card_name": "Liberation of the Greater",
+    "hexagram_name": "Work on What Has Been Spoiled (Ku)",
+    "is_self_inverse": false,
+    "teaching": "Read these lines from the other end and they become Code 18, Liberation of the Greater. What looks from one side like joyful following looks from the other like the patient work of undoing what a less careful following put in place."
+  },
+
+  "programming_partner": {
+    "number": 18,
+    "card_name": "Liberation of the Greater",
+    "teaching": "Across the genetic code, this pairing also runs with Code 18. The two are bound at the biological level too, one choosing what to move with, the other choosing what to set right. What this code says yes to, its partner is left to repair or polish, and neither is whole work without the other."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [10, 21, 25, 38, 51],
+    "teaching": "This code sits in the Ring of Humanity with Codes 10, 21, 25, 38, and 51. The family carries conduct, control, innocence, struggle, and shock between them. Here, this code is the opinion seat, the inner act of choosing what to align with and what to follow into the room."
+  },
+
+  "tarot": {
+    "card": "VII, The Chariot",
+    "teaching": "VII The Chariot rides this code too, but from a different angle than its sibling. The figure does not pull the chariot, he chooses which forces to harness and lets them carry him. This code is the same discernment, the act of selecting the current that is going somewhere worth arriving at."
+  },
+
+  "trigrams": {
+    "upper": "Lake",
+    "lower": "Thunder",
+    "teaching": "Lake over Thunder, the joyous water resting above the arousing pulse, delight in motion that knows where the first impulse came from."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer carries this ring, cardinal water, the protective tide that gathers what it loves and moves only where its own people are going."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Lake",
+      "name": "Li Tieguai",
+      "virtue": "The crippled beggar with the iron crutch and the gourd of medicine"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": false,
+    "teaching": "Li Tieguai sits above with his iron crutch and gourd of medicine, joyous force holding wound and remedy in one body. Cao Guojiu stands below, the noble who left inherited power for a truer ground. Together they teach that real following begins where borrowed authority ends."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence, the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "On the Tree, the path of this code's ring is Cheth, the fence, running between understanding and disciplined force. The letter teaches that following is itself a fence, the chosen boundary that lets a person travel fast because they no longer have to argue with the road."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 17",
+    "generated": "relations-v1"
+  }
+}

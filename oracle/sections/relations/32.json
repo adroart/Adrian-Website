@@ -1,0 +1,81 @@
+{
+  "number": 32,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Art of Living",
+
+  "unity_line": "Paired with Code 31, this is the long marriage that follows the first attraction, the quiet endurance that keeps the spark from being a spark only.",
+
+  "pair": {
+    "number": 31,
+    "card_name": "Theater of Truth",
+    "hexagram_name": "Influence (Hsien)",
+    "teaching": "Theater of Truth is the first reaching toward another, the courtship that opens with influence and answer. This code is what is asked of that meeting once the bright opening is over. One is how two come together; the other is how they stay together long enough for the thing between them to mean anything."
+  },
+
+  "inverse": {
+    "number": 31,
+    "card_name": "Theater of Truth",
+    "hexagram_name": "Influence (Hsien)",
+    "is_self_inverse": false,
+    "teaching": "Turn these lines end for end and you arrive at Code 31, Theater of Truth. The same six lines read from the other side become the first stirring of attraction rather than its long keeping. Influence and duration are the same motion seen from either end of a life."
+  },
+
+  "programming_partner": {
+    "number": 42,
+    "card_name": "Moving to Perfection",
+    "teaching": "In the genetic code, the partner here is Code 42, Moving to Perfection. Endurance is held by the patient finishing of what was begun, the willingness to bring a thing all the way to its proper close. Together they teach that no practice is a real practice until it has been carried through to its own completion."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Illusion",
+    "tarot": "18 - The Moon",
+    "siblings": [28],
+    "teaching": "Inside the Ring of Illusion, this code sits with one other, Code 28. The family travels the country where things are not as they appear, where the surface and the truth are at different depths. This seat is the one that lasts inside that country, the practice steady enough to keep its bearings when the lights keep shifting."
+  },
+
+  "tarot": {
+    "card": "XVIII, The Moon",
+    "teaching": "XVIII The Moon is the Tarot face here, the long night road between the towers with the pool and the howling dog. The image is the journey that must be walked when nothing is clear, only continued. This code carries that same charge, the willingness to keep going when the path is shown only in pieces."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Wind",
+    "teaching": "Thunder above, Wind below, the rolling drum sustained by the steady breath that keeps moving through the room long after the strike."
+  },
+
+  "sky": {
+    "value": "Pisces",
+    "type": "sign",
+    "teaching": "Pisces carries this ring, mutable water, the current that keeps flowing without forcing a shape, devotion that finds its own form by not stopping."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "same_trigram": false,
+    "teaching": "Cao Guojiu stands above, the noble who left the inherited palace to walk the longer road, and Han Xiangzi stands below, the youth whose flute steadied whatever wildness it met. Together they teach that endurance is made of the choice to leave what was easy and the breath that keeps making music for as long as the road needs it."
+  },
+
+  "hebrew_letter": {
+    "letter": "Qoph",
+    "meaning": "The Back of the Head — the dreaming, what lies below consciousness",
+    "path_number": "29",
+    "path_connects": "Netzach to Malkuth",
+    "teaching": "On the Tree, the path of this code's ring is Qoph, the back of the head, running from Netzach down to Malkuth. The letter teaches that the practice that lasts is the one fed from underneath, by what the dreaming knows in the dark and the body keeps doing while the mind sleeps."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 32",
+    "generated": "relations-v1"
+  }
+}

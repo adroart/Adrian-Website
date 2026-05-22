@@ -1,0 +1,81 @@
+{
+  "number": 9,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Ease in This",
+
+  "unity_line": "Beside Code 10, this is the soft taming that prepares the ground, while its pair is the careful step that walks it.",
+
+  "pair": {
+    "number": 10,
+    "card_name": "Internal Treasure",
+    "hexagram_name": "Treading (Lu)",
+    "teaching": "Held with Internal Treasure, these two are the small refinements that make a life workable. One is the gentle restraint that smooths the field before action, the other is the considered footfall on dangerous ground. Together they teach that grace is built out of tiny, attentive moves."
+  },
+
+  "inverse": {
+    "number": 10,
+    "card_name": "Internal Treasure",
+    "hexagram_name": "Treading (Lu)",
+    "is_self_inverse": false,
+    "teaching": "Turn the lines and you find Code 10, Internal Treasure. The same patient adjustment, read from the other end, becomes the inner conduct that lets a person walk where the ground is uncertain."
+  },
+
+  "programming_partner": {
+    "number": 16,
+    "card_name": "Grand Rising",
+    "teaching": "Across the genetic code, this pairing runs with Code 16, Grand Rising. The soft taming that prepares conditions is met by the enthusiasm that finally lifts off, and what they know together is timing. Skill ripens quietly, then the morning comes when it sings."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Light",
+    "tarot": "19 - The Sun",
+    "siblings": [5, 11, 26],
+    "teaching": "Inside the Ring of Light, this code sits with three siblings, Codes 5, 11, and 26. The family is held by the sun principle, the light that nourishes everything it touches without choosing. This code carries the family's patience, the way light keeps shining whether or not anyone notices yet."
+  },
+
+  "tarot": {
+    "card": "XIX · The Sun",
+    "teaching": "The Tarot card here is XIX The Sun, the most uncomplicated joy in the Major Arcana. Children play in its light, a wall is behind them, nothing is hidden. This code carries the same open quality, ease that has nothing to prove and nothing to push against."
+  },
+
+  "trigrams": {
+    "upper": "Wind",
+    "lower": "Heaven",
+    "teaching": "Wind moving across Heaven, the gentle breath shaping a clear sky, small force working on something vast and willing."
+  },
+
+  "sky": {
+    "value": "Sun",
+    "type": "planet",
+    "teaching": "The ring is keyed to the Sun, the steady centre that gives without bargaining, and this code carries that giving as ease rather than effort."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Wind",
+      "name": "Han Xiangzi",
+      "virtue": "The flute-playing youth whose music tames the wild"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": false,
+    "teaching": "Han Xiangzi plays his flute above, Zhongli Quan stands below as the general who already stopped fighting. Together they teach that the small music only works because the larger force has already laid down its weapons and chosen to listen."
+  },
+
+  "hebrew_letter": {
+    "letter": "Resh",
+    "meaning": "The Head — the sovereign light, clarity that vitalises",
+    "path_number": "30",
+    "path_connects": "Hod to Yesod",
+    "teaching": "On the Tree, the path of this code's ring is Resh, the Head, running from Hod down to Yesod. The letter teaches that the small adjustments of this code are guided by a clear mind above, sovereign light reaching down into the foundation it lives in."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 9",
+    "generated": "relations-v1"
+  }
+}

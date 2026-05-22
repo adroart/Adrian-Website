@@ -1,0 +1,81 @@
+{
+  "number": 51,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Unshakable Arrival",
+
+  "unity_line": "Read with Code 52, this is the strike that wakes the body and the mountain that receives it, shock and stillness teaching one nervous system to hold.",
+
+  "pair": {
+    "number": 52,
+    "card_name": "Timeless Blossom",
+    "hexagram_name": "Keeping Still, Mountain (Ken)",
+    "teaching": "Beside Timeless Blossom, the pair is how a body learns to meet what arrives. One is the sudden thunder that shakes everything loose; the other is the still mountain that does not flinch when the sky breaks. Shock and steadiness are written on the same six lines, the only difference whether the energy is moving or resting."
+  },
+
+  "inverse": {
+    "number": 52,
+    "card_name": "Timeless Blossom",
+    "hexagram_name": "Keeping Still, Mountain (Ken)",
+    "is_self_inverse": false,
+    "teaching": "Turn this code end for end and you arrive at Code 52, Timeless Blossom. The same lines read from the other side stop being the bolt of thunder and become the mountain that absorbs it, the same force seen from inside the body that has finally stopped reacting."
+  },
+
+  "programming_partner": {
+    "number": 57,
+    "card_name": "Flight of the Tao",
+    "teaching": "Across the genetic code, the partner is Code 57, Flight of the Tao. Thunder and Wind programme each other, the loud arrival and the quiet intuition that always knew it was coming. Together they hold how a body senses and meets the world, the shock and the soft knowing that felt it on the air a moment before."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Humanity",
+    "tarot": "7 - The Chariot",
+    "siblings": [10, 17, 21, 25, 38],
+    "teaching": "Inside the Ring of Humanity, this code rides with 10, 17, 21, 25, and 38, the family of behaviour, opinions, control, innocence, and the holdout's refusal. The Chariot's ring carries the full breadth of being human, and this seat is the initiation by shock, the moment a person is broken open into a deeper humanity than they had before."
+  },
+
+  "tarot": {
+    "card": "VII. The Chariot",
+    "teaching": "Resonant here is VII, The Chariot, the figure who rides between forces that should pull a person apart and stays whole anyway. This code carries the same posture from the other angle, the willingness to be struck and to remain upright, the nervous system that has learned to hold what would have flattened it before."
+  },
+
+  "trigrams": {
+    "upper": "Thunder",
+    "lower": "Thunder",
+    "teaching": "Thunder over Thunder, the same arousing force doubled, one strike then another, the sky teaching the body that shock can be a rhythm rather than an interruption."
+  },
+
+  "sky": {
+    "value": "Cancer",
+    "type": "sign",
+    "teaching": "Cancer keys this ring, cardinal water, the sign of the protective shell that learns through feeling what is safe to let inside and what must finally be allowed through."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "lower": {
+      "trigram": "Thunder",
+      "name": "Cao Guojiu",
+      "virtue": "The noble who renounced the court for the way"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams carry the same Daoist Immortal, Cao Guojiu, the courtier who walked away from inherited power to find the way on his own ground. Doubled, he teaches that the shock which strips a person of their old position is the same shock that delivers them to themselves."
+  },
+
+  "hebrew_letter": {
+    "letter": "Cheth",
+    "meaning": "The Fence, the enclosure that contains and enables movement",
+    "path_number": "18",
+    "path_connects": "Binah to Geburah",
+    "teaching": "On the Tree, the ring stands on the path of Cheth, the Fence, running from Binah to Geburah. The letter teaches that the thunder this code carries is held inside a vessel strong enough to take it, the shock allowed only because a body is braced to receive it."
+  },
+
+  "meta": {
+    "source": "relations v1, scaffold UL 51",
+    "generated": "relations-v1"
+  }
+}

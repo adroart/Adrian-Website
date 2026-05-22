@@ -1,0 +1,58 @@
+{
+  "number": 17,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Following",
+  "combination": "Lake sits over Thunder. The shock that usually rises into open sky has gone under water instead, the way a struck bell is muffled when it sounds beneath a pond. The strong line is at the bottom, lying under the soft lines above it, and the whole figure tilts toward that submission. This is what it looks like when the loud thing chooses to be quiet first, so that the quiet thing will eventually move with it.",
+  "upper_nature": "Lake, Dui. The open surface, the place where water gathers and vapor lifts off it. Mouth and exchange. When this trigram is on top, the outer face of the situation is pleasant, responsive, willing to talk, willing to be glad. It draws people. It is the part that smiles.",
+  "lower_nature": "Thunder, Zhen. The sudden sound from below, the eldest son, the move that startles things into life. Underneath, this trigram is the buried charge. It is the engine that will eventually shake the pond from inside, but for now it is held under, content to wait beneath the easy water.",
+  "reading": "The situation this code names is the strong one bowing to the soft one first, so that the soft one will follow later. Thunder, the loud son, has gone under the lake. The pond is on top, smiling. This is not weakness. It is a particular kind of leadership, the kind that knows people will not be forced and so will not try. If you want to be followed, you go first as a follower. You meet the season instead of breaking it.\n\nThe hexagram is the answer to a problem nobody states out loud. The problem is that people do not actually follow strength. They follow gladness, and they follow timing. So the work, if you are the one wanting to lead, is to make yourself worth following: to drop your own preference long enough to receive what is in front of you, to let the mood of the moment carry the first move. At nightfall, the old image says, the wise person goes indoors. Even leading has its hour for rest.\n\nThere is a warning inside the gentleness, though. Following can curdle. It can become clinging to the wrong company, or trailing after a brighter person to borrow their light, or binding yourself to a cause out of fear of being alone. The teaching keeps drawing the line between these. Follow what is correct. Follow what is true. The route to influence runs through being the one who first knew how to yield.",
+  "judgement_lines": [
+    "Following. Great success.",
+    "It is favorable to stay correct.",
+    "There is no fault."
+  ],
+  "image_lines": [
+    "Thunder lying under the lake.",
+    "So at nightfall the wise one turns inward, and rests."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "stepping past your own gate.",
+      "reading": "The standard you were following has shifted, and the room you trusted is no longer the right room. Hold to what is true in yourself, and walk out the door. The companions you need are not the ones already at your table. Mix with whoever the day brings. Merit comes from that mixing.",
+      "becomes": { "hexagram": 45, "name": "Gathering Together" }
+    },
+    {
+      "line": 2,
+      "image": "clinging to the little boy.",
+      "reading": "You are giving your attention to the smaller bond, the one that flatters or asks little of you, and the larger person quietly steps back. You cannot hold both. Notice which one you keep reaching for by reflex. That reflex is the problem. The cost of this attachment is not loud yet, but it is real.",
+      "becomes": { "hexagram": 58, "name": "The Joyous Lake" }
+    },
+    {
+      "line": 3,
+      "image": "turning toward the older one.",
+      "reading": "You have let the lesser tie fall and chosen the company that has walked further than you. The aim is met by this choice. There is a catch, though. Weak natures lose focus quickly in strong company. Stay steady in what you came for. Otherwise you will follow the person without ever following the thing.",
+      "becomes": { "hexagram": 49, "name": "Revolution" }
+    },
+    {
+      "line": 4,
+      "image": "the catch in the net.",
+      "reading": "People are following you now, and the catch is yours. Even so, the position is uneasy. Power that gathers people can turn on itself and become its own end. The only safe move is sincerity made visible: act in the open, name your motive, keep the path lit. Done that way, no blame finds you.",
+      "becomes": { "hexagram": 3, "name": "Difficulty at the Beginning" }
+    },
+    {
+      "line": 5,
+      "image": "trusting what is good.",
+      "reading": "You are in the right place and you know it. The line is simple: be sincere toward what is genuinely excellent, and let that loyalty be the whole of your strategy. No trickery, no hedging. Good fortune comes through the steadiness of the trust itself, not through anything clever you might add to it.",
+      "becomes": { "hexagram": 51, "name": "The Arousing Thunder" }
+    },
+    {
+      "line": 6,
+      "image": "the king at the western mountain.",
+      "reading": "Allegiance has been held so long it has become a binding. The king goes up the western mountain and makes his offering there, tying his line to something larger than himself. This is the top of the hexagram, the place where following ends in devotion. Be careful it stays devotion, and does not harden into a cage.",
+      "becomes": { "hexagram": 25, "name": "Innocence" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/17", "generated": "iching-brief-v1" }
+}

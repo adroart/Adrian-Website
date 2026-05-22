@@ -1,0 +1,81 @@
+{
+  "number": 2,
+  "section": "relations",
+  "status": "scaffold",
+  "card_name": "Beyond the Shell",
+
+  "unity_line": "Read alongside Code 1, this is form welcoming force, the field that receives what the sky sends and shapes it into the world.",
+
+  "pair": {
+    "number": 1,
+    "card_name": "Earth's Breath",
+    "hexagram_name": "The Creative (Ch'ien)",
+    "teaching": "These two open the I Ching together, and this one is the ground that everything Code 1 sends arrives in. Where its pair is pure creative force, this code is pure receptive depth. The world is what happens between them, but the holding belongs to this side."
+  },
+
+  "inverse": {
+    "number": 2,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn this code upside down and nothing changes. It is one of the eight that meets its own reflection, and the meaning is its own teaching. A pure field of reception has no back side, only depth, the same all the way through."
+  },
+
+  "programming_partner": {
+    "number": 1,
+    "card_name": "Earth's Breath",
+    "teaching": "The pair runs all the way down into the genetic code, where these two are the codes that programme each other. One sends, the other holds. Together they know how to take a spark and grow it patiently into a body, neither hurrying the other."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Water",
+    "tarot": "17 - The Star",
+    "siblings": [8],
+    "teaching": "This code shares its ring with one other, Code 8, the quiet contribution that flows from being oneself. The family carries water's wisdom, finding its way without forcing, and the star's wisdom, shining only by its own nature. Reception and individuality, held as one teaching."
+  },
+
+  "tarot": {
+    "card": "XVII · The Star",
+    "teaching": "The Star shows a figure kneeling by a pool, pouring water onto the earth and into the water itself. The image is replenishment from a source that needs no asking. This code carries the same quiet, the field that receives because that is what it is."
+  },
+
+  "trigrams": {
+    "upper": "Earth",
+    "lower": "Earth",
+    "teaching": "Earth over Earth, the same field doubled, unbroken. This code is one depth, one yielding, the ground meeting itself with nothing between."
+  },
+
+  "sky": {
+    "value": "Aquarius",
+    "type": "sign",
+    "teaching": "The ring is keyed to Aquarius, fixed air, the steady current that carries what is poured into it without losing its own shape."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "lower": {
+      "trigram": "Earth",
+      "name": "He Xiangu",
+      "virtue": "The maiden who became immortal by eating moon-stone"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams here carry the same Daoist Immortal, He Xiangu, the maiden who lived on moon-stone and asked for nothing. Doubled, her presence is the whole of this code, a holding so complete it nourishes itself on what arrives."
+  },
+
+  "hebrew_letter": {
+    "letter": "Tzaddi",
+    "meaning": "The Fish-hook — the lure of return, hope drawn out of the deep",
+    "path_number": "28",
+    "path_connects": "Netzach to Yesod",
+    "teaching": "On the Tree, the path of this code's ring is Tzaddi, the fish-hook, running between the waters of feeling and the foundation. The letter teaches that the receptive draws what it needs upward by simply being there, open and quiet."
+  },
+
+  "meta": {
+    "source": "relations v1, locked sample UL 1",
+    "generated": "relations-v1"
+  }
+}
