@@ -86,10 +86,19 @@ export const ChapterWordmark: React.FC<{
       role="tablist"
       aria-label="Reading chapters"
     >
-      <div className="flex items-stretch h-10 max-w-2xl mx-auto">
+      {/* Content-based column widths instead of equal flex-1 buckets.
+          Each chapter takes the width its label needs; remaining space
+          distributes proportionally via flex-auto. Multi-word labels
+          (GENE KEYS, HUMAN DESIGN) can wrap to two lines on narrow
+          viewports, so the strip's vertical footprint grows by one
+          line of text-height when any chapter is wrapping. The
+          sliding underline adapts automatically to each chapter's
+          measured width. */}
+      <div className="flex items-stretch min-h-[40px] max-w-2xl mx-auto">
         {chapters.map((chapter, idx) => {
           const isActive = chapter.key === active;
           const isLast = idx === chapters.length - 1;
+          const label = chapter.shortLabel ?? chapter.label;
           return (
             <button
               key={chapter.key}
@@ -98,17 +107,9 @@ export const ChapterWordmark: React.FC<{
               role="tab"
               aria-selected={isActive}
               onClick={() => onSelect(chapter.key)}
-              className={`relative flex-1 min-w-0 flex items-center justify-center px-1.5 sm:px-3 ${!isLast ? `border-r ${ruleCls}` : ''} font-label uppercase tracking-[0.16em] text-[12px] sm:text-[13px] leading-none font-semibold transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.05] ${isActive ? activeCls : inactiveCls}`}
+              className={`relative flex-auto min-w-0 flex items-center justify-center text-center px-2 sm:px-3 py-1.5 ${!isLast ? `border-r ${ruleCls}` : ''} font-label uppercase tracking-[0.16em] text-[12px] sm:text-[13px] leading-[1.15] font-semibold transition-colors focus-visible:outline-none focus-visible:bg-bronze-500/[0.05] ${isActive ? activeCls : inactiveCls}`}
             >
-              {/* Show shortLabel on very narrow screens via the label-mobile/label-desktop pair */}
-              {chapter.shortLabel ? (
-                <>
-                  <span className="sm:hidden">{chapter.shortLabel}</span>
-                  <span className="hidden sm:inline">{chapter.label}</span>
-                </>
-              ) : (
-                <span>{chapter.label}</span>
-              )}
+              <span>{label}</span>
             </button>
           );
         })}

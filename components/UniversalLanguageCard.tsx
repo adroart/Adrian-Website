@@ -963,7 +963,7 @@ const CHAPTERS: Chapter[] = [
   { key: 'ul',          label: 'UL' },
   { key: 'iching',      label: 'I CHING' },
   { key: 'genekeys',    label: 'GENE KEYS' },
-  { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
+  { key: 'humandesign', label: 'HUMAN DESIGN' },
   // VISION.md order: BODY before RELATIONS. Inward journey deepens into the
   // body; RELATIONS is the final section, the doorway out to kin cards.
   { key: 'body',        label: 'BODY' },
