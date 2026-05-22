@@ -236,6 +236,34 @@ function cardImageUrl(number: number, size: number): string {
   return img(publicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' });
 }
 
+/** Spell out a card number 1-64 as one or two uppercase English words.
+ *  Used as the system index sitting under the hexagram glyph in the
+ *  hero action band.
+ *
+ *  Returns an array of word parts so compound numbers can be rendered
+ *  as a two-line stack (no hyphen):
+ *
+ *      ONE             →  ["ONE"]            (one line)
+ *      FOURTEEN        →  ["FOURTEEN"]       (one line)
+ *      THIRTY-THREE    →  ["THIRTY", "THREE"] (two lines stacked)
+ *      SIXTY-FOUR      →  ["SIXTY", "FOUR"]  (two lines stacked)
+ *
+ *  Stacking compound numbers gives the center column a consistent
+ *  narrow horizontal footprint regardless of which card it's on, while
+ *  letting the vertical stack do the work of communicating both parts.
+ *  Editioned art often labels numbers this way (catalogue raisonnés,
+ *  museum plates, lithograph stamps). */
+function numberToWord(n: number): string[] {
+  const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE',
+                'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN',
+                'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+  const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY'];
+  if (n < 20) return [ones[n]];
+  const t = Math.floor(n / 10);
+  const o = n % 10;
+  return o === 0 ? [tens[t]] : [tens[t], ones[o]];
+}
+
 const CLOUDINARY_BASE = 'https://res.cloudinary.com/dobbosnda/image/upload';
 
 function fitText(
@@ -932,7 +960,7 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
 const CHAPTERS: Chapter[] = [
   // Universal Language — Adrian's own system, the entry to the reading.
   // Holds the invocation, the intro, the keywords. Always first.
-  { key: 'ul',          label: 'U.L.' },
+  { key: 'ul',          label: 'UL' },
   { key: 'iching',      label: 'I CHING' },
   { key: 'genekeys',    label: 'GENE KEYS' },
   { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
@@ -1175,6 +1203,10 @@ const UniversalLanguageCard: React.FC = () => {
     navigator.clipboard.writeText(shareUrl).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    // Auto-close the share sheet so the reader gets the "Copied!" feedback
+    // briefly then returns to the card. 1500ms is long enough to read the
+    // confirmation, short enough to feel responsive.
+    setTimeout(() => setShareOpen(false), 1500);
   };
 
   const handleInstagramShare = async () => {
@@ -1185,6 +1217,7 @@ const UniversalLanguageCard: React.FC = () => {
       // Desktop or unsupported - fall back to download
       handleStoryDownload();
     }
+    setShareOpen(false);
   };
 
   const handleStoryDownload = async () => {
@@ -1228,6 +1261,7 @@ const UniversalLanguageCard: React.FC = () => {
           href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => setShareOpen(false)}
           className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366] flex-shrink-0">
@@ -1239,6 +1273,7 @@ const UniversalLanguageCard: React.FC = () => {
           href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => setShareOpen(false)}
           className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-[#2AABEE] flex-shrink-0">
@@ -1250,6 +1285,7 @@ const UniversalLanguageCard: React.FC = () => {
           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => setShareOpen(false)}
           className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-wood-700 flex-shrink-0">
@@ -1259,6 +1295,7 @@ const UniversalLanguageCard: React.FC = () => {
         </a>
         <a
           href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent('I wanted to share this oracle card with you:\n\n' + shareUrl)}`}
+          onClick={() => setShareOpen(false)}
           className="flex items-center gap-3 px-4 py-3 bg-paper-50 hover:bg-paper-100 border border-wood-200/60 hover:border-wood-300 transition-colors"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-wood-500 flex-shrink-0">
@@ -1394,23 +1431,32 @@ const UniversalLanguageCard: React.FC = () => {
               />
             </figure>
 
-            {/* Order + Share - two-up row directly below image */}
+            {/* Acquire / hexagram glyph + spelled number / Share — its
+                own band directly below the artwork. The hexagram glyph
+                with the spelled-out card number ("ONE", "TWO", ...,
+                "SIXTY-FOUR") sits in the center column as the visual
+                axis between the two buttons. The glyph is the I-Ching
+                mark; the word names this piece's position in the 64.
+                Both flanking buttons carry equal visual weight; the
+                whole row is balanced and centered. Subtle warm bronze
+                tint on the buttons makes them feel "of the deck's
+                palette" rather than as cold neutral chrome. */}
             <div ref={acquireSectionRef} className="border-t border-b border-wood-200/60 bg-paper-100/50">
               <div className="flex items-stretch gap-2 px-3 py-3">
-                {/* Acquire — opens the BuySheet so the reader doesn't lose
-                    their place in the reading. */}
+                {/* Acquire — opens the BuySheet so the reader doesn't
+                    lose their place in the reading. */}
                 <button
                   type="button"
                   onClick={() => setBuyOpen(true)}
-                  className="group flex-1 flex items-center justify-between gap-4 px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200 text-left"
+                  className="group flex-1 min-w-[88px] flex items-center justify-between gap-4 px-4 py-3 bg-paper-100 hover:bg-bronze-50/60 border border-wood-300 hover:border-bronze-400/70 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.08),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_3px_8px_rgba(60,44,22,0.1),inset_0_1px_0_rgba(255,255,255,0.5)] hover:-translate-y-px active:translate-y-[1px] active:shadow-[0_1px_2px_rgba(60,44,22,0.1),inset_0_1px_3px_rgba(60,44,22,0.08)] active:bg-bronze-50/80 transition-all duration-150 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-50"
                   aria-haspopup="dialog"
                 >
                   <div>
-                    <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
+                    <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 transition-colors duration-200 leading-tight">
                       Acquire
                     </p>
                     <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mt-0.5">
-                      Physical piece
+                      The Original
                     </p>
                   </div>
                   {piece?.availability === 'SOLD' && (
@@ -1425,56 +1471,81 @@ const UniversalLanguageCard: React.FC = () => {
                   )}
                 </button>
 
-                {/* Hexagram symbol - decorative, sits between the two buttons */}
+                {/* Center axis: hexagram glyph + spelled-out card number.
+
+                    Composed to match the buttons' two-line baseline:
+                    - Top baseline: button title (serif 15px) | glyph
+                    - Bottom baseline: button subtitle (small-caps 11px) | spelled number
+
+                    py-3 + justify-between aligns the glyph and the
+                    number to the same vertical positions as the
+                    buttons' title and subtitle baselines.
+
+                    Shrinkage behavior: when the viewport narrows,
+                    everything shrinks together gracefully. The center
+                    column is flexible-width (min-w-0, flex-shrink
+                    allowed) — it gives up width as needed. The buttons
+                    also shrink, but each button has min-w-[64px] to
+                    ensure their subtitles never wrap beyond two lines.
+                    The center column stays visible at all viewports;
+                    the spelled number may visually compress on very
+                    narrow screens but never disappears. */}
                 {synthesis?.reference?.hexagram_symbol && (
-                  <div className="flex items-center justify-center px-2 flex-shrink-0">
-                    <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={40} />
+                  <div className="flex flex-col items-center justify-between px-2 py-3 gap-1 flex-shrink min-w-0">
+                    <HexagramSVG upper={card.iching.upper_trigram.symbol} lower={card.iching.lower_trigram.symbol} color="#a09070" width={36} />
+                    <div className="flex flex-col items-center leading-[1.1]">
+                      {numberToWord(card.number).map((word, i) => (
+                        <span key={i} className="font-label text-[9px] uppercase tracking-[0.2em] text-wood-500 whitespace-nowrap">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Share */}
                 <button
                   onClick={() => setShareOpen(v => !v)}
-                  className="group flex-1 flex items-center justify-end px-4 py-3 bg-paper-50 hover:bg-bronze-50/70 border border-wood-200/70 hover:border-bronze-300/60 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.05)] hover:shadow-[0_3px_10px_rgba(171,146,102,0.18)] transition-all duration-200"
+                  className="group flex-1 min-w-[88px] flex items-center justify-end px-4 py-3 bg-paper-100 hover:bg-bronze-50/60 border border-wood-300 hover:border-bronze-400/70 rounded-md shadow-[0_1px_2px_rgba(60,44,22,0.08),inset_0_1px_0_rgba(255,255,255,0.4)] hover:shadow-[0_3px_8px_rgba(60,44,22,0.1),inset_0_1px_0_rgba(255,255,255,0.5)] hover:-translate-y-px active:translate-y-[1px] active:shadow-[0_1px_2px_rgba(60,44,22,0.1),inset_0_1px_3px_rgba(60,44,22,0.08)] active:bg-bronze-50/80 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper-50"
                   aria-expanded={shareOpen}
                 >
                   <div className="text-right">
-                    <p className="font-serif text-[15px] text-wood-900 group-hover:text-bronze-600 transition-colors duration-200 leading-tight">
+                    <p className="font-serif text-[17px] text-wood-900 group-hover:text-bronze-700 transition-colors duration-200 leading-tight">
                       Share
                     </p>
                     <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 mt-0.5">
-                      This card
+                      Send a code
                     </p>
                   </div>
                 </button>
               </div>
 
-              {/* Sentinel sits between the button row and the share sheet so
-                  opening the share sheet doesn't shift the sentinel's
-                  document position. Otherwise the sheet pushes the sentinel
-                  off-screen on tall openings, chromeCollapsed flips, the
-                  field sheet unmounts, layout collapses, and the cycle
-                  repeats — visible as a flashing oscillation. */}
+              {/* Sentinel sits between the button row and the share
+                  sheet so opening the share sheet doesn't shift the
+                  sentinel's document position. Otherwise the sheet
+                  pushes the sentinel off-screen on tall openings,
+                  chromeCollapsed flips, the field sheet unmounts,
+                  layout collapses, and the cycle repeats. */}
               <div ref={acquireShareEndRef} aria-hidden="true" className="h-px" />
 
-              {/* Share sheet — expands below the field-section share button.
-                  Hidden once the contextual card header has taken over so
-                  the dropdown only ever renders once at a time. */}
+              {/* Share sheet — expands below the action row. Hidden
+                  once the contextual card header has taken over so the
+                  dropdown only ever renders once at a time. */}
               {shareOpen && !chromeCollapsed && renderShareSheet('field')}
             </div>
           </div>
 
+          {/* Title card — its own dignified framed object. Sits below
+              the actions band with its own breathing room. The bronze
+              accent bar is the strongest visual signal in the hero
+              area, marking this as the named, labeled artwork. */}
           <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
-            {/* Title block - card container */}
             <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden">
-              {/* Bronze accent top bar */}
               <div className="h-[3px] w-full bg-bronze-400" />
               <div className="px-6 pt-6 pb-5">
-                {/* Title row */}
                 <div className="text-center">
                   <h1 className="font-serif text-[32px] text-wood-900 leading-[1.1] tracking-[-0.01em] whitespace-nowrap">{card.card_name}</h1>
                 </div>
-                {/* Keywords subtitle */}
                 {(() => {
                   const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
                   return kws.length > 0 ? (
@@ -1484,9 +1555,25 @@ const UniversalLanguageCard: React.FC = () => {
                     </>
                   ) : null;
                 })()}
+              </div>
+            </div>
+          </div>
 
-              </div>{/* end card inner px */}
-            </div>{/* end card container */}
+          {/* Inline chapter strip — sits directly below the title
+              card so readers can jump to any section without having to
+              scroll first to discover the navigation. The existing
+              sticky chapter strip (inside the collapsed contextual
+              header) takes over automatically when the reader scrolls
+              past this inline one. Two appearances of the same
+              component: one in-flow for discoverability, one sticky
+              for persistence during reading. */}
+          <div className="md:max-w-2xl md:mx-auto px-4 pt-6 pb-2 bg-paper-50">
+            <ChapterWordmark
+              chapters={CHAPTERS}
+              active={activeChapter}
+              onSelect={jumpToChapter}
+              variant="paper"
+            />
           </div>
 
           <div className="max-w-3xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
@@ -1638,53 +1725,25 @@ const UniversalLanguageCard: React.FC = () => {
         >
 
           {/* ────────── UNIVERSAL LANGUAGE (Adrian's system) ─────────────
-              The entry. Holds the invocation, the intro reading (the
-              one-breath teaching in Adrian's voice), and the keywords.
-              First in the chapter order. First in the reading order.
-              Reader meets the card here before stepping into I Ching.
+              The entry. Holds the invocation — the unique content of
+              this panel that doesn't appear in the hero above. Title,
+              essence, and keywords are NOT repeated here because they
+              already appear on the hero (title block + EssenceBlock).
+              The UL panel's job is to deliver the invocation: the
+              ritual opening of this code in Adrian's voice.
 
-              Data lives in oracle/generated/NN.json (glance.invocation,
-              glance.reading, glance.keywords). Currently only UL 1 has
-              the data populated; other cards show a graceful
-              "coming" placeholder until commissioned. */}
+              Data lives in oracle/generated/NN.json (glance.invocation).
+              Currently only UL 1 has the invocation populated; other
+              cards show a placeholder until commissioned. */}
           <div className={`${SCREEN_BG.ul} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
             <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-              {/* Plate header — Universal Language */}
+              {/* Plate header — Universal Language. Just the panel
+                  label, no duplicated card title/code (those are in the
+                  hero above). */}
               <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
                 <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Universal Language</p>
-                <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{card.card_name}</h2>
-                <p className={`${LABEL_SECTION} text-wood-500 mt-3`}>Code {card.number}</p>
               </header>
-
-              {/* The Reading — the one-breath summary, set in display serif */}
-              {synthesis?.essence ? (
-                <section className="mb-12 sm:mb-14">
-                  <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>The Reading</p>
-                  <p className="font-serif text-[19px] sm:text-[21px] text-wood-900 leading-[1.55] text-center max-w-prose mx-auto">
-                    {synthesis.essence}
-                  </p>
-                </section>
-              ) : null}
-
-              {/* Keywords — the touch-points the reader can carry away */}
-              {(() => {
-                const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
-                if (kws.length === 0) return null;
-                return (
-                  <section className="mb-12 sm:mb-14">
-                    <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>Keywords</p>
-                    <ul className="flex flex-wrap justify-center gap-x-3 gap-y-2 max-w-prose mx-auto">
-                      {kws.map((k, i) => (
-                        <li key={i} className="font-serif text-[16px] text-wood-800 leading-[1.5]">
-                          {k}
-                          {i < kws.length - 1 && <span className="text-wood-400 ml-3" aria-hidden="true">·</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })()}
 
               {/* Invocation — the ritual opening of this code. Set in
                   plain serif (not italic). Each line breaks naturally,

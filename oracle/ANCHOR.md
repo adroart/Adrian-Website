@@ -1,285 +1,197 @@
 # Universal Language Oracle — Anchor & Hand-off
 
-A clean-start anchor. The working conversation grew very long and accumulated
-assumptions; this document is the honest, current record so the next session
-begins from truth, not from a tangle.
+The honest, current record of where the work stands. Read this with
+`VISION.md` (the *intent* — what the deck is for and the six-section card
+structure) and `WRITING_METHOD.md` (the *method* — every text slot, locked
+voice rules, Hexagram 1 worked samples). Together they are the working spine.
+This document records the *situation*: what exists, what is decided, what is
+not, and what comes next.
 
-**Read `VISION.md` first, then this.** `VISION.md` holds the *intent* — what
-the deck is for, who it is for, and the six-section card structure Adrian has
-set. This document holds the *situation* — what exists, what is decided, what
-is not, and the open questions. Together they are the hand-off. Neither alone
-is enough: VISION is the why, ANCHOR is the where-things-stand.
-
-This document deliberately does **not** invent a plan for the parts Adrian has
-not approved.
+Last revised: 2026-05-22. Earlier drafts of this anchor described Stage A as
+the starting point — Stage A has run. The frontier has moved.
 
 ---
 
-## 1. The single most important thing
+## 1. Where the work actually stands
 
-**The writing method for the cards is NOT decided. It is Adrian's to set.**
+The card *structure* (six sections, `UL N · ICHING · KEYS · DESIGN · BODY ·
+RELATIONS`) is locked in `VISION.md`.
 
-In the working session, the assistant drafted a prototype synthesis for
-Hexagram 1 and a casting layout, and treated them as progress. Adrian did not
-approve a writing method, was not asked, and the draft (e.g. one-sentence
-voice readings) is **not** what he wants. That prototype is set aside.
+The *writing method* is locked in `WRITING_METHOD.md` — field-by-field, with
+Hexagram 1 worked samples drawn from the real vault source. The voice
+("intimate teacher"), the §1.5 "reads-as-human" cuts (no symmetry, no summary
+sentence, plain vocabulary, end a beat early), the no-em-dash rule, the
+"writing IS the information" / click-glossary rule, and the UL N opening as
+2–3 clusters with empty-line breaks are all decided.
 
-Before any card is written, Adrian and the assistant **design the writing
-method together** — anchored in the real source material — and Adrian locks
-it. Specifically still to be decided by Adrian:
+Writing for the deck has started. Section by section:
 
-- How long a card's reading is, overall and per voice.
-- How "assimilatable" / accessible vs. deep the writing should be.
-- What each voice should and should not contain.
-- Concrete things to do and not do (example Adrian gave: the Human Design
-  source material starts every gate description with "Gate 1 …" / a fixed
-  template — that is a *not-do*; the writing should not inherit that).
-- The structure and shape of a card overall.
+| Section | Status | Where |
+|---|---|---|
+| UL N (opening reading + invocation) | UL 1 locked. UL 2–64 invocations not yet written. | `oracle/generated/01.json` (only 01 exists) |
+| ICHING | Not yet started under the locked method (some legacy synthesis prose exists in `oracle/synthesis/key_*.json`). | — |
+| KEYS (Gene Keys) | **All 64 written.** UL 1 final, UL 2–64 scaffold. | `oracle/sections/keys/01.json … 64.json` |
+| DESIGN (Human Design) | **All 64 written** in the bridge-rewritten standard (no HD jargon in prose). UL 1 + UL 2 final, UL 3–64 scaffold. | `oracle/sections/design/01.json … 64.json` |
+| BODY | Not yet written as overlays (the legacy synthesis files carry some body prose). | — |
+| RELATIONS | UL 1 locked as the reference. UL 2–64 not written. Brief is `_BRIEF.md`. | `oracle/sections/relations/01.json` |
 
-The assistant must not draft card content until this is set.
+A separate strategic document, `MARKETING_POSITIONING.md` (2026-05-22, ~33KB),
+now exists as the spine for mission, product ladder, pricing, network logic,
+and language rules (no scarcity, no ecommerce-coded copy, honest production
+credit, "wisdom is free, objects are art"). It is *not* card-writing — it is
+the project's positioning.
 
----
+A separate UI hand-off, `HANDOFF.md` (2026-05-22), tracks the live card
+component work: small fixes already shipped, the `CardIdentityHeader` refactor
+agreed but not yet built, and the per-panel artwork strategy.
 
-## 2. What genuinely exists (verified)
+The legacy `oracle/synthesis/key_*.json` files (all 64 present) carry an
+older synthesis shape. The card reads them via `data/synthesisData.ts` with
+the `sections/keys/` and `sections/design/` overlays on top. RELATIONS is the
+next overlay to wire in.
 
-### The standards (written, in `Adrian-Website/oracle/`)
-- `VISION.md` — **the intent.** Why the deck exists, who it is for, the
-  six-section card structure. Adrian-set. Read first.
-- `CONCEPT.md` — what the deck is (the older vision document; VISION.md is the
-  current, Adrian-confirmed intent and supersedes it where they differ).
-- `00`–`06` — the guide set (master, description, invocation, I-Ching,
-  translation method, keywords, connections).
-- `SCHEMA.md` — the card-data shape.
-- `PROJECT_PLAN.md` — the build plan.
-- `RECONCILIATION.md` — historical; the template/live-card reconciliation,
-  now done. Treat as a record, not a live doc.
-
-Caveat: the guide set was written across the long session. Some of it encodes
-assumptions Adrian had not signed off (lengths, exact section framing). It is a
-strong *draft* of the standards, not gospel. The Stage A writing-method work,
-and the six-section structure in `VISION.md`, may revise it.
-
-### The source corpus — the Obsidian vault
-`~/Documents/Obsidian Vault/oracle/` — ~2,460 files, verified complete:
-- 64 hexagrams, each with 6 I-Ching translations (Legge, Wilhelm, Huang,
-  Deng, Cleary ×2), the Eranos translation, Rudd's *64 Ways*, two Gene Keys
-  files, the HD gate, the channel, a practical reading, Tarot correspondences,
-  and the 6 moving-line files.
-- `human-design/` — 64 gates, 36 channels, 9 centers.
-- `gene-keys/codon-rings/` — 22 codon rings.
-- `systems/` — 8 trigrams, the 8 Eight Immortals, 3 Tarot reference files
-  (codon-ring↔Tarot mapping, Golden Dawn keywords, Xuan system).
-- Each hexagram's `_hexagram-NN.md` has a master index, a `## Correlation`
-  section (wired this session — links trigrams, immortals, ring Tarot), and a
-  `## Synthesis` section.
-
-**This is the real "collective" of source material.** Any writing-method
-design should begin by Adrian and the assistant actually reading across these
-sources for a sample hexagram, together.
-
-### The deck content — almost entirely unwritten
-- **63 of 64** `## Synthesis` sections are empty placeholders.
-- Hexagram 1 has a draft synthesis — **set aside** (see §1), not approved.
-
-### The website / card UI
-- The live oracle card (`UniversalLanguageCard.tsx`) had a UI pass this
-  session — labels, the casting ritual, the Relations panel, all reworked and
-  folded in. It builds and type-checks.
-- It still renders the **old** data (`oracle_cards_complete.json`), not the
-  vault. The vault→card pipe does not fully exist.
-- **The live card does NOT yet match the structure Adrian set in `VISION.md`.**
-  The intended structure is six sections with the bar
-  `UL 1 · ICHING · KEYS · DESIGN · BODY · RELATIONS`. The live card currently:
-  ends Relations → Body (VISION puts Body before Relations); shows full-word
-  labels "I CHING / GENE KEYS / HUMAN DESIGN" (VISION shortens to
-  ICHING / KEYS / DESIGN); has no `UL N` identity slot; labels kin-card links
-  "Code N" (VISION: "UL N"). Reconciling the live card to `VISION.md` is a
-  Stage B task — see §6.
-
-### The generator (half-built, not wired)
-- `scripts/generate-oracle-cards.mjs` — reads a vault `_hexagram-NN.md`,
-  parses `## Synthesis` + `## Correlation`, emits `oracle/generated/NN.json`
-  in the `SCHEMA.md` shape. Works on Hexagram 1.
-- It is **not wired to the card** — no adapter, the renderer still reads old
-  data. Building further on this was paused, correctly, pending §1.
+The live card (`components/UniversalLanguageCard.tsx`) renders all six section
+panels with the locked KEYS + DESIGN overlays. The Relations panel renders
+the TCG-style correspondence sheet for UL 1 only; UL 2–64 still need their
+prose written.
 
 ---
 
-## 3. Decisions that ARE settled
+## 2. The source vault
 
-These came up in the session and Adrian confirmed them. The card-structure
-decisions are recorded in full in `VISION.md`; summarised here:
-- The deck is an **oracle first**, with the teaching as the depth underneath —
-  it serves system-experts, beginners, and people new to all of it at once.
-- The card is **six sections**, reached from a nav bar so a reader can skip to
-  any one in a single tap:
-  `UL 1 · ICHING · KEYS · DESIGN · BODY · RELATIONS`.
-- **UL 1** is the card's identity/home slot (per-card label, e.g. "UL 1").
-- **BODY** is the biological/DNA layer (the codon, the codon ring as living
-  chemistry, the physical seat) — distinct from Human Design's energy body.
-- **RELATIONS** is the true final section — the doorway out to kin cards.
-  Named Relations (not "Web" — reads as internet).
-- **Tarot is nested inside Relations** as the ring's archetypal face — not its
-  own chapter.
+`~/Documents/Obsidian Vault/oracle/` — ~2,460 files, verified earlier and
+still the source corpus. The Stage A2 method was built from reading this
+vault for Hexagram 1. The same vault feeds any future writing.
+
+---
+
+## 3. What is still open
+
+- **UL 2–64 invocations** — only UL 1 has an invocation written. Needs a
+  brief for the invocation voice, then the 63 remaining files dropped in
+  `oracle/generated/`. Loader (`getInvocation()` in `data/synthesisData.ts`)
+  already supports any file that lands.
+- **UL 2–64 RELATIONS prose** — brief is locked (`sections/relations/_BRIEF.md`),
+  reference card is UL 1, per-card metadata is pre-computed in
+  `_per_card_reference.json`. The 63 cards have not been drafted. Once
+  written, an overlay loader must be wired into `data/synthesisData.ts`
+  parallel to the KEYS / DESIGN overlays, and the Relations panel pointed at it.
+- **ICHING section overlay** — has not been built. Either the legacy
+  synthesis prose is reconciled to the locked method, or a `sections/iching/`
+  pass is run the way KEYS and DESIGN were.
+- **BODY section overlay** — same story as ICHING. Legacy prose exists in
+  synthesis files; a clean per-section pass under `WRITING_METHOD.md` §5 has
+  not happened.
+- **KEYS and DESIGN scaffold → final pass** — 63 of the 64 cards in each are
+  scaffold (Phase 1 AI draft, on-standard). Adrian Phase 2 (per-card refining
+  to "final") is the deck's main writing labour ahead.
+- **Older guide set (`00`–`06`, `SCHEMA.md`)** — predates the six-section
+  structure and the locked method. They are not actively misleading because
+  `WRITING_METHOD.md` is canonical, but they have not been edited to point at
+  the new method. Light reconciliation outstanding.
+- **The live card UI refactor** — `CardIdentityHeader` (artwork + Acquire / glyph /
+  Share row + framed title block at the top of every reading panel), and
+  per-panel artwork sizing. See `HANDOFF.md` for the full UI punch list.
+- **`oracle/generated/01.json`** — provisional, was built before the locked
+  method; the part of it that drives the live invocation panel is fine, but
+  the legacy `synthesis` shape is superseded by `sections/` overlays.
+  Regenerate or retire as ICHING / BODY get rebuilt.
+
+---
+
+## 4. The standing decisions (settled, do not re-litigate)
+
+From earlier sessions and `VISION.md` / `WRITING_METHOD.md`:
+
+- Oracle first, teaching as the depth underneath. Serves system-experts,
+  beginners, and people new to all four traditions at once.
+- Six sections in the order `UL N · ICHING · KEYS · DESIGN · BODY · RELATIONS`.
+  Nav bar lets a reader jump to any in one tap.
+- "UL N" everywhere — bar's home slot, kin links, URLs. Never "Code N".
+- BODY is the biological/DNA layer (codon, codon ring as living chemistry,
+  the physical seat) — distinct from Human Design's energy body.
+- RELATIONS is the true final section, the doorway out to kin cards. Tarot
+  nests inside RELATIONS as one element; it does not get its own chapter.
 - Internal relating (moving lines, Shadow/Gift/Siddhi, gate-in-channel) stays
-  inside its own system's section; only outward relating lives in Relations.
-- A single card is called **"UL N"** everywhere (bar, kin links, URLs).
-- The casting is a **ritual the reader performs** — not pre-loaded; the reader
-  throws and watches it unfold. (UI built.)
-- The invocation is **optional** and fills in over time; a card is complete
-  without one.
-- Copyright: teach the systems freely in original words, never reproduce a
-  source's prose, name the lineages where the deck is teaching.
-- The moving lines are part of the deck (core, not an extra).
-- The Eight Immortals / trigrams / Golden Dawn material is in scope as a
-  deeper correlation layer, nested inside Relations.
+  inside its system's own section. Outward relating lives only in RELATIONS.
+- The casting is a ritual the reader performs — coin-cast, thrown and watched
+  as it unfolds; not pre-loaded.
+- Invocation is optional; a card is complete without one.
+- Copyright: teach the four systems freely in original words, never reproduce
+  a source's prose, name the lineages where the deck is teaching.
+- DESIGN section follows the "bridge" rule: no HD jargon (gate/centre/channel/
+  circuit) in the prose; architecture lives as quiet metadata for the UI.
+- Voice: intimate teacher, warm, speaks to "you". No em dashes anywhere on a
+  card. No oracle throat-clearing. The writing IS the information — system
+  terms live only in the click-glossary.
 
 ---
 
-## 3b. Stage A2 — the writing method, DESIGNED AND LOCKED
+## 5. The current roadmap — everything left to do, in order
 
-The writing method was designed with Adrian in the Stage A session and is now
-written in full in **`WRITING_METHOD.md`** — the field-by-field standard for
-every text slot across all six sections, with Hexagram 1 worked samples drawn
-from the real vault source. That document is canonical; where it conflicts with
-`00_MASTER_WRITING_GUIDE.md` §4–§5.4 (the older "GLANCE + voices" anatomy),
-the method wins.
+Stage A (design the writing method) is **complete**. Stage B (prove it on one
+card) is **substantially complete** — UL 1 is the locked reference across
+KEYS, DESIGN, RELATIONS, BODY samples, and the live card renders it. The
+remaining work is scaling that proof to the other 63 cards and finishing the
+overlays that aren't yet built.
 
-Locked in that session:
+### Stage C — Write the deck (current stage)
 
-- **Voice:** intimate teacher, warm, speaks to "you". No em dashes anywhere on
-  a card. No oracle throat-clearing ("you have drawn...", "the cards reveal").
-- **The writing IS the information, never an entrance to it.** No section
-  explains what its system is. System context (what a hexagram/codon/Shadow is)
-  lives in a **click-glossary** on first-use terms — minimal, one or two
-  sentences, the only place a system is defined.
-- The **UL N opening reading** is locked: two paragraphs, ~200–280 words. The
-  Hexagram 1 sample in `WRITING_METHOD.md` §3 is the reference for all 64.
+C1. **UL 2–64 RELATIONS prose** to the locked brief. Wire the overlay into
+    `data/synthesisData.ts`. (Briefs and metadata ready; nothing else blocks.)
+C2. **UL 2–64 invocations.** Write the invocation brief, then the 63 files
+    into `oracle/generated/`.
+C3. **ICHING section pass** — either reconcile legacy synthesis prose to the
+    method, or run a per-card sections/iching/ build like KEYS and DESIGN.
+    Includes the trigram selector, the main reading, judgement and image
+    lines, and the six moving lines per card.
+C4. **BODY section pass** — same shape (physiology + amino acid prose per
+    card).
+C5. **KEYS and DESIGN: scaffold → final.** Adrian's Phase 2 personal pass on
+    each card, updating `status: "scaffold"` → `"final"`. The deck's main
+    writing labour. Tracked in each section's `_MANIFEST.md`.
+C6. **Moving-line readings** — 384 micro-readings, internal relating per
+    `WRITING_METHOD.md` §3 ICHING.
 
-Five structure differences between the built card and `VISION.md`, resolved:
+### Stage D — Wire, polish, ship
 
-1. **Section order** — nav bar `UL 1 · ICHING · KEYS · DESIGN · BODY ·
-   RELATIONS` (`KEYS` = Gene Keys, `DESIGN` = Human Design). BODY before
-   RELATIONS (VISION). The built card has them reversed; reorder in Stage B.
-2. **UL N is a real first section** — a tappable destination holding art, name,
-   keywords, invocation, and the opening reading. The built card's separate
-   "Field Section" folds into it. Add the section in Stage B.
-3. **"UL N" everywhere** — the built card says "Code N"; change all of it.
-4. **The field spec drives the JSON shape** — `WRITING_METHOD.md` §5 is the
-   single source of truth for the schema. `SCHEMA.md` and the generator are
-   both reconciled to it in Stage A3 / Stage B, not the reverse.
-5. **The trigram selector stays** — the I-Ching Hex/Upper/Lower selector is
-   kept; the method specs all three readings.
-
----
-
-## 4. Open questions — NOT decided
-
-Resolved since the first draft of this anchor: the card *structure* (settled
-in `VISION.md`) and the *writing method* (Stage A2 — see §3b, written in
-`WRITING_METHOD.md`). What remains open:
-
-- The generator's render target — a "B via adapter" approach was discussed
-  but nothing is built or approved.
-- `00`–`06` guide reconciliation (Stage A3) — `00`'s §4–§5.4 anatomy predates
-  the six-section structure; `WRITING_METHOD.md` supersedes it but the guide
-  set has not yet been edited to point at the new method.
-- `SCHEMA.md` and the generator must be reconciled to `WRITING_METHOD.md` §5 —
-  add the `ul` and `body` sections, the `UL N` identity, drop the old
-  `glance`/`anchor_line` shape (Stage A3 / Stage B).
-- The 64 artwork images — never verified to exist/be correct.
-- `SCHEMA.md`'s `reading` vs `anchor_line` — the vault GLANCE has only one
-  "Essence" field, so the generator duplicated them. Unresolved.
-- Markdown markers (`**bold**`, `*italic*`) currently leak into generated JSON
-  string values. Unresolved (strip in generator, or render in card).
-- `oracle/generated/01.json` exists — the generator's output for Hexagram 1.
-  It is **provisional**, built from the set-aside prototype synthesis. Not
-  approved content. Delete or regenerate once the writing method is set.
-
----
-
-## 5. The honest next step
-
-Start a fresh session. Read `VISION.md` first — the intent and the six-section
-structure are settled there. Then the first real work is **Stage A — design
-the writing method** (§6), and it begins by Adrian and the assistant reading
-the actual vault source material for one sample hexagram, *together*, so the
-method is grounded in the real collective and not in assumptions. Adrian sets
-the length, the depth, the do's and don'ts. The card *structure* is already
-set (VISION.md); the writing *method that fills it* is not. Only then does any
-card get written, and only then does the generator/adapter/render pipe get
-finished.
-
-Nothing about card content or the writing method should be assumed from this
-document. It records the situation; Adrian directs what happens next.
-
----
-
-## 6. The full roadmap — everything left to do, in order
-
-The complete remaining path from here to a finished deck. Each step waits on
-the one before it. Adrian directs the pace and approves each stage; the
-assistant does not skip ahead or assume.
-
-### Stage A — Design the writing method  ← START HERE
-The card *structure* is already set in `VISION.md` (six sections). Stage A is
-the writing *method* that fills that structure.
-A1. Read one sample hexagram's full vault source *with Adrian* — the six
-    translations, the Gene Keys text, the HD gate/channel/center, the moving
-    lines, the trigrams, immortals, Tarot. See the real material.
-A2. Adrian sets the writing method: per-section length, depth vs.
-    accessibility, what each section does and does not contain, explicit
-    do's and don'ts, the shape of each of the six sections.
-A3. Reconcile the guide set (`CONCEPT.md`, `00`–`06`, `SCHEMA.md`) to both
-    `VISION.md` (structure) and the method Adrian set — revise whatever those
-    guides assumed that VISION or the method overrides. Note: `SCHEMA.md` and
-    the generator currently have no `body` section and no `UL N` identity
-    field — Stage A3 must add them. Lock the standards.
-
-### Stage B — Prove it on one card
-B1. Write ONE hexagram's full `## Synthesis` in the vault, to the locked
-    method and the six-section structure. Adrian reviews and refines.
-B2. Settle the open data questions surfaced by doing it: the
-    `reading`/`anchor_line` duplication, markdown-in-JSON, the vault
-    Synthesis template format the generator parses, the new `body` section.
-B3. Update the generator to match the locked method/template; regenerate
-    that one card's JSON. (Generator already parses `### RELATIONS`, fixed
-    from the stale `### THE WEB`.)
-B4. **Reconcile the live card (`UniversalLanguageCard.tsx`) to `VISION.md`:**
-    six sections in the order UL 1 · ICHING · KEYS · DESIGN · BODY · RELATIONS;
-    add the `UL N` identity slot; add the BODY section; move Body before
-    Relations; shorten the bar labels; rename kin-card links "Code N" → "UL N".
-B5. Build the adapter (or rewire the renderer) so the generated JSON renders
-    on the restructured live card. Decide "adapter" vs. full-rewire.
-B6. See the one card whole on the live site. This proves the entire pipe:
-    vault writing → generator → JSON → card. Do not scale until it is right.
-
-### Stage C — Write the deck
-C1. Phase 1 — scaffold all 64 hexagram syntheses in the vault to the locked
-    method (a complete, on-standard draft).
-C2. Phase 1 — the 384 moving-line readings.
-C3. Phase 2 — Adrian's per-card art pass: refine each card until it is
-    genuinely his. Status tracked (`scaffold` → `in-progress` → `final`).
-
-### Stage D — Generate, wire, ship
-D1. Generate all 64 card JSONs from the finished vault.
-D2. Rewire the live card fully to the new data; retire
-    `oracle_cards_complete.json`.
-D3. Verify the 64 artwork images exist and are correct.
-D4. Build the whole-system map (all 64, the kinship webs seen at once —
-    `CONCEPT.md` §7).
+D1. RELATIONS overlay wired into the card.
+D2. ICHING + BODY overlays wired into the card.
+D3. `CardIdentityHeader` refactor — artwork + Acquire/glyph/Share row + title
+    block at the top of every panel. See `HANDOFF.md` Priority 1.
+D4. Per-panel artwork sizing strategy (UL full-size, others medium).
+D5. The Acquire detail section / configurator (per
+    `MARKETING_POSITIONING.md` §IV).
+D6. Verify the 64 artwork images.
+D7. Retire `oracle_cards_complete.json` and `expandedOracleData.ts` once the
+    overlays cover everything they were serving.
+D8. Light reconciliation of the older guide set (`00`–`06`, `SCHEMA.md`) to
+    `WRITING_METHOD.md`.
 
 ### Stage E — Surface & launch
-E1. Rework the lineage / "about the systems" page (`OracleSystems.tsx`).
-E2. Full review of all 64 against `CONCEPT.md` and the guide set.
-E3. The Human Design rights check (`CONCEPT.md` §9 / §10) before publishing.
-E4. Confirm every card's status is `final`. Launch.
 
-### Standing notes for the next session
+E1. Rework `OracleSystems.tsx` (the lineage / "about the systems" page).
+E2. The map / network UI (planetary grid of placed sculptures + Pearl-holder
+    profiles) — `HANDOFF.md` Priority 4 and `MARKETING_POSITIONING.md` §VIII–IX.
+E3. Full review of all 64 against the locked method and positioning.
+E4. The Human Design rights check before publishing (`CONCEPT.md` §9 / §10).
+E5. Confirm every card's status is `final`. Launch.
+
+### Stage F — Brand / domain (parked)
+
+The Universal Language name itself, the domain, the i64 / i64os relationship,
+and the painted-vs-unpainted finish strategy are open strategic questions —
+parked, not blocking. See `HANDOFF.md` "Open strategic questions".
+
+---
+
+## 6. Standing notes
+
 - The dev server (`npm run dev`, port 8888) stops on its own; restart when
   the page won't load.
 - Verify visual changes with a screenshot, not by scraping page text — the
   reading-stage is a swipe-panel layout that defeats text probes.
 - Work that is not trivial happens on a branch; commit at checkpoints.
-- This whole session's work is committed on `oracle/synthesis-foundation`
-  (commit `2c5ccc9`), not yet pushed.
+- The current working branch is `oracle/synthesis-foundation`. Last commit:
+  `668b6ce` (SEO research expansion). Uncommitted: `UniversalLanguageCard.tsx`
+  has small in-progress edits; `oracle/HANDOFF.md` is untracked.
