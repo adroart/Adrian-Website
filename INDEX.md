@@ -100,3 +100,7 @@ hooks/useParallax.ts → useParallax
 hooks/useReveal.ts → useReveal
 hooks/useScrollProgress.ts → useScrollProgress
 ```
+
+## Notes
+
+- Atlas (world map of where every piece lives), /atlas, see docs/ledger-api.md
