@@ -109,13 +109,13 @@ Six phases. Each phase commits independently. Adrian only needs to act on the it
    - In Clerk dashboard, enable: email magic link (primary), Google OAuth, Apple OAuth
    - Theme: paste the bronze/wood/paper palette into Clerk's appearance config (I'll leave a TODO with the values in `AuthButton.tsx`)
 
-2. **Cloudflare D1** — in the Cloudflare dashboard or via wrangler:
+2. **Cloudflare D1** — the `[[d1_databases]]` block in `wrangler.toml` is intentionally commented out so Pages deploys don't reject the placeholder id. To enable:
    ```
    wrangler d1 create adrian-website
    ```
-   Copy the database_id into `wrangler.toml` (replacing the placeholder), then apply migrations:
+   In `wrangler.toml`, paste the returned id in place of `paste-database-id-here`, then uncomment the four lines under that block, then:
    ```
-   wrangler d1 migrations apply adrian-website
+   wrangler d1 migrations apply adrian-website --remote
    ```
 
 3. **Stripe webhook** — in Stripe dashboard, add an endpoint `https://adrian-rasmussen.art/api/stripe/webhook` listening to:

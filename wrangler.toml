@@ -7,11 +7,22 @@ binding = "MUSIC_BUCKET"
 bucket_name = "adrian-music"
 
 # D1 database for user accounts, profiles, orders, cart, and collections.
-# Provision once with: wrangler d1 create adrian-website
-# Then copy the returned database_id over the placeholder below and run:
-# wrangler d1 migrations apply adrian-website --remote
-[[d1_databases]]
-binding = "DB"
-database_name = "adrian-website"
-database_id = "PROVISION_ME_VIA_WRANGLER"
-migrations_dir = "migrations"
+#
+# UNCOMMENT this block AFTER provisioning. Cloudflare Pages rejects deploys
+# when the database_id is not a real id, so the binding stays commented out
+# until the resource exists. Steps to enable:
+#
+#   1. wrangler d1 create adrian-website
+#   2. Replace `paste-database-id-here` below with the id from step 1
+#   3. Uncomment the four lines
+#   4. wrangler d1 migrations apply adrian-website --remote
+#
+# Every Function that needs the DB already guards on `if (!env.DB)` and
+# returns 503 db_not_configured at runtime, so the site keeps building
+# and the non-account routes keep working while this is commented out.
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "adrian-website"
+# database_id = "paste-database-id-here"
+# migrations_dir = "migrations"
