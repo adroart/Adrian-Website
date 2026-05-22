@@ -34,11 +34,11 @@ const SLUG_MAP: Record<string, SubcategoryConfig> = {
     },
     'mandala': {
         title: 'Mandala',
-        description: 'Sacred geometry forms. Maps of the inner and outer cosmos. Each layer a ring of the palace, moving inward toward the bindu.',
+        description: 'Original mandala art created as layered laser-cut wood sculptures. Sacred geometry, hand-finished color, and contemplative form by Adrian Rasmussen.',
         image: SERIES_DATA.find(s => s.name === 'Mandala')?.image,
         getPieces: (a) => a.filter(p => p.series === 'Mandala'),
         filters: ['availability', 'finish', 'hasStory'],
-        showCommissionInvite: false,
+        showCommissionInvite: true,
         seriesName: 'Mandala',
     },
     'light-codes': {
@@ -146,6 +146,46 @@ const SubcategoryPage: React.FC = () => {
         : undefined;
     useMetaTags({ title: config?.title, description: config?.description, image: ogImage });
 
+    const collectionSchema = useMemo(() => {
+        if (!config) return null;
+        const canonicalPath = `/creations/multidimensional-art/${subcategory}`;
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: `${config.title} by Adrian Rasmussen`,
+            description: config.description,
+            url: `https://adrianrasmussen.com${canonicalPath}`,
+            mainEntity: {
+                '@type': 'ItemList',
+                numberOfItems: basePieces.length,
+                itemListElement: basePieces.map((piece, index) => ({
+                    '@type': 'ListItem',
+                    position: index + 1,
+                    url: `https://adrianrasmussen.com/creations/${piece.id}`,
+                    name: piece.title,
+                })),
+            },
+            creator: {
+                '@type': 'Person',
+                name: 'Adrian Rasmussen',
+                url: 'https://adrianrasmussen.com/about',
+            },
+        };
+    }, [basePieces, config, subcategory]);
+
+    const breadcrumbSchema = useMemo(() => {
+        if (!config) return null;
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Creations', item: 'https://adrianrasmussen.com/creations' },
+                { '@type': 'ListItem', position: 2, name: 'Multidimensional Art', item: 'https://adrianrasmussen.com/creations/multidimensional-art' },
+                { '@type': 'ListItem', position: 3, name: config.title, item: `https://adrianrasmussen.com/creations/multidimensional-art/${subcategory}` },
+            ],
+        };
+    }, [config, subcategory]);
+
     if (!config) {
         return (
             <section className="bg-paper-50 min-h-screen pt-32 pb-32 px-6">
@@ -173,6 +213,18 @@ const SubcategoryPage: React.FC = () => {
 
     return (
         <section className="bg-paper-50 min-h-screen pt-24 pb-32 animate-fade-in">
+            {collectionSchema && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') }}
+                />
+            )}
+            {breadcrumbSchema && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') }}
+                />
+            )}
 
             {/* Hero - with gradient fade into content */}
             {config.image && (
@@ -181,7 +233,13 @@ const SubcategoryPage: React.FC = () => {
                         src={img(config.image, { w: 1200, h: 675 })}
                         srcSet={[640, 960, 1200, 1600].map(w => `${img(config.image!, { w, h: Math.round(w * 9 / 16) })} ${w}w`).join(', ')}
                         sizes="100vw"
-                        alt={subcategory === 'universal-language' ? 'Universal Language, a series of 64 multi-dimensional wooden sculptures by Adrian Rasmussen.' : config.title}
+                        alt={
+                            subcategory === 'universal-language'
+                                ? 'Universal Language, a series of 64 multi-dimensional wooden sculptures by Adrian Rasmussen.'
+                                : subcategory === 'mandala'
+                                ? 'Original sacred geometry mandala artwork in layered laser-cut wood by Adrian Rasmussen.'
+                                : config.title
+                        }
                         className="w-full h-full object-cover"
                         decoding="async"
                     />
@@ -218,6 +276,52 @@ const SubcategoryPage: React.FC = () => {
                                 Read the full story <ArrowRight size={12} />
                             </Link>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {subcategory === 'mandala' && (
+                <div className="max-w-[1800px] mx-auto px-6 md:px-10 pb-16">
+                    <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-10 md:gap-16 border-y border-wood-200 py-12">
+                        <div className="max-w-3xl">
+                            <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-5">
+                                Original Mandala Art In Layered Laser-Cut Wood
+                            </h2>
+                            <div className="space-y-5 font-sans text-base md:text-lg text-wood-650 leading-[1.8]">
+                                <p>
+                                    Adrian Rasmussen creates mandala art as physical sacred geometry. Each piece begins with exact ratios and radial structure, then becomes a layered wooden sculpture through laser-cut forms, hand-finished color, crystal, and surface work.
+                                </p>
+                                <p>
+                                    These works are made for collectors, meditation spaces, ceremonial rooms, and homes where the artwork needs to hold presence, not only pattern. The mandala becomes an object to enter with attention.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-5 content-start">
+                            <div>
+                                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold mb-2">Primary Search</p>
+                                <p className="font-serif text-2xl text-wood-900">Mandala art</p>
+                            </div>
+                            <div>
+                                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold mb-2">Technique</p>
+                                <p className="font-serif text-2xl text-wood-900">Layered laser-cut wood</p>
+                            </div>
+                            <div>
+                                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold mb-2">Available</p>
+                                <p className="font-serif text-4xl text-wood-900">
+                                    {basePieces.filter(piece => piece.availability !== 'SOLD').length}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-500 font-semibold mb-2">Commissions</p>
+                                <Link
+                                    to="/inquire"
+                                    className="font-serif text-2xl text-wood-900 hover:text-bronze-600 transition-colors"
+                                >
+                                    Open inquiry
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

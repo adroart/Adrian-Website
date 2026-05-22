@@ -1,0 +1,81 @@
+{
+  "number": 1,
+  "section": "relations",
+  "status": "final",
+  "card_name": "Earth's Breath",
+
+  "unity_line": "Met by Code 2, this is the world coming into form, the creative force and the field that receives it moving as one.",
+
+  "pair": {
+    "number": 2,
+    "card_name": "Beyond the Shell",
+    "hexagram_name": "The Receptive (K'un)",
+    "teaching": "These two are the deck's first pair, the oldest pair in the I Ching, and they teach the same thing from opposite ends. One is pure creative force; the other is pure receptive ground. Nothing in the world is made by either alone. Everything in the world is what happens when the two meet."
+  },
+
+  "inverse": {
+    "number": 1,
+    "card_name": null,
+    "hexagram_name": null,
+    "is_self_inverse": true,
+    "teaching": "Turn this code upside down and you find it unchanged. It is one of only eight in the deck that meets its own reflection, and the meaning is exactly that. Pure creative force does not have a back side. There is no other angle from which to read it."
+  },
+
+  "programming_partner": {
+    "number": 2,
+    "card_name": "Beyond the Shell",
+    "teaching": "The same pairing runs through the genetic code, where these two are the codes that programme each other. What one does, the other holds. What one initiates, the other receives and ripens. The partnership is biological, not just symbolic."
+  },
+
+  "codon_ring": {
+    "name": "Ring of Fire",
+    "tarot": "14 - Temperance",
+    "siblings": [14],
+    "teaching": "This code shares its ring with one other, Code 14, the abundance that follows fire's spark. The ring is small because the teaching is exact. Pure creative force, met by the patient labour that turns the spark into a life, is the whole of what this family carries."
+  },
+
+  "tarot": {
+    "card": "XIV · The Art",
+    "teaching": "In the Thoth deck, this card is named The Art rather than Temperance, and the older name fits this code better. The image is alchemical mixing, two forces blended into a third thing that neither was before. This code is what does the mixing."
+  },
+
+  "trigrams": {
+    "upper": "Heaven",
+    "lower": "Heaven",
+    "teaching": "Heaven over Heaven, the same force doubled, undivided. This code is one motion, unmixed, the sky meeting itself with nothing in between."
+  },
+
+  "sky": {
+    "value": "Sagittarius",
+    "type": "sign",
+    "teaching": "The ring is keyed to Sagittarius, the mutable fire of the arrow flying outward, and this code is the bow that releases it."
+  },
+
+  "immortals": {
+    "upper": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "lower": {
+      "trigram": "Heaven",
+      "name": "Zhongli Quan",
+      "virtue": "The retired general who turned to the way"
+    },
+    "same_trigram": true,
+    "teaching": "Both trigrams here carry the same Daoist Immortal, Zhongli Quan, the retired general who turned inward to refine what was left. Doubled, his presence speaks of force that has stopped seeking outside itself and turned the whole of its strength toward becoming what it is."
+  },
+
+  "hebrew_letter": {
+    "letter": "Samech",
+    "meaning": "The Prop — the spine, the staff that steadies the ascending",
+    "path_number": "25",
+    "path_connects": "Tiphareth to Yesod",
+    "teaching": "On the Tree, the path of this code's ring is Samech, the prop or spine, running from the heart of the Tree down toward the foundation. The letter teaches that pure creative force needs something to lean on as it descends into form."
+  },
+
+  "meta": {
+    "source": "relations v1, Adrian-locked sample UL 1",
+    "generated": "relations-v1"
+  }
+}

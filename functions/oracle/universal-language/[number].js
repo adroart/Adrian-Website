@@ -11,7 +11,7 @@
 
 const CLOUDINARY = 'https://res.cloudinary.com/dobbosnda/image/upload';
 const OG_CROP    = 'f_auto,q_auto,w_300,h_300,c_fill,g_center';
-const SITE_URL   = 'https://www.adrianrasmussen.com';
+const SITE_URL   = 'https://adrianrasmussen.com';
 
 /* ─── Card name lookup (1–64) ────────────────────────────────────────────── */
 

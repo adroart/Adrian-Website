@@ -80,6 +80,12 @@ async function skipCardEntrance(page: Page) {
   }
 }
 
+async function forceMovingCoinCast(page: Page) {
+  await page.addInitScript(() => {
+    Math.random = () => 0.1;
+  });
+}
+
 // First piece ID from mockData (UL-100)
 const FIRST_PIECE_ID = 'UL-100';
 
@@ -336,8 +342,9 @@ test('10. piece detail page renders title and image', async ({ page }) => {
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });
 
-test('11. I Ching coin-cast: throws, builds, shows the reading, and persists', async ({ page }) => {
+test('11. I Ching coin-cast: throws, builds, shows the changing, and resets cleanly', async ({ page }) => {
   const errors = attachErrorListeners(page);
+  await forceMovingCoinCast(page);
 
   // Open a card straight into the I Ching chapter.
   await page.goto('/oracle/universal-language/23?system=iching', { waitUntil: 'networkidle' });
@@ -346,56 +353,87 @@ test('11. I Ching coin-cast: throws, builds, shows the reading, and persists', a
   await assertNo404Text(page);
 
   // The idle casting invitation is present.
-  const castButton = page.getByRole('button', { name: /cast the coins/i });
-  await castButton.scrollIntoViewIfNeeded();
-  await expect(castButton).toBeVisible();
+  const throwButton = page.getByRole('button', { name: /throw the coins/i });
+  await throwButton.scrollIntoViewIfNeeded();
+  await expect(throwButton).toBeVisible();
 
   // Throw the coins — the build/flip/reveal animation runs on its own.
-  await castButton.click();
+  await throwButton.click();
 
-  // After the sequence settles, the reading detail (guidance + Cast again)
-  // is shown, and the present hexagram name is on screen.
-  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
-  await expect(page.getByText(/^Now$/i)).toBeVisible();
+  // After the sequence settles, the present and becoming stages are shown.
+  await expect(page.getByText(/^Now$/i)).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText(/^Becoming$/i)).toBeVisible({ timeout: 6000 });
+  await expect(page.getByRole('button', { name: /read code/i })).toBeVisible();
 
   await assertNoOverflow(page);
   await assertNoErrorBoundary(page);
   await screenshot(page, '11-iching-cast-result');
 
-  // "Cast again" is available and re-rolls without error.
-  const castAgain = page.getByRole('button', { name: /cast again/i });
-  await expect(castAgain).toBeVisible();
-
-  // The cast is persisted: swiping away and back keeps the reading.
-  // Simulate a chapter change via the system param, then return.
+  // A card opens with no stale cast restored; returning to I Ching shows the
+  // idle invitation again, matching the current ritual design.
   await page.goto('/oracle/universal-language/23?system=genekeys', { waitUntil: 'networkidle' });
   await skipCardEntrance(page);
   await page.goto('/oracle/universal-language/23?system=iching', { waitUntil: 'networkidle' });
   await skipCardEntrance(page);
-  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
+  await expect(page.getByRole('button', { name: /throw the coins/i })).toBeVisible({ timeout: 6000 });
 
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });
 
 test('12. I Ching coin-cast on mobile: no overflow, reading renders', async ({ page }) => {
   const errors = attachErrorListeners(page);
+  await forceMovingCoinCast(page);
   await page.setViewportSize({ width: 390, height: 844 });
 
   await page.goto('/oracle/universal-language/1?system=iching', { waitUntil: 'networkidle' });
   await skipCardEntrance(page);
   await assertNoErrorBoundary(page);
 
-  const castButton = page.getByRole('button', { name: /cast the coins/i });
-  await castButton.scrollIntoViewIfNeeded();
-  await expect(castButton).toBeVisible();
-  await castButton.click();
+  const throwButton = page.getByRole('button', { name: /throw the coins/i });
+  await throwButton.scrollIntoViewIfNeeded();
+  await expect(throwButton).toBeVisible();
+  await throwButton.click();
 
-  await expect(page.getByRole('button', { name: /cast again/i })).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText(/^Becoming$/i)).toBeVisible({ timeout: 6000 });
 
   // The two-hexagram pairing must not introduce horizontal overflow on mobile.
   await assertNoOverflow(page);
   await assertNoErrorBoundary(page);
   await screenshot(page, '12-iching-cast-mobile');
+
+  expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
+});
+
+test('13. SEO page: laser-cut wood art route renders target content', async ({ page }) => {
+  const errors = attachErrorListeners(page);
+
+  await page.goto('/creations/laser-cut-wood-art', { waitUntil: 'networkidle' });
+
+  await expect(page.getByRole('heading', { name: /^Laser-Cut Wood Art$/i })).toBeVisible();
+  await expect(page.getByText(/Layered Wood, Cut With Precision/i).first()).toBeVisible();
+  await expect(page.getByText(/Selected Works/i).first()).toBeVisible();
+  await expect(page.getByText(/129 pieces/i).first()).toBeVisible();
+
+  await assertNoOverflow(page);
+  await assertNoErrorBoundary(page);
+  await assertNo404Text(page);
+
+  expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
+});
+
+test('14. SEO page: mandala route renders strengthened target content', async ({ page }) => {
+  const errors = attachErrorListeners(page);
+
+  await page.goto('/creations/multidimensional-art/mandala', { waitUntil: 'networkidle' });
+
+  await expect(page.getByRole('heading', { name: /^Mandala$/i })).toBeVisible();
+  await expect(page.getByText(/Original Mandala Art In Layered Laser-Cut Wood/i).first()).toBeVisible();
+  await expect(page.getByText(/Primary Search/i).first()).toBeVisible();
+  await expect(page.getByText(/Mandala art/i).first()).toBeVisible();
+
+  await assertNoOverflow(page);
+  await assertNoErrorBoundary(page);
+  await assertNo404Text(page);
 
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });

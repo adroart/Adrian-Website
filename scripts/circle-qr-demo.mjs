@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { writeFileSync } from 'node:fs';
 
-const url = 'https://www.adrianrasmussen.com';
+const url = 'https://adrianrasmussen.com';
 const size = 900;
 const frameInset = 15;
 const frameStroke = 4;

@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SEO And AI Search Guidance | Adrian Rasmussen</title>
+  <meta
+    name="description"
+    content="Human and agent guidance dashboard for Adrian Rasmussen SEO, AI search visibility, Mandala art, sacred geometry art, and laser-cut wood art strategy."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Karla:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      --paper-50: #f5f4f0;
+      --paper-100: #ebe8e1;
+      --paper-200: #e0dbcf;
+      --paper-300: #cfc6b5;
+      --wood-50: #faf9f7;
+      --wood-100: #f0ece5;
+      --wood-200: #e0d8cc;
+      --wood-300: #c8bda8;
+      --wood-400: #a89070;
+      --wood-500: #8f7a5b;
+      --wood-600: #736046;
+      --wood-700: #524330;
+      --wood-800: #3d3226;
+      --wood-900: #262321;
+      --stone-950: #23201e;
+      --bronze-300: #d5c1a0;
+      --bronze-400: #c4aa7c;
+      --bronze-500: #ab9266;
+      --bronze-600: #8a744e;
+      --bronze-700: #6d5a3c;
+      --font-display: "Cormorant Garamond", serif;
+      --font-body: "Lora", serif;
+      --font-label: "Karla", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(240, 236, 229, 0.82), rgba(245, 244, 240, 0.96) 460px),
+        var(--paper-50);
+      color: var(--wood-900);
+      font-family: var(--font-body);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: var(--bronze-700);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.24em;
+      transition: color 240ms ease, border-color 240ms ease, background-color 240ms ease;
+    }
+
+    a:visited {
+      color: var(--bronze-700);
+    }
+
+    a:hover {
+      color: var(--wood-900);
+    }
+
+    a:active {
+      color: var(--wood-900);
+      background-color: rgba(196, 170, 124, 0.18);
+    }
+
+    a:focus-visible {
+      color: var(--wood-900);
+      background-color: rgba(196, 170, 124, 0.18);
+      outline: 2px solid var(--bronze-400);
+      outline-offset: 3px;
+    }
+
+    code {
+      background: var(--paper-100);
+      border: 1px solid var(--wood-200);
+      padding: 0.08rem 0.28rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86em;
+      color: var(--wood-800);
+    }
+
+    .shell {
+      width: min(1400px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--wood-200);
+    }
+
+    .hero {
+      padding: 92px 0 52px;
+      display: grid;
+      gap: 28px;
+      grid-template-columns: minmax(0, 1.36fr) minmax(300px, 0.82fr);
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--bronze-600);
+      font: 700 0.72rem/1.35 var(--font-label);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.1;
+      font-family: var(--font-display);
+      font-weight: 500;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 930px;
+      font-size: clamp(3.25rem, 7vw, 7rem);
+      letter-spacing: 0;
+      line-height: 0.95;
+    }
+
+    h2 {
+      font-size: clamp(2.25rem, 4vw, 4.75rem);
+      color: var(--wood-900);
+    }
+
+    h3 {
+      font-size: clamp(1.45rem, 2vw, 1.9rem);
+      color: var(--wood-900);
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lede {
+      max-width: 760px;
+      color: var(--wood-600);
+      font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+      font-weight: 400;
+      margin-top: 26px;
+    }
+
+    .status-panel {
+      background:
+        linear-gradient(135deg, rgba(196, 170, 124, 0.08), transparent 34%),
+        var(--wood-800);
+      color: var(--paper-50);
+      border: 1px solid var(--wood-700);
+      padding: 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-panel a {
+      color: var(--bronze-400);
+    }
+
+    .status-panel a:visited {
+      color: var(--bronze-400);
+    }
+
+    .status-panel a:hover,
+    .status-panel a:active,
+    .status-panel a:focus-visible {
+      color: var(--paper-50);
+      background-color: rgba(196, 170, 124, 0.2);
+    }
+
+    .status-panel .eyebrow {
+      color: var(--bronze-400);
+      margin-bottom: 12px;
+    }
+
+    .status-panel p:not(.eyebrow) {
+      color: var(--wood-200);
+      font-size: 0.94rem;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .metric {
+      border-top: 1px solid rgba(196, 170, 124, 0.34);
+      padding-top: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 0.95;
+      color: var(--paper-50);
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--wood-300);
+      font: 600 0.68rem/1.35 var(--font-label);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      border-top: 1px solid var(--wood-200);
+      background: rgba(245, 244, 240, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      overflow-x: hidden;
+    }
+
+    .nav-inner {
+      display: flex;
+      gap: 22px;
+      overflow-x: auto;
+      max-width: calc(100% - 32px);
+      padding: 16px 0 14px;
+      font: 700 0.7rem/1 var(--font-label);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      scrollbar-width: thin;
+    }
+
+    .nav-inner a {
+      white-space: nowrap;
+      color: var(--wood-600);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      padding: 4px 0 7px;
+    }
+
+    .nav-inner a:visited {
+      color: var(--wood-600);
+    }
+
+    .nav-inner a:hover,
+    .nav-inner a:active,
+    .nav-inner a:focus-visible {
+      color: var(--wood-900);
+      background-color: transparent;
+      border-bottom-color: var(--bronze-400);
+    }
+
+    main {
+      padding: 34px 0 84px;
+    }
+
+    section {
+      padding: 56px 0 62px;
+      border-bottom: 1px solid var(--wood-200);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.66fr) minmax(0, 1fr);
+      gap: 42px;
+      margin-bottom: 34px;
+      align-items: start;
+    }
+
+    .section-head p {
+      color: var(--wood-600);
+      font-size: 1rem;
+      max-width: 68ch;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      background: rgba(250, 249, 247, 0.68);
+      border: 1px solid var(--wood-200);
+      padding: clamp(18px, 2.5vw, 28px);
+      transition: border-color 260ms ease, background-color 260ms ease, transform 260ms ease;
+    }
+
+    .card:hover {
+      border-color: var(--bronze-300);
+      background: rgba(250, 249, 247, 0.92);
+    }
+
+    .card h3 {
+      margin-bottom: 12px;
+    }
+
+    .card p,
+    .card li {
+      color: var(--wood-600);
+      font-size: 0.94rem;
+    }
+
+    .label {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--bronze-600);
+      font: 700 0.68rem/1.1 var(--font-label);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--wood-100);
+    }
+
+    .pill {
+      color: var(--wood-700);
+      font: 700 0.68rem/1.15 var(--font-label);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    ul,
+    ol {
+      margin: 10px 0 0;
+      padding-left: 1.15rem;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      background: var(--wood-50);
+      border: 1px solid var(--wood-200);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-wrap.offset {
+      margin-top: 18px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+      background: transparent;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--wood-200);
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: var(--paper-100);
+      color: var(--wood-700);
+      font: 700 0.68rem/1.3 var(--font-label);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td small {
+      color: var(--wood-500);
+    }
+
+    .keyword-source {
+      margin: -4px 0 24px;
+      color: var(--wood-600);
+      font-size: 0.92rem;
+      max-width: 82ch;
+    }
+
+    .keyword-source strong {
+      color: var(--wood-800);
+      font-weight: 600;
+    }
+
+    .keyword-cluster-title {
+      margin-top: 34px;
+      margin-bottom: 10px;
+      font-size: clamp(1.8rem, 3vw, 3rem);
+    }
+
+    .keyword-cluster-note {
+      margin-bottom: 18px;
+      color: var(--wood-600);
+      max-width: 82ch;
+      font-size: 0.95rem;
+    }
+
+    .volume-stack {
+      display: grid;
+      gap: 2px;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+
+    .volume-stack strong {
+      color: var(--wood-900);
+      font-weight: 600;
+    }
+
+    .volume-stack small {
+      color: var(--wood-500);
+      font-size: 0.78rem;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      border-top: 1px solid var(--wood-200);
+      padding: 16px 0;
+    }
+
+    .route:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .route strong {
+      color: var(--wood-800);
+    }
+
+    .route p {
+      color: var(--wood-600);
+      font-size: 0.95rem;
+    }
+
+    .callout {
+      border: 1px solid var(--bronze-300);
+      background: rgba(196, 170, 124, 0.13);
+      padding: 18px 20px;
+    }
+
+    .callout.offset {
+      margin-top: 18px;
+    }
+
+    .callout strong {
+      color: var(--bronze-700);
+    }
+
+    .command {
+      background: var(--wood-900);
+      color: var(--paper-50);
+      border: 1px solid var(--wood-700);
+      padding: 15px 16px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .file-list {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--wood-200);
+    }
+
+    .file-link {
+      display: grid;
+      gap: 4px;
+      border-bottom: 1px solid var(--wood-200);
+      padding: 13px 0;
+      text-decoration: none;
+      color: var(--bronze-700);
+    }
+
+    .file-link:visited {
+      color: var(--bronze-700);
+    }
+
+    .file-link:hover,
+    .file-link:active,
+    .file-link:focus-visible {
+      color: var(--wood-900);
+      background-color: rgba(196, 170, 124, 0.12);
+    }
+
+    .file-link:hover strong,
+    .file-link:active strong,
+    .file-link:focus-visible strong {
+      color: var(--bronze-700);
+    }
+
+    .file-link strong {
+      color: var(--wood-900);
+      transition: color 240ms ease;
+    }
+
+    .file-link span {
+      color: var(--wood-600);
+      font-size: 0.9rem;
+    }
+
+    .path-line {
+      display: inline-block;
+      color: var(--wood-500);
+      font: 600 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .source-file-notice {
+      border: 1px solid var(--bronze-300);
+      background: rgba(196, 170, 124, 0.13);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      color: var(--wood-700);
+    }
+
+    .source-file-notice[hidden] {
+      display: none;
+    }
+
+    .source-file-notice p + p {
+      margin-top: 6px;
+      font-size: 0.92rem;
+    }
+
+    a[data-source-path] {
+      cursor: copy;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: var(--wood-600);
+    }
+
+    footer {
+      padding: 34px 0 48px;
+      color: var(--wood-600);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        width: min(100% - 28px, 1400px);
+      }
+
+      .hero,
+      .section-head,
+      .grid,
+      .grid.two,
+      .route {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 70px;
+      }
+
+      h1 {
+        font-size: clamp(3rem, 14vw, 5.2rem);
+      }
+
+      .status-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      th,
+      td {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell hero">
+      <div>
+        <p class="eyebrow">Adrian Rasmussen SEO Command Center</p>
+        <h1>Mandala, Sacred Geometry, Laser-Cut Wood Art, And AI Search</h1>
+        <p class="lede">
+          This page is the plain-English map of the SEO system: what we are trying to win,
+          what has already been built, which files control it, and how future agents should
+          continue without losing the strategy.
+        </p>
+      </div>
+      <aside class="status-panel" aria-label="Current SEO status">
+        <p class="eyebrow">Current Status</p>
+        <p>
+          Canonical domain is <a href="https://adrianrasmussen.com" target="_blank" rel="noreferrer">adrianrasmussen.com</a>.
+          The site now has dedicated Mandala and Laser-Cut Wood Art SEO hubs, image sitemap entries,
+          route-specific built HTML metadata, and validation checks.
+        </p>
+        <div class="status-grid">
+          <div class="metric">
+            <strong>173</strong>
+            <span>Archive artworks</span>
+          </div>
+          <div class="metric">
+            <strong>42</strong>
+            <span>Mandala pieces</span>
+          </div>
+          <div class="metric">
+            <strong>129</strong>
+            <span>Laser-cut wood pieces</span>
+          </div>
+          <div class="metric">
+            <strong>260</strong>
+            <span>Sitemap URLs</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <nav aria-label="SEO guidance navigation">
+      <div class="shell nav-inner">
+        <a href="#strategy">Strategy</a>
+        <a href="#keywords">Keywords</a>
+        <a href="#routes">Routes</a>
+        <a href="#files">Files</a>
+        <a href="#runbook">Runbook</a>
+        <a href="#next">Next Steps</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section id="strategy">
+      <div class="section-head">
+        <h2>Strategy</h2>
+        <p>
+          The aim is not just to rank for one phrase. The aim is to make Adrian a credible,
+          citable entity for original Mandala art, sacred geometry art, layered wood sculpture,
+          and high-value commissioned works.
+        </p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <span class="label">Positioning</span>
+          <h3>Lead With Meaning</h3>
+          <p>
+            The highest-value buyers are more likely to respond to sacred geometry, Mandala,
+            original artwork, artist identity, and commissioned space-specific work than to a
+            pure production phrase like laser cut.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Mandala art</span>
+            <span class="pill">Sacred geometry</span>
+            <span class="pill">Original work</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="label">Proof</span>
+          <h3>Use Process As Authority</h3>
+          <p>
+            Laser-cut wood should be treated as evidence of craft: designed, cut, layered,
+            hand-finished, and built as physical sculpture. Process photos and videos matter.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Layered wood</span>
+            <span class="pill">Hand-finished</span>
+            <span class="pill">Studio proof</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="label">Distribution</span>
+          <h3>Search Plus Reputation</h3>
+          <p>
+            Google pages are the base. AI citations and high-ticket buyers need off-site proof:
+            interviews, designer resources, artist profiles, process videos, galleries, and
+            relevant editorial mentions.
+          </p>
+          <div class="pill-row">
+            <span class="pill">Google</span>
+            <span class="pill">AI citations</span>
+            <span class="pill">Designers</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="keywords">
+      <div class="section-head">
+        <h2>Keyword Map</h2>
+        <p>
+          Use this as the working hierarchy. Broad terms create the biggest ceiling, but the
+          most qualified traffic comes from specific terms that match Adrian's actual work.
+        </p>
+      </div>
+      <p class="keyword-source">
+        <strong>Volume note:</strong> monthly search volumes below are United States estimates gathered
+        on 2026-05-21 from a free AI keyword-volume checker and should be treated as directional.
+        Confirm exact numbers later in Google Keyword Planner, Ahrefs, Semrush, or Search Console.
+        Public benchmarks from
+        <a href="https://www.keysearch.co/top-keywords/art-keywords" target="_blank" rel="noreferrer">KeySearch</a>
+        and <a href="https://www.rankhero.com/keywords/laser-cut" target="_blank" rel="noreferrer">RankHero</a>
+        also show <code>mandala art</code> as a very large global Google term and
+        <code>laser cut</code> as a large marketplace term, but those sources use different datasets.
+      </p>
+      <div class="table-wrap" role="region" aria-label="Keyword target table" tabindex="0">
+        <table>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>US Volume</th>
+            <th>Difficulty</th>
+            <th>CPC</th>
+            <th>Intent</th>
+            <th>Fit And Risk</th>
+            <th>Primary Page</th>
+            <th>Analytics To Watch</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>mandala art</code></td>
+            <td><span class="volume-stack"><strong>49,500/mo</strong><small>Very high</small></span></td>
+            <td>68, hard</td>
+            <td>$1</td>
+            <td>Informational</td>
+            <td>Huge ceiling, high image and tutorial noise. Long-term authority target, not quick revenue.</td>
+            <td><a href="https://adrianrasmussen.com/creations/multidimensional-art/mandala" target="_blank" rel="noreferrer">Mandala hub</a></td>
+            <td>GSC impressions, image search impressions, average position, branded follow-up searches, AI answer mentions.</td>
+          </tr>
+          <tr>
+            <td><code>sacred geometry art</code></td>
+            <td><span class="volume-stack"><strong>18,100/mo</strong><small>Very high</small></span></td>
+            <td>52, medium-hard</td>
+            <td>$2</td>
+            <td>Informational</td>
+            <td>Strong brand fit and AI-entity fit. SERP includes education, symbols, artists, and marketplaces.</td>
+            <td>Mandala hub, About, writings cluster</td>
+            <td>Queries by page, AI citations, backlinks to essays, internal links into Mandala and Universal Language art pages.</td>
+          </tr>
+          <tr>
+            <td><code>laser cut wood art</code></td>
+            <td><span class="volume-stack"><strong>4,400/mo</strong><small>High</small></span></td>
+            <td>45, medium</td>
+            <td>$2</td>
+            <td>Commercial</td>
+            <td>Best exact process term. Lower volume than broad art terms, but much cleaner fit.</td>
+            <td><a href="https://adrianrasmussen.com/creations/laser-cut-wood-art" target="_blank" rel="noreferrer">Laser-Cut Wood Art hub</a></td>
+            <td>Landing page impressions, clicks to artwork pages, inquiry assists, image search, phrase variants with wood and layered.</td>
+          </tr>
+          <tr>
+            <td><code>layered wood art</code></td>
+            <td><span class="volume-stack"><strong>3,600/mo</strong><small>High</small></span></td>
+            <td>42, medium</td>
+            <td>$2</td>
+            <td>Commercial, rising</td>
+            <td>Good material and depth language. Some DIY noise, but buyer fit is stronger than generic laser terms.</td>
+            <td>Laser-Cut Wood Art hub and artwork pages</td>
+            <td>Image impressions, product-detail exits, engagement on process content, queries containing layered or wood.</td>
+          </tr>
+          <tr>
+            <td><code>laser cut art</code></td>
+            <td><span class="volume-stack"><strong>6,600/mo</strong><small>High</small></span></td>
+            <td>48, medium</td>
+            <td>$3</td>
+            <td>Commercial, rising</td>
+            <td>Useful broad process term, but mixed with files, machines, templates, and hobby content.</td>
+            <td>Laser-Cut Wood Art hub</td>
+            <td>CTR by query, negative-intent query variants, image pack exposure, assisted conversions from long-tail variants.</td>
+          </tr>
+          <tr>
+            <td><code>3d wood art</code></td>
+            <td><span class="volume-stack"><strong>5,400/mo</strong><small>High</small></span></td>
+            <td>46, medium</td>
+            <td>$3</td>
+            <td>Commercial</td>
+            <td>Good for depth and sculpture discovery, but less distinctive than layered or laser-cut wood.</td>
+            <td>Laser-Cut Wood Art hub</td>
+            <td>Query impressions, image engagement, on-page clicks into large dimensional works.</td>
+          </tr>
+          <tr>
+            <td><code>wood sculpture art</code></td>
+            <td><span class="volume-stack"><strong>8,100/mo</strong><small>High</small></span></td>
+            <td>55, medium-hard</td>
+            <td>$4</td>
+            <td>Informational</td>
+            <td>Strong price-aligned category language, but broad and competitive across many sculptors.</td>
+            <td>About, Laser-Cut Wood Art, artwork pages</td>
+            <td>Average position, qualified page paths, inquiries from sculpture-oriented pages.</td>
+          </tr>
+          <tr>
+            <td><code>visionary art</code></td>
+            <td><span class="volume-stack"><strong>12,100/mo</strong><small>Very high</small></span></td>
+            <td>58, medium-hard</td>
+            <td>$1</td>
+            <td>Informational</td>
+            <td>Useful artist-genre bridge, but not as exact as Mandala, sacred geometry, or layered wood.</td>
+            <td>About, writings, selected works</td>
+            <td>AI citation prompts, branded searches, artist profile backlinks, social/referral traffic.</td>
+          </tr>
+          <tr>
+            <td><code>geometric wood art</code></td>
+            <td><span class="volume-stack"><strong>2,900/mo</strong><small>Medium-high</small></span></td>
+            <td>40, medium</td>
+            <td>$2</td>
+            <td>Commercial</td>
+            <td>Good supporting phrase. More decor and DIY noise than sacred geometry language.</td>
+            <td>Laser-Cut Wood Art hub</td>
+            <td>Image search, query variants, time on page, clicks to inquiry.</td>
+          </tr>
+          <tr>
+            <td><code>mandala artist</code></td>
+            <td><span class="volume-stack"><strong>2,400/mo</strong><small>Medium-high</small></span></td>
+            <td>36, medium</td>
+            <td>$3</td>
+            <td>Informational</td>
+            <td>Good entity target for Adrian. Use About and Mandala hub to connect person plus subject.</td>
+            <td>About plus Mandala hub</td>
+            <td>Knowledge-style searches, branded search growth, AI mentions, About page impressions.</td>
+          </tr>
+          <tr>
+            <td><code>laser cut mandala art</code></td>
+            <td><span class="volume-stack"><strong>1,600/mo</strong><small>Medium</small></span></td>
+            <td>34, medium</td>
+            <td>$3</td>
+            <td>Transactional</td>
+            <td>Excellent exact-match bridge between Mandala and process. Strong near-term opportunity.</td>
+            <td>Mandala hub plus process article</td>
+            <td>Mandala hub impressions, artwork clicks, image pack visibility, inquiry assists.</td>
+          </tr>
+          <tr>
+            <td><code>sacred geometry mandala art</code></td>
+            <td><span class="volume-stack"><strong>1,300/mo</strong><small>Medium</small></span></td>
+            <td>38, medium</td>
+            <td>$2</td>
+            <td>Informational</td>
+            <td>Strong semantic fit. Good for definitive writing and internal links to pieces.</td>
+            <td>Mandala hub plus article</td>
+            <td>Essay impressions, AI citations, backlinks, internal link clicks to Mandala pieces.</td>
+          </tr>
+          <tr>
+            <td><code>original mandala art</code></td>
+            <td><span class="volume-stack"><strong>880/mo</strong><small>Medium</small></span></td>
+            <td>32, medium-low</td>
+            <td>$4</td>
+            <td>Commercial</td>
+            <td>High collector fit. Much more valuable than broad tutorial traffic.</td>
+            <td>Mandala hub and individual Mandala pieces</td>
+            <td>CTR, artwork page clicks, saves/shares, inquiries, image search impressions.</td>
+          </tr>
+          <tr>
+            <td><code>layered laser cut wood art</code></td>
+            <td><span class="volume-stack"><strong>720/mo</strong><small>Medium-low</small></span></td>
+            <td>31, medium-low</td>
+            <td>$3</td>
+            <td>Commercial, rising</td>
+            <td>Very high fit. Lower volume, but the phrase describes the actual work cleanly.</td>
+            <td>Laser-Cut Wood Art hub</td>
+            <td>Long-tail impressions, image engagement, qualified inquiry paths.</td>
+          </tr>
+          <tr>
+            <td><code>wooden mandala sculpture</code></td>
+            <td><span class="volume-stack"><strong>590/mo</strong><small>Low-medium</small></span></td>
+            <td>28, low-medium</td>
+            <td>$5</td>
+            <td>Transactional</td>
+            <td>Excellent high-ticket fit. Smaller audience, but much closer to a collector or designer.</td>
+            <td>Mandala artwork pages</td>
+            <td>Artwork impressions, inquiry starts, page depth, image search, referrals from design contexts.</td>
+          </tr>
+          <tr>
+            <td><code>original mandala art for sale</code></td>
+            <td><span class="volume-stack"><strong>320/mo</strong><small>Low-medium</small></span></td>
+            <td>35, medium</td>
+            <td>$6</td>
+            <td>Transactional</td>
+            <td>Very strong buyer intent. Use carefully, with real availability and inquiry paths.</td>
+            <td>Mandala hub, inquiry, shop later</td>
+            <td>CTR, artwork availability clicks, inquiry conversion rate, revenue per lead.</td>
+          </tr>
+          <tr>
+            <td><code>laser cut wood artist</code></td>
+            <td><span class="volume-stack"><strong>260/mo</strong><small>Low</small></span></td>
+            <td>24, low-medium</td>
+            <td>$4</td>
+            <td>Informational, rising</td>
+            <td>Good entity term. Low volume, but helps AI and Google connect Adrian to the craft.</td>
+            <td>About and Laser-Cut Wood Art hub</td>
+            <td>About impressions, AI mentions, branded query growth, off-site profile links.</td>
+          </tr>
+          <tr>
+            <td><code>custom mandala artwork</code></td>
+            <td><span class="volume-stack"><strong>210/mo</strong><small>Low</small></span></td>
+            <td>25, low-medium</td>
+            <td>$8</td>
+            <td>Transactional</td>
+            <td>Small but commercially important. This is a commission page target, not a blog-only term.</td>
+            <td><a href="https://adrianrasmussen.com/inquire" target="_blank" rel="noreferrer">Inquire</a> plus future commission article</td>
+            <td>Inquiry conversion rate, lead quality, form completion, assisted revenue.</td>
+          </tr>
+          <tr>
+            <td><code>Bali mandala artist</code></td>
+            <td><span class="volume-stack"><strong>170/mo</strong><small>Low</small></span></td>
+            <td>18, low</td>
+            <td>$1</td>
+            <td>Informational</td>
+            <td>Low volume, high uniqueness. Useful for travel, retreat, hotel, and local discovery.</td>
+            <td>About, Inquire, Mandala hub</td>
+            <td>Location query impressions, referral inquiries, map/entity mentions, retreat/hospitality leads.</td>
+          </tr>
+          <tr>
+            <td><code>mandala art commission</code></td>
+            <td><span class="volume-stack"><strong>140/mo</strong><small>Low</small></span></td>
+            <td>22, low</td>
+            <td>$9</td>
+            <td>Transactional</td>
+            <td>One of the best revenue terms despite low volume. Build around proof, process, and trust.</td>
+            <td>Inquire plus commission article</td>
+            <td>Lead quality, form starts, booked calls, close rate, revenue per inquiry.</td>
+          </tr>
+          <tr>
+            <td><code>multi-dimensional wooden sculptures</code></td>
+            <td><span class="volume-stack"><strong>90/mo</strong><small>Very low</small></span></td>
+            <td>15, low</td>
+            <td>$7</td>
+            <td>Commercial</td>
+            <td>Not a volume play. Strong entity and AI-citation language for Universal Language and About.</td>
+            <td>Universal Language art series and About</td>
+            <td>AI answer inclusion, branded searches, direct traffic, citation source quality.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="callout offset">
+        <p>
+          <strong>High-ticket note:</strong> for $300 to $10,000 works, do not lead only with
+          <code>laser cut art</code>. Use it as process language. The stronger buyer language is
+          original Mandala art, sacred geometry art, layered wood sculpture, custom artwork,
+          and designer or consultant-ready commissions.
+        </p>
+      </div>
+      <h3 class="keyword-cluster-title">Yemingzhu, glowing crystal, and light-based crystal searches</h3>
+      <p class="keyword-cluster-note">
+        This cluster supports the existing <a href="https://adrianrasmussen.com/writings/ye-ming-zhu" target="_blank" rel="noreferrer">Ye Ming Zhu writing</a>,
+        Light Codes, crystal-inclusive Mandalas, and future object or commission pages. It should be treated as a supporting
+        authority cluster: lower search volume than Mandala, but unusually specific to Adrian's material language of wood,
+        crystal, light, talismanic objects, and illuminated sculpture.
+      </p>
+      <div class="table-wrap offset" role="region" aria-label="Yemingzhu and glowing crystal keyword cluster" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>US Volume</th>
+              <th>Difficulty</th>
+              <th>CPC</th>
+              <th>Intent</th>
+              <th>Fit And Risk</th>
+              <th>Primary Page</th>
+              <th>Analytics To Watch</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>crystal art</code></td>
+              <td><span class="volume-stack"><strong>12,100/mo</strong><small>Very high</small></span></td>
+              <td>60, hard</td>
+              <td>$4</td>
+              <td>Informational</td>
+              <td>Broad and competitive. Good as supporting language, but too wide for Adrian's main positioning.</td>
+              <td>Light Codes, writings, selected crystal-inclusive works</td>
+              <td>Query variants, image search, backlinks to crystal essays, pages receiving crystal-intent impressions.</td>
+            </tr>
+            <tr>
+              <td><code>crystal sculpture</code></td>
+              <td><span class="volume-stack"><strong>8,100/mo</strong><small>High</small></span></td>
+              <td>55, medium-hard</td>
+              <td>$5</td>
+              <td>Commercial</td>
+              <td>Good high-ticket language, but SERPs include glass, mineral, decor, and marketplace results.</td>
+              <td>Light Codes and future crystal sculpture or objects page</td>
+              <td>Commercial query impressions, inquiry assists, image clicks, designer or collector referrals.</td>
+            </tr>
+            <tr>
+              <td><code>glowing crystals</code></td>
+              <td><span class="volume-stack"><strong>5,400/mo</strong><small>High</small></span></td>
+              <td>48, medium</td>
+              <td>$2</td>
+              <td>Transactional, rising</td>
+              <td>Good demand, but product/mineral shopping intent can overpower art intent.</td>
+              <td>Ye Ming Zhu writing and future product/object content</td>
+              <td>Search Console queries, image search, retail-intent bounce rate, clicks into relevant artwork.</td>
+            </tr>
+            <tr>
+              <td><code>glowing crystal</code></td>
+              <td><span class="volume-stack"><strong>3,600/mo</strong><small>High</small></span></td>
+              <td>45, medium</td>
+              <td>$2</td>
+              <td>Commercial</td>
+              <td>Strong bridge phrase for Ye Ming Zhu, but still mostly object/mineral discovery.</td>
+              <td>Ye Ming Zhu writing</td>
+              <td>Article impressions, time on page, internal clicks to Light Codes or inquiry.</td>
+            </tr>
+            <tr>
+              <td><code>luminous pearl</code></td>
+              <td><span class="volume-stack"><strong>2,900/mo</strong><small>Medium-high</small></span></td>
+              <td>32, medium-low</td>
+              <td>$3</td>
+              <td>Commercial, rising</td>
+              <td>Useful mythic synonym. Good for historical and symbolic writing around Ye Ming Zhu.</td>
+              <td>Ye Ming Zhu writing</td>
+              <td>Synonym query impressions, AI citations, external references, article engagement.</td>
+            </tr>
+            <tr>
+              <td><code>yemingzhu</code></td>
+              <td><span class="volume-stack"><strong>1,200/mo</strong><small>Medium</small></span></td>
+              <td>15, low</td>
+              <td>$1</td>
+              <td>Informational</td>
+              <td>Low competition and highly specific. Best exact entity term for the existing article.</td>
+              <td>Ye Ming Zhu writing</td>
+              <td>Exact-query impressions, average position, AI definitions, backlinks using the term.</td>
+            </tr>
+            <tr>
+              <td><code>crystal light art</code></td>
+              <td><span class="volume-stack"><strong>1,100/mo</strong><small>Medium</small></span></td>
+              <td>38, medium</td>
+              <td>$6</td>
+              <td>Commercial, rising</td>
+              <td>Strong fit for Light Codes and illuminated objects. Good future page or writing target.</td>
+              <td>Light Codes and future process article</td>
+              <td>Light Codes impressions, image clicks, inquiry assists, process article engagement.</td>
+            </tr>
+            <tr>
+              <td><code>ye ming zhu</code></td>
+              <td><span class="volume-stack"><strong>900/mo</strong><small>Medium</small></span></td>
+              <td>15, low</td>
+              <td>$1</td>
+              <td>Informational</td>
+              <td>Exact spaced spelling. Use in title, headings, schema, and first paragraph.</td>
+              <td>Ye Ming Zhu writing</td>
+              <td>Exact-query rankings, snippet quality, AI answer inclusion, related-search expansion.</td>
+            </tr>
+            <tr>
+              <td><code>crystal mandala art</code></td>
+              <td><span class="volume-stack"><strong>600/mo</strong><small>Low-medium</small></span></td>
+              <td>24, low-medium</td>
+              <td>$2</td>
+              <td>Informational, rising</td>
+              <td>High fit where Mandalas include crystals. Good support term, not a standalone broad target.</td>
+              <td>Mandala hub and selected artwork pages</td>
+              <td>Mandala page queries, image impressions, clicks to crystal-inclusive works.</td>
+            </tr>
+            <tr>
+              <td><code>night shining pearl</code></td>
+              <td><span class="volume-stack"><strong>450/mo</strong><small>Low-medium</small></span></td>
+              <td>20, low</td>
+              <td>$2</td>
+              <td>Informational</td>
+              <td>Useful translation-style synonym. Best inside the Ye Ming Zhu article and metadata.</td>
+              <td>Ye Ming Zhu writing</td>
+              <td>Synonym impressions, featured snippets, AI definitions, article scroll depth.</td>
+            </tr>
+            <tr>
+              <td><code>glowing crystal art</code></td>
+              <td><span class="volume-stack"><strong>350/mo</strong><small>Low-medium</small></span></td>
+              <td>22, low-medium</td>
+              <td>$4</td>
+              <td>Commercial</td>
+              <td>Very high fit. Lower volume, but exactly bridges art, crystal, and glow.</td>
+              <td>Ye Ming Zhu writing and Light Codes</td>
+              <td>Qualified impressions, inquiry paths, image clicks, AI citation prompts.</td>
+            </tr>
+            <tr>
+              <td><code>crystal installation art</code></td>
+              <td><span class="volume-stack"><strong>300/mo</strong><small>Low</small></span></td>
+              <td>20, low</td>
+              <td>$6</td>
+              <td>Informational</td>
+              <td>Small but high-ticket aligned. Useful for commissions, installations, and design contexts.</td>
+              <td>About, Inquire, Light Codes</td>
+              <td>Designer inquiries, referral traffic, installation-related search impressions.</td>
+            </tr>
+            <tr>
+              <td><code>led crystal sculpture</code></td>
+              <td><span class="volume-stack"><strong>250/mo</strong><small>Low</small></span></td>
+              <td>30, medium-low</td>
+              <td>$7</td>
+              <td>Transactional</td>
+              <td>High CPC, but language may feel more product/tech than Adrian's art voice.</td>
+              <td>Light Codes only where technically accurate</td>
+              <td>Commercial impressions, bounce rate, inquiry quality, product-style query noise.</td>
+            </tr>
+            <tr>
+              <td><code>glowing crystal sculpture</code></td>
+              <td><span class="volume-stack"><strong>200/mo</strong><small>Low</small></span></td>
+              <td>25, low-medium</td>
+              <td>$5</td>
+              <td>Commercial</td>
+              <td>Excellent niche fit when the work is sculptural, luminous, and crystal-centered.</td>
+              <td>Light Codes and future crystal sculpture page</td>
+              <td>Qualified impressions, image clicks, inquiry assists, design-context referrals.</td>
+            </tr>
+            <tr>
+              <td><code>sacred crystal art</code></td>
+              <td><span class="volume-stack"><strong>150/mo</strong><small>Low</small></span></td>
+              <td>18, low</td>
+              <td>$3</td>
+              <td>Informational</td>
+              <td>Strong spiritual fit, but small volume. Useful in writing and metadata, not as a main page title.</td>
+              <td>Ye Ming Zhu writing and About</td>
+              <td>AI citations, article impressions, branded searches, related spiritual-art prompts.</td>
+            </tr>
+            <tr>
+              <td><code>lighted crystal sculpture</code></td>
+              <td><span class="volume-stack"><strong>150/mo</strong><small>Low</small></span></td>
+              <td>28, low-medium</td>
+              <td>$5</td>
+              <td>Transactional</td>
+              <td>Useful synonym, but wording is less refined than illuminated or luminous.</td>
+              <td>Light Codes where relevant</td>
+              <td>Long-tail impressions, commercial query quality, inquiry assists.</td>
+            </tr>
+            <tr>
+              <td><code>illuminated crystal sculpture</code></td>
+              <td><span class="volume-stack"><strong>90/mo</strong><small>Very low</small></span></td>
+              <td>24, low-medium</td>
+              <td>$4</td>
+              <td>Commercial</td>
+              <td>Small but premium language. Good for commissions and AI citation clarity.</td>
+              <td>Light Codes, About, Inquire</td>
+              <td>AI answer inclusion, designer inquiries, high-value lead quality.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap offset" role="region" aria-label="High-volume terms not to prioritize" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th>Do Not Lead With</th>
+              <th>US Volume</th>
+              <th>Why It Is Noisy</th>
+              <th>How To Use It</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>laser cut machine</code></td>
+              <td><span class="volume-stack"><strong>49,500/mo</strong><small>Very high</small></span></td>
+              <td>Machine-buying intent, not original art buying intent.</td>
+              <td>Avoid as a content target unless writing a process article that clearly leads back to finished work.</td>
+            </tr>
+            <tr>
+              <td><code>laser cut svg</code></td>
+              <td><span class="volume-stack"><strong>33,100/mo</strong><small>Very high</small></span></td>
+              <td>File-download intent. Attracts makers, not collectors.</td>
+              <td>Do not target. Use only if explaining that the work is original, not downloadable design files.</td>
+            </tr>
+            <tr>
+              <td><code>laser cut files</code></td>
+              <td><span class="volume-stack"><strong>27,100/mo</strong><small>Very high</small></span></td>
+              <td>Template and file marketplace intent.</td>
+              <td>Do not target for Adrian's site.</td>
+            </tr>
+            <tr>
+              <td><code>mandala art coloring</code></td>
+              <td><span class="volume-stack"><strong>18,100/mo</strong><small>Very high</small></span></td>
+              <td>Printable/coloring intent. Weak fit for original physical artwork.</td>
+              <td>Avoid as a primary term. Do not dilute Mandala hub with coloring content.</td>
+            </tr>
+            <tr>
+              <td><code>mandala art easy</code></td>
+              <td><span class="volume-stack"><strong>12,100/mo</strong><small>Very high</small></span></td>
+              <td>Beginner tutorial intent.</td>
+              <td>Avoid unless a future education project exists.</td>
+            </tr>
+            <tr>
+              <td><code>mandala art simple</code></td>
+              <td><span class="volume-stack"><strong>9,900/mo</strong><small>High</small></span></td>
+              <td>Beginner and inspiration intent, not high-ticket buyer intent.</td>
+              <td>Avoid on sales pages.</td>
+            </tr>
+            <tr>
+              <td><code>laser cut free download</code></td>
+              <td><span class="volume-stack"><strong>14,800/mo</strong><small>Very high</small></span></td>
+              <td>Free-file intent. Very poor fit for original artwork.</td>
+              <td>Do not target.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="routes">
+      <div class="section-head">
+        <h2>Page And Route Map</h2>
+        <p>
+          These are the live strategic pages. Future content should link back to the right hub
+          with descriptive, natural anchor text.
+        </p>
+      </div>
+      <div class="card">
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/creations/multidimensional-art/mandala" target="_blank" rel="noreferrer">Mandala hub</a></strong>
+          <p>
+            Primary page for <code>mandala art</code>, <code>original mandala art</code>,
+            <code>sacred geometry mandala art</code>, and links to individual Mandala pieces.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/creations/laser-cut-wood-art" target="_blank" rel="noreferrer">Laser-Cut Wood Art hub</a></strong>
+          <p>
+            Primary page for <code>laser cut wood art</code>, <code>layered wood art</code>,
+            <code>geometric wood art</code>, and process-based discovery.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/about" target="_blank" rel="noreferrer">About</a></strong>
+          <p>
+            Entity page for Adrian Rasmussen as an artist. Supports sacred geometry artist,
+            Mandala artist, laser-cut wood artist, Bali-based artist, and multidimensional artist.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/inquire" target="_blank" rel="noreferrer">Inquire</a></strong>
+          <p>
+            Commercial-intent destination. Should become stronger for custom Mandala artwork,
+            sacred geometry commissions, designer inquiries, and high-value commissioned works.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/writings/ye-ming-zhu" target="_blank" rel="noreferrer">Ye Ming Zhu writing</a></strong>
+          <p>
+            Primary page for <code>yemingzhu</code>, <code>ye ming zhu</code>,
+            <code>night shining pearl</code>, <code>luminous pearl</code>, and glowing crystal authority.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/creations/multidimensional-art/light-codes" target="_blank" rel="noreferrer">Light Codes</a></strong>
+          <p>
+            Supporting page for <code>crystal light art</code>, <code>glowing crystal art</code>,
+            illuminated crystal sculpture language, and crystal-inclusive multidimensional work.
+          </p>
+        </div>
+        <div class="route">
+          <strong><a href="https://adrianrasmussen.com/creations/multidimensional-art/universal-language" target="_blank" rel="noreferrer">Universal Language art series</a></strong>
+          <p>
+            Art-series page only. Do not use oracle framing in art-series SEO or alt text.
+            The oracle deck has its own route and can use oracle language.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="files">
+      <div class="section-head">
+        <h2>Usable File Map</h2>
+        <p>
+          These links are relative to this HTML file. They are intended for Adrian, Codex,
+          and future agents to jump directly into the source of truth.
+        </p>
+      </div>
+      <div id="source-file-notice" class="source-file-notice" hidden aria-live="polite">
+        <p><strong>Source file path:</strong> <code id="source-file-path"></code></p>
+        <p>
+          Browser preview would show raw code. Use this path in Codex or your editor instead.
+          The path has been selected for you here without leaving this guide.
+        </p>
+      </div>
+      <div class="grid two">
+        <article class="card">
+          <span class="label">Research And Plan</span>
+          <div class="file-list">
+            <a class="file-link" href="README.md">
+              <strong>SEO research README</strong>
+              <span>Index, canonical domain, and current strategic thesis.</span>
+            </a>
+            <a class="file-link" href="2026-05-20-google-ai-search-guidance.md">
+              <strong>Google AI search guidance</strong>
+              <span>Official guidance interpreted for this site.</span>
+            </a>
+            <a class="file-link" href="2026-05-20-keyword-map-mandala-laser-cut.md">
+              <strong>Keyword map</strong>
+              <span>Mandala, sacred geometry, and laser-cut wood search strategy.</span>
+            </a>
+            <a class="file-link" href="2026-05-20-ai-citation-and-brand-presence-playbook.md">
+              <strong>AI citation playbook</strong>
+              <span>Prompt set, citation tracking, and off-site authority plan.</span>
+            </a>
+            <a class="file-link" href="2026-05-20-12-month-execution-plan.md">
+              <strong>12-month execution plan</strong>
+              <span>Completed work, monthly plan, and manual next steps.</span>
+            </a>
+            <a class="file-link" href="../../superpowers/plans/2026-05-20-seo-ai-mandala-laser-cut-implementation.md">
+              <strong>Implementation plan</strong>
+              <span>Task-by-task record of the technical SEO implementation.</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="label">Technical SEO Source</span>
+          <div class="file-list">
+            <a class="file-link" href="../../../utils/seoMetadata.ts" data-source-path="utils/seoMetadata.ts">
+              <strong>SEO metadata registry</strong>
+              <span class="path-line">utils/seoMetadata.ts</span>
+              <span>Central titles, descriptions, canonicals, priorities, and static route entries.</span>
+            </a>
+            <a class="file-link" href="../../../useSeoMeta.ts" data-source-path="useSeoMeta.ts">
+              <strong>React meta hook</strong>
+              <span class="path-line">useSeoMeta.ts</span>
+              <span>Client-side metadata behavior, driven by the central registry.</span>
+            </a>
+            <a class="file-link" href="../../../scripts/generate-static-route-html.ts" data-source-path="scripts/generate-static-route-html.ts">
+              <strong>Static route HTML generator</strong>
+              <span class="path-line">scripts/generate-static-route-html.ts</span>
+              <span>Writes route-specific built HTML for crawlers and social previews.</span>
+            </a>
+            <a class="file-link" href="../../../scripts/generate-sitemap.ts" data-source-path="scripts/generate-sitemap.ts">
+              <strong>Sitemap generator</strong>
+              <span class="path-line">scripts/generate-sitemap.ts</span>
+              <span>Creates public sitemap with static, oracle, artwork, writing, and image entries.</span>
+            </a>
+            <a class="file-link" href="../../../scripts/validate-seo.ts" data-source-path="scripts/validate-seo.ts">
+              <strong>SEO validation script</strong>
+              <span class="path-line">scripts/validate-seo.ts</span>
+              <span>Guards canonical domain, forbidden terms, sitemap routes, and build behavior.</span>
+            </a>
+            <a class="file-link" href="../../../public/sitemap.xml" data-source-path="public/sitemap.xml">
+              <strong>Generated sitemap</strong>
+              <span class="path-line">public/sitemap.xml</span>
+              <span>Current submitted URL inventory.</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="label">Page Components</span>
+          <div class="file-list">
+            <a class="file-link" href="../../../components/LaserCutWoodArtPage.tsx" data-source-path="components/LaserCutWoodArtPage.tsx">
+              <strong>Laser-Cut Wood Art page</strong>
+              <span class="path-line">components/LaserCutWoodArtPage.tsx</span>
+              <span>Dedicated collection page and schema for laser-cut wood artworks.</span>
+            </a>
+            <a class="file-link" href="../../../components/SubcategoryPage.tsx" data-source-path="components/SubcategoryPage.tsx">
+              <strong>Subcategory pages</strong>
+              <span class="path-line">components/SubcategoryPage.tsx</span>
+              <span>Mandala hub content, schema, and subcategory behavior.</span>
+            </a>
+            <a class="file-link" href="../../../components/PiecePage.tsx" data-source-path="components/PiecePage.tsx">
+              <strong>Artwork detail pages</strong>
+              <span class="path-line">components/PiecePage.tsx</span>
+              <span>Image schema, alt text, internal links, and piece-level metadata.</span>
+            </a>
+            <a class="file-link" href="../../../components/About.tsx" data-source-path="components/About.tsx">
+              <strong>About page</strong>
+              <span class="path-line">components/About.tsx</span>
+              <span>Artist entity copy and Person schema.</span>
+            </a>
+            <a class="file-link" href="../../../components/MultidimensionalArt.tsx" data-source-path="components/MultidimensionalArt.tsx">
+              <strong>Multidimensional Art page</strong>
+              <span class="path-line">components/MultidimensionalArt.tsx</span>
+              <span>Internal link path into Laser-Cut Wood Art.</span>
+            </a>
+            <a class="file-link" href="../../../App.tsx" data-source-path="App.tsx">
+              <strong>Routes</strong>
+              <span class="path-line">App.tsx</span>
+              <span>React Router route placement. Static routes must stay before catch-alls.</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="label">Data And Rules</span>
+          <div class="file-list">
+            <a class="file-link" href="../../../data/mockData.ts" data-source-path="data/mockData.ts">
+              <strong>Artwork and category data</strong>
+              <span class="path-line">data/mockData.ts</span>
+              <span>All artworks, Mandala descriptions, and Creations tile data.</span>
+            </a>
+            <a class="file-link" href="../../../utils/artworkFilters.ts" data-source-path="utils/artworkFilters.ts">
+              <strong>Artwork filters and alt helpers</strong>
+              <span class="path-line">utils/artworkFilters.ts</span>
+              <span>Shared Mandala and laser-cut wood detection and alt text helpers.</span>
+            </a>
+            <a class="file-link" href="../../../index.html" data-source-path="index.html">
+              <strong>Global HTML and schema</strong>
+              <span class="path-line">index.html</span>
+              <span>Person and WebSite schema for the built app shell.</span>
+            </a>
+            <a class="file-link" href="../../../public/robots.txt" data-source-path="public/robots.txt">
+              <strong>Robots file</strong>
+              <span class="path-line">public/robots.txt</span>
+              <span>Points crawlers to the canonical sitemap.</span>
+            </a>
+            <a class="file-link" href="../../../tests/e2e.spec.ts" data-source-path="tests/e2e.spec.ts">
+              <strong>Playwright tests</strong>
+              <span class="path-line">tests/e2e.spec.ts</span>
+              <span>SEO route, artwork, and app smoke coverage.</span>
+            </a>
+            <a class="file-link" href="../../../AGENTS.md" data-source-path="AGENTS.md">
+              <strong>Agent rules</strong>
+              <span class="path-line">AGENTS.md</span>
+              <span>Project-wide constraints future agents must follow.</span>
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="runbook">
+      <div class="section-head">
+        <h2>Agent Runbook</h2>
+        <p>
+          Future agents should start here before changing SEO, routes, content, or domain behavior.
+          The most common mistake would be separating the strategy from the technical registry.
+        </p>
+      </div>
+      <div class="grid two">
+        <article class="card">
+          <span class="label">Before Editing</span>
+          <ol>
+            <li>Read <a href="../../../AGENTS.md" data-source-path="AGENTS.md">AGENTS.md</a>.</li>
+            <li>Read the <a href="2026-05-20-keyword-map-mandala-laser-cut.md">keyword map</a>.</li>
+            <li>Check <a href="../../../utils/seoMetadata.ts" data-source-path="utils/seoMetadata.ts">utils/seoMetadata.ts</a> for route metadata.</li>
+            <li>Respect the Universal Language split between art-series SEO and oracle SEO.</li>
+            <li>Keep <code>https://adrianrasmussen.com</code> as the canonical domain.</li>
+          </ol>
+        </article>
+        <article class="card">
+          <span class="label">Verification Commands</span>
+          <div class="command">npm run seo:check
+npm run typecheck
+npm run build
+npm test -- --project=chromium --reporter=list</div>
+          <p class="note">
+            Use the full test command when route, navigation, artwork detail, or oracle behavior changes.
+            For pure docs edits, <code>npm run seo:check</code> and <code>npm run typecheck</code> are usually enough.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="next">
+      <div class="section-head">
+        <h2>Next Work</h2>
+        <p>
+          The site now has the technical base. The next gains come from first-hand content,
+          process evidence, and off-site reputation.
+        </p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <span class="label">Content Cluster</span>
+          <h3>Write The First Four Authority Pieces</h3>
+          <ul>
+            <li>What Is Mandala Art?</li>
+            <li>Why I Make Mandalas In Layered Wood</li>
+            <li>How Laser-Cut Wooden Mandalas Are Made</li>
+            <li>Commissioning A Custom Mandala Artwork</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">High-Ticket Sales</span>
+          <h3>Build Designer And Consultant Assets</h3>
+          <ul>
+            <li>Create a page for interior designers and art consultants.</li>
+            <li>Add scale photos and room-context images.</li>
+            <li>Create a PDF portfolio for $1k to $10k works.</li>
+            <li>Build a direct outreach list of designers, consultants, retreat centers, and boutique hotels.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">AI Visibility</span>
+          <h3>Measure Citations Monthly</h3>
+          <ul>
+            <li>Run the prompt set in the <a href="2026-05-20-ai-citation-and-brand-presence-playbook.md">AI citation playbook</a>.</li>
+            <li>Record whether Adrian appears and which sources are cited.</li>
+            <li>Use missing citations to decide which content or off-site mentions to build next.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <p>
+      Last updated 2026-05-21. This page is for local guidance and future agent continuity.
+      Public canonical domain: <a href="https://adrianrasmussen.com" target="_blank" rel="noreferrer">https://adrianrasmussen.com</a>.
+    </p>
+  </footer>
+  <script>
+    document.addEventListener('click', async (event) => {
+      const link = event.target.closest('a[data-source-path]');
+      if (!link) return;
+
+      event.preventDefault();
+      const path = link.getAttribute('data-source-path');
+      const notice = document.getElementById('source-file-notice');
+      const output = document.getElementById('source-file-path');
+
+      if (!path || !notice || !output) return;
+
+      output.textContent = path;
+      notice.hidden = false;
+      notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      try {
+        await navigator.clipboard.writeText(path);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(output);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    });
+  </script>
+</body>
+</html>

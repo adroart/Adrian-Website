@@ -4,7 +4,7 @@ import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'reac
 import { Home } from 'lucide-react';
 import { ALL_CARDS, CARD_BY_NUMBER } from '../data/oracleData';
 import { getExpandedCard, type ExpandedGeneKeyLevel } from '../data/expandedOracleData';
-import { getSynthesis, type CardSynthesis } from '../data/synthesisData';
+import { getSynthesis, getInvocation, type CardSynthesis } from '../data/synthesisData';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -41,13 +41,15 @@ const LABEL_SECTION = 'font-label text-[14px] uppercase tracking-[0.2em] font-bo
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
-type Screen = 'field' | 'iching' | 'genekeys' | 'humandesign' | 'connections';
+type Screen = 'field' | 'ul' | 'iching' | 'genekeys' | 'humandesign' | 'connections';
 
 /* ─── Per-section palette ─────────────────────────────────────────────────── */
 
-// Alternating light / dark / light / dark / light
+// U.L. (Adrian's system, the entry) opens light/paper. Then alternating
+// light / dark / light / dark / light across the five system panels.
 const SCREEN_BG: Record<Screen, string> = {
   field:       'bg-paper-50',
+  ul:          'bg-paper-50',
   iching:      'bg-stone-900',
   genekeys:    'bg-stone-50',
   humandesign: 'bg-stone-900',
@@ -928,6 +930,9 @@ const KeywordRow: React.FC<{ kws: string[]; onClick: () => void }> = ({ kws, onC
 /* ─── Reading-stage chapters (system navigation) ─────────────────────────── */
 
 const CHAPTERS: Chapter[] = [
+  // Universal Language — Adrian's own system, the entry to the reading.
+  // Holds the invocation, the intro, the keywords. Always first.
+  { key: 'ul',          label: 'U.L.' },
   { key: 'iching',      label: 'I CHING' },
   { key: 'genekeys',    label: 'GENE KEYS' },
   { key: 'humandesign', label: 'HUMAN DESIGN', shortLabel: 'DESIGN' },
@@ -957,6 +962,7 @@ const UniversalLanguageCard: React.FC = () => {
   const [storyLoading,   setStoryLoading]   = useState(false);
   const [ichingOpen,     setIchingOpen]     = useState<'hex' | 'upper' | 'lower'>('hex');
   const [synthesis,      setSynthesis]      = useState<CardSynthesis | undefined>(undefined);
+  const [invocation,     setInvocation]     = useState<string | undefined>(undefined);
   // I Ching coin-cast — held at card level so it survives chapter swipes,
   // and mirrored to sessionStorage so back-navigation restores it.
   const [cast,    setCast]    = useState<CastResult | null>(null);
@@ -969,8 +975,8 @@ const UniversalLanguageCard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialChapter = (() => {
     const s = searchParams.get('system');
-    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'body', 'tarot'];
-    return valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching';
+    const valid: ChapterKey[] = ['ul', 'iching', 'genekeys', 'humandesign', 'body', 'tarot'];
+    return valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'ul';
   })();
   const [activeChapter, setActiveChapter] = useState<ChapterKey>(initialChapter);
   const stageHandle = useRef<ReadingStageHandle>(null);
@@ -1074,6 +1080,7 @@ const UniversalLanguageCard: React.FC = () => {
     setShareOpen(false);
     setBuyOpen(false);
     setSynthesis(undefined);
+    setInvocation(undefined);
     storyFileRef.current = null;
     // TEMPLATE: the cast must never "come already loaded". Every card opens
     // with no cast — only the still invitation. The casting is a ritual the
@@ -1082,10 +1089,10 @@ const UniversalLanguageCard: React.FC = () => {
     setCasting(false);
     setCast(null);
     window.scrollTo(0, 0);
-    // Reset to the system specified in URL if present, else I Ching
+    // Reset to the system specified in URL if present, else U.L. (the entry).
     const s = searchParams.get('system');
-    const valid: ChapterKey[] = ['iching', 'genekeys', 'humandesign', 'body', 'tarot'];
-    setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'iching');
+    const valid: ChapterKey[] = ['ul', 'iching', 'genekeys', 'humandesign', 'body', 'tarot'];
+    setActiveChapter(valid.includes(s as ChapterKey) ? (s as ChapterKey) : 'ul');
   }, [cardNum]);
 
   useEffect(() => {
@@ -1096,6 +1103,15 @@ const UniversalLanguageCard: React.FC = () => {
       })
       .catch(() => {
         if (!cancelled) setSynthesis(undefined);
+      });
+    // Main Reading invocation: load alongside synthesis. Cards without
+    // generated/NN.json simply resolve undefined and the section hides.
+    getInvocation(cardNum)
+      .then(inv => {
+        if (!cancelled) setInvocation(inv);
+      })
+      .catch(() => {
+        if (!cancelled) setInvocation(undefined);
       });
     return () => {
       cancelled = true;
@@ -1468,6 +1484,7 @@ const UniversalLanguageCard: React.FC = () => {
                     </>
                   ) : null;
                 })()}
+
               </div>{/* end card inner px */}
             </div>{/* end card container */}
           </div>
@@ -1477,6 +1494,7 @@ const UniversalLanguageCard: React.FC = () => {
             {synthesis?.essence && (
               <EssenceBlock essence={synthesis.essence} />
             )}
+
 
 
             {/* Creator voice (conditional) */}
@@ -1614,10 +1632,84 @@ const UniversalLanguageCard: React.FC = () => {
         {/* ════════════ READING STAGE — five system panels ═════════════════ */}
         <ReadingStage
           ref={stageHandle}
-          chapters={['iching', 'genekeys', 'humandesign', 'body', 'tarot']}
+          chapters={['ul', 'iching', 'genekeys', 'humandesign', 'body', 'tarot']}
           active={activeChapter}
           onActiveChange={handleChapterChange}
         >
+
+          {/* ────────── UNIVERSAL LANGUAGE (Adrian's system) ─────────────
+              The entry. Holds the invocation, the intro reading (the
+              one-breath teaching in Adrian's voice), and the keywords.
+              First in the chapter order. First in the reading order.
+              Reader meets the card here before stepping into I Ching.
+
+              Data lives in oracle/generated/NN.json (glance.invocation,
+              glance.reading, glance.keywords). Currently only UL 1 has
+              the data populated; other cards show a graceful
+              "coming" placeholder until commissioned. */}
+          <div className={`${SCREEN_BG.ul} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+            <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
+
+              {/* Plate header — Universal Language */}
+              <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
+                <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Universal Language</p>
+                <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">{card.card_name}</h2>
+                <p className={`${LABEL_SECTION} text-wood-500 mt-3`}>Code {card.number}</p>
+              </header>
+
+              {/* The Reading — the one-breath summary, set in display serif */}
+              {synthesis?.essence ? (
+                <section className="mb-12 sm:mb-14">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>The Reading</p>
+                  <p className="font-serif text-[19px] sm:text-[21px] text-wood-900 leading-[1.55] text-center max-w-prose mx-auto">
+                    {synthesis.essence}
+                  </p>
+                </section>
+              ) : null}
+
+              {/* Keywords — the touch-points the reader can carry away */}
+              {(() => {
+                const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
+                if (kws.length === 0) return null;
+                return (
+                  <section className="mb-12 sm:mb-14">
+                    <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>Keywords</p>
+                    <ul className="flex flex-wrap justify-center gap-x-3 gap-y-2 max-w-prose mx-auto">
+                      {kws.map((k, i) => (
+                        <li key={i} className="font-serif text-[16px] text-wood-800 leading-[1.5]">
+                          {k}
+                          {i < kws.length - 1 && <span className="text-wood-400 ml-3" aria-hidden="true">·</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })()}
+
+              {/* Invocation — the ritual opening of this code. Set in
+                  plain serif (not italic). Each line breaks naturally,
+                  centred, like a small prayer. */}
+              {invocation ? (
+                <section>
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-5`}>Invocation</p>
+                  <div className="border-y border-bronze-600/25 py-8 sm:py-10 max-w-prose mx-auto">
+                    {invocation.split('\n').filter(Boolean).map((line, i) => (
+                      <p key={i} className="font-serif text-[17px] sm:text-[18px] text-wood-800 leading-[1.75] text-center">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                </section>
+              ) : (
+                <section className="text-center mt-2">
+                  <p className="font-serif text-[14px] text-wood-500 leading-[1.6]">
+                    The invocation for this code is being written.
+                  </p>
+                </section>
+              )}
+
+            </div>
+          </div>
 
           {/* ────────── I CHING ────────── */}
           {/* dark-preserve: intentionally-dark panel stays dark in dark mode
@@ -2195,11 +2287,20 @@ const UniversalLanguageCard: React.FC = () => {
         <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-            {/* Plate header — Relations */}
+            {/* Plate header — Relations. The descriptive intro line is
+                collapsed under a + so the reader meets the panel name,
+                title, and the kin layout directly. Tap to read the
+                framing. */}
             <header className="mb-10 sm:mb-12 flex flex-col items-center text-center">
               <p className={`${LABEL_PANEL} text-bronze-700/85 pb-1.5 border-b border-bronze-600/30`}>Relations</p>
               <h2 className="font-serif text-[28px] sm:text-[32px] leading-[1.1] sm:leading-[1.15] text-wood-900 tracking-[-0.005em] mt-7 sm:mt-8">The Living Field</h2>
-              <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.5] mt-3 max-w-prose">No code stands alone. Here are the cards this one is kin to, and what they form together.</p>
+              <details className="group mt-4 max-w-prose">
+                <summary className="cursor-pointer list-none inline-flex items-center gap-2 text-wood-500 hover:text-bronze-700 transition-colors focus-visible:outline-none">
+                  <span className="font-label text-[10px] uppercase tracking-[0.3em]">About this section</span>
+                  <span className="font-serif text-[14px] transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+                </summary>
+                <p className="font-serif text-[14px] sm:text-[15px] text-wood-600 leading-[1.6] mt-3">No code stands alone. Here are the cards this one is kin to, and what they form together.</p>
+              </details>
             </header>
 
             {/* ── Header band: the pair-as-unity line ─────────────────────
@@ -2210,7 +2311,7 @@ const UniversalLanguageCard: React.FC = () => {
                 code becomes…" field when written. */}
             {expanded && pairCard && (
               <div className="border-y border-bronze-600/25 py-6 sm:py-7 mb-10 sm:mb-12">
-                <p className="font-serif italic text-[18px] sm:text-[20px] text-wood-800 leading-[1.55] text-center max-w-prose mx-auto">
+                <p className="font-serif text-[18px] sm:text-[20px] text-wood-800 leading-[1.55] text-center max-w-prose mx-auto">
                   {expanded.i_ching.hexagrams_in_pairs.context.text}
                 </p>
               </div>
@@ -2280,68 +2381,72 @@ const UniversalLanguageCard: React.FC = () => {
               </p>
             </div>
 
-            {/* ── Kinship row: three seats (programming partner / codon
-                ring / tarot) ─────────────────────────────────────────────
-                Three equal seats in a row. Each holds a label, a value,
-                and a one-line gloss. The eye learns the row across cards. */}
+            {/* ── The Kin: vertical stack of full kin rows ────────────────
+                Programming partner + every codon ring sibling get a full
+                CardLink row (thumbnail, name, hexagram name) so the kin
+                feels present and navigable. Each kin block carries its
+                full teaching prose underneath, no truncation. Tarot sits
+                last as a textual resonance (no card to navigate to). */}
             <div className="mb-12 sm:mb-14">
               <p className={`${LABEL_SECTION} text-bronze-700/80 text-center mb-6`}>The Kin</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-wood-200/50 border border-wood-200/50">
-                {/* Programming Partner */}
-                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+
+              {/* Programming Partner */}
+              {expanded?.gene_keys.programming_partner ? (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
                   <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Programming Partner</p>
-                  {expanded?.gene_keys.programming_partner ? (
-                    <>
-                      <button
-                        onClick={() => navigate(`/oracle/universal-language/${expanded.gene_keys.programming_partner!.number}`, { state: { ritual: true } })}
-                        className="group text-left transition-colors focus-visible:outline-none"
-                      >
-                        <p className="font-serif text-[22px] sm:text-[24px] text-wood-900 leading-[1.15] group-hover:text-bronze-700 transition-colors">Code {expanded.gene_keys.programming_partner.number}</p>
-                      </button>
-                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{expanded.gene_keys.programming_partner.relationship_context}</p>
-                    </>
-                  ) : (
-                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
-                  )}
+                  <CardLink
+                    number={expanded.gene_keys.programming_partner.number}
+                    onClick={() => navigate(`/oracle/universal-language/${expanded.gene_keys.programming_partner!.number}`, { state: { ritual: true } })}
+                  />
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] mt-4">{expanded.gene_keys.programming_partner.relationship_context}</p>
                 </div>
+              ) : (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Programming Partner</p>
+                  <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                </div>
+              )}
 
-                {/* Codon Ring */}
-                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+              {/* Codon Ring — ring name + every sibling as a full CardLink */}
+              {expanded ? (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
                   <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Codon Ring</p>
-                  {expanded && siblings.length > 0 ? (
-                    <>
-                      <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.2]">{expanded.gene_keys.codon_ring.name}</p>
-                      <p className="font-sans text-[13px] tracking-wide text-wood-600 mt-1">
-                        {siblings.map((n, i) => (
-                          <React.Fragment key={n}>
-                            <button
-                              onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
-                              className="hover:text-bronze-700 transition-colors focus-visible:outline-none"
-                            >Code {n}</button>
-                            {i < siblings.length - 1 ? <span className="text-wood-400"> · </span> : null}
-                          </React.Fragment>
-                        ))}
-                      </p>
-                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{expanded.gene_keys.codon_ring.relationship_context}</p>
-                    </>
+                  <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.25]">{expanded.gene_keys.codon_ring.name}</p>
+                  {siblings.length > 0 ? (
+                    <div className="divide-y divide-wood-200/40 mt-3">
+                      {siblings.map(n => (
+                        <CardLink
+                          key={n}
+                          number={n}
+                          onClick={() => navigate(`/oracle/universal-language/${n}`, { state: { ritual: true } })}
+                        />
+                      ))}
+                    </div>
                   ) : (
-                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                    <p className="font-serif text-[14px] italic text-wood-500 mt-2">This code stands alone in its ring.</p>
                   )}
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] mt-4">{expanded.gene_keys.codon_ring.relationship_context}</p>
                 </div>
+              ) : (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Codon Ring</p>
+                  <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                </div>
+              )}
 
-                {/* Tarot Resonance */}
-                <div className="bg-paper p-5 sm:p-6 flex flex-col">
+              {/* Tarot Resonance — textual, no card to navigate to */}
+              {synthesis ? (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
                   <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Tarot Resonance</p>
-                  {synthesis ? (
-                    <>
-                      <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.2]">{synthesis.reference?.tarot_card ?? card.ring_tarot}</p>
-                      <p className="font-serif text-[14px] text-wood-600 leading-[1.55] mt-2 line-clamp-3">{synthesis.synthesis.tarot.tarot_resonance}</p>
-                    </>
-                  ) : (
-                    <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
-                  )}
+                  <p className="font-serif text-[18px] sm:text-[19px] text-wood-900 leading-[1.25]">{synthesis.reference?.tarot_card ?? card.ring_tarot}</p>
+                  <p className="font-sans text-[16px] text-wood-700 leading-[1.75] sm:leading-[1.8] mt-4">{synthesis.synthesis.tarot.tarot_resonance}</p>
                 </div>
-              </div>
+              ) : (
+                <div className="border-t border-wood-200/50 py-6 sm:py-7">
+                  <p className={`${LABEL_SECTION} text-bronze-700/80 mb-3`}>Tarot Resonance</p>
+                  <p className="font-serif text-[14px] italic text-wood-500">To be written.</p>
+                </div>
+              )}
             </div>
 
             {/* ── Correspondence grid (2×2): trigrams / zodiac / immortal /

@@ -125,7 +125,7 @@ function mockApiPlugin(): Plugin {
 
 const CLOUDINARY  = 'https://res.cloudinary.com/dobbosnda/image/upload';
 const OG_CROP     = 'f_auto,q_auto:best,w_1200,h_1200,c_fill,g_center';
-const SITE_URL    = 'https://www.adrianrasmussen.com';
+const SITE_URL    = 'https://adrianrasmussen.com';
 
 const UL_CARD_NAMES: Record<number, string> = {
    1:"Earth's Breath", 2:'Beyond the Shell', 3:'Messengers of the Infinite',

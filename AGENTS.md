@@ -2,7 +2,7 @@
 name: adrian-website
 status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
-deploy: https://adrianrasmussen.art
+deploy: https://adrianrasmussen.com
 family: art
 last_reviewed: 2026-05-02
 ---

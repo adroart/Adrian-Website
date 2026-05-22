@@ -1,1264 +1,2330 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://adrianrasmussen.com/</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://adrianrasmussen.com/writings</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>0.9</priority>
+    <loc>https://adrianrasmussen.com/creations/laser-cut-wood-art</loc>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://adrianrasmussen.com/about</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://adrianrasmussen.com/shop</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://adrianrasmussen.com/inquire</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://adrianrasmussen.com/oracle/universal-language</loc>
-    <lastmod>2026-04-21</lastmod>
+    <loc>https://adrianrasmussen.com/creations/illuminated-works</loc>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/multidimensional-art</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/multidimensional-art/universal-language</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/multidimensional-art/mandala</loc>
-    <lastmod>2026-04-21</lastmod>
-    <priority>0.9</priority>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/multidimensional-art/light-codes</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/multidimensional-art/signature-pieces</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://adrianrasmussen.com/creations/illuminated-works</loc>
-    <lastmod>2026-04-21</lastmod>
+    <loc>https://adrianrasmussen.com/oracle/universal-language</loc>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://adrianrasmussen.com/oracle/the-systems</loc>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://adrianrasmussen.com/writings</loc>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://adrianrasmussen.com/about</loc>
+    <lastmod>2026-05-21</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://adrianrasmussen.com/inquire</loc>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/privacy</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/terms</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/1</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/2</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/3</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/4</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/5</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/6</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/7</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/8</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/9</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/10</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/11</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/12</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/13</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/14</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/15</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/16</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/17</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/18</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/19</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/20</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/21</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/22</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/23</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/24</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/25</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/26</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/27</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/28</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/29</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/30</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/31</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/32</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/33</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/34</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/35</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/36</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/37</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/38</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/39</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/40</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/41</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/42</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/43</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/44</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/45</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/46</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/47</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/48</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/49</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/50</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/51</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/52</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/53</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/54</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/55</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/56</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/57</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/58</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/59</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/60</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/61</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/62</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/63</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/oracle/universal-language/64</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-100</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/32_x9qxas</image:loc>
+      <image:title>Art of Living - 32</image:title>
+      <image:caption>Art of Living - 32. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-101</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/36_k8tlcz</image:loc>
+      <image:title>Crystal Creation - 36</image:title>
+      <image:caption>Crystal Creation - 36. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-102</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/48_ttflpq</image:loc>
+      <image:title>Doorways Of The Unknown - 48</image:title>
+      <image:caption>Doorways Of The Unknown - 48. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-103</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/9_tjug04</image:loc>
+      <image:title>Ease in This - 9</image:title>
+      <image:caption>Ease in This - 9. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-104</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/20_e4a4zp</image:loc>
+      <image:title>Emerging as the Code - 20</image:title>
+      <image:caption>Emerging as the Code - 20. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-105</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/7_bzq8ct</image:loc>
+      <image:title>Essential Nexus - 7</image:title>
+      <image:caption>Essential Nexus - 7. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-106</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/57_ykvrmw</image:loc>
+      <image:title>Flight of the Tao - 57</image:title>
+      <image:caption>Flight of the Tao - 57. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-107</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/46_hqh9va</image:loc>
+      <image:title>Fountain of Light - 46</image:title>
+      <image:caption>Fountain of Light - 46. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-108</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/6_w1otd0</image:loc>
+      <image:title>Harmonious Mirage - 6</image:title>
+      <image:caption>Harmonious Mirage - 6. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-109</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/18_kznsph</image:loc>
+      <image:title>Liberation of the Greater - 18</image:title>
+      <image:caption>Liberation of the Greater - 18. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-110</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/42_jb7xjb</image:loc>
+      <image:title>Moving to Perfection - 42</image:title>
+      <image:caption>Moving to Perfection - 42. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-111</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/39_rnqs4x</image:loc>
+      <image:title>Nobel Spark - 39</image:title>
+      <image:caption>Nobel Spark - 39. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-112</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/8_nff0od</image:loc>
+      <image:title>Odyssey of Freedom - 8</image:title>
+      <image:caption>Odyssey of Freedom - 8. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-113</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/54_m3cjgp</image:loc>
+      <image:title>Everlasting Bounty - 54</image:title>
+      <image:caption>Everlasting Bounty - 54. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-114</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/11_rtesiu</image:loc>
+      <image:title>Sol Star - 11</image:title>
+      <image:caption>Sol Star - 11. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-115</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/19_imppfd</image:loc>
+      <image:title>Solection - 19</image:title>
+      <image:caption>Solection - 19. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-116</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/44_p9s6o1</image:loc>
+      <image:title>Sophia&apos;s Orchestra - 44</image:title>
+      <image:caption>Sophia&apos;s Orchestra - 44. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-117</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/25_aelw6r</image:loc>
+      <image:title>The Mysteries Play - 25</image:title>
+      <image:caption>The Mysteries Play - 25. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-118</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/31_wiywrb</image:loc>
+      <image:title>Theater of Truth - 31</image:title>
+      <image:caption>Theater of Truth - 31. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-119</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/22_lldo5g</image:loc>
+      <image:title>Treasure of the Way - 22</image:title>
+      <image:caption>Treasure of the Way - 22. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-120</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/51_pdgusl</image:loc>
+      <image:title>Unshakable Arrival - 51</image:title>
+      <image:caption>Unshakable Arrival - 51. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-121</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/4_qesce2</image:loc>
+      <image:title>Veils of Knowledge - 4</image:title>
+      <image:caption>Veils of Knowledge - 4. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-122</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/1_o8tafh</image:loc>
+      <image:title>Earth&apos;s Breath - 1</image:title>
+      <image:caption>Earth&apos;s Breath - 1. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-123</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/2_kvndyq</image:loc>
+      <image:title>Beyond the Shell - 2</image:title>
+      <image:caption>Beyond the Shell - 2. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-124</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/3_b8iscb</image:loc>
+      <image:title>Messengers of the Infinite - 3</image:title>
+      <image:caption>Messengers of the Infinite - 3. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-125</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/5_egctcj</image:loc>
+      <image:title>The Space Between Time - 5</image:title>
+      <image:caption>The Space Between Time - 5. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-126</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/10_ozcqlz</image:loc>
+      <image:title>Internal Treasure - 10</image:title>
+      <image:caption>Internal Treasure - 10. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-127</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/12_xjjkon</image:loc>
+      <image:title>Petals of Freedom - 12</image:title>
+      <image:caption>Petals of Freedom - 12. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-128</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/13_citdc4</image:loc>
+      <image:title>Universal Crest - 13</image:title>
+      <image:caption>Universal Crest - 13. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-129</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/14_l5ufs8</image:loc>
+      <image:title>Ancestors Bloom - 14</image:title>
+      <image:caption>Ancestors Bloom - 14. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-130</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/15_vozkvv</image:loc>
+      <image:title>Ordinary Valiance - 15</image:title>
+      <image:caption>Ordinary Valiance - 15. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-131</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/16_dvhi86</image:loc>
+      <image:title>Grand Rising - 16</image:title>
+      <image:caption>Grand Rising - 16. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-132</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/17_ntlh1k</image:loc>
+      <image:title>Peral of Christos - 17</image:title>
+      <image:caption>Peral of Christos - 17. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-133</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/21_vxnf0f</image:loc>
+      <image:title>Beyond Binary - 21</image:title>
+      <image:caption>Beyond Binary - 21. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-134</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/23_kbbbt8</image:loc>
+      <image:title>Beneath the Surface - 23</image:title>
+      <image:caption>Beneath the Surface - 23. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-135</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/24_s6sd3e</image:loc>
+      <image:title>Frequency Flutter - 24</image:title>
+      <image:caption>Frequency Flutter - 24. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-136</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/26_hoyypz</image:loc>
+      <image:title>Lighter Than a Feather - 26</image:title>
+      <image:caption>Lighter Than a Feather - 26. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-137</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/27_fxvwyy</image:loc>
+      <image:title>Inner Majesty - 27</image:title>
+      <image:caption>Inner Majesty - 27. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-138</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/28_zr859p</image:loc>
+      <image:title>Becoming the Mystery - 28</image:title>
+      <image:caption>Becoming the Mystery - 28. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-139</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/29_lhj3ug</image:loc>
+      <image:title>All In - 29</image:title>
+      <image:caption>All In - 29. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-140</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/30_fp8gza</image:loc>
+      <image:title>Sparking the Blaze - 30</image:title>
+      <image:caption>Sparking the Blaze - 30. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-141</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/33_nsf6y8</image:loc>
+      <image:title>Echos of Time - 33</image:title>
+      <image:caption>Echos of Time - 33. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-142</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/34_n1s8hf</image:loc>
+      <image:title>Sublime Power - 34</image:title>
+      <image:caption>Sublime Power - 34. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-143</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/35_qdtutl</image:loc>
+      <image:title>Navigational Star - 35</image:title>
+      <image:caption>Navigational Star - 35. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-144</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/37_f4zdoz</image:loc>
+      <image:title>Journey Home - 37</image:title>
+      <image:caption>Journey Home - 37. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-145</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/38_rca4zk</image:loc>
+      <image:title>Inner Light Symphony - 38</image:title>
+      <image:caption>Inner Light Symphony - 38. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-146</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/40_zeqgmt</image:loc>
+      <image:title>Eternal Wellspring - 40</image:title>
+      <image:caption>Eternal Wellspring - 40. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-147</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/41_qlljho</image:loc>
+      <image:title>Beginning and the End - 41</image:title>
+      <image:caption>Beginning and the End - 41. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-148</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/43_bhjxku</image:loc>
+      <image:title>Cipher of Knowledge - 43</image:title>
+      <image:caption>Cipher of Knowledge - 43. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-149</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/45_xjnohi</image:loc>
+      <image:title>Tribal Tapestry - 45</image:title>
+      <image:caption>Tribal Tapestry - 45. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-150</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/47_oxq0wy</image:loc>
+      <image:title>Garden of Alchemy - 47</image:title>
+      <image:caption>Garden of Alchemy - 47. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-151</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/49_xciocz</image:loc>
+      <image:title>Union in the Ashes - 49</image:title>
+      <image:caption>Union in the Ashes - 49. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-152</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/50_g1vs1y</image:loc>
+      <image:title>Melt Into Perfection - 50</image:title>
+      <image:caption>Melt Into Perfection - 50. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-153</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/52_farywa</image:loc>
+      <image:title>Timeless Blossom - 52</image:title>
+      <image:caption>Timeless Blossom - 52. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-154</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/53_hai5ju</image:loc>
+      <image:title>Creation Oscillation - 53</image:title>
+      <image:caption>Creation Oscillation - 53. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-155</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/55_olyr5l</image:loc>
+      <image:title>Untouched Perfection - 55</image:title>
+      <image:caption>Untouched Perfection - 55. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-156</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/56_boey2k</image:loc>
+      <image:title>Infinite Journey - 56</image:title>
+      <image:caption>Infinite Journey - 56. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-157</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/58_hsyihd</image:loc>
+      <image:title>Rhythm of Life - 58</image:title>
+      <image:caption>Rhythm of Life - 58. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-158</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/59_braqjq</image:loc>
+      <image:title>Mystics Treasures - 59</image:title>
+      <image:caption>Mystics Treasures - 59. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-159</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/60_eoiule</image:loc>
+      <image:title>Woven Light - 60</image:title>
+      <image:caption>Woven Light - 60. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-160</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/61_o6dqa5</image:loc>
+      <image:title>Celestial Remembrance - 61</image:title>
+      <image:caption>Celestial Remembrance - 61. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-161</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/62_rtxmo2</image:loc>
+      <image:title>Voice of Nature - 62</image:title>
+      <image:caption>Voice of Nature - 62. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-162</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/63_ns8e6p</image:loc>
+      <image:title>Adornments of Time - 63</image:title>
+      <image:caption>Adornments of Time - 63. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/UL-163</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/64_lgyp8t</image:loc>
+      <image:title>Communion - 64</image:title>
+      <image:caption>Communion - 64. Original multi-dimensional wooden sculpture by Adrian Rasmussen.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-100</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/amphibian-dream</image:loc>
+      <image:title>Amphibian Dream</image:title>
+      <image:caption>Amphibian Dream by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/amphibian-dream-detail-1</image:loc>
+      <image:title>Amphibian Dream</image:title>
+      <image:caption>Amphibian Dream by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/amphibian-dream-detail-2</image:loc>
+      <image:title>Amphibian Dream</image:title>
+      <image:caption>Amphibian Dream by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-101</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/DSC04374_vviyyc</image:loc>
+      <image:title>Beyond the Matrix</image:title>
+      <image:caption>Beyond the Matrix by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-102</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/communion</image:loc>
+      <image:title>Communion</image:title>
+      <image:caption>Communion by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-103</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/communion-gold-blue-red</image:loc>
+      <image:title>Communion - Gold, Blue, Red</image:title>
+      <image:caption>Communion - Gold, Blue, Red by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-104</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/communion-red-burst</image:loc>
+      <image:title>Communion - Red Burst</image:title>
+      <image:caption>Communion - Red Burst by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/communion-red-burst-detail-1</image:loc>
+      <image:title>Communion - Red Burst</image:title>
+      <image:caption>Communion - Red Burst by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/communion-red-burst-detail-2</image:loc>
+      <image:title>Communion - Red Burst</image:title>
+      <image:caption>Communion - Red Burst by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-105</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/creation-unfolding</image:loc>
+      <image:title>Creation Unfolding</image:title>
+      <image:caption>Creation Unfolding by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-106</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/mystics-journey-framed</image:loc>
+      <image:title>Mystics Journey - Framed</image:title>
+      <image:caption>Mystics Journey - Framed by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-107</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/path-of-the-ordinary</image:loc>
+      <image:title>Path of the Ordinary</image:title>
+      <image:caption>Path of the Ordinary by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-108</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/signature-pieces/winged-spirit-wood</image:loc>
+      <image:title>Winged Spirit Wood</image:title>
+      <image:caption>Winged Spirit Wood by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-001</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green-gold</image:loc>
+      <image:title>Green Gold</image:title>
+      <image:caption>Green Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green-gold-detail-1</image:loc>
+      <image:title>Green Gold</image:title>
+      <image:caption>Green Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-002</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-gold</image:loc>
+      <image:title>Blue gold</image:title>
+      <image:caption>Blue gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-gold-detail-1</image:loc>
+      <image:title>Blue gold</image:title>
+      <image:caption>Blue gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-003</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/red-gold</image:loc>
+      <image:title>Red gold</image:title>
+      <image:caption>Red gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/red-gold-detail-1</image:loc>
+      <image:title>Red gold</image:title>
+      <image:caption>Red gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-004</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-sun</image:loc>
+      <image:title>Blue Sun</image:title>
+      <image:caption>Blue Sun by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-005</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-white</image:loc>
+      <image:title>Blue White</image:title>
+      <image:caption>Blue White by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-white-detail-1</image:loc>
+      <image:title>Blue White</image:title>
+      <image:caption>Blue White by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-006</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-pink-white</image:loc>
+      <image:title>Blue-pink-white</image:title>
+      <image:caption>Blue-pink-white by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/blue-pink-white-detail-1</image:loc>
+      <image:title>Blue-pink-white</image:title>
+      <image:caption>Blue-pink-white by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-007</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/boundless-flower-blue-purple</image:loc>
+      <image:title>Boundless Flower - Blue Purple</image:title>
+      <image:caption>Boundless Flower - Blue Purple by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-008</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/boundless-flower-green-gold</image:loc>
+      <image:title>Boundless Flower - Green Gold</image:title>
+      <image:caption>Boundless Flower - Green Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-009</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/brown-gold</image:loc>
+      <image:title>Brown Gold</image:title>
+      <image:caption>Brown Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/brown-gold-detail-1</image:loc>
+      <image:title>Brown Gold</image:title>
+      <image:caption>Brown Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-010</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/circle-of-existance-bloom</image:loc>
+      <image:title>Circle Of Existance - Bloom</image:title>
+      <image:caption>Circle Of Existance - Bloom by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-011</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/circle-of-existance-blue</image:loc>
+      <image:title>Circle Of Existance - Blue</image:title>
+      <image:caption>Circle Of Existance - Blue by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-012</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/circle-of-existance-remix-orange</image:loc>
+      <image:title>Circle Of Existance - Remix Orange</image:title>
+      <image:caption>Circle Of Existance - Remix Orange by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-013</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/emergence-metatrons-cube-brown</image:loc>
+      <image:title>Emergence - Metatron&apos;s Cube Brown</image:title>
+      <image:caption>Emergence - Metatron&apos;s Cube Brown by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-014</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/emergence-metatrons-cube-red</image:loc>
+      <image:title>Emergence - Metatron&apos;s Cube Red</image:title>
+      <image:caption>Emergence - Metatron&apos;s Cube Red by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-015</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/emergence-metatrons-cube-remix</image:loc>
+      <image:title>Emergence - Metatron&apos;s Cube Remix</image:title>
+      <image:caption>Emergence - Metatron&apos;s Cube Remix by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-016</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/endless-bloom-remix</image:loc>
+      <image:title>Endless Bloom - Remix</image:title>
+      <image:caption>Endless Bloom - Remix by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-017</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/golden-harmony-gold-brass</image:loc>
+      <image:title>Golden Harmony - Gold Brass</image:title>
+      <image:caption>Golden Harmony - Gold Brass by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-018</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green</image:loc>
+      <image:title>Green</image:title>
+      <image:caption>Green by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green-detail-1</image:loc>
+      <image:title>Green</image:title>
+      <image:caption>Green by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-019</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green-blue-gold</image:loc>
+      <image:title>Green-blue-gold</image:title>
+      <image:caption>Green-blue-gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/green-blue-gold-detail-1</image:loc>
+      <image:title>Green-blue-gold</image:title>
+      <image:caption>Green-blue-gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-020</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/heart-centered-remix-star</image:loc>
+      <image:title>Heart Centered - Remix Star</image:title>
+      <image:caption>Heart Centered - Remix Star by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-021</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/infinite-zoom</image:loc>
+      <image:title>Infinite Zoom</image:title>
+      <image:caption>Infinite Zoom by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-022</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/metatron-flower-black</image:loc>
+      <image:title>Metatron Flower - Black</image:title>
+      <image:caption>Metatron Flower - Black by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-023</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/metatron-flower-green</image:loc>
+      <image:title>Metatron Flower - Green</image:title>
+      <image:caption>Metatron Flower - Green by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-024</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/midnight-sunrise-black-gold</image:loc>
+      <image:title>Midnight Sunrise - Black Gold</image:title>
+      <image:caption>Midnight Sunrise - Black Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-025</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/midnight-sunrise-remix</image:loc>
+      <image:title>Midnight Sunrise - Remix</image:title>
+      <image:caption>Midnight Sunrise - Remix by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-026</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/night-fly</image:loc>
+      <image:title>Night - Fly</image:title>
+      <image:caption>Night - Fly by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-027</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/red</image:loc>
+      <image:title>Red</image:title>
+      <image:caption>Red by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/red-detail-1</image:loc>
+      <image:title>Red</image:title>
+      <image:caption>Red by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-028</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/resequence-blue-purple</image:loc>
+      <image:title>Resequence - Blue Purple</image:title>
+      <image:caption>Resequence - Blue Purple by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-029</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/secret-garden</image:loc>
+      <image:title>Secret Garden</image:title>
+      <image:caption>Secret Garden by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-030</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/seed-of-life-bloom-blue</image:loc>
+      <image:title>Seed Of Life - Bloom Blue</image:title>
+      <image:caption>Seed Of Life - Bloom Blue by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-031</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/seed-of-life-bloom-orange</image:loc>
+      <image:title>Seed Of Life - Bloom Orange</image:title>
+      <image:caption>Seed Of Life - Bloom Orange by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-032</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-blue</image:loc>
+      <image:title>Sol Urchin - Blue</image:title>
+      <image:caption>Sol Urchin - Blue by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-033</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-green</image:loc>
+      <image:title>Sol Urchin - Green</image:title>
+      <image:caption>Sol Urchin - Green by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-034</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-green-blue</image:loc>
+      <image:title>Sol Urchin - Green Blue</image:title>
+      <image:caption>Sol Urchin - Green Blue by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-035</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-purple-gold</image:loc>
+      <image:title>Sol Urchin - Purple Gold</image:title>
+      <image:caption>Sol Urchin - Purple Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-036</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-red-gold</image:loc>
+      <image:title>Sol Urchin - Red Gold</image:title>
+      <image:caption>Sol Urchin - Red Gold by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-037</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sol-urchin-remix-metatrons-cube</image:loc>
+      <image:title>Sol Urchin - Remix Metatron&apos;s Cube</image:title>
+      <image:caption>Sol Urchin - Remix Metatron&apos;s Cube by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-038</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/star-sun-red</image:loc>
+      <image:title>Star Sun - Red</image:title>
+      <image:caption>Star Sun - Red by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-039</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/starburst-green</image:loc>
+      <image:title>Starburst - Green</image:title>
+      <image:caption>Starburst - Green by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-040</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/starburst-red</image:loc>
+      <image:title>Starburst - Red</image:title>
+      <image:caption>Starburst - Red by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-041</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/sun-star-pastel</image:loc>
+      <image:title>Sun Star - Pastel</image:title>
+      <image:caption>Sun Star - Pastel by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/MAN-042</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/mandala/unfolding-green-blue</image:loc>
+      <image:title>Unfolding - Green Blue</image:title>
+      <image:caption>Unfolding - Green Blue by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-100</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/bodi</image:loc>
+      <image:title>Bodi</image:title>
+      <image:caption>Bodi by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-101</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/cenil</image:loc>
+      <image:title>Cenil</image:title>
+      <image:caption>Cenil by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-102</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/centrano</image:loc>
+      <image:title>Centrano</image:title>
+      <image:caption>Centrano by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-103</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/cosmi</image:loc>
+      <image:title>Cosmi</image:title>
+      <image:caption>Cosmi by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-104</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/derah</image:loc>
+      <image:title>Derah</image:title>
+      <image:caption>Derah by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-105</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/egon</image:loc>
+      <image:title>Egon</image:title>
+      <image:caption>Egon by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-106</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/elona</image:loc>
+      <image:title>Elona</image:title>
+      <image:caption>Elona by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-107</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/emans</image:loc>
+      <image:title>Emans</image:title>
+      <image:caption>Emans by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-108</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/flanos</image:loc>
+      <image:title>Flanos</image:title>
+      <image:caption>Flanos by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-109</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/flora</image:loc>
+      <image:title>Flora</image:title>
+      <image:caption>Flora by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-110</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/fluma</image:loc>
+      <image:title>Fluma</image:title>
+      <image:caption>Fluma by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-111</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/hiru</image:loc>
+      <image:title>Hiru</image:title>
+      <image:caption>Hiru by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-112</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/kani</image:loc>
+      <image:title>Kani</image:title>
+      <image:caption>Kani by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-113</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/natura</image:loc>
+      <image:title>Natura</image:title>
+      <image:caption>Natura by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-114</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/nocturna</image:loc>
+      <image:title>Nocturna</image:title>
+      <image:caption>Nocturna by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-115</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/ongo</image:loc>
+      <image:title>Ongo</image:title>
+      <image:caption>Ongo by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-116</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/onxen</image:loc>
+      <image:title>Onxen</image:title>
+      <image:caption>Onxen by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-117</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/oseno</image:loc>
+      <image:title>Oseno</image:title>
+      <image:caption>Oseno by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-118</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/ramah</image:loc>
+      <image:title>Ramah</image:title>
+      <image:caption>Ramah by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-119</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/raza</image:loc>
+      <image:title>Raza</image:title>
+      <image:caption>Raza by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-120</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/rondot</image:loc>
+      <image:title>Rondot</image:title>
+      <image:caption>Rondot by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-121</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/sensis</image:loc>
+      <image:title>Sensis</image:title>
+      <image:caption>Sensis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-122</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/shama</image:loc>
+      <image:title>Shama</image:title>
+      <image:caption>Shama by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-123</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/sino-chano</image:loc>
+      <image:title>Sino Chano</image:title>
+      <image:caption>Sino Chano by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-124</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/sophi</image:loc>
+      <image:title>Sophi</image:title>
+      <image:caption>Sophi by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-125</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/starla</image:loc>
+      <image:title>Starla</image:title>
+      <image:caption>Starla by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-126</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/suni</image:loc>
+      <image:title>Suni</image:title>
+      <image:caption>Suni by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-127</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/tijiro</image:loc>
+      <image:title>Tijiro</image:title>
+      <image:caption>Tijiro by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-128</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/toran</image:loc>
+      <image:title>Toran</image:title>
+      <image:caption>Toran by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-129</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/tribon</image:loc>
+      <image:title>Tribon</image:title>
+      <image:caption>Tribon by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-130</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/utone</image:loc>
+      <image:title>Utone</image:title>
+      <image:caption>Utone by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-131</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/wifly</image:loc>
+      <image:title>Wifly</image:title>
+      <image:caption>Wifly by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-132</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/yonis</image:loc>
+      <image:title>Yonis</image:title>
+      <image:caption>Yonis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/LC-133</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/light-codes/zelio</image:loc>
+      <image:title>Zelio</image:title>
+      <image:caption>Zelio by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-001</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-brown-leaf</image:loc>
+      <image:title>Lotus Stand -  Brown Leaf</image:title>
+      <image:caption>Lotus Stand -  Brown Leaf by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-brown-leaf-detail-1</image:loc>
+      <image:title>Lotus Stand -  Brown Leaf</image:title>
+      <image:caption>Lotus Stand -  Brown Leaf by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-002</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-autumn-bloom</image:loc>
+      <image:title>Lotus Stand - Autumn Bloom</image:title>
+      <image:caption>Lotus Stand - Autumn Bloom by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-003</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-beyond-lumber</image:loc>
+      <image:title>Lotus Stand - Beyond Lumber</image:title>
+      <image:caption>Lotus Stand - Beyond Lumber by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-beyond-lumber-detail-1</image:loc>
+      <image:title>Lotus Stand - Beyond Lumber</image:title>
+      <image:caption>Lotus Stand - Beyond Lumber by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-004</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-campfire</image:loc>
+      <image:title>Lotus Stand - Campfire</image:title>
+      <image:caption>Lotus Stand - Campfire by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-campfire-detail-1</image:loc>
+      <image:title>Lotus Stand - Campfire</image:title>
+      <image:caption>Lotus Stand - Campfire by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-005</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-cherry</image:loc>
+      <image:title>Lotus Stand - Cherry</image:title>
+      <image:caption>Lotus Stand - Cherry by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-006</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-cherry-x</image:loc>
+      <image:title>Lotus Stand - Cherry X</image:title>
+      <image:caption>Lotus Stand - Cherry X by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-cherry-x-detail-1</image:loc>
+      <image:title>Lotus Stand - Cherry X</image:title>
+      <image:caption>Lotus Stand - Cherry X by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-007</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-classic</image:loc>
+      <image:title>Lotus Stand - Classic</image:title>
+      <image:caption>Lotus Stand - Classic by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-classic-detail-1</image:loc>
+      <image:title>Lotus Stand - Classic</image:title>
+      <image:caption>Lotus Stand - Classic by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-008</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-daylight</image:loc>
+      <image:title>Lotus Stand - Daylight</image:title>
+      <image:caption>Lotus Stand - Daylight by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-daylight-detail-1</image:loc>
+      <image:title>Lotus Stand - Daylight</image:title>
+      <image:caption>Lotus Stand - Daylight by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-009</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-fall-days</image:loc>
+      <image:title>Lotus Stand - Fall Days</image:title>
+      <image:caption>Lotus Stand - Fall Days by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-fall-days-detail-1</image:loc>
+      <image:title>Lotus Stand - Fall Days</image:title>
+      <image:caption>Lotus Stand - Fall Days by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-010</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-forest-fauna</image:loc>
+      <image:title>Lotus Stand - Forest Fauna</image:title>
+      <image:caption>Lotus Stand - Forest Fauna by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-forest-fauna-detail-1</image:loc>
+      <image:title>Lotus Stand - Forest Fauna</image:title>
+      <image:caption>Lotus Stand - Forest Fauna by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-011</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-inner-bloom</image:loc>
+      <image:title>Lotus Stand - Inner Bloom</image:title>
+      <image:caption>Lotus Stand - Inner Bloom by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-inner-bloom-detail-1</image:loc>
+      <image:title>Lotus Stand - Inner Bloom</image:title>
+      <image:caption>Lotus Stand - Inner Bloom by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-012</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-mahogany-dream</image:loc>
+      <image:title>Lotus Stand - Mahogany Dream</image:title>
+      <image:caption>Lotus Stand - Mahogany Dream by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-mahogany-dream-detail-1</image:loc>
+      <image:title>Lotus Stand - Mahogany Dream</image:title>
+      <image:caption>Lotus Stand - Mahogany Dream by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-013</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-midnight-fall</image:loc>
+      <image:title>Lotus Stand - Midnight Fall</image:title>
+      <image:caption>Lotus Stand - Midnight Fall by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-midnight-fall-detail-1</image:loc>
+      <image:title>Lotus Stand - Midnight Fall</image:title>
+      <image:caption>Lotus Stand - Midnight Fall by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-midnight-fall-detail-2</image:loc>
+      <image:title>Lotus Stand - Midnight Fall</image:title>
+      <image:caption>Lotus Stand - Midnight Fall by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-014</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-regenerative-forest</image:loc>
+      <image:title>Lotus Stand - Regenerative Forest</image:title>
+      <image:caption>Lotus Stand - Regenerative Forest by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-regenerative-forest-detail-1</image:loc>
+      <image:title>Lotus Stand - Regenerative Forest</image:title>
+      <image:caption>Lotus Stand - Regenerative Forest by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-015</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-sondari-days</image:loc>
+      <image:title>Lotus Stand - Sondari Days</image:title>
+      <image:caption>Lotus Stand - Sondari Days by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-sondari-days-detail-1</image:loc>
+      <image:title>Lotus Stand - Sondari Days</image:title>
+      <image:caption>Lotus Stand - Sondari Days by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-016</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-still-night</image:loc>
+      <image:title>Lotus Stand - Still Night</image:title>
+      <image:caption>Lotus Stand - Still Night by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-still-night-detail-1</image:loc>
+      <image:title>Lotus Stand - Still Night</image:title>
+      <image:caption>Lotus Stand - Still Night by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-017</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-summer-harvest</image:loc>
+      <image:title>Lotus Stand - Summer Harvest</image:title>
+      <image:caption>Lotus Stand - Summer Harvest by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-summer-harvest-detail-1</image:loc>
+      <image:title>Lotus Stand - Summer Harvest</image:title>
+      <image:caption>Lotus Stand - Summer Harvest by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-018</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-tan-light-tan</image:loc>
+      <image:title>Lotus Stand - Tan, Light Tan</image:title>
+      <image:caption>Lotus Stand - Tan, Light Tan by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-tan-light-tan-detail-1</image:loc>
+      <image:title>Lotus Stand - Tan, Light Tan</image:title>
+      <image:caption>Lotus Stand - Tan, Light Tan by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-019</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-time-glimpse</image:loc>
+      <image:title>Lotus Stand - Time Glimpse</image:title>
+      <image:caption>Lotus Stand - Time Glimpse by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-020</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-wood-cabin</image:loc>
+      <image:title>Lotus Stand - Wood Cabin</image:title>
+      <image:caption>Lotus Stand - Wood Cabin by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-wood-cabin-detail-1</image:loc>
+      <image:title>Lotus Stand - Wood Cabin</image:title>
+      <image:caption>Lotus Stand - Wood Cabin by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/OBJ-021</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-wooden-trail</image:loc>
+      <image:title>Lotus Stand - Wooden Trail</image:title>
+      <image:caption>Lotus Stand - Wooden Trail by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/objects/lotus-stand-wooden-trail-detail-1</image:loc>
+      <image:title>Lotus Stand - Wooden Trail</image:title>
+      <image:caption>Lotus Stand - Wooden Trail by Adrian Rasmussen. Objects.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-110</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/adrian-website/creations/uncategorized/rise-of-the-buffalo</image:loc>
+      <image:title>Rise Of The Buffalo</image:title>
+      <image:caption>Rise Of The Buffalo by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-112</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/Metamorphosis-5_vdtgp9</image:loc>
+      <image:title>Metamorphosis</image:title>
+      <image:caption>Metamorphosis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/Metamorphosis-6_mdyfvv</image:loc>
+      <image:title>Metamorphosis</image:title>
+      <image:caption>Metamorphosis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/Metamorphosis-7_epdk4g</image:loc>
+      <image:title>Metamorphosis</image:title>
+      <image:caption>Metamorphosis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/Metamorphosis-8_aussae</image:loc>
+      <image:title>Metamorphosis</image:title>
+      <image:caption>Metamorphosis by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/creations/SIG-113</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-05-21</lastmod>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/we-rise_uizdgs</image:loc>
+      <image:title>We Rise</image:title>
+      <image:caption>We Rise by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/We-Rise-Lasercut-Art-2_ioi0zv</image:loc>
+      <image:title>We Rise</image:title>
+      <image:caption>We Rise by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/We-Rise-Lasercut-Art-3_md7zo4</image:loc>
+      <image:title>We Rise</image:title>
+      <image:caption>We Rise by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/We-Rise-Lasercut-Art-4_xzdgky</image:loc>
+      <image:title>We Rise</image:title>
+      <image:caption>We Rise by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/We-Rise-Lasercut-Art-6_dugjba</image:loc>
+      <image:title>We Rise</image:title>
+      <image:caption>We Rise by Adrian Rasmussen. Multidimensional Art.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://adrianrasmussen.com/writings/ye-ming-zhu</loc>

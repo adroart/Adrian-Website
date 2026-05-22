@@ -13,6 +13,7 @@ const Inquire = lazy(() => import('./components/Inquire'));
 const Store = lazy(() => import('./components/Store'));
 const PiecePage = lazy(() => import('./components/PiecePage'));
 const MultidimensionalArt = lazy(() => import('./components/MultidimensionalArt'));
+const LaserCutWoodArtPage = lazy(() => import('./components/LaserCutWoodArtPage'));
 const SubcategoryPage = lazy(() => import('./components/SubcategoryPage'));
 const IlluminatedWorks = lazy(() => import('./components/IlluminatedWorks'));
 const OracleCards = lazy(() => import('./components/OracleCards'));
@@ -108,6 +109,7 @@ const AppInner: React.FC = () => {
             {/* Creations — static routes must come before /:id catch-all */}
             <Route path="/creations" element={<Creations />} />
             <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
+            <Route path="/creations/laser-cut-wood-art" element={<LaserCutWoodArtPage />} />
             {/* Oracle gateway — QR code target */}
             <Route path="/oracle" element={<OracleGateway />} />
             <Route path="/oracle/the-systems" element={<OracleSystems />} />

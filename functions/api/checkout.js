@@ -24,7 +24,6 @@ const SHIPPING_COUNTRIES = [
 // Add localhost variants for local development as needed.
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
-  'https://www.adrianrasmussen.com',
   'https://adrian-rasmussen-art.pages.dev',
 ];
 

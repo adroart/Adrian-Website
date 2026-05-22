@@ -13,6 +13,7 @@ import Breadcrumb, { type Crumb } from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
+import { isLaserCutWoodArtwork, laserCutWoodAltText, mandalaAltText } from '../utils/artworkFilters';
 
 // --- Helpers ---
 
@@ -199,6 +200,8 @@ const PiecePage: React.FC = () => {
     const [purchaseVisible, setPurchaseVisible] = useState(false);
 
     const art = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+    const isMandala = art?.series === 'Mandala';
+    const isLaserCutWood = art ? isLaserCutWoodArtwork(art) : false;
 
     // Recently viewed tracking
     const recentIds = useRecentlyViewed(id ?? '');
@@ -210,9 +213,14 @@ const PiecePage: React.FC = () => {
     // Dynamic meta tags for sharing
     const ogImage = art ? `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${art.coverImage}` : undefined;
     const isUL = art?.series === 'Universal Language';
+    const nonUlDescription = art
+        ? isMandala
+            ? `${art.title} by Adrian Rasmussen. Original sacred geometry mandala artwork in layered laser-cut wood${art.dimensions ? ` · ${art.dimensions}` : ''}.`
+            : `${art.title} by Adrian Rasmussen · ${art.category}${art.dimensions ? ` · ${art.dimensions}` : ''}`
+        : undefined;
     useMetaTags({
         title: art ? (isUL ? ulMetaTitle(art) : art.title) : undefined,
-        description: art ? (isUL ? ulMetaDescription(art) : `${art.title} by Adrian Rasmussen · ${art.category}${art.dimensions ? ` · ${art.dimensions}` : ''}`) : undefined,
+        description: art ? (isUL ? ulMetaDescription(art) : nonUlDescription) : undefined,
         image: ogImage,
     });
 
@@ -565,6 +573,24 @@ const PiecePage: React.FC = () => {
 
     const detailParts = [art.dimensions, art.material, art.year].filter(Boolean);
     const detailString = detailParts.join(' · ');
+    const primaryImageAlt = isUL
+        ? ulAltText(art, ulCardNumber(art.coverImage))
+        : isMandala
+        ? mandalaAltText(art.title)
+        : isLaserCutWood
+        ? laserCutWoodAltText(art.title)
+        : art.title;
+
+    const imageSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'ImageObject',
+        name: art.title,
+        description: primaryImageAlt,
+        contentUrl: `https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1600,c_fit/${art.coverImage}`,
+        url: `https://adrianrasmussen.com/creations/${art.id}`,
+        creator: { '@type': 'Person', name: 'Adrian Rasmussen', url: 'https://adrianrasmussen.com/about' },
+        representativeOfPage: true,
+    };
 
     // Breadcrumb crumbs for the Breadcrumb component (desktop)
     const breadcrumbCrumbs = (() => {
@@ -599,6 +625,10 @@ const PiecePage: React.FC = () => {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: safeJsonLd(imageSchema) }}
             />
 
             {/* Return to oracle reading — shown only when the reader arrived
@@ -670,7 +700,7 @@ const PiecePage: React.FC = () => {
                         <img
                             src={cldImg(allImages[activeImageIndex], { w: 1200 })}
                             className="w-full h-auto object-cover transition-opacity duration-300 pointer-events-none"
-                            alt={isUL ? ulAltText(art, ulCardNumber(art.coverImage)) : art.title}
+                            alt={primaryImageAlt}
                         />
                     </div>
                     <p className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-500 text-center md:hidden">
@@ -799,6 +829,17 @@ const PiecePage: React.FC = () => {
                                         <p>{art.seriesDescription}</p>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {isLaserCutWood && (
+                            <div className="mt-6 border-t border-wood-100 pt-4">
+                                <Link
+                                    to="/creations/laser-cut-wood-art"
+                                    className="font-label text-[11px] uppercase tracking-[0.18em] text-bronze-600 hover:text-bronze-700 font-semibold underline underline-offset-4 decoration-1"
+                                >
+                                    Explore laser-cut wood art
+                                </Link>
                             </div>
                         )}
                     </div>

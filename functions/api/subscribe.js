@@ -13,7 +13,6 @@
 
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
-  'https://www.adrianrasmussen.com',
   'https://adrian-rasmussen-art.pages.dev',
 ];
 

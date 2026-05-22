@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-export type ChapterKey = 'iching' | 'genekeys' | 'humandesign' | 'tarot' | 'body';
+export type ChapterKey = 'ul' | 'iching' | 'genekeys' | 'humandesign' | 'tarot' | 'body';
 
 export interface Chapter {
   key: ChapterKey;

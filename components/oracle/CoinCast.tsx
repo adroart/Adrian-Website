@@ -424,7 +424,7 @@ const CoinCast: React.FC<{
           type="button"
           onClick={onCast}
           className="group flex flex-col items-center text-center rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-bronze-500/50 focus-visible:ring-offset-8 focus-visible:ring-offset-stone-900"
-          aria-label="Begin the changing — see how this hexagram is moving"
+          aria-label="Throw the coins. Begin the changing and see how this hexagram is moving."
         >
           <span className="transition-transform duration-300 group-hover:-translate-y-0.5">
             <ThreeCoins size={84} />

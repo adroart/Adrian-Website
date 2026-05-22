@@ -110,6 +110,15 @@ const MultidimensionalArt: React.FC = () => {
                     View all multidimensional art
                     <ArrowRight size={14} />
                 </Link>
+                <div className="mt-6">
+                    <Link
+                        to="/creations/laser-cut-wood-art"
+                        className="inline-flex items-center gap-2 font-label text-xs uppercase tracking-[0.2em] text-wood-600 hover:text-bronze-600 font-semibold border-b border-transparent hover:border-bronze-600 pb-1 transition-colors"
+                    >
+                        View laser-cut wood art
+                        <ArrowRight size={14} />
+                    </Link>
+                </div>
             </div>
         </section>
     );

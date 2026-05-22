@@ -110,7 +110,20 @@ type DesignSection = {
 const keysModules = import.meta.glob<{ default: KeysSection }>('../oracle/sections/keys/*.json');
 const designModules = import.meta.glob<{ default: DesignSection }>('../oracle/sections/design/*.json');
 
+/* Main Reading data lives in oracle/generated/NN.json under glance.
+ * Currently only UL 1 has this populated; other cards return undefined
+ * until the invocation-writing pass commissions them. */
+type GeneratedShape = {
+  glance?: {
+    invocation?: string;
+    reading?: string;
+    keywords?: string[];
+  };
+};
+const generatedModules = import.meta.glob<{ default: GeneratedShape }>('../oracle/generated/*.json');
+
 const synthesisCache = new Map<number, CardSynthesis | undefined>();
+const invocationCache = new Map<number, string | undefined>();
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -169,4 +182,22 @@ export async function getSynthesis(cardNumber: number): Promise<CardSynthesis | 
 
   synthesisCache.set(cardNumber, merged);
   return merged;
+}
+
+/* ─── Invocation loader ──────────────────────────────────────────────────
+   Returns the invocation prose for a given card, or undefined when the
+   generated/NN.json file doesn't exist yet. Cached after first load. */
+export async function getInvocation(cardNumber: number): Promise<string | undefined> {
+  if (invocationCache.has(cardNumber)) return invocationCache.get(cardNumber);
+
+  const loader = generatedModules[`../oracle/generated/${pad2(cardNumber)}.json`];
+  if (!loader) {
+    invocationCache.set(cardNumber, undefined);
+    return undefined;
+  }
+
+  const data = (await loader()).default;
+  const inv = data.glance?.invocation;
+  invocationCache.set(cardNumber, inv);
+  return inv;
 }

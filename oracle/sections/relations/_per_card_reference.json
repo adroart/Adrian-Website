@@ -1,0 +1,4143 @@
+{
+  "1": {
+    "number": 1,
+    "card_name": "Earth's Breath",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": true
+    },
+    "pair": {
+      "number": 2,
+      "card_name": "Beyond the Shell",
+      "hexagram_name": "The Receptive (K'un)"
+    },
+    "inverse": {
+      "number": 1,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 2,
+      "card_name": "Beyond the Shell"
+    },
+    "codon_ring": {
+      "name": "Ring of Fire",
+      "tarot": "14 - Temperance",
+      "description": "The creative flame and its abundance. These two cards share the fire that moves through all things, the force that both creates and consumes.",
+      "siblings": [
+        14
+      ]
+    },
+    "tarot": {
+      "card": "XIV · The Art",
+      "ring_tarot": "14 - Temperance"
+    },
+    "hebrew_letter": {
+      "letter": "Samech",
+      "meaning": "The Prop — the spine, the staff that steadies the ascending",
+      "path_number": "25",
+      "path_connects": "Tiphareth to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Sagittarius",
+      "type": "sign"
+    }
+  },
+  "2": {
+    "number": 2,
+    "card_name": "Beyond the Shell",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": true
+    },
+    "pair": {
+      "number": 1,
+      "card_name": "Earth's Breath",
+      "hexagram_name": "The Creative (Ch'ien)"
+    },
+    "inverse": {
+      "number": 2,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 1,
+      "card_name": "Earth's Breath"
+    },
+    "codon_ring": {
+      "name": "Ring of Water",
+      "tarot": "17 - The Star",
+      "description": "The receptive depths and the individual contribution. Water finds its way without forcing. The star shines by its own nature.",
+      "siblings": [
+        8
+      ]
+    },
+    "tarot": {
+      "card": "XVII · The Star",
+      "ring_tarot": "17 - The Star"
+    },
+    "hebrew_letter": {
+      "letter": "Tzaddi",
+      "meaning": "The Fish-hook — the lure of return, hope drawn out of the deep",
+      "path_number": "28",
+      "path_connects": "Netzach to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Aquarius",
+      "type": "sign"
+    }
+  },
+  "3": {
+    "number": 3,
+    "card_name": "Messengers of the Infinite",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 4,
+      "card_name": "Veils of Knowledge",
+      "hexagram_name": "Youthful Folly (Meng)"
+    },
+    "inverse": {
+      "number": 4,
+      "card_name": "Veils of Knowledge",
+      "hexagram_name": "Youthful Folly (Meng)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 50,
+      "card_name": "Melt Into Perfection"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        20,
+        23,
+        24,
+        27,
+        42
+      ]
+    },
+    "tarot": {
+      "card": "XIII · Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish — transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "4": {
+    "number": 4,
+    "card_name": "Veils of Knowledge",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 3,
+      "card_name": "Messengers of the Infinite",
+      "hexagram_name": "Difficulty at the Beginning (Chun)"
+    },
+    "inverse": {
+      "number": 3,
+      "card_name": "Messengers of the Infinite",
+      "hexagram_name": "Difficulty at the Beginning (Chun)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 49,
+      "card_name": "Union in the Ashes"
+    },
+    "codon_ring": {
+      "name": "Ring of Union",
+      "tarot": "6 - The Lovers",
+      "description": "Four cards woven by the principle of coming together. The folly of youth finding understanding, the discipline of virtue, the leap into the void, and the dissolution that makes intimacy possible.",
+      "siblings": [
+        7,
+        29,
+        59
+      ]
+    },
+    "tarot": {
+      "card": "VI · The Lovers",
+      "ring_tarot": "6 - The Lovers"
+    },
+    "hebrew_letter": {
+      "letter": "Zain",
+      "meaning": "The Sword — the blade of discrimination that forces a choice",
+      "path_number": "17",
+      "path_connects": "Binah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Gemini",
+      "type": "sign"
+    }
+  },
+  "5": {
+    "number": 5,
+    "card_name": "The Space Between Time",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 6,
+      "card_name": "Harmonious Mirage",
+      "hexagram_name": "Conflict (Sung)"
+    },
+    "inverse": {
+      "number": 6,
+      "card_name": "Harmonious Mirage",
+      "hexagram_name": "Conflict (Sung)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 35,
+      "card_name": "Navigational Star"
+    },
+    "codon_ring": {
+      "name": "Ring of Light",
+      "tarot": "19 - The Sun",
+      "description": "Four cards illuminated by the sun principle. Patience, determination, idealism, and the sacred trickster. The light that nourishes all things equally.",
+      "siblings": [
+        9,
+        11,
+        26
+      ]
+    },
+    "tarot": {
+      "card": "XIX · The Sun",
+      "ring_tarot": "19 - The Sun"
+    },
+    "hebrew_letter": {
+      "letter": "Resh",
+      "meaning": "The Head — the sovereign light, clarity that vitalises",
+      "path_number": "30",
+      "path_connects": "Hod to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Sun",
+      "type": "planet"
+    }
+  },
+  "6": {
+    "number": 6,
+    "card_name": "Harmonious Mirage",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 5,
+      "card_name": "The Space Between Time",
+      "hexagram_name": "Waiting (Hsu)"
+    },
+    "inverse": {
+      "number": 5,
+      "card_name": "The Space Between Time",
+      "hexagram_name": "Waiting (Hsu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 36,
+      "card_name": "Crystal Creation"
+    },
+    "codon_ring": {
+      "name": "Ring of Alchemy",
+      "tarot": "1 - The Magician",
+      "description": "Four cards bound by the transformative fire. Conflict becoming peace, exhaustion becoming divine will, oppression becoming transfiguration, confusion becoming illumination. The Magician works with what is at hand.",
+      "siblings": [
+        40,
+        47,
+        64
+      ]
+    },
+    "tarot": {
+      "card": "I · The Magician",
+      "ring_tarot": "1 - The Magician"
+    },
+    "hebrew_letter": {
+      "letter": "Beth",
+      "meaning": "The House — the vessel that focuses will",
+      "path_number": "12",
+      "path_connects": "Kether to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mercury",
+      "type": "planet"
+    }
+  },
+  "7": {
+    "number": 7,
+    "card_name": "Essential Nexus",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 8,
+      "card_name": "Odyssey of Freedom",
+      "hexagram_name": "Holding Together (Pi)"
+    },
+    "inverse": {
+      "number": 8,
+      "card_name": "Odyssey of Freedom",
+      "hexagram_name": "Holding Together (Pi)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 13,
+      "card_name": "Universal Crest"
+    },
+    "codon_ring": {
+      "name": "Ring of Union",
+      "tarot": "6 - The Lovers",
+      "description": "Four cards woven by the principle of coming together. The folly of youth finding understanding, the discipline of virtue, the leap into the void, and the dissolution that makes intimacy possible.",
+      "siblings": [
+        4,
+        29,
+        59
+      ]
+    },
+    "tarot": {
+      "card": "VI · The Lovers",
+      "ring_tarot": "6 - The Lovers"
+    },
+    "hebrew_letter": {
+      "letter": "Zain",
+      "meaning": "The Sword — the blade of discrimination that forces a choice",
+      "path_number": "17",
+      "path_connects": "Binah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Gemini",
+      "type": "sign"
+    }
+  },
+  "8": {
+    "number": 8,
+    "card_name": "Odyssey of Freedom",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 7,
+      "card_name": "Essential Nexus",
+      "hexagram_name": "The Army (Shih)"
+    },
+    "inverse": {
+      "number": 7,
+      "card_name": "Essential Nexus",
+      "hexagram_name": "The Army (Shih)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 14,
+      "card_name": "Ancestors Bloom"
+    },
+    "codon_ring": {
+      "name": "Ring of Water",
+      "tarot": "17 - The Star",
+      "description": "The receptive depths and the individual contribution. Water finds its way without forcing. The star shines by its own nature.",
+      "siblings": [
+        2
+      ]
+    },
+    "tarot": {
+      "card": "XVII · The Star",
+      "ring_tarot": "17 - The Star"
+    },
+    "hebrew_letter": {
+      "letter": "Tzaddi",
+      "meaning": "The Fish-hook — the lure of return, hope drawn out of the deep",
+      "path_number": "28",
+      "path_connects": "Netzach to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Aquarius",
+      "type": "sign"
+    }
+  },
+  "9": {
+    "number": 9,
+    "card_name": "Ease in This",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 10,
+      "card_name": "Internal Treasure",
+      "hexagram_name": "Treading (Lu)"
+    },
+    "inverse": {
+      "number": 10,
+      "card_name": "Internal Treasure",
+      "hexagram_name": "Treading (Lu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 16,
+      "card_name": "Grand Rising"
+    },
+    "codon_ring": {
+      "name": "Ring of Light",
+      "tarot": "19 - The Sun",
+      "description": "Four cards illuminated by the sun principle. Patience, determination, idealism, and the sacred trickster. The light that nourishes all things equally.",
+      "siblings": [
+        5,
+        11,
+        26
+      ]
+    },
+    "tarot": {
+      "card": "XIX · The Sun",
+      "ring_tarot": "19 - The Sun"
+    },
+    "hebrew_letter": {
+      "letter": "Resh",
+      "meaning": "The Head — the sovereign light, clarity that vitalises",
+      "path_number": "30",
+      "path_connects": "Hod to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Sun",
+      "type": "planet"
+    }
+  },
+  "10": {
+    "number": 10,
+    "card_name": "Internal Treasure",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 9,
+      "card_name": "Ease in This",
+      "hexagram_name": "Taming Power of the Small (Hsiao Ch'u)"
+    },
+    "inverse": {
+      "number": 9,
+      "card_name": "Ease in This",
+      "hexagram_name": "Taming Power of the Small (Hsiao Ch'u)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 15,
+      "card_name": "Ordinary Valiance"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        17,
+        21,
+        25,
+        38,
+        51
+      ]
+    },
+    "tarot": {
+      "card": "VII · The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence — the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "11": {
+    "number": 11,
+    "card_name": "Sol Star",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 12,
+      "card_name": "Petals of Freedom",
+      "hexagram_name": "Standstill / Stagnation (P'i)"
+    },
+    "inverse": {
+      "number": 12,
+      "card_name": "Petals of Freedom",
+      "hexagram_name": "Standstill / Stagnation (P'i)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 12,
+      "card_name": "Petals of Freedom"
+    },
+    "codon_ring": {
+      "name": "Ring of Light",
+      "tarot": "19 - The Sun",
+      "description": "Four cards illuminated by the sun principle. Patience, determination, idealism, and the sacred trickster. The light that nourishes all things equally.",
+      "siblings": [
+        5,
+        9,
+        26
+      ]
+    },
+    "tarot": {
+      "card": "XIX · The Sun",
+      "ring_tarot": "19 - The Sun"
+    },
+    "hebrew_letter": {
+      "letter": "Resh",
+      "meaning": "The Head — the sovereign light, clarity that vitalises",
+      "path_number": "30",
+      "path_connects": "Hod to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Sun",
+      "type": "planet"
+    }
+  },
+  "12": {
+    "number": 12,
+    "card_name": "Petals of Freedom",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 11,
+      "card_name": "Sol Star",
+      "hexagram_name": "Peace (T'ai)"
+    },
+    "inverse": {
+      "number": 11,
+      "card_name": "Sol Star",
+      "hexagram_name": "Peace (T'ai)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 11,
+      "card_name": "Sol Star"
+    },
+    "codon_ring": {
+      "name": "Ring of Secrets",
+      "tarot": "2 - The High Priestess",
+      "description": "A single card holds this ring. The keeper of what is hidden. What cannot be spoken directly must be carried in silence.",
+      "siblings": []
+    },
+    "tarot": {
+      "card": "II · The High Priestess",
+      "ring_tarot": "2 - The High Priestess"
+    },
+    "hebrew_letter": {
+      "letter": "Gimel",
+      "meaning": "The Camel — the crossing, memory bridging worlds",
+      "path_number": "13",
+      "path_connects": "Kether to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Moon",
+      "type": "planet"
+    }
+  },
+  "13": {
+    "number": 13,
+    "card_name": "Universal Crest",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 14,
+      "card_name": "Ancestors Bloom",
+      "hexagram_name": "The Great Possessing (Ta Yu)"
+    },
+    "inverse": {
+      "number": 14,
+      "card_name": "Ancestors Bloom",
+      "hexagram_name": "The Great Possessing (Ta Yu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 7,
+      "card_name": "Essential Nexus"
+    },
+    "codon_ring": {
+      "name": "Ring of Purification",
+      "tarot": "15 - The Devil",
+      "description": "Two cards that purify through fire. The listener and the one who sparks the blaze. Discord becoming empathy, desire becoming rapture.",
+      "siblings": [
+        30
+      ]
+    },
+    "tarot": {
+      "card": "XV · The Devil",
+      "ring_tarot": "15 - The Devil"
+    },
+    "hebrew_letter": {
+      "letter": "Ayin",
+      "meaning": "The Eye — the limiting vision, matter as the ground of play",
+      "path_number": "26",
+      "path_connects": "Tiphareth to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Capricorn",
+      "type": "sign"
+    }
+  },
+  "14": {
+    "number": 14,
+    "card_name": "Ancestors Bloom",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 13,
+      "card_name": "Universal Crest",
+      "hexagram_name": "Fellowship with Men (T'ung Jen)"
+    },
+    "inverse": {
+      "number": 13,
+      "card_name": "Universal Crest",
+      "hexagram_name": "Fellowship with Men (T'ung Jen)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 8,
+      "card_name": "Odyssey of Freedom"
+    },
+    "codon_ring": {
+      "name": "Ring of Fire",
+      "tarot": "14 - Temperance",
+      "description": "The creative flame and its abundance. These two cards share the fire that moves through all things, the force that both creates and consumes.",
+      "siblings": [
+        1
+      ]
+    },
+    "tarot": {
+      "card": "XIV · The Art",
+      "ring_tarot": "14 - Temperance"
+    },
+    "hebrew_letter": {
+      "letter": "Samech",
+      "meaning": "The Prop — the spine, the staff that steadies the ascending",
+      "path_number": "25",
+      "path_connects": "Tiphareth to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Sagittarius",
+      "type": "sign"
+    }
+  },
+  "15": {
+    "number": 15,
+    "card_name": "Ordinary Valiance",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 16,
+      "card_name": "Grand Rising",
+      "hexagram_name": "Enthusiasm (Yu)"
+    },
+    "inverse": {
+      "number": 16,
+      "card_name": "Grand Rising",
+      "hexagram_name": "Enthusiasm (Yu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 10,
+      "card_name": "Internal Treasure"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        39,
+        52,
+        53,
+        54,
+        58
+      ]
+    },
+    "tarot": {
+      "card": "IX · The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand — the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "16": {
+    "number": 16,
+    "card_name": "Grand Rising",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 15,
+      "card_name": "Ordinary Valiance",
+      "hexagram_name": "Modesty (Ch'ien)"
+    },
+    "inverse": {
+      "number": 15,
+      "card_name": "Ordinary Valiance",
+      "hexagram_name": "Modesty (Ch'ien)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 9,
+      "card_name": "Ease in This"
+    },
+    "codon_ring": {
+      "name": "Ring of Prosperity",
+      "tarot": "21 - The World",
+      "description": "Two cards that hold the energy of worldly fulfillment. Mastery and communion. The skills that serve the whole and the gathering that transforms the tribe.",
+      "siblings": [
+        45
+      ]
+    },
+    "tarot": {
+      "card": "XXI · The Universe",
+      "ring_tarot": "21 - The World"
+    },
+    "hebrew_letter": {
+      "letter": "Tau",
+      "meaning": "The Cross — the completion of the journey, matter as sacred",
+      "path_number": "32",
+      "path_connects": "Yesod to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Saturn",
+      "type": "planet"
+    }
+  },
+  "17": {
+    "number": 17,
+    "card_name": "Peral of Christos",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 18,
+      "card_name": "Liberation of the Greater",
+      "hexagram_name": "Work on What Has Been Spoiled (Ku)"
+    },
+    "inverse": {
+      "number": 18,
+      "card_name": "Liberation of the Greater",
+      "hexagram_name": "Work on What Has Been Spoiled (Ku)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 18,
+      "card_name": "Liberation of the Greater"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        10,
+        21,
+        25,
+        38,
+        51
+      ]
+    },
+    "tarot": {
+      "card": "VII, The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence, the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "18": {
+    "number": 18,
+    "card_name": "Liberation of the Greater",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 17,
+      "card_name": "Peral of Christos",
+      "hexagram_name": "Following (Sui)"
+    },
+    "inverse": {
+      "number": 17,
+      "card_name": "Peral of Christos",
+      "hexagram_name": "Following (Sui)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 17,
+      "card_name": "Peral of Christos"
+    },
+    "codon_ring": {
+      "name": "Ring of Matter",
+      "tarot": "4 - The Emperor",
+      "description": "Four cards that govern the material plane. Correction and delight, depth and intuition. The Emperor's domain is the body, the structure, the physical foundation.",
+      "siblings": [
+        46,
+        48,
+        57
+      ]
+    },
+    "tarot": {
+      "card": "IV, The Emperor",
+      "ring_tarot": "4 - The Emperor"
+    },
+    "hebrew_letter": {
+      "letter": "Heh",
+      "meaning": "The Window, the frame through which vision orders the world",
+      "path_number": "15",
+      "path_connects": "Chokmah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Aries",
+      "type": "sign"
+    }
+  },
+  "19": {
+    "number": 19,
+    "card_name": "Solection",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 20,
+      "card_name": "Emerging as the Code",
+      "hexagram_name": "Contemplation (Kuan)"
+    },
+    "inverse": {
+      "number": 20,
+      "card_name": "Emerging as the Code",
+      "hexagram_name": "Contemplation (Kuan)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 33,
+      "card_name": "Echos of Time"
+    },
+    "codon_ring": {
+      "name": "Ring of Gaia",
+      "tarot": "3 - The Empress",
+      "description": "Three cards woven into the body of the Earth Mother. Approach, limitation, and inner truth. The living intelligence of the planet expressed through sensitivity, structure, and mystery.",
+      "siblings": [
+        60,
+        61
+      ]
+    },
+    "tarot": {
+      "card": "III, The Empress",
+      "ring_tarot": "3 - The Empress"
+    },
+    "hebrew_letter": {
+      "letter": "Daleth",
+      "meaning": "The Door, the opening, abundance pouring through",
+      "path_number": "14",
+      "path_connects": "Chokmah to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Venus",
+      "type": "planet"
+    }
+  },
+  "20": {
+    "number": 20,
+    "card_name": "Emerging as the Code",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 19,
+      "card_name": "Solection",
+      "hexagram_name": "Approach (Lin)"
+    },
+    "inverse": {
+      "number": 19,
+      "card_name": "Solection",
+      "hexagram_name": "Approach (Lin)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 34,
+      "card_name": "Sublime Power"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        3,
+        23,
+        24,
+        27,
+        42
+      ]
+    },
+    "tarot": {
+      "card": "XIII, Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish, transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "21": {
+    "number": 21,
+    "card_name": "Beyond Binary",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 22,
+      "card_name": "Treasure of the Way",
+      "hexagram_name": "Grace (Pi)"
+    },
+    "inverse": {
+      "number": 22,
+      "card_name": "Treasure of the Way",
+      "hexagram_name": "Grace (Pi)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 48,
+      "card_name": "Doorways of the Unknown"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        10,
+        17,
+        25,
+        38,
+        51
+      ]
+    },
+    "tarot": {
+      "card": "VII, The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence, the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "22": {
+    "number": 22,
+    "card_name": "Treasure of the Way",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 21,
+      "card_name": "Beyond Binary",
+      "hexagram_name": "Biting Through (Shih Ho)"
+    },
+    "inverse": {
+      "number": 21,
+      "card_name": "Beyond Binary",
+      "hexagram_name": "Biting Through (Shih Ho)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 47,
+      "card_name": "Garden of Alchemy"
+    },
+    "codon_ring": {
+      "name": "Ring of Divinity",
+      "tarot": "5 - The Hierophant",
+      "description": "Four cards bound by the sacred teachings. Grace under pressure, the dark night of the soul, family alchemy, and the inquiry that reaches the source.",
+      "siblings": [
+        36,
+        37,
+        63
+      ]
+    },
+    "tarot": {
+      "card": "V, The Hierophant",
+      "ring_tarot": "5 - The Hierophant"
+    },
+    "hebrew_letter": {
+      "letter": "Vav",
+      "meaning": "The Nail, the pin that connects heaven to earth",
+      "path_number": "16",
+      "path_connects": "Chokmah to Chesed"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Taurus",
+      "type": "sign"
+    }
+  },
+  "23": {
+    "number": 23,
+    "card_name": "Beneath the Surface",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 24,
+      "card_name": "Frequency Flutter",
+      "hexagram_name": "Return (Fu)"
+    },
+    "inverse": {
+      "number": 24,
+      "card_name": "Frequency Flutter",
+      "hexagram_name": "Return (Fu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 43,
+      "card_name": "Cipher of Knowledge"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        3,
+        20,
+        24,
+        27,
+        42
+      ]
+    },
+    "tarot": {
+      "card": "XIII, Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish, transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "24": {
+    "number": 24,
+    "card_name": "Frequency Flutter",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 23,
+      "card_name": "Beneath the Surface",
+      "hexagram_name": "Splitting Apart (Po)"
+    },
+    "inverse": {
+      "number": 23,
+      "card_name": "Beneath the Surface",
+      "hexagram_name": "Splitting Apart (Po)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 44,
+      "card_name": "Sophia's Orchestra"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        3,
+        20,
+        23,
+        27,
+        42
+      ]
+    },
+    "tarot": {
+      "card": "XIII, Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish, transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "25": {
+    "number": 25,
+    "card_name": "The Mysteries Play",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 26,
+      "card_name": "Lighter Than a Feather",
+      "hexagram_name": "Taming Power of the Great (Ta Ch'u)"
+    },
+    "inverse": {
+      "number": 26,
+      "card_name": "Lighter Than a Feather",
+      "hexagram_name": "Taming Power of the Great (Ta Ch'u)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 46,
+      "card_name": "Fountain of Light"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        10,
+        17,
+        21,
+        38,
+        51
+      ]
+    },
+    "tarot": {
+      "card": "VII, The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence, the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "26": {
+    "number": 26,
+    "card_name": "Lighter Than a Feather",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 25,
+      "card_name": "The Mysteries Play",
+      "hexagram_name": "Innocence (Wu Wang)"
+    },
+    "inverse": {
+      "number": 25,
+      "card_name": "The Mysteries Play",
+      "hexagram_name": "Innocence (Wu Wang)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 45,
+      "card_name": "Tribal Tapestry"
+    },
+    "codon_ring": {
+      "name": "Ring of Light",
+      "tarot": "19 - The Sun",
+      "description": "Four cards illuminated by the sun principle. Patience, determination, idealism, and the sacred trickster. The light that nourishes all things equally.",
+      "siblings": [
+        5,
+        9,
+        11
+      ]
+    },
+    "tarot": {
+      "card": "XIX, The Sun",
+      "ring_tarot": "19 - The Sun"
+    },
+    "hebrew_letter": {
+      "letter": "Resh",
+      "meaning": "The Head, the sovereign light, clarity that vitalises",
+      "path_number": "30",
+      "path_connects": "Hod to Yesod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Sun",
+      "type": "planet"
+    }
+  },
+  "27": {
+    "number": 27,
+    "card_name": "Inner Majesty",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 28,
+      "card_name": "Becoming the Mystery",
+      "hexagram_name": "Preponderance of the Great (Ta Kuo)"
+    },
+    "inverse": {
+      "number": 27,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 28,
+      "card_name": "Becoming the Mystery"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        3,
+        20,
+        23,
+        24,
+        42
+      ]
+    },
+    "tarot": {
+      "card": "XIII, Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish, transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "28": {
+    "number": 28,
+    "card_name": "Becoming the Mystery",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 27,
+      "card_name": "Inner Majesty",
+      "hexagram_name": "Nourishment (I)"
+    },
+    "inverse": {
+      "number": 28,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 27,
+      "card_name": "Inner Majesty"
+    },
+    "codon_ring": {
+      "name": "Ring of Illusion",
+      "tarot": "18 - The Moon",
+      "description": "Two cards that navigate the territory of what is not as it seems. The game player who embraces the dark side and the one who preserves through duration.",
+      "siblings": [
+        32
+      ]
+    },
+    "tarot": {
+      "card": "XVIII, The Moon",
+      "ring_tarot": "18 - The Moon"
+    },
+    "hebrew_letter": {
+      "letter": "Qoph",
+      "meaning": "The Back of the Head, the dreaming, what lies below consciousness",
+      "path_number": "29",
+      "path_connects": "Netzach to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Pisces",
+      "type": "sign"
+    }
+  },
+  "29": {
+    "number": 29,
+    "card_name": "All In",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": true
+    },
+    "pair": {
+      "number": 30,
+      "card_name": "Sparking the Blaze",
+      "hexagram_name": "The Clinging, Fire (Li)"
+    },
+    "inverse": {
+      "number": 29,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 30,
+      "card_name": "Sparking the Blaze"
+    },
+    "codon_ring": {
+      "name": "Ring of Union",
+      "tarot": "6 - The Lovers",
+      "description": "Four cards woven by the principle of coming together. The folly of youth finding understanding, the discipline of virtue, the leap into the void, and the dissolution that makes intimacy possible.",
+      "siblings": [
+        4,
+        7,
+        59
+      ]
+    },
+    "tarot": {
+      "card": "VI, The Lovers",
+      "ring_tarot": "6 - The Lovers"
+    },
+    "hebrew_letter": {
+      "letter": "Zain",
+      "meaning": "The Sword, the blade of discrimination that forces a choice",
+      "path_number": "17",
+      "path_connects": "Binah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Gemini",
+      "type": "sign"
+    }
+  },
+  "30": {
+    "number": 30,
+    "card_name": "Sparking the Blaze",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": true
+    },
+    "pair": {
+      "number": 29,
+      "card_name": "All In",
+      "hexagram_name": "The Abysmal, Water (K'an)"
+    },
+    "inverse": {
+      "number": 30,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 29,
+      "card_name": "All In"
+    },
+    "codon_ring": {
+      "name": "Ring of Purification",
+      "tarot": "15 - The Devil",
+      "description": "Two cards that purify through fire. The listener and the one who sparks the blaze. Discord becoming empathy, desire becoming rapture.",
+      "siblings": [
+        13
+      ]
+    },
+    "tarot": {
+      "card": "XV, The Devil",
+      "ring_tarot": "15 - The Devil"
+    },
+    "hebrew_letter": {
+      "letter": "Ayin",
+      "meaning": "The Eye, the limiting vision, matter as the ground of play",
+      "path_number": "26",
+      "path_connects": "Tiphareth to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Capricorn",
+      "type": "sign"
+    }
+  },
+  "31": {
+    "number": 31,
+    "card_name": "Theater of Truth",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 32,
+      "card_name": "Art of Living",
+      "hexagram_name": "Duration (Heng)"
+    },
+    "inverse": {
+      "number": 32,
+      "card_name": "Art of Living",
+      "hexagram_name": "Duration (Heng)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 41,
+      "card_name": "Beginning and the End"
+    },
+    "codon_ring": {
+      "name": "Ring of No Return",
+      "tarot": "20 - Judgement",
+      "description": "Two cards that sound the truth from which there is no turning back. The one who leads by influence and the one who speaks the language of light.",
+      "siblings": [
+        62
+      ]
+    },
+    "tarot": {
+      "card": "XX, The Aeon",
+      "ring_tarot": "20 - Judgement"
+    },
+    "hebrew_letter": {
+      "letter": "Shin",
+      "meaning": "The Tooth, fire, the transforming flame of a new age",
+      "path_number": "31",
+      "path_connects": "Hod to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Fire",
+      "type": "element"
+    }
+  },
+  "32": {
+    "number": 32,
+    "card_name": "Art of Living",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 31,
+      "card_name": "Theater of Truth",
+      "hexagram_name": "Influence (Hsien)"
+    },
+    "inverse": {
+      "number": 31,
+      "card_name": "Theater of Truth",
+      "hexagram_name": "Influence (Hsien)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 42,
+      "card_name": "Moving to Perfection"
+    },
+    "codon_ring": {
+      "name": "Ring of Illusion",
+      "tarot": "18 - The Moon",
+      "description": "Two cards that navigate the territory of what is not as it seems. The game player who embraces the dark side and the one who preserves through duration.",
+      "siblings": [
+        28
+      ]
+    },
+    "tarot": {
+      "card": "XVIII, The Moon",
+      "ring_tarot": "18 - The Moon"
+    },
+    "hebrew_letter": {
+      "letter": "Qoph",
+      "meaning": "The Back of the Head, the dreaming, what lies below consciousness",
+      "path_number": "29",
+      "path_connects": "Netzach to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Pisces",
+      "type": "sign"
+    }
+  },
+  "33": {
+    "number": 33,
+    "card_name": "Echos of Time",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 34,
+      "card_name": "Sublime Power",
+      "hexagram_name": "The Power of the Great (Ta Chuang)"
+    },
+    "inverse": {
+      "number": 34,
+      "card_name": "Sublime Power",
+      "hexagram_name": "The Power of the Great (Ta Chuang)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 19,
+      "card_name": "Solection"
+    },
+    "codon_ring": {
+      "name": "Ring of Trials",
+      "tarot": "12 - The Hanged Man",
+      "description": "Three cards connected by the tests that refine the soul. Standstill, retreat, and the wanderer. The trials that cannot be skipped. (Card 12 is also held in the Ring of Secrets.)",
+      "siblings": [
+        56
+      ]
+    },
+    "tarot": {
+      "card": "XII , The Hanged Man",
+      "ring_tarot": "12 - The Hanged Man"
+    },
+    "hebrew_letter": {
+      "letter": "Mem",
+      "meaning": "Water , the element of surrender, reversal, the still deep",
+      "path_number": "23",
+      "path_connects": "Geburah to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Water",
+      "type": "element"
+    }
+  },
+  "34": {
+    "number": 34,
+    "card_name": "Sublime Power",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 33,
+      "card_name": "Echos of Time",
+      "hexagram_name": "Retreat (Tun)"
+    },
+    "inverse": {
+      "number": 33,
+      "card_name": "Echos of Time",
+      "hexagram_name": "Retreat (Tun)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 20,
+      "card_name": "Emerging as the Code"
+    },
+    "codon_ring": {
+      "name": "Ring of Destiny",
+      "tarot": "10 - The Wheel of Fortune",
+      "description": "Two cards that hold the turning of fate. Sublime power and breakthrough insight. The force that moves through the body and the knowing that breaks through the mind.",
+      "siblings": [
+        43
+      ]
+    },
+    "tarot": {
+      "card": "X , The Wheel of Fortune",
+      "ring_tarot": "10 - The Wheel of Fortune"
+    },
+    "hebrew_letter": {
+      "letter": "Kaph",
+      "meaning": "The Palm , the open hand, cycles turning, fate received",
+      "path_number": "21",
+      "path_connects": "Chesed to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Jupiter",
+      "type": "planet"
+    }
+  },
+  "35": {
+    "number": 35,
+    "card_name": "Navigational Star",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 36,
+      "card_name": "Crystal Creation",
+      "hexagram_name": "Darkening of the Light (Ming I)"
+    },
+    "inverse": {
+      "number": 36,
+      "card_name": "Crystal Creation",
+      "hexagram_name": "Darkening of the Light (Ming I)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 5,
+      "card_name": "The Space Between Time"
+    },
+    "codon_ring": {
+      "name": "Ring of Miracles",
+      "tarot": "11 - Strength",
+      "description": "A single card holds this ring. The adventure that never ends. The hunger that, when fully met, opens into boundlessness.",
+      "siblings": []
+    },
+    "tarot": {
+      "card": "XI , Lust",
+      "ring_tarot": "11 - Strength"
+    },
+    "hebrew_letter": {
+      "letter": "Teth",
+      "meaning": "The Serpent , the creative fire coiled at the base, courage",
+      "path_number": "19",
+      "path_connects": "Geburah to Chesed"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Leo",
+      "type": "sign"
+    }
+  },
+  "36": {
+    "number": 36,
+    "card_name": "Crystal Creation",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 35,
+      "card_name": "Navigational Star",
+      "hexagram_name": "Progress (Chin)"
+    },
+    "inverse": {
+      "number": 35,
+      "card_name": "Navigational Star",
+      "hexagram_name": "Progress (Chin)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 6,
+      "card_name": "Harmonious Mirage"
+    },
+    "codon_ring": {
+      "name": "Ring of Divinity",
+      "tarot": "5 - The Hierophant",
+      "description": "Four cards bound by the sacred teachings. Grace under pressure, the dark night of the soul, family alchemy, and the inquiry that reaches the source.",
+      "siblings": [
+        22,
+        37,
+        63
+      ]
+    },
+    "tarot": {
+      "card": "V , The Hierophant",
+      "ring_tarot": "5 - The Hierophant"
+    },
+    "hebrew_letter": {
+      "letter": "Vav",
+      "meaning": "The Nail , the pin that connects heaven to earth",
+      "path_number": "16",
+      "path_connects": "Chokmah to Chesed"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Taurus",
+      "type": "sign"
+    }
+  },
+  "37": {
+    "number": 37,
+    "card_name": "Journey Home",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 38,
+      "card_name": "Inner Light Symphony",
+      "hexagram_name": "Opposition (K'uei)"
+    },
+    "inverse": {
+      "number": 38,
+      "card_name": "Inner Light Symphony",
+      "hexagram_name": "Opposition (K'uei)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 40,
+      "card_name": "Eternal Wellspring"
+    },
+    "codon_ring": {
+      "name": "Ring of Divinity",
+      "tarot": "5 - The Hierophant",
+      "description": "Four cards bound by the sacred teachings. Grace under pressure, the dark night of the soul, family alchemy, and the inquiry that reaches the source.",
+      "siblings": [
+        22,
+        36,
+        63
+      ]
+    },
+    "tarot": {
+      "card": "V , The Hierophant",
+      "ring_tarot": "5 - The Hierophant"
+    },
+    "hebrew_letter": {
+      "letter": "Vav",
+      "meaning": "The Nail , the pin that connects heaven to earth",
+      "path_number": "16",
+      "path_connects": "Chokmah to Chesed"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Taurus",
+      "type": "sign"
+    }
+  },
+  "38": {
+    "number": 38,
+    "card_name": "Inner Light Symphony",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 37,
+      "card_name": "Journey Home",
+      "hexagram_name": "The Family (Chia Jen)"
+    },
+    "inverse": {
+      "number": 37,
+      "card_name": "Journey Home",
+      "hexagram_name": "The Family (Chia Jen)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 39,
+      "card_name": "Nobel Spark"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        10,
+        17,
+        21,
+        25,
+        51
+      ]
+    },
+    "tarot": {
+      "card": "VII , The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence , the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "39": {
+    "number": 39,
+    "card_name": "Nobel Spark",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 40,
+      "card_name": "Eternal Wellspring",
+      "hexagram_name": "Deliverance (Hsieh)"
+    },
+    "inverse": {
+      "number": 40,
+      "card_name": "Eternal Wellspring",
+      "hexagram_name": "Deliverance (Hsieh)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 38,
+      "card_name": "Inner Light Symphony"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        15,
+        52,
+        53,
+        54,
+        58
+      ]
+    },
+    "tarot": {
+      "card": "IX , The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand , the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "40": {
+    "number": 40,
+    "card_name": "Eternal Wellspring",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 39,
+      "card_name": "Nobel Spark",
+      "hexagram_name": "Obstruction (Chien)"
+    },
+    "inverse": {
+      "number": 39,
+      "card_name": "Nobel Spark",
+      "hexagram_name": "Obstruction (Chien)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 37,
+      "card_name": "Journey Home"
+    },
+    "codon_ring": {
+      "name": "Ring of Alchemy",
+      "tarot": "1 - The Magician",
+      "description": "Four cards bound by the transformative fire. Conflict becoming peace, exhaustion becoming divine will, oppression becoming transfiguration, confusion becoming illumination. The Magician works with what is at hand.",
+      "siblings": [
+        6,
+        47,
+        64
+      ]
+    },
+    "tarot": {
+      "card": "I , The Magician",
+      "ring_tarot": "1 - The Magician"
+    },
+    "hebrew_letter": {
+      "letter": "Beth",
+      "meaning": "The House , the vessel that focuses will",
+      "path_number": "12",
+      "path_connects": "Kether to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mercury",
+      "type": "planet"
+    }
+  },
+  "41": {
+    "number": 41,
+    "card_name": "Beginning and the End",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 42,
+      "card_name": "Moving to Perfection",
+      "hexagram_name": "Increase (I)"
+    },
+    "inverse": {
+      "number": 42,
+      "card_name": "Moving to Perfection",
+      "hexagram_name": "Increase (I)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 31,
+      "card_name": "Theater of Truth"
+    },
+    "codon_ring": {
+      "name": "Ring of Origin",
+      "tarot": "0 - The Fool",
+      "description": "The single card that stands alone at the beginning of the cycle. The ouroboros. Before the journey begins, and after it has ended.",
+      "siblings": []
+    },
+    "tarot": {
+      "card": "0, The Fool",
+      "ring_tarot": "0 - The Fool"
+    },
+    "hebrew_letter": {
+      "letter": "Aleph",
+      "meaning": "The Ox, primal breath, the beginningless beginning",
+      "path_number": "11",
+      "path_connects": "Kether to Chokmah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Air",
+      "type": "element"
+    }
+  },
+  "42": {
+    "number": 42,
+    "card_name": "Moving to Perfection",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": false
+    },
+    "pair": {
+      "number": 41,
+      "card_name": "Beginning and the End",
+      "hexagram_name": "Diminishing (Sun)"
+    },
+    "inverse": {
+      "number": 41,
+      "card_name": "Beginning and the End",
+      "hexagram_name": "Diminishing (Sun)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 32,
+      "card_name": "Art of Living"
+    },
+    "codon_ring": {
+      "name": "Ring of Life and Death",
+      "tarot": "13 - Death",
+      "description": "Six cards bound by the great cycle. Birth, decay, transformation, return. These cards hold the entire span of incarnation.",
+      "siblings": [
+        3,
+        20,
+        23,
+        24,
+        27
+      ]
+    },
+    "tarot": {
+      "card": "XIII, Death",
+      "ring_tarot": "13 - Death"
+    },
+    "hebrew_letter": {
+      "letter": "Nun",
+      "meaning": "The Fish, transformation without loss, continuity through change",
+      "path_number": "24",
+      "path_connects": "Tiphareth to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Scorpio",
+      "type": "sign"
+    }
+  },
+  "43": {
+    "number": 43,
+    "card_name": "Cipher of Knowledge",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Heaven",
+      "lower_symbol": "☰",
+      "same": false
+    },
+    "pair": {
+      "number": 44,
+      "card_name": "Sophia's Orchestra",
+      "hexagram_name": "Coming to Meet (Kou)"
+    },
+    "inverse": {
+      "number": 44,
+      "card_name": "Sophia's Orchestra",
+      "hexagram_name": "Coming to Meet (Kou)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 23,
+      "card_name": "Beneath the Surface"
+    },
+    "codon_ring": {
+      "name": "Ring of Destiny",
+      "tarot": "10 - The Wheel of Fortune",
+      "description": "Two cards that hold the turning of fate. Sublime power and breakthrough insight. The force that moves through the body and the knowing that breaks through the mind.",
+      "siblings": [
+        34
+      ]
+    },
+    "tarot": {
+      "card": "X, The Wheel of Fortune",
+      "ring_tarot": "10 - The Wheel of Fortune"
+    },
+    "hebrew_letter": {
+      "letter": "Kaph",
+      "meaning": "The Palm, the open hand, cycles turning, fate received",
+      "path_number": "21",
+      "path_connects": "Chesed to Netzach"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Jupiter",
+      "type": "planet"
+    }
+  },
+  "44": {
+    "number": 44,
+    "card_name": "Sophia's Orchestra",
+    "trigrams": {
+      "upper": "Heaven",
+      "upper_symbol": "☰",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 43,
+      "card_name": "Cipher of Knowledge",
+      "hexagram_name": "Breakthrough (Kuai)"
+    },
+    "inverse": {
+      "number": 43,
+      "card_name": "Cipher of Knowledge",
+      "hexagram_name": "Breakthrough (Kuai)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 24,
+      "card_name": "Frequency Flutter"
+    },
+    "codon_ring": {
+      "name": "Ring of Illuminati",
+      "tarot": "8 - Justice",
+      "description": "Two cards bound by the principle of cosmic order. The pattern that organizes itself and the alertness that recognizes the pattern.",
+      "siblings": [
+        50
+      ]
+    },
+    "tarot": {
+      "card": "VIII, Adjustment",
+      "ring_tarot": "8 - Justice"
+    },
+    "hebrew_letter": {
+      "letter": "Lamed",
+      "meaning": "The Ox-Goad, consequence, the precise adjustment of forces",
+      "path_number": "22",
+      "path_connects": "Geburah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Heaven",
+        "name": "Zhongli Quan",
+        "virtue": "The retired general who turned to the way",
+        "teaching": "The force that has done enough in the world and turns inward to refine what remains."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Libra",
+      "type": "sign"
+    }
+  },
+  "45": {
+    "number": 45,
+    "card_name": "Tribal Tapestry",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Earth",
+      "lower_symbol": "☷",
+      "same": false
+    },
+    "pair": {
+      "number": 46,
+      "card_name": "Fountain of Light",
+      "hexagram_name": "Pushing Upward (Sheng)"
+    },
+    "inverse": {
+      "number": 46,
+      "card_name": "Fountain of Light",
+      "hexagram_name": "Pushing Upward (Sheng)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 26,
+      "card_name": "Lighter Than a Feather"
+    },
+    "codon_ring": {
+      "name": "Ring of Prosperity",
+      "tarot": "21 - The World",
+      "description": "Two cards that hold the energy of worldly fulfillment. Mastery and communion. The skills that serve the whole and the gathering that transforms the tribe.",
+      "siblings": [
+        16
+      ]
+    },
+    "tarot": {
+      "card": "XXI, The Universe",
+      "ring_tarot": "21 - The World"
+    },
+    "hebrew_letter": {
+      "letter": "Tau",
+      "meaning": "The Cross, the completion of the journey, matter as sacred",
+      "path_number": "32",
+      "path_connects": "Yesod to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Saturn",
+      "type": "planet"
+    }
+  },
+  "46": {
+    "number": 46,
+    "card_name": "Fountain of Light",
+    "trigrams": {
+      "upper": "Earth",
+      "upper_symbol": "☷",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 45,
+      "card_name": "Tribal Tapestry",
+      "hexagram_name": "Gathering Together (Ts'ui)"
+    },
+    "inverse": {
+      "number": 45,
+      "card_name": "Tribal Tapestry",
+      "hexagram_name": "Gathering Together (Ts'ui)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 25,
+      "card_name": "The Mysteries Play"
+    },
+    "codon_ring": {
+      "name": "Ring of Matter",
+      "tarot": "4 - The Emperor",
+      "description": "Four cards that govern the material plane. Correction and delight, depth and intuition. The Emperor's domain is the body, the structure, the physical foundation.",
+      "siblings": [
+        18,
+        48,
+        57
+      ]
+    },
+    "tarot": {
+      "card": "IV, The Emperor",
+      "ring_tarot": "4 - The Emperor"
+    },
+    "hebrew_letter": {
+      "letter": "Heh",
+      "meaning": "The Window, the frame through which vision orders the world",
+      "path_number": "15",
+      "path_connects": "Chokmah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Earth",
+        "name": "He Xiangu",
+        "virtue": "The maiden who became immortal by eating moon-stone",
+        "teaching": "The receptive force that nourishes itself on what is offered and asks for nothing more."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Aries",
+      "type": "sign"
+    }
+  },
+  "47": {
+    "number": 47,
+    "card_name": "Garden of Alchemy",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 48,
+      "card_name": "Doorways of the Unknown",
+      "hexagram_name": "The Well (Ching)"
+    },
+    "inverse": {
+      "number": 48,
+      "card_name": "Doorways of the Unknown",
+      "hexagram_name": "The Well (Ching)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 22,
+      "card_name": "Treasure of the Way"
+    },
+    "codon_ring": {
+      "name": "Ring of Alchemy",
+      "tarot": "1 - The Magician",
+      "description": "Four cards bound by the transformative fire. Conflict becoming peace, exhaustion becoming divine will, oppression becoming transfiguration, confusion becoming illumination. The Magician works with what is at hand.",
+      "siblings": [
+        6,
+        40,
+        64
+      ]
+    },
+    "tarot": {
+      "card": "I, The Magician",
+      "ring_tarot": "1 - The Magician"
+    },
+    "hebrew_letter": {
+      "letter": "Beth",
+      "meaning": "The House, the vessel that focuses will",
+      "path_number": "12",
+      "path_connects": "Kether to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mercury",
+      "type": "planet"
+    }
+  },
+  "48": {
+    "number": 48,
+    "card_name": "Doorways of the Unknown",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 47,
+      "card_name": "Garden of Alchemy",
+      "hexagram_name": "Oppression (K'un)"
+    },
+    "inverse": {
+      "number": 47,
+      "card_name": "Garden of Alchemy",
+      "hexagram_name": "Oppression (K'un)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 21,
+      "card_name": "Beyond Binary"
+    },
+    "codon_ring": {
+      "name": "Ring of Matter",
+      "tarot": "4 - The Emperor",
+      "description": "Four cards that govern the material plane. Correction and delight, depth and intuition. The Emperor's domain is the body, the structure, the physical foundation.",
+      "siblings": [
+        18,
+        46,
+        57
+      ]
+    },
+    "tarot": {
+      "card": "IV, The Emperor",
+      "ring_tarot": "4 - The Emperor"
+    },
+    "hebrew_letter": {
+      "letter": "Heh",
+      "meaning": "The Window, the frame through which vision orders the world",
+      "path_number": "15",
+      "path_connects": "Chokmah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Aries",
+      "type": "sign"
+    }
+  },
+  "49": {
+    "number": 49,
+    "card_name": "Union in the Ashes",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 50,
+      "card_name": "Melt Into Perfection",
+      "hexagram_name": "The Cauldron (Ting)"
+    },
+    "inverse": {
+      "number": 50,
+      "card_name": "Melt Into Perfection",
+      "hexagram_name": "The Cauldron (Ting)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 4,
+      "card_name": "Veils of Knowledge"
+    },
+    "codon_ring": {
+      "name": "Ring of the Whirlwind",
+      "tarot": "16 - The Tower",
+      "description": "Two cards that carry the energy of revolutionary change. The fire that burns away the old and the spirit that rises from the ashes.",
+      "siblings": [
+        55
+      ]
+    },
+    "tarot": {
+      "card": "XVI. The Tower",
+      "ring_tarot": "16 - The Tower"
+    },
+    "hebrew_letter": {
+      "letter": "Peh",
+      "meaning": "The Mouth, the word that shatters, revelation through rupture",
+      "path_number": "27",
+      "path_connects": "Netzach to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mars",
+      "type": "planet"
+    }
+  },
+  "50": {
+    "number": 50,
+    "card_name": "Melt Into Perfection",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": false
+    },
+    "pair": {
+      "number": 49,
+      "card_name": "Union in the Ashes",
+      "hexagram_name": "Revolution (Ko)"
+    },
+    "inverse": {
+      "number": 49,
+      "card_name": "Union in the Ashes",
+      "hexagram_name": "Revolution (Ko)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 3,
+      "card_name": "Messengers of the Infinite"
+    },
+    "codon_ring": {
+      "name": "Ring of Illuminati",
+      "tarot": "8 - Justice",
+      "description": "Two cards bound by the principle of cosmic order. The pattern that organizes itself and the alertness that recognizes the pattern.",
+      "siblings": [
+        44
+      ]
+    },
+    "tarot": {
+      "card": "VIII. Adjustment",
+      "ring_tarot": "8 - Justice"
+    },
+    "hebrew_letter": {
+      "letter": "Lamed",
+      "meaning": "The Ox-Goad, consequence, the precise adjustment of forces",
+      "path_number": "22",
+      "path_connects": "Geburah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Libra",
+      "type": "sign"
+    }
+  },
+  "51": {
+    "number": 51,
+    "card_name": "Unshakable Arrival",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Thunder",
+      "lower_symbol": "☳",
+      "same": true
+    },
+    "pair": {
+      "number": 52,
+      "card_name": "Timeless Blossom",
+      "hexagram_name": "Keeping Still, Mountain (Ken)"
+    },
+    "inverse": {
+      "number": 52,
+      "card_name": "Timeless Blossom",
+      "hexagram_name": "Keeping Still, Mountain (Ken)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 57,
+      "card_name": "Flight of the Tao"
+    },
+    "codon_ring": {
+      "name": "Ring of Humanity",
+      "tarot": "7 - The Chariot",
+      "description": "Six cards that define the human journey. Behavior, opinions, control, innocence, struggle, and shock. The Chariot carries us through the full spectrum of being human.",
+      "siblings": [
+        10,
+        17,
+        21,
+        25,
+        38
+      ]
+    },
+    "tarot": {
+      "card": "VII. The Chariot",
+      "ring_tarot": "7 - The Chariot"
+    },
+    "hebrew_letter": {
+      "letter": "Cheth",
+      "meaning": "The Fence, the enclosure that contains and enables movement",
+      "path_number": "18",
+      "path_connects": "Binah to Geburah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Cancer",
+      "type": "sign"
+    }
+  },
+  "52": {
+    "number": 52,
+    "card_name": "Timeless Blossom",
+    "trigrams": {
+      "upper": "Mountain",
+      "upper_symbol": "☶",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": true
+    },
+    "pair": {
+      "number": 51,
+      "card_name": "Unshakable Arrival",
+      "hexagram_name": "The Arousing, Thunder (Chen)"
+    },
+    "inverse": {
+      "number": 51,
+      "card_name": "Unshakable Arrival",
+      "hexagram_name": "The Arousing, Thunder (Chen)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 58,
+      "card_name": "Rhythm of Life"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        15,
+        39,
+        53,
+        54,
+        58
+      ]
+    },
+    "tarot": {
+      "card": "IX. The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "53": {
+    "number": 53,
+    "card_name": "Creation Oscillation",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 54,
+      "card_name": "Everlasting Bounty",
+      "hexagram_name": "The Marrying Maiden (Kuei Mei)"
+    },
+    "inverse": {
+      "number": 54,
+      "card_name": "Everlasting Bounty",
+      "hexagram_name": "The Marrying Maiden (Kuei Mei)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 54,
+      "card_name": "Everlasting Bounty"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        15,
+        39,
+        52,
+        54,
+        58
+      ]
+    },
+    "tarot": {
+      "card": "IX. The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "54": {
+    "number": 54,
+    "card_name": "Everlasting Bounty",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 53,
+      "card_name": "Creation Oscillation",
+      "hexagram_name": "Gradual Progress (Chien)"
+    },
+    "inverse": {
+      "number": 53,
+      "card_name": "Creation Oscillation",
+      "hexagram_name": "Gradual Progress (Chien)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 53,
+      "card_name": "Creation Oscillation"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        15,
+        39,
+        52,
+        53,
+        58
+      ]
+    },
+    "tarot": {
+      "card": "IX. The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "55": {
+    "number": 55,
+    "card_name": "Untouched Perfection",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 56,
+      "card_name": "Infinite Journey",
+      "hexagram_name": "The Wanderer (Lu)"
+    },
+    "inverse": {
+      "number": 56,
+      "card_name": "Infinite Journey",
+      "hexagram_name": "The Wanderer (Lu)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 59,
+      "card_name": "Mystics Treasures"
+    },
+    "codon_ring": {
+      "name": "Ring of the Whirlwind",
+      "tarot": "16 - The Tower",
+      "description": "Two cards that carry the energy of revolutionary change. The fire that burns away the old and the spirit that rises from the ashes.",
+      "siblings": [
+        49
+      ]
+    },
+    "tarot": {
+      "card": "XVI. The Tower",
+      "ring_tarot": "16 - The Tower"
+    },
+    "hebrew_letter": {
+      "letter": "Peh",
+      "meaning": "The Mouth, the word that shatters, revelation through rupture",
+      "path_number": "27",
+      "path_connects": "Netzach to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mars",
+      "type": "planet"
+    }
+  },
+  "56": {
+    "number": 56,
+    "card_name": "Infinite Journey",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 55,
+      "card_name": "Untouched Perfection",
+      "hexagram_name": "Abundance (Feng)"
+    },
+    "inverse": {
+      "number": 55,
+      "card_name": "Untouched Perfection",
+      "hexagram_name": "Abundance (Feng)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 60,
+      "card_name": "Woven Light"
+    },
+    "codon_ring": {
+      "name": "Ring of Trials",
+      "tarot": "12 - The Hanged Man",
+      "description": "Three cards connected by the tests that refine the soul. Standstill, retreat, and the wanderer. The trials that cannot be skipped. (Card 12 is also held in the Ring of Secrets.)",
+      "siblings": [
+        33
+      ]
+    },
+    "tarot": {
+      "card": "XII. The Hanged Man",
+      "ring_tarot": "12 - The Hanged Man"
+    },
+    "hebrew_letter": {
+      "letter": "Mem",
+      "meaning": "Water, the element of surrender, reversal, the still deep",
+      "path_number": "23",
+      "path_connects": "Geburah to Hod"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Water",
+      "type": "element"
+    }
+  },
+  "57": {
+    "number": 57,
+    "card_name": "Flight of the Tao",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Wind",
+      "lower_symbol": "☴",
+      "same": true
+    },
+    "pair": {
+      "number": 58,
+      "card_name": "Rhythm of Life",
+      "hexagram_name": "The Joyous, Lake (Tui)"
+    },
+    "inverse": {
+      "number": 58,
+      "card_name": "Rhythm of Life",
+      "hexagram_name": "The Joyous, Lake (Tui)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 51,
+      "card_name": "Unshakable Arrival"
+    },
+    "codon_ring": {
+      "name": "Ring of Matter",
+      "tarot": "4 - The Emperor",
+      "description": "Four cards that govern the material plane. Correction and delight, depth and intuition. The Emperor's domain is the body, the structure, the physical foundation.",
+      "siblings": [
+        18,
+        46,
+        48
+      ]
+    },
+    "tarot": {
+      "card": "IV, The Emperor",
+      "ring_tarot": "4 - The Emperor"
+    },
+    "hebrew_letter": {
+      "letter": "Heh",
+      "meaning": "The Window, the frame through which vision orders the world",
+      "path_number": "15",
+      "path_connects": "Chokmah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Aries",
+      "type": "sign"
+    }
+  },
+  "58": {
+    "number": 58,
+    "card_name": "Rhythm of Life",
+    "trigrams": {
+      "upper": "Lake",
+      "upper_symbol": "☱",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": true
+    },
+    "pair": {
+      "number": 57,
+      "card_name": "Flight of the Tao",
+      "hexagram_name": "The Gentle, Wind (Sun)"
+    },
+    "inverse": {
+      "number": 57,
+      "card_name": "Flight of the Tao",
+      "hexagram_name": "The Gentle, Wind (Sun)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 52,
+      "card_name": "Timeless Blossom"
+    },
+    "codon_ring": {
+      "name": "Ring of Seeking",
+      "tarot": "9 - The Hermit",
+      "description": "Six cards on the path of the seeker. Modesty, provocation, stillness, gradual progress, ambition, and aliveness. The Hermit walks alone but each step serves the whole.",
+      "siblings": [
+        15,
+        39,
+        52,
+        53,
+        54
+      ]
+    },
+    "tarot": {
+      "card": "IX, The Hermit",
+      "ring_tarot": "9 - The Hermit"
+    },
+    "hebrew_letter": {
+      "letter": "Yod",
+      "meaning": "The Hand, the closed fist holding the seed in withdrawal",
+      "path_number": "20",
+      "path_connects": "Chesed to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": true
+    },
+    "sky": {
+      "value": "Virgo",
+      "type": "sign"
+    }
+  },
+  "59": {
+    "number": 59,
+    "card_name": "Mystics Treasures",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 60,
+      "card_name": "Woven Light",
+      "hexagram_name": "Limitation (Chieh)"
+    },
+    "inverse": {
+      "number": 60,
+      "card_name": "Woven Light",
+      "hexagram_name": "Limitation (Chieh)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 55,
+      "card_name": "Untouched Perfection"
+    },
+    "codon_ring": {
+      "name": "Ring of Union",
+      "tarot": "6 - The Lovers",
+      "description": "Four cards woven by the principle of coming together. The folly of youth finding understanding, the discipline of virtue, the leap into the void, and the dissolution that makes intimacy possible.",
+      "siblings": [
+        4,
+        7,
+        29
+      ]
+    },
+    "tarot": {
+      "card": "VI, The Lovers",
+      "ring_tarot": "6 - The Lovers"
+    },
+    "hebrew_letter": {
+      "letter": "Zain",
+      "meaning": "The Sword, the blade of discrimination that forces a choice",
+      "path_number": "17",
+      "path_connects": "Binah to Tiphareth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Gemini",
+      "type": "sign"
+    }
+  },
+  "60": {
+    "number": 60,
+    "card_name": "Woven Light",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 59,
+      "card_name": "Mystics Treasures",
+      "hexagram_name": "Dispersion (Huan)"
+    },
+    "inverse": {
+      "number": 59,
+      "card_name": "Mystics Treasures",
+      "hexagram_name": "Dispersion (Huan)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 56,
+      "card_name": "Infinite Journey"
+    },
+    "codon_ring": {
+      "name": "Ring of Gaia",
+      "tarot": "3 - The Empress",
+      "description": "Three cards woven into the body of the Earth Mother. Approach, limitation, and inner truth. The living intelligence of the planet expressed through sensitivity, structure, and mystery.",
+      "siblings": [
+        19,
+        61
+      ]
+    },
+    "tarot": {
+      "card": "III, The Empress",
+      "ring_tarot": "3 - The Empress"
+    },
+    "hebrew_letter": {
+      "letter": "Daleth",
+      "meaning": "The Door, the opening, abundance pouring through",
+      "path_number": "14",
+      "path_connects": "Chokmah to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Venus",
+      "type": "planet"
+    }
+  },
+  "61": {
+    "number": 61,
+    "card_name": "Celestial Remembrance",
+    "trigrams": {
+      "upper": "Wind",
+      "upper_symbol": "☴",
+      "lower": "Lake",
+      "lower_symbol": "☱",
+      "same": false
+    },
+    "pair": {
+      "number": 62,
+      "card_name": "Voice of Nature",
+      "hexagram_name": "Preponderance of the Small (Hsiao Kuo)"
+    },
+    "inverse": {
+      "number": 61,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 62,
+      "card_name": "Voice of Nature"
+    },
+    "codon_ring": {
+      "name": "Ring of Gaia",
+      "tarot": "3 - The Empress",
+      "description": "Three cards woven into the body of the Earth Mother. Approach, limitation, and inner truth. The living intelligence of the planet expressed through sensitivity, structure, and mystery.",
+      "siblings": [
+        19,
+        60
+      ]
+    },
+    "tarot": {
+      "card": "III, The Empress",
+      "ring_tarot": "3 - The Empress"
+    },
+    "hebrew_letter": {
+      "letter": "Daleth",
+      "meaning": "The Door, the opening, abundance pouring through",
+      "path_number": "14",
+      "path_connects": "Chokmah to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Wind",
+        "name": "Han Xiangzi",
+        "virtue": "The flute-playing youth whose music tames the wild",
+        "teaching": "The gentle penetrating force that enters without breaking, the breath that shapes the room."
+      },
+      "lower": {
+        "trigram": "Lake",
+        "name": "Li Tieguai",
+        "virtue": "The crippled beggar with the iron crutch and the gourd of medicine",
+        "teaching": "The joyous force that holds suffering in one hand and healing in the other, both at once."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Venus",
+      "type": "planet"
+    }
+  },
+  "62": {
+    "number": 62,
+    "card_name": "Voice of Nature",
+    "trigrams": {
+      "upper": "Thunder",
+      "upper_symbol": "☳",
+      "lower": "Mountain",
+      "lower_symbol": "☶",
+      "same": false
+    },
+    "pair": {
+      "number": 61,
+      "card_name": "Celestial Remembrance",
+      "hexagram_name": "Inner Truth (Chung Fu)"
+    },
+    "inverse": {
+      "number": 62,
+      "card_name": null,
+      "hexagram_name": null,
+      "is_self_inverse": true
+    },
+    "programming_partner": {
+      "number": 61,
+      "card_name": "Celestial Remembrance"
+    },
+    "codon_ring": {
+      "name": "Ring of No Return",
+      "tarot": "20 - Judgement",
+      "description": "Two cards that sound the truth from which there is no turning back. The one who leads by influence and the one who speaks the language of light.",
+      "siblings": [
+        31
+      ]
+    },
+    "tarot": {
+      "card": "XX, The Aeon",
+      "ring_tarot": "20 - Judgement"
+    },
+    "hebrew_letter": {
+      "letter": "Shin",
+      "meaning": "The Tooth, fire, the transforming flame of a new age",
+      "path_number": "31",
+      "path_connects": "Hod to Malkuth"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Thunder",
+        "name": "Cao Guojiu",
+        "virtue": "The noble who renounced the court for the way",
+        "teaching": "The arousing force that leaves the place of inherited power to find a truer ground."
+      },
+      "lower": {
+        "trigram": "Mountain",
+        "name": "Zhang Guolao",
+        "virtue": "The old hermit who rides his donkey backwards",
+        "teaching": "The still force that sees where it came from more clearly than where it is going."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Fire",
+      "type": "element"
+    }
+  },
+  "63": {
+    "number": 63,
+    "card_name": "Adornments of Time",
+    "trigrams": {
+      "upper": "Water",
+      "upper_symbol": "☵",
+      "lower": "Fire",
+      "lower_symbol": "☲",
+      "same": false
+    },
+    "pair": {
+      "number": 64,
+      "card_name": "Communion",
+      "hexagram_name": "Before Completion (Wei Chi)"
+    },
+    "inverse": {
+      "number": 64,
+      "card_name": "Communion",
+      "hexagram_name": "Before Completion (Wei Chi)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 64,
+      "card_name": "Communion"
+    },
+    "codon_ring": {
+      "name": "Ring of Divinity",
+      "tarot": "5 - The Hierophant",
+      "description": "Four cards bound by the sacred teachings. Grace under pressure, the dark night of the soul, family alchemy, and the inquiry that reaches the source.",
+      "siblings": [
+        22,
+        36,
+        37
+      ]
+    },
+    "tarot": {
+      "card": "V, The Hierophant",
+      "ring_tarot": "5 - The Hierophant"
+    },
+    "hebrew_letter": {
+      "letter": "Vav",
+      "meaning": "The Nail, the pin that connects heaven to earth",
+      "path_number": "16",
+      "path_connects": "Chokmah to Chesed"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "lower": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Taurus",
+      "type": "sign"
+    }
+  },
+  "64": {
+    "number": 64,
+    "card_name": "Communion",
+    "trigrams": {
+      "upper": "Fire",
+      "upper_symbol": "☲",
+      "lower": "Water",
+      "lower_symbol": "☵",
+      "same": false
+    },
+    "pair": {
+      "number": 63,
+      "card_name": "Adornments of Time",
+      "hexagram_name": "After Completion (Chi Chi)"
+    },
+    "inverse": {
+      "number": 63,
+      "card_name": "Adornments of Time",
+      "hexagram_name": "After Completion (Chi Chi)",
+      "is_self_inverse": false
+    },
+    "programming_partner": {
+      "number": 63,
+      "card_name": "Adornments of Time"
+    },
+    "codon_ring": {
+      "name": "Ring of Alchemy",
+      "tarot": "1 - The Magician",
+      "description": "Four cards bound by the transformative fire. Conflict becoming peace, exhaustion becoming divine will, oppression becoming transfiguration, confusion becoming illumination. The Magician works with what is at hand.",
+      "siblings": [
+        6,
+        40,
+        47
+      ]
+    },
+    "tarot": {
+      "card": "I, The Magician",
+      "ring_tarot": "1 - The Magician"
+    },
+    "hebrew_letter": {
+      "letter": "Beth",
+      "meaning": "The House, the vessel that focuses will",
+      "path_number": "12",
+      "path_connects": "Kether to Binah"
+    },
+    "immortals": {
+      "upper": {
+        "trigram": "Fire",
+        "name": "Lan Caihe",
+        "virtue": "The wandering minstrel of uncertain gender",
+        "teaching": "The clinging luminous force that lights and warms and refuses to be pinned to one form."
+      },
+      "lower": {
+        "trigram": "Water",
+        "name": "Lü Dongbin",
+        "virtue": "The scholar-warrior who carries the sword of discernment",
+        "teaching": "The abysmal force that goes through, cutting illusion with what it has learned in the depths."
+      },
+      "same_trigram": false
+    },
+    "sky": {
+      "value": "Mercury",
+      "type": "planet"
+    }
+  }
+}

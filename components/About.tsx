@@ -14,9 +14,18 @@ const PERSON_SCHEMA = {
   name: 'Adrian Rasmussen',
   url: 'https://adrianrasmussen.com',
   jobTitle: 'Multidimensional Artist',
-  description: 'Technician of the Sacred. Multidimensional artist working between studios in Bali and Santa Cruz, California.',
-  sameAs: ['https://www.instagram.com/adrianrasmussen'],
-  knowsAbout: ['Sculpture', 'Installation Art', 'Laser Cutting', 'Projection Mapping', 'Tea Ceremony'],
+  description: 'Technician of the Sacred. Multidimensional artist creating sacred geometry, mandala art, laser-cut wood art, layered wooden sculpture, installations, and ceremonial spaces between Bali and Santa Cruz, California.',
+  sameAs: ['https://www.instagram.com/technicianofthesacred'],
+  knowsAbout: [
+    'Mandala Art',
+    'Sacred Geometry Art',
+    'Laser-Cut Wood Art',
+    'Layered Wooden Sculpture',
+    'Multi-Dimensional Wooden Sculpture',
+    'Installation Art',
+    'Projection Mapping',
+    'Tea Ceremony',
+  ],
   workLocation: [
     { '@type': 'Place', name: 'Bali, Indonesia' },
     { '@type': 'Place', name: 'Santa Cruz, California' },
@@ -99,9 +108,10 @@ const About: React.FC = () => {
               <Reveal delay={160} dir="up">
                 {/* #2 - paragraph width varies per column */}
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
-                  I create art and spaces of presence and connection. Multidimensional wooden sculptures
-                  with original paintings, light, and crystals. Jewelry. Oracle cards. Tea houses. Stages.
-                  Immersive installations you can walk into.
+                  I create art and spaces of presence and connection. Sacred geometry, mandala art,
+                  and multidimensional wooden sculptures made with laser-cut wood, original paintings,
+                  light, and crystals. Jewelry. Oracle cards. Tea houses. Stages. Immersive installations
+                  you can walk into.
                 </p>
               </Reveal>
               <Reveal delay={260} dir="up">
