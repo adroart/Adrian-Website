@@ -38,6 +38,10 @@ const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
 const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
+const AtlasPage = lazy(() => import('./components/AtlasPage'));
+const StewardClaim = lazy(() => import('./components/atlas/StewardClaim'));
+const StewardEdit = lazy(() => import('./components/atlas/StewardEdit'));
+const AdminAtlas = lazy(() => import('./components/AdminAtlas'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';
@@ -146,6 +150,10 @@ const AppInner: React.FC = () => {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
+            <Route path="/admin/atlas" element={<AdminAtlas />} />
+            <Route path="/atlas" element={<AtlasPage />} />
+            <Route path="/atlas/claim" element={<StewardClaim />} />
+            <Route path="/atlas/edit" element={<StewardEdit />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
             <Route path="/account" element={<AccountDashboard />} />
             <Route path="/account/orders" element={<OrdersList />} />
