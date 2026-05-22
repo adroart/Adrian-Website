@@ -1,9 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Globe, { type GlobeNode } from './atlas/Globe';
 import AtlasFilters, { type AtlasStatusFilter } from './atlas/AtlasFilters';
-import PieceSidePanel, { type SelectedPiece } from './atlas/PieceSidePanel';
+import PieceSidePanel, {
+  type SelectedPiece,
+  type KinSummary,
+} from './atlas/PieceSidePanel';
 import SeekingGround, { type SeekingPiece } from './atlas/SeekingGround';
+import KinshipLayer, {
+  type KinshipFrameState,
+} from './atlas/KinshipLayer';
+import {
+  buildKinshipIndex,
+  greatCircleDistance,
+  trigramsFor,
+  type KinshipNode,
+} from '../utils/kinship';
+import { ulCardNumber } from '../utils/universalLanguage';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { CITIES_BY_ID } from '../data/cities';
 import type { PublicAtlasState } from '../types';
@@ -46,6 +59,12 @@ const AtlasPage: React.FC = () => {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [status, setStatus] = useState<AtlasStatusFilter>('all');
+  const [kinshipEnabled, setKinshipEnabled] = useState<boolean>(true);
+
+  // Shared ref between Globe (writer, on every cobe frame) and KinshipLayer
+  // (reader, via its own rAF loop). Keeps phi/theta out of React state so
+  // 60fps rotation doesn't trigger re-renders on every frame.
+  const frameRef = useRef<KinshipFrameState | null>(null);
 
   /* Fetch on mount. No retry, no spinner — quiet copy only. */
   useEffect(() => {
@@ -128,6 +147,61 @@ const AtlasPage: React.FC = () => {
     return nodes;
   }, [seriesFiltered, status]);
 
+  /* ─── Kinship index ──────────────────────────────────────────────────────
+     Build the list of Universal Language nodes that are both placed (have a
+     city) AND visible under the current series filter, derive their hexagram
+     trigrams via ulCardNumber + CARD_BY_NUMBER, then compute every kin pair.
+
+     The index is memoized on (seriesFiltered, status) because cities, the UL
+     hexagram map, and FULL_ARCHIVE titles are otherwise stable for the page
+     lifetime. Recomputing on filter change keeps the visible arc set honest
+     when the user narrows to Universal Language only.
+
+     Cap is 200 pairs (prompt constraint). All 64 placed gives ~256 pairs in
+     the worst case, so the cap can engage and we surface a console note. */
+  const kinshipNodes: KinshipNode[] = useMemo(() => {
+    const out: KinshipNode[] = [];
+    for (const p of seriesFiltered) {
+      if (status === 'seeking') continue;
+      if (p.status !== 'placed') continue;
+      if (!p.cityId) continue;
+      if (p.series !== 'Universal Language') continue;
+      const c = CITIES_BY_ID.get(p.cityId);
+      if (!c) continue;
+      // Look up the piece's UL number via its coverImage. Pull it from
+      // FULL_ARCHIVE since the ledger doesn't carry the image filename.
+      const art = FULL_ARCHIVE.find((a) => a.id === p.pieceId);
+      if (!art) continue;
+      const num = ulCardNumber(art.coverImage);
+      if (num == null) continue;
+      const tris = trigramsFor(num);
+      if (!tris) continue;
+      out.push({
+        key: p.key,
+        pieceId: p.pieceId,
+        editionNumber: p.editionNumber,
+        title: p.title,
+        lat: c.lat,
+        lng: c.lng,
+        cardNumber: num,
+        trigrams: tris,
+      });
+    }
+    return out;
+  }, [seriesFiltered, status]);
+
+  const kinshipIndex = useMemo(() => {
+    const result = buildKinshipIndex(kinshipNodes);
+    if (result.capped && typeof console !== 'undefined') {
+      // Architecture log: surface the cap when it engages so the dev knows
+      // the visible arcs are a subset. Not user-facing.
+      console.info(
+        `[atlas] kinship index capped at 200 pairs (computed ${result.total}).`,
+      );
+    }
+    return result;
+  }, [kinshipNodes]);
+
   /* Seeking section honors filters — when status=placed, the section hides. */
   const seekingPieces: SeekingPiece[] = useMemo(() => {
     if (status === 'placed') return [];
@@ -165,6 +239,35 @@ const AtlasPage: React.FC = () => {
     const stillVisible = seriesFiltered.some((p) => p.key === selectedKey);
     if (!stillVisible) setSelectedKey(null);
   }, [selectedKey, seriesFiltered]);
+
+  /* Kin summary for the side panel. Only computed for UL selections, sorted
+     by great-circle distance to the selected node, capped at 6 entries. */
+  const kinSummary: KinSummary[] = useMemo(() => {
+    if (!selectedKey) return [];
+    const selectedNode = kinshipNodes.find((n) => n.key === selectedKey);
+    if (!selectedNode) return [];
+    // Gather kin nodes by checking the pair list for matches.
+    const kinKeys = new Set<string>();
+    for (const pair of kinshipIndex.pairs) {
+      if (pair.a === selectedKey) kinKeys.add(pair.b);
+      else if (pair.b === selectedKey) kinKeys.add(pair.a);
+    }
+    const candidates = kinshipNodes.filter((n) => kinKeys.has(n.key));
+    // Sort by great-circle distance to the selected node.
+    candidates.sort(
+      (a, b) =>
+        greatCircleDistance(selectedNode.lat, selectedNode.lng, a.lat, a.lng) -
+        greatCircleDistance(selectedNode.lat, selectedNode.lng, b.lat, b.lng),
+    );
+    return candidates.slice(0, 6).map((n) => {
+      const piece = seriesFiltered.find((p) => p.key === n.key);
+      return {
+        key: n.key,
+        title: n.title,
+        cityLabel: piece ? cityLabelFor(piece.cityId) : undefined,
+      };
+    });
+  }, [selectedKey, kinshipNodes, kinshipIndex, seriesFiltered]);
 
   /* ─── Render ─────────────────────────────────────────────────────────────── */
   return (
@@ -227,6 +330,8 @@ const AtlasPage: React.FC = () => {
                 onStatusChange={setStatus}
                 placedCount={placedCount}
                 seekingCount={seekingCount}
+                kinshipEnabled={kinshipEnabled}
+                onKinshipChange={setKinshipEnabled}
               />
             </div>
 
@@ -234,7 +339,7 @@ const AtlasPage: React.FC = () => {
                 Globe takes ~60vh; side panel sits beside on lg+, below on smaller. */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               <div
-                className="lg:col-span-2 w-full max-w-full overflow-hidden"
+                className="lg:col-span-2 w-full max-w-full overflow-hidden relative"
                 style={{ height: '60vh', minHeight: 360 }}
               >
                 <Globe
@@ -242,10 +347,31 @@ const AtlasPage: React.FC = () => {
                   selectedId={selectedKey}
                   onSelect={(id) => setSelectedKey(id)}
                   className="w-full h-full"
+                  onFrame={(s) => {
+                    frameRef.current = s;
+                  }}
+                />
+                {/* Kinship arc overlay. Sits on top of the globe canvas,
+                    passes pointer events through. Driven by frameRef which
+                    Globe writes to on every cobe render. */}
+                <KinshipLayer
+                  nodes={kinshipNodes}
+                  pairs={kinshipIndex.pairs}
+                  selectedKey={selectedKey}
+                  enabled={kinshipEnabled}
+                  frameRef={frameRef}
                 />
               </div>
               <div className="lg:col-span-1">
-                <PieceSidePanel piece={selectedPiece} />
+                <PieceSidePanel
+                  piece={selectedPiece}
+                  kin={
+                    selectedPiece?.series === 'Universal Language'
+                      ? kinSummary
+                      : undefined
+                  }
+                  onSelectKin={(key) => setSelectedKey(key)}
+                />
               </div>
             </div>
 

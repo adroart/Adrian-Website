@@ -39,6 +39,19 @@ export interface GlobeProps {
   selectedId?: string | null;
   onSelect?: (id: string) => void;
   className?: string;
+  /**
+   * Optional per-frame callback used by overlay layers (e.g. KinshipLayer)
+   * that need to sync to the same orthographic projection cobe is rendering.
+   * Reports phi/theta in radians and the CSS-pixel width/height of the
+   * canvas. Do not mutate state synchronously from this callback — write to
+   * a ref and read it from a rAF loop in the parent.
+   */
+  onFrame?: (state: {
+    phi: number;
+    theta: number;
+    width: number;
+    height: number;
+  }) => void;
 }
 
 // ─── Color tokens (derived, not imported, so this file stays self-contained)
@@ -123,7 +136,14 @@ export default function Globe({
   selectedId,
   onSelect,
   className,
+  onFrame,
 }: GlobeProps) {
+  // Latest onFrame ref so the cobe onRender closure always calls the current
+  // callback without recreating the globe instance when the parent rebinds.
+  const onFrameRef = useRef(onFrame);
+  useEffect(() => {
+    onFrameRef.current = onFrame;
+  }, [onFrame]);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -265,6 +285,20 @@ export default function Globe({
         const breath =
           3.2 + Math.sin(((now - startedAt) / 1000) * (Math.PI * 2) / 3.5) * 0.4;
         state.mapBrightness = breath;
+
+        // Notify any overlay layers (e.g. KinshipLayer) of the current
+        // projection state in CSS pixels. cobe's `state` values use device
+        // pixels, but overlays draw in CSS pixels, so we pass the unscaled
+        // dimensions here.
+        const cb = onFrameRef.current;
+        if (cb) {
+          cb({
+            phi: phiRef.current,
+            theta: thetaRef.current,
+            width: size.width,
+            height: size.height,
+          });
+        }
       },
     };
     const globe = createGlobe(canvas, opts as COBEOptions);

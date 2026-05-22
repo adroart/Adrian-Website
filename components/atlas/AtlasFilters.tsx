@@ -10,6 +10,9 @@ export interface AtlasFiltersProps {
   onStatusChange: (next: AtlasStatusFilter) => void;
   placedCount: number;
   seekingCount: number;
+  /** True when the kinship-arc overlay is visible globally. */
+  kinshipEnabled: boolean;
+  onKinshipChange: (next: boolean) => void;
 }
 
 const btnBase =
@@ -32,6 +35,8 @@ const AtlasFilters: React.FC<AtlasFiltersProps> = ({
   onStatusChange,
   placedCount,
   seekingCount,
+  kinshipEnabled,
+  onKinshipChange,
 }) => {
   const total = placedCount + seekingCount;
 
@@ -95,6 +100,20 @@ const AtlasFilters: React.FC<AtlasFiltersProps> = ({
           {total} {total === 1 ? 'piece' : 'pieces'} · {placedCount} placed ·{' '}
           {seekingCount} seeking ground
         </p>
+        {/* Kinship-thread toggle. Plain checkbox, sentence-case label.
+            Bronze accent when active, no icon, no glyph. */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={kinshipEnabled}
+            onChange={(e) => onKinshipChange(e.target.checked)}
+            className="appearance-none w-4 h-4 border border-wood-400 bg-transparent checked:bg-bronze-700 checked:border-bronze-700 focus:outline-2 focus:outline-bronze-700 focus:outline-offset-2 transition-colors duration-200"
+            aria-label="Show kinship threads"
+          />
+          <span className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-700">
+            Show kinship threads
+          </span>
+        </label>
       </div>
     </div>
   );

@@ -11,8 +11,23 @@ export interface SelectedPiece {
   placedAt?: string;      // ISO of most recent placed/moved event
 }
 
+/** One kindred Universal Language piece, surfaced beneath a UL selection. */
+export interface KinSummary {
+  key: string;            // globe id (pieceId:editionNumber)
+  title: string;
+  cityLabel?: string;
+}
+
 export interface PieceSidePanelProps {
   piece: SelectedPiece | null;
+  /**
+   * Kin pieces for the current selection, sorted by great-circle proximity.
+   * Empty array or undefined when there are no kin to display (e.g. non-UL
+   * selection, no other UL pieces placed, or no shared trigrams).
+   */
+  kin?: KinSummary[];
+  /** Click handler when a kin entry is selected. */
+  onSelectKin?: (key: string) => void;
 }
 
 function formatPlacedYear(iso?: string): string | null {
@@ -23,7 +38,7 @@ function formatPlacedYear(iso?: string): string | null {
   return String(d.getUTCFullYear());
 }
 
-const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece }) => {
+const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece, kin, onSelectKin }) => {
   if (!piece) {
     return (
       <aside
@@ -91,6 +106,35 @@ const PieceSidePanel: React.FC<PieceSidePanelProps> = ({ piece }) => {
           {statusLine}
         </p>
       </div>
+
+      {/* Kin section: only for UL pieces with at least one kindred placed piece.
+          Capped at 6 entries upstream, sorted by great-circle proximity. */}
+      {kin && kin.length > 0 && (
+        <div className="border-t border-wood-200 pt-5 mt-5">
+          <p className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 mb-2">
+            Kin
+          </p>
+          <ul className="flex flex-col gap-1">
+            {kin.map((k) => (
+              <li key={k.key}>
+                <button
+                  type="button"
+                  onClick={() => onSelectKin?.(k.key)}
+                  className="font-serif text-base text-wood-900 hover:text-bronze-700 transition-colors text-left leading-snug"
+                >
+                  {k.title}
+                  {k.cityLabel && (
+                    <span className="font-sans text-sm text-wood-600">
+                      <span aria-hidden className="mx-1.5 text-wood-400">·</span>
+                      {k.cityLabel}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </aside>
   );
 };

@@ -40,6 +40,14 @@ This is the working notes for the `/atlas` feature. Branch: `claude/world-map-la
 - [`components/atlas/StewardClaim.tsx`](../components/atlas/StewardClaim.tsx) — `/atlas/claim` (single key input, navigates to `/atlas/edit` on success)
 - [`components/atlas/StewardEdit.tsx`](../components/atlas/StewardEdit.tsx) — `/atlas/edit` (searchable city combobox, "Show on the atlas / Keep this private" toggle, transient "Saved." flash)
 
+### Interconnection layer
+- [`utils/kinship.ts`](../utils/kinship.ts) — pure functions: `buildKinshipIndex`, `isKin`, `trigramsFor`, `projectPoint`, `arcControlPoint`, `greatCircleDistance`. Mirrors the orthographic projection math from `Globe.tsx` so the SVG overlay tracks the cobe canvas exactly.
+- [`components/atlas/KinshipLayer.tsx`](../components/atlas/KinshipLayer.tsx) — SVG overlay drawing bronze quadratic-Bezier arcs between Universal Language pieces whose hexagrams share at least one trigram. Defaults to opacity 0.15, lifts to 0.6 on selection of either endpoint, dims to 0.05 for non-selected arcs. Back-hemisphere endpoints are culled.
+- `components/atlas/Globe.tsx` — added `onFrame` callback so parents can subscribe to each frame's `phi`/`theta`/`width`/`height` without owning the rotation state. Single optional prop, no behavioural change.
+- `components/atlas/AtlasFilters.tsx` — added "Show kinship threads" toggle (default on). When off, no arcs render globally, but selecting a node still highlights its kin.
+- `components/atlas/PieceSidePanel.tsx` — added Kin section. For Universal Language selections, lists up to six kindred pieces sorted by great-circle distance; each clickable.
+- `components/AtlasPage.tsx` — composes everything: builds the kinship index from placed UL pieces only, caps it at 200 pairs, surfaces a console note when the cap engages, and pipes the projection ref between Globe and KinshipLayer.
+
 ### Admin surface
 - [`components/AdminAtlas.tsx`](../components/AdminAtlas.tsx) — three sections: seed event, issue steward key, steward roster
 - [`components/AdminDashboard.tsx`](../components/AdminDashboard.tsx) — added Atlas tile linking to `/admin/atlas`
@@ -70,7 +78,8 @@ Designed-for and discussed, intentionally **not** built yet. Listed in suggested
 
 ### Phase 3 — Web logic (ship when you have enough pieces to make it interesting)
 - [ ] **Time scrubber.** Animate the map as events accumulate over time. Pilgrimage trails for moved pieces.
-- [ ] **Kinship threads.** For UL, hexagram-kinship (pieces sharing a trigram). For all series, theme/year/material kinship surfaced privately to stewards.
+- [x] **Kinship threads (UL hexagram kinship).** Shipped as the interconnection layer above. Cross-series kinship (theme, year, material) still deferred.
+- [ ] **Cross-series kinship threads.** For all series, theme/year/material kinship surfaced privately to stewards.
 - [ ] **Hexagram grid sub-view.** Just for UL: the 8×8 grid filling in as pieces are placed across the world. Ties to your existing oracle data.
 - [ ] **"Seeking ground" call to action.** When a piece is unplaced and a visitor lands on its detail, a quiet pull toward acquisition or inquiry.
 
@@ -155,11 +164,12 @@ The hash chain is self-checking. From any environment with access to `atlas/ledg
 |---|---|
 | Data + types | [`types.ts`](../types.ts), [`data/cities.ts`](../data/cities.ts) |
 | Ledger utils | [`utils/ledger.ts`](../utils/ledger.ts), [`utils/ledgerProjection.ts`](../utils/ledgerProjection.ts), [`utils/stewardKey.ts`](../utils/stewardKey.ts) |
+| Kinship utils | [`utils/kinship.ts`](../utils/kinship.ts) |
 | Backend | [`functions/api/atlas/`](../functions/api/atlas/) |
 | GitHub mirror | [`functions/api/atlas/_mirror.ts`](../functions/api/atlas/_mirror.ts), [`wrangler.toml`](../wrangler.toml) |
 | Public page | [`components/AtlasPage.tsx`](../components/AtlasPage.tsx) |
 | Globe | [`components/atlas/Globe.tsx`](../components/atlas/Globe.tsx) |
-| Atlas sub-components | [`components/atlas/AtlasFilters.tsx`](../components/atlas/AtlasFilters.tsx), [`components/atlas/PieceSidePanel.tsx`](../components/atlas/PieceSidePanel.tsx), [`components/atlas/SeekingGround.tsx`](../components/atlas/SeekingGround.tsx) |
+| Atlas sub-components | [`components/atlas/AtlasFilters.tsx`](../components/atlas/AtlasFilters.tsx), [`components/atlas/PieceSidePanel.tsx`](../components/atlas/PieceSidePanel.tsx), [`components/atlas/SeekingGround.tsx`](../components/atlas/SeekingGround.tsx), [`components/atlas/KinshipLayer.tsx`](../components/atlas/KinshipLayer.tsx) |
 | Collector flow | [`components/atlas/StewardClaim.tsx`](../components/atlas/StewardClaim.tsx), [`components/atlas/StewardEdit.tsx`](../components/atlas/StewardEdit.tsx) |
 | Admin | [`components/AdminAtlas.tsx`](../components/AdminAtlas.tsx), [`components/AdminDashboard.tsx`](../components/AdminDashboard.tsx) |
 | Scripts | [`scripts/seed-atlas.ts`](../scripts/seed-atlas.ts) |
