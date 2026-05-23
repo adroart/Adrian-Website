@@ -1,16 +1,12 @@
 /**
  * GET /qr/oracle
  *
- * Redirects a physical QR code scan to the Universal Language oracle gateway.
- * This indirection means the destination can change any time without reprinting
- * physical plaques — just update the URL below and redeploy.
+ * Gateway plaque redirect. Printed material pointing here now resolves
+ * to mandalacodes.com (the oracle's new home).
  *
- * Current destination: /oracle?ref=qr  (the gateway entrance page)
+ * NEVER DELETE THIS FILE — same QR-safety contract as /qr/:number.
  */
 
 export function onRequest() {
-  return Response.redirect(
-    'https://adrianrasmussen.com/oracle?ref=qr',
-    302,
-  );
+  return Response.redirect('https://mandalacodes.com/?ref=qr', 302);
 }

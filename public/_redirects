@@ -52,76 +52,16 @@
 /shop/mandalas-layered/*        /shop                           301
 
 # ============================================================
-# Oracle card OG pages — explicit rules, one per card.
-# Must be BEFORE the SPA catch-all.
-# Each rule rewrites /oracle/universal-language/N to the
-# pre-rendered N.html file with card-specific og:image tags.
-# Explicit rules (not :param) guaranteed to work in CF Pages.
+# Oracle migration to mandalacodes.com (2026-05-23)
+# All /oracle/* paths now live at mandalacodes.com. These 301s
+# catch any bookmarked URL or external link to the old location.
+# Printed QR cards (encoded /qr/:n) go through functions/qr/[number].js
+# which also targets mandalacodes — see that file.
 # ============================================================
-/oracle/universal-language/1  /oracle/universal-language/1.html  200
-/oracle/universal-language/2  /oracle/universal-language/2.html  200
-/oracle/universal-language/3  /oracle/universal-language/3.html  200
-/oracle/universal-language/4  /oracle/universal-language/4.html  200
-/oracle/universal-language/5  /oracle/universal-language/5.html  200
-/oracle/universal-language/6  /oracle/universal-language/6.html  200
-/oracle/universal-language/7  /oracle/universal-language/7.html  200
-/oracle/universal-language/8  /oracle/universal-language/8.html  200
-/oracle/universal-language/9  /oracle/universal-language/9.html  200
-/oracle/universal-language/10 /oracle/universal-language/10.html 200
-/oracle/universal-language/11 /oracle/universal-language/11.html 200
-/oracle/universal-language/12 /oracle/universal-language/12.html 200
-/oracle/universal-language/13 /oracle/universal-language/13.html 200
-/oracle/universal-language/14 /oracle/universal-language/14.html 200
-/oracle/universal-language/15 /oracle/universal-language/15.html 200
-/oracle/universal-language/16 /oracle/universal-language/16.html 200
-/oracle/universal-language/17 /oracle/universal-language/17.html 200
-/oracle/universal-language/18 /oracle/universal-language/18.html 200
-/oracle/universal-language/19 /oracle/universal-language/19.html 200
-/oracle/universal-language/20 /oracle/universal-language/20.html 200
-/oracle/universal-language/21 /oracle/universal-language/21.html 200
-/oracle/universal-language/22 /oracle/universal-language/22.html 200
-/oracle/universal-language/23 /oracle/universal-language/23.html 200
-/oracle/universal-language/24 /oracle/universal-language/24.html 200
-/oracle/universal-language/25 /oracle/universal-language/25.html 200
-/oracle/universal-language/26 /oracle/universal-language/26.html 200
-/oracle/universal-language/27 /oracle/universal-language/27.html 200
-/oracle/universal-language/28 /oracle/universal-language/28.html 200
-/oracle/universal-language/29 /oracle/universal-language/29.html 200
-/oracle/universal-language/30 /oracle/universal-language/30.html 200
-/oracle/universal-language/31 /oracle/universal-language/31.html 200
-/oracle/universal-language/32 /oracle/universal-language/32.html 200
-/oracle/universal-language/33 /oracle/universal-language/33.html 200
-/oracle/universal-language/34 /oracle/universal-language/34.html 200
-/oracle/universal-language/35 /oracle/universal-language/35.html 200
-/oracle/universal-language/36 /oracle/universal-language/36.html 200
-/oracle/universal-language/37 /oracle/universal-language/37.html 200
-/oracle/universal-language/38 /oracle/universal-language/38.html 200
-/oracle/universal-language/39 /oracle/universal-language/39.html 200
-/oracle/universal-language/40 /oracle/universal-language/40.html 200
-/oracle/universal-language/41 /oracle/universal-language/41.html 200
-/oracle/universal-language/42 /oracle/universal-language/42.html 200
-/oracle/universal-language/43 /oracle/universal-language/43.html 200
-/oracle/universal-language/44 /oracle/universal-language/44.html 200
-/oracle/universal-language/45 /oracle/universal-language/45.html 200
-/oracle/universal-language/46 /oracle/universal-language/46.html 200
-/oracle/universal-language/47 /oracle/universal-language/47.html 200
-/oracle/universal-language/48 /oracle/universal-language/48.html 200
-/oracle/universal-language/49 /oracle/universal-language/49.html 200
-/oracle/universal-language/50 /oracle/universal-language/50.html 200
-/oracle/universal-language/51 /oracle/universal-language/51.html 200
-/oracle/universal-language/52 /oracle/universal-language/52.html 200
-/oracle/universal-language/53 /oracle/universal-language/53.html 200
-/oracle/universal-language/54 /oracle/universal-language/54.html 200
-/oracle/universal-language/55 /oracle/universal-language/55.html 200
-/oracle/universal-language/56 /oracle/universal-language/56.html 200
-/oracle/universal-language/57 /oracle/universal-language/57.html 200
-/oracle/universal-language/58 /oracle/universal-language/58.html 200
-/oracle/universal-language/59 /oracle/universal-language/59.html 200
-/oracle/universal-language/60 /oracle/universal-language/60.html 200
-/oracle/universal-language/61 /oracle/universal-language/61.html 200
-/oracle/universal-language/62 /oracle/universal-language/62.html 200
-/oracle/universal-language/63 /oracle/universal-language/63.html 200
-/oracle/universal-language/64 /oracle/universal-language/64.html 200
+/oracle/the-systems             https://mandalacodes.com/the-systems           301!
+/oracle/universal-language/*    https://mandalacodes.com/universal-language/:splat  301!
+/oracle/universal-language      https://mandalacodes.com/universal-language    301!
+/oracle                         https://mandalacodes.com/                      301!
 
 # ============================================================
 # SPA catch-all (must be LAST)

@@ -1,22 +1,23 @@
 /**
  * GET /qr/:number
  *
- * Redirects a physical QR code scan to the oracle card reading page.
- * This indirection means the destination URL can change any time without
- * reprinting physical plaques — just update this file and redeploy.
+ * Printed-plaque redirect. The 64 oracle cards have been migrated to
+ * mandalacodes.com; this function keeps every physical plaque already
+ * in the world working forever by 302-redirecting to the new home.
+ *
+ * NEVER DELETE THIS FILE. The plaques are printed and out there.
+ * As long as adrianrasmussen.com keeps serving /qr/:n, the QR codes
+ * on every card resolve correctly without reprinting.
  *
  * Examples:
- *   /qr/1  →  /oracle/universal-language/1?ref=qr
- *   /qr/41 →  /oracle/universal-language/41?ref=qr
+ *   /qr/1  →  https://mandalacodes.com/universal-language/1?ref=qr
+ *   /qr/41 →  https://mandalacodes.com/universal-language/41?ref=qr
  */
 
 export function onRequest({ params }) {
-  // Gateway — redirects to the oracle deck entrance page
+  // Gateway plaque — redirects to the Mandala Codes home / deck entrance.
   if (params.number === 'oracle') {
-    return Response.redirect(
-      'https://adrianrasmussen.com/oracle?ref=qr',
-      302,
-    );
+    return Response.redirect('https://mandalacodes.com/?ref=qr', 302);
   }
 
   const n = parseInt(params.number, 10);
@@ -26,7 +27,7 @@ export function onRequest({ params }) {
   }
 
   return Response.redirect(
-    `https://adrianrasmussen.com/oracle/universal-language/${n}?ref=qr`,
+    `https://mandalacodes.com/universal-language/${n}?ref=qr`,
     302,
   );
 }
