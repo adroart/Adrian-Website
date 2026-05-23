@@ -1,0 +1,58 @@
+{
+  "number": 3,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "Difficulty at the Beginning",
+  "combination": "Water sits over Thunder. The storm has gathered, the first roll of thunder has come up out of the ground, and the rain has not yet fallen. The picture inside the hexagram's name is a single blade of grass with a root longer than itself, pushing the crust of the soil up from underneath. Heaven is generating tender growth in half-light. The energy is real. The opening is not.",
+  "upper_nature": "Water, Kan. A single firm line caught between two yielding ones, the way a river hides its force inside a hollow. The gorge, the pit, the place where you slip. On top, this trigram is the unclear weather above the work, the danger the new thing is rising into.",
+  "lower_nature": "Thunder, Zhen. A single firm line struck under two yielding ones, the way the first shock of spring thunder rises out of the depths. The arousing, the stir, the thing coming out of the egg. Below, this trigram is the new motion at the root, pressing up before there is yet a path.",
+  "reading": "The situation this code names is the moment just after a thing has begun and before it has found its shape. A seed bearing the whole weight of the ground above it. A child in the long labour of being born. The first dynasty of a small house that does not yet know it will become one. The energy is real and the resistance is real, and they meet inside you at the same time. That is the difficulty. Not that the new thing is wrong. That a new thing always arrives this way.\n\nThe picture is clouds and thunder. The storm has built, the first sound has come, and the rain still has not fallen. Everything is charged. Nothing is released. To force the rain is to mistake yourself for the weather. To freeze is to waste the charge. The counsel instead is the patient work of someone at a loom, twisting fibres into thread and binding the threads into rope. Sort the threads. Find the people who will hold the four corners with you. Appoint the helpers, the lords of the small provinces of your own life, so that what arrives has hands to receive it.\n\nMost of the line readings are some version of horses ready and not yet moving. Stand in the held moment and prepare. The first growth is always crooked. The root has to go further down than you would like before any of it shows above the ground. Out of this irregularity and dim light, regularity slowly arrives. What is asked here is steadfast smallness, not heroic largeness. The whole gift you are carrying is still inside its case. Spreading. Not yet shining.",
+  "judgement_lines": [
+    "Difficulty at the beginning reaches through to great growth.",
+    "It serves what is true, and holds.",
+    "Do not set out yet. It is good to appoint the helpers."
+  ],
+  "image_lines": [
+    "Clouds and thunder gather. The rain has not yet fallen.",
+    "So the one who would grow sorts the threads, and twists them into rope."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "a soapnut tree, the post that marks a grave.",
+      "reading": "Not just a stone. Huan, the soapnut tree, the immovable post set in the ground at a grave, the wood whose nuts old healers ground for medicine and carried as amulets. The first move is not a move. It is the planting of something that will not be shifted. Value what is low and near. The hearts of many will gather to it.",
+      "becomes": { "hexagram": 8, "name": "Holding Together" }
+    },
+    {
+      "line": 2,
+      "image": "horses turning back. The riders mistaken for bandits.",
+      "reading": "They come hard out of the dust, and at first they look like a raid. They are not. They are suitors. The old custom of seizing the bride before the wedding ceremony is the picture. The offer is real. The timing is not yours yet. Hold your own ground. Refuse the early union. Ten years pass, a whole cycle, and only then is there a child.",
+      "becomes": { "hexagram": 60, "name": "Limitation" }
+    },
+    {
+      "line": 3,
+      "image": "chasing a deer with no forester.",
+      "reading": "The eager hunter goes in alone, with no officer of the grounds, no one who knows which thickets give and which close. He half believes the deer is something rarer, a creature out of legend. It is not. He is inexperienced enough to be wrong about what he is chasing. Stop the chase. Trace your steps backward. Going on from here is end without new beginning.",
+      "becomes": { "hexagram": 63, "name": "After Completion" }
+    },
+    {
+      "line": 4,
+      "image": "the same horses, ready, the alliance asked for.",
+      "reading": "The horses that stood still before are the same horses, and now they will go. The difference is that you stopped trying to ride out alone. Reach toward the one who has been reaching toward you. Bring together the parts of yourself you have been keeping separate. Seeking and going meet. There is light. Nothing here is unfavourable. Go.",
+      "becomes": { "hexagram": 17, "name": "Following" }
+    },
+    {
+      "line": 5,
+      "image": "the rich oil pooled in the press, not yet poured.",
+      "reading": "The juice, the fertilising essence, the genius of the thing is here. The belly has filled. The channel out is still too narrow for the whole gift to come through. Stay correct in the small. Grand gestures from this position bring misfortune, because the gift is spreading inside you and is not yet able to shine outward. Wait for the channel to widen.",
+      "becomes": { "hexagram": 24, "name": "Return" }
+    },
+    {
+      "line": 6,
+      "image": "horses standing. Weeping that runs like blood.",
+      "reading": "At the top of the difficulty, the strength to come through it has run out. The horses are mounted and they will not go. No whip in the hand. The tears run like blood on water. The line asks honestly how long any of this can hold, and answers that it cannot. Sometimes you have arrived at the end of an effort. Mourn it. Then begin again, smaller.",
+      "becomes": { "hexagram": 42, "name": "Increase" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/03", "generated": "iching-deep-v1" }
+}

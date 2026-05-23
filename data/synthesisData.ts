@@ -135,6 +135,21 @@ const designModules = import.meta.glob<{ default: DesignSection }>('../oracle/se
 const ichingModules = import.meta.glob<{ default: IchingSection }>('../oracle/sections/iching/*.json');
 const bodyModules = import.meta.glob<{ default: BodySection }>('../oracle/sections/body/*.json');
 
+/* Deep-pass priority. When a `NN.deep.json` exists alongside `NN.json`, prefer
+ * the deep version. This lets the pilot (UL 3 / 22 / 50) preview the deep
+ * pass on the live card without overwriting the scaffolds. Scaffolds remain
+ * for the other 61 cards until the deep pass is committed. */
+function pickSection<T>(
+  modules: Record<string, () => Promise<{ default: T }>>,
+  folder: string,
+  cardNumber: number,
+): (() => Promise<{ default: T }>) | undefined {
+  const pad = pad2(cardNumber);
+  const deep = modules[`../oracle/sections/${folder}/${pad}.deep.json`];
+  if (deep) return deep;
+  return modules[`../oracle/sections/${folder}/${pad}.json`];
+}
+
 /* Main Reading data lives in oracle/generated/NN.json under glance.
  * Currently only UL 1 has this populated; other cards return undefined
  * until the invocation-writing pass commissions them. */
@@ -205,14 +220,10 @@ export async function getSynthesis(cardNumber: number): Promise<CardSynthesis | 
     };
   }
 
-  // ICHING overlay. Section file provides combination + main reading +
-  // judgement_lines + image_lines + six moving lines. The card UI currently
-  // reads trigram_combination / reading / judgement_lines / image_lines off the
-  // shared synthesis shape, so we map directly. The six moving-line readings
-  // are dropped on the overlay's `lines[]` for the trigram selector to render
-  // (UI hookup pending; data is there).
-  const ichingPath = `../oracle/sections/iching/${pad2(cardNumber)}.json`;
-  const ichingLoader = ichingModules[ichingPath];
+  // ICHING overlay. Prefers `*.deep.json` when present (pilot deep pass),
+  // falls back to the scaffold `*.json`. Section file provides combination
+  // + reading + judgement_lines + image_lines + six moving lines.
+  const ichingLoader = pickSection(ichingModules, 'iching', cardNumber);
   if (ichingLoader) {
     const iching = (await ichingLoader()).default;
     merged.synthesis.iching = {
@@ -221,15 +232,11 @@ export async function getSynthesis(cardNumber: number): Promise<CardSynthesis | 
       judgement_lines: iching.judgement_lines ?? [],
       image_lines: iching.image_lines ?? [],
     };
-    // Stash the extended ICHING data for any consumer that wants the moving
-    // lines or per-trigram natures. Card UI can opt-in later.
     (merged as unknown as Record<string, unknown>).iching_extended = iching;
   }
 
-  // BODY overlay. Section file provides physiology + amino_acid as locked
-  // prose. The card UI already reads body.physiology / body.amino_acid.
-  const bodyPath = `../oracle/sections/body/${pad2(cardNumber)}.json`;
-  const bodyLoader = bodyModules[bodyPath];
+  // BODY overlay. Prefers `*.deep.json` when present, falls back to scaffold.
+  const bodyLoader = pickSection(bodyModules, 'body', cardNumber);
   if (bodyLoader) {
     const body = (await bodyLoader()).default;
     merged.synthesis.body = {

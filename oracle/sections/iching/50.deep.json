@@ -1,0 +1,57 @@
+{
+  "number": 50,
+  "section": "iching",
+  "status": "scaffold",
+  "hexagram_name": "The Cauldron",
+  "combination": "Fire sits over wood. The flame eats what is offered to it, and the heavy bronze pot above holds whatever has been placed inside until it is no longer raw. The six lines draw the vessel: a broken line for the feet, three solid lines for the belly, a broken line for the two ears at the rim, a solid line across the top for the handle. The kind of pot that took several people to lift, with loops cast onto the rim so chains could be passed through. Cooking is the whole point.",
+  "upper_nature": "Fire, Li. Broken in the middle, solid above and below. Clinging brightness. Fire does not stand on its own. It lives on what it burns, and that is why it gives light. As the outer trigram, it is what shines from this situation: clarity, refinement, the look of a thing that has been cooked through.",
+  "lower_nature": "Wind and wood, Xun. Broken at the base, solid above. Gentle and entering. Wood is the slow stuff that feeds the fire, the root the breath enters by. As the inner trigram, it is what is happening underneath the visible: a steady offering up of fuel without which no cooking would be possible at all.",
+  "reading": "The situation this code names is the work after the overturning. Something old has been pulled down, and now a new order has to be built out of better material. That is harder than the breaking was. The cauldron is the vessel where the new material gets gathered, cleaned, set on the fire, and slowly turned into something fit to feed others. The destruction is over. The cooking has begun.\n\nThe pot in the picture is not a kitchen pot. It is the great bronze tripod the founder cast at the start of a dynasty, with the new mandate inscribed into the metal so the world could read it. When the dynasty fell, the next ruler moved the pots to a new capital and recast them. To change dynasties is to change the pots. That is the weight of the moment you are in. You are casting the vessel your next chapter will be cooked in.\n\nThe counsel sits in three places. Empty the pot first. The food left in the old vessel has gone stale, and if you cook on top of it nothing you make next will be edible. Pour it out, and do not be ashamed of how it looks while you are pouring. Then mind the ears. This pot is so heavy that the only way to lift it is by the handles on the rim, and the wisdom this code teaches is the wisdom of the ear: the one who knows the whole song from a single sound. You will know whether to carry the vessel by what you can hear coming up from underneath. Last, remember who the cooking is for. The food in these pots was offered upward before anyone in the household ate. If you have been given a strong vessel, you have been given it for the table.",
+  "judgement_lines": [
+    "The Cauldron. Originating fortune.",
+    "The new is established, and goes through."
+  ],
+  "image_lines": [
+    "Fire on wood. The cauldron.",
+    "So the one who would lead corrects the position, and lets fate settle into form."
+  ],
+  "lines": [
+    {
+      "line": 1,
+      "image": "the pot tipped upside down, three feet pointing at the sky.",
+      "reading": "Looks like disaster. It is not. The old food sticks to the inside of the vessel and you cannot cook anything new on top of it, so the pot has to be turned out before it can be set right. The line teaches the same thing through a second image: the second wife with the son who inherits. What looked low becomes the line that carries forward. Turn it over without shame.",
+      "becomes": { "hexagram": 14, "name": "Great Possession" }
+    },
+    {
+      "line": 2,
+      "image": "the cauldron full of real food.",
+      "reading": "The work has gone well and the pot holds substance. Someone close to you is sour about it and would keep you from the table if they could. They cannot reach where you are. Stay where you are. Do not turn around and answer the resentment. The bowl is full. Mind only where you take it from here.",
+      "becomes": { "hexagram": 56, "name": "The Wanderer" }
+    },
+    {
+      "line": 3,
+      "image": "the ears of the pot changed, the rich pheasant going cold.",
+      "reading": "You have cooked something good and there is no way to lift it to the table. The handles do not match the rings. Progress stops here for a stretch and the fat of the bird, the genius part, is going uneaten. Do not force the lift. The weather breaks, rain comes through, the regret thins out. What was held back gets eaten in the end.",
+      "becomes": { "hexagram": 64, "name": "Before Completion" }
+    },
+    {
+      "line": 4,
+      "image": "the legs snap, the prince's stew on the floor.",
+      "reading": "Too heavy a load on too thin a base. The position was beyond what you could carry, and you knew it, and you carried it anyway because the seat was offered. The spilled stew stains the robe of the one you were serving and the question that comes next is about your trustworthiness, not your sorrow. There is no dressing this up. Pitfall.",
+      "becomes": { "hexagram": 18, "name": "Work on the Decayed" }
+    },
+    {
+      "line": 5,
+      "image": "yellow ears, metal rings.",
+      "reading": "The pot can now be lifted. Yellow is the colour of the soil at the centre of the country, the colour of the founding emperor, the steady ground between yang and yin. The ears are set right and the rings will not give. Receptive in the high seat, firm support rising from below to meet it. Stay singleminded. The blessing is in the steadiness, not the show.",
+      "becomes": { "hexagram": 44, "name": "Coming to Meet" }
+    },
+    {
+      "line": 6,
+      "image": "a handle of jade across the top.",
+      "reading": "Jade is the one material that does not break in a hot fire. Metal melts. Jade keeps. At the top of the work, strength has softened just enough to be useful and softness has firmed just enough to bear weight, and the two are no longer separate things in you. The pot can be carried anywhere from here. Nothing that does not move forward.",
+      "becomes": { "hexagram": 32, "name": "Duration" }
+    }
+  ],
+  "meta": { "source": "vault hexagrams/50", "generated": "iching-deep-pass-v1" }
+}

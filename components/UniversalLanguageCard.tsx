@@ -45,15 +45,18 @@ type Screen = 'field' | 'ul' | 'iching' | 'genekeys' | 'humandesign' | 'connecti
 
 /* ─── Per-section palette ─────────────────────────────────────────────────── */
 
-// U.L. (Adrian's system, the entry) opens light/paper. Then alternating
-// light / dark / light / dark / light across the five system panels.
+// FIELD (hero, above the chapter strip) keeps its original light paper.
+// The six panels below the strip carry a subtle deepening in the same
+// dusty warm-grey family — warm enough to feel of-the-brand, desaturated
+// enough that no panel reads as muddy brown. Each step is a quiet
+// progression, not a saturation push.
 const SCREEN_BG: Record<Screen, string> = {
   field:       'bg-paper-50',
-  ul:          'bg-paper-50',
-  iching:      'bg-stone-900',
-  genekeys:    'bg-stone-50',
-  humandesign: 'bg-stone-900',
-  connections: 'bg-stone-50',
+  ul:          'bg-[#151311]',  // start: warm near-black
+  iching:      'bg-[#1c1a17]',
+  genekeys:    'bg-[#22201d]',
+  humandesign: 'bg-[#2a2724]',
+  connections: 'bg-[#33302c]',  // end: dusty warm grey
 };
 
 const DARK_SECTIONS: Screen[] = ['iching', 'humandesign'];
@@ -1084,13 +1087,9 @@ const UniversalLanguageCard: React.FC = () => {
   const jumpToChapter = useCallback((key: ChapterKey) => {
     handleChapterChange(key);
     stageHandle.current?.scrollTo(key);
-    // Also scroll the page back to the top of the reading area, so the new
-    // panel starts at its header — not at whatever vertical depth the previous
-    // panel was scrolled to. The hero sentinel sits right above the sticky
-    // chrome, so scrolling it into view positions the wordmark at the top.
-    requestAnimationFrame(() => {
-      heroSentinelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    // No page scroll. Clicking a chapter link swaps the active panel in
+    // place; the reader stays where they are vertically, the panel below
+    // the nav simply changes content.
   }, [handleChapterChange]);
 
   // Throw the three coins for this card's hexagram, persist, and start the
@@ -1117,6 +1116,13 @@ const UniversalLanguageCard: React.FC = () => {
     obs.observe(sentinel);
     return () => obs.disconnect();
   }, [cardNum]);
+
+  // While a card is open, force the page (html + body) to the dark warm
+  // background so chapter swipes don't flash white between panels.
+  useEffect(() => {
+    document.documentElement.classList.add('oracle-card-page');
+    return () => document.documentElement.classList.remove('oracle-card-page');
+  }, []);
 
   const openLightbox = useCallback((rect: DOMRect | null) => {
     setLightboxOrigin(rect);
@@ -1439,56 +1445,76 @@ const UniversalLanguageCard: React.FC = () => {
       />
 
 
-      {/* ── Single scrolling page - four color-blocked sections ──────────── */}
-      {/* Top padding follows the live nav height (Navigation.tsx writes
-          --nav-height on every resize/scroll change) so the first pixel of
-          the card image is never tucked under the fixed nav. The +32px buffer
-          gives the hero image clear breathing room below the nav. */}
-      <div className="pb-14" style={{ paddingTop: 'calc(var(--nav-height, 72px) + 32px)' }}>
+      {/* ── Single scrolling page ─────────────────────────────────────────
+          Top padding follows the live nav height; +32px buffer gives the
+          hero image breathing room below the nav. */}
+      <div style={{ paddingTop: 'calc(var(--nav-height, 72px) + 32px)' }}>
 
         {/* ════════════ FIELD ════════════════════════════════════════════ */}
         <section id="field" className={`${SCREEN_BG.field} scroll-mt-16`}>
 
-          {/* Image - full-bleed on mobile, contained on desktop */}
-          <div className="md:max-w-2xl md:mx-auto">
-            <figure
-              className="w-full aspect-square cursor-zoom-in"
-              onClick={(e) => {
-                const target = e.currentTarget.querySelector('img');
-                openLightbox(target?.getBoundingClientRect() ?? null);
-              }}
-              role="button" tabIndex={0} aria-label="Enlarge image"
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  const target = (e.currentTarget as HTMLElement).querySelector('img');
-                  openLightbox(target?.getBoundingClientRect() ?? null);
-                }
-              }}
-            >
-              <img
-                ref={heroImageRef}
-                src={cardImageUrl(card.number, 900)}
-                srcSet={cardPublicId ? [480, 720, 900, 1200].map(size => `${img(cardPublicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' })} ${size}w`).join(', ') : undefined}
-                sizes="(max-width: 768px) 100vw, 672px"
-                alt={imageAlt}
-                className="w-full h-full object-cover"
-                loading="eager"
-                decoding="async"
-              />
-            </figure>
+          {/* Card-as-object container — title + artwork + keywords belong
+              to the card itself, wrapped in one bordered surface. The
+              keywords sit inside as the bottom edge of the label. The
+              acquire/share row that follows is intentionally OUTSIDE this
+              container: it is chrome around the object, not part of it. */}
+          <div className="md:max-w-2xl md:mx-auto px-4">
+            <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden bg-paper-50">
 
-            {/* Acquire / hexagram glyph + spelled number / Share — its
-                own band directly below the artwork. The hexagram glyph
-                with the spelled-out card number ("ONE", "TWO", ...,
-                "SIXTY-FOUR") sits in the center column as the visual
-                axis between the two buttons. The glyph is the I-Ching
-                mark; the word names this piece's position in the 64.
-                Both flanking buttons carry equal visual weight; the
-                whole row is balanced and centered. Subtle warm bronze
-                tint on the buttons makes them feel "of the deck's
-                palette" rather than as cold neutral chrome. */}
-            <div ref={acquireSectionRef} className="border-t border-b border-wood-200/60 bg-paper-100/50">
+              {/* Title — labels the work above the artwork. */}
+              <div className="px-6 pt-6 pb-5 text-center">
+                <h1 className="font-serif text-[32px] text-wood-900 leading-[1.1] tracking-[-0.01em] whitespace-nowrap">{card.card_name}</h1>
+              </div>
+
+              {/* Artwork */}
+              <figure
+                className="w-full aspect-square cursor-zoom-in"
+                onClick={(e) => {
+                  const target = e.currentTarget.querySelector('img');
+                  openLightbox(target?.getBoundingClientRect() ?? null);
+                }}
+                role="button" tabIndex={0} aria-label="Enlarge image"
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const target = (e.currentTarget as HTMLElement).querySelector('img');
+                    openLightbox(target?.getBoundingClientRect() ?? null);
+                  }
+                }}
+              >
+                <img
+                  ref={heroImageRef}
+                  src={cardImageUrl(card.number, 900)}
+                  srcSet={cardPublicId ? [480, 720, 900, 1200].map(size => `${img(cardPublicId, { w: size, h: size, crop: 'fill', gravity: 'center', format: 'webp' })} ${size}w`).join(', ') : undefined}
+                  sizes="(max-width: 768px) 100vw, 672px"
+                  alt={imageAlt}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  decoding="async"
+                />
+              </figure>
+
+              {/* Keywords — the bottom edge of the label. Inside the
+                  container, fastened to the work. */}
+              {(() => {
+                const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
+                return kws.length > 0 ? (
+                  <div className="px-6 pt-4 pb-5 border-t border-wood-200/60">
+                    <KeywordRow kws={kws} onClick={() => go('genekeys')} />
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          </div>
+
+          {/* Acquire / hexagram glyph + spelled number / Share — chrome
+              around the artwork, in a matching rounded container. Same
+              border + shadow as the card-as-object container above so
+              the two read as siblings: the object, then its actions. */}
+          <div className="md:max-w-2xl md:mx-auto mt-4 px-4">
+            <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden bg-paper-100/50">
+              <div className="h-[3px] w-full bg-bronze-400" />
+              <div ref={acquireSectionRef}>
               <div className="flex items-stretch gap-2 px-3 py-3">
                 {/* Acquire — opens the BuySheet so the reader doesn't
                     lose their place in the reading. */}
@@ -1580,6 +1606,7 @@ const UniversalLanguageCard: React.FC = () => {
                   dropdown only ever renders once at a time. */}
               {shareOpen && !chromeCollapsed && renderShareSheet('field')}
             </div>
+            </div>
           </div>
 
           {/* Inline chapter strip — sits between the Acquire/Share
@@ -1599,12 +1626,17 @@ const UniversalLanguageCard: React.FC = () => {
               The sticky chapter strip (in the collapsed contextual
               header) takes over automatically when the reader scrolls
               past this inline one. */}
-          <div className="sm:max-w-2xl sm:mx-auto px-0 sm:px-4 pt-6 pb-0 bg-paper-50">
+          {/* Full-width chapter strip — stretches edge-to-edge on every
+              viewport. mt-6 gives it breathing room above so it doesn't
+              press flush into the share/acquire row, and it touches the
+              section below cleanly. */}
+          <div className="w-full bg-paper-50 mt-6">
             <ChapterWordmark
               chapters={CHAPTERS}
               active={activeChapter}
               onSelect={jumpToChapter}
               variant="paper"
+              shape="sticky"
             />
           </div>
 
@@ -1612,43 +1644,16 @@ const UniversalLanguageCard: React.FC = () => {
               the chapter strip with its own breathing room. The bronze
               accent bar is the strongest visual signal in the hero
               area, marking this as the named, labeled artwork. */}
-          <div className="md:max-w-2xl md:mx-auto px-4 pt-8 pb-0 bg-paper-50">
-            <div className="rounded-2xl border border-wood-200/70 shadow-[0_4px_24px_rgba(60,44,22,0.09),0_1px_3px_rgba(60,44,22,0.05)] overflow-hidden">
-              <div className="h-[3px] w-full bg-bronze-400" />
-              <div className="px-6 pt-6 pb-5">
-                <div className="text-center">
-                  <h1 className="font-serif text-[32px] text-wood-900 leading-[1.1] tracking-[-0.01em] whitespace-nowrap">{card.card_name}</h1>
-                </div>
-                {(() => {
-                  const kws = synthesis?.keywords ?? expanded?.keywords ?? [];
-                  return kws.length > 0 ? (
-                    <>
-                      <div className="mt-3 h-px bg-wood-400/30" />
-                      <KeywordRow kws={kws} onClick={() => go('genekeys')} />
-                    </>
-                  ) : null;
-                })()}
-              </div>
-            </div>
-          </div>
+          {/* Card title + keywords used to render here in the hero. Moved
+              into the UL chapter panel so the title sits above The Reading
+              within the same panel. The hero is now just the artwork +
+              creator voice. */}
 
-          <div className="max-w-3xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
-
-            {/* "The Reading" — the felt summary of this card, set as
-                a named section above the essence prose. Uses the same
-                panel-label typography as the system panels so the
-                whole page reads with consistent section headers. */}
-            {synthesis?.essence && (
-              <>
-                <p className={`${LABEL_PANEL} text-bronze-700/85 text-center pb-1.5 mb-2 max-w-fit mx-auto border-b border-bronze-600/30`}>The Reading</p>
-                <EssenceBlock essence={synthesis.essence} />
-              </>
-            )}
-
-
-
-            {/* Creator voice (conditional) */}
-            {expanded?.creator_voice?.personal_reading ? (
+          {/* Creator voice (conditional). Only renders padding when the
+              block is actually present, otherwise the chapter strip sits
+              flush against the next section below. */}
+          {expanded?.creator_voice?.personal_reading ? (
+            <div className="max-w-3xl mx-auto px-4 pt-6 pb-14 bg-paper-50">
               <div className="card-grain rounded-2xl bg-stone-100 border border-wood-200/30 px-5 py-8 shadow-[inset_0_1px_3px_rgba(60,44,22,0.06)]">
                 <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-6">From the creator</p>
                 <div className="space-y-5">
@@ -1657,8 +1662,8 @@ const UniversalLanguageCard: React.FC = () => {
                   ))}
                 </div>
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </section>
 
         {/* ════════════ CONTEXTUAL CARD HEADER ═══════════════════════════
@@ -1696,27 +1701,12 @@ const UniversalLanguageCard: React.FC = () => {
           <div className="bg-paper-100 border-b border-wood-300/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto px-2 sm:px-3 py-1.5">
 
-              {/* Artwork anchor — 56px stamp, tap to return to the artwork
-                  hero at the top of the card. This is the "back to the
-                  card-as-object" affordance. */}
-              <button
-                type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                aria-label={`Return to ${card.card_name} artwork`}
-                className="flex-shrink-0 w-14 h-14 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bronze-500/50 rounded-sm transition-opacity hover:opacity-90"
-              >
-                <img
-                  src={cardImageUrl(card.number, 168)}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                  decoding="async"
-                />
-              </button>
+              {/* Artwork thumbnail removed from the sticky header — the
+                  identity strip is cleaner without it; tapping the card
+                  name still returns to the artwork. */}
 
-              {/* Card identity — name + code number. Tap also scrolls to
-                  the artwork (matches the anchor's behaviour so the whole
-                  left half of the row is one consistent target). */}
+              {/* Card identity — name + code number. Tap scrolls to the
+                  artwork. */}
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -1801,15 +1791,22 @@ const UniversalLanguageCard: React.FC = () => {
               Data lives in oracle/generated/NN.json (glance.invocation).
               Currently only UL 1 has the invocation populated; other
               cards show a placeholder until commissioned. */}
-          <div className={`${SCREEN_BG.ul} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+          <div className={`${SCREEN_BG.ul} min-h-screen`} style={{ touchAction: 'pan-y' }}>
             <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
-              {/* The chapter strip above ("UL") already labels this
-                  panel. No need for a redundant "Universal Language"
-                  header here — it would create two stacked labels
-                  competing with the Invocation heading below. Drop
-                  the panel header entirely; let the Invocation be
-                  the only labeled content block in this panel. */}
+              {/* The UL panel holds The Reading (the felt summary) and the
+                  Invocation. Both UL-specific. Title + keywords live above
+                  the artwork in the hero, visible on every page. */}
+
+              {/* The Reading — the felt summary of this card. The header
+                  is the prominent title for this panel, set in serif at
+                  size; the prose follows below. */}
+              {synthesis?.essence && (
+                <section className="mb-12 sm:mb-14">
+                  <h2 className="font-serif text-[26px] sm:text-[30px] text-bronze-300 leading-[1.15] tracking-[-0.005em] text-center mb-6">The Reading</h2>
+                  <EssenceBlock essence={synthesis.essence} />
+                </section>
+              )}
 
               {/* Invocation — the ritual opening of this code. Set in
                   plain serif (not italic). Each line breaks naturally,
@@ -1821,7 +1818,7 @@ const UniversalLanguageCard: React.FC = () => {
                   vocabulary. */}
               {invocation ? (
                 <section>
-                  <p className={`${LABEL_PANEL} text-bronze-700/85 text-center pb-1.5 mb-6 max-w-fit mx-auto border-b border-bronze-600/30`}>Invocation</p>
+                  <h2 className="font-serif text-[26px] sm:text-[30px] text-bronze-300 leading-[1.15] tracking-[-0.005em] text-center mb-6">Invocation</h2>
                   {/*
                     Optional info paragraph below the heading — explains
                     what an invocation is, how to use it. Left commented
@@ -1857,7 +1854,7 @@ const UniversalLanguageCard: React.FC = () => {
           {/* ────────── I CHING ────────── */}
           {/* dark-preserve: intentionally-dark panel stays dark in dark mode
               (without it, bg-stone-900 would remap to a light tone). */}
-          <div className={`${SCREEN_BG.iching} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+          <div className={`${SCREEN_BG.iching} dark-preserve min-h-screen`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -1959,22 +1956,9 @@ const UniversalLanguageCard: React.FC = () => {
               </div>
             </div>
 
-            {/* The Changing — the coin cast.
-                TEMPLATE FIX: the cast used to appear with no framing, a
-                floating widget. It now opens with a proper plate header and
-                a framing line, so it reads as a named movement of the
-                I-Ching teaching: the panel above teaches the fixed hexagram;
-                here the reader sees it change. */}
-            <div className="border-t border-stone-700/60 -mx-4 sm:-mx-7 pt-6 sm:pt-7 px-4 sm:px-7">
-              <p className={`${LABEL_SECTION} text-bronze-400/80`}>
-                The Changing
-              </p>
-              <p className="font-sans text-[15px] text-stone-400 leading-[1.6] mt-1.5 max-w-prose">
-                The I Ching is the book of change. The hexagram above is the
-                shape of the present moment. Below, the oracle shows how it is
-                moving, and the hexagram it is turning into.
-              </p>
-            </div>
+            {/* The Changing — the coin cast. The CoinCast component carries
+                its own invitation copy on the idle state, so the framing
+                header that used to live here is redundant and removed. */}
             <CoinCast
               primaryNumber={card.number}
               cast={cast}
@@ -2135,7 +2119,7 @@ const UniversalLanguageCard: React.FC = () => {
         </div>
 
         {/* ────────── GENE KEYS ────────── */}
-        <div className={`${SCREEN_BG.genekeys} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+        <div className={`${SCREEN_BG.genekeys} min-h-screen`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -2225,7 +2209,7 @@ const UniversalLanguageCard: React.FC = () => {
 
         {/* ────────── HUMAN DESIGN ────────── */}
         {/* dark-preserve: intentionally-dark panel stays dark in dark mode. */}
-        <div className={`${SCREEN_BG.humandesign} dark-preserve min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+        <div className={`${SCREEN_BG.humandesign} dark-preserve min-h-screen`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — hexagram glyph is the trigger to the system overlay */}
@@ -2352,7 +2336,7 @@ const UniversalLanguageCard: React.FC = () => {
         </div>
 
         {/* ────────── BODY (physiology + amino acid) ────────── */}
-        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+        <div className={`${SCREEN_BG.connections} min-h-screen`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — Body */}
@@ -2434,7 +2418,7 @@ const UniversalLanguageCard: React.FC = () => {
 
             Pieces marked "to be written" mean the prose field doesn't exist
             in the data yet; the seat is held so the layout is whole. */}
-        <div className={`${SCREEN_BG.connections} min-h-[60vh]`} style={{ touchAction: 'pan-y' }}>
+        <div className={`${SCREEN_BG.connections} min-h-screen`} style={{ touchAction: 'pan-y' }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-7 pt-12 sm:pt-16 pb-16 sm:pb-20">
 
             {/* Plate header — Relations. The descriptive intro line is

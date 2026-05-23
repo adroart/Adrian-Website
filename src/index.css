@@ -409,6 +409,16 @@ blockquote {
 body { transition: background-color 0.5s ease; }
 html.dark body { background-color: #171310; }
 
+/* On the oracle card page only, force the page (html + body) to the
+   dark warm background so chapter swipes don't briefly flash white when
+   one panel slides off and the next slides on. The body default is
+   normally light; the .oracle-card-page class is added by the card
+   component when mounted and removed on unmount. */
+html.oracle-card-page,
+html.oracle-card-page body {
+  background-color: #171310;
+}
+
 /* Placeholder text — slightly brighter in dark mode */
 .dark ::placeholder { color: #a09a92; }
 

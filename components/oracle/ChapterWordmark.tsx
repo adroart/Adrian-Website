@@ -98,6 +98,8 @@ export const ChapterWordmark: React.FC<{
   // Variant tokens. Paper for light section backgrounds; mixed for the
   // floating chrome strip that crosses light/dark sections.
   const paper = variant === 'paper';
+  // Faint hairline — the bar is meant to read as one continuous surface
+  // with the section below it, not a hard division.
   const ruleCls = paper ? 'border-wood-300/40' : 'border-stone-300/40';
   const inactiveCls = paper ? 'text-wood-600 hover:text-wood-900' : 'text-stone-400 hover:text-stone-100';
   const dotCls = paper ? 'text-wood-400' : 'text-stone-500';
@@ -130,7 +132,7 @@ export const ChapterWordmark: React.FC<{
           gets a comfortable tap target. */}
       <div className={
         shape === 'sticky'
-          ? `flex items-center justify-between gap-x-1 sm:gap-x-3 w-full px-4 sm:px-6 py-3.5 bg-paper-100 border-b ${ruleCls}`
+          ? `flex items-center justify-center gap-x-6 sm:gap-x-10 w-full px-4 sm:px-6 py-3.5 bg-paper-100 border-b ${ruleCls}`
           : `flex items-center justify-between gap-x-1 sm:gap-x-3 w-full sm:max-w-2xl sm:mx-auto px-4 sm:px-6 py-4 bg-paper-100 border-t border-b sm:border sm:rounded-2xl sm:shadow-[0_1px_3px_rgba(60,44,22,0.06)] ${ruleCls}`
       }>
         {chapters.map((chapter, idx) => {
@@ -146,7 +148,7 @@ export const ChapterWordmark: React.FC<{
                 aria-selected={isActive}
                 onClick={() => onSelect(chapter.key)}
                 style={{ fontFamily: '"Cormorant Garamond", serif' }}
-                className={`text-[14px] sm:text-[17px] md:text-[18px] leading-[1.2] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-bronze-700 ${isActive ? activeCls : inactiveCls}`}
+                className={`text-[17px] sm:text-[20px] md:text-[22px] leading-[1.2] tracking-[-0.005em] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-bronze-700 ${isActive ? activeCls : inactiveCls}`}
               >
                 {label}
               </button>
@@ -155,7 +157,7 @@ export const ChapterWordmark: React.FC<{
                   of the row and are part of the deck's typographic
                   signature (matching the keyword-row pattern). */}
               {!isLast && (
-                <span aria-hidden="true" style={{ fontFamily: '"Cormorant Garamond", serif' }} className={`text-[14px] sm:text-[17px] md:text-[18px] leading-[1.2] select-none ${dotCls}`}>
+                <span aria-hidden="true" style={{ fontFamily: '"Cormorant Garamond", serif' }} className={`text-[17px] sm:text-[20px] md:text-[22px] leading-[1.2] tracking-[-0.005em] select-none ${dotCls}`}>
                   ·
                 </span>
               )}
