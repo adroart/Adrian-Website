@@ -26,9 +26,3 @@ bucket_name = "adrian-music"
 # database_name = "adrian-website"
 # database_id = "paste-database-id-here"
 # migrations_dir = "migrations"
-
-# Optional: GitHub mirror for ledger durability. Leave unset to disable.
-# Set on the Cloudflare Pages project (Settings > Environment variables).
-# GITHUB_MIRROR_TOKEN  - fine-grained PAT with Contents read/write
-# GITHUB_MIRROR_REPO   - "owner/repo" (e.g. "technicianofthesacred/adrian-atlas-mirror")
-# GITHUB_MIRROR_PATH   - file path in repo (e.g. "atlas/public.json")

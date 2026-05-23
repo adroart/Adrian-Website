@@ -26,11 +26,6 @@ const TOOLS: AdminTool[] = [
     description: 'Publish and edit poems for /poetry. Pick an uploaded audio file, paste the poem, click save.',
     href: '/admin/poetry',
   },
-  {
-    title: 'Atlas',
-    description: 'Seed ledger events and issue steward keys for the /atlas world map.',
-    href: '/admin/atlas',
-  },
 ];
 
 const COMING_SOON: AdminTool[] = [
