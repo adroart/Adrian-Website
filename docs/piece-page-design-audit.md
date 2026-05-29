@@ -1,11 +1,6 @@
-# Future Development
+# PiecePage (Store) Design Improvements
 
-Not for launch or first month. Revisit as the site matures.
-
----
-
-## PiecePage (Store) Design Improvements
-Audited April 2026 — 50 design suggestions organized by theme.
+Audited April 2026 — 50 design suggestions organized by theme. Pulled out of `todo/future.md` during the 2026-05-29 TODO cleanup. Live PiecePage entry in `TODO.md` (under Future) points here.
 
 ### Typography & Hierarchy
 - [ ] Increase title size to `text-5xl md:text-6xl` — currently too small relative to the image
@@ -43,7 +38,7 @@ Audited April 2026 — 50 design suggestions organized by theme.
 - [ ] Size variant labels: reduce to `text-base`, sub-line for status in `text-sm text-wood-500`
 - [ ] Add `border-t border-wood-100` between each add-on checkbox item
 - [ ] Remove "Add to your piece" heading — the checkboxes are self-explanatory
-- [ ] "Ships from Bali" — expand to two lines with bronze rule above
+- [ ] "Ships from Bali" — expand to two lines with bronze rule above (per the no-business-location rule, drop "Bali" reference; "Ships internationally" is fine)
 - [ ] Add `<figure>` + `<figcaption>` semantic wrapper around main image
 
 ### Related Works
@@ -56,8 +51,8 @@ Audited April 2026 — 50 design suggestions organized by theme.
 - [ ] Story link: remove box, use `border-l-2 border-bronze-300 pl-4` only (no background box)
 - [ ] Add collapsible "Details" section with material process + creation notes
 - [ ] Move category label to above title as eyebrow (not orphaned at bottom of right column)
-- [ ] For UL pieces: add bridge link to oracle card page (`/oracle/universal-language/:number`)
-- [ ] Add `<figcaption>` below main image: "Detail · Studio Rasmussen, Bali, [year]"
+- [ ] For UL pieces: add bridge link to oracle card page on mandalacodes.com (`mandalacodes.com/oracle/universal-language/:number`)
+- [ ] Add `<figcaption>` below main image: "Detail · Studio Rasmussen, [year]"
 
 ### Mobile
 - [ ] Mobile breadcrumb: add piece title in `font-serif italic text-wood-700` below back button
@@ -70,54 +65,3 @@ Audited April 2026 — 50 design suggestions organized by theme.
 - [ ] Bookmark/wishlist icon beside Share (highlights on click, stores to localStorage)
 - [ ] Prev/next piece navigation within a series (at bottom of right column)
 - [ ] Faint rotated series watermark text along left margin behind image (pure atmosphere)
-
----
-
-## Features
-- [ ] Re-add featured creations gallery to homepage (was "Selected Works" masonry grid with GalleryTileCard)
-- [ ] Re-add "Selected Works" section to Creations page (was featured pieces grid shown when no category filter active)
-- [ ] Re-add "Available Now" section to Creations page (was ready-to-ship pieces with link to Shop)
-- [ ] Global site search
-- [ ] "Recently Viewed" pieces (localStorage)
-- [ ] Image comparison slider for Illuminated Works (day vs night)
-- [ ] Pricing explorer tool (interactive sliders for size + finish)
-- [ ] Currency selector for international visitors
-- [ ] PWA capabilities (Service Worker + manifest)
-- [ ] Print stylesheet for collectors
-- [ ] "Save for Later" / wishlist
-- [ ] "Notify Me" for sold-out pieces
-
-## E-Commerce
-- [ ] Re-enable custom laser cut frame add-on (temporarily disabled, needs pricing finalized)
-- [ ] Apple Pay / Google Pay express checkout
-- [ ] Made-to-order deposit structure (50% upfront, 50% on completion)
-- [ ] Abandoned cart recovery
-- [ ] Order tracking post-purchase
-- [ ] Inventory management synced with Stripe
-- [ ] Edition tracking system (real-time counts)
-
-## SEO
-- [ ] Dynamic og:image per artwork page (show actual piece when shared)
-- [ ] Additional structured data (ImageGallery, FAQ)
-- [ ] Keyword strategy execution for primary opportunities
-- [ ] Per-category/series meta descriptions
-
-## Infrastructure
-- [ ] End-to-end tests (Playwright/Cypress)
-- [ ] Error monitoring (Sentry)
-- [ ] Heat mapping for post-launch optimization
-- [ ] Headless CMS migration (when mockData.ts becomes unmaintainable)
-- [ ] Cloudflare Images migration (if outgrowing Cloudinary free tier)
-- [ ] Route-level error boundaries
-- [ ] Intersection-based infinite scroll for Store
-- [ ] Backup strategy for content, images, and order data
-
-## Content (Adrian)
-- [ ] NFT integration for legacy documentation
-- [ ] QR codes on physical plaques
-- [ ] Virtual tours / 3D piece viewing
-- [ ] Client portal for commission progress tracking
-- [ ] Events calendar
-- [ ] Press / media section
-- [ ] Process videos for The Practice (Writings)
-- [ ] Installation project documentation (2-3 projects)

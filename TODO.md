@@ -6,129 +6,120 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ### Recent decisions to watch
 
-- [ ] **Decide whether to strip Bali from About bio + Writings stories.** _(band: you-required)_ Trigger: revisit if a buyer reading About reads too "Bali-coded." The 2026-05-29 scrub removed Bali from business copy and SEO; autobiographical mentions in `components/About.tsx` and `content/stories/*.md` were left in place per scope. Standing rule: `feedback_no_business_location.md` in project memory.
-
-- [ ] **Watch SEO ranking shift after Bali removal.** _(band: you-required)_ Trigger: glance at Cloudflare Analytics search-term data over the next month. Removing `addressLocality: Bali` from JSON-LD will drop "Bali artist" local-search results, intended.
+- [ ] Decide whether to strip Bali from the About bio and Writings stories _(band: you-required)_ _(effort: moderate)_
+- [ ] Watch the SEO ranking shift over the next month after removing Bali _(band: you-required)_ _(effort: moderate)_
 
 ## Pre-launch
 
 ### Adrian-only: blocks launch
 
-- [ ] **Commit the staged Bali → studio scrub.** _(band: you-required)_ Trigger: any time you open Adrian-Website. 8 modified files in the working tree on `main` (`components/About.tsx`, `Footer.tsx`, `Inquire.tsx`, `PiecePage.tsx`, `Terms.tsx`, `hooks/useMetaTags.ts`, `useSeoMeta.ts`, `index.html`), small, focused, one commit on its own branch. They were stashed-then-restored during the 2026-05-29 oracle-removal work (PR #113) to keep that PR clean.
-
-- [ ] **Review and decide on the untracked `docs/phase-2-mandala-split.md`.** _(band: you-required)_ Trigger: same session as the scrub commit. Planning doc that appeared in the working tree before the oracle-removal work; never reviewed. Either commit it into `docs/`, move it to the right place, or delete it.
-- File: [docs/phase-2-mandala-split.md](docs/phase-2-mandala-split.md)
-
-- [ ] **Photography.** _(band: you-required)_ 40+ site-level images plus 2-3 gallery shots per artwork. Shoot, upload to Cloudinary under `adrian-website/`, then update public IDs in `data/mockData.ts` yourself or hand filenames to Claude. Site-level shots: homepage commission detail (9:11); About portrait (3:4), tea/travels (3:4), studio creation (1:1), two interstitials (16:9); 8 Creations category tiles (1:1); 4 Multidimensional Art subcategory tiles (1:1); Universal Language / Light Codes / Mandala subcategory heroes (3:2); Illuminated Works hero (2:1, day-to-dark); Oracle Cards 4 deck covers (9:11), 4 sample cards (2:3), 1 ceremony interstitial (16:9); 6 Writings story images (3:2); Inquire hero (16:9), personal path (5:6), spatial path (6:5). Illuminated pieces need daylight + glowing versions.
-
-- [ ] **Stripe activation.** _(band: you-required)_ Switch to live mode, create Products + Prices for every ready-to-ship piece and all UL sizeVariants (29 / 58 / 90 cm), replace every `price_REPLACE` and `_REPLACE_WITH_REAL_ID` in `data/mockData.ts`, configure shipping rates in the Stripe dashboard (carrier from Bali, flat vs weight-based, regional rates, free-shipping threshold).
-
-- [ ] **Set Cloudflare Pages env vars.** _(band: you-required)_ Set `STRIPE_SECRET_KEY` (live `sk_live_...`), `VITE_STRIPE_PUBLISHABLE_KEY` (live `pk_live_...`), `RESEND_API_KEY` (inquiry emails are silent without this). Verify `VITE_KIT_FORM_ID` and `VITE_KIT_PUBLIC_API_KEY` are set.
-
-- [ ] **Pricing decisions.** _(band: you-required)_ Final pricing for all pieces by size tier; add-on pricing for crystals / wood frame / illumination per size tier / custom frame; category ranges for Light Codes, Jewelry, Tables, Oracle Cards. Current UL sizeVariant placeholders are $395 / $1,111 / $2,500.
-
-- [ ] **Write shipping + returns policy content.** _(band: you-required)_ Cover: where pieces ship from, domestic vs international timelines, ready-to-ship (~2-3 weeks typical), commissioned work (ships on completion), packaging and insurance, returns/exchanges, customs and import duties. Claude builds the page component once content lands. Per the no-business-location rule, the policy shouldn't name Bali.
-
-- [ ] **Write UL piece descriptions.** _(band: you-required)_ All 22 currently say "Number [N] in the Universal Language series." Write a short unique paragraph for each.
-
-- [ ] **Other launch content.** _(band: you-required)_ Illuminated Works voice (2-3 sentences, replaces TODO in `IlluminatedWorks.tsx`); About page "The Root" review for biographical accuracy; favicon source (512x512 square); OG share image (1200x630).
-
-- [ ] **Curation.** _(band: you-required)_ Choose 10-20 pieces for the homepage Selected Works grid. Ensure at least one full series is populated end-to-end (images + descriptions + pricing) before shipping.
+- [ ] Commit the staged Bali-to-studio wording change (8 files already edited, on their own branch) _(band: you-required)_ _(effort: quick)_
+- [ ] Review the stray planning doc in the working tree and decide whether to keep or delete it _(band: you-required)_ _(effort: quick)_ → File: [docs/phase-2-mandala-split.md](docs/phase-2-mandala-split.md)
+- [ ] Photograph the site and the artworks _(band: you-required)_ _(effort: deep)_ → Plan: [photography.md](todo/plans/photography.md)
+- [ ] Turn the shop on: Stripe, pricing, env vars, and launch content _(band: you-required)_ _(effort: deep)_ → Plan: [shop-launch.md](todo/plans/shop-launch.md)
 
 ### Claude-side: code bugs to fix before shop launch
 
-- [ ] **Resolve configurator duplication between `PiecePage` and `PieceConfigurator`.** _(band: agent-runnable)_ Two copies of the same wizard state + pricing math + helpers + buy handler; any pricing change means two edits. Refactor: delete the wizard JSX + state from `PiecePage`, render `<PieceConfigurator art={art} initialSize={preferredSize} />` instead. Blocker to bypass: `PiecePage`'s sticky mobile bottom bar reads live total + selectedSize from local state. Either lift state up (configurator becomes controlled, PiecePage owns state) or simplify the sticky bar to "From $X · View options" + scroll-to-purchase.
-
-- [ ] **Add the edition-closed gate to `PieceConfigurator`.** _(band: agent-runnable)_ When `shopEnabled` flips on, a sold-out edition (`editionSize && (editionSold ?? 0) >= editionSize`) can still be purchased through the inline BuySheet wizard. `PiecePage` has the gate; the extracted component skips it. Mirror the check at the top of `PieceConfigurator`. Not user-facing today (shop off, request routes to `/inquire`), but a shop-launch blocker.
-
-- [ ] **Add auto-scroll on configurator step 1 → 2.** _(band: agent-runnable)_ Inside the BuySheet on short phones, "Continue to options" leaves the new step below the fold. Same in `PiecePage`. Fix: when `configStep` becomes 2, `scrollIntoView({ behavior: 'smooth', block: 'start' })` on the step-2 container or nearest scrollable ancestor.
+- [ ] Fix the piece configurator before the shop launches (three bugs) _(band: agent-runnable)_ _(effort: deep)_ → Plan: [configurator-fixes.md](todo/plans/configurator-fixes.md)
 
 ### Claude-side: needs Adrian's content before it can ship
 
-- [ ] **Build the shipping policy page component + route.** _(band: agent-runnable)_ Build once the policy content is written (see the policy-content item under Adrian-only above).
+- [ ] Build the shipping policy page once the policy content is written _(band: agent-runnable)_ _(effort: moderate)_
 
 ### Oracle accounts branch: decision pending
 
-- [ ] **Decide on the oracle accounts branch.** _(band: you-required)_ `origin/claude/oracle-energy-birthdate-4HS3f` carries Clerk + D1 + Hologenetic profile + today/year energy panels. Today/year cards on `main` are placeholder. Either merge that branch into `main`, or accept the placeholder state as permanent now that oracle work lives in mandalacodes. Mandalacodes already has its own Clerk swap merged (2026-05-28); double-Clerk-app or shared-app is the choice point. If merging: complete the provisioning steps in the doc's "Adrian to provision" section, run the smoke test, then flip `accounts: true` in `launchFlags.ts`.
-- Full per-file implementation log: [docs/oracle-accounts-implementation.md](docs/oracle-accounts-implementation.md)
+- [ ] Decide what happens to the oracle accounts branch _(band: you-required)_ _(effort: deep)_ → Plan: [oracle-accounts-decision.md](todo/plans/oracle-accounts-decision.md)
 
 ## Future
 
 ### Shop launch
 
-- [ ] **Shop launch.** _(band: you-required)_ `LAUNCH_FLAGS.shopEnabled` is `false` (in `src/launchFlags.ts`). "Add to Cart" routes to `/inquire`. Price IDs still placeholder. When ready: real Stripe price IDs, flip the flag.
+- [ ] Flip the shop on once Stripe price IDs are real _(band: you-required)_ _(effort: deep)_ → Plan: [shop-launch.md](todo/plans/shop-launch.md)
 
 ### Mandala Codes split
 
-- [ ] **Mandala Codes split, Phase 2 cleanup.** _(band: agent-runnable)_ The oracle reader components, oracle data files, and inline-redirect components are still in place as planned (see Operational notes). Once mandalacodes.com is visibly sale-ready (deck purchase path live) and the redirects have been live long enough to confirm no traffic relies on the in-site oracle pages, remove the oracle reader (`UniversalLanguageCard`, `UniversalLanguageIndex`, `OracleSystems`, `OracleProfile`, `OracleCardEntrance`, `components/oracle/`) and any oracle-only data files (`synthesisData`, expanded readings, `profilePositions`, `trigrams`) nothing else imports. Optionally add a small "Experience this in Mandala Codes" cross-link on each Universal Language piece page.
-- Full scope: [docs/phase-2-mandala-split.md](docs/phase-2-mandala-split.md)
+- [ ] Remove the leftover in-site oracle code once mandalacodes is sale-ready and redirects are proven _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/phase-2-mandala-split.md](docs/phase-2-mandala-split.md)
 
 ### First week after launch
 
-- [ ] **Finishes / Options modal.** _(band: you-required)_ Needs Adrian's images for Natural, Painted, Crystal, LED, Framing; needs illumination demo videos (15-30s, loop-friendly, day-to-dark transitions).
-- [ ] **"Available Now" section on Creations landing.** _(band: agent-runnable)_ Dedicated section surfacing in-stock pieces.
-- [ ] **Rate limiting on `/api/checkout`.** _(band: you-required)_ Cloudflare rate-limiting rules.
-- [ ] **Post-purchase confirmation page.** _(band: you-required)_ Needs Adrian's tone/copy direction.
-- [ ] **Review the Cloudflare Web Analytics dashboard.** _(band: you-required)_
-- [ ] **Build newsletter welcome sequence in Kit dashboard.** _(band: you-required)_ 3 emails (welcome, story, invitation). Decide frequency approach ("as inspired, not scheduled"?).
+- [ ] Build the Finishes and Options modal (needs Adrian's images and illumination demo videos) _(band: you-required)_ _(effort: moderate)_
+- [ ] Add an "Available Now" section to the Creations landing page _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add rate limiting on the checkout endpoint _(band: you-required)_ _(effort: moderate)_
+- [ ] Build the post-purchase confirmation page (needs Adrian's tone and copy) _(band: you-required)_ _(effort: moderate)_
+- [ ] Review the Cloudflare Web Analytics dashboard _(band: you-required)_ _(effort: quick)_
+- [ ] Build the newsletter welcome sequence in Kit (3 emails: welcome, story, invitation) _(band: you-required)_ _(effort: moderate)_
 
 ### First month after launch
 
-- [ ] **Dedicated category pages** _(band: agent-runnable)_ for Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces (Adrian writes intro text per category; Claude builds pages).
-- [ ] **Category-specific + series-specific filters** _(band: agent-runnable)_ per spec (Jewelry: type/material/price; Tables: size/material; UL: availability/finish/size; Light Codes: category/size). Includes UX decisions for single vs multi-select, active display style, clear-all vs individual, result counts, empty-state messaging.
-- [ ] **Mobile bottom-sheet filter overlay.** _(band: agent-runnable)_ Replaces inline filters on small screens.
-- [ ] **Mobile two-tap hero grid.** _(band: agent-runnable)_ Tap once reveals name + description, tap again navigates.
-- [ ] **"See What's Possible" modal** _(band: agent-runnable)_ as a full-screen overlay on mobile.
-- [ ] **Flesh out "Objects" category descriptions.** _(band: you-required)_ Sphere holders, incense, dimensional pieces.
-- [ ] **More Writings content.** _(band: you-required)_ Publish at least one piece in The Path.
-- [ ] **SEO keyword strategy review.** _(band: agent-runnable)_ Claude drafts, Adrian approves.
-- [ ] **Conversion tracking.** _(band: agent-runnable)_ Inquiry submissions + completed purchases.
-- [ ] **Cookie consent mechanism.** _(band: agent-runnable)_ If needed for GDPR/CCPA with analytics + Kit.
-- [ ] **Cross-browser testing.** _(band: you-required)_ Safari, Firefox, Chrome, mobile browsers.
-- [ ] **Full WCAG color-contrast audit + screen reader + keyboard navigation audit.** _(band: agent-runnable)_
-- [ ] **Teajia integration points.** _(band: agent-runnable)_ Spaces category page, Tables category page, Inquire spatial commissions.
-- [ ] **Route-based code splitting + self-host Google Fonts.** _(band: agent-runnable)_ `React.lazy` for routes.
-- [ ] **Decide newsletter signup placement.** _(band: you-required)_ Welcome page link? Mobile hamburger menu?
-- [ ] **Friendly error-state messaging.** _(band: agent-runnable)_ Light touch, per Copy Guidelines.
-- [ ] **Motion polish.** _(band: agent-runnable)_ Cart drawer swipe-to-close; page transition animations; pause GenerativeBackground when offscreen.
-- [ ] **Image performance.** _(band: agent-runnable)_ LQIP blur-up placeholders; responsive srcset on non-ArtImage images; DarkModeContext targeted re-renders.
+- [ ] Build dedicated category pages for Jewelry, Oracle Cards, Tables, Installations, Objects, Spaces (Adrian writes intros, Claude builds) _(band: agent-runnable)_ _(effort: deep)_
+- [ ] Build category-specific and series-specific filters per spec _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Build a mobile bottom-sheet filter overlay for small screens _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Build the mobile two-tap hero grid (tap reveals name, tap again navigates) _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Build the "See What's Possible" modal as a full-screen overlay on mobile _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Flesh out the "Objects" category descriptions (sphere holders, incense, dimensional pieces) _(band: you-required)_ _(effort: moderate)_
+- [ ] Publish at least one more Writings piece in The Path _(band: you-required)_ _(effort: moderate)_
+- [ ] Review the SEO keyword strategy (Claude drafts, Adrian approves) _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add conversion tracking for inquiries and completed purchases _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a cookie consent mechanism if needed for GDPR/CCPA _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Cross-browser testing across Safari, Firefox, Chrome, and mobile browsers _(band: you-required)_ _(effort: moderate)_
+- [ ] Run a full accessibility audit (color contrast, screen reader, keyboard navigation) _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add Teajia integration points (Spaces page, Tables page, spatial commissions in Inquire) _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add route-based code splitting and self-host Google Fonts _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Decide where the newsletter signup lives _(band: you-required)_ _(effort: quick)_
+- [ ] Add friendly error-state messaging _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Motion polish: cart drawer swipe-to-close, page transitions, pause the background when offscreen _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Image performance: blur-up placeholders, responsive images, targeted re-renders _(band: agent-runnable)_ _(effort: moderate)_
 
 ### Optional polish (Claude-side, non-blocking)
 
-- [ ] **Surface `SaveToCollectionButton`** _(band: agent-runnable)_ on artwork pages and Store cards (currently only on Universal Language card reading; component + provider already in place).
-- [ ] **Refactor cart add-on identity** _(band: agent-runnable)_ to thread `configurator` state through `lib/cart/sync.ts` if configurator state ships in the cart (add-ons, frame, illumination). Server already keys cart rows on `(user_id, product_id, configurator_json)`.
-- [ ] **Lazy-import Clerk inside `AuthButton`** _(band: agent-runnable)_ (pre-launch only) so the home-page bundle doesn't carry ~18 KB gz from Clerk's SDK when accounts are off.
-- [ ] **Expand `public/data/cities-index.json`** _(band: agent-runnable)_ by running `npx tsx scripts/build-cities-index.ts cities15000.txt` against a fresh GeoNames extract (current 92-city seed is fine for early users, undersized long-term).
+- [ ] Surface the Save-to-Collection button on artwork pages and Store cards _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Thread configurator state through the cart sync if configured options ship in the cart _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Lazy-load the sign-in SDK so the home page bundle stays light while accounts are off _(band: agent-runnable)_ _(effort: quick)_
+- [ ] Expand the cities index from a fresh GeoNames extract _(band: agent-runnable)_ _(effort: quick)_
 
 ### PiecePage / Store design improvements
 
-- [ ] **PiecePage / Store design pass.** _(band: agent-runnable)_ 50 design suggestions from an April 2026 audit, typography, layout, color, motion, configurator, related works, IA, mobile, peripheral.
-- Full list: [docs/piece-page-design-audit.md](docs/piece-page-design-audit.md)
+- [ ] Work through the 50 PiecePage and Store design suggestions from the April 2026 audit _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/piece-page-design-audit.md](docs/piece-page-design-audit.md)
+
+### Architecture, AI, and SEO roadmap
+
+- [ ] Repair the verification baseline so typecheck, tests, and build all pass _(band: agent-runnable)_ _(effort: moderate)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Build a central route metadata registry feeding sitemap and page SEO from one source _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Consolidate Universal Language card metadata into one source for names, images, canonicals, and OG pages _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Rebuild the content model around validated source data split into domain modules _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Add JSON-LD structured data across the site (Person, VisualArtwork, CollectionPage, Article, ImageObject, BreadcrumbList) _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Build the mandala search-growth cluster (collection page, artwork descriptions, supporting writings, image SEO) _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Set up crawl and index hygiene (robots policy, AI crawler decisions, sitemap from launch flags) _(band: agent-runnable)_ _(effort: moderate)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+- [ ] Decompose the oversized feature components (UniversalLanguageCard, PiecePage, Store, Inquire) _(band: agent-runnable)_ _(effort: deep)_ → Plan: [docs/ARCHITECTURE_AI_SEO_ROADMAP.md](docs/ARCHITECTURE_AI_SEO_ROADMAP.md)
+
+### Image workflow
+
+- [ ] Replace placeholder photos with real artwork imagery once photos are prepped and uploaded to Cloudinary _(band: you-required)_ _(effort: deep)_ → Plan: [docs/IMAGE-WORKFLOW-PLAN.md](docs/IMAGE-WORKFLOW-PLAN.md)
 
 ### Larger features (no commitment yet)
 
-- [ ] **Homepage/Creations sections.** _(band: agent-runnable)_ Re-add featured creations / Selected Works / Available Now sections.
-- [ ] **Global site search.** _(band: agent-runnable)_
-- [ ] **Recently Viewed pieces (localStorage).** _(band: agent-runnable)_
-- [ ] **Image comparison slider for Illuminated Works (day vs night).** _(band: agent-runnable)_
-- [ ] **Pricing explorer tool (interactive sliders for size + finish).** _(band: agent-runnable)_
-- [ ] **Currency selector for international visitors.** _(band: agent-runnable)_
-- [ ] **PWA capabilities (Service Worker + manifest).** _(band: agent-runnable)_
-- [ ] **Print stylesheet for collectors.** _(band: agent-runnable)_
-- [ ] **Save for Later / wishlist.** _(band: agent-runnable)_
-- [ ] **Notify Me for sold-out pieces.** _(band: agent-runnable)_
-- [ ] **Custom laser-cut frame add-on.** _(band: you-required)_ Temporarily disabled, needs pricing.
-- [ ] **Apple Pay / Google Pay express checkout.** _(band: agent-runnable)_
-- [ ] **Made-to-order deposit structure (50% upfront, 50% on completion).** _(band: you-required)_
-- [ ] **Order lifecycle features.** _(band: agent-runnable)_ Abandoned cart recovery; order tracking post-purchase; inventory management synced with Stripe; edition tracking (real-time counts).
-- [ ] **SEO/metadata depth.** _(band: agent-runnable)_ Dynamic og:image per artwork; additional structured data (ImageGallery, FAQ); keyword strategy execution; per-category/series meta descriptions.
-- [ ] **Quality infrastructure.** _(band: agent-runnable)_ End-to-end tests (Playwright/Cypress); error monitoring (Sentry); heat mapping for post-launch optimization.
-- [ ] **Headless CMS migration** _(band: agent-runnable)_ when `mockData.ts` becomes unmaintainable.
-- [ ] **Cloudflare Images migration** _(band: agent-runnable)_ if outgrowing Cloudinary free tier.
-- [ ] **Route-level error boundaries + intersection-based infinite scroll for Store.** _(band: agent-runnable)_
-- [ ] **Backup strategy for content, images, and order data.** _(band: you-required)_
-- [ ] **NFT integration for legacy documentation; QR codes on physical plaques.** _(band: you-required)_
-- [ ] **Larger experiences.** _(band: you-required)_ Virtual tours / 3D piece viewing; client portal for commission progress; events calendar; press/media section; process videos for The Practice; installation project documentation.
+- [ ] Re-add the featured creations, Selected Works, and Available Now homepage sections _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add global site search _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a Recently Viewed pieces strip (localStorage) _(band: agent-runnable)_ _(effort: quick)_
+- [ ] Add a day-vs-night comparison slider for Illuminated Works _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Build a pricing explorer tool with sliders for size and finish _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a currency selector for international visitors _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add progressive-web-app capabilities (service worker plus manifest) _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a print stylesheet for collectors _(band: agent-runnable)_ _(effort: quick)_
+- [ ] Add a Save for Later wishlist _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a Notify Me option for sold-out pieces _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Re-enable the custom laser-cut frame add-on once pricing is set _(band: you-required)_ _(effort: moderate)_
+- [ ] Add Apple Pay and Google Pay express checkout _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add a made-to-order deposit structure (50% upfront, 50% on completion) _(band: you-required)_ _(effort: moderate)_
+- [ ] Add order lifecycle features: abandoned cart recovery, order tracking, Stripe inventory sync, real-time edition counts _(band: agent-runnable)_ _(effort: deep)_
+- [ ] Deepen SEO metadata: per-artwork share images, more structured data, per-category meta descriptions _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add quality infrastructure: end-to-end tests, error monitoring, heat mapping _(band: agent-runnable)_ _(effort: deep)_
+- [ ] Migrate content to a headless CMS when the data file becomes unmaintainable _(band: agent-runnable)_ _(effort: deep)_
+- [ ] Migrate images to Cloudflare Images if outgrowing the Cloudinary free tier _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Add route-level error boundaries and infinite scroll for the Store _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Set up a backup strategy for content, images, and order data _(band: you-required)_ _(effort: moderate)_
+- [ ] Add NFT documentation for legacy pieces and QR codes on physical plaques _(band: you-required)_ _(effort: moderate)_
+- [ ] Larger experiences: virtual tours, commission client portal, events calendar, press section, process videos _(band: you-required)_ _(effort: deep)_
 
 ## Operational notes (not TODOs: context for future-you)
 
