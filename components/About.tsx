@@ -14,13 +14,9 @@ const PERSON_SCHEMA = {
   name: 'Adrian Rasmussen',
   url: 'https://adrianrasmussen.com',
   jobTitle: 'Multidimensional Artist',
-  description: 'Technician of the Sacred. Multidimensional artist working between studios in Bali and Santa Cruz, California.',
+  description: 'Technician of the Sacred. Multidimensional artist creating sacred geometry sculptures, installations, and spaces.',
   sameAs: ['https://www.instagram.com/adrianrasmussen'],
   knowsAbout: ['Sculpture', 'Installation Art', 'Laser Cutting', 'Projection Mapping', 'Tea Ceremony'],
-  workLocation: [
-    { '@type': 'Place', name: 'Bali, Indonesia' },
-    { '@type': 'Place', name: 'Santa Cruz, California' },
-  ],
 };
 
 /* ─── SECTION MAP for side-nav ──────────────────────────────────────── */

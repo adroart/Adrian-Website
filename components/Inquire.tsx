@@ -41,7 +41,7 @@ const COMMISSION_PATHS = {
       'Something for your home, your altar, your life. A centerpiece. An alternative to passive consumption. A place to sit with. To feel held. To feel connected. Created from conversation about what wants to exist.',
     image: img('Untitled_eidlbn', { w: 1400, h: 800, crop: 'fit', gravity: 'center' }),
     alt: 'Personal commission piece by Adrian Rasmussen',
-    successMsg: 'Your vision for a personal piece is on its way to Bali.',
+    successMsg: 'Your vision for a personal piece is on its way to the studio.',
     suggestLink: '/creations',
     suggestLabel: 'Explore the Creations',
     forText: 'For a personal piece',
@@ -55,7 +55,7 @@ const COMMISSION_PATHS = {
       'When you walk into a space, there is something you can feel. I love creating spaces that bring this through. Installations. Tea houses. Stages. The art, the ceremony, the intention. All in service of what happens between people when presence is held.',
     image: img('72CAF335-30B9-412C-9FB7-6F92BA637FF8_lb9gzp', { w: 1200, h: 800, gravity: 'center' }),
     alt: 'Spatial installation by Adrian Rasmussen',
-    successMsg: 'Your spatial vision is on its way to Bali.',
+    successMsg: 'Your spatial vision is on its way to the studio.',
     suggestLink: '/creations/multidimensional-art',
     suggestLabel: 'See Spatial Installations',
     forText: 'For a spatial installation',
@@ -554,7 +554,7 @@ const Inquire: React.FC = () => {
                   </h4>
                   <p className="font-serif text-xl text-wood-700 leading-[1.7] mb-2">
                     {purchaseMode
-                      ? `Your request for "${pieceTitle}" is on its way to Bali.`
+                      ? `Your request for "${pieceTitle}" is on its way to the studio.`
                       : chosenPath.successMsg
                     }
                   </p>
@@ -980,9 +980,9 @@ const Inquire: React.FC = () => {
                   Where do pieces ship from?
                 </h4>
                 <p className="font-sans text-base text-wood-600 leading-[1.8]">
-                  Most pieces are created in my studio in Bali and ship internationally from
-                  there. Ready-to-ship items typically arrive within 2 to 3 weeks. Commissioned
-                  work ships upon completion. I handle packaging personally to ensure safe arrival.
+                  Most pieces are created in my studio and ship internationally. Ready-to-ship
+                  items typically arrive within 2 to 3 weeks. Commissioned work ships upon
+                  completion. I handle packaging personally to ensure safe arrival.
                 </p>
               </div>
               <div className="h-px bg-wood-100" />

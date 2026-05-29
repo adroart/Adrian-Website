@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 const DEFAULT_TITLE = 'Adrian Rasmussen | Bringing the Formless into Form';
 const DEFAULT_DESCRIPTION =
-  'Multidimensional art, sacred geometry sculptures, and immersive installations by Adrian Rasmussen. Created between studios in Bali and California.';
+  'Multidimensional art, sacred geometry sculptures, and immersive installations by Adrian Rasmussen.';
 const DEFAULT_IMAGE =
   'https://res.cloudinary.com/dobbosnda/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/adrian-website/placeholders/hero-wide-1';
 
