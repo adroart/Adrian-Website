@@ -165,20 +165,25 @@ test('4. /shop cart flow - Configure or Add to Cart opens expected UI', async ({
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });
 
-test('5. /oracle/universal-language loads with card index visible', async ({ page }) => {
+test('5. /oracle is a directory page that links out to the oracle decks', async ({ page }) => {
   const errors = attachErrorListeners(page);
 
-  await page.goto('/oracle/universal-language', { waitUntil: 'networkidle' });
+  await page.goto('/oracle', { waitUntil: 'networkidle' });
 
   await assertNoErrorBoundary(page);
   await assertNo404Text(page);
   await assertNoOverflow(page);
 
-  // The index page should have some card/grid content
+  // The hub page lists Universal Language and points at mandalacodes.
   const body = await page.evaluate(() => document.body.innerText);
-  expect(body.length, 'Oracle index page should have meaningful content').toBeGreaterThan(100);
+  expect(body, 'Hub page should name the oracle').toContain('Universal Language');
 
-  await screenshot(page, '05-oracle-index');
+  const ulLink = page.getByRole('link', { name: /open at mandalacodes\.com/i });
+  await expect(ulLink).toBeVisible();
+  const href = await ulLink.getAttribute('href');
+  expect(href).toMatch(/^https:\/\/mandalacodes\.com\/oracle\/universal-language/);
+
+  await screenshot(page, '05-oracle-hub');
 
   expect(errors, `Unexpected console/page errors: ${errors}`).toHaveLength(0);
 });

@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import AccountLayout from './AccountLayout';
 import { useCollections, type CollectionItem } from '../../lib/collections/context';
-import { CARD_BY_NUMBER } from '../../data/oracleData';
 import { Link } from 'react-router-dom';
 
 const itemLabel = (item: CollectionItem): string => {
-  if (item.kind === 'card') {
-    const card = CARD_BY_NUMBER.get(Number(item.ref));
-    return card ? `${card.card_name} · Card ${card.number}` : `Card ${item.ref}`;
-  }
   if (item.kind === 'artwork') return `Artwork · ${item.ref}`;
-  return `Product · ${item.ref}`;
+  if (item.kind === 'product') return `Product · ${item.ref}`;
+  // Legacy 'card' items from when the oracle deck lived on this site.
+  // The deck now lives at mandalacodes.com; saved entries persist as
+  // history but no longer link.
+  return `Oracle card · ${item.ref}`;
 };
 
-const itemLink = (item: CollectionItem): string => {
-  if (item.kind === 'card') return `/oracle/universal-language/${item.ref}`;
+const itemLink = (item: CollectionItem): string | null => {
   if (item.kind === 'artwork') return `/creations/${item.ref}`;
-  return '/shop';
+  if (item.kind === 'product') return '/shop';
+  return null;
 };
 
 const CollectionsManagerInner: React.FC = () => {
@@ -119,23 +118,32 @@ const CollectionsManagerInner: React.FC = () => {
                 <p className="font-serif text-sm text-wood-600 italic">No items yet.</p>
               ) : (
                 <ul className="grid sm:grid-cols-2 gap-2">
-                  {c.items.map((item) => (
-                    <li key={`${item.kind}_${item.ref}`} className="flex items-center justify-between gap-3 text-sm">
-                      <Link
-                        to={itemLink(item)}
-                        className="font-serif text-wood-800 hover:text-bronze-600 truncate"
-                      >
-                        {itemLabel(item)}
-                      </Link>
-                      <button
-                        type="button"
-                        className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500 hover:text-wood-900 flex-shrink-0"
-                        onClick={() => removeItem(c.id, item)}
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
+                  {c.items.map((item) => {
+                    const link = itemLink(item);
+                    return (
+                      <li key={`${item.kind}_${item.ref}`} className="flex items-center justify-between gap-3 text-sm">
+                        {link ? (
+                          <Link
+                            to={link}
+                            className="font-serif text-wood-800 hover:text-bronze-600 truncate"
+                          >
+                            {itemLabel(item)}
+                          </Link>
+                        ) : (
+                          <span className="font-serif text-wood-500 italic truncate" title="The oracle deck moved to mandalacodes.com">
+                            {itemLabel(item)}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500 hover:text-wood-900 flex-shrink-0"
+                          onClick={() => removeItem(c.id, item)}
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </li>

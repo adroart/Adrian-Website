@@ -1,6 +1,14 @@
 import { Artwork } from '../types';
-import { CARD_BY_NUMBER } from '../data/oracleData';
-import { FULL_ARCHIVE } from '../data/mockData';
+
+/**
+ * Helpers for the Universal Language art series on this site.
+ *
+ * The companion *oracle deck* of the same 64 pieces lives at
+ * mandalacodes.com. Both come from the same hand, and the SEO copy here
+ * acknowledges that without leaning on oracle data, so the art-series
+ * pages remain stand-alone fine-art pages while still pointing the
+ * curious toward the deeper project.
+ */
 
 /**
  * Parse the card number from a Universal Language coverImage public ID.
@@ -32,17 +40,15 @@ export function ulAltText(art: Artwork, number?: number | null): string {
 
 /**
  * SEO-optimised meta description for a Universal Language piece page.
- * Pulls hexagram and Gene Key data from oracleData when available.
+ *
+ * Cross-links to the companion oracle deck at mandalacodes without
+ * embedding oracle data here, so this site can stay a clean art-series
+ * presentation. Two SEO surfaces, one creator, one body of work.
  */
-export function ulMetaDescription(art: Artwork): string {
-  const num = ulCardNumber(art.coverImage);
-  if (num != null) {
-    const card = CARD_BY_NUMBER.get(num);
-    if (card) {
-      return `Original multi-dimensional wooden sculpture, connected to ${card.iching.hexagram_name} (Hexagram ${num}) of the I Ching and Gene Key ${num}: ${card.gene_keys.gift}. One of 64 sculptures by Adrian Rasmussen.`;
-    }
-  }
-  return `Original multi-dimensional wooden sculpture. One of 64 works in the Universal Language series by Adrian Rasmussen, each connected to a hexagram of the I Ching and a corresponding Gene Key.`;
+export function ulMetaDescription(art: Artwork, number?: number | null): string {
+  const num = number ?? ulCardNumber(art.coverImage);
+  const numberPart = num != null ? ` (number ${num} of 64)` : '';
+  return `Original multi-dimensional wooden sculpture${numberPart} by Adrian Rasmussen, from the Universal Language series. The companion oracle deck of the same 64 pieces lives at mandalacodes.com.`;
 }
 
 /**
@@ -51,23 +57,4 @@ export function ulMetaDescription(art: Artwork): string {
  */
 export function ulMetaTitle(art: Artwork): string {
   return `${art.title} · Universal Language · Mandala Art`;
-}
-
-let ulArtworkByGate: Map<number, Artwork> | null = null;
-
-/**
- * Look up the Universal Language artwork whose card number matches the
- * given Human Design gate. UL pieces are 1:1 with the 64 gates, so gate
- * 41 → card 41 → the artwork in FULL_ARCHIVE with that card number.
- */
-export function findUlArtworkForGate(gate: number): Artwork | null {
-  if (!ulArtworkByGate) {
-    ulArtworkByGate = new Map();
-    for (const art of FULL_ARCHIVE) {
-      if (art.series !== 'Universal Language') continue;
-      const n = ulCardNumber(art.coverImage);
-      if (n != null) ulArtworkByGate.set(n, art);
-    }
-  }
-  return ulArtworkByGate.get(gate) ?? null;
 }

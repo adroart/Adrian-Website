@@ -1,20 +1,21 @@
 /**
  * GET /qr/:number
  *
- * Redirects a physical QR code scan to the oracle card reading page.
- * This indirection means the destination URL can change any time without
- * reprinting physical plaques — just update this file and redeploy.
+ * Redirects a physical QR code scan to the Universal Language oracle card.
+ * The oracle deck now lives on mandalacodes.com, so the redirect target
+ * crosses domains; this indirection keeps any printed plaques working
+ * until Adrian reprints them with the mandalacodes URL baked in.
  *
  * Examples:
- *   /qr/1  →  /oracle/universal-language/1?ref=qr
- *   /qr/41 →  /oracle/universal-language/41?ref=qr
+ *   /qr/1  →  https://mandalacodes.com/oracle/universal-language/1?ref=qr
+ *   /qr/41 →  https://mandalacodes.com/oracle/universal-language/41?ref=qr
  */
 
 export function onRequest({ params }) {
-  // Gateway — redirects to the oracle deck entrance page
+  // Gateway — the bare /qr/oracle code redirects to the deck's home.
   if (params.number === 'oracle') {
     return Response.redirect(
-      'https://adrianrasmussen.com/oracle?ref=qr',
+      'https://mandalacodes.com/oracle/universal-language?ref=qr',
       302,
     );
   }
@@ -26,7 +27,7 @@ export function onRequest({ params }) {
   }
 
   return Response.redirect(
-    `https://adrianrasmussen.com/oracle/universal-language/${n}?ref=qr`,
+    `https://mandalacodes.com/oracle/universal-language/${n}?ref=qr`,
     302,
   );
 }
