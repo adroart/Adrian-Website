@@ -4,7 +4,7 @@ status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
 deploy: https://adrianrasmussen.art
 family: art
-last_reviewed: 2026-05-10
+last_reviewed: 2026-05-29
 ---
 
 # Adrian Rasmussen Art Website — personal portfolio + shop
@@ -60,4 +60,7 @@ remains discoverable; oracle framing belongs on mandalacodes, not here.
 - UL pieces are multi-dimensional wooden sculptures — use that term in marketing
 
 ## Deploy
-Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Claude tasks, Adrian tasks, and future items.
+Push to `main` → Cloudflare Pages auto-deploys. Remaining work lives in `TODO.md` at the project root (the old `todo/` folder was retired 2026-05-29).
+
+## TODO format
+`TODO.md` items follow the workspace convention: `- [ ] **Bold lead.** _(band: agent-runnable | you-required | routine)_ One descriptive sentence.` with an optional link/detail line underneath pointing to the full plan doc, PR, or referenced files. Group items under `## Soon` / `## Pre-launch` / `## Future` / `## Operational notes`. The band hint tells the i64os Temple page which lane to render the item in.
