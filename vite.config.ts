@@ -116,7 +116,7 @@ function mockApiPlugin(): Plugin {
 
 export default defineConfig({
   server: {
-    port: 8888,
+    port: 5555,
     host: '0.0.0.0',
     strictPort: true,
     watch: {

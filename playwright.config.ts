@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:8888',
+    baseURL: 'http://localhost:5555',
     trace: 'on-first-retry',
   },
   projects: [
@@ -25,8 +25,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'vite --port 8888',
-    url: 'http://localhost:8888',
+    command: 'vite --port 5555',
+    url: 'http://localhost:5555',
     reuseExistingServer: !process.env.CI,
   },
 });
