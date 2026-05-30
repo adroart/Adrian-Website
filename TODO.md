@@ -32,6 +32,11 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Future
 
+### Modernize the site + make it interactive
+
+- [ ] Explore modernizing the website and new ways to interact with it, including having i64os know the art business (pieces, editions, writings, inquiries, orders) the way it already knows the tea business _(band: you-required)_ _(effort: deep)_
+  - Cliff note, not yet shaped. The old idea was a worker exposing the site's data to i64os over an HTTP "integration contract" — that approach is retired (archived at `i64os/_archive/adrian-website-int/`, kept only for its clean data shape: piece / edition / writing / inquiry / customer / order). The live way to do this now is MCP, the same mechanism Teajia uses. Worth a `/shape` session: what "modern + interactive" means for the art site, and whether i64os reading the art business is part of it.
+
 ### Shop launch
 
 - [ ] Flip the shop on once Stripe price IDs are real _(band: you-required)_ _(effort: deep)_ → Plan: [shop-launch.md](todo/plans/shop-launch.md)
