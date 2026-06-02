@@ -6,7 +6,8 @@ Detailed task files:
 - [claude-tasks.md](claude-tasks.md) - Code tasks (Claude can do independently)
 - [adrian-tasks.md](adrian-tasks.md) - Content, decisions, accounts (only Adrian)
 - [future.md](future.md) - Post-launch and long-term ideas
-- [oracle-accounts-implementation.md](oracle-accounts-implementation.md) - **Oracle Hologenetic Profile + unified accounts** (6 phases, all code-complete on branch `claude/oracle-energy-birthdate-4HS3f`; waiting on Adrian-side provisioning before the accounts flag flips on)
+- [oracle-accounts-implementation.md](oracle-accounts-implementation.md) - **Oracle Hologenetic Profile + unified accounts** (6 phases, all code-complete in `main` via PR #107; waiting on Adrian-side provisioning before the accounts flag flips on)
+- [accounts-provisioning-prompt.md](accounts-provisioning-prompt.md) - Drop-in prompt to hand to a fresh Claude session (or teammate) when ready to do the Clerk + D1 + Stripe webhook provisioning
 
 ---
 
