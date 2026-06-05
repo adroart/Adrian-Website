@@ -108,14 +108,14 @@ const PublicInvoice: React.FC = () => {
             margin: 0 !important;
             box-shadow: none !important;
             border: 0 !important;
-            padding: 8mm 12mm !important;
+            padding: 7mm 12mm !important;
           }
           .invoice-a4 .mt-auto { margin-top: 0 !important; }
           .invoice-a4 > * { break-inside: avoid; }
           /* Trim each section's vertical padding. */
-          .invoice-a4 .print-tight { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
-          .invoice-a4 .print-tight-top { padding-top: 0.35rem !important; }
-          .invoice-a4 header { padding-bottom: 0.4rem !important; }
+          .invoice-a4 .print-tight { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+          .invoice-a4 .print-tight-top { padding-top: 0.25rem !important; }
+          .invoice-a4 header { padding-bottom: 0.3rem !important; }
           /* Compress the payment-schedule step cards. */
           .invoice-a4 .pay-step { padding: 0.3rem 0.6rem !important; }
           /* Shrink the bank/account details block (the tallest element). */
