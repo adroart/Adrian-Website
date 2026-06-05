@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Invoice, InvoicePaymentOption } from './invoices/invoiceTypes';
-import { formatMoney, methodLabel } from './invoices/invoiceUtils';
+import { WISE_REFERRAL_URL, formatMoney, isWiseMethod, methodLabel } from './invoices/invoiceUtils';
 
 async function readInvoice(token: string): Promise<Invoice> {
   const res = await fetch(`/api/invoices/${encodeURIComponent(token)}`);
@@ -277,6 +277,20 @@ const PublicInvoice: React.FC = () => {
                   {selectedPayment.url && (
                     <p className="mt-3 break-all font-sans text-xs text-wood-600">
                       {selectedPayment.url}
+                    </p>
+                  )}
+                  {isWiseMethod(selectedPayment.method) && (
+                    <p className="invoice-print-hide mt-3 border-t border-wood-200 pt-2 font-sans text-xs leading-snug text-wood-600">
+                      New to Wise?{' '}
+                      <a
+                        href={WISE_REFERRAL_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-bronze-700 underline hover:text-bronze-800"
+                      >
+                        Sign up free here
+                      </a>{' '}
+                      to send your payment with low fees.
                     </p>
                   )}
                 </>

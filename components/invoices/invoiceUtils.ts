@@ -2,6 +2,14 @@ import type { InvoiceLineItem, InvoiceScheduleItem, PaymentTermMode } from './in
 
 const DEFAULT_CURRENCY = 'USD';
 
+// Adrian's Wise referral link, shown to clients who don't have a Wise account yet.
+export const WISE_REFERRAL_URL = 'https://wise.com/invite/irtc/adrianr381';
+
+// True for the Wise payment method, where the referral sign-up nudge applies.
+export function isWiseMethod(method: string): boolean {
+  return method === 'wise';
+}
+
 export const PAYMENT_TERM_LABELS: Record<PaymentTermMode, string> = {
   single: 'One payment',
   two_part: 'Half now, half before shipping',
