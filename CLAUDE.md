@@ -2,7 +2,7 @@
 name: adrian-website
 status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
-deploy: https://adrianrasmussen.art
+deploy: https://adrianrasmussen.com
 family: art
 last_reviewed: 2026-05-29
 ---
@@ -10,7 +10,7 @@ last_reviewed: 2026-05-29
 # Adrian Rasmussen Art Website — personal portfolio + shop
 
 ## What this is
-Personal art website for Adrian Rasmussen, a multidisciplinary artist based in Bali. Showcases creations, writings, a shop, and commission inquiries. No backend — all data lives in `src/data/mockData.ts`. Stripe for payments via Checkout Sessions.
+Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases creations, writings, a shop, and commission inquiries. No backend — all data lives in `src/data/mockData.ts`. Stripe for payments via Checkout Sessions.
 
 ## Stack & constraints
 - Vite + React 18 + TypeScript + Tailwind CSS 4.2 + React Router v7

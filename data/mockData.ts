@@ -3504,7 +3504,7 @@ export const STORIES: Story[] = [
         image: 'adrian-website/creations/light-codes/suni',
         excerpt: 'After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.',
         content: [
-            "In Bali, I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
+            "I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
             "As my eyes opened and I woke from this dream, my whole body was shaking with this light. And I heard: You are a High Priestess of Ithaca. A healer and a guide.",
             "This was a surprise, as I am a man.",
             "I later researched Ithaca. Legend has it that this is where Hercules is from. And the story of Ithaca symbolically represents the journey of returning to the heart. Coming home to what was always there.",
@@ -3575,7 +3575,7 @@ export const STORIES: Story[] = [
         image: 'copy_of_img_9273_gbrg5b_ac4d52',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
-            "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.",
+            "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan. Learning the ways of different cultures.",
             "Since 2010, I've been trading artwork for Chinese tea. Two practices that had always been connected. Now, through Teajia, I share this culture globally.",
             "In my art, the influence of tea is everywhere. The patience required to wait for the kettle is the same patience required to sand a piece of walnut to a mirror finish."
         ],

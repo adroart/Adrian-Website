@@ -45,6 +45,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </Link>
           <span className="text-wood-200">|</span>
           <Link to="/admin/files" className="font-sans text-sm text-wood-500 hover:text-wood-900 transition-colors">Files</Link>
+          <Link to="/admin/invoices" className="font-sans text-sm text-wood-500 hover:text-wood-900 transition-colors">Invoices</Link>
           <Link to="/keystatic" className="font-sans text-sm text-wood-500 hover:text-wood-900 transition-colors">Content</Link>
         </div>
         <button

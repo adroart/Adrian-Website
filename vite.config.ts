@@ -85,9 +85,249 @@ export const STORIES: Story[] = ${JSON.stringify(output, null, 2)}
 }
 
 function mockApiPlugin(): Plugin {
+  const nowIso = () => new Date().toISOString();
+  const makeToken = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  let presetId = 3;
+  let invoiceId = 1;
+  const presets = [
+    {
+      id: 1,
+      label: 'Wise placeholder',
+      method: 'wise',
+      currency: 'USD',
+      instructions: 'Use your Wise payment link here.',
+      details: 'Replace this placeholder with your Wise account details or reference instructions.',
+      url: 'https://wise.com',
+      isDefault: true,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    },
+    {
+      id: 2,
+      label: 'Crypto placeholder',
+      method: 'crypto',
+      currency: 'USD',
+      instructions: 'Pay with crypto using the wallet details below.',
+      details: 'Network: Add network, for example BTC, ETH, or USDC\nWallet: Add wallet address\nReference: Invoice number',
+      url: '',
+      isDefault: false,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    },
+    {
+      id: 3,
+      label: 'Bank transfer placeholder',
+      method: 'bank',
+      currency: 'USD',
+      instructions: 'Transfer to the account details below.',
+      details: 'Account name: Adrian Rasmussen\nBank: Add bank name\nAccount: Add account number\nReference: Invoice number',
+      url: '',
+      isDefault: false,
+      isActive: true,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    },
+  ];
+  const invoices: any[] = [];
+
+  function send(res: any, status: number, body: unknown) {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(body));
+  }
+
+  function readBody(req: any): Promise<any> {
+    return new Promise(resolve => {
+      let body = '';
+      req.on('data', (chunk: Buffer) => { body += chunk; });
+      req.on('end', () => {
+        try { resolve(body ? JSON.parse(body) : {}); } catch { resolve({}); }
+      });
+    });
+  }
+
+  function paymentOptionsFor(ids: number[]) {
+    return ids
+      .map(id => presets.find(preset => preset.id === id && preset.isActive))
+      .filter(Boolean)
+      .map(preset => ({
+        id: preset!.id,
+        label: preset!.label,
+        method: preset!.method,
+        currency: preset!.currency,
+        instructions: preset!.instructions,
+        details: preset!.details,
+        url: preset!.url,
+      }));
+  }
+
+  function serializeInvoice(input: any) {
+    const subtotalCents = (input.lineItems || []).reduce((sum: number, item: any) => sum + Number(item.amountCents || 0), 0);
+    const totalCents = Number(input.totalCents || subtotalCents);
+    const paymentPresetIds = Array.isArray(input.paymentPresetIds)
+      ? input.paymentPresetIds.map(Number).filter(Boolean)
+      : input.paymentPresetId ? [Number(input.paymentPresetId)] : [];
+    const paymentOptions = paymentOptionsFor(paymentPresetIds);
+    const currentStep = input.paymentSchedule?.[input.currentStepIndex || 0];
+    return {
+      id: input.id,
+      invoiceNumber: input.invoiceNumber,
+      publicToken: input.publicToken,
+      publicUrlPath: `/invoice/${input.publicToken}`,
+      status: input.status || 'draft',
+      clientName: input.clientName || '',
+      clientEmail: input.clientEmail || '',
+      clientLocation: input.clientLocation || '',
+      jobTitle: input.jobTitle || '',
+      jobDescription: input.jobDescription || '',
+      currency: input.currency || 'USD',
+      lineItems: input.lineItems || [],
+      paymentSchedule: input.paymentSchedule || [],
+      currentStepIndex: input.currentStepIndex || 0,
+      subtotalCents,
+      shippingText: input.shippingText || 'To be confirmed',
+      totalCents,
+      dueTodayCents: Number(input.dueTodayCents || currentStep?.amountCents || totalCents),
+      paymentPresetId: paymentPresetIds[0] || null,
+      paymentPresetIds,
+      paymentSnapshot: paymentOptions[0] || {},
+      paymentOptions,
+      notes: input.notes || '',
+      createdAt: input.createdAt || nowIso(),
+      updatedAt: nowIso(),
+      sentAt: input.sentAt || null,
+      paidAt: input.paidAt || null,
+    };
+  }
+
   return {
     name: 'mock-api',
     configureServer(server) {
+      server.middlewares.use('/api/admin/login', async (req, res, next) => {
+        if (req.method !== 'POST') return next();
+        await readBody(req);
+        res.setHeader('Set-Cookie', 'admin_session=local-dev; Path=/; SameSite=Strict');
+        send(res, 200, { ok: true });
+      });
+
+      server.middlewares.use('/api/admin/logout', (req, res, next) => {
+        if (req.method !== 'POST') return next();
+        res.setHeader('Set-Cookie', 'admin_session=; Path=/; Max-Age=0; SameSite=Strict');
+        send(res, 200, { ok: true });
+      });
+
+      server.middlewares.use('/api/admin/verify', (req, res, next) => {
+        if (req.method !== 'GET') return next();
+        send(res, 200, { ok: true, dev: true });
+      });
+
+      server.middlewares.use('/api/admin/payment-presets', async (req, res, next) => {
+        const url = new URL(req.url || '/', 'http://local.dev');
+        const idMatch = url.pathname.match(/^\/(\d+)$/);
+        if (idMatch && req.method === 'DELETE') {
+          const id = Number(idMatch[1]);
+          const preset = presets.find(item => item.id === id);
+          if (!preset) return send(res, 404, { ok: false, error: 'not_found' });
+          preset.isActive = false;
+          return send(res, 200, { ok: true, preset });
+        }
+        if (idMatch && req.method !== 'DELETE') return next();
+        if (url.pathname !== '/') return next();
+
+        if (req.method === 'GET') {
+          return send(res, 200, { ok: true, presets: presets.filter(preset => preset.isActive) });
+        }
+
+        if (req.method === 'POST') {
+          const body = await readBody(req);
+          if (body.isDefault) presets.forEach(preset => { preset.isDefault = false; });
+          presetId += 1;
+          const preset = {
+            id: presetId,
+            label: String(body.label || 'Payment option'),
+            method: String(body.method || 'custom'),
+            currency: String(body.currency || 'USD').toUpperCase().slice(0, 3),
+            instructions: String(body.instructions || ''),
+            details: String(body.details || ''),
+            url: String(body.url || ''),
+            isDefault: Boolean(body.isDefault),
+            isActive: true,
+            createdAt: nowIso(),
+            updatedAt: nowIso(),
+          };
+          presets.push(preset);
+          return send(res, 201, { ok: true, preset });
+        }
+
+        return next();
+      });
+
+      server.middlewares.use('/api/admin/invoices', async (req, res, next) => {
+        const url = new URL(req.url || '/', 'http://local.dev');
+        const sendMatch = url.pathname.match(/^\/(\d+)\/send$/);
+        if (sendMatch && req.method === 'POST') {
+          const id = Number(sendMatch[1]);
+          const invoice = invoices.find(item => item.id === id);
+          if (!invoice) return send(res, 404, { ok: false, error: 'not_found' });
+          invoice.status = invoice.status === 'draft' ? 'sent' : invoice.status;
+          invoice.sentAt = invoice.sentAt || nowIso();
+          invoice.updatedAt = nowIso();
+          return send(res, 200, { ok: true, invoice, publicUrlPath: invoice.publicUrlPath });
+        }
+
+        const idMatch = url.pathname.match(/^\/(\d+)$/);
+        if (idMatch) {
+          const id = Number(idMatch[1]);
+          const existingIndex = invoices.findIndex(item => item.id === id);
+          if (existingIndex < 0) return send(res, 404, { ok: false, error: 'not_found' });
+
+          if (req.method === 'PUT') {
+            const body = await readBody(req);
+            const updated = serializeInvoice({ ...invoices[existingIndex], ...body, id });
+            invoices[existingIndex] = updated;
+            return send(res, 200, { ok: true, invoice: updated });
+          }
+
+          if (req.method === 'DELETE') {
+            invoices[existingIndex].status = 'void';
+            invoices[existingIndex].updatedAt = nowIso();
+            return send(res, 200, { ok: true, invoice: invoices[existingIndex] });
+          }
+
+          if (req.method === 'GET') return send(res, 200, { ok: true, invoice: invoices[existingIndex] });
+          return next();
+        }
+
+        if (url.pathname !== '/') return next();
+        if (req.method === 'GET') return send(res, 200, { ok: true, invoices });
+
+        if (req.method === 'POST') {
+          const body = await readBody(req);
+          const nextInvoiceNumber = `AR-${new Date().getUTCFullYear()}-${String(invoiceId).padStart(3, '0')}`;
+          const invoice = serializeInvoice({
+            ...body,
+            id: invoiceId,
+            invoiceNumber: nextInvoiceNumber,
+            publicToken: makeToken(),
+          });
+          invoiceId += 1;
+          invoices.unshift(invoice);
+          return send(res, 201, { ok: true, invoice });
+        }
+
+        return next();
+      });
+
+      server.middlewares.use('/api/invoices', (req, res, next) => {
+        const url = new URL(req.url || '/', 'http://local.dev');
+        const token = url.pathname.replace(/^\//, '');
+        if (!token || req.method !== 'GET') return next();
+        const invoice = invoices.find(item => item.publicToken === token && item.status !== 'void');
+        if (!invoice) return send(res, 404, { ok: false, error: 'not_found' });
+        return send(res, 200, { ok: true, invoice });
+      });
+
       server.middlewares.use('/api/inquire', (req, res, next) => {
         if (req.method !== 'POST') return next();
         let body = '';

@@ -24,7 +24,9 @@ const Terms = lazy(() => import('./components/Terms'));
 const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
 const OrdersList = lazy(() => import('./components/account/OrdersList'));
 const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
@@ -82,6 +84,7 @@ const AppInner: React.FC = () => {
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
   const isAdmin = location.pathname.startsWith('/admin');
+  const isInvoice = location.pathname.startsWith('/invoice/');
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
@@ -90,8 +93,8 @@ const AppInner: React.FC = () => {
   return (
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      <GenerativeBackground pathname={location.pathname} theme={theme} />
-      {!isWelcome && !isAdmin && <Navigation theme={theme} />}
+      {!isInvoice && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isWelcome && !isAdmin && !isInvoice && <Navigation theme={theme} />}
 
       <main id="main-content">
         <div key={location.pathname} className="route-fade-in">
@@ -134,8 +137,10 @@ const AppInner: React.FC = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
+            <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/atlas" element={<AtlasExternalRedirect />} />
             <Route path="/atlas/*" element={<AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
@@ -147,7 +152,7 @@ const AppInner: React.FC = () => {
         </div>
       </main>
 
-      {!isWelcome && !isAdmin && <Footer />}
+      {!isWelcome && !isAdmin && !isInvoice && <Footer />}
       <CartDrawer />
       <MiniPlayer />
     </div>

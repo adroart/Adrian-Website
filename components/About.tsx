@@ -103,8 +103,8 @@ const About: React.FC = () => {
               <Reveal delay={260} dir="up">
                 <p className="font-serif text-xl md:text-2xl text-wood-700 leading-[1.45] font-light">
                   Some pieces are intimate enough to hold. Others transform entire environments. They've
-                  found their way into homes and spaces across dozens of countries. I work globally but
-                  spend most of my time between Bali and California.
+                  found their way into homes and spaces across dozens of countries. I work globally, with
+                  each piece shaped through conversation, place, and presence.
                 </p>
               </Reveal>
               <Reveal delay={360} dir="up">
@@ -226,7 +226,7 @@ const About: React.FC = () => {
                 <div className="timeline-node">
                   <p className="pg-2 font-sans text-lg text-wood-700 leading-[1.7]">
                     My tea journey came early. My father introduced it when I was young, and it never left.
-                    In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning from
+                    In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan. Learning from
                     guides. Qigong, Tai Chi, meditation, tea ceremony. The tea and the art have always
                     effortlessly intertwined in creating spaces to experience communion.
                   </p>
@@ -236,7 +236,7 @@ const About: React.FC = () => {
                 <div className="timeline-node">
                   <p className="pg-3 font-sans text-lg text-wood-700 leading-[1.7]">
                     Along the way, I discovered new tools. LEDs, airbrushing, projection mapping. I set up
-                    several studios built between Santa Cruz and Bali. The forms keep evolving. The intention
+                    several studios across different places. The forms keep evolving. The intention
                     stays the same. Art is the journey, bringing the formless into form in communion with
                     something bigger than any one.
                   </p>
