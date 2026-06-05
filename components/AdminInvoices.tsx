@@ -177,6 +177,26 @@ const AdminInvoices: React.FC = () => {
     }));
   };
 
+  // What the user is actively typing in each amount field, by index. While a
+  // field is being edited we show the raw text, so the input never reformats
+  // mid-keystroke and traps the caret. On blur we normalize to cents.
+  const [amountEdits, setAmountEdits] = useState<Record<number, string>>({});
+
+  const onAmountChange = (index: number, raw: string) => {
+    // Allow only digits and a single decimal point while typing.
+    const cleaned = raw.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+    setAmountEdits(prev => ({ ...prev, [index]: cleaned }));
+    updateLineItem(index, { amountCents: parseMoneyToCents(cleaned) });
+  };
+
+  const onAmountBlur = (index: number) => {
+    setAmountEdits(prev => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  };
+
   const addLineItem = () => {
     setDraft(prev => ({ ...prev, lineItems: [...prev.lineItems, { ...EMPTY_LINE_ITEM, description: '' }] }));
   };
@@ -569,7 +589,14 @@ const AdminInvoices: React.FC = () => {
                       </label>
                       <label>
                         <span className={labelClass}>Amount</span>
-                        <input className={inputClass} inputMode="decimal" value={centsToInput(item.amountCents)} onChange={e => updateLineItem(index, { amountCents: parseMoneyToCents(e.target.value) })} />
+                        <input
+                          className={inputClass}
+                          inputMode="decimal"
+                          value={amountEdits[index] ?? (item.amountCents ? centsToInput(item.amountCents) : '')}
+                          onChange={e => onAmountChange(index, e.target.value)}
+                          onBlur={() => onAmountBlur(index)}
+                          placeholder="0.00"
+                        />
                       </label>
                       <button
                         type="button"
