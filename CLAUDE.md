@@ -2,15 +2,15 @@
 name: adrian-website
 status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
-deploy: https://adrianrasmussen.art
+deploy: https://adrianrasmussen.com
 family: art
-last_reviewed: 2026-05-10
+last_reviewed: 2026-05-29
 ---
 
 # Adrian Rasmussen Art Website — personal portfolio + shop
 
 ## What this is
-Personal art website for Adrian Rasmussen, a multidisciplinary artist based in Bali. Showcases creations, writings, a shop, and commission inquiries. No backend — all data lives in `src/data/mockData.ts`. Stripe for payments via Checkout Sessions.
+Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases creations, writings, a shop, and commission inquiries. No backend — all data lives in `src/data/mockData.ts`. Stripe for payments via Checkout Sessions.
 
 ## Stack & constraints
 - Vite + React 18 + TypeScript + Tailwind CSS 4.2 + React Router v7
@@ -25,18 +25,24 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist based in B
 - `src/types.ts` — TypeScript type definitions
 
 ## Where to look for…
-- **Artwork / product data** → `src/data/mockData.ts`
-- **Oracle card pages** → `src/pages/oracle/` (route `/oracle/universal-language/*`)
-- **Creations / category pages** → `src/pages/creations/`
-- **Shop** → `src/pages/ShopPage.tsx`
-- **QR / oracle image generation** → `tsx scripts/` at repo root
-- **SEO utilities for Universal Language** → `utils/universalLanguage.ts`
+- **Artwork / product data** → `data/mockData.ts`
+- **Creations / category pages** → `components/Creations.tsx`, `components/MultidimensionalArt.tsx`, `components/SubcategoryPage.tsx`
+- **Shop** → `components/Store.tsx`
+- **Oracle hub page (directory only)** → `components/OracleGateway.tsx` at `/oracle`
+- **SEO utilities for Universal Language art series** → `utils/universalLanguage.ts`
 
-## Critical distinction: "Universal Language"
-Two separate products share the same 64 artwork images:
-1. **Art series** at `/creations/multidimensional-art/universal-language` — fine art, NO oracle framing in SEO
-2. **Oracle deck** at `/oracle/universal-language` — interactive card reader, oracle framing correct here
-Never conflate them. Never use "oracle" in alt text or meta for art-series routes.
+## "Universal Language" — art series only on this site
+The art series at `/creations/multidimensional-art/universal-language` is the
+only Universal Language presence on this site. The companion *oracle deck* of
+the same 64 pieces lives at **mandalacodes.com** as its own project. The
+`/oracle` page on this site is a small directory that points there.
+
+Old oracle URLs (`/oracle/universal-language/:n`, `/universal-language/:n`,
+`/creations/oracle-cards/*`) redirect to the matching page on mandalacodes via
+inline external-redirect components in `App.tsx`.
+
+SEO copy on art-series pages cross-links to mandalacodes so the deeper project
+remains discoverable; oracle framing belongs on mandalacodes, not here.
 
 ## Design system
 - Color palette: `paper / wood / stone / bronze` (defined in `src/index.css`)
@@ -47,10 +53,14 @@ Never conflate them. Never use "oracle" in alt text or meta for art-series route
 
 ## SEO rules (enforced — do not override)
 - Never use "wall art" anywhere on the site
-- Never use "oracle" in SEO for art-series pages (`/creations/multidimensional-art/*`)
+- Never use "oracle" in SEO for art-series pages (`/creations/multidimensional-art/*`). The oracle framing belongs on mandalacodes.com, not here.
+- UL meta descriptions should mention that the companion oracle deck lives at mandalacodes.com (one creator, two SEO surfaces)
 - UL alt text: `[Piece Name], Universal Language [Number]. Original multi-dimensional wooden sculpture by Adrian Rasmussen.`
 - UL Cloudinary filename: `universal-language-[number]-[piece-name-slug]`
-- UL pieces are multi-dimensional wooden sculptures — use that term in marketing and oracle contexts
+- UL pieces are multi-dimensional wooden sculptures — use that term in marketing
 
 ## Deploy
-Push to `main` → Cloudflare Pages auto-deploys. See `todo/README.md` for remaining tasks split into Claude tasks, Adrian tasks, and future items.
+Push to `main` → Cloudflare Pages auto-deploys. Remaining work lives in `TODO.md` at the project root (the old `todo/` folder was retired 2026-05-29).
+
+## TODO format
+`TODO.md` items follow the workspace convention: `- [ ] **Bold lead.** _(band: agent-runnable | you-required | routine)_ One descriptive sentence.` with an optional link/detail line underneath pointing to the full plan doc, PR, or referenced files. Group items under `## Soon` / `## Pre-launch` / `## Future` / `## Operational notes`. The band hint tells the i64os Temple page which lane to render the item in.

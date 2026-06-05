@@ -30,6 +30,7 @@ dist-ssr
 # Claude Code
 .claude/
 .codex/
+.superpowers/
 
 # Generated audit run artifacts
 audit/current/

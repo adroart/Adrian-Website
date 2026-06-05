@@ -1176,7 +1176,7 @@ const PiecePage: React.FC = () => {
                                 </Link>
                                 )}
                                 <p className="text-center font-sans text-[13px] text-wood-600 mt-1 leading-[1.55] max-w-[40ch] mx-auto">
-                                    Ships from Bali. Shipping handled separately based on destination, invoiced within 48 hours of purchase.
+                                    Ships internationally from the studio. Shipping handled separately based on destination, invoiced within 48 hours of purchase.
                                 </p>
                             </div>
 
@@ -1243,7 +1243,7 @@ const PiecePage: React.FC = () => {
                                     Inquire about a similar piece <ArrowRight size={14} />
                                 </Link>
                                 <p className="text-center font-label text-[11px] uppercase tracking-[0.2em] text-wood-600 font-semibold">
-                                    Each piece is made by hand in Bali
+                                    Each piece is made by hand in the studio
                                 </p>
                             </div>
                         )}

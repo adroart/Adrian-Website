@@ -28,7 +28,7 @@ const Terms: React.FC = () => {
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Shipping</h2>
           <p>
-            Most pieces ship from Bali, Indonesia. Estimated delivery times are approximate and may vary based on customs and destination. The buyer is responsible for any import duties or taxes.
+            Most pieces ship internationally from the studio. Estimated delivery times are approximate and may vary based on customs and destination. The buyer is responsible for any import duties or taxes.
           </p>
 
           <h2 className="font-serif text-2xl text-wood-900 mt-12 mb-4 font-medium">Intellectual Property</h2>

@@ -26,18 +26,17 @@ const TOOLS: AdminTool[] = [
     description: 'Publish and edit poems for /poetry. Pick an uploaded audio file, paste the poem, click save.',
     href: '/admin/poetry',
   },
+  {
+    title: 'Invoices',
+    description: 'Create commission invoices, manage reusable payment options, and copy printable client links.',
+    href: '/admin/invoices',
+  },
 ];
 
 const COMING_SOON: AdminTool[] = [
   {
     title: 'Shop',
     description: 'Manage products, pricing, and availability.',
-    href: '#',
-    badge: 'Soon',
-  },
-  {
-    title: 'Commissions',
-    description: 'View and respond to commission inquiries.',
     href: '#',
     badge: 'Soon',
   },

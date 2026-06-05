@@ -1,6 +1,6 @@
 
 import React, { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams, Link } from 'react-router-dom';
 
 const KeystaticRoute = lazy(() => import('./components/KeystaticRoute'));
 const Home = lazy(() => import('./components/Home'));
@@ -15,25 +15,21 @@ const PiecePage = lazy(() => import('./components/PiecePage'));
 const MultidimensionalArt = lazy(() => import('./components/MultidimensionalArt'));
 const SubcategoryPage = lazy(() => import('./components/SubcategoryPage'));
 const IlluminatedWorks = lazy(() => import('./components/IlluminatedWorks'));
-const OracleCards = lazy(() => import('./components/OracleCards'));
-const UniversalLanguageIndex = lazy(() => import('./components/UniversalLanguageIndex'));
-const UniversalLanguageCard = lazy(() => import('./components/UniversalLanguageCard'));
 const OracleGateway = lazy(() => import('./components/OracleGateway'));
-const OracleSystems = lazy(() => import('./components/OracleSystems'));
 const Welcome = lazy(() => import('./components/Welcome'));
 const NotFound = lazy(() => import('./components/NotFound'));
 const OrderConfirmed = lazy(() => import('./components/OrderConfirmed'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const Terms = lazy(() => import('./components/Terms'));
-const FontPreview = lazy(() => import('./components/FontPreview'));
 const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
 const OrdersList = lazy(() => import('./components/account/OrdersList'));
 const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
-const OracleProfile = lazy(() => import('./components/OracleProfile'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -45,7 +41,6 @@ import { CartProvider } from './CartContext';
 import { DarkModeProvider, useDarkMode } from './DarkModeContext';
 import { PlayerProvider } from './PlayerContext';
 import { AccountProvider } from './lib/account/AccountProvider';
-import { ProfileProvider } from './lib/profile/context';
 import { CollectionsProvider } from './lib/collections/context';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
@@ -89,13 +84,7 @@ const AppInner: React.FC = () => {
   const isHome = location.pathname === '/';
   const isWelcome = location.pathname === '/welcome';
   const isAdmin = location.pathname.startsWith('/admin');
-  // Only the /oracle gateway is fully immersive — card detail pages use the standard nav
-  const isOracleGateway = location.pathname === '/oracle';
-  // Footer is hidden on all oracle card routes (bottom nav acts as footer)
-  const isOracleCard = /^\/oracle\/universal-language\/\d+$/.test(location.pathname)
-    || /^\/universal-language\/\d+$/.test(location.pathname)
-    || /^\/creations\/oracle-cards\/universal-language\/\d+$/.test(location.pathname)
-    || isOracleGateway;
+  const isInvoice = location.pathname.startsWith('/invoice/');
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
@@ -104,29 +93,34 @@ const AppInner: React.FC = () => {
   return (
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      <GenerativeBackground pathname={location.pathname} theme={theme} />
-      {!isWelcome && !isOracleGateway && !isAdmin && <Navigation theme={theme} />}
+      {!isInvoice && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isWelcome && !isAdmin && !isInvoice && <Navigation theme={theme} />}
 
       <main id="main-content">
-        <div key={/^\/oracle\/universal-language\/\d+$/.test(location.pathname) ? '/oracle/universal-language/:n' : location.pathname} className="route-fade-in">
+        <div key={location.pathname} className="route-fade-in">
           <Routes>
             <Route path="/" element={<><Hero /><Home /></>} />
 
             {/* Creations — static routes must come before /:id catch-all */}
             <Route path="/creations" element={<Creations />} />
             <Route path="/creations/illuminated-works" element={<IlluminatedWorks />} />
-            {/* Oracle gateway — QR code target */}
+            {/* Oracle hub — a directory page that points outward to the
+                oracle decks Adrian has made (Universal Language lives at
+                mandalacodes.com). The deep oracle reading itself no longer
+                lives on this site. */}
             <Route path="/oracle" element={<OracleGateway />} />
-            <Route path="/oracle/profile" element={LAUNCH_FLAGS.hologeneticProfile ? <OracleProfile /> : <Navigate to="/oracle" replace />} />
-            <Route path="/oracle/the-systems" element={<OracleSystems />} />
-            <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCard />} />
-            <Route path="/oracle/universal-language" element={<UniversalLanguageIndex />} />
-            {/* Backwards-compat redirects — old URLs still resolve */}
-            <Route path="/universal-language/:number" element={<UniversalLanguageCard />} />
-            <Route path="/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
-            <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCard />} />
-            <Route path="/creations/oracle-cards/universal-language" element={<Navigate to="/oracle/universal-language" replace />} />
-            <Route path="/creations/oracle-cards" element={<Navigate to="/oracle/universal-language" replace />} />
+            {/* The Universal Language oracle deck moved to mandalacodes.com.
+                Old deep links redirect there with the same card number so any
+                printed QR codes and backlinks keep working. */}
+            <Route path="/oracle/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
+            <Route path="/oracle/universal-language" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/oracle/the-systems" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/oracle/profile" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
+            <Route path="/universal-language" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/creations/oracle-cards/universal-language/:number" element={<UniversalLanguageCardExternalRedirect />} />
+            <Route path="/creations/oracle-cards/universal-language" element={<UniversalLanguageIndexExternalRedirect />} />
+            <Route path="/creations/oracle-cards" element={<UniversalLanguageIndexExternalRedirect />} />
             <Route path="/creations/multidimensional-art" element={<MultidimensionalArt />} />
             <Route path="/creations/multidimensional-art/:subcategory" element={<SubcategoryPage />} />
             <Route path="/creations/:id" element={<PiecePage />} />
@@ -141,11 +135,12 @@ const AppInner: React.FC = () => {
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
-            <Route path="/font-preview" element={<FontPreview />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
+            <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/atlas" element={<AtlasExternalRedirect />} />
             <Route path="/atlas/*" element={<AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
@@ -157,7 +152,7 @@ const AppInner: React.FC = () => {
         </div>
       </main>
 
-      {!isWelcome && !isOracleCard && !isAdmin && <Footer />}
+      {!isWelcome && !isAdmin && !isInvoice && <Footer />}
       <CartDrawer />
       <MiniPlayer />
     </div>
@@ -170,11 +165,9 @@ const App: React.FC = () => (
     <DarkModeProvider>
       <CartProvider>
         <PlayerProvider>
-          <ProfileProvider>
-            <CollectionsProvider>
-              <AppInner />
-            </CollectionsProvider>
-          </ProfileProvider>
+          <CollectionsProvider>
+            <AppInner />
+          </CollectionsProvider>
         </PlayerProvider>
       </CartProvider>
     </DarkModeProvider>
@@ -186,6 +179,31 @@ const App: React.FC = () => (
 const AtlasExternalRedirect: React.FC = () => {
   useEffect(() => {
     window.location.replace('https://mandalacodes.com/atlas');
+  }, []);
+  return null;
+};
+
+/** The Universal Language oracle deck moved to mandalacodes.com. Old card
+ *  deep-links carry their card number across so printed QR codes and any
+ *  indexed pages land on the matching card on the new home. */
+const UniversalLanguageCardExternalRedirect: React.FC = () => {
+  const { number } = useParams<{ number: string }>();
+  useEffect(() => {
+    const n = number && /^\d+$/.test(number) ? number : '';
+    const target = n
+      ? `https://mandalacodes.com/oracle/universal-language/${n}`
+      : 'https://mandalacodes.com/oracle/universal-language';
+    window.location.replace(target);
+  }, [number]);
+  return null;
+};
+
+/** Old non-card oracle URLs (the index, the systems history, the profile,
+ *  the legacy back-compat routes) all redirect to the deck's index page on
+ *  mandalacodes.com. */
+const UniversalLanguageIndexExternalRedirect: React.FC = () => {
+  useEffect(() => {
+    window.location.replace('https://mandalacodes.com/oracle/universal-language');
   }, []);
   return null;
 };

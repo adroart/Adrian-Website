@@ -394,6 +394,63 @@ blockquote {
 .dark .hover\:bg-white:hover {
   background-color: #1f1d1a;
 }
+
+/* Printable invoice pages are a light-mode island even when the site is dark.
+   This keeps PDFs white/paper with dark ink instead of inheriting dark tokens. */
+.invoice-light,
+.dark .invoice-light {
+  color-scheme: light;
+  color: #262321;
+  --color-paper-50: #f5f4f0;
+  --color-paper-100: #ebe8e1;
+  --color-paper-200: #e0dbcf;
+  --color-paper-300: #cfc6b5;
+  --color-wood-50: #faf9f7;
+  --color-wood-100: #f0ece5;
+  --color-wood-200: #e0d8cc;
+  --color-wood-300: #c8bda8;
+  --color-wood-400: #a89070;
+  --color-wood-500: #8f7a5b;
+  --color-wood-600: #736046;
+  --color-wood-700: #524330;
+  --color-wood-800: #3d3226;
+  --color-wood-900: #262321;
+  --color-stone-50: #f7f6f4;
+  --color-stone-100: #ebe9e6;
+  --color-stone-200: #dcd9d4;
+  --color-stone-300: #c2beb8;
+  --color-stone-400: #8a857c;
+  --color-stone-500: #6f6a62;
+  --color-stone-600: #6b665f;
+  --color-stone-700: #524e49;
+  --color-stone-800: #3d3a36;
+  --color-stone-900: #2b2926;
+  --color-stone-950: #23201e;
+  --color-bronze-50: #faf6f0;
+  --color-bronze-100: #f0e8d8;
+  --color-bronze-200: #e6d9c3;
+  --color-bronze-300: #d5c1a0;
+  --color-bronze-400: #c4aa7c;
+  --color-bronze-500: #ab9266;
+  --color-bronze-600: #8a744e;
+  --color-bronze-700: #6d5a3c;
+  --color-bronze-900: #453825;
+}
+
+.invoice-light .bg-white,
+.dark .invoice-light .bg-white,
+.invoice-light .hover\:bg-white:hover,
+.dark .invoice-light .hover\:bg-white:hover {
+  background-color: #fff;
+}
+
+@media print {
+  .invoice-light,
+  .invoice-light * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
 /* Semantic status colors on dark backgrounds */
 .dark .bg-green-50 { background-color: #0a2010; }
 .dark .border-green-200 { border-color: #1a4030; }

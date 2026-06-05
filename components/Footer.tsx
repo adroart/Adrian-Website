@@ -159,7 +159,7 @@ const Footer: React.FC = () => {
                     <div className="md:w-[60%]">
                         <h2 className="font-display text-3xl md:text-4xl text-wood-100 mb-4 tracking-normal font-normal">Adrian Rasmussen</h2>
                         <p className="font-sans text-wood-300 text-sm leading-[1.7] max-w-lg">
-                            Multidimensional art between Bali and California. <br />
+                            Multidimensional art from the studio. <br />
                             Mandala series, sacred geometry, and layered wood.
                         </p>
                         {/* #13 "Currently" status line */}

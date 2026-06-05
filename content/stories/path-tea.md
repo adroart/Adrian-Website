@@ -13,7 +13,7 @@ isFeatured: false
 order: 7
 ---
 
-Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.
+Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan. Learning the ways of different cultures.
 
 Since 2010, I've been trading artwork for Chinese tea. Two practices that had always been connected. Now, through Teajia, I share this culture globally.
 

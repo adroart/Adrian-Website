@@ -10,7 +10,7 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
   '/': {
     title: 'Adrian Rasmussen | Bringing the Formless into Form',
     description:
-      'Multidimensional art, sacred geometry sculptures, and immersive installations by Adrian Rasmussen. Created between studios in Bali and California.',
+      'Multidimensional art, sacred geometry sculptures, and immersive installations by Adrian Rasmussen.',
   },
   '/creations': {
     title: 'Creations | Adrian Rasmussen',
@@ -50,7 +50,7 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
   '/about': {
     title: 'About | Adrian Rasmussen',
     description:
-      'Adrian Rasmussen is a multidimensional artist creating sacred geometry sculptures, installations, and spaces between studios in Bali and California.',
+      'Adrian Rasmussen is a multidimensional artist creating sacred geometry sculptures, installations, and spaces.',
   },
   '/inquire': {
     title: 'Inquire | Adrian Rasmussen',
@@ -65,7 +65,7 @@ const SEO_BY_ROUTE: Record<string, SeoConfig> = {
   '/welcome': {
     title: 'Adrian Rasmussen | Bringing the Formless into Form',
     description:
-      'Multidimensional art between Bali and California. Explore creations, writings, and commissions.',
+      'Multidimensional art by Adrian Rasmussen. Explore creations, writings, and commissions.',
   },
   '/privacy': {
     title: 'Privacy Policy | Adrian Rasmussen',

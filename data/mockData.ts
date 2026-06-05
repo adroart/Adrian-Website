@@ -83,7 +83,7 @@ export const CREATION_CATEGORIES = [
     { id: 'MULTI',   label: 'Multidimensional Art', desc: 'Windows into the infinite',                                            link: '/creations/multidimensional-art', image: 'adrian-website/creations/signature-pieces/path-of-the-ordinary' },
     { id: 'ILLUM',   label: 'Illuminated Works',    desc: 'Art that lives differently after dark',                                link: '/creations/illuminated-works',    image: 'adrian-website/placeholders/artwork-square-2', video: 'https://res.cloudinary.com/dobbosnda/video/upload/a_90,w_480,q_auto/v1774442528/technicianofthesacred_-_Bc27Krhn7j__kwimjc.mp4' },
     { id: 'JEWELRY', label: 'Jewelry',              desc: 'Wearable pieces and talismans',                                                                                image: 'yemingzhu-jewelrt-3_hfk7nj' },
-    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/oracle/universal-language', image: '2_d74upi' },
+    { id: 'ORACLE',  label: 'Oracle Cards',         desc: 'Tools for reflection',                                            link: '/oracle', image: '2_d74upi' },
     { id: 'FURNITURE', label: 'Furniture',            desc: 'Functional art for gathering',                                                                                 image: 'adrian-website/placeholders/artwork-square-5', hidden: true },
     { id: 'INSTALL', label: 'Installations',        desc: 'Immersive environments',                                                                                       image: 'adrian-website/placeholders/artwork-square-6', hidden: true },
     { id: 'OBJECTS', label: 'Objects',              desc: 'Functional objects for the altar, the table, the everyday ritual',                                              image: 'adrian-website/creations/objects/lotus-stand-brown-leaf' },
@@ -3504,7 +3504,7 @@ export const STORIES: Story[] = [
         image: 'adrian-website/creations/light-codes/suni',
         excerpt: 'After a vivid dream where I spoke a light language and sat in the high council of Ithaca, I awoke with a new style of art.',
         content: [
-            "In Bali, I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
+            "I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.",
             "As my eyes opened and I woke from this dream, my whole body was shaking with this light. And I heard: You are a High Priestess of Ithaca. A healer and a guide.",
             "This was a surprise, as I am a man.",
             "I later researched Ithaca. Legend has it that this is where Hercules is from. And the story of Ithaca symbolically represents the journey of returning to the heart. Coming home to what was always there.",
@@ -3575,7 +3575,7 @@ export const STORIES: Story[] = [
         image: 'copy_of_img_9273_gbrg5b_ac4d52',
         excerpt: 'Tea came early. My father introduced it when I was young. Since 2010, I’ve been trading artwork for Chinese tea.',
         content: [
-            "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan, Bali. Learning the ways of different cultures.",
+            "Tea came early. My father introduced it when I was young. In 2009, I began exploring Asia. China, Japan, Thailand, Taiwan. Learning the ways of different cultures.",
             "Since 2010, I've been trading artwork for Chinese tea. Two practices that had always been connected. Now, through Teajia, I share this culture globally.",
             "In my art, the influence of tea is everywhere. The patience required to wait for the kettle is the same patience required to sand a piece of walnut to a mirror finish."
         ],

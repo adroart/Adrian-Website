@@ -14,7 +14,7 @@ isFeatured: false
 order: 4
 ---
 
-In Bali, I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.
+I had a vivid dream where I shifted an alignment of something in my heart and instantly my whole body lit up. Illuminated blue, overlaid with glowing sigils. My throat completely opened as a language of light moved through me.
 
 As my eyes opened and I woke from this dream, my whole body was shaking with this light. And I heard: You are a High Priestess of Ithaca. A healer and a guide.
 

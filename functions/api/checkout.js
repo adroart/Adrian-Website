@@ -9,7 +9,7 @@
  *   STRIPE_SECRET_KEY  — sk_live_... or sk_test_...
  */
 
-// Countries to which Adrian ships from Bali.
+// Countries to which Adrian ships.
 // Add or remove codes as needed before going live.
 const SHIPPING_COUNTRIES = [
   'US', 'CA', 'GB', 'AU', 'NZ',
@@ -182,7 +182,7 @@ export async function onRequestPost(context) {
         [`line_items[${i}][quantity]`, String(item.quantity)],
       ])
     ),
-    // Collect shipping address for all orders (ships internationally from Bali)
+    // Collect shipping address for all orders.
     ...shippingParams,
     success_url: `${origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/shop?checkout=cancelled`,

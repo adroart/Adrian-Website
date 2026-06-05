@@ -30,15 +30,6 @@ export const LAUNCH_FLAGS = {
   shopEnabled: false,
 
   /**
-   * ORACLE CARDS category tile
-   * Disabled because: No artwork pieces, placeholder images only.
-   * To re-enable: Upload real images, add pieces to mockData.ts,
-   *   remove hidden: true from ORACLE in mockData.ts CREATION_CATEGORIES.
-   * Files affected: mockData.ts (hidden: true on ORACLE category)
-   */
-  oracleCards: false,
-
-  /**
    * FURNITURE category tile (formerly Tables)
    * Disabled because: Only 1 piece (SOLD), placeholder image.
    * To re-enable: Upload real images, add pieces to mockData.ts,
@@ -72,20 +63,6 @@ export const LAUNCH_FLAGS = {
    * Files affected: About.tsx (section + side nav entry hidden)
    */
   aboutMeaning: false,
-
-  /**
-   * HOLOGENETIC PROFILE — Birthdate-driven Gene Keys profile on /oracle/profile
-   * Adds Today's / Year's energy panels on /oracle and a "Your position" overlay
-   * on Universal Language card pages when a card matches one of the 11 positions.
-   * Disabled because: feature is in active development; reading needs Adrian's
-   *   editorial pass on position copy in data/profilePositions.ts.
-   * To re-enable: review copy, flip to true.
-   * Files affected:
-   *   - OracleGateway.tsx (today/year/profile panels)
-   *   - UniversalLanguageCard.tsx (YourPositionCallout)
-   *   - App.tsx (/oracle/profile route)
-   */
-  hologeneticProfile: true,
 
   /**
    * ACCOUNTS — Unified Clerk sign-in for profile sync, order history, saved
