@@ -404,7 +404,7 @@ const AdminInvoices: React.FC = () => {
           {message && (
             <div className={`mb-6 border px-4 py-3 font-sans text-sm ${
               message.type === 'ok'
-                ? 'border-bronze-300 bg-bronze-50 text-bronze-900'
+                ? 'border-bronze-300 bg-bronze-50 text-bronze-900 dark:text-bronze-600'
                 : 'border-red-300 bg-red-50 text-red-800'
             }`}>
               {message.text}
@@ -634,7 +634,7 @@ const AdminInvoices: React.FC = () => {
                       onClick={() => setTermMode(mode)}
                       className={`border px-4 py-3 text-left font-sans text-sm ${
                         termMode === mode
-                          ? 'border-bronze-600 bg-bronze-50 text-bronze-900'
+                          ? 'border-bronze-600 bg-bronze-600 text-white dark:text-paper-50'
                           : 'border-wood-200 bg-paper-50 text-wood-700 hover:border-bronze-400'
                       }`}
                     >
