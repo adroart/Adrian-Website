@@ -467,7 +467,7 @@ const AdminInvoices: React.FC = () => {
                                 onClick={() => togglePaymentPreset(preset.id)}
                                 className={`mt-4 w-full border px-3 py-2 font-label text-[11px] uppercase tracking-[0.12em] ${
                                   selected
-                                    ? 'border-bronze-600 bg-bronze-600 text-white'
+                                    ? 'border-bronze-600 bg-bronze-600 text-white dark:text-paper-50'
                                     : 'border-wood-300 bg-white text-wood-700 hover:border-bronze-500'
                                 }`}
                               >

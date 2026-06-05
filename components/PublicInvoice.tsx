@@ -97,13 +97,28 @@ const PublicInvoice: React.FC = () => {
         @media print {
           @page { size: A4; margin: 0; }
           html, body, #root { background: white !important; }
+          /* Keep the whole invoice on a single A4 sheet. The fixed 297mm
+             height plus screen-comfortable padding overflowed onto a second
+             page once bank details were filled in, so in print we cap the
+             height to one page, trim the internal spacing, and forbid any
+             section from splitting across pages. */
           .invoice-a4 {
             width: 210mm !important;
-            min-height: 297mm !important;
+            min-height: 0 !important;
+            max-height: 297mm !important;
             margin: 0 !important;
             box-shadow: none !important;
             border: 0 !important;
+            padding: 10mm 14mm !important;
           }
+          /* Flow content compactly from the top in print. On screen mt-auto
+             pushes the payment block to the bottom of the sheet; in print that
+             stretch is what spilled the page, so neutralize it. */
+          .invoice-a4 .mt-auto { margin-top: 0 !important; }
+          .invoice-a4 > * { break-inside: avoid; }
+          /* Tighten the vertical rhythm so everything fits one sheet. */
+          .invoice-a4 .print-tight { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
+          .invoice-a4 .print-tight-top { padding-top: 0.45rem !important; }
           .invoice-print-hide { display: none !important; }
         }
       `}</style>
@@ -136,7 +151,7 @@ const PublicInvoice: React.FC = () => {
           </div>
         </header>
 
-        <div className="grid gap-6 border-b border-wood-200 py-4 sm:grid-cols-[1fr_1.15fr]">
+        <div className="print-tight grid gap-6 border-b border-wood-200 py-4 sm:grid-cols-[1fr_1.15fr]">
           <section>
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-2">
               Prepared for
@@ -157,7 +172,7 @@ const PublicInvoice: React.FC = () => {
           </section>
         </div>
 
-        <section className="border-b border-wood-200 py-4">
+        <section className="print-tight border-b border-wood-200 py-4">
           <div className="grid grid-cols-[1fr_90px] gap-4 border-b border-wood-200 pb-2 font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold">
             <span>Description</span>
             <span className="text-right">Amount</span>
@@ -191,7 +206,7 @@ const PublicInvoice: React.FC = () => {
           </div>
         </section>
 
-        <section className="grid gap-4 border-b border-wood-200 py-4 sm:grid-cols-[1fr_190px]">
+        <section className="print-tight grid gap-4 border-b border-wood-200 py-4 sm:grid-cols-[1fr_190px]">
           <div>
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
               Payment schedule
@@ -225,7 +240,7 @@ const PublicInvoice: React.FC = () => {
           </div>
         </section>
 
-        <section className="mt-auto pt-4">
+        <section className="print-tight-top mt-auto pt-4">
           <div className="grid gap-4 sm:grid-cols-[1fr_1.35fr]">
             <div>
               <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
