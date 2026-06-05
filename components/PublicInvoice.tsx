@@ -97,28 +97,34 @@ const PublicInvoice: React.FC = () => {
         @media print {
           @page { size: A4; margin: 0; }
           html, body, #root { background: white !important; }
-          /* Keep the whole invoice on a single A4 sheet. The fixed 297mm
-             height plus screen-comfortable padding overflowed onto a second
-             page once bank details were filled in, so in print we cap the
-             height to one page, trim the internal spacing, and forbid any
-             section from splitting across pages. */
+          /* Keep the whole invoice on a single A4 sheet. Screen-comfortable
+             padding plus a filled-in bank-details block ran ~29mm past one
+             page, so print uses a tighter page padding, compresses the
+             section rhythm, shrinks the bank-details block, and neutralizes
+             the screen-only bottom-stretch. */
           .invoice-a4 {
             width: 210mm !important;
             min-height: 0 !important;
-            max-height: 297mm !important;
             margin: 0 !important;
             box-shadow: none !important;
             border: 0 !important;
-            padding: 10mm 14mm !important;
+            padding: 8mm 12mm !important;
           }
-          /* Flow content compactly from the top in print. On screen mt-auto
-             pushes the payment block to the bottom of the sheet; in print that
-             stretch is what spilled the page, so neutralize it. */
           .invoice-a4 .mt-auto { margin-top: 0 !important; }
           .invoice-a4 > * { break-inside: avoid; }
-          /* Tighten the vertical rhythm so everything fits one sheet. */
-          .invoice-a4 .print-tight { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
-          .invoice-a4 .print-tight-top { padding-top: 0.45rem !important; }
+          /* Trim each section's vertical padding. */
+          .invoice-a4 .print-tight { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; }
+          .invoice-a4 .print-tight-top { padding-top: 0.35rem !important; }
+          .invoice-a4 header { padding-bottom: 0.4rem !important; }
+          /* Compress the payment-schedule step cards. */
+          .invoice-a4 .pay-step { padding: 0.3rem 0.6rem !important; }
+          /* Shrink the bank/account details block (the tallest element). */
+          .invoice-a4 .pay-details {
+            font-size: 10px !important;
+            line-height: 1.35 !important;
+            margin-top: 0.35rem !important;
+            padding-top: 0.35rem !important;
+          }
           .invoice-print-hide { display: none !important; }
         }
       `}</style>
@@ -213,7 +219,7 @@ const PublicInvoice: React.FC = () => {
             </p>
             <div className="space-y-1.5">
               {invoice.paymentSchedule.map((step, index) => (
-                <div key={`${step.label}-${index}`} className={`border px-3 py-2 ${index === invoice.currentStepIndex ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'}`}>
+                <div key={`${step.label}-${index}`} className={`pay-step border px-3 py-2 ${index === invoice.currentStepIndex ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
@@ -285,7 +291,7 @@ const PublicInvoice: React.FC = () => {
                     </p>
                   )}
                   {selectedPayment.details && (
-                    <pre className="mt-2 whitespace-pre-wrap border-t border-wood-200 pt-2 font-sans text-xs leading-snug text-wood-800">
+                    <pre className="pay-details mt-2 whitespace-pre-wrap border-t border-wood-200 pt-2 font-sans text-xs leading-snug text-wood-800">
                       {selectedPayment.details}
                     </pre>
                   )}
