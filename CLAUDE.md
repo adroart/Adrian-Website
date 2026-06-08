@@ -25,6 +25,10 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases
 - `src/types.ts` — TypeScript type definitions
 
 ## Where to look for…
+- **QR registry and rules** → `data/qrRegistry.ts` (single source of truth for every issued QR code)
+- **Works page (permanent artwork record)** → `components/WorksPage.tsx` at `/works/:id`
+- **QR index (private registry)** → `components/QRIndex.tsx` at `/qr`
+- **QR redirect function** → `functions/qr/[number].js` (Cloudflare Function, permanent infrastructure)
 - **Artwork / product data** → `data/mockData.ts`
 - **Creations / category pages** → `components/Creations.tsx`, `components/MultidimensionalArt.tsx`, `components/SubcategoryPage.tsx`
 - **Shop** → `components/Store.tsx`

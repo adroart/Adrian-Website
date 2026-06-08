@@ -123,12 +123,12 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] Migrate images to Cloudflare Images if outgrowing the Cloudinary free tier _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Add route-level error boundaries and infinite scroll for the Store _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Set up a backup strategy for content, images, and order data _(band: you-required)_ _(effort: moderate)_
-- [ ] Add NFT documentation for legacy pieces and QR codes on physical plaques _(band: you-required)_ _(effort: moderate)_
+- [ ] **Populate the works registry.** _(band: you-required)_ _(effort: moderate)_ Register artwork QR codes in `data/qrRegistry.ts` as pieces are engraved/printed. Add provenance events once the data model supports them.
 - [ ] Larger experiences: virtual tours, commission client portal, events calendar, press section, process videos _(band: you-required)_ _(effort: deep)_
 
 ## Operational notes (not TODOs: context for future-you)
 
-- The QR Function at `functions/qr/[number].js` redirects scanned plaques to `mandalacodes.com/universal-language/:n`. Treat it as permanent infrastructure, printed plaques out in the world depend on it.
+- The QR Function at `functions/qr/[number].js` is a universal redirect: numbers 1-64 go to mandalacodes.com oracle cards, "oracle" goes to the oracle deck home, everything else goes to `/works/:code` on this domain. Treat it as permanent infrastructure: printed plaques and engraved QR codes in the wild depend on it. Rules, routing, and the full registry of issued codes live in `data/qrRegistry.ts`. Max code length: 11 characters (keeps QR at Version 3, 29x29 grid). The private index at `/qr` shows every registered code.
 
 - Oracle code (`OracleGateway`, `UniversalLanguageCard`, oracle data files, vite OG plugin) was intentionally left in place when mandalacodes split off. It can be removed in a future PR after the redirect has been live long enough to confirm no traffic relies on the in-site oracle pages.
 

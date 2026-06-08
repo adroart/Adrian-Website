@@ -1,33 +1,43 @@
 /**
- * GET /qr/:number
+ * GET /qr/:code
  *
- * Redirects a physical QR code scan to the Universal Language oracle card.
- * The oracle deck now lives on mandalacodes.com, so the redirect target
- * crosses domains; this indirection keeps any printed plaques working
- * until Adrian reprints them with the mandalacodes URL baked in.
+ * Universal QR redirect — the permanent URL engraved/printed on
+ * physical art pieces. This function is the single routing layer
+ * between a scanned QR code and its destination.
  *
- * Examples:
- *   /qr/1  →  https://mandalacodes.com/oracle/universal-language/1?ref=qr
- *   /qr/41 →  https://mandalacodes.com/oracle/universal-language/41?ref=qr
+ * Routing rules (order matters):
+ *   "oracle"  →  mandalacodes.com oracle deck home
+ *   1..64     →  mandalacodes.com oracle card (legacy printed plaques)
+ *   *         →  /works/:code on this domain (artwork record)
+ *
+ * PERMANENT INFRASTRUCTURE — printed and engraved QR codes in the
+ * wild depend on this function. Do not change the URL scheme.
  */
 
-export function onRequest({ params }) {
-  // Gateway — the bare /qr/oracle code redirects to the deck's home.
-  if (params.number === 'oracle') {
+export function onRequest({ params, request }) {
+  const code = params.number;
+
+  // Oracle deck home
+  if (code === 'oracle') {
     return Response.redirect(
       'https://mandalacodes.com/oracle/universal-language?ref=qr',
       302,
     );
   }
 
-  const n = parseInt(params.number, 10);
-
-  if (isNaN(n) || n < 1 || n > 64) {
-    return new Response('Not found', { status: 404 });
+  // Oracle cards 1-64 (legacy printed plaques)
+  const n = parseInt(code, 10);
+  if (!isNaN(n) && n >= 1 && n <= 64 && String(n) === code) {
+    return Response.redirect(
+      `https://mandalacodes.com/oracle/universal-language/${n}?ref=qr`,
+      302,
+    );
   }
 
+  // Everything else → artwork record on this domain
+  const origin = new URL(request.url).origin;
   return Response.redirect(
-    `https://mandalacodes.com/oracle/universal-language/${n}?ref=qr`,
+    `${origin}/works/${code}?ref=qr`,
     302,
   );
 }
