@@ -26,6 +26,12 @@ dist-ssr
 # Local environment variables (secrets)
 .dev.vars
 .mcp.json
+# Ignore all dotenv files by default so secrets never commit. The single
+# exception is .env.production, which holds ONLY the Clerk publishable key
+# (pk_…) — a public, browser-safe value Vite must inline into the build.
+.env
+.env.*
+!.env.production
 
 # Claude Code
 .claude/
