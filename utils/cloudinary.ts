@@ -42,8 +42,14 @@ export function img(publicId: string, opts: ImgOptions = {}): string {
   if (opts.w) transforms.push(`w_${opts.w}`);
   if (opts.h) transforms.push(`h_${opts.h}`);
   if (opts.w || opts.h) {
-    transforms.push(`c_${opts.crop ?? 'fill'}`);
-    transforms.push(`g_${opts.gravity ?? 'auto'}`);
+    const crop = opts.crop ?? 'fill';
+    transforms.push(`c_${crop}`);
+    // Gravity only applies to crops that actually crop. Adding g_* to 'fit' or
+    // 'scale' is an invalid transform and Cloudinary returns 400 (the broken
+    // large hero image). 'fill'/'thumb' use gravity; 'fit'/'scale' must not.
+    if (crop === 'fill' || crop === 'thumb') {
+      transforms.push(`g_${opts.gravity ?? 'auto'}`);
+    }
   }
 
   return `${BASE}/${transforms.join(',')}/${publicId}`;
