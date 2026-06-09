@@ -44,10 +44,10 @@ const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ ch
 const Keywords: React.FC<{ words?: string[] }> = ({ words }) => {
   if (!words || words.length === 0) return null;
   return (
-    <p className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-600 my-3">
+    <p className="font-label text-[14px] sm:text-[15px] uppercase tracking-[0.16em] text-bronze-600 my-4 leading-relaxed">
       {words.map((w, i) => (
         <React.Fragment key={w}>
-          {i > 0 && <span className="text-bronze-500 px-1.5">·</span>}
+          {i > 0 && <span className="text-bronze-500 px-2">·</span>}
           {w}
         </React.Fragment>
       ))}
@@ -62,10 +62,6 @@ const PieceCard: React.FC<{
   onToggleSelect: () => void;
 }> = ({ piece, selected, onToggleSelect }) => {
   const hero = pieceImg(piece, 1400, 'fit');
-  const [expanded, setExpanded] = useState(false);
-  // Consolidated by default: the description is clamped to a few lines with an
-  // inline "Read more"; the full essence is one tap away, not a separate state.
-  const longDescription = (piece.description || '').length > 220;
 
   return (
     <article className="max-w-3xl mx-auto px-6 py-16 sm:py-20">
@@ -94,35 +90,23 @@ const PieceCard: React.FC<{
         <h2 className="font-display text-3xl sm:text-4xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
         <p className="font-sans italic text-wood-600 text-lg leading-relaxed mt-2 max-w-prose">{piece.glance}</p>
 
-        {/* Keywords + a consolidated description: clamped to a few lines, with
-            an inline "Read more" that opens the full essence. Art first. */}
+        {/* Keywords + the full 5-sentence reading. Shown in full, no clamp. */}
         <Keywords words={piece.keywords} />
         {piece.description && (
-          <p
-            className={`font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line ${
-              expanded || !longDescription ? '' : 'line-clamp-3'
-            }`}
-          >
+          <p className="font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line">
             {piece.description}
           </p>
         )}
-        {longDescription && (
-          <button
-            type="button"
-            onClick={() => setExpanded((e) => !e)}
-            className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors mt-2"
-          >
-            {expanded ? 'Read less' : 'Read more'}
-          </button>
-        )}
 
-        {/* Quiet actions + the deeper pull. No buttons. */}
-        <div className="flex items-center gap-6 mt-6 pt-5 border-t border-wood-200">
+        {/* Matching bordered buttons: Select (fills when chosen) + Go deeper. */}
+        <div className="flex flex-wrap items-center gap-3 mt-7 pt-5 border-t border-wood-200">
           <button
             type="button"
             onClick={onToggleSelect}
-            className={`font-label text-[11px] uppercase tracking-[0.18em] underline underline-offset-4 decoration-wood-200 transition-colors ${
-              selected ? 'text-bronze-700' : 'text-wood-600 hover:text-bronze-700'
+            className={`font-label text-[11px] uppercase tracking-[0.18em] border px-5 py-2.5 transition-colors ${
+              selected
+                ? 'border-bronze-500 bg-bronze-200 text-bronze-700'
+                : 'border-wood-300 text-wood-700 hover:border-bronze-500 hover:text-bronze-700'
             }`}
           >
             {selected ? '✓ Selected' : 'Select'}
@@ -132,7 +116,7 @@ const PieceCard: React.FC<{
               href={piece.pieceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors"
+              className="font-label text-[11px] uppercase tracking-[0.18em] border border-wood-300 text-wood-700 hover:border-bronze-500 hover:text-bronze-700 px-5 py-2.5 transition-colors"
             >
               Go deeper
             </a>
