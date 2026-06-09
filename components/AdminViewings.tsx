@@ -16,7 +16,7 @@
  * engine, with the artifact preview inline. Persistence + token delivery + the
  * invoice handoff are the following pass (they reuse the invoice plumbing).
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import Viewing from './viewing/Viewing';
 import type { ViewingData, ViewingPiece } from './viewing/viewingTypes';
@@ -113,7 +113,31 @@ const BoardCard: React.FC<{
   </div>
 );
 
+interface ViewingRow {
+  id: number;
+  publicToken: string;
+  publicUrlPath: string;
+  status: string;
+  recipientName: string;
+  intention: string;
+  chart: any;
+  data: any;
+  invoiceToken: string | null;
+  createdAt: number;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: 'Draft',
+  sent: 'Sent',
+  viewed: 'Viewed',
+  requested: 'Requested',
+};
+
 const AdminViewings: React.FC = () => {
+  const [view, setView] = useState<'list' | 'editor'>('list');
+  const [rows, setRows] = useState<ViewingRow[]>([]);
+  const [listLoading, setListLoading] = useState(false);
+
   // Intake
   const [recipientName, setRecipientName] = useState('');
   const [intention, setIntention] = useState('');
@@ -138,6 +162,58 @@ const AdminViewings: React.FC = () => {
   const [shareUrl, setShareUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedNote, setSavedNote] = useState('');
+
+  const loadList = async () => {
+    setListLoading(true);
+    try {
+      const res = await fetch('/api/admin/viewings');
+      const d = await res.json().catch(() => ({}));
+      if (d?.ok) setRows(d.viewings as ViewingRow[]);
+    } finally {
+      setListLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadList();
+  }, []);
+
+  const resetEditor = () => {
+    setRecipientName('');
+    setIntention('');
+    setMode('chart');
+    setUtcBirth('');
+    setChart(Object.fromEntries(SPHERE_KEYS.map((k) => [k, { gate: 0, line: 1 }])) as Record<SphereKey, GateLine>);
+    setPieces([]);
+    setSphereByCode({});
+    setReasons({});
+    setClosing('Pick these up together, or one at a time.');
+    setViewingId(null);
+    setShareUrl('');
+    setSavedNote('');
+    setError('');
+    setShowPreview(false);
+  };
+
+  const openNew = () => {
+    resetEditor();
+    setView('editor');
+  };
+
+  const openExisting = (row: ViewingRow) => {
+    resetEditor();
+    setRecipientName(row.recipientName || '');
+    setIntention(row.intention || '');
+    setViewingId(row.id);
+    setShareUrl(`${window.location.origin}${row.publicUrlPath}`);
+    const data = row.data || {};
+    const loaded: ViewingPiece[] = Array.isArray(data.pieces) ? data.pieces : [];
+    setPieces(loaded);
+    setSphereByCode(Object.fromEntries(loaded.map((p) => [p.code, ''])));
+    const recPicks = data.recommendation?.picks || [];
+    setReasons(Object.fromEntries(recPicks.map((pk: any) => [pk.pieceId, pk.reason || ''])));
+    if (data.recommendation?.closing) setClosing(data.recommendation.closing);
+    setView('editor');
+  };
 
   const compute = async () => {
     setLoading(true);
@@ -213,6 +289,7 @@ const AdminViewings: React.FC = () => {
       } else {
         setSavedNote('Saved as draft.');
       }
+      loadList();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save the viewing.');
     } finally {
@@ -220,14 +297,64 @@ const AdminViewings: React.FC = () => {
     }
   };
 
+  if (view === 'list') {
+    return (
+      <AdminLayout>
+        <div className="min-h-screen bg-paper-50 px-6 py-12">
+          <div className="max-w-4xl mx-auto">
+            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+              The Curation Desk
+            </p>
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="font-display text-3xl text-wood-900">Viewings</h1>
+              <button type="button" onClick={openNew} className="font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 transition-colors">
+                + New viewing
+              </button>
+            </div>
+
+            {listLoading && rows.length === 0 ? (
+              <p className="font-sans text-sm text-wood-500">Loading…</p>
+            ) : rows.length === 0 ? (
+              <div className="border border-wood-200 bg-white p-8 text-center">
+                <p className="font-sans text-wood-600">No viewings yet. Build the first one for a collector.</p>
+              </div>
+            ) : (
+              <div className="border border-wood-200 bg-white divide-y divide-wood-200">
+                {rows.map((row) => (
+                  <button key={row.id} type="button" onClick={() => openExisting(row)} className="w-full text-left px-5 py-4 hover:bg-paper-100 transition-colors flex items-center justify-between gap-4">
+                    <div>
+                      <span className="font-display text-lg text-wood-900">{row.recipientName || 'Untitled'}</span>
+                      {row.intention && <span className="font-sans text-sm text-wood-500 ml-3">{row.intention}</span>}
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      {row.invoiceToken && <span className="font-label text-[10px] uppercase tracking-[0.14em] text-bronze-600">invoice</span>}
+                      <span className="font-label text-[10px] uppercase tracking-[0.16em] text-wood-500">{STATUS_LABEL[row.status] || row.status}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="min-h-screen bg-paper-50 px-6 py-12">
         <div className="max-w-6xl mx-auto">
-          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
-            The Curation Desk
-          </p>
-          <h1 className="font-display text-3xl text-wood-900 mb-8">Build a Viewing</h1>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
+                The Curation Desk
+              </p>
+              <h1 className="font-display text-3xl text-wood-900">{viewingId ? `Editing · ${recipientName || 'Viewing'}` : 'Build a Viewing'}</h1>
+            </div>
+            <button type="button" onClick={() => { setView('list'); loadList(); }} className="font-label text-[11px] uppercase tracking-[0.16em] text-wood-600 hover:text-bronze-700 underline underline-offset-4">
+              ← All viewings
+            </button>
+          </div>
 
           {/* Intake */}
           <div className="border border-wood-200 bg-white p-5 mb-8">
