@@ -85,6 +85,36 @@ export async function onRequestPost({ env, params, request }) {
     .bind(row.id, newInvoiceToken)
     .run();
 
+  // Notify Adrian by email (reuses the same Resend setup as the contact form).
+  // Non-blocking: a mail failure must not fail the buyer's request.
+  if (env.RESEND_API_KEY && !env.RESEND_API_KEY.startsWith('re_test_')) {
+    const to = env.INQUIRY_TO_EMAIL || 'hello@adrianrasmussen.com';
+    const from = env.RESEND_FROM_EMAIL || 'noreply@adrianrasmussen.com';
+    const note = typeof body.message === 'string' ? body.message.slice(0, 1000) : '';
+    const list = chosen.map((p) => `<li>${p.name} · Universal Language No. ${p.code}</li>`).join('');
+    const html = `
+      <h2>${row.recipient_name} requested ${chosen.length} piece${chosen.length === 1 ? '' : 's'}</h2>
+      <p>From the private viewing for <strong>${row.recipient_name}</strong>.</p>
+      <ul>${list}</ul>
+      ${note ? `<p><strong>Their note:</strong><br>${note.replace(/</g, '&lt;')}</p>` : ''}
+      <p>A draft invoice was created and is waiting for you to price and send:<br>
+      <a href="https://adrianrasmussen.com/admin/invoices">Open the draft invoice</a></p>`;
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: `Adrian Rasmussen Art <${from}>`,
+          to: [to],
+          subject: `${row.recipient_name} requested ${chosen.length} piece${chosen.length === 1 ? '' : 's'} from their viewing`,
+          html,
+        }),
+      });
+    } catch (e) {
+      console.error('viewing request email failed:', e);
+    }
+  }
+
   return jsonResponse({
     ok: true,
     requested: chosen.length,

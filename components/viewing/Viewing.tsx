@@ -213,26 +213,26 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
 
   return (
     <div className="min-h-screen bg-paper-50 text-wood-900 pb-28">
-      {/* 1 · Cover */}
-      <header className="min-h-[88vh] flex flex-col justify-center max-w-3xl mx-auto px-6">
+      {/* 1 · Cover — title, then the contact-sheet pulled up tight beneath it. */}
+      <header className="max-w-4xl mx-auto px-6 pt-24 sm:pt-28 pb-16">
         <Label className="text-[11px] tracking-[0.32em]">A Private Viewing</Label>
         <h1 className="font-display text-5xl sm:text-7xl leading-[1.02] text-wood-900 mt-3">
           For {data.recipientName}
         </h1>
-        <p className="font-sans italic text-wood-600 text-xl mt-4 max-w-[30ch]">{data.subtitle}</p>
+        <p className="font-sans italic text-wood-600 text-xl mt-4 max-w-[34ch]">{data.subtitle}</p>
 
-        {/* Contact sheet: everything inside, at a glance. */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 mt-12">
+        {/* Contact sheet: every piece at a glance, denser, recommended starred. */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-x-4 gap-y-6 mt-10">
           {data.pieces.map((p) => {
-            const t = pieceImg(p, 320, 'fill');
+            const t = pieceImg(p, 360, 'fill');
             return (
-              <div key={p.id} className="flex flex-col items-center text-center gap-2">
+              <div key={p.id} className="flex flex-col gap-1.5">
                 {t ? (
                   <img src={t} alt="" className="w-full aspect-square object-cover border border-wood-200" loading="lazy" />
                 ) : (
                   <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
                 )}
-                <span className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-600 leading-tight">
+                <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-600 leading-tight">
                   {p.recommended && <span className="text-bronze-600">★ </span>}
                   {p.name}
                 </span>
@@ -240,7 +240,7 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
             );
           })}
         </div>
-        <div className="flex justify-between mt-14 border-t border-wood-200 pt-3">
+        <div className="flex justify-between mt-10 border-t border-wood-200 pt-3">
           <Label className="text-[9px] tracking-[0.16em]">Pieces chosen with you in mind</Label>
           <Label className="text-[9px] tracking-[0.16em]">adrianrasmussen.com</Label>
         </div>
