@@ -17,6 +17,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] Review the stray planning doc in the working tree and decide whether to keep or delete it _(band: you-required)_ _(effort: quick)_ → File: [docs/phase-2-mandala-split.md](docs/phase-2-mandala-split.md)
 - [ ] Photograph the site and the artworks _(band: you-required)_ _(effort: deep)_ → Plan: [photography.md](todo/plans/photography.md)
 - [ ] Turn the shop on: Stripe, pricing, env vars, and launch content _(band: you-required)_ _(effort: deep)_ → Plan: [shop-launch.md](todo/plans/shop-launch.md)
+- [ ] Take Clerk login to production for real users: rotate the exposed secret, add the 5 DNS records, finish Google OAuth, then Claude wires the live keys _(band: you-required)_ _(effort: deep)_ → Plan: [clerk-production-launch.md](todo/plans/clerk-production-launch.md)
 
 ### Claude-side: code bugs to fix before shop launch
 
