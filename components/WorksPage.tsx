@@ -1,9 +1,19 @@
 
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Artwork, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img as cldImg } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
+
+const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
+    created: 'Created',
+    exhibited: 'Exhibited',
+    sold: 'Acquired',
+    commissioned: 'Commissioned',
+    restored: 'Restored',
+    transferred: 'Transferred',
+};
 
 const WorksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -44,76 +54,146 @@ const WorksPage: React.FC = () => {
     const imageUrl = artwork.coverImage
         ? cldImg(artwork.coverImage, { w: 800 })
         : null;
+    const provenance = artwork.provenance || [];
 
     return (
-        <section className="min-h-screen pt-28 pb-32 px-6">
+        <section className="min-h-screen pt-28 pb-32 px-6 print:pt-8 print:pb-8">
             <div className="max-w-2xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-4 font-semibold">
-                        Certificate of Authenticity
-                    </span>
-                    <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-2">
-                        {artwork.title}
-                    </h1>
-                    {artwork.series && (
-                        <p className="font-sans text-sm text-wood-500">
-                            {artwork.series} Series{' · '}{artwork.id}
+
+                {/* ── Certificate frame ── */}
+                <div className="border border-wood-200 p-8 md:p-12 print:p-6">
+
+                    {/* Inner border — double-frame effect */}
+                    <div className="border border-wood-100 p-6 md:p-10 print:p-4">
+
+                        {/* Artist name */}
+                        <div className="text-center mb-10">
+                            <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
+                                Adrian Rasmussen
+                            </p>
+
+                            <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                {artwork.title}
+                            </h1>
+
+                            {artwork.series && (
+                                <p className="font-sans text-[13px] text-wood-400 tracking-wide">
+                                    {artwork.series} Series
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Ornamental divider */}
+                        <div className="flex items-center justify-center gap-4 mb-10">
+                            <div className="h-px w-12 bg-bronze-300" />
+                            <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
+                            <div className="h-px w-12 bg-bronze-300" />
+                        </div>
+
+                        {/* Certificate label */}
+                        <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
+                            Certificate of Authenticity
                         </p>
-                    )}
-                    {!artwork.series && (
-                        <p className="font-sans text-sm text-wood-500">{artwork.id}</p>
-                    )}
-                </div>
 
-                {/* Divider */}
-                <div className="w-16 h-px bg-bronze-300 mx-auto mb-12" />
+                        {/* Image */}
+                        {imageUrl && (
+                            <div className="mb-10 flex justify-center">
+                                <img
+                                    src={imageUrl}
+                                    alt={artwork.title}
+                                    className="max-w-sm w-full shadow-sm"
+                                    loading="eager"
+                                />
+                            </div>
+                        )}
 
-                {/* Image */}
-                {imageUrl && (
-                    <div className="mb-12">
-                        <img
-                            src={imageUrl}
-                            alt={artwork.title}
-                            className="w-full max-w-lg mx-auto"
-                            loading="eager"
-                        />
-                    </div>
-                )}
+                        {/* Details grid */}
+                        <div className="max-w-md mx-auto mb-10">
+                            <div className="space-y-4">
+                                <DetailRow label="Artist" value="Adrian Rasmussen" />
+                                <DetailRow label="Year" value={artwork.year} />
+                                {artwork.material && <DetailRow label="Materials" value={artwork.material} />}
+                                {artwork.dimensions && <DetailRow label="Dimensions" value={artwork.dimensions} />}
+                                {editionDisplay && <DetailRow label="Edition" value={editionDisplay} />}
+                                {artwork.finish && <DetailRow label="Finish" value={artwork.finish} />}
+                                {artwork.createdLocation && <DetailRow label="Origin" value={artwork.createdLocation} />}
+                                <DetailRow label="Identifier" value={artwork.id} />
+                            </div>
+                        </div>
 
-                {/* Details */}
-                <div className="space-y-6 mb-12">
-                    <DetailRow label="Artist" value="Adrian Rasmussen" />
-                    <DetailRow label="Year" value={artwork.year} />
-                    {artwork.material && <DetailRow label="Materials" value={artwork.material} />}
-                    {artwork.dimensions && <DetailRow label="Dimensions" value={artwork.dimensions} />}
-                    {editionDisplay && <DetailRow label="Edition" value={editionDisplay} />}
-                    {artwork.category && <DetailRow label="Category" value={artwork.category} />}
-                </div>
+                        {/* Description */}
+                        {artwork.description && (
+                            <>
+                                <div className="flex items-center justify-center gap-4 mb-8">
+                                    <div className="h-px w-8 bg-wood-100" />
+                                    <div className="w-1 h-1 rotate-45 border border-wood-200" />
+                                    <div className="h-px w-8 bg-wood-100" />
+                                </div>
+                                <p className="font-sans text-[15px] text-wood-600 leading-[1.9] text-center max-w-md mx-auto mb-10">
+                                    {artwork.longDescription || artwork.description}
+                                </p>
+                            </>
+                        )}
 
-                {/* Divider */}
-                <div className="w-16 h-px bg-bronze-300 mx-auto mb-12" />
+                        {/* Provenance timeline */}
+                        {provenance.length > 0 && (
+                            <div className="max-w-md mx-auto mb-10">
+                                <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                                    Provenance
+                                </p>
+                                <div className="space-y-3">
+                                    {provenance.map((evt, i) => (
+                                        <div key={i} className="flex items-baseline gap-4">
+                                            <span className="font-sans text-[13px] text-wood-400 shrink-0 w-10 text-right tabular-nums">
+                                                {evt.year}
+                                            </span>
+                                            <div className="w-px h-3 bg-bronze-200 shrink-0 self-center" />
+                                            <div className="font-sans text-[13px] text-wood-600">
+                                                <span className="text-wood-700 font-medium">
+                                                    {EVENT_LABELS[evt.event]}
+                                                </span>
+                                                {evt.note && (
+                                                    <span className="text-wood-500">
+                                                        {' · '}{evt.note}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                {/* Description */}
-                {artwork.description && (
-                    <div className="mb-12">
-                        <p className="font-sans text-base text-wood-700 leading-[1.8] text-center max-w-lg mx-auto">
-                            {artwork.longDescription || artwork.description}
-                        </p>
-                    </div>
-                )}
+                        {/* Signature line */}
+                        <div className="flex items-center justify-center gap-4 mb-8 mt-10">
+                            <div className="h-px w-12 bg-bronze-300" />
+                            <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
+                            <div className="h-px w-12 bg-bronze-300" />
+                        </div>
 
-                {/* Footer */}
-                <div className="text-center pt-8 border-t border-wood-100">
-                    <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 mb-6 font-semibold">
-                        adrianrasmussen.com
-                    </p>
+                        <div className="text-center">
+                            <p className="font-serif text-lg text-wood-700 italic mb-1">
+                                Adrian Rasmussen
+                            </p>
+                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                Artist
+                            </p>
+                        </div>
+
+                    </div>{/* inner border */}
+                </div>{/* outer border */}
+
+                {/* Below the certificate */}
+                <div className="text-center mt-8 space-y-4 print:hidden">
                     <Link
                         to={`/creations/${artwork.id}`}
-                        className="font-sans text-sm text-bronze-600 hover:text-bronze-800 transition-colors underline underline-offset-4"
+                        className="inline-block font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
                     >
-                        View full details
+                        View this piece
                     </Link>
+                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-300 font-semibold">
+                        adrianrasmussen.com/works/{artwork.id}
+                    </p>
                 </div>
             </div>
         </section>
@@ -122,21 +202,21 @@ const WorksPage: React.FC = () => {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex justify-between items-baseline border-b border-wood-100 pb-3">
-            <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 font-semibold">
+        <div className="flex justify-between items-baseline">
+            <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
                 {label}
             </span>
-            <span className="font-sans text-sm text-wood-800 text-right max-w-[60%]">
+            <span className="font-sans text-[14px] text-wood-700 text-right max-w-[60%]">
                 {value}
             </span>
         </div>
     );
 }
 
-function getEditionLine(art: { edition?: string; editionSize?: number; editionNumber?: number; editionSold?: number }): string | null {
+function getEditionLine(art: Artwork): string | null {
     if (art.editionSize) {
         if (art.editionNumber) {
-            return `${art.editionNumber} of ${art.editionSize}`;
+            return `${art.editionNumber} of ${art.editionSize}, signed and numbered`;
         }
         return `Edition of ${art.editionSize}`;
     }
