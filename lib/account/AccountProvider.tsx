@@ -30,6 +30,11 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <ClerkProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      // This site shares ONE Clerk app + ONE D1 user database with
+      // mandalacodes.com, so it is the same account on both domains. We do NOT
+      // use Clerk satellite domains (a paid feature) — each domain signs in
+      // independently against the same user pool. See mandalacodes
+      // AccountProvider for the full rationale.
       appearance={{
         variables: {
           colorPrimary: '#8c6b3f',         // bronze-600

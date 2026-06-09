@@ -76,6 +76,10 @@ export const LAUNCH_FLAGS = {
    *   - App.tsx (ClerkProvider, /account routes)
    *   - CartContext.tsx (D1 sync when signed in)
    *   - components/account/* (all account UI)
+   *
+   * Enabled 2026-06-09: shared Clerk app (enabling-oyster-2) across
+   * adrianrasmussen.com + mandalacodes.com, shared D1 (adrian-website).
+   * Keys live in Infisical (dev) and Cloudflare Pages env (prod).
    */
-  accounts: false,
+  accounts: true,
 };
