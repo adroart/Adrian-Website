@@ -222,17 +222,17 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
         <p className="font-sans italic text-wood-600 text-xl mt-4 max-w-[30ch]">{data.subtitle}</p>
 
         {/* Contact sheet: everything inside, at a glance. */}
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mt-12">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-5 mt-12">
           {data.pieces.map((p) => {
-            const t = pieceImg(p, 120, 'fill');
+            const t = pieceImg(p, 320, 'fill');
             return (
-              <div key={p.id} className="flex flex-col items-center text-center gap-1.5">
+              <div key={p.id} className="flex flex-col items-center text-center gap-2">
                 {t ? (
-                  <img src={t} alt="" className="w-12 h-12 object-cover border border-wood-200" loading="lazy" />
+                  <img src={t} alt="" className="w-full aspect-square object-cover border border-wood-200" loading="lazy" />
                 ) : (
-                  <div className="w-12 h-12 border border-wood-200 bg-paper-100" />
+                  <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
                 )}
-                <span className="font-label text-[9px] uppercase tracking-[0.14em] text-wood-600 leading-tight">
+                <span className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-600 leading-tight">
                   {p.recommended && <span className="text-bronze-600">★ </span>}
                   {p.name}
                 </span>
