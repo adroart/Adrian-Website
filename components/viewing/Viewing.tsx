@@ -24,8 +24,12 @@ import { SAMPLE_VIEWING } from './sampleViewing';
 
 const UL_BASE = 'adrian-website/creations/multidimensional-art/universal-language';
 
-/** Build a Cloudinary URL for a piece, tolerating a missing image. */
+/**
+ * Resolve a piece's image. The engine supplies a full Cloudinary delivery URL
+ * (use it as-is); fall back to building one from a bare public id or the code.
+ */
 function pieceImg(p: ViewingPiece, w: number, crop: 'fit' | 'fill' = 'fit'): string | undefined {
+  if (p.image && /^https?:\/\//.test(p.image)) return p.image;
   const id = p.image || (p.code ? `${UL_BASE}/universal-language-${p.code}` : undefined);
   return id ? img(id, { w, crop }) : undefined;
 }
