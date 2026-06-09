@@ -1,5 +1,13 @@
 export type AvailabilityStatus = 'READY_TO_SHIP' | 'MADE_TO_ORDER' | 'SOLD';
 
+// ── Provenance (permanent works record) ───────────────────────────
+
+export interface ProvenanceEvent {
+  year: string;
+  event: 'created' | 'exhibited' | 'sold' | 'commissioned' | 'restored' | 'transferred';
+  note?: string;
+}
+
 export type VariantAvailability = 'IN_STOCK' | 'MADE_TO_ORDER';
 
 export interface SizeVariant {
@@ -56,6 +64,10 @@ export interface Artwork {
   // — illumination still gated by size tier). Use this to hide add-ons that
   // don't apply to a piece (e.g. jewelry shouldn't offer a wood frame).
   availableAddOns?: Array<'crystals' | 'woodFrame' | 'illumination'>;
+
+  // Provenance — permanent record displayed on /works/:id
+  provenance?: ProvenanceEvent[];
+  createdLocation?: string;
 }
 
 export interface Collection {

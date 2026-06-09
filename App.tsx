@@ -18,6 +18,8 @@ const IlluminatedWorks = lazy(() => import('./components/IlluminatedWorks'));
 const OracleGateway = lazy(() => import('./components/OracleGateway'));
 const Welcome = lazy(() => import('./components/Welcome'));
 const NotFound = lazy(() => import('./components/NotFound'));
+const WorksPage = lazy(() => import('./components/WorksPage'));
+const QRIndex = lazy(() => import('./components/QRIndex'));
 const OrderConfirmed = lazy(() => import('./components/OrderConfirmed'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const Terms = lazy(() => import('./components/Terms'));
@@ -141,6 +143,8 @@ const AppInner: React.FC = () => {
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/invoice/:token" element={<PublicInvoice />} />
+            <Route path="/works/:id" element={<WorksPage />} />
+            <Route path="/qr" element={<QRIndex />} />
             <Route path="/atlas" element={<AtlasExternalRedirect />} />
             <Route path="/atlas/*" element={<AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
