@@ -28,7 +28,9 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
+const Viewing = lazy(() => import('./components/viewing/Viewing'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
 const OrdersList = lazy(() => import('./components/account/OrdersList'));
 const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
@@ -87,6 +89,8 @@ const AppInner: React.FC = () => {
   const isWelcome = location.pathname === '/welcome';
   const isAdmin = location.pathname.startsWith('/admin');
   const isInvoice = location.pathname.startsWith('/invoice/');
+  const isViewing = location.pathname.startsWith('/viewing/');
+  const isChromeless = isInvoice || isViewing;
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
@@ -95,8 +99,8 @@ const AppInner: React.FC = () => {
   return (
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      {!isInvoice && <GenerativeBackground pathname={location.pathname} theme={theme} />}
-      {!isWelcome && !isAdmin && !isInvoice && <Navigation theme={theme} />}
+      {!isChromeless && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isWelcome && !isAdmin && !isChromeless && <Navigation theme={theme} />}
 
       <main id="main-content">
         <div key={location.pathname} className="route-fade-in">
@@ -142,9 +146,11 @@ const AppInner: React.FC = () => {
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
+            <Route path="/admin/viewings" element={<AdminViewings />} />
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
             <Route path="/qr" element={<QRIndex />} />
+            <Route path="/viewing/:token" element={<Viewing />} />
             <Route path="/atlas" element={<AtlasExternalRedirect />} />
             <Route path="/atlas/*" element={<AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
@@ -156,7 +162,7 @@ const AppInner: React.FC = () => {
         </div>
       </main>
 
-      {!isWelcome && !isAdmin && !isInvoice && <Footer />}
+      {!isWelcome && !isAdmin && !isChromeless && <Footer />}
       <CartDrawer />
       <MiniPlayer />
     </div>

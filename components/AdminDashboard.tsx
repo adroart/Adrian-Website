@@ -31,6 +31,11 @@ const TOOLS: AdminTool[] = [
     description: 'Create commission invoices, manage reusable payment options, and copy printable client links.',
     href: '/admin/invoices',
   },
+  {
+    title: 'Viewings',
+    description: 'Build a private art viewing for a collector. Compute their chart, curate the pieces, write the reasons, and preview the artifact they receive.',
+    href: '/admin/viewings',
+  },
 ];
 
 const COMING_SOON: AdminTool[] = [
