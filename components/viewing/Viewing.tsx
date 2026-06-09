@@ -87,12 +87,12 @@ const PieceCard: React.FC<{
         )}
       </figure>
 
-      <div className="mt-3">
-        {/* The label row spans the full art width; the star sits at its right
-            end (its original spot), separate from the title. */}
+      <div className="mt-[5px]">
+        {/* The label row spans the full art width, 5px under the art; the star
+            sits at its right end (its original spot), separate from the title. */}
         <div className="flex items-baseline justify-between gap-4 w-full">
-          <Label>Universal Language · No. {piece.code}</Label>
-          {piece.recommended && <span className="text-bronze-600 text-sm leading-none" aria-label="recommended">★</span>}
+          <Label className="!text-[13px] sm:!text-[14px] tracking-[0.18em]">Universal Language · No. {piece.code}</Label>
+          {piece.recommended && <span className="text-bronze-600 text-lg leading-none" aria-label="recommended">★</span>}
         </div>
 
         <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
