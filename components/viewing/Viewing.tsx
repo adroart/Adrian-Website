@@ -40,14 +40,14 @@ const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ ch
   <span className={`font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600 ${className}`}>{children}</span>
 );
 
-/** A scannable row of evocative keywords. Pure art language, no system. */
+/** A quiet eyebrow row of keywords. Small, tight, muted — not a headline. */
 const Keywords: React.FC<{ words?: string[] }> = ({ words }) => {
   if (!words || words.length === 0) return null;
   return (
-    <p className="font-label text-[14px] sm:text-[15px] uppercase tracking-[0.16em] text-bronze-600 my-4 leading-relaxed">
+    <p className="font-label text-[10px] uppercase tracking-[0.14em] text-wood-500 mt-2 leading-[1.7]">
       {words.map((w, i) => (
         <React.Fragment key={w}>
-          {i > 0 && <span className="text-bronze-500 px-2">·</span>}
+          {i > 0 && <span className="text-wood-300 px-1.5">·</span>}
           {w}
         </React.Fragment>
       ))}
@@ -95,13 +95,13 @@ const PieceCard: React.FC<{
           {piece.recommended && <span className="text-bronze-600 text-sm leading-none" aria-label="recommended">★</span>}
         </div>
 
-        <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-1.5 leading-tight">{piece.name}</h2>
+        <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
 
-        {/* Keywords full width (match the art), then the reading. The glance
-            line is dropped — it duplicated the first sentence. */}
+        {/* Keywords sit tight under the title (quiet eyebrow); a clear gap then
+            separates them from the reading body. The glance line is dropped. */}
         <Keywords words={piece.keywords} />
         {firstPara && (
-          <p className="font-sans text-wood-800 text-base leading-relaxed mt-3 whitespace-pre-line">{firstPara}</p>
+          <p className="font-sans text-wood-800 text-base leading-relaxed mt-6 whitespace-pre-line">{firstPara}</p>
         )}
         {restParas.length > 0 && expanded && (
           <p className="font-sans text-wood-800 text-base leading-relaxed mt-4 whitespace-pre-line">
