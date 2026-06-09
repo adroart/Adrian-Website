@@ -62,9 +62,15 @@ const PieceCard: React.FC<{
   onToggleSelect: () => void;
 }> = ({ piece, selected, onToggleSelect }) => {
   const hero = pieceImg(piece, 1400, 'fit');
+  const [expanded, setExpanded] = useState(false);
+
+  // First paragraph by default; "Read more" reveals the other two.
+  const paragraphs = (piece.description || '').split('\n\n').filter(Boolean);
+  const firstPara = paragraphs[0] || '';
+  const restParas = paragraphs.slice(1);
 
   return (
-    <article className="max-w-3xl mx-auto px-6 py-16 sm:py-20">
+    <article id={`piece-${piece.code}`} className="max-w-3xl mx-auto px-6 py-16 sm:py-20 scroll-mt-6">
       {/* The artwork dominates. Nothing sits on top of it. */}
       <figure className="m-0">
         {hero ? (
@@ -81,21 +87,34 @@ const PieceCard: React.FC<{
         )}
       </figure>
 
-      <div className="mt-6">
-        <div className="flex items-baseline justify-between gap-4">
-          <Label>Universal Language · No. {piece.code}</Label>
-          {piece.recommended && <span className="text-bronze-600 text-sm leading-none" aria-label="recommended">★</span>}
-        </div>
+      <div className="mt-4">
+        <Label>Universal Language · No. {piece.code}</Label>
 
-        <h2 className="font-display text-3xl sm:text-4xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
-        <p className="font-sans italic text-wood-600 text-lg leading-relaxed mt-2 max-w-prose">{piece.glance}</p>
+        {/* Title spans the art width, slightly bigger, star in front. */}
+        <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-1.5 leading-tight">
+          {piece.recommended && <span className="text-bronze-600 mr-2" aria-label="recommended">★</span>}
+          {piece.name}
+        </h2>
 
-        {/* Keywords + the full 5-sentence reading. Shown in full, no clamp. */}
+        {/* Keywords full width (match the art), then the reading. The glance
+            line is dropped — it duplicated the first sentence. */}
         <Keywords words={piece.keywords} />
-        {piece.description && (
-          <p className="font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line">
-            {piece.description}
+        {firstPara && (
+          <p className="font-sans text-wood-800 text-base leading-relaxed mt-3 whitespace-pre-line">{firstPara}</p>
+        )}
+        {restParas.length > 0 && expanded && (
+          <p className="font-sans text-wood-800 text-base leading-relaxed mt-4 whitespace-pre-line">
+            {restParas.join('\n\n')}
           </p>
+        )}
+        {restParas.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors mt-3"
+          >
+            {expanded ? 'Read less' : 'Read more'}
+          </button>
         )}
 
         {/* Matching bordered buttons: Select (fills when chosen) + Go deeper. */}
@@ -205,22 +224,30 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
         </h1>
         <p className="font-sans italic text-wood-600 text-xl mt-4 max-w-[34ch]">{data.subtitle}</p>
 
-        {/* Contact sheet: every piece at a glance, denser, recommended starred. */}
+        {/* Contact sheet: click a piece to jump to its card below. */}
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-x-4 gap-y-6 mt-10">
           {data.pieces.map((p) => {
             const t = pieceImg(p, 360, 'fill');
             return (
-              <div key={p.id} className="flex flex-col gap-1.5">
+              <a
+                key={p.id}
+                href={`#piece-${p.code}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(`piece-${p.code}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="group flex flex-col gap-1.5 cursor-pointer"
+              >
                 {t ? (
-                  <img src={t} alt="" className="w-full aspect-square object-cover border border-wood-200" loading="lazy" />
+                  <img src={t} alt="" className="w-full aspect-square object-cover border border-wood-200 group-hover:border-bronze-500 transition-colors" loading="lazy" />
                 ) : (
                   <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
                 )}
-                <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-600 leading-tight">
+                <span className="font-label text-[9px] uppercase tracking-[0.12em] text-wood-600 group-hover:text-bronze-700 leading-tight transition-colors">
                   {p.recommended && <span className="text-bronze-600">★ </span>}
                   {p.name}
                 </span>
-              </div>
+              </a>
             );
           })}
         </div>

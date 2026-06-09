@@ -1,14 +1,12 @@
 /**
- * Michael's private viewing — the live data.
- * Readings are the full ## CODE block (keywords + all 3 paragraphs) from
- * mandalacodes/oracle/cards/NN.md, verbatim. No I Ching, no rewriting.
- * Images pull from the linked site (adrianrasmussen.com Cloudinary).
+ * Michael's private viewing — live data.
+ * Readings: full ## CODE block from mandalacodes/oracle/cards/NN.md, verbatim.
  */
 import type { ViewingData } from './viewingTypes';
 
 export const MICHAEL_VIEWING: ViewingData = {
   "recipientName": "Michael",
-  "subtitle": "A handful of pieces I chose with you in mind.",
+  "subtitle": "A handful of pieces I chose aligned with your intentions.",
   "pieces": [
     {
       "id": "communion",
@@ -30,9 +28,9 @@ export const MICHAEL_VIEWING: ViewingData = {
       "recommended": true
     },
     {
-      "id": "the-holy-of-holies",
+      "id": "celestial-remembrance",
       "code": 61,
-      "name": "The Holy of Holies",
+      "name": "Celestial Remembrance",
       "glance": "A question sits under your skull and it has only one word.",
       "keywords": [
         "The Question Why",
@@ -228,7 +226,7 @@ export const MICHAEL_VIEWING: ViewingData = {
         "reason": ""
       },
       {
-        "pieceId": "the-holy-of-holies",
+        "pieceId": "celestial-remembrance",
         "reason": ""
       },
       {
