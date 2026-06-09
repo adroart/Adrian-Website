@@ -56,6 +56,10 @@ const PieceCard: React.FC<{
   onToggleSelect: () => void;
 }> = ({ piece, selected, onToggleSelect }) => {
   const hero = pieceImg(piece, 1400, 'fit');
+  const [expanded, setExpanded] = useState(false);
+  // Consolidated by default: the description is clamped to a few lines with an
+  // inline "Read more"; the full essence is one tap away, not a separate state.
+  const longDescription = (piece.description || '').length > 220;
 
   return (
     <article className="max-w-3xl mx-auto px-6 py-16 sm:py-20">
@@ -84,11 +88,26 @@ const PieceCard: React.FC<{
         <h2 className="font-display text-3xl sm:text-4xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
         <p className="font-sans italic text-wood-600 text-lg leading-relaxed mt-2 max-w-prose">{piece.glance}</p>
 
-        {/* The energy is open by default — keywords + the full description, with
-            room to feel the piece. Art first, no esoteric vocabulary. */}
+        {/* Keywords + a consolidated description: clamped to a few lines, with
+            an inline "Read more" that opens the full essence. Art first. */}
         <Keywords words={piece.keywords} />
         {piece.description && (
-          <p className="font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line">{piece.description}</p>
+          <p
+            className={`font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line ${
+              expanded || !longDescription ? '' : 'line-clamp-3'
+            }`}
+          >
+            {piece.description}
+          </p>
+        )}
+        {longDescription && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors mt-2"
+          >
+            {expanded ? 'Read less' : 'Read more'}
+          </button>
         )}
 
         {/* Quiet actions + the deeper pull. No buttons. */}
