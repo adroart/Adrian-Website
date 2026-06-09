@@ -84,4 +84,10 @@ export interface ViewingData {
   pieces: ViewingPiece[];
   /** The closing recommendation, if the artist wrote one. */
   recommendation?: ViewingRecommendation;
+  /**
+   * When true, append a quiet "The rest of the collection" grid of the deck's
+   * other codes at the end — for open/anonymous viewings, not ones personalized
+   * for a named collector. Hidden by default.
+   */
+  showRestOfCollection?: boolean;
 }

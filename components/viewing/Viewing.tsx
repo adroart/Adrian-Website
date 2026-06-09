@@ -21,17 +21,19 @@ import { useParams } from 'react-router-dom';
 import { img } from '../../utils/cloudinary';
 import type { ViewingData, ViewingPiece } from './viewingTypes';
 import { SAMPLE_VIEWING } from './sampleViewing';
-
-const UL_BASE = 'adrian-website/creations/multidimensional-art/universal-language';
+import { UL_COVER_BY_CODE } from './ulCovers';
 
 /**
- * Resolve a piece's image. The engine supplies a full Cloudinary delivery URL
- * (use it as-is); fall back to building one from a bare public id or the code.
+ * Resolve a piece's image. Pull from the LINKED SITE first — the Universal
+ * Language cover for this code in Adrian's own Cloudinary cloud — so the
+ * collector sees the site's photographs, not the engine's. Fall back to an
+ * explicit full URL on the piece, then nothing.
  */
 function pieceImg(p: ViewingPiece, w: number, crop: 'fit' | 'fill' = 'fit'): string | undefined {
+  const siteCover = p.code ? UL_COVER_BY_CODE[p.code] : undefined;
+  if (siteCover) return img(siteCover, { w, crop });
   if (p.image && /^https?:\/\//.test(p.image)) return p.image;
-  const id = p.image || (p.code ? `${UL_BASE}/universal-language-${p.code}` : undefined);
-  return id ? img(id, { w, crop }) : undefined;
+  return undefined;
 }
 
 const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
@@ -179,6 +181,15 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
   const byId = useMemo(() => new Map(data.pieces.map((p) => [p.id, p])), [data.pieces]);
   const chosen = [...selected].map((id) => byId.get(id)).filter(Boolean) as ViewingPiece[];
 
+  // Codes not already featured — the "rest of the collection" grid.
+  const restCodes = useMemo(() => {
+    const shown = new Set(data.pieces.map((p) => p.code));
+    return Object.keys(UL_COVER_BY_CODE)
+      .map(Number)
+      .filter((c) => !shown.has(c))
+      .sort((a, b) => a - b);
+  }, [data.pieces]);
+
   const requestPieces = async () => {
     if (requesting || requested) return;
     // No token (sample / desk preview): nothing to persist, just confirm.
@@ -283,6 +294,37 @@ const Viewing: React.FC<{ data?: ViewingData }> = ({ data: dataProp }) => {
             </p>
           )}
           <p className="font-display italic text-wood-600 text-xl mt-2">— {data.recommendation.signature || 'Adrian'}</p>
+        </section>
+      )}
+
+      {/* The rest of the collection — only for open/anonymous viewings. */}
+      {data.showRestOfCollection && (
+        <section className="max-w-3xl mx-auto px-6 py-16 border-t border-wood-200">
+          <Label className="text-[11px] tracking-[0.32em]">The rest of the collection</Label>
+          <p className="font-sans italic text-wood-600 text-base mt-3 mb-8 max-w-prose">
+            The full Universal Language. Tap any piece to read its code.
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+            {restCodes.map((code) => {
+              const cover = UL_COVER_BY_CODE[code];
+              return (
+                <a
+                  key={code}
+                  href={`https://mandalacodes.com/universal-language/${code}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block"
+                >
+                  {cover ? (
+                    <img src={img(cover, { w: 240, crop: 'fill' })} alt="" className="w-full aspect-square object-cover border border-wood-200 group-hover:border-bronze-500 transition-colors" loading="lazy" />
+                  ) : (
+                    <div className="w-full aspect-square border border-wood-200 bg-paper-100" />
+                  )}
+                  <span className="font-label text-[9px] uppercase tracking-[0.14em] text-wood-500 group-hover:text-bronze-700 block mt-1.5">No. {code}</span>
+                </a>
+              );
+            })}
+          </div>
         </section>
       )}
 
