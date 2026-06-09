@@ -55,7 +55,6 @@ const PieceCard: React.FC<{
   selected: boolean;
   onToggleSelect: () => void;
 }> = ({ piece, selected, onToggleSelect }) => {
-  const [open, setOpen] = useState(false);
   const hero = pieceImg(piece, 1400, 'fit');
 
   return (
@@ -76,7 +75,6 @@ const PieceCard: React.FC<{
         )}
       </figure>
 
-      {/* Skim layer: identity, name, one essence line. */}
       <div className="mt-6">
         <div className="flex items-baseline justify-between gap-4">
           <Label>Universal Language · No. {piece.code}</Label>
@@ -86,15 +84,15 @@ const PieceCard: React.FC<{
         <h2 className="font-display text-3xl sm:text-4xl text-wood-900 mt-2 leading-tight">{piece.name}</h2>
         <p className="font-sans italic text-wood-600 text-lg leading-relaxed mt-2 max-w-prose">{piece.glance}</p>
 
-        {/* Two quiet, text-only actions. No buttons. */}
-        <div className="flex items-center gap-6 mt-5">
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors"
-          >
-            {open ? 'Close' : 'Read more'}
-          </button>
+        {/* The energy is open by default — keywords + the full description, with
+            room to feel the piece. Art first, no esoteric vocabulary. */}
+        <Keywords words={piece.keywords} />
+        {piece.description && (
+          <p className="font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3 whitespace-pre-line">{piece.description}</p>
+        )}
+
+        {/* Quiet actions + the deeper pull. No buttons. */}
+        <div className="flex items-center gap-6 mt-6 pt-5 border-t border-wood-200">
           <button
             type="button"
             onClick={onToggleSelect}
@@ -104,29 +102,18 @@ const PieceCard: React.FC<{
           >
             {selected ? '✓ Selected' : 'Select'}
           </button>
-        </div>
-      </div>
-
-      {/* Energy layer: a taste, art first. Keywords, a short plain description,
-          and a quiet pull to go deeper. No esoteric vocabulary here. */}
-      {open && (
-        <div className="mt-10 pt-8 border-t border-wood-200 motion-safe:animate-fade-in">
-          <Keywords words={piece.keywords} />
-          {piece.description && (
-            <p className="font-sans text-wood-800 text-base leading-relaxed max-w-prose mt-3">{piece.description}</p>
-          )}
           {piece.pieceUrl && (
             <a
               href={piece.pieceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors border-t border-wood-200 pt-5 mt-8"
+              className="font-label text-[11px] uppercase tracking-[0.18em] text-wood-600 hover:text-bronze-700 underline underline-offset-4 decoration-wood-200 transition-colors"
             >
-              Go deeper into this piece
+              Go deeper
             </a>
           )}
         </div>
-      )}
+      </div>
     </article>
   );
 };

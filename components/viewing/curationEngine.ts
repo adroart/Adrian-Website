@@ -11,16 +11,22 @@
  */
 import type { ViewingPiece } from './viewingTypes';
 
-const UL = '/creations/multidimensional-art/universal-language';
-
-/** A sphere as the engine returns it — we keep only number, name, and a taste. */
+/** A sphere as the engine returns it — number, name, full essence + keywords. */
 export interface EngineSphere {
   gate: number;
   sphere: string;
   cardName?: string;
   essence?: string;
+  keywords?: string[];
   image?: string;
   thumb?: string;
+}
+
+const UL_DEEP = 'https://mandalacodes.com/universal-language';
+
+/** The "Go deeper" link for a code — the full card on Mandala Codes. */
+export function deepLink(code: number): string {
+  return `${UL_DEEP}/${code}`;
 }
 
 export interface EngineResult {
@@ -51,17 +57,6 @@ export const SPHERE_KEYS = [
 export type SphereKey = (typeof SPHERE_KEYS)[number];
 
 /**
- * Trim the engine's full essence down to a plain-voice taste (2-3 sentences),
- * so the curator starts from something art-shaped rather than the whole reading.
- * The curator edits this in the desk; it is never shipped raw.
- */
-export function tasteFromEssence(essence?: string): string {
-  if (!essence) return '';
-  const sentences = essence.replace(/\s+/g, ' ').trim().split(/(?<=[.?!])\s+/);
-  return sentences.slice(0, 3).join(' ');
-}
-
-/**
  * Call the recommendation engine. Returns the spheres (meaning only) or throws.
  * baseUrl lets the desk hit production Mandala Codes or a local dev instance.
  */
@@ -85,24 +80,33 @@ export async function fetchChart(
     sphere: p.sphere,
     cardName: p.cardName,
     essence: p.essence,
+    keywords: Array.isArray(p.keywords) ? p.keywords : [],
     image: p.image,
     thumb: p.thumb,
   }));
   return { clientName: data.clientName || body.clientName || '', spheres };
 }
 
-/** Map one engine sphere to a draft ViewingPiece — art-first, esoterica dropped. */
+/**
+ * Map one engine sphere to a draft ViewingPiece — art-first, esoterica dropped.
+ * Auto-filled from the engine: the glance is the first sentence, the description
+ * is the FULL essence (more room to feel the piece), keywords are the real
+ * corpus set, and "Go deeper" points to the full card on Mandala Codes. All
+ * editable in the desk, but pre-filled so the curator rarely needs to.
+ */
 export function sphereToPiece(s: EngineSphere): ViewingPiece {
+  const essence = (s.essence || '').replace(/\s+/g, ' ').trim();
+  const firstSentence = essence.split(/(?<=[.?!])\s+/)[0] || '';
   return {
     id: `code-${s.gate}`,
     code: s.gate,
     name: s.cardName || `Code ${s.gate}`,
-    glance: tasteFromEssence(s.essence).split(/(?<=[.?!])\s+/)[0] || '',
-    keywords: [],
-    description: tasteFromEssence(s.essence),
+    glance: firstSentence,
+    keywords: s.keywords || [],
+    description: essence,
     image: s.image,
     thumb: s.thumb,
-    pieceUrl: UL,
+    pieceUrl: deepLink(s.gate),
     recommended: false,
   };
 }

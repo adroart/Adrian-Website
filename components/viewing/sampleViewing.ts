@@ -11,7 +11,7 @@
  */
 import type { ViewingData } from './viewingTypes';
 
-const UL = '/creations/multidimensional-art/universal-language';
+const deep = (code: number) => `https://mandalacodes.com/universal-language/${code}`;
 
 export const SAMPLE_VIEWING: ViewingData = {
   recipientName: 'Daniel',
@@ -25,7 +25,7 @@ export const SAMPLE_VIEWING: ViewingData = {
       keywords: ['Origination', 'Renewal', 'First Movement'],
       description:
         'This piece holds the energy of a beginning, before anything has taken shape. It is the creative impulse in its purest form, made for the joy of making rather than to answer anyone. There is a quiet power in it, the kind that starts something new and trusts where it leads.',
-      pieceUrl: UL,
+      pieceUrl: deep(1),
       recommended: true,
     },
     {
@@ -36,7 +36,7 @@ export const SAMPLE_VIEWING: ViewingData = {
       keywords: ['Strength', 'Composure', 'Aligned Force'],
       description:
         'A piece about power that has learned patience. The strength here is fully present, but it holds itself, moving with the grain of things instead of against them. It carries the feeling of a force that no longer needs to prove itself, which is its own kind of presence in a room.',
-      pieceUrl: UL,
+      pieceUrl: deep(34),
       recommended: true,
     },
     {
@@ -47,7 +47,7 @@ export const SAMPLE_VIEWING: ViewingData = {
       keywords: ['Gathering', 'Belonging', 'Shared Ground'],
       description:
         'This piece is about what draws people together. It speaks to the natural pull of belonging, the way the right things gather around a center without being forced. It holds a warmth that makes a space feel shared rather than ruled.',
-      pieceUrl: UL,
+      pieceUrl: deep(45),
     },
     {
       id: 'cipher-of-knowledge',
@@ -57,7 +57,7 @@ export const SAMPLE_VIEWING: ViewingData = {
       keywords: ['Breakthrough', 'Insight', 'The Flash of Knowing'],
       description:
         'A piece about the moment something finally breaks through. The insight here does not come from pushing harder, but from the quiet that opens once the strain lets go. It carries the charge of a sudden, clear knowing.',
-      pieceUrl: UL,
+      pieceUrl: deep(43),
     },
     {
       id: 'ancestors-bloom',
@@ -67,7 +67,7 @@ export const SAMPLE_VIEWING: ViewingData = {
       keywords: ['Abundance', 'Radiance', 'The Uncompromised Life'],
       description:
         'This piece holds a sense of abundance that asks to be shared rather than kept. It is a light that opens upward in every direction, the feeling of a life that stops bargaining and simply gives. There is generosity in it, and an ease.',
-      pieceUrl: UL,
+      pieceUrl: deep(14),
     },
   ],
   recommendation: {
