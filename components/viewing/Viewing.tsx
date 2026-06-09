@@ -87,14 +87,15 @@ const PieceCard: React.FC<{
         )}
       </figure>
 
-      <div className="mt-4">
-        <Label>Universal Language · No. {piece.code}</Label>
+      <div className="mt-3">
+        {/* The label row spans the full art width; the star sits at its right
+            end (its original spot), separate from the title. */}
+        <div className="flex items-baseline justify-between gap-4 w-full">
+          <Label>Universal Language · No. {piece.code}</Label>
+          {piece.recommended && <span className="text-bronze-600 text-sm leading-none" aria-label="recommended">★</span>}
+        </div>
 
-        {/* Title spans the art width, slightly bigger, star in front. */}
-        <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-1.5 leading-tight">
-          {piece.recommended && <span className="text-bronze-600 mr-2" aria-label="recommended">★</span>}
-          {piece.name}
-        </h2>
+        <h2 className="font-display text-4xl sm:text-5xl text-wood-900 mt-1.5 leading-tight">{piece.name}</h2>
 
         {/* Keywords full width (match the art), then the reading. The glance
             line is dropped — it duplicated the first sentence. */}
