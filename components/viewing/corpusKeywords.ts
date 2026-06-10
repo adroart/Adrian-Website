@@ -1,0 +1,78 @@
+/**
+ * GENERATED FILE — do not edit by hand.
+ * Source: mandalacodes/data/oracle-corpus.json (the canonical readings).
+ * Regenerate: node scripts/sync-corpus-keywords.mjs
+ *
+ * The energy keywords of each of the 64 codes, keyed by code number. Viewing
+ * content reads keywords from here by code so they always match the reading and
+ * can never drift into hand-typed prose fragments.
+ */
+export const CORPUS_KEYWORDS: Record<number, string[]> = {
+  1: ["Originating Force","Pure Potential","Creative Impulse","Renewal","Genesis","The Tempering"],
+  2: ["Surrender","Deep Listening","Magnetic Stillness","Inner Compass","Yielding","Receptive Devotion"],
+  3: ["Difficult Birth","Emergence","Chaos as Portal","Ordering Force","Mutation","Beginnings"],
+  4: ["Premature Certainty","Holding the Question","Understanding","Discrimination","Veiled Knowing","The Unseeing Mind"],
+  5: ["Sacred Waiting","Natural Rhythm","Trust in Timing","The Nourished Pause","Ripening","Presence"],
+  6: ["Creative Friction","Opposing Forces","Emotional Gatekeeper","Alchemy of Conflict","The Harmonious Meeting","Peace Through Tension"],
+  7: ["Hidden Center","Quiet Authority","Invisible Structure","Leading Through Virtue","The Power Behind the Throne"],
+  8: ["Authentic Expression","Following Your Own Current","The Courage to Be Different","Natural Affinity","Unique Contribution"],
+  9: ["Patient Accumulation","Small Acts, Large Power","Sustained Attention","The Grove Fills Before the Rain","Groove and Momentum"],
+  10: ["Ease in Your Own Nature","The Search That Exhausts Itself","Walking Without Provoking","Identity as Ground","Self-Love","Divine Laziness"],
+  11: ["Inner Vision","Heaven and Earth Meeting","Perception Unfiltered","Peace as Natural Order","Archetypal Imagination"],
+  12: ["Sacred Silence","The Bud Before the Petal","Waiting With Integrity","The Stop Before the New","Discerning What Is Real"],
+  13: ["Deep Witnessing","Held Memory","Fellowship Through Fire","The Space That Hears","Collective Processing"],
+  14: ["Fire in Alignment","Authentic Harvest","Power Freely Given","The Uncompromised Life","Abundance Through Purpose"],
+  15: ["The Mountain Inside the Earth","Ordinary as Sacred","Slowing to Earth's Pulse","Concealed Strength","The Extraordinary Hidden in Tuesday"],
+  16: ["Thunder Breaking Through","The First Committed Note","Long Practice Erupting","Enthusiasm as Force","Commitment Draws Help"],
+  17: ["Seeing the Pattern Early","Following What Is Actually Moving","Vision Without Grip","The Lake Beneath Thunder","Direction Through Alignment"],
+  18: ["Clearing What Festers","The Work of Correction","Rising from Decay","Earned Wholeness","Integrity Under Pressure"],
+  19: ["The Approach of Something Larger","Sensitivity as Perception","Moving from Need to Union","The Future Human Being","Sacrifice as Interdependence"],
+  20: ["Contemplative Seeing","Sacred Breath","Present Moment","Divine Relaxation","Incarnating Consciousness"],
+  21: ["Decisive Action","Noble Service","Surrender to Authority","Biting Through","Chivalric Courage","Territory and Trust"],
+  22: ["Grace Under Pressure","The Akashic Record","Redemption Through Suffering","Emotional Accountability","Involution of the Divine","The Milk of Human Kindness"],
+  23: ["Stripping Away","Precise Speech","Earned Simplicity","The Middle Way","Alchemical Transmission"],
+  24: ["The Return","Resting in the Gap","Compulsive Cycles","Creative Pause","Quantum Leap","Exiting the Wheel"],
+  25: ["The Sacred Wound","Innocence Before the Story","Love Without Discrimination","Unwinding Constriction","The Grail Hidden in the Wound"],
+  26: ["Sacred Trickster","Effortless Accumulation","Heart Marketing","The Light Touch","Invisible Power"],
+  27: ["Nourishment","The Flow of Giving","Communal Bond","Altruistic Intelligence","Life Feeding Life"],
+  28: ["Facing the Dark Side","Total Engagement","Deathless Presence","The Game Worth Playing","Dissolution into Mystery"],
+  29: ["Total Commitment","Leaping Into the Abyss","Devotional Fire","The Business of Luck","Following Through"],
+  30: ["Clinging Fire","Devotional Longing","Surrender to Experience","Purification","Ecstatic Release","The Final Desire"],
+  31: ["Magnetic Influence","Voice of the Collective","The Leap Beyond Words","True Humility","Sounding Truth"],
+  32: ["Enduring Through Change","Ancestral Reverence","The Living Chain","Grafting New onto Old","Duration as Practice","Sacred Continuity"],
+  33: ["Strategic Retreat","Memory and Forgetting","The Witnessing Mind","Sacred Withdrawal","Divine Closure"],
+  34: ["Contained Force","Responsive Strength","Primal Vitality","Aligned Action","The Body's Intelligence"],
+  35: ["Hunger Transforming","Adventure of the Heart","Wormhole Through Form","Progress from Within","Boundless Openness"],
+  36: ["Dark Night of the Soul","Earned Compassion","Pressure into Light","Emotional Depth","Becoming Human"],
+  37: ["Family Alchemy","Sacred Belonging","Yin-Yang Balance","Heartfelt Giving","Tenderness","Collective Bond"],
+  38: ["Purposeful Struggle","Indomitable Will","The Warrior's Path","Surrender into Victory","Sacred Fight"],
+  39: ["Pressure as Catalyst","Friction and Fire","The Warrior's Path","Creative Explosion","Provocation Transformed","Liberation Through Resistance"],
+  40: ["Deliverance","Sacred Aloneness","True Will","Effortless Resolve","Surrender to Flow","The Lost Art of Rest"],
+  41: ["The Held Breath Before the Dive","Beginning Itself","Primal Pressure","The Step Off the Edge","What Arrives Before It Has a Name"],
+  42: ["Completion Without Grasping","The Full Arc","Release as Increase","Life as Punchline","Natural Cycles","Dying into Celebration"],
+  43: ["Breakthrough","Inner Listening","Creative Rebellion","The Flash of Knowing","Destiny Turning"],
+  44: ["Human Fractals","Pattern Recognition","Ancestral Memory","Collective Orchestration","Coming to Meet","Synarchic Emergence"],
+  45: ["Gathering as Power","From Hierarchy to Heterarchy","Synergistic Weaving","The Tribal Bond","Shared Resources","Communion"],
+  46: ["Natural Ascent","Embodied Fortune","Delight in Matter","Serendipity","Luminous Presence"],
+  47: ["Sealed Vessel","Ancestral Pressure","Alchemical Turning","Surrender to Depth","Dimensional Shift"],
+  48: ["Depth of the Unknown","The Inexhaustible Well","Surrender to Not-Knowing","Resourcefulness from Fear","Feminine Wisdom","Drawing from the Void"],
+  49: ["Rupture and Renewal","Genetic Fire","Revolutionary Heart","Rebirth Through Dissolution","Transformative Rejection"],
+  50: ["Sacred Vessel","Refining Fire","Cosmic Order","Self-Organising Harmony","The Cauldron's Work"],
+  51: ["Shock as Portal","Initiative","Creative Courage","Awakening Thunder","Unshakable Presence"],
+  52: ["Stillpoint","Ecological Patience","Restrained Power","Inner Seed","Collective Calm"],
+  53: ["Gradual Unfolding","Organic Expansion","Patient Beginning","Evolutionary Pulse","Superabundant Being"],
+  54: ["Ascending Pressure","The Serpent Path","Grounded Aspiration","Material Alchemy","Hierarchical Transformation","Liquid Prosperity"],
+  55: ["Peak Fullness","The Mutating Wave","Victim into Freedom","Emotional Alchemy","The Dragonfly's Ascent","Untouched Perfection"],
+  56: ["The Wanderer's Fire","Turning Within","Alchemical Pleasure","Divine Intoxication","Enrichment Through Experience","The Necessary End"],
+  57: ["Intuitive Listening","Subtle Penetration","Presence Over Thinking","Frequency Attunement","Softness as Power","The Gentle Wind"],
+  58: ["Joyful Pressure","Aliveness","Seeking Exhausted","Vital Service","The Still Lake","Bliss as Ground"],
+  59: ["Dissolution of Barriers","Raw Intimacy","Genetic Alchemy","Hidden Agenda","The Dispersing Force","Transparency"],
+  60: ["Sacred Constraint","Form as Vessel","Mutation Through Acceptance","The Law That Breaks","Earthbound Magic"],
+  61: ["Inner Pressure","Inspired Knowing","Sacred Mystery","The Question Beneath All Questions","Dissolution into Truth"],
+  62: ["Precision of Speech","Language as Light","Small Exceeding Great","Intelligence of the Heart","Impeccable Expression"],
+  63: ["After Completion","Relentless Questioning","The End of Seeking","Doubt as Doorway","Truth in Every Step"],
+  64: ["Before Completion","The Inner Light Revealing Itself","Chaos as Primal Substance","Imagination as Alchemy","The Moment Before Everything Comes Together"],
+};
+
+/** Keywords for a code, or [] if the code is unknown. */
+export const keywordsForCode = (code: number): string[] => CORPUS_KEYWORDS[code] ?? [];
