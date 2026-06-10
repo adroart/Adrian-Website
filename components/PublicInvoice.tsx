@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { Invoice, InvoicePaymentOption } from './invoices/invoiceTypes';
+import type { Invoice, InvoiceLineItem, InvoicePaymentOption } from './invoices/invoiceTypes';
 import { WISE_REFERRAL_URL, formatMoney, isWiseMethod, methodLabel } from './invoices/invoiceUtils';
 
 async function readInvoice(token: string): Promise<Invoice> {
@@ -39,6 +39,32 @@ const PublicInvoice: React.FC = () => {
       .catch(err => setError(err instanceof Error ? err.message : 'not_found'))
       .finally(() => setLoading(false));
   }, [token]);
+
+  // Buyer-selected variant (size) per line item index. Defaults to variant 0.
+  const [variantChoice, setVariantChoice] = useState<Record<number, number>>({});
+
+  // The effective amount for a line: the chosen variant's price, else its base.
+  const lineAmount = (item: InvoiceLineItem, index: number): number => {
+    if (item.variants && item.variants.length > 0) {
+      const v = item.variants[variantChoice[index] ?? 0] || item.variants[0];
+      return v.amountCents;
+    }
+    return item.amountCents;
+  };
+
+  // Live totals: if any line has variants, recompute from the chosen prices so
+  // the displayed Total / Due today follow the buyer's size pick. Otherwise use
+  // the stored totals unchanged (no behaviour change for normal invoices).
+  const hasVariants = !!invoice?.lineItems.some((i) => i.variants && i.variants.length > 0);
+  const liveSubtotal = invoice
+    ? invoice.lineItems.reduce((sum, item, i) => sum + lineAmount(item, i), 0)
+    : 0;
+  const displaySubtotal = hasVariants ? liveSubtotal : (invoice?.subtotalCents ?? 0);
+  const displayTotal = hasVariants ? liveSubtotal : (invoice?.totalCents ?? 0);
+  // Single-payment invoices: due today == total. Multi-step keeps its stored
+  // schedule (variants are intended for single-payment art sales).
+  const singleStep = (invoice?.paymentSchedule.length ?? 0) <= 1;
+  const displayDueToday = hasVariants && singleStep ? liveSubtotal : (invoice?.dueTodayCents ?? 0);
 
   const paymentOptions = invoice?.paymentOptions || [];
   const selectedPayment = paymentOptions[selectedPaymentIndex] || paymentOptions[0] || null;
@@ -189,9 +215,35 @@ const PublicInvoice: React.FC = () => {
                 <div>
                   <p className="font-sans text-sm text-wood-900">{item.description}</p>
                   {item.terms && <p className="font-sans text-xs text-wood-600">{item.terms}</p>}
+                  {item.variants && item.variants.length > 0 && (
+                    <div className="no-print mt-2 flex flex-wrap gap-2">
+                      {item.variants.map((v, vi) => {
+                        const active = (variantChoice[index] ?? 0) === vi;
+                        return (
+                          <button
+                            key={v.label}
+                            type="button"
+                            onClick={() => setVariantChoice((prev) => ({ ...prev, [index]: vi }))}
+                            className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
+                              active
+                                ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
+                                : 'border-wood-300 text-wood-600 hover:border-bronze-500'
+                            }`}
+                          >
+                            {v.label} · {formatMoney(v.amountCents, invoice.currency)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {item.variants && item.variants.length > 0 && (
+                    <p className="print-only hidden font-sans text-xs text-wood-600">
+                      Size: {(item.variants[variantChoice[index] ?? 0] || item.variants[0]).label}
+                    </p>
+                  )}
                 </div>
                 <p className="text-right font-sans text-sm text-wood-900">
-                  {formatMoney(item.amountCents, invoice.currency)}
+                  {formatMoney(lineAmount(item, index), invoice.currency)}
                 </p>
               </div>
             ))}
@@ -199,7 +251,7 @@ const PublicInvoice: React.FC = () => {
           <div className="ml-auto mt-3 w-full max-w-xs space-y-1.5">
             <div className="flex items-center justify-between font-sans text-sm text-wood-700">
               <span>Subtotal</span>
-              <span>{formatMoney(invoice.subtotalCents, invoice.currency)}</span>
+              <span>{formatMoney(displaySubtotal, invoice.currency)}</span>
             </div>
             <div className="flex items-center justify-between font-sans text-sm text-wood-700">
               <span>Shipping</span>
@@ -207,7 +259,7 @@ const PublicInvoice: React.FC = () => {
             </div>
             <div className="flex items-center justify-between border-t border-wood-900 pt-2 font-serif text-2xl text-wood-900">
               <span>Total</span>
-              <span>{formatMoney(invoice.totalCents, invoice.currency)}</span>
+              <span>{formatMoney(displayTotal, invoice.currency)}</span>
             </div>
           </div>
         </section>
@@ -237,7 +289,7 @@ const PublicInvoice: React.FC = () => {
 
           <div className="border border-wood-900 bg-wood-900 p-3 text-paper-50 sm:mt-7">
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-paper-200 font-semibold">Due today</p>
-            <p className="font-serif text-3xl leading-tight">{formatMoney(invoice.dueTodayCents, invoice.currency)}</p>
+            <p className="font-serif text-3xl leading-tight">{formatMoney(displayDueToday, invoice.currency)}</p>
             {currentStep && (
               <p className="mt-1 font-sans text-sm leading-snug text-paper-200">
                 Current step: {currentStep.label}

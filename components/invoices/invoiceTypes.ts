@@ -16,10 +16,23 @@ export interface PaymentPreset {
   updatedAt?: string | null;
 }
 
+/** A selectable option on a line item (e.g. a size), priced per choice. */
+export interface InvoiceLineItemVariant {
+  label: string;        // e.g. "58 cm"
+  amountCents: number;  // the price if this variant is chosen
+}
+
 export interface InvoiceLineItem {
   description: string;
   terms: string;
   amountCents: number;
+  /**
+   * Optional buyer-selectable options (sizes). When present, the public invoice
+   * shows a selector and the chosen variant's price drives the live total. The
+   * stored amountCents is the default (first variant) for variant-less rendering
+   * and for any consumer that ignores variants.
+   */
+  variants?: InvoiceLineItemVariant[];
 }
 
 export interface InvoiceScheduleItem {

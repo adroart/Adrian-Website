@@ -450,6 +450,9 @@ blockquote {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+  /* Hide interactive controls; reveal their printed text equivalents. */
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
 }
 /* Semantic status colors on dark backgrounds */
 .dark .bg-green-50 { background-color: #0a2010; }

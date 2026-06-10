@@ -107,11 +107,19 @@ export function validatePaymentPreset(preset) {
 
 function normalizeLineItems(items) {
   return (Array.isArray(items) ? items : [])
-    .map(item => ({
-      description: cleanString(item.description, 300),
-      terms: cleanString(item.terms, 120),
-      amountCents: cleanCents(item.amountCents),
-    }))
+    .map(item => {
+      const variants = (Array.isArray(item.variants) ? item.variants : [])
+        .map(v => ({ label: cleanString(v.label, 80), amountCents: cleanCents(v.amountCents) }))
+        .filter(v => v.label && v.amountCents > 0)
+        .slice(0, 6);
+      const base = {
+        description: cleanString(item.description, 300),
+        terms: cleanString(item.terms, 120),
+        // A variant line's base amount defaults to the first variant's price.
+        amountCents: variants.length ? variants[0].amountCents : cleanCents(item.amountCents),
+      };
+      return variants.length ? { ...base, variants } : base;
+    })
     .filter(item => item.description && item.amountCents > 0)
     .slice(0, 20);
 }
