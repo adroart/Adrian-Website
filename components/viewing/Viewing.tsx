@@ -44,10 +44,10 @@ const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ ch
 const Keywords: React.FC<{ words?: string[] }> = ({ words }) => {
   if (!words || words.length === 0) return null;
   return (
-    <p className="font-label text-[13px] sm:text-[14px] uppercase tracking-[0.14em] text-bronze-600 mt-2.5 leading-[1.7]">
+    <p className="font-label text-[16px] sm:text-[18px] uppercase tracking-[0.12em] text-bronze-500 mt-3 leading-[1.7]">
       {words.map((w, i) => (
         <React.Fragment key={w}>
-          {i > 0 && <span className="text-bronze-400 px-1.5">·</span>}
+          {i > 0 && <span className="text-bronze-300 px-2">·</span>}
           {w}
         </React.Fragment>
       ))}
