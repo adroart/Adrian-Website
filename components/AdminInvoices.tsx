@@ -40,6 +40,7 @@ const EMPTY_DRAFT: InvoiceDraft = {
   shippingText: 'To be confirmed',
   paymentPresetIds: [],
   notes: '',
+  offerPaymentChoice: false,
 };
 
 const EMPTY_PRESET = {
@@ -106,6 +107,7 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
     shippingText: invoice.shippingText,
     paymentPresetIds: invoice.paymentPresetIds,
     notes: invoice.notes,
+    offerPaymentChoice: invoice.offerPaymentChoice,
   };
 }
 
@@ -207,6 +209,38 @@ const AdminInvoices: React.FC = () => {
       lineItems: prev.lineItems.length === 1
         ? [{ ...EMPTY_LINE_ITEM }]
         : prev.lineItems.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Size variants on a line item. When present, the buyer picks one on the
+  // public invoice and the chosen price drives the total; the line's amount
+  // tracks the first variant.
+  const addVariant = (lineIndex: number) => {
+    setDraft(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.map((item, i) =>
+        i === lineIndex ? { ...item, variants: [...(item.variants || []), { label: '', amountCents: 0 }] } : item,
+      ),
+    }));
+  };
+  const updateVariant = (lineIndex: number, vIndex: number, patch: Partial<{ label: string; amountCents: number }>) => {
+    setDraft(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.map((item, i) => {
+        if (i !== lineIndex) return item;
+        const variants = (item.variants || []).map((v, vi) => (vi === vIndex ? { ...v, ...patch } : v));
+        return { ...item, variants, amountCents: variants[0]?.amountCents ?? item.amountCents };
+      }),
+    }));
+  };
+  const removeVariant = (lineIndex: number, vIndex: number) => {
+    setDraft(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.map((item, i) => {
+        if (i !== lineIndex) return item;
+        const variants = (item.variants || []).filter((_, vi) => vi !== vIndex);
+        return { ...item, variants: variants.length ? variants : undefined };
+      }),
     }));
   };
 
@@ -577,36 +611,76 @@ const AdminInvoices: React.FC = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {draft.lineItems.map((item, index) => (
-                    <div key={index} className="grid gap-3 border border-wood-100 bg-paper-50 p-4 md:grid-cols-[minmax(0,1fr)_180px_150px_auto]">
-                      <label>
-                        <span className={labelClass}>Description</span>
-                        <input className={inputClass} value={item.description} onChange={e => updateLineItem(index, { description: e.target.value })} />
-                      </label>
-                      <label>
-                        <span className={labelClass}>Terms</span>
-                        <input className={inputClass} value={item.terms} onChange={e => updateLineItem(index, { terms: e.target.value })} placeholder="Optional" />
-                      </label>
-                      <label>
-                        <span className={labelClass}>Amount</span>
-                        <input
-                          className={inputClass}
-                          inputMode="decimal"
-                          value={amountEdits[index] ?? (item.amountCents ? centsToInput(item.amountCents) : '')}
-                          onChange={e => onAmountChange(index, e.target.value)}
-                          onBlur={() => onAmountBlur(index)}
-                          placeholder="0.00"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => removeLineItem(index)}
-                        className="self-end border border-wood-300 bg-white px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
+                  {draft.lineItems.map((item, index) => {
+                    const hasVariants = !!(item.variants && item.variants.length > 0);
+                    return (
+                    <div key={index} className="border border-wood-100 bg-paper-50 p-4">
+                      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_150px_auto]">
+                        <label>
+                          <span className={labelClass}>Description</span>
+                          <input className={inputClass} value={item.description} onChange={e => updateLineItem(index, { description: e.target.value })} />
+                        </label>
+                        <label>
+                          <span className={labelClass}>Terms</span>
+                          <input className={inputClass} value={item.terms} onChange={e => updateLineItem(index, { terms: e.target.value })} placeholder="Optional" />
+                        </label>
+                        <label>
+                          <span className={labelClass}>Amount{hasVariants ? ' (from sizes)' : ''}</span>
+                          <input
+                            className={`${inputClass} ${hasVariants ? 'opacity-60' : ''}`}
+                            inputMode="decimal"
+                            disabled={hasVariants}
+                            value={hasVariants ? centsToInput(item.variants![0]?.amountCents || 0) : (amountEdits[index] ?? (item.amountCents ? centsToInput(item.amountCents) : ''))}
+                            onChange={e => onAmountChange(index, e.target.value)}
+                            onBlur={() => onAmountBlur(index)}
+                            placeholder="0.00"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeLineItem(index)}
+                          className="self-end border border-wood-300 bg-white px-3 py-2.5 font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 hover:border-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      {/* Size options (optional). Add 2+ to let the buyer pick a
+                          size on the invoice; the chosen price drives the total. */}
+                      <div className="mt-3 border-t border-wood-100 pt-3">
+                        {hasVariants && (
+                          <div className="space-y-2 mb-2">
+                            {item.variants!.map((v, vi) => (
+                              <div key={vi} className="flex gap-2 items-center">
+                                <input
+                                  className={`${inputClass} max-w-[160px]`}
+                                  value={v.label}
+                                  onChange={e => updateVariant(index, vi, { label: e.target.value })}
+                                  placeholder="Size, e.g. 3 x 3 ft"
+                                />
+                                <input
+                                  className={`${inputClass} max-w-[120px]`}
+                                  inputMode="decimal"
+                                  value={v.amountCents ? centsToInput(v.amountCents) : ''}
+                                  onChange={e => updateVariant(index, vi, { amountCents: parseMoneyToCents(e.target.value) })}
+                                  placeholder="0.00"
+                                />
+                                <button type="button" onClick={() => removeVariant(index, vi)} className="font-label text-[10px] uppercase tracking-[0.12em] text-wood-500 hover:text-red-700">Remove</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => addVariant(index)}
+                          className="font-label text-[10px] uppercase tracking-[0.12em] text-bronze-700 hover:text-bronze-800 underline underline-offset-4"
+                        >
+                          + Add size option
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <button
@@ -642,6 +716,18 @@ const AdminInvoices: React.FC = () => {
                     </button>
                   ))}
                 </div>
+
+                <label className="mt-4 flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!draft.offerPaymentChoice}
+                    onChange={e => updateDraft('offerPaymentChoice', e.target.checked)}
+                    className="accent-bronze-600 w-4 h-4"
+                  />
+                  <span className="font-sans text-sm text-wood-700">
+                    Let the buyer choose on the invoice: pay in full, or in 2 payments (recalculates from their size pick)
+                  </span>
+                </label>
 
                 <div className="mt-6 space-y-3">
                   {draft.paymentSchedule.map((step, index) => (

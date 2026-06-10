@@ -106,10 +106,11 @@ async function updateInvoice(request, env, id) {
          line_items_json = ?18,
          payment_schedule_json = ?19,
          notes = ?20,
+         offer_payment_choice = ?21,
          updated_at = unixepoch(),
          sent_at = CASE WHEN ?2 = 'sent' AND sent_at IS NULL THEN unixepoch() ELSE sent_at END,
          paid_at = CASE WHEN ?2 = 'paid' AND paid_at IS NULL THEN unixepoch() ELSE paid_at END
-       WHERE id = ?21
+       WHERE id = ?22
        RETURNING *`,
     )
     .bind(
@@ -133,6 +134,7 @@ async function updateInvoice(request, env, id) {
       JSON.stringify(invoice.lineItems),
       JSON.stringify(invoice.paymentSchedule),
       invoice.notes,
+      invoice.offerPaymentChoice ? 1 : 0,
       id,
     )
     .first();

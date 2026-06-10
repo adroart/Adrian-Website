@@ -76,6 +76,11 @@ export interface Invoice {
   paymentSnapshot: InvoicePaymentOption | Record<string, never>;
   paymentOptions: InvoicePaymentOption[];
   notes: string;
+  /**
+   * When true, the buyer chooses on the public invoice between paying in full
+   * or in 2 payments; the schedule recomputes live from the chosen size + plan.
+   */
+  offerPaymentChoice?: boolean;
   createdAt?: string | null;
   updatedAt?: string | null;
   sentAt?: string | null;
@@ -96,4 +101,5 @@ export interface InvoiceDraft {
   shippingText: string;
   paymentPresetIds: number[];
   notes: string;
+  offerPaymentChoice?: boolean;
 }

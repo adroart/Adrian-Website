@@ -63,10 +63,10 @@ async function createInvoice(request, env) {
           job_title, job_description, currency, subtotal_cents, shipping_text, total_cents,
           due_today_cents, current_step_index, payment_preset_id, payment_preset_ids_json,
           payment_snapshot_json, payment_options_json, line_items_json, payment_schedule_json,
-          notes, sent_at, paid_at
+          notes, offer_payment_choice, sent_at, paid_at
         )
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21,
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
          CASE WHEN ?3 = 'sent' THEN unixepoch() ELSE NULL END,
          CASE WHEN ?3 = 'paid' THEN unixepoch() ELSE NULL END)
        RETURNING *`,
@@ -93,6 +93,7 @@ async function createInvoice(request, env) {
       JSON.stringify(invoice.lineItems),
       JSON.stringify(invoice.paymentSchedule),
       invoice.notes,
+      invoice.offerPaymentChoice ? 1 : 0,
     )
     .first();
 

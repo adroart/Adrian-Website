@@ -199,6 +199,7 @@ export function normalizeInvoiceInput(input = {}, paymentPresets = []) {
     paymentSnapshot: paymentOptions[0] || {},
     paymentOptions,
     notes: cleanString(input.notes, 2000),
+    offerPaymentChoice: !!input.offerPaymentChoice,
   };
 }
 
@@ -266,6 +267,7 @@ export function serializeInvoiceRow(row) {
     paymentSnapshot,
     paymentOptions: paymentOptions.length ? paymentOptions : Object.keys(paymentSnapshot).length ? [paymentSnapshot] : [],
     notes: row.notes || '',
+    offerPaymentChoice: !!row.offer_payment_choice,
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
     sentAt: toIso(row.sent_at),

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Invoice, InvoiceLineItem, InvoicePaymentOption } from './invoices/invoiceTypes';
-import { WISE_REFERRAL_URL, formatMoney, isWiseMethod, methodLabel } from './invoices/invoiceUtils';
+import { WISE_REFERRAL_URL, buildPaymentSchedule, formatMoney, inferPaymentTermMode, isWiseMethod, methodLabel } from './invoices/invoiceUtils';
 
 async function readInvoice(token: string): Promise<Invoice> {
   const res = await fetch(`/api/invoices/${encodeURIComponent(token)}`);
@@ -55,20 +55,31 @@ const PublicInvoice: React.FC = () => {
   // Live totals: if any line has variants, recompute from the chosen prices so
   // the displayed Total / Due today follow the buyer's size pick. Otherwise use
   // the stored totals unchanged (no behaviour change for normal invoices).
+  // Buyer's payment choice (only when the invoice offers it): pay in full or 2.
+  const [planChoice, setPlanChoice] = useState<'single' | 'two_part'>('single');
+
   const hasVariants = !!invoice?.lineItems.some((i) => i.variants && i.variants.length > 0);
   const liveSubtotal = invoice
     ? invoice.lineItems.reduce((sum, item, i) => sum + lineAmount(item, i), 0)
     : 0;
   const displaySubtotal = hasVariants ? liveSubtotal : (invoice?.subtotalCents ?? 0);
   const displayTotal = hasVariants ? liveSubtotal : (invoice?.totalCents ?? 0);
-  // Single-payment invoices: due today == total. Multi-step keeps its stored
-  // schedule (variants are intended for single-payment art sales).
-  const singleStep = (invoice?.paymentSchedule.length ?? 0) <= 1;
-  const displayDueToday = hasVariants && singleStep ? liveSubtotal : (invoice?.dueTodayCents ?? 0);
+
+  // When the invoice offers a payment choice, recompute the schedule live from
+  // the chosen size (liveSubtotal) × the chosen plan. Otherwise use the stored
+  // schedule, recomputing only its amounts if a size changed the total.
+  const offerChoice = !!invoice?.offerPaymentChoice;
+  const displaySchedule = useMemo(() => {
+    if (!invoice) return [];
+    if (offerChoice) return buildPaymentSchedule(liveSubtotal, planChoice);
+    if (hasVariants) return buildPaymentSchedule(displayTotal, inferPaymentTermMode(invoice.paymentSchedule));
+    return invoice.paymentSchedule;
+  }, [invoice, offerChoice, planChoice, liveSubtotal, hasVariants, displayTotal]);
+  const displayDueToday = displaySchedule[0]?.amountCents ?? (invoice?.dueTodayCents ?? 0);
 
   const paymentOptions = invoice?.paymentOptions || [];
   const selectedPayment = paymentOptions[selectedPaymentIndex] || paymentOptions[0] || null;
-  const currentStep = invoice?.paymentSchedule[invoice.currentStepIndex] || invoice?.paymentSchedule[0] || null;
+  const currentStep = displaySchedule[invoice?.currentStepIndex ?? 0] || displaySchedule[0] || null;
   const invoiceDate = invoice?.sentAt || invoice?.createdAt || null;
 
   const paymentAction = useMemo(() => {
@@ -269,8 +280,26 @@ const PublicInvoice: React.FC = () => {
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
               Payment schedule
             </p>
+            {offerChoice && (
+              <div className="no-print mb-3 flex flex-wrap gap-2">
+                {([['single', 'Pay in full'], ['two_part', '2 payments']] as const).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setPlanChoice(mode)}
+                    className={`font-label text-[11px] uppercase tracking-[0.12em] border px-3 py-1.5 transition-colors ${
+                      planChoice === mode
+                        ? 'border-bronze-500 bg-bronze-50 text-bronze-700'
+                        : 'border-wood-300 text-wood-600 hover:border-bronze-500'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="space-y-1.5">
-              {invoice.paymentSchedule.map((step, index) => (
+              {displaySchedule.map((step, index) => (
                 <div key={`${step.label}-${index}`} className={`pay-step border px-3 py-2 ${index === invoice.currentStepIndex ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
