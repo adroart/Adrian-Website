@@ -372,11 +372,16 @@ const PublicInvoice: React.FC = () => {
                       {selectedPayment.instructions}
                     </p>
                   )}
-                  {selectedPayment.details && (
+                  {selectedPayment.details && isWiseMethod(selectedPayment.method) ? (
+                    <div className="mt-3 border-t border-wood-200 pt-3">
+                      <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">Send to this Wisetag</p>
+                      <p className="font-serif text-3xl sm:text-4xl text-wood-900 leading-tight mt-1 break-all">{selectedPayment.details}</p>
+                    </div>
+                  ) : selectedPayment.details ? (
                     <pre className="pay-details mt-2 whitespace-pre-wrap border-t border-wood-200 pt-2 font-sans text-xs leading-snug text-wood-800">
                       {selectedPayment.details}
                     </pre>
-                  )}
+                  ) : null}
                   {selectedPayment.url && (
                     <p className="mt-3 break-all font-sans text-xs text-wood-600">
                       {selectedPayment.url}
