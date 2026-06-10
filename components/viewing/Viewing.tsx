@@ -40,18 +40,24 @@ const Label: React.FC<{ children: React.ReactNode; className?: string }> = ({ ch
   <span className={`font-label text-[10px] uppercase tracking-[0.22em] text-bronze-600 ${className}`}>{children}</span>
 );
 
-/** A quiet eyebrow row of keywords. Small, tight, muted — not a headline. */
+/**
+ * Keywords as chips — each term is one whole unit that never breaks across
+ * lines, so multi-word phrases ("The Last Step") stay intact. The row wraps as
+ * a tidy set of tags, not a fragmented dot-separated sentence.
+ */
 const Keywords: React.FC<{ words?: string[] }> = ({ words }) => {
   if (!words || words.length === 0) return null;
   return (
-    <p className="font-label text-[16px] sm:text-[18px] uppercase tracking-[0.12em] text-bronze-500 mt-3 leading-[1.7]">
-      {words.map((w, i) => (
-        <React.Fragment key={w}>
-          {i > 0 && <span className="text-bronze-300 px-2">·</span>}
+    <ul className="flex flex-wrap gap-2 mt-4 list-none p-0">
+      {words.map((w) => (
+        <li
+          key={w}
+          className="font-label text-[12px] uppercase tracking-[0.12em] text-bronze-700 border border-bronze-300 px-3 py-1.5 whitespace-nowrap"
+        >
           {w}
-        </React.Fragment>
+        </li>
       ))}
-    </p>
+    </ul>
   );
 };
 
