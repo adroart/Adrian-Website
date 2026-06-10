@@ -153,8 +153,9 @@ const PublicInvoice: React.FC = () => {
           .invoice-a4 .print-tight { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
           .invoice-a4 .print-tight-top { padding-top: 0.25rem !important; }
           .invoice-a4 header { padding-bottom: 0.3rem !important; }
-          /* Compress the payment-schedule step cards. */
-          .invoice-a4 .pay-step { padding: 0.3rem 0.6rem !important; }
+          /* Compress the payment-schedule step cards (tighter when 2 steps show). */
+          .invoice-a4 .pay-step { padding: 0.25rem 0.55rem !important; }
+          .invoice-a4 .pay-step p { line-height: 1.25 !important; }
           /* Shrink the bank/account details block (the tallest element). */
           .invoice-a4 .pay-details {
             font-size: 10px !important;
@@ -379,6 +380,13 @@ const PublicInvoice: React.FC = () => {
                   {selectedPayment.url && (
                     <p className="mt-3 break-all font-sans text-xs text-wood-600">
                       {selectedPayment.url}
+                    </p>
+                  )}
+                  {/* Fallback so the buyer always knows how to pay, even if a
+                      method's link/details were not filled in. */}
+                  {!selectedPayment.url && !selectedPayment.details && !selectedPayment.instructions && (
+                    <p className="mt-2 font-sans text-xs leading-snug text-wood-600">
+                      Payment details for {selectedPayment.label} will be sent to you directly. Reply to this invoice or contact the studio to arrange payment.
                     </p>
                   )}
                   {isWiseMethod(selectedPayment.method) && (
