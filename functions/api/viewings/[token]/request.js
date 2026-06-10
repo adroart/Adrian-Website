@@ -62,11 +62,32 @@ export async function onRequestPost({ env, params, request }) {
   const invoiceNumber = `VIEW-${row.id}-${Date.now().toString(36).toUpperCase()}`;
   const jobDescription = `Pieces requested from a private viewing for ${row.recipient_name}.`;
 
+  // Attach the studio's active payment presets so the generated invoice is a
+  // real, payable invoice (Wise/Bank/etc.) — not an orphan. Mirrors what the
+  // admin creator stores: snapshot list + preset ids + primary snapshot.
+  const presetRows = await env.DB
+    .prepare('SELECT * FROM payment_presets WHERE is_active = 1 ORDER BY is_default DESC, id ASC LIMIT 8')
+    .all();
+  const presets = (presetRows.results || []).map((p) => ({
+    id: p.id,
+    label: String(p.label || '').slice(0, 120),
+    method: String(p.method || 'custom').slice(0, 40),
+    currency: String(p.currency || 'USD').slice(0, 8).toUpperCase(),
+    instructions: String(p.instructions || '').slice(0, 1200),
+    details: String(p.details || '').slice(0, 2000),
+    url: String(p.url || '').slice(0, 500),
+  }));
+  const presetIds = presets.map((p) => p.id);
+  const primaryId = presetIds[0] ?? null;
+  const snapshot = presets[0] || {};
+
   await env.DB.prepare(
     `INSERT INTO invoices
        (invoice_number, public_token, status, client_name, client_email, client_location,
-        job_title, job_description, currency, line_items_json)
-     VALUES (?1, ?2, 'draft', ?3, ?4, '', ?5, ?6, 'USD', ?7)`,
+        job_title, job_description, currency, line_items_json,
+        payment_preset_id, payment_preset_ids_json, payment_snapshot_json, payment_options_json,
+        offer_payment_choice)
+     VALUES (?1, ?2, 'draft', ?3, ?4, '', ?5, ?6, 'USD', ?7, ?8, ?9, ?10, ?11, 1)`,
   )
     .bind(
       invoiceNumber,
@@ -76,6 +97,10 @@ export async function onRequestPost({ env, params, request }) {
       'Requested artworks',
       jobDescription,
       JSON.stringify(lineItems),
+      primaryId,
+      JSON.stringify(presetIds),
+      JSON.stringify(snapshot),
+      JSON.stringify(presets),
     )
     .run();
 
