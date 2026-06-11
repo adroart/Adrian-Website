@@ -13,6 +13,7 @@
  */
 
 import { verifyStripeWebhook } from '../_lib/stripe.js';
+import { notifyMandalacodes } from '../_lib/atlasSale.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -120,6 +121,26 @@ export async function onRequest(context) {
     } catch (err) {
       console.warn('[stripe/webhook] line items fetch failed:', err);
     }
+  }
+
+  // Notify the mandalacodes living-legacy atlas of the sale (M4 sale bridge).
+  // Best-effort and out-of-band: it enqueues a PENDING row for Adrian to
+  // confirm in /admin/atlas, never touches the ledger, and must never block
+  // or fail this order write. waitUntil lets its retries finish after we've
+  // already 200'd Stripe. No-ops quietly until SALE_WEBHOOK_SECRET is set.
+  if (status === 'paid') {
+    context.waitUntil(
+      notifyMandalacodes(env, {
+        saleId: sessionId,
+        buyerEmail: email,
+        buyerName: s.customer_details?.name || undefined,
+        saleDate: new Date((s.created ?? Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+        priceCents: amountTotal,
+        currency: currency.toUpperCase(),
+        // sku/pieceId/editionNumber left unset: Adrian picks the piece in the
+        // admin queue (the webhook's word never decides which piece moves).
+      }).catch((err) => console.warn('[stripe/webhook] atlas notify failed:', err)),
+    );
   }
 
   return new Response('ok', { status: 200 });
