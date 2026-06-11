@@ -324,6 +324,36 @@ const AdminInvoices: React.FC = () => {
     setMessage(null);
   };
 
+  const markPaid = async (invoice: Invoice) => {
+    // If a line offers sizes, ask which total the buyer actually paid; else use
+    // the invoice total. The recorded amount reflects what they decided.
+    let paidCents: number | undefined;
+    const variantLine = invoice.lineItems.find(li => li.variants && li.variants.length > 0);
+    if (variantLine?.variants?.length) {
+      const opts = variantLine.variants.map((v, i) => `${i + 1}) ${v.label} — ${formatMoney(v.amountCents, invoice.currency)}`).join('\n');
+      const pick = window.prompt(`Which size did ${invoice.clientName} pay for?\n${opts}\n\nEnter 1-${variantLine.variants.length}:`);
+      const idx = pick ? Number(pick) - 1 : -1;
+      if (idx < 0 || idx >= variantLine.variants.length) return;
+      // Total = chosen variant + any non-variant lines.
+      const others = invoice.lineItems.filter(li => li !== variantLine).reduce((s, li) => s + li.amountCents, 0);
+      paidCents = variantLine.variants[idx].amountCents + others;
+    } else {
+      if (!window.confirm(`Mark ${invoice.clientName}'s invoice paid for ${formatMoney(invoice.totalCents, invoice.currency)}?`)) return;
+      paidCents = invoice.totalCents;
+    }
+    try {
+      const data = await fetch(`/api/admin/invoices/${invoice.id}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paidCents }),
+      }).then(res => readJson<{ ok: boolean; invoice: Invoice }>(res));
+      setInvoices(prev => prev.map(inv => (inv.id === data.invoice.id ? data.invoice : inv)));
+      setMessage({ type: 'ok', text: `Marked paid: ${formatMoney(data.invoice.totalCents, data.invoice.currency)}` });
+    } catch {
+      setMessage({ type: 'err', text: 'Could not mark paid.' });
+    }
+  };
+
   const saveInvoice = async () => {
     if (!draft.clientName.trim() || !draft.jobTitle.trim() || !draft.jobDescription.trim()) {
       setMessage({ type: 'err', text: 'Client name, job title, and description are required.' });
@@ -832,22 +862,31 @@ const AdminInvoices: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {invoices.map(invoice => (
-                      <button
+                      <div
                         key={invoice.id}
-                        type="button"
-                        onClick={() => editInvoice(invoice)}
-                        className={`w-full border p-3 text-left hover:border-bronze-500 ${
+                        className={`border p-3 ${
                           editingId === invoice.id ? 'border-bronze-500 bg-bronze-50' : 'border-wood-200 bg-paper-50'
                         }`}
                       >
-                        <span className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
-                          {invoice.invoiceNumber} · {invoice.status}
-                        </span>
-                        <span className="block font-serif text-lg text-wood-900">{invoice.clientName}</span>
-                        <span className="block font-sans text-sm text-wood-600">
-                          Due now {formatMoney(invoice.dueTodayCents, invoice.currency)}
-                        </span>
-                      </button>
+                        <button type="button" onClick={() => editInvoice(invoice)} className="w-full text-left hover:opacity-80">
+                          <span className="block font-label text-[11px] uppercase tracking-[0.12em] text-wood-500">
+                            {invoice.invoiceNumber} · {invoice.status}
+                          </span>
+                          <span className="block font-serif text-lg text-wood-900">{invoice.clientName}</span>
+                          <span className="block font-sans text-sm text-wood-600">
+                            Total {formatMoney(invoice.totalCents, invoice.currency)}
+                          </span>
+                        </button>
+                        {invoice.status !== 'paid' && invoice.status !== 'void' && (
+                          <button
+                            type="button"
+                            onClick={() => markPaid(invoice)}
+                            className="mt-2 border border-wood-300 bg-white px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-wood-700 hover:border-green-600 hover:text-green-700"
+                          >
+                            ✓ Mark paid
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
