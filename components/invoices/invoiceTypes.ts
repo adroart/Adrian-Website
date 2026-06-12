@@ -81,6 +81,8 @@ export interface Invoice {
    * or in 2 payments; the schedule recomputes live from the chosen size + plan.
    */
   offerPaymentChoice?: boolean;
+  /** Total paid so far. Balance due = totalCents - amountPaidCents. */
+  amountPaidCents?: number;
   createdAt?: string | null;
   updatedAt?: string | null;
   sentAt?: string | null;

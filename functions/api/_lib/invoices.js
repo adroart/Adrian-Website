@@ -268,6 +268,7 @@ export function serializeInvoiceRow(row) {
     paymentOptions: paymentOptions.length ? paymentOptions : Object.keys(paymentSnapshot).length ? [paymentSnapshot] : [],
     notes: row.notes || '',
     offerPaymentChoice: !!row.offer_payment_choice,
+    amountPaidCents: row.amount_paid_cents || 0,
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
     sentAt: toIso(row.sent_at),

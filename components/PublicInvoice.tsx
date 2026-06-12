@@ -273,6 +273,20 @@ const PublicInvoice: React.FC = () => {
               <span>Total</span>
               <span>{formatMoney(displayTotal, invoice.currency)}</span>
             </div>
+            {(invoice.amountPaidCents || 0) > 0 && (
+              <>
+                <div className="flex items-center justify-between font-sans text-sm text-wood-700 pt-1.5">
+                  <span>Paid</span>
+                  <span>-{formatMoney(invoice.amountPaidCents || 0, invoice.currency)}</span>
+                </div>
+                {displayTotal - (invoice.amountPaidCents || 0) > 0 && (
+                  <div className="flex items-center justify-between border-t border-wood-900 pt-2 font-serif text-2xl text-bronze-700">
+                    <span>Balance due</span>
+                    <span>{formatMoney(displayTotal - (invoice.amountPaidCents || 0), invoice.currency)}</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
 

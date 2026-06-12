@@ -25,22 +25,34 @@ export async function onRequestPost({ request, env, params }) {
   } catch {
     body = {};
   }
-  const paidCents = Number.isFinite(body.paidCents) && body.paidCents > 0 ? Math.round(body.paidCents) : null;
+
+  const current = await env.DB.prepare('SELECT * FROM invoices WHERE id = ?1 AND status != "void"').bind(id).first();
+  if (!current) return jsonResponse({ ok: false, error: 'not_found' }, 404);
+
+  // If a fixed total was supplied (variant invoices), set it before computing balance.
+  const setTotal = Number.isFinite(body.totalCents) && body.totalCents > 0 ? Math.round(body.totalCents) : null;
+  const total = setTotal ?? current.total_cents;
+
+  // Record a payment: full settle (no amount) pays the balance; a partial
+  // amount accumulates. Status becomes 'paid' only when fully covered.
+  const already = current.amount_paid_cents || 0;
+  const payment = Number.isFinite(body.paidCents) && body.paidCents > 0 ? Math.round(body.paidCents) : (total - already);
+  const newPaid = Math.min(total, already + payment);
+  const fullyPaid = newPaid >= total;
 
   const row = await env.DB
     .prepare(
       `UPDATE invoices SET
-         status = 'paid',
-         paid_at = CASE WHEN paid_at IS NULL THEN unixepoch() ELSE paid_at END,
-         total_cents = COALESCE(?2, total_cents),
-         due_today_cents = COALESCE(?2, due_today_cents),
+         amount_paid_cents = ?2,
+         total_cents = ?3,
+         status = CASE WHEN ?4 = 1 THEN 'paid' ELSE status END,
+         paid_at = CASE WHEN ?4 = 1 AND paid_at IS NULL THEN unixepoch() ELSE paid_at END,
          updated_at = unixepoch()
-       WHERE id = ?1 AND status != 'void'
+       WHERE id = ?1
        RETURNING *`,
     )
-    .bind(id, paidCents)
+    .bind(id, newPaid, total, fullyPaid ? 1 : 0)
     .first();
 
-  if (!row) return jsonResponse({ ok: false, error: 'not_found' }, 404);
   return jsonResponse({ ok: true, invoice: serializeInvoiceRow(row) });
 }
