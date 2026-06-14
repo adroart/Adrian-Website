@@ -24,6 +24,21 @@ export function verifySignInCode(email: string, otp: string) {
   return authClient.signIn.emailOtp({ email, otp });
 }
 
+/** Create an account with email + password. */
+export function signUpWithPassword(email: string, password: string, name?: string) {
+  return authClient.signUp.email({ email, password, name: name ?? '' });
+}
+
+/** Log in with email + password. */
+export function signInWithPassword(email: string, password: string) {
+  return authClient.signIn.email({ email, password });
+}
+
+/** Continue with Google (redirects to Google, returns to the site). */
+export function signInWithGoogle(callbackURL: string = '/') {
+  return authClient.signIn.social({ provider: 'google', callbackURL });
+}
+
 /** Sign out and clear the session cookie. */
 export function signOut() {
   return authClient.signOut();
