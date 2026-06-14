@@ -21,14 +21,13 @@
     "sitemap": "tsx scripts/generate-sitemap.ts"
   },
   "dependencies": {
-    "@clerk/backend": "^3.4.11",
-    "@clerk/clerk-react": "^5.61.6",
     "@fontsource/cormorant-garamond": "^5.2.11",
     "@fontsource/karla": "^5.2.8",
     "@fontsource/lora": "^5.2.8",
     "@keystatic/core": "^0.5.50",
     "@stripe/stripe-js": "^8.7.0",
     "astronomy-engine": "^2.1.19",
+    "better-auth": "^1.6.18",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

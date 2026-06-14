@@ -27,6 +27,11 @@ const TOOLS: AdminTool[] = [
     href: '/admin/poetry',
   },
   {
+    title: 'Book Pages',
+    description: 'Write the long-form page for each piece, shown on its works record at /works/:id. Pick a piece, write its story, save. Changes go live immediately.',
+    href: '/admin/book',
+  },
+  {
     title: 'Invoices',
     description: 'Create commission invoices, manage reusable payment options, and copy printable client links.',
     href: '/admin/invoices',

@@ -28,6 +28,7 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
+const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const Viewing = lazy(() => import('./components/viewing/Viewing'));
@@ -146,6 +147,7 @@ const AppInner: React.FC = () => {
             <Route path="/admin/invoices" element={<AdminInvoices />} />
             <Route path="/admin/files" element={<AdminFileUpload />} />
             <Route path="/admin/poetry" element={<AdminPoetry />} />
+            <Route path="/admin/book" element={<AdminBookEditor />} />
             <Route path="/admin/viewings" element={<AdminViewings />} />
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />

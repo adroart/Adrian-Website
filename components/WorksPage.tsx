@@ -1,7 +1,7 @@
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Artwork, ProvenanceEvent } from '../types';
+import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img as cldImg } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -18,6 +18,7 @@ const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
 const WorksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const artwork = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
+    const book = useBookContent(id);
 
     useMetaTags(
         artwork
@@ -183,6 +184,58 @@ const WorksPage: React.FC = () => {
                     </div>{/* inner border */}
                 </div>{/* outer border */}
 
+                {/* ── The book: Adrian's authored page for this piece ── */}
+                {book && hasBookContent(book) && (
+                    <article className="mt-20 print:mt-12">
+                        {book.epigraph && (
+                            <p className="font-serif italic text-xl md:text-2xl text-wood-500 leading-[1.6] text-center max-w-xl mx-auto mb-14">
+                                {book.epigraph}
+                            </p>
+                        )}
+
+                        {book.body && book.body.length > 0 && (
+                            <div className="max-w-xl mx-auto space-y-6 mb-16">
+                                {book.body.map((para, i) => (
+                                    <p
+                                        key={i}
+                                        className={`font-serif text-[17px] md:text-lg text-wood-700 leading-[1.9] ${i === 0 ? 'drop-cap' : ''}`}
+                                    >
+                                        {para}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+
+                        {book.makersNote && book.makersNote.length > 0 && (
+                            <BookSection label="From the Studio">
+                                <div className="space-y-4">
+                                    {book.makersNote.map((para, i) => (
+                                        <p key={i} className="font-sans text-[15px] text-wood-600 leading-[1.8]">
+                                            {para}
+                                        </p>
+                                    ))}
+                                </div>
+                            </BookSection>
+                        )}
+
+                        {book.materialsStory && (
+                            <BookSection label="Materials">
+                                <p className="font-serif text-[17px] italic text-wood-600 leading-[1.8]">
+                                    {book.materialsStory}
+                                </p>
+                            </BookSection>
+                        )}
+
+                        {book.inspiration && (
+                            <BookSection label="What It Reaches Toward">
+                                <p className="font-serif text-[17px] italic text-wood-600 leading-[1.8]">
+                                    {book.inspiration}
+                                </p>
+                            </BookSection>
+                        )}
+                    </article>
+                )}
+
                 {/* Below the certificate */}
                 <div className="text-center mt-8 space-y-4 print:hidden">
                     <Link
@@ -199,6 +252,51 @@ const WorksPage: React.FC = () => {
         </section>
     );
 };
+
+/** Fetch the authored book page for a piece. Returns null until loaded or
+ *  if no entry exists — the works page renders fully without it. */
+function useBookContent(id: string | undefined): BookContent | null {
+    const [book, setBook] = useState<BookContent | null>(null);
+    useEffect(() => {
+        setBook(null);
+        if (!id) return;
+        let active = true;
+        fetch(`/api/book?id=${encodeURIComponent(id)}`)
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+                if (active && data?.ok && data.entry) setBook(data.entry);
+            })
+            .catch(() => { /* no page yet, or offline — render without it */ });
+        return () => { active = false; };
+    }, [id]);
+    return book;
+}
+
+function hasBookContent(b: BookContent): boolean {
+    return Boolean(
+        b.epigraph ||
+        (b.body && b.body.length) ||
+        (b.makersNote && b.makersNote.length) ||
+        b.materialsStory ||
+        b.inspiration
+    );
+}
+
+/** A titled block in the book, with an ornamental rule above the label. */
+function BookSection({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <section className="max-w-xl mx-auto mb-14">
+            <div className="flex items-center gap-4 mb-6">
+                <div className="h-px w-8 bg-bronze-300" />
+                <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold">
+                    {label}
+                </p>
+                <div className="h-px flex-1 bg-wood-100" />
+            </div>
+            {children}
+        </section>
+    );
+}
 
 function DetailRow({ label, value }: { label: string; value: string }) {
     return (

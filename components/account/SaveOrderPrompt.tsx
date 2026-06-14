@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
 import { useAccount } from '../../lib/account/useAccount';
+import SignInTrigger from './SignInTrigger';
 
 interface Props {
   sessionId: string | null;
@@ -34,29 +34,28 @@ const SaveOrderPrompt: React.FC<Props> = ({ sessionId }) => {
 
   return (
     <div className="save-order-prompt">
-      <SignedOut>
+      {!account.isSignedIn ? (
+        <>
+          <p className="save-order-prompt__copy">
+            Save this order to an account so you can find it later and re-order easily.
+          </p>
+          <SignInTrigger>
+            <button type="button" className="save-order-prompt__cta">
+              Save to my account
+            </button>
+          </SignInTrigger>
+        </>
+      ) : claimState === 'done' ? (
         <p className="save-order-prompt__copy">
-          Save this order to an account so you can find it later and re-order easily.
+          Your order is saved. <a href="/account/orders" className="save-order-prompt__link">View all orders</a>.
         </p>
-        <SignInButton mode="modal">
-          <button type="button" className="save-order-prompt__cta">
-            Save to my account
-          </button>
-        </SignInButton>
-      </SignedOut>
-      <SignedIn>
-        {claimState === 'done' ? (
-          <p className="save-order-prompt__copy">
-            Your order is saved. <a href="/account/orders" className="save-order-prompt__link">View all orders</a>.
-          </p>
-        ) : claimState === 'error' ? (
-          <p className="save-order-prompt__copy">
-            We could not attach this order automatically. <a href="/account/orders" className="save-order-prompt__link">View your orders</a>.
-          </p>
-        ) : (
-          <p className="save-order-prompt__copy">Saving your order…</p>
-        )}
-      </SignedIn>
+      ) : claimState === 'error' ? (
+        <p className="save-order-prompt__copy">
+          We could not attach this order automatically. <a href="/account/orders" className="save-order-prompt__link">View your orders</a>.
+        </p>
+      ) : (
+        <p className="save-order-prompt__copy">Saving your order…</p>
+      )}
 
       <style>{`
         .save-order-prompt {

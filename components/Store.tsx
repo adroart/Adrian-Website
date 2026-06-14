@@ -13,6 +13,7 @@ import {
 import { useCart } from '../CartContext';
 import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
+import SaveToCollectionButton from './account/SaveToCollectionButton';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -652,6 +653,9 @@ const InspectionDrawer: React.FC<{
                             Private Collection
                         </div>
                     )}
+                    <div className="flex justify-center mt-3">
+                        <SaveToCollectionButton kind="product" itemRef={product.id} label="Save to collection" />
+                    </div>
                 </div>
             </div>
         </div>,
