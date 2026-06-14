@@ -68,14 +68,22 @@ const PublicInvoice: React.FC = () => {
   // When the invoice offers a payment choice, recompute the schedule live from
   // the chosen size (liveSubtotal) × the chosen plan. Otherwise use the stored
   // schedule, recomputing only its amounts if a size changed the total.
+  const amountPaid = invoice?.amountPaidCents ?? 0;
+  const balanceDue = Math.max(0, displayTotal - amountPaid);
+
   const offerChoice = !!invoice?.offerPaymentChoice;
   const displaySchedule = useMemo(() => {
     if (!invoice) return [];
+    // Once a payment has been made, the remaining balance is what's owed —
+    // show it as a single "Balance due" step instead of the original plan.
+    if (amountPaid > 0) {
+      return [{ label: 'Balance due', description: 'Remaining amount owed.', dueTiming: 'Due now', amountCents: balanceDue }];
+    }
     if (offerChoice) return buildPaymentSchedule(liveSubtotal, planChoice);
     if (hasVariants) return buildPaymentSchedule(displayTotal, inferPaymentTermMode(invoice.paymentSchedule));
     return invoice.paymentSchedule;
-  }, [invoice, offerChoice, planChoice, liveSubtotal, hasVariants, displayTotal]);
-  const displayDueToday = displaySchedule[0]?.amountCents ?? (invoice?.dueTodayCents ?? 0);
+  }, [invoice, offerChoice, planChoice, liveSubtotal, hasVariants, displayTotal, amountPaid, balanceDue]);
+  const displayDueToday = amountPaid > 0 ? balanceDue : (displaySchedule[0]?.amountCents ?? (invoice?.dueTodayCents ?? 0));
 
   const paymentOptions = invoice?.paymentOptions || [];
   const selectedPayment = paymentOptions[selectedPaymentIndex] || paymentOptions[0] || null;
@@ -295,7 +303,7 @@ const PublicInvoice: React.FC = () => {
             <p className="font-label text-[11px] uppercase tracking-[0.12em] text-wood-500 font-semibold mb-3">
               Payment schedule
             </p>
-            {offerChoice && (
+            {offerChoice && amountPaid === 0 && (
               <div className="no-print mb-3 flex flex-wrap gap-2">
                 {([['single', 'Pay in full'], ['two_part', '2 payments']] as const).map(([mode, label]) => (
                   <button
