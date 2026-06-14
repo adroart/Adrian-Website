@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS account (
   refreshTokenExpiresAt INTEGER,
   scope                 TEXT,
   idToken               TEXT,
-  password              TEXT,                 -- unused (no password sign-in)
+  password              TEXT,                 -- credential password hash (email+password sign-in)
   createdAt             INTEGER NOT NULL,
   updatedAt             INTEGER NOT NULL
 );
