@@ -1,5 +1,8 @@
 name = "adrian-website"
 compatibility_date = "2024-09-23"
+# Better Auth (self-owned customer login) uses node:crypto, which Cloudflare
+# only exposes behind this flag. Required for the /api/auth/* handler.
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
 [[r2_buckets]]

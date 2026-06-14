@@ -11,6 +11,7 @@ import { formatPrice } from '../utils/formatPrice';
 import VisualLightbox from './VisualLightbox';
 import Breadcrumb, { type Crumb } from './Breadcrumb';
 import GalleryTileCard from './GalleryTileCard';
+import SaveToCollectionButton from './account/SaveToCollectionButton';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { ulCardNumber, ulAltText, ulMetaDescription, ulMetaTitle } from '../utils/universalLanguage';
 
@@ -733,13 +734,16 @@ const PiecePage: React.FC = () => {
                             <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-wood-900 leading-[1.1] font-medium">
                                 {art.title}
                             </h1>
-                            <button
-                                onClick={handleShare}
-                                className="shrink-0 mt-1 flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
-                                aria-label="Share this piece"
-                            >
-                                {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
-                            </button>
+                            <div className="shrink-0 mt-1 flex flex-col items-end gap-2">
+                                <button
+                                    onClick={handleShare}
+                                    className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.1em] text-wood-600 hover:text-wood-900 transition-colors font-semibold"
+                                    aria-label="Share this piece"
+                                >
+                                    {copied ? <><Check size={12} className="text-bronze-600" /> Copied</> : <><Share2 size={12} /> Share</>}
+                                </button>
+                                <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" />
+                            </div>
                         </div>
 
                         {/* Mobile: stacked labeled metadata rows */}

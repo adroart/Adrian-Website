@@ -8,6 +8,23 @@ export interface ProvenanceEvent {
   note?: string;
 }
 
+// ── Book content (authored long-form record on /works/:id) ────────
+// Adrian writes one of these per piece in the admin Book editor. It is
+// stored server-side (R2, book/index.json) and rendered beneath the
+// certificate on the permanent works page. Every field is optional so a
+// piece can have a partial entry; the page renders only what is present.
+
+export interface BookContent {
+  id: string;                  // Artwork.id this entry belongs to (the key)
+  title?: string;              // Cached piece title for the admin list (display only)
+  epigraph?: string;           // A short line set apart above the body (italic)
+  body?: string[];             // The main authored prose, one entry per paragraph
+  makersNote?: string[];       // "From the studio" — process / intention, paragraphs
+  materialsStory?: string;     // A sentence or two on the materials and their meaning
+  inspiration?: string;        // What the piece is reaching toward
+  updatedAt?: string;          // ISO date of last save
+}
+
 export type VariantAvailability = 'IN_STOCK' | 'MADE_TO_ORDER';
 
 export interface SizeVariant {

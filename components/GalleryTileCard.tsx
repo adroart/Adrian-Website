@@ -5,6 +5,7 @@ import { Artwork } from '../types';
 import ArtImage from './ArtImage';
 import { formatPrice } from '../utils/formatPrice';
 import { ulAltText, ulCardNumber } from '../utils/universalLanguage';
+import SaveToCollectionButton from './account/SaveToCollectionButton';
 
 interface GalleryTileCardProps {
     art: Artwork;
@@ -116,6 +117,14 @@ const GalleryTileCard: React.FC<GalleryTileCardProps> = ({ art, showDetails, sub
                     </span>
                 )}
             </Link>
+
+            {/* Save affordance — only in detail mode, sits below the label so it
+                never overlaps the artwork and is outside the card's Link. */}
+            {showDetails && (
+                <div className="mt-2 flex justify-center">
+                    <SaveToCollectionButton kind="artwork" itemRef={art.id} label="Save" />
+                </div>
+            )}
         </div>
     );
 };
