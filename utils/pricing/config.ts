@@ -96,6 +96,14 @@ export const DEFAULT_CONFIG: PricingConfig = {
     { minSizeIn: 31, maxSizeIn: 42, min: 100, max: 180 },
     { minSizeIn: 43, maxSizeIn: 60, min: 160, max: 280 },
   ],
+
+  crateRanges: [
+    { minSizeIn: 6, maxSizeIn: 12, min: 30, max: 60 },
+    { minSizeIn: 13, maxSizeIn: 20, min: 60, max: 120 },
+    { minSizeIn: 21, maxSizeIn: 30, min: 120, max: 220 },
+    { minSizeIn: 31, maxSizeIn: 42, min: 220, max: 400 },
+    { minSizeIn: 43, maxSizeIn: 60, min: 400, max: 700 },
+  ],
 };
 
 const STORAGE_KEY = 'tots-pricing-config-v1';

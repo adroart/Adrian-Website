@@ -13,9 +13,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CustomerInputs, PricingConfig } from '../../utils/pricing/types';
-import { customerRange, formatMoney } from '../../utils/pricing/engine';
+import { customerRange } from '../../utils/pricing/engine';
 import { loadConfig } from '../../utils/pricing/config';
 import { fetchConfig } from '../../utils/pricing/api';
+import { CURRENCIES, formatInCurrency } from '../../utils/pricing/currency';
 import { Segmented } from './controls';
 
 const SIZE_OPTIONS_IMPERIAL = [
@@ -50,6 +51,8 @@ const PricingExplorer: React.FC = () => {
     finishId: config.finishes[1]?.id ?? config.finishes[0]?.id ?? 'painted',
     illumination: 'none',
   });
+
+  const [currency, setCurrency] = useState('USD');
 
   const range = useMemo(() => customerRange(inputs, config), [inputs, config]);
   const set = <K extends keyof CustomerInputs>(key: K, value: CustomerInputs[K]) =>
@@ -105,15 +108,30 @@ const PricingExplorer: React.FC = () => {
       </div>
 
       <div className="mt-10 pt-8 border-t border-wood-200">
-        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 font-semibold mb-2">
-          Typical range
-        </p>
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <p className="font-label text-[11px] uppercase tracking-[0.2em] text-stone-500 font-semibold">
+            Typical range
+          </p>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            aria-label="Currency"
+            className="font-label text-[11px] uppercase tracking-[0.15em] font-semibold text-wood-600 bg-transparent border border-wood-200 px-2 py-1 focus:border-bronze-400 outline-none transition-colors"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code}
+              </option>
+            ))}
+          </select>
+        </div>
         <p className="font-serif text-4xl md:text-5xl text-wood-900 tabular-nums mb-3">
-          {formatMoney(range.low)} to {formatMoney(range.high)}
+          {formatInCurrency(range.low, currency)} to {formatInCurrency(range.high, currency)}
         </p>
         <p className="font-sans text-sm text-wood-500 leading-relaxed max-w-lg">
           An estimate. The final price is confirmed once the specific design, dimensions, and
           details are settled together.
+          {currency !== 'USD' && ' Non-USD figures are approximate, converted from USD.'}
         </p>
 
         <div className="flex flex-wrap gap-4 mt-8">

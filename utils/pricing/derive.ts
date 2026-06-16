@@ -61,6 +61,8 @@ export function inputsFromArtwork(art: Artwork, config: PricingConfig): Internal
     frameCostOverride: null,
     hasClimateProtection: f.hasClimateProtection ?? false,
     climateCostOverride: null,
+    hasCrating: false,
+    crateCostOverride: null,
     hasProjectionMapping: false,
     designAdjustment: 0,
   };

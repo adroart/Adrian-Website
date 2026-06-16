@@ -108,8 +108,14 @@ export function calculatePricing(inputs: InternalInputs, config: PricingConfig):
       : tieredMidpoint(config.climateRanges, inputs.diameterIn)
     : 0;
 
+  const crating = inputs.hasCrating
+    ? inputs.crateCostOverride != null
+      ? inputs.crateCostOverride
+      : tieredMidpoint(config.crateRanges, inputs.diameterIn)
+    : 0;
+
   const productionBaseline =
-    afterLayers + finishAddition + crystalAddition + lighting + frame + climate;
+    afterLayers + finishAddition + crystalAddition + lighting + frame + climate + crating;
 
   const designAdjustment = Math.max(0, inputs.designAdjustment || 0);
   const total = productionBaseline + designAdjustment;
@@ -136,6 +142,7 @@ export function calculatePricing(inputs: InternalInputs, config: PricingConfig):
   if (lighting > 0) lines.push({ label: 'Lighting', detail: lightingOption?.label, amount: lighting });
   if (frame > 0) lines.push({ label: 'Frame', amount: frame });
   if (climate > 0) lines.push({ label: 'Climate protection', amount: climate });
+  if (crating > 0) lines.push({ label: 'Crating', amount: crating });
 
   return {
     lines,
@@ -147,6 +154,7 @@ export function calculatePricing(inputs: InternalInputs, config: PricingConfig):
     lighting,
     frame,
     climate,
+    crating,
     productionBaseline,
     designAdjustment,
     total,
@@ -201,6 +209,8 @@ export function customerRange(inputs: CustomerInputs, config: PricingConfig): Cu
     frameCostOverride: null,
     hasClimateProtection: false,
     climateCostOverride: null,
+    hasCrating: false,
+    crateCostOverride: null,
     hasProjectionMapping: false,
     designAdjustment: 0,
   };

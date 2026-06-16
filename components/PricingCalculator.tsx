@@ -48,6 +48,8 @@ const DEFAULT_INPUTS: InternalInputs = {
   frameCostOverride: null,
   hasClimateProtection: false,
   climateCostOverride: null,
+  hasCrating: false,
+  crateCostOverride: null,
   hasProjectionMapping: false,
   designAdjustment: 0,
 };
@@ -126,6 +128,7 @@ const PricingCalculator: React.FC = () => {
 
   const frameSuggested = tieredMidpoint(config.frameRanges, inputs.diameterIn);
   const climateSuggested = tieredMidpoint(config.climateRanges, inputs.diameterIn);
+  const crateSuggested = tieredMidpoint(config.crateRanges, inputs.diameterIn);
 
   // Sculpture pieces, so the calculator can price any existing work directly.
   const pieces = useMemo(
@@ -306,6 +309,24 @@ const PricingCalculator: React.FC = () => {
                       />
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Toggle
+                    label="Crating / shipping prep"
+                    value={inputs.hasCrating}
+                    onChange={(v) =>
+                      setInputs((p) => ({ ...p, hasCrating: v, crateCostOverride: null }))
+                    }
+                  />
+                  {inputs.hasCrating && (
+                    <MoneyInput
+                      value={inputs.crateCostOverride}
+                      onChange={(v) => setInput('crateCostOverride', v)}
+                      placeholder={`${Math.round(crateSuggested)} suggested`}
+                      allowNull
+                    />
+                  )}
                 </div>
 
                 <Toggle

@@ -246,6 +246,14 @@ const PricingSettings: React.FC<Props> = ({ config, onChange, onReset }) => {
         {renderTieredTable(config.climateRanges, (next) => update({ climateRanges: next }))}
       </Section>
 
+      {/* Crating */}
+      <Section
+        title="Crating / shipping prep"
+        hint="Cost to crate and prepare a piece for safe transit. Suggested range by size, overridable per piece."
+      >
+        {renderTieredTable(config.crateRanges ?? [], (next) => update({ crateRanges: next }))}
+      </Section>
+
       <div className="pt-2">
         <button
           type="button"

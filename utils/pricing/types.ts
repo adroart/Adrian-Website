@@ -68,6 +68,8 @@ export interface PricingConfig {
   lighting: LightingOption[];
   frameRanges: SizeTieredCost[];
   climateRanges: SizeTieredCost[];
+  /** Crating / shipping-prep cost by size, for safely sending larger work. */
+  crateRanges: SizeTieredCost[];
 }
 
 /** Everything the internal calculator needs to price a single piece. */
@@ -81,6 +83,8 @@ export interface InternalInputs {
   frameCostOverride: number | null;
   hasClimateProtection: boolean;
   climateCostOverride: number | null;
+  hasCrating: boolean;
+  crateCostOverride: number | null;
   hasProjectionMapping: boolean;
   /** The intangible creative weight. No formula touches this. */
   designAdjustment: number;
@@ -102,6 +106,7 @@ export interface PriceBreakdown {
   lighting: number;
   frame: number;
   climate: number;
+  crating: number;
   productionBaseline: number;
   designAdjustment: number;
   total: number;
