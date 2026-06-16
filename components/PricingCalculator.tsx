@@ -29,6 +29,8 @@ import {
   updateQuote as apiUpdateQuote,
   deleteQuote as apiDeleteQuote,
 } from '../utils/pricing/api';
+import { inputsFromArtwork } from '../utils/pricing/derive';
+import { FULL_ARCHIVE } from '../data/mockData';
 import { Slider, Segmented, Toggle, MoneyInput, Label } from './pricing/controls';
 import PricingSettings from './pricing/PricingSettings';
 
@@ -109,6 +111,19 @@ const PricingCalculator: React.FC = () => {
   const frameSuggested = tieredMidpoint(config.frameRanges, inputs.diameterIn);
   const climateSuggested = tieredMidpoint(config.climateRanges, inputs.diameterIn);
 
+  // Sculpture pieces, so the calculator can price any existing work directly.
+  const pieces = useMemo(
+    () =>
+      FULL_ARCHIVE.filter(
+        (a) => a.category === 'Multidimensional Art' || a.series === 'Universal Language'
+      ).sort((a, b) => a.title.localeCompare(b.title)),
+    []
+  );
+  const loadPiece = (id: string) => {
+    const art = pieces.find((p) => p.id === id);
+    if (art) setInputs(inputsFromArtwork(art, config));
+  };
+
   const saveCurrentQuote = async () => {
     const name = window.prompt('Name this piece (for your reference)');
     if (!name) return;
@@ -160,6 +175,25 @@ const PricingCalculator: React.FC = () => {
             <div className="bg-white border border-wood-200">
               {/* Inputs */}
               <div className="px-5 py-6 md:px-7 md:py-7 space-y-6">
+                {pieces.length > 0 && (
+                  <div>
+                    <Label className="block mb-2">Start from a piece</Label>
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && loadPiece(e.target.value)}
+                      className="font-sans text-sm text-wood-900 w-full py-2.5 px-3 border border-wood-200 bg-white focus:border-bronze-400 outline-none transition-colors"
+                    >
+                      <option value="">Choose a piece to load its dimensions…</option>
+                      {pieces.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.title}
+                          {p.dimensions ? ` · ${p.dimensions}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <Slider
                   label="Diameter"
                   value={sliderValue}

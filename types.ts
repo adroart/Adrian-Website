@@ -85,6 +85,19 @@ export interface Artwork {
   // Provenance — permanent record displayed on /works/:id
   provenance?: ProvenanceEvent[];
   createdLocation?: string;
+
+  // Pricing factors — optional structured inputs for the pricing engine
+  // (utils/pricing). When set, the internal calculator can load this piece
+  // exactly; when absent, it derives what it can from `dimensions`, `finish`,
+  // and `illuminated`. Purely additive — nothing reads this on the public site.
+  pricingFactors?: {
+    diameterIn?: number;
+    layerCount?: number;
+    finishId?: string;
+    lightingType?: 'none' | 'simple' | 'custom' | 'full';
+    hasFrame?: boolean;
+    hasClimateProtection?: boolean;
+  };
 }
 
 export interface Collection {
