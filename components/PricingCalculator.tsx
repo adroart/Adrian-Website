@@ -9,6 +9,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import { InternalInputs, SavedQuote, PricingConfig } from '../utils/pricing/types';
 import {
@@ -50,7 +51,11 @@ const DEFAULT_INPUTS: InternalInputs = {
   designAdjustment: 0,
 };
 
+/** Hand-off key the invoice tool reads to prefill a draft from a quote. */
+export const INVOICE_DRAFT_KEY = 'pricing:invoice-draft';
+
 const PricingCalculator: React.FC = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<View>('calculator');
   // Render instantly from the local cache (or defaults), then hydrate from
   // the authoritative server copy once it arrives.
@@ -138,6 +143,20 @@ const PricingCalculator: React.FC = () => {
       saveQuotes(next);
       return next;
     });
+  };
+
+  const draftInvoice = () => {
+    const payload = {
+      jobTitle: '',
+      description: `Original multi-dimensional wooden sculpture · ${formatDiameter(inputs.diameterIn, config)}`,
+      amountCents: Math.round(breakdown.quote * 100),
+    };
+    try {
+      window.sessionStorage.setItem(INVOICE_DRAFT_KEY, JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
+    navigate('/admin/invoices');
   };
 
   return (
@@ -339,13 +358,22 @@ const PricingCalculator: React.FC = () => {
                   <span className="font-serif text-3xl tabular-nums">{formatMoney(breakdown.quote)}</span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={saveCurrentQuote}
-                  className="mt-5 font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
-                >
-                  Save this piece to reference
-                </button>
+                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                  <button
+                    type="button"
+                    onClick={saveCurrentQuote}
+                    className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
+                  >
+                    Save this piece to reference
+                  </button>
+                  <button
+                    type="button"
+                    onClick={draftInvoice}
+                    className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
+                  >
+                    Draft an invoice from this quote
+                  </button>
+                </div>
               </div>
             </div>
           )}
