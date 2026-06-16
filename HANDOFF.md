@@ -1,30 +1,26 @@
-# Handoff
-
 ## State
 
-Pricing tool built end to end on branch `claude/beautiful-goodall-zz2t1x`. Type-checks clean, builds green.
+Two features merged or pending merge to `main`:
 
-Works:
-- Engine `utils/pricing/{types,engine,config,api,derive,currency}.ts`. Pure calc, unit conversion, customer range, calibration insights.
-- Internal calculator `/admin/pricing` (`components/PricingCalculator.tsx`, behind `AdminLayout` auth): Calculator / Settings / Reference tabs. All factors: size curve, layer slider (1–20, live multiplier), finish, crystal budget, lighting, frame, climate, crating, projection (quoted separately), design value, 15% margin, metric/imperial. "Start from a piece" loads real artworks.
-- Customer explorer `components/pricing/PricingExplorer.tsx` on Multidimensional Art page, gated by `LAUNCH_FLAGS.pricingExplorer` (false). Currency selector USD/EUR/GBP/AUD/CAD.
-- Backend `functions/api/pricing/{config.js,quotes.js,quotes/[id].js}`, helpers `_lib/pricing.js`, schema `migrations/007_pricing.sql`. GET config public; rest admin-only. localStorage = offline cache/fallback.
-- Quote → Invoice handoff: calculator stashes to sessionStorage, `AdminInvoices` prefills draft.
+**Security hardening** (`claude/optimistic-albattani-0cou9s`, PR #124):
+- Admin auth: signed/expiring HMAC session cookie, constant-time login + token verify, per-IP rate limit.
+- Stripe webhook constant-time signature verify.
+- Rate limits on `inquire`, `subscribe`, `admin/login`, `viewings/:token/request`.
+- `viewings/:token/request` idempotent (no duplicate invoices/emails).
+- Removed orphan `clerk/webhook.js`; lazy `ensureUser` bridge row; `checkout` gates on `env.DB`.
+- `delete-file` key validation; currency uppercased; `atlasSale` backoff shortened; `.wrangler/` gitignored.
+- Details in `SECURITY.md`. Syntax-checked with `node --check`; not build/smoke-tested yet.
 
-Stubbed / placeholder:
-- `DEFAULT_CONFIG` anchors/multipliers are plan estimates, not calibrated to real sales (no real data available: "New Prices" empty, "Guide Pricing" is an unrelated Qigong DVD list).
-- Currency rates in `currency.ts` are static, hand-set, labeled approximate.
-
-Untested:
-- Backend endpoints not run against live D1 (migration not applied; no network to D1 here). Logic reviewed, not executed.
-- No automated tests for the engine.
-- Calculator/explorer not manually exercised in a browser this session (typecheck + production build only).
+**Pricing tool** (already on `main` via `claude/beautiful-goodall-zz2t1x`):
+- Engine `utils/pricing/`, internal calc at `/admin/pricing`, customer explorer (flag-gated).
+- Backend `functions/api/pricing/`, migration `007_pricing.sql` (not yet applied remotely).
+- `DEFAULT_CONFIG` anchors are estimates; currency rates are static placeholders.
 
 ## Next
 
-- Open a PR for `claude/beautiful-goodall-zz2t1x` if Adrian wants one (not yet requested): use the github MCP tools once reconnected.
-- Adrian: apply migration — `npx wrangler d1 migrations apply adrian-website --remote`
-- Adrian: tune the model at `/admin/pricing` (Settings), save 10–15 real pieces to Reference with actual prices, then use the calibration card to recenter.
-- Adrian: set `LAUNCH_FLAGS.pricingExplorer` to `true` once ranges read true.
-- Optional: add a unit test for `utils/pricing/engine.ts` (`calculatePricing`, `interpolateSize`, `customerRange`, `calibrationInsights`).
-- Optional: run the app locally (`npm run dev`, port 5555) and click through `/admin/pricing` + the explorer.
+- **Owner: rotate `sk_live_`** in Stripe dashboard + Cloudflare Pages env (compromised key flagged in `SECURITY.md`).
+- **Owner: verify `UPLOAD_SECRET`** is random 32+ chars; rotate if not.
+- **Owner: unset** `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SECRET` in Cloudflare Pages.
+- Locally smoke-test admin auth after merge: `npm run dev:full`, POST `/api/admin/login`, confirm `admin_session` cookie + `/api/admin/verify` → `{ok:true}`.
+- Apply pricing migration: `npx wrangler d1 migrations apply adrian-website --remote`
+- Tune pricing model at `/admin/pricing` (Settings) with real piece prices; set `LAUNCH_FLAGS.pricingExplorer = true` when ready.
