@@ -162,8 +162,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   This helps returning browsers pick up where they left off. Done when recently viewed pieces show from localStorage.
 - [ ] **Day/night slider** — add a day-vs-night comparison slider for Illuminated Works _(agent · moderate)_
   This shows the lit vs unlit state that makes Illuminated Works special. Done when a before/after slider works on those pieces.
-- [ ] **Pricing explorer** — build a pricing explorer tool with sliders for size and finish _(agent · moderate)_
-  This lets buyers see how size and finish change price before inquiring. Done when the sliders compute live prices.
+- [x] **Pricing explorer** — built. Internal quoting calculator at `/admin/pricing` (size, layers, finish, crystals, lighting, frame, climate, projection, design value, margin; fully tunable settings; calibration reference tab) plus a customer-facing range tool sharing the same engine (`utils/pricing/*`). Public explorer is gated behind `LAUNCH_FLAGS.pricingExplorer` until the model is tuned against real pieces.
 - [ ] **Currency selector** — add a currency selector for international visitors _(agent · moderate)_
   This shows prices in the visitor's currency to reduce friction. Done when prices convert and display in the chosen currency.
 - [ ] **PWA support** — add progressive-web-app capabilities (service worker plus manifest) _(agent · moderate)_

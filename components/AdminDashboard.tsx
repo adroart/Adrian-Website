@@ -41,6 +41,11 @@ const TOOLS: AdminTool[] = [
     description: 'Build a private art viewing for a collector. Compute their chart, curate the pieces, write the reasons, and preview the artifact they receive.',
     href: '/admin/viewings',
   },
+  {
+    title: 'Pricing',
+    description: 'Your private quoting engine. Set the size, layers, finish, and add-ons, add the design value, and arrive at a suggested retail and a quote. Every multiplier is tunable.',
+    href: '/admin/pricing',
+  },
 ];
 
 const COMING_SOON: AdminTool[] = [
