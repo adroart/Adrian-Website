@@ -14,6 +14,7 @@ import AdminLayout from './AdminLayout';
 import { InternalInputs, SavedQuote, PricingConfig } from '../utils/pricing/types';
 import {
   calculatePricing,
+  calibrationInsights,
   formatMoney,
   formatDiameter,
   getLayerMultiplier,
@@ -98,6 +99,16 @@ const PricingCalculator: React.FC = () => {
       return next;
     });
     apiDeleteQuote(id);
+  };
+
+  // Recenter the model on reality: scale the size base by the calibration
+  // factor drawn from saved actual-vs-suggested prices.
+  const applyScale = (factor: number) => {
+    const next: PricingConfig = {
+      ...config,
+      sizeAnchors: config.sizeAnchors.map((a) => ({ ...a, price: Math.round(a.price * factor) })),
+    };
+    setConfig(next);
   };
 
   const breakdown = useMemo(() => calculatePricing(inputs, config), [inputs, config]);
@@ -387,7 +398,12 @@ const PricingCalculator: React.FC = () => {
           )}
 
           {view === 'reference' && (
-            <ReferenceTab quotes={quotes} onSetActual={setQuoteActual} onRemove={removeQuote} />
+            <ReferenceTab
+              quotes={quotes}
+              onSetActual={setQuoteActual}
+              onRemove={removeQuote}
+              onApplyScale={applyScale}
+            />
           )}
         </div>
       </div>
@@ -399,7 +415,9 @@ const ReferenceTab: React.FC<{
   quotes: SavedQuote[];
   onSetActual: (id: string, actualPrice: number | null) => void;
   onRemove: (id: string) => void;
-}> = ({ quotes, onSetActual, onRemove }) => {
+  onApplyScale: (factor: number) => void;
+}> = ({ quotes, onSetActual, onRemove, onApplyScale }) => {
+  const insight = calibrationInsights(quotes);
   if (quotes.length === 0) {
     return (
       <div className="bg-white border border-wood-200 px-6 py-10 text-center">
@@ -412,8 +430,46 @@ const ReferenceTab: React.FC<{
     );
   }
 
+  const applySuggestion = () => {
+    if (!insight) return;
+    const factor = insight.medianRatio;
+    const ok = window.confirm(
+      `Scale every size base price by ×${factor.toFixed(2)} to recenter the model on your actual prices? You can fine-tune or reset afterward in Settings.`
+    );
+    if (ok) onApplyScale(factor);
+  };
+
   return (
     <div className="space-y-3">
+      {insight && (
+        <div className="bg-white border border-bronze-300 px-5 py-5">
+          <Label className="block mb-3">Calibration · {insight.calibratedCount} pieces</Label>
+          <p className="font-sans text-sm text-wood-600 leading-relaxed mb-4">
+            On the pieces you've priced, the formula sits within an average of{' '}
+            <span className="text-wood-900">{insight.meanAbsVariancePct}%</span> of what you charged
+            {insight.biasPct === 0 ? (
+              ', with no consistent lean.'
+            ) : (
+              <>
+                , and tends to run{' '}
+                <span className="text-wood-900">
+                  {Math.abs(insight.biasPct)}% {insight.biasPct > 0 ? 'low' : 'high'}
+                </span>
+                .
+              </>
+            )}
+          </p>
+          {Math.abs(insight.biasPct) >= 5 && (
+            <button
+              type="button"
+              onClick={applySuggestion}
+              className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-700 hover:text-bronze-900 transition-colors font-semibold border-b border-bronze-400 pb-0.5"
+            >
+              Recenter base prices ×{insight.medianRatio.toFixed(2)}
+            </button>
+          )}
+        </div>
+      )}
       {quotes.map((q) => {
         const variance =
           q.actualPrice != null && q.suggestedRetail > 0

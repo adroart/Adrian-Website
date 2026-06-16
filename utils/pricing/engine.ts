@@ -16,6 +16,7 @@ import {
   LayerTier,
   CustomerInputs,
   CustomerRange,
+  SavedQuote,
 } from './types';
 
 const CM_PER_IN = 2.54;
@@ -207,5 +208,47 @@ export function customerRange(inputs: CustomerInputs, config: PricingConfig): Cu
   return {
     low: roundToNearest(baseline, config.roundTo),
     high: roundToNearest(baseline * (1 + config.designSpreadPercent), config.roundTo),
+  };
+}
+
+// ----- Calibration ------------------------------------------------------------
+
+export interface CalibrationInsight {
+  /** How many saved quotes have an actual price to compare against. */
+  calibratedCount: number;
+  /** Average absolute distance between suggested and actual, as a percent. */
+  meanAbsVariancePct: number;
+  /** Median of actual / suggested. >1 means the formula tends to run low. */
+  medianRatio: number;
+  /** (medianRatio - 1) as a percent: how far, and which way, the formula leans. */
+  biasPct: number;
+}
+
+/**
+ * Compare what the formula suggested against what was actually charged across
+ * the saved pieces. Returns null until there are at least three calibrated
+ * quotes — fewer than that is anecdote, not signal. The medianRatio is the
+ * factor to scale the size base by to recenter the model on reality.
+ */
+export function calibrationInsights(quotes: SavedQuote[]): CalibrationInsight | null {
+  const pairs = quotes
+    .filter((q) => q.actualPrice != null && q.actualPrice > 0 && q.suggestedRetail > 0)
+    .map((q) => ({
+      ratio: (q.actualPrice as number) / q.suggestedRetail,
+      absVar: Math.abs((q.actualPrice as number) - q.suggestedRetail) / q.suggestedRetail,
+    }));
+  if (pairs.length < 3) return null;
+
+  const ratios = pairs.map((p) => p.ratio).sort((a, b) => a - b);
+  const mid = Math.floor(ratios.length / 2);
+  const medianRatio =
+    ratios.length % 2 === 0 ? (ratios[mid - 1] + ratios[mid]) / 2 : ratios[mid];
+  const meanAbs = pairs.reduce((s, p) => s + p.absVar, 0) / pairs.length;
+
+  return {
+    calibratedCount: pairs.length,
+    meanAbsVariancePct: Math.round(meanAbs * 100),
+    medianRatio,
+    biasPct: Math.round((medianRatio - 1) * 100),
   };
 }
