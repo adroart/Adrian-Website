@@ -8,9 +8,9 @@
  * actually charged). All three read and write one shared PricingConfig.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from './AdminLayout';
-import { InternalInputs, SavedQuote } from '../utils/pricing/types';
+import { InternalInputs, SavedQuote, PricingConfig } from '../utils/pricing/types';
 import {
   calculatePricing,
   formatMoney,
@@ -20,13 +20,15 @@ import {
   inToCm,
   cmToIn,
 } from '../utils/pricing/engine';
+import { loadConfig, saveConfig, resetConfig, loadQuotes, saveQuotes } from '../utils/pricing/config';
 import {
-  loadConfig,
-  saveConfig,
-  resetConfig,
-  loadQuotes,
-  saveQuotes,
-} from '../utils/pricing/config';
+  fetchConfig,
+  pushConfig,
+  fetchQuotes,
+  createQuote as apiCreateQuote,
+  updateQuote as apiUpdateQuote,
+  deleteQuote as apiDeleteQuote,
+} from '../utils/pricing/api';
 import { Slider, Segmented, Toggle, MoneyInput, Label } from './pricing/controls';
 import PricingSettings from './pricing/PricingSettings';
 
@@ -48,17 +50,47 @@ const DEFAULT_INPUTS: InternalInputs = {
 
 const PricingCalculator: React.FC = () => {
   const [view, setView] = useState<View>('calculator');
-  const [config, setConfigState] = useState(() => loadConfig());
+  // Render instantly from the local cache (or defaults), then hydrate from
+  // the authoritative server copy once it arrives.
+  const [config, setConfigState] = useState<PricingConfig>(loadConfig);
   const [inputs, setInputs] = useState<InternalInputs>(DEFAULT_INPUTS);
-  const [quotes, setQuotesState] = useState<SavedQuote[]>(() => loadQuotes());
+  const [quotes, setQuotesState] = useState<SavedQuote[]>(loadQuotes);
+  const pushTimer = useRef<number | null>(null);
 
-  const setConfig = (next: typeof config) => {
+  useEffect(() => {
+    let alive = true;
+    fetchConfig().then((c) => alive && setConfigState(c));
+    fetchQuotes().then((q) => alive && setQuotesState(q));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Cache locally at once; push to the server debounced so dragging a value
+  // doesn't fire a request per pixel.
+  const setConfig = (next: PricingConfig) => {
     setConfigState(next);
     saveConfig(next);
+    if (pushTimer.current) window.clearTimeout(pushTimer.current);
+    pushTimer.current = window.setTimeout(() => pushConfig(next), 600);
   };
-  const setQuotes = (next: SavedQuote[]) => {
-    setQuotesState(next);
-    saveQuotes(next);
+
+  const setQuoteActual = (id: string, actualPrice: number | null) => {
+    setQuotesState((prev) => {
+      const next = prev.map((q) => (q.id === id ? { ...q, actualPrice } : q));
+      saveQuotes(next);
+      return next;
+    });
+    apiUpdateQuote(id, { actualPrice });
+  };
+
+  const removeQuote = (id: string) => {
+    setQuotesState((prev) => {
+      const next = prev.filter((q) => q.id !== id);
+      saveQuotes(next);
+      return next;
+    });
+    apiDeleteQuote(id);
   };
 
   const breakdown = useMemo(() => calculatePricing(inputs, config), [inputs, config]);
@@ -77,19 +109,20 @@ const PricingCalculator: React.FC = () => {
   const frameSuggested = tieredMidpoint(config.frameRanges, inputs.diameterIn);
   const climateSuggested = tieredMidpoint(config.climateRanges, inputs.diameterIn);
 
-  const saveCurrentQuote = () => {
+  const saveCurrentQuote = async () => {
     const name = window.prompt('Name this piece (for your reference)');
     if (!name) return;
-    const quote: SavedQuote = {
-      id: `${Date.now()}`,
+    const created = await apiCreateQuote({
       name: name.trim(),
-      savedAt: new Date().toISOString(),
       inputs: { ...inputs },
       suggestedRetail: breakdown.suggestedRetail,
       quote: breakdown.quote,
-      actualPrice: null,
-    };
-    setQuotes([quote, ...quotes]);
+    });
+    setQuotesState((prev) => {
+      const next = [created, ...prev];
+      saveQuotes(next);
+      return next;
+    });
   };
 
   return (
@@ -292,7 +325,7 @@ const PricingCalculator: React.FC = () => {
           )}
 
           {view === 'reference' && (
-            <ReferenceTab quotes={quotes} onChange={setQuotes} />
+            <ReferenceTab quotes={quotes} onSetActual={setQuoteActual} onRemove={removeQuote} />
           )}
         </div>
       </div>
@@ -300,10 +333,11 @@ const PricingCalculator: React.FC = () => {
   );
 };
 
-const ReferenceTab: React.FC<{ quotes: SavedQuote[]; onChange: (q: SavedQuote[]) => void }> = ({
-  quotes,
-  onChange,
-}) => {
+const ReferenceTab: React.FC<{
+  quotes: SavedQuote[];
+  onSetActual: (id: string, actualPrice: number | null) => void;
+  onRemove: (id: string) => void;
+}> = ({ quotes, onSetActual, onRemove }) => {
   if (quotes.length === 0) {
     return (
       <div className="bg-white border border-wood-200 px-6 py-10 text-center">
@@ -315,10 +349,6 @@ const ReferenceTab: React.FC<{ quotes: SavedQuote[]; onChange: (q: SavedQuote[])
       </div>
     );
   }
-
-  const setActual = (id: string, actualPrice: number | null) =>
-    onChange(quotes.map((q) => (q.id === id ? { ...q, actualPrice } : q)));
-  const remove = (id: string) => onChange(quotes.filter((q) => q.id !== id));
 
   return (
     <div className="space-y-3">
@@ -333,7 +363,7 @@ const ReferenceTab: React.FC<{ quotes: SavedQuote[]; onChange: (q: SavedQuote[])
               <h3 className="font-serif text-lg text-wood-900 font-medium">{q.name}</h3>
               <button
                 type="button"
-                onClick={() => remove(q.id)}
+                onClick={() => onRemove(q.id)}
                 className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-300 hover:text-wood-700 transition-colors font-semibold"
               >
                 Remove
@@ -350,7 +380,7 @@ const ReferenceTab: React.FC<{ quotes: SavedQuote[]; onChange: (q: SavedQuote[])
                 <Label className="block mb-1">Actual</Label>
                 <MoneyInput
                   value={q.actualPrice}
-                  onChange={(v) => setActual(q.id, v)}
+                  onChange={(v) => onSetActual(q.id, v)}
                   placeholder="—"
                   allowNull
                 />

@@ -10,11 +10,12 @@
  * framing, no "wall art" — these are multi-dimensional wooden sculptures.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CustomerInputs } from '../../utils/pricing/types';
+import { CustomerInputs, PricingConfig } from '../../utils/pricing/types';
 import { customerRange, formatMoney } from '../../utils/pricing/engine';
 import { loadConfig } from '../../utils/pricing/config';
+import { fetchConfig } from '../../utils/pricing/api';
 import { Segmented } from './controls';
 
 const SIZE_OPTIONS_IMPERIAL = [
@@ -32,8 +33,17 @@ const SIZE_OPTIONS_METRIC = [
 ];
 
 const PricingExplorer: React.FC = () => {
-  // Read the tuned config if present; otherwise the shared defaults.
-  const config = useMemo(() => loadConfig(), []);
+  // Cached/default model for an instant first paint, then the authoritative
+  // tuned model from the server so visitors always see Adrian's real numbers.
+  const [config, setConfig] = useState<PricingConfig>(loadConfig);
+  useEffect(() => {
+    let alive = true;
+    fetchConfig().then((c) => alive && setConfig(c));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const [inputs, setInputs] = useState<CustomerInputs>({
     sizeCategory: 'medium',
     complexity: 'layered',
