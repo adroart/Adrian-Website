@@ -73,6 +73,7 @@ const PricingCalculator: React.FC = () => {
     fetchQuotes().then((q) => alive && setQuotesState(q));
     return () => {
       alive = false;
+      if (pushTimer.current) window.clearTimeout(pushTimer.current);
     };
   }, []);
 
