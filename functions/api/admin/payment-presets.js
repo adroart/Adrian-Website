@@ -7,7 +7,7 @@ import {
 
 export async function onRequest(context) {
   const { request, env } = context;
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;

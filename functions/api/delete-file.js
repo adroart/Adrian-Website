@@ -1,18 +1,16 @@
 /**
  * DELETE /api/delete-file?key=filename.mp3
- * Auth: admin_session cookie
+ * Auth: admin_session cookie (signed token)
  */
 
-const COOKIE_NAME = 'admin_session';
+import { isAdminAuthed } from './_lib/admin.js';
 
-function getCookie(request, name) {
-  const header = request.headers.get('Cookie') || '';
-  const match = header.split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
-  return match ? match.slice(name.length + 1) : null;
-}
+// Keys are flat object names in the music bucket. Reject anything that could
+// traverse or reach outside the expected namespace.
+const KEY_RE = /^[a-zA-Z0-9._\/-]{1,200}$/;
 
 export async function onRequestDelete({ request, env }) {
-  if (getCookie(request, COOKIE_NAME) !== env.UPLOAD_SECRET) {
+  if (!(await isAdminAuthed(request, env))) {
     return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
       status: 401, headers: { 'Content-Type': 'application/json' },
     });
@@ -21,6 +19,11 @@ export async function onRequestDelete({ request, env }) {
   const key = new URL(request.url).searchParams.get('key');
   if (!key) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing key' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  if (!KEY_RE.test(key) || key.includes('..')) {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid key' }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }

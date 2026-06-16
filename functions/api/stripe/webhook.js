@@ -40,7 +40,8 @@ export async function onRequest(context) {
   const email = (s.customer_details?.email || s.customer_email || '').toLowerCase();
   const status = s.payment_status === 'paid' ? 'paid' : (s.payment_status || 'pending');
   const amountTotal = s.amount_total ?? 0;
-  const currency = (s.currency || 'usd').toLowerCase();
+  // Store currency uppercase to stay consistent with invoices/atlas tables.
+  const currency = (s.currency || 'usd').toUpperCase();
 
   // Look up the user by stripe_customer_id first, then fall back to email
   // matching. user_id stays null for guest checkouts; later /api/orders/claim
@@ -136,7 +137,7 @@ export async function onRequest(context) {
         buyerName: s.customer_details?.name || undefined,
         saleDate: new Date((s.created ?? Math.floor(Date.now() / 1000)) * 1000).toISOString(),
         priceCents: amountTotal,
-        currency: currency.toUpperCase(),
+        currency,
         // sku/pieceId/editionNumber left unset: Adrian picks the piece in the
         // admin queue (the webhook's word never decides which piece moves).
       }).catch((err) => console.warn('[stripe/webhook] atlas notify failed:', err)),

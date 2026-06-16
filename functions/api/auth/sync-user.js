@@ -1,9 +1,11 @@
 /**
  * POST /api/auth/sync-user
  *
- * Called once per session after Clerk reports a signed-in user. Idempotent:
- * upserts the D1 users row by clerk_user_id, creates (or finds) a Stripe
- * Customer for that email, and links them. Returns the persisted row.
+ * Called once per session after Better Auth reports a signed-in user. Idempotent:
+ * upserts the D1 users bridge row (keyed by the external auth id, stored in the
+ * legacy clerk_user_id column), creates (or finds) a Stripe Customer for that
+ * email, and links them. Returns the persisted row. Customer endpoints also
+ * lazily upsert this row via ensureUser, so a missed call here is non-fatal.
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';

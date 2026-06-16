@@ -11,6 +11,8 @@
  *   RESEND_FROM_EMAIL  — Verified sender address (default: noreply@adrianrasmussen.com)
  */
 
+import { rateLimit, clientIp } from './_lib/ratelimit.js';
+
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
   'https://www.adrianrasmussen.com',
@@ -119,6 +121,15 @@ export async function onRequestPost(context) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
   };
+
+  // Throttle inbound inquiries per IP — each one sends a paid Resend email.
+  const limit = rateLimit(`inquire:${clientIp(request)}`, { max: 5, windowMs: 60_000 });
+  if (!limit.allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please wait a moment and try again.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Retry-After': String(limit.retryAfter) },
+    });
+  }
 
   let body;
   try {

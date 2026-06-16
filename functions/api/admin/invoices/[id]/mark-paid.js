@@ -11,7 +11,7 @@ import { serializeInvoiceRow } from '../../../_lib/invoices.js';
  * total_cents/due_today_cents so the figure reflects the buyer's choice.
  */
 export async function onRequestPost({ request, env, params }) {
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
@@ -26,7 +26,7 @@ export async function onRequestPost({ request, env, params }) {
     body = {};
   }
 
-  const current = await env.DB.prepare('SELECT * FROM invoices WHERE id = ?1 AND status != "void"').bind(id).first();
+  const current = await env.DB.prepare("SELECT * FROM invoices WHERE id = ?1 AND status != 'void'").bind(id).first();
   if (!current) return jsonResponse({ ok: false, error: 'not_found' }, 404);
 
   // If a fixed total was supplied (variant invoices), set it before computing balance.

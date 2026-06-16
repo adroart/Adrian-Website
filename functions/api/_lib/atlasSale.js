@@ -20,7 +20,9 @@
 const ENDPOINT = 'https://mandalacodes.com/api/atlas/sale';
 
 // Retry backoff in ms. 400 = sender bug, never retried. 401/5xx/network = retry.
-const BACKOFF_MS = [10_000, 60_000, 360_000];
+// Kept short so the whole sequence finishes inside the waitUntil window after
+// we've already 200'd Stripe; long multi-minute sleeps were silently killed.
+const BACKOFF_MS = [1_000, 5_000, 15_000];
 
 async function hmacHex(secret, message) {
   const enc = new TextEncoder();

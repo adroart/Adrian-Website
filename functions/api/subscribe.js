@@ -11,6 +11,8 @@
  *   KIT_PUBLIC_API_KEY   — public API key from Kit
  */
 
+import { rateLimit, clientIp } from './_lib/ratelimit.js';
+
 const ALLOWED_ORIGINS = [
   'https://adrianrasmussen.com',
   'https://www.adrianrasmussen.com',
@@ -49,6 +51,15 @@ export async function onRequestPost(context) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
   };
+
+  // Throttle per IP to blunt subscribe-bombing of the newsletter provider.
+  const limit = rateLimit(`subscribe:${clientIp(request)}`, { max: 5, windowMs: 60_000 });
+  if (!limit.allowed) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please wait a moment and try again.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Retry-After': String(limit.retryAfter) },
+    });
+  }
 
   let body;
   try {
