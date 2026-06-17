@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { MULTIDIMENSIONAL_CATEGORIES } from '../data/mockData';
 import { ArrowRight } from 'lucide-react';
 import ArtImage from './ArtImage';
+import { LAUNCH_FLAGS } from '../launchFlags';
+import PricingExplorer from './pricing/PricingExplorer';
 
 // --- Sub-components ---
 
@@ -111,6 +113,14 @@ const MultidimensionalArt: React.FC = () => {
                     <ArrowRight size={14} />
                 </Link>
             </div>
+
+            {/* Pricing Explorer — a quiet doorway into what's possible at a
+                given size and finish. Gated until the model is tuned. */}
+            {LAUNCH_FLAGS.pricingExplorer && (
+                <div className="max-w-[1800px] mx-auto px-6 mt-24">
+                    <PricingExplorer />
+                </div>
+            )}
         </section>
     );
 };

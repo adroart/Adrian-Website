@@ -82,4 +82,17 @@ export const LAUNCH_FLAGS = {
    * Keys live in Infisical (dev) and Cloudflare Pages env (prod).
    */
   accounts: true,
+
+  /**
+   * PRICING EXPLORER — Customer-facing price-range tool in the
+   * Multidimensional Art section. Shares the internal calculator's engine and
+   * tuned config (utils/pricing/*).
+   * Disabled because: the internal model should be validated against real
+   * pieces first (Settings tab at /admin/pricing, then the Reference tab),
+   * so the public ranges read true before visitors see them.
+   * To re-enable: tune the model in /admin/pricing, then flip to true.
+   * Files affected:
+   *   - MultidimensionalArt.tsx (renders <PricingExplorer /> when true)
+   */
+  pricingExplorer: false,
 };

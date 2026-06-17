@@ -30,6 +30,7 @@ const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
+const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const Viewing = lazy(() => import('./components/viewing/Viewing'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
@@ -149,6 +150,7 @@ const AppInner: React.FC = () => {
             <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/admin/book" element={<AdminBookEditor />} />
             <Route path="/admin/viewings" element={<AdminViewings />} />
+            <Route path="/admin/pricing" element={<PricingCalculator />} />
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
             <Route path="/qr" element={<QRIndex />} />

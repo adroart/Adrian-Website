@@ -157,6 +157,38 @@ const AdminInvoices: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
+  // Prefill from the pricing calculator's "Draft an invoice from this quote"
+  // hand-off (sessionStorage key 'pricing:invoice-draft'). One-shot: consume
+  // and clear, then let Adrian fill in the client details.
+  useEffect(() => {
+    let raw: string | null = null;
+    try {
+      raw = window.sessionStorage.getItem('pricing:invoice-draft');
+      if (raw) window.sessionStorage.removeItem('pricing:invoice-draft');
+    } catch {
+      raw = null;
+    }
+    if (!raw) return;
+    try {
+      const h = JSON.parse(raw) as { jobTitle?: string; description?: string; amountCents?: number };
+      setDraft(prev => ({
+        ...prev,
+        jobTitle: prev.jobTitle || h.jobTitle || 'Commissioned wooden sculpture',
+        lineItems: [
+          {
+            ...prev.lineItems[0],
+            description: h.description || prev.lineItems[0]?.description || '',
+            amountCents: Number(h.amountCents) || 0,
+          },
+          ...prev.lineItems.slice(1),
+        ],
+      }));
+      setMessage({ type: 'ok', text: 'Started from a pricing quote. Add the client details to finish.' });
+    } catch {
+      /* malformed hand-off — ignore */
+    }
+  }, []);
+
   useEffect(() => {
     setDraft(prev => {
       const schedule = buildPaymentSchedule(totalCents, termMode);

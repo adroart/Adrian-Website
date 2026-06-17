@@ -23,6 +23,12 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   Real photography replaces placeholders before launch, and the shop can't look credible without it. Done when every live piece has real imagery shot and prepped. → Plan: [photography.md](todo/plans/photography.md)
 - [ ] **Shop launch** — turn the shop on: Stripe, pricing, env vars, and launch content _(you · deep)_
   The shop is gated off because all Stripe price IDs are `price_REPLACE` placeholders, so real products and keys are needed to sell. Done when real prices are set, env vars are in place, the `shopEnabled` flag is flipped, and a test purchase succeeds. → Plan: [shop-launch.md](todo/plans/shop-launch.md)
+- [ ] **Pricing tool: apply migration** — create the D1 tables for the pricing calculator _(you · quick)_
+  Run `npx wrangler d1 migrations apply adrian-website --remote`. Until then the tools fall back to local cache/defaults. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
+- [ ] **Pricing tool: tune the model** — calibrate anchors and multipliers against real pieces at `/admin/pricing` _(you · moderate)_
+  The defaults are plan estimates; no real art-pricing data was available to calibrate. Load real pieces, set Settings to match your intuition, save pieces to Reference with their actual prices, and recenter. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
+- [ ] **Pricing tool: flip the explorer on** — make the public Pricing Explorer live once the model reads true _(you · quick)_
+  Set `LAUNCH_FLAGS.pricingExplorer` to `true`. It lives on the Multidimensional Art page. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
 - [ ] **Clerk prod** — take Clerk login to production: rotate the exposed secret, add the 5 DNS records, finish Google OAuth, then Claude wires the live keys _(you · deep)_
   Shared dev login is live, but production needs its own keys and DNS, and the pasted `sk_live_` must be rotated for safety. Done when DNS is verified, Google OAuth is set, prod keys are wired, and a real sign-up lands a D1 row on the live site. → Plan: [clerk-production-launch.md](todo/plans/clerk-production-launch.md)
 
@@ -162,8 +168,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   This helps returning browsers pick up where they left off. Done when recently viewed pieces show from localStorage.
 - [ ] **Day/night slider** — add a day-vs-night comparison slider for Illuminated Works _(agent · moderate)_
   This shows the lit vs unlit state that makes Illuminated Works special. Done when a before/after slider works on those pieces.
-- [ ] **Pricing explorer** — build a pricing explorer tool with sliders for size and finish _(agent · moderate)_
-  This lets buyers see how size and finish change price before inquiring. Done when the sliders compute live prices.
+- [x] **Pricing explorer** — built. Internal quoting calculator at `/admin/pricing` (size, layers, finish, crystals, lighting, frame, climate, projection, design value, margin; fully tunable settings; calibration reference tab) plus a customer-facing range tool sharing the same engine (`utils/pricing/*`). Public explorer is gated behind `LAUNCH_FLAGS.pricingExplorer` until the model is tuned against real pieces.
 - [ ] **Currency selector** — add a currency selector for international visitors _(agent · moderate)_
   This shows prices in the visitor's currency to reduce friction. Done when prices convert and display in the chosen currency.
 - [ ] **PWA support** — add progressive-web-app capabilities (service worker plus manifest) _(agent · moderate)_
