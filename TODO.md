@@ -32,6 +32,20 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 - [ ] **Clerk prod** — take Clerk login to production: rotate the exposed secret, add the 5 DNS records, finish Google OAuth, then Claude wires the live keys _(you · deep)_
   Shared dev login is live, but production needs its own keys and DNS, and the pasted `sk_live_` must be rotated for safety. Done when DNS is verified, Google OAuth is set, prod keys are wired, and a real sign-up lands a D1 row on the live site. → Plan: [clerk-production-launch.md](todo/plans/clerk-production-launch.md)
 
+### Adrian-only: backend security pass (waiting on you to verify before it goes live)
+
+- [ ] **Backend security hardening** — review, verify, and merge the open security pass, and rotate the live Stripe key _(you · deep)_
+  A 47-file hardening of sign-in, abuse limits, and payment handling is built and waiting in an open request, but it was only syntax-checked, never run, and it touches live payments — so it can't go live unverified. Rotate the live Stripe key regardless (a key was exposed). Then build it, smoke-test sign-in + checkout + a payment notification, and merge or discard. The request also carries a few stray local cache files to drop before merge. Done when the Stripe key is rotated, the pass is verified working, and it's merged or dropped. → Request: open PR #124 on Adrian-Website (`claude/optimistic-albattani-0cou9s`)
+
+### Adrian-only: turn on the art-sale → oracle notification chain
+
+> All the code for this is built and live on both sites. The oracle (receiving) side is already configured — a live test confirmed it's on. These two steps switch on the art-site (sending) side so a real sale shows up as a pending row in the mandalacodes admin to one-click confirm. Until both are done, no sale is ever lost — it stays in Stripe and you can issue the steward by hand.
+
+- [ ] **Shared notification secret on the art site** — set `SALE_WEBHOOK_SECRET` on the art-site hosting, same value as the oracle uses _(you · quick)_
+  Without it the art site can't sign its sale notifications, so nothing reaches the oracle's pending-sales queue. Generate with `openssl rand -hex 32`, then Cloudflare → the Adrian-Website Pages project → Settings → Environment variables → Production. The exact same value must already be set on the mandalacodes project (the live probe says the oracle side is configured). Done when both sites carry the identical secret.
+- [ ] **Apply the sale-queue database setup on the art site** — run the records migration against the live art-site database _(you · quick)_
+  The pending-sales table has to exist on the live database or the sale bridge can't store anything. From the Adrian-Website folder: `wrangler d1 migrations apply adrian-website --remote`. Done when the migration reports applied. Then prove the whole chain end-to-end: make one test sale and confirm it appears under `/admin/atlas` → Pending Sales on mandalacodes.
+
 ### Claude-side: code bugs to fix before shop launch
 
 - [ ] **Configurator bugs** — fix the piece configurator before the shop launches (three bugs) _(agent · deep)_
