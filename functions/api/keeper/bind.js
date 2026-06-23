@@ -9,6 +9,19 @@
  * which is look-only. The code is hashed and matched; the plaintext is never
  * stored or logged.
  *
+ * REGISTRATION IS THE GATE. A piece row is born when the artist registers it
+ * (functions/api/admin/pieces.js), which mints the recovery code, stores ONLY
+ * its hash, and leaves keeper_user_id / claimed_at NULL (migration 009). Binding
+ * never creates a row: with no registered hash there is nothing to prove
+ * possession against. The state machine on a POST is exactly five arms:
+ *   1. No row for this piece/edition      → 404 not_registered (register first).
+ *   2. Registered, unclaimed, code MATCHES → FIRST BIND: stamp keeper + claimed_at.
+ *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that).
+ *   4. Live keeper bound (released_at NULL)→ idempotent if it is YOU, else the
+ *                                            contested-claim handoff (202).
+ *   5. Released piece (released_at set)    → re-bindable like case 2: the printed
+ *                                            code re-binds the next holder.
+ *
  * Returns: { ok: true, keeper: { pieceId, editionNumber, claimedAt } } on a
  * fresh bind; the same shape (idempotent) when the caller is already the keeper.
  * On a CONTESTED bind (the piece already has a living keeper) it does NOT 409:
@@ -59,7 +72,6 @@ import {
   migrationNotApplied,
   isMissingTableError,
   hashRecoveryCode,
-  genKeeperPieceId,
 } from '../_lib/keeper.js';
 import { requestContestedClaim } from '../_lib/claimBridge.js';
 
@@ -104,17 +116,43 @@ export async function onRequest(context) {
   const nowIso = new Date().toISOString();
 
   try {
-    // Is there already an ACTIVE binding for this piece/edition?
+    // Fetch THE row for this piece/edition. UNIQUE(piece_id, edition_number)
+    // guarantees at most one, so we do not filter on released_at here: we want
+    // to see a released row too, because a released piece is re-bindable by the
+    // next holder of the printed code (case 5 below). registered_at + claimed_at
+    // + released_at together tell us which state-machine arm to take.
     const existing = await env.DB
       .prepare(
-        `SELECT id, keeper_user_id, recovery_code_hash, claimed_at
+        `SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at
            FROM keeper_pieces
-          WHERE piece_id = ?1 AND edition_number = ?2 AND released_at IS NULL`,
+          WHERE piece_id = ?1 AND edition_number = ?2`,
       )
       .bind(pieceId, editionNumber)
       .first();
 
-    if (existing) {
+    // ── Case 1: no row at all ────────────────────────────────────────────────
+    // Registration is the gate. A piece must be registered by the admin (which
+    // mints + hashes the recovery code) before anyone can claim it. We do NOT
+    // silently create a binding here: with no registered hash there is nothing
+    // to prove possession against, and an auto-create would let any signed-in
+    // user seize an unregistered piece by inventing a code. Reject clearly.
+    if (!existing) {
+      return json(
+        {
+          ok: false,
+          error: 'not_registered',
+          message:
+            'This piece is not registered yet. The artist must register it before it can be claimed.',
+        },
+        404,
+      );
+    }
+
+    // ── Case 4: a LIVE keeper already holds this piece ───────────────────────
+    // keeper_user_id set AND released_at NULL. This is the only arm that routes
+    // into the contested-claim handoff. A registered-but-unclaimed row (no
+    // keeper) must NOT reach here — that is the bug this rewrite kills.
+    if (existing.keeper_user_id && !existing.released_at) {
       // Already bound to THIS user → idempotent success (re-scan / refresh).
       if (existing.keeper_user_id === auth.userId) {
         return json({
@@ -202,37 +240,62 @@ export async function onRequest(context) {
       );
     }
 
-    // The recovery code must match the one the artist registered for this piece.
-    // The registry's recoveryCodeHash is the artist-side anchor; a real
-    // deployment may also seed this hash at sale time. We compare against the
-    // hash carried on the request (already SHA-256'd) — the plaintext never
-    // touches D1. The UNIQUE(recovery_code_hash) constraint additionally stops
-    // the same code binding two different pieces.
-    const id = genKeeperPieceId();
-    let inserted;
-    try {
-      inserted = await env.DB
-        .prepare(
-          `INSERT INTO keeper_pieces
-             (id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
-        )
-        .bind(id, pieceId, editionNumber, auth.userId, codeHash, nowIso)
-        .run();
-    } catch (insErr) {
-      // UNIQUE violation: either the piece got bound concurrently, or this
-      // exact recovery code is already in use for another piece.
-      if (/unique/i.test(String(insErr?.message))) {
-        return json(
-          { ok: false, error: 'bind_conflict', message: 'This piece or code is already bound.' },
-          409,
-        );
-      }
-      throw insErr;
+    // ── Cases 2, 3, 5: the row is bindable (registered-unclaimed, OR released) ─
+    // Reaching here means there is NO live keeper: either the piece was
+    // registered and never claimed (keeper_user_id NULL), or it was released
+    // (released_at set) and is back in circulation for the next holder. Both
+    // resolve the same way: the printed recovery code is the proof. We compare
+    // the incoming code's hash to the stored hash and bind on a match.
+    //
+    // Released pieces (case 5) route through this same unclaimed-and-registered
+    // path on purpose: a release puts the piece back to "awaiting its first new
+    // keeper", and whoever physically holds it (and thus the printed code) is
+    // the legitimate next keeper. We do NOT route a release into the contested
+    // path, because there is no live holder to contest. If the artist wanted a
+    // fresh code on release, re-registration mints one; the stored hash is
+    // whatever currently anchors the piece.
+    if (existing.recovery_code_hash !== codeHash) {
+      // ── Case 3: code does NOT match ────────────────────────────────────────
+      // Reject. We do not reveal whether the piece exists beyond "the code did
+      // not match" — same message whether unclaimed or released.
+      return json(
+        {
+          ok: false,
+          error: 'code_mismatch',
+          message: 'That recovery code did not match. Check the code on the back of the art.',
+        },
+        403,
+      );
     }
 
-    if (!inserted?.success) {
-      return json({ ok: false, error: 'bind_failed' }, 500);
+    // ── Case 2 (and case 5 on a matching code): FIRST BIND ───────────────────
+    // The code matches the registered hash. Stamp this user as the keeper and
+    // record claimed_at. UPDATE (not INSERT): the row already exists from
+    // registration. We bind only when there is no live keeper, so the WHERE
+    // guard (keeper_user_id IS NULL AND released_at NULL, OR released_at set)
+    // also defends against a concurrent first-bind racing us. On release we
+    // clear released_at so the row is active again under the new keeper.
+    const updated = await env.DB
+      .prepare(
+        `UPDATE keeper_pieces
+            SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
+          WHERE id = ?3
+            AND (keeper_user_id IS NULL OR released_at IS NOT NULL)`,
+      )
+      .bind(auth.userId, nowIso, existing.id)
+      .run();
+
+    if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
+      // The guard matched no row → a concurrent bind beat us to this piece.
+      // Treat it as contested rather than silently overwriting.
+      return json(
+        {
+          ok: false,
+          error: 'bind_conflict',
+          message: 'This piece was just claimed by someone else. Reload and try again.',
+        },
+        409,
+      );
     }
 
     return json({

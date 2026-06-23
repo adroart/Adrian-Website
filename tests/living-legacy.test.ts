@@ -772,3 +772,279 @@ describe('admin piece registration', () => {
     }
   });
 });
+
+// ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
+// These exercise functions/api/keeper/bind.js against the SAME in-memory D1
+// stand-in the admin suite uses, extended to the few extra statement shapes
+// bind issues (the no-released-filter SELECT, the keeper UPDATE, and the users
+// lookup getUserByClerkId runs). The session layer (requireUser) is module-
+// mocked so we can drive distinct signed-in users without a real Better Auth
+// cookie; the contested-claim bridge fetch is stubbed at globalThis.fetch.
+//
+// Run note: this section uses node:test's mock.module, so the suite is invoked
+// with `npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts`.
+// The flag is benign for every other test in this file.
+
+import { mock } from 'node:test';
+
+// The signed-in identity bind sees. Mutated per-test before each call so one
+// suite can play several different users (registrant never binds; first keeper;
+// a second, contesting user).
+let CURRENT_AUTH: { userId: string; email: string | null } | null = null;
+
+mock.module('../functions/api/_lib/clerk.js', {
+  namedExports: {
+    requireUser: async () => {
+      if (!CURRENT_AUTH) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
+      }
+      return { userId: CURRENT_AUTH.userId, email: CURRENT_AUTH.email };
+    },
+  },
+});
+
+// getUserByClerkId is satisfied by the fake DB's users SELECT below, so we do
+// not mock db.js; we just make the fake DB answer that statement.
+
+// A fuller fake D1 that serves BOTH the admin registration statements and the
+// keeper-bind statements, plus the users lookup. Same key (piece_id +
+// edition_number); UNIQUE(piece_id, edition_number) is honoured.
+function makeKeeperDb() {
+  const pieces: any[] = [];
+  const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
+
+  function findActive(pieceId: string, edition: number) {
+    return pieces.find(
+      (r) => r.piece_id === pieceId && r.edition_number === edition && !r.released_at,
+    );
+  }
+  function findAny(pieceId: string, edition: number) {
+    return pieces.find((r) => r.piece_id === pieceId && r.edition_number === edition);
+  }
+
+  function exec(sql: string, params: any[]) {
+    const s = sql.replace(/\s+/g, ' ').trim();
+
+    // users lookup (getUserByClerkId)
+    if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(s)) {
+      const u = users.find((r) => r.clerk_user_id === params[0]) || null;
+      return { kind: 'first', row: u };
+    }
+
+    // bind SELECT: the row regardless of released_at (no released filter)
+    if (
+      /^SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2$/i.test(
+        s,
+      )
+    ) {
+      return { kind: 'first', row: findAny(params[0], params[1]) || null };
+    }
+
+    // admin SELECT: active row for a piece/edition (released filter)
+    if (
+      /^SELECT .* FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2 AND released_at IS NULL/i.test(
+        s,
+      )
+    ) {
+      return { kind: 'first', row: findActive(params[0], params[1]) || null };
+    }
+
+    // admin INSERT: fresh registration (no keeper yet)
+    if (
+      /^INSERT INTO keeper_pieces \(id, piece_id, edition_number, recovery_code_hash, registered_at\)/i.test(
+        s,
+      )
+    ) {
+      const [id, piece_id, edition_number, recovery_code_hash, registered_at] = params;
+      if (pieces.some((r) => r.recovery_code_hash === recovery_code_hash)) {
+        throw new Error('UNIQUE constraint failed: keeper_pieces.recovery_code_hash');
+      }
+      if (findActive(piece_id, edition_number)) {
+        throw new Error('UNIQUE constraint failed: keeper_pieces.piece_id');
+      }
+      pieces.push({
+        id,
+        piece_id,
+        edition_number,
+        keeper_user_id: null,
+        recovery_code_hash,
+        current_display_location: null,
+        registered_at,
+        claimed_at: null,
+        released_at: null,
+      });
+      return { kind: 'run', meta: { changes: 1 } };
+    }
+
+    // admin UPDATE: re-register an unclaimed row's hash
+    if (/^UPDATE keeper_pieces SET recovery_code_hash = \?1, registered_at = \?2 WHERE id = \?3/i.test(s)) {
+      const [hash, registeredAt, id] = params;
+      const row = pieces.find((r) => r.id === id);
+      if (row) {
+        row.recovery_code_hash = hash;
+        row.registered_at = registeredAt;
+      }
+      return { kind: 'run', meta: { changes: row ? 1 : 0 } };
+    }
+
+    // bind UPDATE: first bind / re-bind a released piece (guarded WHERE)
+    if (
+      /^UPDATE keeper_pieces SET keeper_user_id = \?1, claimed_at = \?2, released_at = NULL WHERE id = \?3 AND \(keeper_user_id IS NULL OR released_at IS NOT NULL\)/i.test(
+        s,
+      )
+    ) {
+      const [keeperUserId, claimedAt, id] = params;
+      const row = pieces.find((r) => r.id === id);
+      const guardPasses = row && (row.keeper_user_id == null || row.released_at != null);
+      if (row && guardPasses) {
+        row.keeper_user_id = keeperUserId;
+        row.claimed_at = claimedAt;
+        row.released_at = null;
+        return { kind: 'run', meta: { changes: 1 } };
+      }
+      return { kind: 'run', meta: { changes: 0 } };
+    }
+
+    // list
+    if (/^SELECT .* FROM keeper_pieces ORDER BY/i.test(s)) {
+      return { kind: 'all', results: pieces.slice() };
+    }
+    throw new Error(`fake D1: unhandled statement: ${s}`);
+  }
+
+  const DB = {
+    prepare(sql: string) {
+      let bound: any[] = [];
+      const stmt: any = {
+        bind(...args: any[]) {
+          bound = args;
+          return stmt;
+        },
+        async first() {
+          return exec(sql, bound).row ?? null;
+        },
+        async run() {
+          const r = exec(sql, bound);
+          return { success: true, meta: r.meta ?? { changes: 0 } };
+        },
+        async all() {
+          return { results: exec(sql, bound).results || [] };
+        },
+      };
+      return stmt;
+    },
+  };
+
+  return { DB, pieces, users };
+}
+
+function bindReq(body: unknown) {
+  return new Request('https://adrianrasmussen.com/api/keeper/bind', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+describe('keeper bind lifecycle (register → first-bind → contested)', () => {
+  it('walks the full happy path and the contested handoff', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    const origFetch = globalThis.fetch;
+    try {
+      // Imported AFTER the requireUser mock is installed.
+      const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
+
+      const { DB, pieces, users } = makeKeeperDb();
+      const adminEnv = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+
+      // 1) Admin registers the piece → we capture the printed recovery code.
+      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-200' }), env: adminEnv });
+      assert.equal(reg.status, 201);
+      const regJson = await reg.json();
+      const recoveryCode: string = regJson.recoveryCode;
+      assert.ok(isWellFormedRecoveryCode(recoveryCode));
+      // Row exists, registered but unclaimed.
+      assert.equal(pieces.length, 1);
+      assert.equal(pieces[0].keeper_user_id, null);
+      assert.equal(pieces[0].claimed_at, null);
+
+      // Bind env: the bridge secret is set so the contested path actually fires.
+      const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
+
+      // 2) FIRST BIND: the holder scans, enters the printed code → they bind.
+      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
+      const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      assert.equal(firstRes.status, 200);
+      const firstJson = await firstRes.json();
+      assert.equal(firstJson.ok, true);
+      assert.equal(firstJson.keeper.pieceId, 'UL-200');
+      assert.ok(firstJson.keeper.claimedAt);
+      // The row now carries the first keeper; still the SAME row (UPDATE, not INSERT).
+      assert.equal(pieces.length, 1);
+      assert.equal(pieces[0].keeper_user_id, 'user-first');
+      assert.ok(pieces[0].claimed_at);
+
+      // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
+      const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      assert.equal(againRes.status, 200);
+      const againJson = await againRes.json();
+      assert.equal(againJson.ok, true);
+      assert.equal('status' in againJson, false); // not a claim_requested envelope
+
+      // 3) A DIFFERENT user now tries to bind → CONTESTED. Goes to a claim
+      //    request (202), never a silent takeover. Stub the bridge fetch.
+      let bridgeCalled = 0;
+      globalThis.fetch = (async () => {
+        bridgeCalled++;
+        return new Response(JSON.stringify({ ok: true, status: 'opened', request: { id: 'req-1' } }), {
+          status: 200,
+        });
+      }) as typeof fetch;
+      // Seed the contesting user so getUserByClerkId resolves them, then bind AS
+      // that user. user-first still holds the piece, so this is a genuine contest.
+      users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
+      CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com' };
+
+      const contestRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      assert.equal(contestRes.status, 202);
+      const contestJson = await contestRes.json();
+      assert.equal(contestJson.ok, true);
+      assert.equal(contestJson.status, 'claim_requested');
+      assert.equal(contestJson.claim.outcome, 'opened');
+      assert.equal(bridgeCalled, 1);
+      // The binding was NOT stolen: user-first is still the keeper.
+      assert.equal(pieces[0].keeper_user_id, 'user-first');
+
+      // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
+      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-201' }), env: adminEnv });
+      await reg2.json();
+      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
+      const wrongRes = await bind({
+        request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-201' }),
+        env: bindEnv,
+      });
+      assert.equal(wrongRes.status, 403);
+      const wrongJson = await wrongRes.json();
+      assert.equal(wrongJson.ok, false);
+      assert.equal(wrongJson.error, 'code_mismatch');
+      // Still unclaimed: a wrong code never binds.
+      const row201 = pieces.find((r) => r.piece_id === 'UL-201');
+      assert.equal(row201.keeper_user_id, null);
+
+      // 5) Binding an UNREGISTERED piece is rejected (no row → not_registered).
+      const unregRes = await bind({
+        request: bindReq({ recoveryCode, pieceId: 'UL-999-never-registered' }),
+        env: bindEnv,
+      });
+      assert.equal(unregRes.status, 404);
+      const unregJson = await unregRes.json();
+      assert.equal(unregJson.ok, false);
+      assert.equal(unregJson.error, 'not_registered');
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+      globalThis.fetch = origFetch;
+      CURRENT_AUTH = null;
+    }
+  });
+});
