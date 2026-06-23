@@ -125,5 +125,5 @@ export const LAUNCH_FLAGS = {
    *   - functions/api/atlas/mirror.js (piece-lens read; 404 when off)
    *   - data/qrRegistry.ts (recoveryCodeHash on artwork entries)
    */
-  livingLegacy: false,
+  livingLegacy: true,
 };
