@@ -11,13 +11,35 @@
  *
  * Returns: { ok: true, keeper: { pieceId, editionNumber, claimedAt } } on a
  * fresh bind; the same shape (idempotent) when the caller is already the keeper.
+ * On a CONTESTED bind (the piece already has a living keeper) it does NOT 409:
+ * it opens a claim request and returns 202 with { ok: true, status: 'claim_requested', claim }.
  *
- * SCOPE (Phase 1 slice): first-bind-on-an-empty-piece only. The full
- * multi-warning CLAIM-BLOCK window for contested claims (resale/inheritance,
- * Decision B) is being built SEPARATELY in mandalacodes — see
- * `mandalacodes/utils/claimWindow.ts` (the patient 30-day, 4-warning window).
- * Here, a piece that already has an active keeper rejects with 409; it does NOT
- * silently steal the binding.
+ * CONTESTED CLAIMS, the handoff into the patient escalation window:
+ * A piece that already has an active keeper no longer hits a dead 409. Instead
+ * this opens a pending CLAIM REQUEST that routes (per the existing routing) to
+ * the current holder, and the response tells the requester their claim has
+ * started, the holder is being notified, and it resolves over a patient window.
+ *
+ * The escalation + resolve flow is NOT reimplemented here. It lives, merged, on
+ * mandalacodes: utils/claimWindow.ts (the 30-day, 4-warning CLAIM_WARNING_DAYS
+ * window) and the steward resolve endpoints. The single source of truth for the
+ * request is mandalacodes' R2 store atlas/claimRequests.json. This file only
+ * CREATES the request there and points the requester at that flow.
+ *
+ * INTEGRATION SHAPE (decision): shape (1), one shared store, server-to-server.
+ * Adrian-Website does not bind the atlas R2 bucket (wrangler.toml: MUSIC_BUCKET
+ * + shared D1 only), so it cannot write atlas/claimRequests.json directly; and
+ * mandalacodes' user-facing request-claim endpoint authenticates with a
+ * per-domain session cookie that cannot be forwarded from here. So the bind
+ * step validates the requester's session locally, then makes a machine-auth
+ * HMAC call (functions/api/_lib/claimBridge.js, mirroring the M4 sale webhook)
+ * to mandalacodes, which appends to the ONE store and runs the existing
+ * routing / dedupe / rate-limit / escalation. No claim machinery is forked here.
+ *
+ * Honored invariants of that flow: a single holder "no" stops the claim cold;
+ * only unanswered silence across the FULL window frees the piece to the
+ * requester; mere inactivity never frees anything. Those rules live in
+ * mandalacodes/utils/claimWindow.ts and run on the mandalacodes side.
  *
  * INVARIANT: nothing written here enters a ledger hash. keeper_pieces is mutable
  * D1; the chain (mandalacodes side) carries only opaque ids + salted
@@ -39,6 +61,7 @@ import {
   hashRecoveryCode,
   genKeeperPieceId,
 } from '../_lib/keeper.js';
+import { requestContestedClaim } from '../_lib/claimBridge.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -61,6 +84,11 @@ export async function onRequest(context) {
   const recoveryCode = typeof body?.recoveryCode === 'string' ? body.recoveryCode : '';
   const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim() : '';
   const editionNumber = Number.isInteger(body?.editionNumber) ? body.editionNumber : 0;
+  // Optional evidence note, used ONLY on the contested-claim path ("bought at
+  // the Vienna auction, lot 12"). Mutable-store only; never hashed, never
+  // required, capped to mandalacodes' CLAIM_REQUEST_NOTE_MAX (500).
+  const note =
+    typeof body?.note === 'string' && body.note.trim() ? body.note.trim().slice(0, 500) : undefined;
   if (!recoveryCode || !pieceId) {
     return json({ ok: false, error: 'recoveryCode and pieceId are required' }, 400);
   }
@@ -94,16 +122,83 @@ export async function onRequest(context) {
           keeper: { pieceId, editionNumber, claimedAt: existing.claimed_at },
         });
       }
-      // Bound to someone else. This Phase-1 slice does NOT contest — the
-      // patient claim-block window lives in mandalacodes/utils/claimWindow.ts.
+      // Bound to someone else → a CONTESTED claim. We do NOT 409 and we do NOT
+      // steal the binding. We open a pending claim request on the shared store
+      // (mandalacodes) and hand the requester into the patient escalation
+      // window. The current holder is notified; a single "no" stops it cold;
+      // only unanswered silence across the full window ever frees the piece;
+      // mere inactivity never frees. All of that runs on the mandalacodes side
+      // (utils/claimWindow.ts + the steward resolve endpoints) against this one
+      // request: we are creating the request, not adjudicating it.
+      //
+      // The requester's email seeds the eventual steward record on approval so
+      // the holder can recognize the buyer. It must come from the verified
+      // session, never the request body.
+      const requesterEmail = (auth.email || '').trim();
+      if (!requesterEmail) {
+        return json(
+          {
+            ok: false,
+            error: 'email_required_for_claim',
+            message:
+              'Your account needs a verified email before you can request a contested piece. Add one and try again.',
+          },
+          400,
+        );
+      }
+
+      const bridge = await requestContestedClaim(env, {
+        pieceId,
+        editionNumber,
+        requesterRef: auth.userId,
+        requesterEmail,
+        note,
+      });
+
+      if (!bridge.ok) {
+        // The handoff could not be opened. Distinguish "not configured yet"
+        // from a transient failure so the requester is not told they were
+        // refused when the bridge is simply pending provisioning.
+        if (bridge.reason === 'secret_unset') {
+          return json(
+            {
+              ok: false,
+              error: 'claim_handoff_unconfigured',
+              message:
+                'Stewardship transfers are not switched on yet. The current keeper has not been notified. Please try again later.',
+            },
+            503,
+          );
+        }
+        return json(
+          {
+            ok: false,
+            error: 'claim_handoff_failed',
+            message:
+              'We could not start your claim just now. The current keeper has not been notified. Please try again shortly.',
+          },
+          502,
+        );
+      }
+
+      // 202 Accepted: the claim has STARTED, nothing has bound. The holder is
+      // being notified; resolution is patient. status carries the receiver's
+      // word: 'opened' on a fresh request, or a friendly no-op reason
+      // ('duplicate' when this requester already has an open request for the
+      // piece, 'rate_limited', 'self'). All are honest, non-binding outcomes.
       return json(
         {
-          ok: false,
-          error: 'piece_already_kept',
+          ok: true,
+          status: 'claim_requested',
           message:
-            'This piece already has a keeper. A transfer of stewardship runs through a separate, patient process.',
+            'This piece already has a keeper, so your claim has begun. The current keeper is being notified and your request resolves over a patient window. A keeper can decline at any time, which ends the claim; only unanswered silence across the full window frees the piece.',
+          claim: {
+            pieceId,
+            editionNumber,
+            outcome: bridge.status ?? 'opened',
+          },
         },
-        409,
+        202,
       );
     }
 

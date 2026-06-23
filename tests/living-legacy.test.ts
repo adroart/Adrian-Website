@@ -21,6 +21,26 @@ import {
   IntentionRow,
 } from '../utils/intentions';
 
+import {
+  buildClaimBridgePayload,
+  requestContestedClaim,
+  CLAIM_REQUEST_NOTE_MAX,
+} from '../functions/api/_lib/claimBridge.js';
+
+// The contested-claim handoff opens a request on mandalacodes' SINGLE shared
+// store, then leans on the escalation logic merged there. These pure modules
+// are the contract Adrian-Website depends on; we import them across the repo
+// boundary to lock that contract (skips cleanly if the sister repo is absent).
+import {
+  planClaimRequest,
+  MAX_OPEN_REQUESTS_PER_REQUESTER,
+} from '../../mandalacodes/utils/claimRequests.ts';
+import {
+  evaluateClaimWindow,
+  CLAIM_WINDOW_DAYS,
+  CLAIM_WARNING_DAYS,
+} from '../../mandalacodes/utils/claimWindow.ts';
+
 // ── Recovery code ──────────────────────────────────────────────────────────
 
 describe('recovery code', () => {
@@ -222,5 +242,285 @@ describe('parseIntentionInput (whitelist)', () => {
     assert.equal(parseIntentionInput({ kind: 'motivation', body: 'x', evil: 1 }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'spell', body: 'x' }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'journal', body: '   ' }).ok, false);
+  });
+});
+
+// ── Contested-claim handoff: Adrian-side bridge payload ──────────────────────
+
+describe('claim bridge payload (Adrian side, whitelist)', () => {
+  it('builds exactly the fields the receiver accepts, edition 0 always sent', () => {
+    const p = buildClaimBridgePayload({
+      pieceId: 'UL-100',
+      editionNumber: 0,
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+    });
+    assert.deepEqual(Object.keys(p).sort(), [
+      'editionNumber',
+      'pieceId',
+      'requesterEmail',
+      'requesterRef',
+    ]);
+    // edition 0 is the chain-key default and must travel (not dropped as falsy).
+    assert.equal(p.editionNumber, 0);
+  });
+
+  it('defaults a missing/invalid editionNumber to 0', () => {
+    const p = buildClaimBridgePayload({
+      pieceId: 'UL-100',
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+    });
+    assert.equal(p.editionNumber, 0);
+  });
+
+  it('includes a trimmed note and caps it at CLAIM_REQUEST_NOTE_MAX', () => {
+    const long = 'x'.repeat(CLAIM_REQUEST_NOTE_MAX + 200);
+    const p = buildClaimBridgePayload({
+      pieceId: 'UL-100',
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      note: `   bought at auction lot 12   `,
+    });
+    assert.equal(p.note, 'bought at auction lot 12');
+
+    const capped = buildClaimBridgePayload({
+      pieceId: 'UL-100',
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      note: long,
+    });
+    assert.equal(capped.note?.length, CLAIM_REQUEST_NOTE_MAX);
+
+    // An empty/whitespace note is omitted entirely (never an empty string).
+    const blank = buildClaimBridgePayload({
+      pieceId: 'UL-100',
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      note: '   ',
+    });
+    assert.equal('note' in blank, false);
+  });
+});
+
+describe('requestContestedClaim (Adrian side, transport)', () => {
+  it('no-ops with secret_unset when CLAIM_BRIDGE_SECRET is not provisioned', async () => {
+    const r = await requestContestedClaim({}, {
+      pieceId: 'UL-100',
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+    });
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, 'secret_unset');
+  });
+
+  it('reports missing required fields without calling out', async () => {
+    const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 's' }, {
+      pieceId: 'UL-100',
+      // requesterRef / requesterEmail missing
+    } as never);
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, 'missing_required_fields');
+  });
+
+  it('passes through the receiver status on a 200 (opened / duplicate)', async () => {
+    const calls: string[] = [];
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (_url: string, init: { headers: Record<string, string> }) => {
+      calls.push(init.headers['X-Claim-Signature']);
+      return new Response(JSON.stringify({ ok: true, status: 'opened', request: { id: 'req-1' } }), {
+        status: 200,
+      });
+    }) as typeof fetch;
+    try {
+      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
+        pieceId: 'UL-100',
+        editionNumber: 0,
+        requesterRef: 'user-asker',
+        requesterEmail: 'asker@example.com',
+      });
+      assert.equal(r.ok, true);
+      assert.equal(r.status, 'opened');
+      assert.equal(r.request?.id, 'req-1');
+      // The call was signed (an HMAC hex of length 64 went out).
+      assert.match(calls[0], /^[0-9a-f]{64}$/);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  it('does NOT retry a 400 (our payload is wrong)', async () => {
+    let n = 0;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      n++;
+      return new Response(JSON.stringify({ ok: false, error: 'bad' }), { status: 400 });
+    }) as typeof fetch;
+    try {
+      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
+        pieceId: 'UL-100',
+        requesterRef: 'user-asker',
+        requesterEmail: 'asker@example.com',
+      });
+      assert.equal(r.ok, false);
+      assert.equal(r.reason, 'rejected_400');
+      assert.equal(n, 1); // no retry
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+});
+
+// ── Contested-claim handoff: shared escalation contract (mandalacodes) ────────
+// These pin the rules Adrian-Website hands the claim into. They live on the
+// mandalacodes side (one source of truth); we assert the contract here so a
+// drift on either side is caught.
+
+describe('contested claim opens a request (not a 409)', () => {
+  const boundSteward = {
+    pieceId: 'UL-100',
+    clerkUserId: 'user-holder',
+    email: 'holder@example.com',
+    issuedAt: '2026-01-01T00:00:00Z',
+    outreachStatus: 'claimed' as const,
+  };
+
+  it('a bound piece routes the request to the HOLDER, pending, never binding', () => {
+    const plan = planClaimRequest([], {
+      input: { pieceId: 'UL-100' },
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      steward: boundSteward,
+      now: '2026-06-23T00:00:00Z',
+    });
+    assert.equal(plan.ok, true);
+    assert.equal(plan.value?.status, 'pending'); // not bound, not 409
+    assert.equal(plan.value?.routedTo, 'holder'); // anti-takeover: the holder decides
+    assert.equal(plan.value?.requesterRef, 'user-asker');
+  });
+
+  it('the bound holder cannot request their own piece (self-guard)', () => {
+    const plan = planClaimRequest([], {
+      input: { pieceId: 'UL-100' },
+      requesterRef: 'user-holder',
+      requesterEmail: 'holder@example.com',
+      steward: boundSteward,
+      now: '2026-06-23T00:00:00Z',
+    });
+    assert.equal(plan.ok, false);
+  });
+});
+
+describe('dedupe + rate limit (shared store guardrails)', () => {
+  const steward = {
+    pieceId: 'UL-100',
+    clerkUserId: 'user-holder',
+    email: 'holder@example.com',
+    issuedAt: '2026-01-01T00:00:00Z',
+    outreachStatus: 'claimed' as const,
+  };
+
+  it('a second request for the same piece by the same requester is one open request', () => {
+    const first = planClaimRequest([], {
+      input: { pieceId: 'UL-100' },
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      steward,
+      now: '2026-06-23T00:00:00Z',
+    });
+    assert.equal(first.ok, true);
+    const second = planClaimRequest([first.value!], {
+      input: { pieceId: 'UL-100' },
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      steward,
+      now: '2026-06-23T01:00:00Z',
+    });
+    assert.equal(second.ok, false); // dedupe → no duplicate open request
+  });
+
+  it('caps a requester at MAX_OPEN_REQUESTS_PER_REQUESTER open requests', () => {
+    const open = [];
+    for (let i = 0; i < MAX_OPEN_REQUESTS_PER_REQUESTER; i++) {
+      const r = planClaimRequest(open, {
+        input: { pieceId: `UL-10${i}` },
+        requesterRef: 'user-asker',
+        requesterEmail: 'asker@example.com',
+        steward: undefined,
+        now: '2026-06-23T00:00:00Z',
+      });
+      assert.equal(r.ok, true);
+      open.push(r.value!);
+    }
+    const overflow = planClaimRequest(open, {
+      input: { pieceId: 'UL-999' },
+      requesterRef: 'user-asker',
+      requesterEmail: 'asker@example.com',
+      steward: undefined,
+      now: '2026-06-23T00:00:00Z',
+    });
+    assert.equal(overflow.ok, false); // rate limited
+  });
+});
+
+describe('escalation outcomes (run on the mandalacodes side)', () => {
+  const baseRequest = {
+    id: 'req-1',
+    pieceId: 'UL-100',
+    requesterRef: 'user-asker',
+    requesterEmail: 'asker@example.com',
+    createdAt: '2026-06-01T00:00:00Z',
+    status: 'pending' as const,
+    routedTo: 'holder' as const,
+  };
+
+  it("a holder's NO stops the claim cold, regardless of elapsed time", () => {
+    const declined = { ...baseRequest, status: 'declined' as const };
+    // Even far past the full window, a decline never frees the piece.
+    const r = evaluateClaimWindow({
+      request: declined,
+      holderResponded: false,
+      nowIso: '2027-01-01T00:00:00Z',
+    });
+    assert.equal(r.status, 'declined');
+  });
+
+  it('only unanswered silence across the FULL window, every warning delivered, frees the piece', () => {
+    const past = new Date(
+      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const freed = evaluateClaimWindow({
+      request: baseRequest,
+      holderResponded: false,
+      nowIso: past,
+      warningsSent: CLAIM_WARNING_DAYS.length, // all four delivered
+    });
+    assert.equal(freed.status, 'frees-to-requester');
+  });
+
+  it('mere inactivity never frees: full window but warnings undelivered stays blocked', () => {
+    const past = new Date(
+      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const notFreed = evaluateClaimWindow({
+      request: baseRequest,
+      holderResponded: false,
+      nowIso: past,
+      warningsSent: 0, // nothing actually delivered to the keeper yet
+    });
+    assert.notEqual(notFreed.status, 'frees-to-requester');
+  });
+
+  it('any keeper response keeps the piece blocked (engagement never frees)', () => {
+    const past = new Date(
+      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const held = evaluateClaimWindow({
+      request: baseRequest,
+      holderResponded: true,
+      nowIso: past,
+      warningsSent: CLAIM_WARNING_DAYS.length,
+    });
+    assert.equal(held.status, 'blocked-active');
   });
 });
