@@ -27,6 +27,12 @@ import {
   CLAIM_REQUEST_NOTE_MAX,
 } from '../functions/api/_lib/claimBridge.js';
 
+// Admin piece-registration endpoint + the launch flag it hides behind. We flip
+// the flag on inside the registration suite (and restore it) so the same handler
+// can be exercised; with the flag off it correctly 404s, which we also assert.
+import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
+import { LAUNCH_FLAGS } from '../launchFlags';
+
 // The contested-claim handoff opens a request on mandalacodes' SINGLE shared
 // store, then leans on the escalation logic merged there. These pure modules
 // are the contract Adrian-Website depends on; we import them across the repo
@@ -522,5 +528,247 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
       warningsSent: CLAIM_WARNING_DAYS.length,
     });
     assert.equal(held.status, 'blocked-active');
+  });
+});
+
+// ── Admin piece registration endpoint ────────────────────────────────────────
+// A tiny in-memory D1 stand-in. It understands only the few statement shapes the
+// handler issues (a SELECT-by-piece, an INSERT, an UPDATE-of-hash, a list
+// SELECT), keyed by piece_id + edition_number. Enough to exercise the
+// show-code-once and refuse-overwrite rules without a real database.
+function makeFakeDb() {
+  const rows: any[] = []; // keeper_pieces
+
+  function find(pieceId: string, edition: number) {
+    return rows.find(
+      (r) => r.piece_id === pieceId && r.edition_number === edition && !r.released_at,
+    );
+  }
+
+  function exec(sql: string, params: any[]) {
+    const s = sql.replace(/\s+/g, ' ').trim();
+    // SELECT one active row for a piece/edition
+    if (/^SELECT .* FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2 AND released_at IS NULL/i.test(s)) {
+      return { kind: 'first', row: find(params[0], params[1]) || null };
+    }
+    // INSERT a fresh registration (no keeper yet)
+    if (/^INSERT INTO keeper_pieces \(id, piece_id, edition_number, recovery_code_hash, registered_at\)/i.test(s)) {
+      const [id, piece_id, edition_number, recovery_code_hash, registered_at] = params;
+      if (rows.some((r) => r.recovery_code_hash === recovery_code_hash)) {
+        throw new Error('UNIQUE constraint failed: keeper_pieces.recovery_code_hash');
+      }
+      if (find(piece_id, edition_number)) {
+        throw new Error('UNIQUE constraint failed: keeper_pieces.piece_id');
+      }
+      rows.push({
+        id,
+        piece_id,
+        edition_number,
+        keeper_user_id: null,
+        recovery_code_hash,
+        current_display_location: null,
+        registered_at,
+        claimed_at: null,
+        released_at: null,
+      });
+      return { kind: 'run' };
+    }
+    // UPDATE hash on re-registration of an unclaimed row
+    if (/^UPDATE keeper_pieces SET recovery_code_hash = \?1, registered_at = \?2 WHERE id = \?3/i.test(s)) {
+      const [hash, registeredAt, id] = params;
+      const row = rows.find((r) => r.id === id);
+      if (row) {
+        row.recovery_code_hash = hash;
+        row.registered_at = registeredAt;
+      }
+      return { kind: 'run' };
+    }
+    // List
+    if (/^SELECT .* FROM keeper_pieces ORDER BY/i.test(s)) {
+      return { kind: 'all', results: rows.slice() };
+    }
+    throw new Error(`fake D1: unhandled statement: ${s}`);
+  }
+
+  const DB = {
+    prepare(sql: string) {
+      let bound: any[] = [];
+      const stmt: any = {
+        bind(...args: any[]) {
+          bound = args;
+          return stmt;
+        },
+        async first() {
+          return exec(sql, bound).row ?? null;
+        },
+        async run() {
+          exec(sql, bound);
+          return { success: true };
+        },
+        async all() {
+          return { results: exec(sql, bound).results || [] };
+        },
+      };
+      return stmt;
+    },
+  };
+
+  return { DB, rows };
+}
+
+// A request carrying the admin cookie that requireAdmin() checks against
+// env.UPLOAD_SECRET. This is the same gate every admin endpoint uses.
+const ADMIN_SECRET = 'test-admin-secret';
+function adminReq(method: string, body?: unknown) {
+  return new Request('https://adrianrasmussen.com/api/admin/pieces', {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `admin_session=${ADMIN_SECRET}`,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+describe('admin piece registration', () => {
+  it('404s while the livingLegacy flag is off (surface stays invisible)', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = false;
+    try {
+      const { DB } = makeFakeDb();
+      const res = await adminPieces({
+        request: adminReq('POST', { pieceId: 'UL-100' }),
+        env: { UPLOAD_SECRET: ADMIN_SECRET, DB },
+      });
+      assert.equal(res.status, 404);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('401s an unauthenticated caller before doing any work', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB } = makeFakeDb();
+      const noCookie = new Request('https://adrianrasmussen.com/api/admin/pieces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pieceId: 'UL-100' }),
+      });
+      const res = await adminPieces({ request: noCookie, env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
+      assert.equal(res.status, 401);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('returns a plaintext code ONCE on POST whose hash is what gets stored', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeFakeDb();
+      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      assert.equal(res.status, 201);
+      const json = await res.json();
+      assert.equal(json.ok, true);
+      // The plaintext code came back, well-formed.
+      assert.ok(isWellFormedRecoveryCode(json.recoveryCode));
+      // The stored row holds ONLY the hash, and it matches the returned plaintext.
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(json.recoveryCode));
+      // The plaintext itself is nowhere in the stored row.
+      assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(json.recoveryCode)), false);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('GET lists registered pieces and NEVER includes a code or its hash', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB } = makeFakeDb();
+      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      const created = await post.json();
+
+      const res = await adminPieces({ request: adminReq('GET'), env });
+      assert.equal(res.status, 200);
+      const json = await res.json();
+      assert.equal(json.ok, true);
+      assert.equal(json.pieces.length, 1);
+      const listed = json.pieces[0];
+      assert.equal(listed.pieceId, 'UL-100');
+      assert.equal(listed.keeperBound, false); // awaiting a keeper
+      // No code, no hash field leaks in the list shape.
+      const blob = JSON.stringify(json);
+      assert.equal('recoveryCode' in listed, false);
+      assert.equal('recovery_code_hash' in listed, false);
+      assert.equal(blob.includes(created.recoveryCode), false);
+      assert.equal(blob.includes(normalizeRecoveryCode(created.recoveryCode)), false);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('re-registering an UNCLAIMED piece mints a fresh code and voids the old one', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeFakeDb();
+      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+      const first = await (await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env })).json();
+      const second = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      const secondJson = await second.json();
+      assert.equal(second.status, 201);
+      assert.equal(secondJson.reRegistered, true);
+      assert.notEqual(secondJson.recoveryCode, first.recoveryCode);
+      // Still one row; it now holds the NEW hash (old printed code is void).
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(secondJson.recoveryCode));
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('REFUSES to overwrite a live keeper binding (409, no new code)', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeFakeDb();
+      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+      // Register, then simulate a keeper having bound the piece.
+      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      rows[0].keeper_user_id = 'user-holder';
+      rows[0].claimed_at = '2026-06-23T00:00:00Z';
+      const boundHash = rows[0].recovery_code_hash;
+
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      assert.equal(res.status, 409);
+      const json = await res.json();
+      assert.equal(json.ok, false);
+      assert.equal(json.error, 'keeper_bound');
+      assert.equal('recoveryCode' in json, false); // no code minted
+      // The live keeper's hash is untouched.
+      assert.equal(rows[0].recovery_code_hash, boundHash);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('requires a pieceId', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB } = makeFakeDb();
+      const res = await adminPieces({ request: adminReq('POST', {}), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
+      assert.equal(res.status, 400);
+      const json = await res.json();
+      assert.equal(json.error, 'piece_id_required');
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
   });
 });
