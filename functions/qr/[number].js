@@ -12,6 +12,15 @@
  *
  * PERMANENT INFRASTRUCTURE — printed and engraved QR codes in the
  * wild depend on this function. Do not change the URL scheme.
+ *
+ * LIVING LEGACY NOTE: no new redirect branch is needed for keeper binding.
+ * The public QR number is look-only and already lands on /works/:code?ref=qr,
+ * which the arrival treatment keys off (see components/WorksPage.tsx). The
+ * SECRET recovery code (the long code on the back of the art) is never placed
+ * in a URL or scanned — it is typed by the keeper into the bind form, which
+ * POSTs to /api/keeper/bind. Keeping the recovery code out of the redirect path
+ * is deliberate: a URL leaks in browser history, referrers, and shoulder-surfs;
+ * the typed-secret flow does not. So the existing /works/:code path suffices.
  */
 
 export function onRequest({ params, request }) {
