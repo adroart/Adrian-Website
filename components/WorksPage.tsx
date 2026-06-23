@@ -1,10 +1,14 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img as cldImg } from '../utils/cloudinary';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { LAUNCH_FLAGS } from '../launchFlags';
+import ArrivalGate from './legacy/ArrivalGate';
+import PieceConstellation from './legacy/PieceConstellation';
+import KeeperPanel from './legacy/KeeperPanel';
 
 const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
     created: 'Created',
@@ -17,8 +21,15 @@ const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
 
 const WorksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
     const artwork = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
     const book = useBookContent(id);
+
+    // Living Legacy: gated behind the flag. The temple-paced arrival only runs
+    // when the visitor reached the page from a physical scan (?ref=qr); a direct
+    // visit goes straight to the certificate so nothing feels withheld.
+    const legacyOn = LAUNCH_FLAGS.livingLegacy;
+    const arrivedByScan = searchParams.get('ref') === 'qr';
 
     useMetaTags(
         artwork
@@ -57,7 +68,7 @@ const WorksPage: React.FC = () => {
         : null;
     const provenance = artwork.provenance || [];
 
-    return (
+    const record = (
         <section className="min-h-screen pt-28 pb-32 px-6 print:pt-8 print:pb-8">
             <div className="max-w-2xl mx-auto">
 
@@ -248,9 +259,26 @@ const WorksPage: React.FC = () => {
                         adrianrasmussen.com/works/{artwork.id}
                     </p>
                 </div>
+
+                {/* ── Living Legacy (gated): constellation lens + keeper doors ── */}
+                {legacyOn && (
+                    <>
+                        <div className="mt-20 print:hidden">
+                            <PieceConstellation artwork={artwork} />
+                        </div>
+                        <KeeperPanel artwork={artwork} />
+                    </>
+                )}
             </div>
         </section>
     );
+
+    // When scanned (and the flag is on), the piece wakes up first, then opens
+    // into the full record. Otherwise the record renders exactly as before.
+    if (legacyOn && arrivedByScan) {
+        return <ArrivalGate artwork={artwork}>{record}</ArrivalGate>;
+    }
+    return record;
 };
 
 /** Fetch the authored book page for a piece. Returns null until loaded or
