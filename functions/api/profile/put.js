@@ -9,7 +9,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { ensureUser } from '../_lib/db.js';
 
 function validInputs(x) {
   if (!x || typeof x !== 'object') return false;
@@ -59,9 +59,9 @@ export async function onRequest(context) {
     return jsonResponse({ error: 'invalid_computed' }, { status: 400 }, request, env);
   }
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
   if (!user) {
-    // Should not happen post sync-user; surface for debugging.
+    // Should not happen — ensureUser upserts the bridge row. Surface for debugging.
     return jsonResponse({ error: 'user_not_synced' }, { status: 409 }, request, env);
   }
 

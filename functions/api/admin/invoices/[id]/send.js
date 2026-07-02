@@ -2,7 +2,7 @@ import { jsonResponse, requireAdmin, requireDb } from '../../../_lib/admin.js';
 import { serializeInvoiceRow } from '../../../_lib/invoices.js';
 
 export async function onRequestPost({ request, env, params }) {
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;

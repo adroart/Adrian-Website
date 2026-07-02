@@ -9,7 +9,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { ensureUser } from '../_lib/db.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -44,7 +44,7 @@ export async function onRequest(context) {
     return jsonResponse({ error: 'email_mismatch' }, { status: 403 }, request, env);
   }
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
   if (!user) {
     return jsonResponse({ error: 'user_not_synced' }, { status: 409 }, request, env);
   }

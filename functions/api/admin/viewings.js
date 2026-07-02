@@ -51,7 +51,7 @@ function safeParse(s, fallback) {
 
 export async function onRequest(context) {
   const { request, env } = context;
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
@@ -65,6 +65,7 @@ async function listViewings(request, env) {
   const url = new URL(request.url);
   const status = url.searchParams.get('status');
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100);
+  const offset = Math.max(0, Number(url.searchParams.get('offset') || 0) || 0);
 
   let query = 'SELECT * FROM viewings';
   const bindings = [];
@@ -72,7 +73,8 @@ async function listViewings(request, env) {
     query += ' WHERE status = ?1';
     bindings.push(status);
   }
-  query += ` ORDER BY created_at DESC LIMIT ${limit}`;
+  // limit/offset are integer-coerced above, safe to inline.
+  query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
 
   const stmt = env.DB.prepare(query);
   const { results } = bindings.length ? await stmt.bind(...bindings).all() : await stmt.all();

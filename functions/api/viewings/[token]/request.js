@@ -13,6 +13,7 @@
  * pricing trust surface.
  */
 import { jsonResponse } from '../../_lib/admin.js';
+import { rateLimit, clientIp } from '../../_lib/ratelimit.js';
 
 function invoiceToken() {
   if (globalThis.crypto?.randomUUID) {
@@ -29,6 +30,13 @@ export async function onRequestPost({ env, params, request }) {
     return jsonResponse({ ok: false, error: 'not_found' }, 404);
   }
 
+  // Throttle: a viewing should be requested once. Cap repeat hits per token+IP
+  // so a leaked token can't be used to flood the studio inbox / spawn drafts.
+  const limit = rateLimit(`viewing-request:${token}:${clientIp(request)}`, { max: 5, windowMs: 60 * 60_000 });
+  if (!limit.allowed) {
+    return jsonResponse({ ok: false, error: 'too_many_requests' }, 429);
+  }
+
   let body;
   try {
     body = await request.json();
@@ -39,6 +47,17 @@ export async function onRequestPost({ env, params, request }) {
 
   const row = await env.DB.prepare('SELECT * FROM viewings WHERE public_token=?1').bind(token).first();
   if (!row) return jsonResponse({ ok: false, error: 'not_found' }, 404);
+
+  // Idempotency: if this viewing was already turned into a request/invoice,
+  // return that result instead of creating a duplicate draft and re-emailing.
+  if (row.invoice_token || row.status === 'requested') {
+    return jsonResponse({
+      ok: true,
+      alreadyRequested: true,
+      invoiceAdminPath: '/admin/invoices',
+      invoiceToken: row.invoice_token || null,
+    });
+  }
 
   let data = {};
   try {

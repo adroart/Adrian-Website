@@ -63,13 +63,23 @@ export async function relinkOrdersByEmail(db, userId, email) {
 }
 
 /**
- * On user.deleted: D1 cascades take care of profiles/cart/collections via
- * FK ON DELETE CASCADE, but we explicitly null out orders so historical
- * order rows survive (still valuable for accounting / Stripe correlation).
+ * Lazily ensure the app `users` bridge row exists for an authenticated session,
+ * returning it. Customer endpoints call this instead of getUserByClerkId so a
+ * missed /api/auth/sync-user call never silently breaks cart/collections/orders
+ * /profile for a logged-in user. Idempotent.
+ * @param {D1Database} db
+ * @param {{ userId: string, email?: string | null }} auth
  */
-export async function deleteUserByClerkId(db, clerkUserId) {
+export async function ensureUser(db, { userId, email }) {
   await db
-    .prepare('DELETE FROM users WHERE clerk_user_id = ?1')
-    .bind(clerkUserId)
+    .prepare(
+      `INSERT INTO users (clerk_user_id, email)
+       VALUES (?1, ?2)
+       ON CONFLICT(clerk_user_id) DO UPDATE SET
+         email = excluded.email,
+         updated_at = unixepoch()`,
+    )
+    .bind(userId, email || '')
     .run();
+  return getUserByClerkId(db, userId);
 }

@@ -6,6 +6,23 @@
 
 const STRIPE_API = 'https://api.stripe.com/v1';
 
+/** Parse a lowercase/uppercase hex string into bytes, or null if malformed. */
+function hexToBytes(hex) {
+  if (typeof hex !== 'string' || hex.length === 0 || hex.length % 2 !== 0) return null;
+  if (!/^[0-9a-fA-F]+$/.test(hex)) return null;
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i += 1) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+
+/** Constant-time equality for two Uint8Arrays. */
+function timingSafeEqual(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
 /**
  * POST to a Stripe endpoint with form-encoded body, returning the parsed
  * JSON. Throws on non-2xx.
@@ -86,12 +103,11 @@ export async function verifyStripeWebhook(request, env) {
     false,
     ['sign'],
   );
-  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
-  const macHex = [...new Uint8Array(mac)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload)));
+  const provided = hexToBytes(v1);
 
-  if (macHex !== v1) return null;
+  // Constant-time comparison — never use === on a signature.
+  if (!timingSafeEqual(mac, provided)) return null;
   // Reject events older than 5 minutes to limit replay window.
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return null;
   try {

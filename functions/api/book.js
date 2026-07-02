@@ -8,18 +8,9 @@
  * Mirrors functions/api/poems.js — same auth model, same store.
  */
 
-const COOKIE_NAME = 'admin_session';
+import { isAdminAuthed } from './_lib/admin.js';
+
 const KEY = 'book/index.json';
-
-function getCookie(request, name) {
-    const header = request.headers.get('Cookie') || '';
-    const match = header.split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
-    return match ? match.slice(name.length + 1) : null;
-}
-
-function isAuthed(request, env) {
-    return getCookie(request, COOKIE_NAME) === env.UPLOAD_SECRET;
-}
 
 async function readEntries(env) {
     const obj = await env.MUSIC_BUCKET.get(KEY);
@@ -95,7 +86,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-    if (!isAuthed(request, env)) return json({ ok: false, error: 'Unauthorized' }, 401);
+    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
 
     let body;
     try {
@@ -118,7 +109,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-    if (!isAuthed(request, env)) return json({ ok: false, error: 'Unauthorized' }, 401);
+    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
 
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return json({ ok: false, error: 'Missing id' }, 400);
