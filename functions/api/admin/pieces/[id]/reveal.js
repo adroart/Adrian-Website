@@ -61,7 +61,7 @@ export async function onRequest({ request, env, params }) {
     ) {
       return jsonResponse({ ok: false, error: 'fabrication_hash_mismatch' }, 409);
     }
-    return jsonResponse({ ok: true, ownershipCode, ...plate });
+    return jsonResponse({ ok: true, ownershipCode, undersideSvg: plate.undersideSvg });
   } catch {
     return jsonResponse({ ok: false, error: 'reveal_failed' }, 500);
   }

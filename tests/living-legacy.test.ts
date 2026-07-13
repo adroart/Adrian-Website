@@ -1672,11 +1672,14 @@ describe('admin artwork plate lifecycle', () => {
 
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(Object.keys(body).sort(), ['ok', 'ownershipCode', 'undersideSvg']);
     assert.equal(body.ownershipCode, fixture.ownershipCode);
-    assert.equal(body.publicCode, 'AR-7KQ9M2WX');
-    assert.equal(body.frontSha256, fixture.plate.frontSha256);
-    assert.equal(body.undersideSha256, fixture.plate.undersideSha256);
     assert.equal(body.undersideSvg, fixture.plate.undersideSvg);
+    for (const forbidden of [
+      'frontSvg', 'manifest', 'publicCode', 'publicUrl', 'frontSha256', 'undersideSha256',
+    ]) {
+      assert.equal(forbidden in body, false);
+    }
     assert.equal(fixture.audits.length, 1);
     assert.equal(fixture.audits[0].keeper_piece_id, 'kp-one');
     assert.equal(fixture.audits[0].action, 'reveal');
