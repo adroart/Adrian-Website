@@ -203,6 +203,10 @@ the plate while the backup is unverified.
 Qualify the real material, size, finish, engraving depth, and attachment method
 before using the design on a sale.
 
+Fabricate the front and underside as opposite faces of one **50 mm × 62 mm**
+plate. Import both SVGs at their native dimensions without cropping, stretching,
+or independently scaling either face.
+
 Test the front QR on at least one current iPhone and one current Android phone:
 
 - bright direct light;

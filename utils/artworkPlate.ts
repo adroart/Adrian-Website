@@ -9,6 +9,10 @@ const ARTWORK_ID_MAX_LENGTH = 7;
 export const PUBLIC_PLATE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 export const PLATE_QR_ERROR_CORRECTION = 'Q' as const;
 export const PLATE_QR_QUIET_ZONE = 4;
+export const PLATE_WIDTH_MM = 50;
+export const PLATE_HEIGHT_MM = 62;
+
+const PLATE_VIEWBOX = '0 0 500 620';
 
 type RandomSource = Pick<Crypto, 'getRandomValues'>;
 
@@ -104,7 +108,7 @@ async function renderFrontSvg(input: ArtworkPlateInput, publicUrl: string): Prom
   const artworkIdentity = escapeXml(`${input.artworkId} · edition ${input.editionNumber}`);
   const visibleUrl = escapeXml(publicUrl);
 
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="62mm" viewBox="0 0 500 620" ' +
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PLATE_WIDTH_MM}mm" height="${PLATE_HEIGHT_MM}mm" viewBox="${PLATE_VIEWBOX}" ` +
     'shape-rendering="crispEdges" data-error-correction="Q" data-quiet-zone="4">' +
     '<rect width="500" height="620" fill="#fff"/>' +
     `<path fill="#000000" transform="translate(45 15) scale(10)" d="${pathParts.join('')}"/>` +
@@ -118,13 +122,13 @@ function renderUndersideSvg(input: ArtworkPlateInput): string {
   const ownershipCode = escapeXml(input.ownershipCode);
   const identity = escapeXml(`${input.artworkId} · edition ${input.editionNumber}`);
 
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="70mm" height="25mm" viewBox="0 0 700 250">' +
-    '<rect width="700" height="250" fill="#fff"/>' +
-    '<text x="350" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" letter-spacing="4">OWNERSHIP CODE</text>' +
-    `<text x="350" y="105" text-anchor="middle" font-family="Arial,sans-serif" font-size="32" letter-spacing="3">${ownershipCode}</text>` +
-    `<text x="350" y="148" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">${identity}</text>` +
-    '<text x="350" y="190" text-anchor="middle" font-family="Arial,sans-serif" font-size="13">Register or transfer at adrianrasmussen.com</text>' +
-    '<text x="350" y="218" text-anchor="middle" font-family="Arial,sans-serif" font-size="12">Keep this permanent code with the artwork.</text>' +
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${PLATE_WIDTH_MM}mm" height="${PLATE_HEIGHT_MM}mm" viewBox="${PLATE_VIEWBOX}">` +
+    '<rect width="500" height="620" fill="#fff"/>' +
+    '<text x="250" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" letter-spacing="4">OWNERSHIP CODE</text>' +
+    `<text x="250" y="265" text-anchor="middle" font-family="Arial,sans-serif" font-size="32" letter-spacing="3">${ownershipCode}</text>` +
+    `<text x="250" y="340" text-anchor="middle" font-family="Arial,sans-serif" font-size="14">${identity}</text>` +
+    '<text x="250" y="420" text-anchor="middle" font-family="Arial,sans-serif" font-size="13">Register or transfer at adrianrasmussen.com</text>' +
+    '<text x="250" y="455" text-anchor="middle" font-family="Arial,sans-serif" font-size="12">Keep this permanent code with the artwork.</text>' +
     '</svg>';
 }
 
