@@ -77,19 +77,26 @@ function escapeXml(value: string): string {
     .replaceAll("'", '&apos;');
 }
 
-async function renderFrontSvg(publicUrl: string): Promise<string> {
-  const svg = await QRCode.toString(publicUrl, {
+async function renderFrontSvg(input: ArtworkPlateInput, publicUrl: string): Promise<string> {
+  const qrSvg = await QRCode.toString(publicUrl, {
     type: 'svg',
     errorCorrectionLevel: PLATE_QR_ERROR_CORRECTION,
     margin: PLATE_QR_QUIET_ZONE,
-    width: 42,
     color: { dark: '#000000', light: '#ffffff' },
   });
+  const qrContents = qrSvg.slice(qrSvg.indexOf('>') + 1, qrSvg.lastIndexOf('</svg>'));
+  const publicCode = escapeXml(input.publicCode);
+  const artworkIdentity = escapeXml(`${input.artworkId} · edition ${input.editionNumber}`);
+  const visibleUrl = escapeXml(publicUrl);
 
-  return svg.replace(
-    '<svg ',
-    '<svg data-error-correction="Q" data-quiet-zone="4" ',
-  ).replace('width="42" height="42"', 'width="42mm" height="42mm"');
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="62mm" viewBox="0 0 500 620" ' +
+    'shape-rendering="crispEdges" data-error-correction="Q" data-quiet-zone="4">' +
+    '<rect width="500" height="620" fill="#fff"/>' +
+    `<g transform="translate(45 15) scale(10)">${qrContents}</g>` +
+    `<text x="250" y="468" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" letter-spacing="3">${publicCode}</text>` +
+    `<text x="250" y="515" text-anchor="middle" font-family="Arial,sans-serif" font-size="12">${visibleUrl}</text>` +
+    `<text x="250" y="558" text-anchor="middle" font-family="Arial,sans-serif" font-size="15">${artworkIdentity}</text>` +
+    '</svg>';
 }
 
 function renderUndersideSvg(input: ArtworkPlateInput): string {
@@ -124,7 +131,7 @@ export async function buildArtworkPlatePackage(
 
   const publicUrl = publicPlateUrl(input.publicCode);
   const [frontSvg, undersideSvg] = await Promise.all([
-    renderFrontSvg(publicUrl),
+    renderFrontSvg(input, publicUrl),
     Promise.resolve(renderUndersideSvg(input)),
   ]);
   const [frontSha256, undersideSha256] = await Promise.all([

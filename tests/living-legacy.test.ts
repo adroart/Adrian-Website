@@ -113,9 +113,15 @@ describe('artwork plate fabrication package', () => {
     });
 
     assert.equal(plate.publicUrl, 'https://adrianrasmussen.com/qr/AR-7KQ9M2WX');
-    assert.match(plate.frontSvg, /width="42mm" height="42mm"/);
+    assert.match(plate.frontSvg, /width="50mm" height="62mm"/);
     assert.match(plate.frontSvg, /data-error-correction="Q"/);
     assert.match(plate.frontSvg, /data-quiet-zone="4"/);
+    assert.match(plate.frontSvg, />AR-7KQ9M2WX</);
+    assert.match(
+      plate.frontSvg,
+      />https:\/\/adrianrasmussen\.com\/qr\/AR-7KQ9M2WX</,
+    );
+    assert.match(plate.frontSvg, />UL-&lt;100&gt; · edition 2</);
     assert.doesNotMatch(plate.frontSvg, /K7QM-9XTR/);
     assert.match(plate.undersideSvg, /width="70mm" height="25mm"/);
     assert.match(plate.undersideSvg, />OWNERSHIP CODE</);
