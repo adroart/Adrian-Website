@@ -59,8 +59,20 @@ OWNERSHIP_CODE_ACTIVE_KEY_VERSION=1
 ```
 
 Confirm the existing admin step-up secret is also provisioned as `UPLOAD_SECRET`.
-The reveal, backup retry, and activation routes require it in addition to the
-admin session.
+The reveal, recovery verification, backup retry, and activation routes require
+it in addition to the admin session.
+
+Keep the public `LAUNCH_FLAGS.livingLegacy` flag off during staging. Set this
+non-secret Cloudflare Pages production variable instead:
+
+```text
+ARTWORK_REGISTRY_ADMIN_ENABLED=true
+```
+
+That runtime gate enables only the authenticated private plate desk and its
+admin API. It does not expose the public keeper, claim, map, or lineage UI. This
+separate gate is what makes it possible to issue and prove a canary before the
+public launch flag is changed.
 
 ### 2. Provision the encrypted backup bucket
 
@@ -186,9 +198,11 @@ Do not engrave if the D1 export, R2 envelope, and escrowed key have not been
 proven together in this canary.
 
 After the canary passes, set `LAUNCH_FLAGS.livingLegacy` to `true`, build again,
-and deploy deliberately. It remains `false` in source until this gate is
-complete so an unrelated deployment cannot expose a partially provisioned
-claim surface.
+and deploy deliberately. The public flag remains `false` in source until this
+gate is complete so an unrelated deployment cannot expose a partially
+provisioned claim surface. After the public deployment is verified, the
+`ARTWORK_REGISTRY_ADMIN_ENABLED` variable may be removed because the public
+flag also keeps private administration available.
 
 ## Issue a plate
 
@@ -317,8 +331,8 @@ into certificates, public lineage payloads, support tickets, or ordinary logs.
 
 ## Incident rules
 
-- **Lost fabrication package before activation:** use audited admin reveal;
-  never mint a second code for the same artwork/edition.
+- **Lost fabrication package before activation:** use **Recover full fabrication
+  package**; never mint a second code for the same artwork/edition.
 - **Wrong engraving before activation:** destroy or permanently deface the bad
   plate, fabricate from the same package, re-run every check, then activate.
 - **Wrong engraving after activation:** stop shipment and treat as an identity

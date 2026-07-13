@@ -101,8 +101,9 @@ export const LAUNCH_FLAGS = {
    * physical artwork identities and keeper binding. Each plate has a public QR
    * identity and a permanent Ownership Code. D1 stores its verifier plus an
    * encrypted recoverable envelope; R2 mirrors only that encrypted envelope.
-   * Plate issuance, recovery, physical activation, fulfillment, and keeper
-   * binding remain gated together so the registry cannot ship partially.
+   * Public QR history and keeper binding stay behind this flag. Private admin
+   * issuance/recovery can be staged first with the runtime-only
+   * ARTWORK_REGISTRY_ADMIN_ENABLED variable, without exposing collector claims.
    *
    * Production configuration, migrations, restore checks, fabrication, and
    * first-shipment procedure are documented in docs/lineage-plate-runbook.md.

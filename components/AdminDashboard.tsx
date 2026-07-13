@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
-import { LAUNCH_FLAGS } from '../launchFlags';
 
 interface AdminTool {
   title: string;
@@ -47,18 +46,12 @@ const TOOLS: AdminTool[] = [
     description: 'Your private quoting engine. Set the size, layers, finish, and add-ons, add the design value, and arrive at a suggested retail and a quote. Every multiplier is tunable.',
     href: '/admin/pricing',
   },
-  // Living Legacy piece registration. Only shown when the feature is switched
-  // on, so a flagged-off build never offers a tile that leads nowhere.
-  ...(LAUNCH_FLAGS.livingLegacy
-    ? [
-        {
-          title: 'Plate and fulfillment desk',
-          description:
-            'Issue a permanent artwork QR and encrypted recoverable Ownership Code, verify and activate its metal plate, then assign that exact plate for fulfillment.',
-          href: '/admin/pieces',
-        },
-      ]
-    : []),
+  {
+    title: 'Plate and fulfillment desk',
+    description:
+      'Issue a permanent artwork QR and encrypted recoverable Ownership Code, verify and activate its metal plate, then assign that exact plate for fulfillment.',
+    href: '/admin/pieces',
+  },
 ];
 
 const COMING_SOON: AdminTool[] = [

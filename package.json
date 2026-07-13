@@ -15,7 +15,7 @@
     "rename:oracle": "tsx scripts/rename-oracle-images.ts",
     "keystatic:dev": "vite --port 5555",
     "test": "npx playwright test",
-    "test:unit": "npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts && npx tsx --test --experimental-test-module-mocks tests/artwork-package-recovery.test.ts && npx tsx --test --experimental-test-module-mocks tests/public-lineage-history.test.ts",
+    "test:unit": "npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts && npx tsx --test --experimental-test-module-mocks tests/artwork-package-recovery.test.ts && npx tsx --test --experimental-test-module-mocks tests/public-lineage-history.test.ts && npx tsx --test --experimental-test-module-mocks tests/artwork-registry-rollout.test.ts",
     "test:mobile": "npx playwright test --project='Mobile Chrome' --reporter=list",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",

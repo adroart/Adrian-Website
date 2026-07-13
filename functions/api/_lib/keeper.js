@@ -39,6 +39,15 @@ export function legacyEnabled() {
   return Boolean(LAUNCH_FLAGS.livingLegacy);
 }
 
+/**
+ * Private registry operations can be staged before the public keeper surface.
+ * This runtime gate is separate from the compile-time public flag so a canary
+ * can be issued and recovery-tested without exposing collector claims.
+ */
+export function registryAdminEnabled(env) {
+  return legacyEnabled() || env?.ARTWORK_REGISTRY_ADMIN_ENABLED === 'true';
+}
+
 /** Graceful 503 when the shared D1 migration 008 has not been applied yet. */
 export function migrationNotApplied() {
   return json(

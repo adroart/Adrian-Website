@@ -8,7 +8,7 @@ import {
 import { generateRecoveryCode } from '../../../utils/recoveryCode.ts';
 import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 import {
-  legacyEnabled,
+  registryAdminEnabled,
   notFound,
   migrationNotApplied,
   isMissingTableError,
@@ -30,7 +30,7 @@ export async function onRequest(context) {
   const { request, env } = context;
   const unauthorized = requireAdmin(request, env);
   if (unauthorized) return unauthorized;
-  if (!legacyEnabled()) return notFound();
+  if (!registryAdminEnabled(env)) return notFound();
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
 

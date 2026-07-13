@@ -151,10 +151,9 @@ const AppInner: React.FC = () => {
             <Route path="/admin/poetry" element={<AdminPoetry />} />
             <Route path="/admin/book" element={<AdminBookEditor />} />
             <Route path="/admin/viewings" element={<AdminViewings />} />
-            {/* Living Legacy piece registration. Only reachable when the flag
-                is on, otherwise it falls through to NotFound so a flagged-off
-                build never leads to a working page. */}
-            <Route path="/admin/pieces" element={LAUNCH_FLAGS.livingLegacy ? <AdminPieces /> : <NotFound />} />
+            {/* Private registry staging remains reachable to authenticated
+                admins while the public Living Legacy surface is disabled. */}
+            <Route path="/admin/pieces" element={<AdminPieces />} />
             <Route path="/admin/pricing" element={<PricingCalculator />} />
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
