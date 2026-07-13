@@ -6,7 +6,7 @@ const MANUAL_REFERENCE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9:_./-]{2,127}$/;
 const CORRECTION_REASON_MAX = 500;
 
 export async function onRequest({ request, env }) {
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;

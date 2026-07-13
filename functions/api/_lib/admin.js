@@ -165,7 +165,7 @@ export async function requireAdminPostStepUp(request, env) {
   if (request.method !== 'POST') {
     return { response: jsonResponse({ ok: false, error: 'method_not_allowed' }, 405) };
   }
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return { response: unauthorized };
   if (!isSameOrigin(request)) {
     return { response: jsonResponse({ ok: false, error: 'origin_forbidden' }, 403) };

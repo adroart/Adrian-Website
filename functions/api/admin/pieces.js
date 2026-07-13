@@ -28,7 +28,7 @@ const PUBLIC_CODE_ATTEMPTS = 8;
 
 export async function onRequest(context) {
   const { request, env } = context;
-  const unauthorized = requireAdmin(request, env);
+  const unauthorized = await requireAdmin(request, env);
   if (unauthorized) return unauthorized;
   if (!registryAdminEnabled(env)) return notFound();
   const missingDb = requireDb(env);

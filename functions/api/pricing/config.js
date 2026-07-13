@@ -16,7 +16,7 @@ export async function onRequest(context) {
   if (request.method === 'GET') return getConfig(env);
 
   if (request.method === 'PUT') {
-    const unauthorized = requireAdmin(request, env);
+    const unauthorized = await requireAdmin(request, env);
     if (unauthorized) return unauthorized;
     const missingDb = requireDb(env);
     if (missingDb) return missingDb;

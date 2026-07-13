@@ -63,6 +63,7 @@ import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
 import { onRequest as activateArtworkPlate } from '../functions/api/admin/pieces/[id]/activate.js';
 import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
+import { createAdminSessionToken } from '../functions/api/_lib/admin.js';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
 const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
@@ -988,7 +989,7 @@ describe('private claim evidence pagination', () => {
     const DB = { prepare() { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async all() { const [, beforeAt, beforeId, limit] = values; return { results: rows.filter((row) => !beforeAt || row.created_at < beforeAt || (row.created_at === beforeAt && row.id < beforeId)).slice(0, limit) }; } }; return statement; } };
     const request = (before?: { createdAt: string; id: string }) => new Request('https://adrianrasmussen.com/api/admin/pieces/kp-one/claim-evidence', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Origin: 'https://adrianrasmussen.com', Cookie: `admin_session=${ADMIN_SECRET}` },
+      headers: { 'Content-Type': 'application/json', Origin: 'https://adrianrasmussen.com', Cookie: `admin_session=${ADMIN_SESSION_TOKEN}` },
       body: JSON.stringify({ adminSecret: ADMIN_SECRET, limit: 2, before }),
     });
     const first = await (await readClaimEvidence({ request: request(), env: { DB, UPLOAD_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
@@ -1011,6 +1012,7 @@ import {
   evaluateClaimWindow,
   CLAIM_WINDOW_DAYS,
   CLAIM_WARNING_DAYS,
+  FINAL_WARNING_GRACE_DAYS,
 } from '../../mandalacodes/utils/claimWindow.ts';
 
 // ── Recovery code ──────────────────────────────────────────────────────────
@@ -1445,6 +1447,14 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
     status: 'pending' as const,
     routedTo: 'holder' as const,
   };
+  const dayMs = 24 * 60 * 60 * 1000;
+  const isoDaysAfterRequest = (days: number) =>
+    new Date(Date.parse(baseRequest.createdAt) + days * dayMs).toISOString();
+  const deliveredWarnings = () =>
+    CLAIM_WARNING_DAYS.map((day, index) => ({
+      ordinal: index + 1,
+      sentAt: isoDaysAfterRequest(day),
+    }));
 
   it("a holder's NO stops the claim cold, regardless of elapsed time", () => {
     const declined = { ...baseRequest, status: 'declined' as const };
@@ -1458,40 +1468,34 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
   });
 
   it('only unanswered silence across the FULL window, every warning delivered, frees the piece', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS + FINAL_WARNING_GRACE_DAYS);
     const freed = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: false,
       nowIso: past,
-      warningsSent: CLAIM_WARNING_DAYS.length, // all four delivered
+      warnings: deliveredWarnings(), // all four delivered
     });
     assert.equal(freed.status, 'frees-to-requester');
   });
 
   it('mere inactivity never frees: full window but warnings undelivered stays blocked', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
     const notFreed = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: false,
       nowIso: past,
-      warningsSent: 0, // nothing actually delivered to the keeper yet
+      warnings: [], // nothing actually delivered to the keeper yet
     });
     assert.notEqual(notFreed.status, 'frees-to-requester');
   });
 
   it('any keeper response keeps the piece blocked (engagement never frees)', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
     const held = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: true,
       nowIso: past,
-      warningsSent: CLAIM_WARNING_DAYS.length,
+      warnings: deliveredWarnings(),
     });
     assert.equal(held.status, 'blocked-active');
   });
@@ -1643,12 +1647,13 @@ function issuanceEnv(DB: any, failBackup = false) {
 // A request carrying the admin cookie that requireAdmin() checks against
 // env.UPLOAD_SECRET. This is the same gate every admin endpoint uses.
 const ADMIN_SECRET = 'test-admin-secret';
+const ADMIN_SESSION_TOKEN = await createAdminSessionToken({ UPLOAD_SECRET: ADMIN_SECRET });
 function adminReq(method: string, body?: unknown) {
   return new Request('https://adrianrasmussen.com/api/admin/pieces', {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Cookie: `admin_session=${ADMIN_SECRET}`,
+      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -2136,7 +2141,7 @@ function lifecycleRequest(path: string, method: string, body?: unknown, options:
   cookie?: boolean; origin?: string;
 } = {}) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (options.cookie !== false) headers.Cookie = `admin_session=${ADMIN_SECRET}`;
+  if (options.cookie !== false) headers.Cookie = `admin_session=${ADMIN_SESSION_TOKEN}`;
   if (options.origin !== '') headers.Origin = options.origin || 'https://adrianrasmussen.com';
   return new Request(`https://adrianrasmussen.com${path}`, {
     method,
@@ -2610,7 +2615,7 @@ function fulfillmentReq(method: string, body?: unknown) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Cookie: `admin_session=${ADMIN_SECRET}`,
+      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });

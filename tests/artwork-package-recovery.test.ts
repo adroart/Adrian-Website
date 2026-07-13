@@ -7,8 +7,10 @@ import { encryptOwnershipCode } from '../utils/ownershipCodeCrypto';
 import { onRequest as recoverArtworkPackage } from '../functions/api/admin/pieces/[id]/package.js';
 import { onRequest as verifyR2Recovery } from '../functions/api/admin/pieces/[id]/verify-recovery.js';
 import { hashRecoveryCode } from '../functions/api/_lib/keeper.js';
+import { createAdminSessionToken } from '../functions/api/_lib/admin.js';
 
 const ADMIN_SECRET = 'registry-admin-secret';
+const ADMIN_SESSION_TOKEN = await createAdminSessionToken({ UPLOAD_SECRET: ADMIN_SECRET });
 const KEY = Buffer.alloc(32, 7).toString('base64');
 const OWNERSHIP_CODE = 'K7QM-9XTR-2PHV-N4WB';
 
@@ -54,7 +56,7 @@ function request(method = 'POST', body: Record<string, unknown> = { adminSecret:
   return new Request('https://adrianrasmussen.com/api/admin/pieces/kp-package-1/package', {
     method,
     headers: {
-      Cookie: `admin_session=${ADMIN_SECRET}`,
+      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
       Origin: 'https://adrianrasmussen.com',
       'Content-Type': 'application/json',
     },
