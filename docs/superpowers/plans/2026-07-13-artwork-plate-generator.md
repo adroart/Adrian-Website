@@ -1,5 +1,11 @@
 # Adrian Rasmussen Artwork Plate Generator Implementation Plan
 
+> **Superseded, 2026-07-13:** Do not execute this plan. It has been replaced by
+> `2026-07-13-shipment-ready-artwork-registry.md` and the operational procedure in
+> `docs/lineage-plate-runbook.md`. The replacement preserves permanent physical
+> identities while adding encrypted recovery, verified online backup, activation,
+> and exact shipment assignment.
+
 > **Storage amendment, 2026-07-13:** The approved design now requires recoverable online Ownership
 > Codes encrypted in the primary database plus a separately encrypted online backup. Sections below
 > that require one-time-only plaintext, no recoverable persistence, browser-only manifests, or the
