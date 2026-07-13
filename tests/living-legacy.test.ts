@@ -56,7 +56,8 @@ import {
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
 import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
-import { applyOrderStatusEvent } from '../functions/api/stripe/webhook.js';
+import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
+import { onRequest as readClaimEvidence } from '../functions/api/admin/pieces/[id]/claim-evidence.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
@@ -831,8 +832,10 @@ describe('artwork lineage commitments', () => {
 describe('Stripe order reversals', () => {
   it('moves paid orders to refunded, canceled, failed, or disputed idempotently', async () => {
     const orders = [{ stripe_session_id: 'cs_paid', stripe_payment_intent_id: 'pi_1', status: 'paid' }];
-    const DB = { prepare(sql: string) { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async run() { const row = orders.find((item) => sql.includes('stripe_session_id') ? item.stripe_session_id === values[1] : item.stripe_payment_intent_id === values[1]); if (row) row.status = values[0]; return { success: true, meta: { changes: row ? 1 : 0 } }; } }; return statement; } };
+    const DB = { prepare(sql: string) { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async run() { if (/^INSERT INTO orders/i.test(sql.trim())) { const row = orders.find((item) => item.stripe_session_id === values[1]); const terminal = row && ['refunded', 'disputed', 'canceled', 'failed'].includes(row.status); const preservesTerminal = /WHEN orders\.status IN \('refunded', 'disputed', 'canceled', 'failed'\)/.test(sql); if (row && (!terminal || !preservesTerminal)) row.status = values[4]; return { success: true, meta: { changes: 1 } }; } const row = orders.find((item) => sql.includes('stripe_session_id') ? item.stripe_session_id === values[1] : item.stripe_payment_intent_id === values[1]); if (row) row.status = values[0]; return { success: true, meta: { changes: row ? 1 : 0 } }; } }; return statement; } };
     await applyOrderStatusEvent({ DB }, { type: 'charge.refunded', data: { object: { payment_intent: 'pi_1' } } });
+    assert.equal(orders[0].status, 'refunded');
+    await upsertCheckoutOrder({ DB }, { userId: null, sessionId: 'cs_paid', piId: 'pi_1', email: 'buyer@example.com', status: 'paid', amountTotal: 100, currency: 'usd' });
     assert.equal(orders[0].status, 'refunded');
     await applyOrderStatusEvent({ DB }, { type: 'payment_intent.canceled', data: { object: { id: 'pi_1' } } });
     assert.equal(orders[0].status, 'canceled');
@@ -844,6 +847,27 @@ describe('Stripe order reversals', () => {
       () => applyOrderStatusEvent({ DB }, { type: 'charge.refunded', data: { object: {} } }),
       /unresolved/i,
     );
+  });
+});
+
+describe('private claim evidence pagination', () => {
+  it('uses an id tiebreaker so equal timestamps are never skipped', async () => {
+    const createdAt = '2026-07-13T00:00:00.000Z';
+    const rows = ['evidence-c', 'evidence-b', 'evidence-a'].map((id) => ({
+      id, actor_user_id: 'keeper', verified_email: 'verified@example.com',
+      ip_address: null, user_agent: null, outcome: 'contested_attempt', created_at: createdAt,
+    }));
+    const DB = { prepare() { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async all() { const [, beforeAt, beforeId, limit] = values; return { results: rows.filter((row) => !beforeAt || row.created_at < beforeAt || (row.created_at === beforeAt && row.id < beforeId)).slice(0, limit) }; } }; return statement; } };
+    const request = (before?: { createdAt: string; id: string }) => new Request('https://adrianrasmussen.com/api/admin/pieces/kp-one/claim-evidence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: 'https://adrianrasmussen.com', Cookie: `admin_session=${ADMIN_SECRET}` },
+      body: JSON.stringify({ adminSecret: ADMIN_SECRET, limit: 2, before }),
+    });
+    const first = await (await readClaimEvidence({ request: request(), env: { DB, UPLOAD_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
+    assert.deepEqual(first.evidence.map((row: any) => row.id), ['evidence-c', 'evidence-b']);
+    assert.deepEqual(first.nextBefore, { createdAt, id: 'evidence-b' });
+    const second = await (await readClaimEvidence({ request: request(first.nextBefore), env: { DB, UPLOAD_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
+    assert.deepEqual(second.evidence.map((row: any) => row.id), ['evidence-a']);
   });
 });
 
@@ -2301,6 +2325,13 @@ function makeKeeperDb() {
     if (/^INSERT INTO artwork_claim_evidence/i.test(s)) {
       const keeper = pieces.find((piece) => piece.id === params[1]);
       if (params[8] && (keeper?.keeper_user_id !== params[8] || keeper?.claimed_at !== params[9])) return { kind: 'run', meta: { changes: 0 } };
+      if (params[10]) {
+        const cutoff = Date.parse(params[7]) - params[10] * 1000;
+        const duplicate = evidence.some((prior) => prior[1] === params[1]
+          && prior[2] === params[2] && prior[6] === params[6]
+          && Date.parse(prior[7]) > cutoff);
+        if (duplicate) return { kind: 'run', meta: { changes: 0 } };
+      }
       evidence.push(params);
       return { kind: 'run', meta: { changes: 1 } };
     }
@@ -2716,10 +2747,18 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // The binding was NOT stolen: user-first is still the keeper.
       assert.equal(pieces[0].keeper_user_id, 'user-first');
 
+      // Retries still reach the governed bridge, but private evidence is
+      // atomically throttled for this piece/requester/outcome tuple.
+      const evidenceCount = evidence.length;
+      const repeatedContest = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(repeatedContest.status, 202);
+      assert.equal(bridgeCalled, 2);
+      assert.equal(evidence.length, evidenceCount);
+
       // A copied permanent code is not enough to open a governed claim.
       const wrongContest = await bind({ request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(wrongContest.status, 403);
-      assert.equal(bridgeCalled, 1);
+      assert.equal(bridgeCalled, 2);
 
       // Once claimed, release never turns the permanent Ownership Code back
       // into a bearer instrument. A later holder enters the governed path.
@@ -2727,7 +2766,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       const releasedContest = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(releasedContest.status, 202);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
-      assert.equal(bridgeCalled, 2);
+      assert.equal(bridgeCalled, 3);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, issuanceKey: 'keeper-negative' }), env: adminEnv });

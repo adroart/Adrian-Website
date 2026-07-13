@@ -97,6 +97,7 @@ export function claimEvidenceStatement(env, {
   createdAt,
   requireKeeperUserId = null,
   requireClaimedAt = null,
+  dedupeWithinSeconds = null,
 }) {
   const email = String(verifiedEmail || '').trim().slice(0, 254);
   if (!email) throw new Error('verified email required for claim evidence');
@@ -111,12 +112,22 @@ export function claimEvidenceStatement(env, {
        (id, keeper_piece_id, actor_user_id, verified_email, ip_address,
         user_agent, outcome, created_at)
      SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8
-      WHERE ?9 IS NULL OR EXISTS (
+      WHERE (?9 IS NULL OR EXISTS (
         SELECT 1 FROM keeper_pieces
          WHERE id = ?2 AND keeper_user_id = ?9 AND claimed_at = ?10
-      )`,
+      ))
+      AND (?11 IS NULL OR NOT EXISTS (
+        SELECT 1 FROM artwork_claim_evidence prior
+         WHERE prior.keeper_piece_id = ?2
+           AND prior.actor_user_id = ?3
+           AND prior.outcome = ?7
+           AND julianday(prior.created_at) > julianday(?8, '-' || ?11 || ' seconds')
+      ))`,
   ).bind(
     crypto.randomUUID(), keeperPieceId, actorUserId, email, ip,
     agent, outcome, createdAt, requireKeeperUserId, requireClaimedAt,
+    Number.isSafeInteger(dedupeWithinSeconds) && dedupeWithinSeconds > 0
+      ? dedupeWithinSeconds
+      : null,
   );
 }

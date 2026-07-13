@@ -217,6 +217,7 @@ export async function onRequest(context) {
         userAgent: request.headers.get('User-Agent'),
         outcome: 'contested_attempt',
         createdAt: nowIso,
+        dedupeWithinSeconds: 15 * 60,
       }).run();
 
       const bridge = await requestContestedClaim(env, {

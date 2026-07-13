@@ -2,13 +2,16 @@
  * POST /api/stripe/webhook
  *
  * Receives Stripe webhook events with HMAC verification (no SDK). Listens
- * for checkout.session.completed and checkout.session.async_payment_succeeded
- * and persists orders + line items into D1. Idempotent on stripe_session_id
- * UNIQUE — duplicates are silently ignored.
+ * for checkout success and payment reversal events, persisting orders + line
+ * items into D1 without allowing late success delivery to erase a terminal
+ * reversal state. Idempotent on stripe_session_id UNIQUE.
  *
  * Configure in the Stripe dashboard:
  *   - Endpoint: https://<site>/api/stripe/webhook
- *   - Events: checkout.session.completed, checkout.session.async_payment_succeeded
+ *   - Events: checkout.session.completed, checkout.session.async_payment_succeeded,
+ *     checkout.session.async_payment_failed, charge.refunded,
+ *     payment_intent.canceled, payment_intent.payment_failed,
+ *     charge.dispute.created
  *   - Set STRIPE_WEBHOOK_SECRET (Functions env)
  */
 
@@ -70,17 +73,9 @@ export async function onRequest(context) {
 
   // Insert the order; ON CONFLICT idempotently no-ops when this webhook
   // fires twice for the same session.
-  const orderInsert = await env.DB
-    .prepare(
-      `INSERT INTO orders (user_id, stripe_session_id, stripe_payment_intent_id, email, status, amount_total, currency)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-       ON CONFLICT(stripe_session_id) DO UPDATE SET
-         status = excluded.status,
-         stripe_payment_intent_id = COALESCE(orders.stripe_payment_intent_id, excluded.stripe_payment_intent_id),
-         user_id = COALESCE(orders.user_id, excluded.user_id)`,
-    )
-    .bind(userId, sessionId, piId, email, status, amountTotal, currency)
-    .run();
+  const orderInsert = await upsertCheckoutOrder(env, {
+    userId, sessionId, piId, email, status, amountTotal, currency,
+  });
 
   // Fetch line items separately because the webhook payload doesn't
   // include them.
@@ -151,6 +146,25 @@ export async function onRequest(context) {
   }
 
   return new Response('ok', { status: 200 });
+}
+
+export async function upsertCheckoutOrder(env, {
+  userId, sessionId, piId, email, status, amountTotal, currency,
+}) {
+  return env.DB
+    .prepare(
+      `INSERT INTO orders (user_id, stripe_session_id, stripe_payment_intent_id, email, status, amount_total, currency)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+       ON CONFLICT(stripe_session_id) DO UPDATE SET
+         status = CASE
+           WHEN orders.status IN ('refunded', 'disputed', 'canceled', 'failed') THEN orders.status
+           ELSE excluded.status
+         END,
+         stripe_payment_intent_id = COALESCE(orders.stripe_payment_intent_id, excluded.stripe_payment_intent_id),
+         user_id = COALESCE(orders.user_id, excluded.user_id)`,
+    )
+    .bind(userId, sessionId, piId, email, status, amountTotal, currency)
+    .run();
 }
 
 export async function applyOrderStatusEvent(env, event) {
