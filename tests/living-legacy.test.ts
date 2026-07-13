@@ -1517,6 +1517,7 @@ type LifecycleFixtureOptions = {
   status?: 'generated' | 'active';
   backupStatus?: 'pending' | 'failed' | 'verified';
   failAudit?: boolean;
+  raceActivation?: boolean;
 };
 
 async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) {
@@ -1589,6 +1590,13 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
         }
         if (/^UPDATE keeper_pieces SET plate_status = 'active'/i.test(normalized)) {
           const [activatedAt, id] = params;
+          if (options.raceActivation) {
+            const raced = rows.find((item) => item.id === id && item.plate_status === 'generated');
+            if (raced) {
+              raced.plate_status = 'active';
+              raced.plate_activated_at = '2026-07-13T11:59:59.000Z';
+            }
+          }
           const row = rows.find((item) => item.id === id && item.plate_status === 'generated');
           if (!row) return { success: true, meta: { changes: 0 } };
           row.plate_status = 'active';
@@ -1768,7 +1776,7 @@ describe('admin artwork plate lifecycle', () => {
       nonce: fixture.rows[0].ownership_code_nonce,
     }, before);
     assert.equal(fixture.audits.at(-1).action, 'activate');
-    assert.equal(fixture.audits.at(-1).outcome, 'activated');
+    assert.equal(fixture.audits.at(-1).outcome, 'activation_attempt');
 
     const repeated = await call(validActivation(fixture.plate));
     assert.equal(repeated.status, 200);
@@ -1776,6 +1784,34 @@ describe('admin artwork plate lifecycle', () => {
     const mismatch = await call({ ...validActivation(fixture.plate), undersideSha256: 'wrong' });
     assert.equal(mismatch.status, 409);
     assert.equal(fixture.rows[0].plate_status, 'active');
+  });
+
+  it('never activates when the required activation-attempt audit cannot be inserted', async () => {
+    const fixture = await makePlateLifecycleFixture({ failAudit: true });
+    const response = await activateArtworkPlate({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/activate', 'POST', validActivation(fixture.plate)),
+      env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
+    });
+
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { ok: false, error: 'audit_unavailable' });
+    assert.equal(fixture.rows[0].plate_status, 'generated');
+    assert.equal(fixture.rows[0].plate_activated_at, null);
+  });
+
+  it('records only an activation attempt when a concurrent request wins the conditional update', async () => {
+    const fixture = await makePlateLifecycleFixture({ raceActivation: true });
+    const response = await activateArtworkPlate({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/activate', 'POST', validActivation(fixture.plate)),
+      env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, plateStatus: 'active', idempotent: true });
+    assert.equal(fixture.audits.length, 1);
+    assert.equal(fixture.audits[0].outcome, 'activation_attempt');
+    assert.equal(fixture.audits.some((audit) => audit.outcome === 'activated'), false);
+    assert.equal(fixture.rows[0].plate_activated_at, '2026-07-13T11:59:59.000Z');
   });
 });
 

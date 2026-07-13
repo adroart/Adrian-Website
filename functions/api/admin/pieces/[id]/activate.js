@@ -1,6 +1,5 @@
 import {
   jsonResponse,
-  ownershipAuditStatement,
   requireAdminPostStepUp,
   requireDb,
   writeOwnershipAudit,
@@ -54,22 +53,35 @@ export async function onRequest({ request, env, params }) {
       return jsonResponse({ ok: true, plateStatus: 'active', idempotent: true });
     }
 
+    try {
+      await writeOwnershipAudit(env, {
+        keeperPieceId: row.id,
+        action: 'activate',
+        outcome: 'activation_attempt',
+      });
+    } catch {
+      return jsonResponse({ ok: false, error: 'audit_unavailable' }, 503);
+    }
+
     const activatedAt = new Date().toISOString();
     const update = env.DB.prepare(
       `UPDATE keeper_pieces
           SET plate_status = 'active', plate_activated_at = ?1
         WHERE id = ?2 AND plate_status = 'generated'`,
     ).bind(activatedAt, row.id);
-    const audit = ownershipAuditStatement(env, {
-      keeperPieceId: row.id,
-      action: 'activate',
-      outcome: 'activated',
-    });
-    const results = typeof env.DB.batch === 'function'
-      ? await env.DB.batch([update, audit])
-      : [await update.run(), await audit.run()];
-    const changes = results?.[0]?.meta?.changes;
+    const result = await update.run();
+    const changes = result?.meta?.changes;
     if (changes === 0) {
+      const current = await env.DB.prepare(
+        'SELECT * FROM keeper_pieces WHERE id = ?1',
+      ).bind(row.id).first();
+      if (
+        current?.plate_status === 'active' &&
+        current.backup_status === 'verified' &&
+        hashesMatch(current, body)
+      ) {
+        return jsonResponse({ ok: true, plateStatus: 'active', idempotent: true });
+      }
       return jsonResponse({ ok: false, error: 'activation_conflict' }, 409);
     }
     return jsonResponse({
