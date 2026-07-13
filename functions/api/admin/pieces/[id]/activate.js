@@ -4,6 +4,7 @@ import {
   requireDb,
   writeOwnershipAudit,
 } from '../../../_lib/admin.js';
+import { prepareNextLineageEvent } from '../../../_lib/lineage.js';
 
 const CONFIRMATIONS = [
   'realMetalQrScanned',
@@ -69,7 +70,17 @@ export async function onRequest({ request, env, params }) {
           SET plate_status = 'active', plate_activated_at = ?1
         WHERE id = ?2 AND plate_status = 'generated'`,
     ).bind(activatedAt, row.id);
-    const result = await update.run();
+    if (typeof env.DB.batch !== 'function') {
+      return jsonResponse({ ok: false, error: 'atomic_write_unavailable' }, 503);
+    }
+    const lineage = await prepareNextLineageEvent(env, {
+      keeperPieceId: row.id,
+      eventType: 'activated',
+      eventAt: activatedAt,
+      publicPayload: { plateStatus: 'active' },
+      onlyIfPreviousChanged: true,
+    });
+    const [result] = await env.DB.batch([update, lineage.statement]);
     const changes = result?.meta?.changes;
     if (changes === 0) {
       const current = await env.DB.prepare(

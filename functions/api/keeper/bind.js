@@ -74,6 +74,10 @@ import {
   hashRecoveryCode,
 } from '../_lib/keeper.js';
 import { requestContestedClaim } from '../_lib/claimBridge.js';
+import {
+  claimEvidenceStatement,
+  prepareNextLineageEvent,
+} from '../_lib/lineage.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -82,6 +86,17 @@ export async function onRequest(context) {
 
   const auth = await requireUser(request, env);
   if (auth instanceof Response) return auth;
+  const verifiedEmail = typeof auth.email === 'string' ? auth.email.trim() : '';
+  if (!verifiedEmail || auth.user?.emailVerified !== true) {
+    return json(
+      {
+        ok: false,
+        error: 'verified_email_required',
+        message: 'Verify your account email before claiming artwork.',
+      },
+      403,
+    );
+  }
 
   if (!env.DB) return migrationNotApplied();
 
@@ -192,18 +207,17 @@ export async function onRequest(context) {
       // The requester's email seeds the eventual steward record on approval so
       // the holder can recognize the buyer. It must come from the verified
       // session, never the request body.
-      const requesterEmail = (auth.email || '').trim();
-      if (!requesterEmail) {
-        return json(
-          {
-            ok: false,
-            error: 'email_required_for_claim',
-            message:
-              'Your account needs a verified email before you can request a contested piece. Add one and try again.',
-          },
-          400,
-        );
-      }
+      const requesterEmail = verifiedEmail;
+
+      await claimEvidenceStatement(env, {
+        keeperPieceId: existing.id,
+        actorUserId: auth.userId,
+        verifiedEmail,
+        ipAddress: request.headers.get('CF-Connecting-IP'),
+        userAgent: request.headers.get('User-Agent'),
+        outcome: 'contested_attempt',
+        createdAt: nowIso,
+      }).run();
 
       const bridge = await requestContestedClaim(env, {
         pieceId,
@@ -292,15 +306,31 @@ export async function onRequest(context) {
           )`,
     ).bind(auth.userId, nowIso, existing.id);
     const fulfillmentMutation = fulfillmentClaimStatement(env, existing.id, nowIso);
-    let updated;
-    if (typeof env.DB.batch === 'function') {
-      [updated] = await env.DB.batch([keeperMutation, fulfillmentMutation]);
-    } else {
-      updated = await keeperMutation.run();
-      if (updated?.success && (updated.meta?.changes ?? 0) > 0) {
-        await repairFulfillmentClaim(env, existing.id, nowIso);
-      }
+    if (typeof env.DB.batch !== 'function') {
+      return json({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }
+    const lineage = await prepareNextLineageEvent(env, {
+      keeperPieceId: existing.id,
+      eventType: 'first_bound',
+      eventAt: nowIso,
+      publicPayload: {},
+      onlyIfPreviousChanged: true,
+    });
+    const evidence = claimEvidenceStatement(env, {
+      keeperPieceId: existing.id,
+      actorUserId: auth.userId,
+      verifiedEmail,
+      ipAddress: request.headers.get('CF-Connecting-IP'),
+      userAgent: request.headers.get('User-Agent'),
+      outcome: 'first_bound',
+      createdAt: nowIso,
+    });
+    const [updated] = await env.DB.batch([
+      keeperMutation,
+      lineage.statement,
+      fulfillmentMutation,
+      evidence,
+    ]);
 
     if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
       // The guard matched no row → a concurrent bind beat us to this piece.

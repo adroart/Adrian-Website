@@ -1,5 +1,6 @@
 import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 import { isMissingTableError, migrationNotApplied } from '../_lib/keeper.js';
+import { prepareNextLineageEvent } from '../_lib/lineage.js';
 
 const MANUAL_REFERENCE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9:_./-]{2,127}$/;
 const CORRECTION_REASON_MAX = 500;
@@ -359,7 +360,15 @@ async function shipFulfillment(env, body) {
   const shippedAt = new Date().toISOString();
   const mutation = env.DB.prepare(
     `UPDATE piece_fulfillments SET shipped_at = ?1
-      WHERE id = ?2 AND shipped_at IS NULL`,
+      WHERE id = ?2 AND shipped_at IS NULL
+        AND (
+          assignment_type = 'manual'
+          OR EXISTS (
+            SELECT 1 FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = piece_fulfillments.order_item_id AND o.status = 'paid'
+          )
+        )`,
   ).bind(shippedAt, existing.id);
   const result = await mutateWithAudit(
     env,
@@ -400,11 +409,16 @@ function auditStatement(env, keeperPieceId, action, outcome, createdAt) {
 
 async function mutateWithAudit(env, mutation, keeperPieceId, action, outcome, createdAt) {
   const audit = auditStatement(env, keeperPieceId, action, outcome, createdAt);
-  if (typeof env.DB.batch === 'function') {
-    const [result] = await env.DB.batch([mutation, audit]);
-    return result;
+  if (typeof env.DB.batch !== 'function') {
+    throw new Error('atomic write unavailable');
   }
-  const result = await mutation.run();
-  await audit.run();
+  const lineage = await prepareNextLineageEvent(env, {
+    keeperPieceId,
+    eventType: action.replace('fulfillment_', 'fulfillment_'),
+    eventAt: createdAt,
+    publicPayload: {},
+    onlyIfPreviousChanged: true,
+  });
+  const [result] = await env.DB.batch([mutation, lineage.statement, audit]);
   return result;
 }

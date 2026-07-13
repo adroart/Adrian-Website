@@ -55,6 +55,7 @@ import {
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
+import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
@@ -69,7 +70,7 @@ const legacyKeeperSchema = () =>
     .map(readMigration)
     .join('\n');
 const registrySchema = () =>
-  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}\n${readMigration('012_piece_fulfillment_guards.sql')}`;
+  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}\n${readMigration('012_piece_fulfillment_guards.sql')}\n${readMigration('013_artwork_lineage.sql')}`;
 const sqliteJson = (sql: string) => {
   const output = execFileSync('sqlite3', ['-json', ':memory:'], {
     encoding: 'utf8',
@@ -785,6 +786,45 @@ describe('artwork registry migrations', () => {
     `);
     assert.equal(row.count, 1);
   });
+
+  it('separates private claim evidence from fork-resistant public lineage', () => {
+    const evidenceColumns = sqliteJson(`${registrySchema()} SELECT name FROM pragma_table_info('artwork_claim_evidence') ORDER BY cid;`).map((row: any) => row.name);
+    const lineageColumns = sqliteJson(`${registrySchema()} SELECT name FROM pragma_table_info('artwork_lineage_events') ORDER BY cid;`).map((row: any) => row.name);
+    assert.ok(evidenceColumns.includes('verified_email'));
+    assert.ok(evidenceColumns.includes('ip_address'));
+    assert.equal(lineageColumns.some((name: string) => /email|ip|user_agent|ownership|cipher|nonce|key/i.test(name)), false);
+
+    const [forkCount] = sqliteJson(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-chain', 'UL-060', 0, 'hash');
+      INSERT INTO artwork_lineage_events
+        (id, keeper_piece_id, sequence, event_type, event_at, previous_hash, event_hash, public_payload_json)
+      VALUES ('le-1', 'kp-chain', 1, 'issued', '2026-07-13T00:00:00Z', NULL, 'hash-1', '{}');
+      INSERT OR IGNORE INTO artwork_lineage_events
+        (id, keeper_piece_id, sequence, event_type, event_at, previous_hash, event_hash, public_payload_json)
+      VALUES ('le-fork', 'kp-chain', 2, 'activated', '2026-07-13T01:00:00Z', NULL, 'fork', '{}');
+      INSERT INTO artwork_lineage_events
+        (id, keeper_piece_id, sequence, event_type, event_at, previous_hash, event_hash, public_payload_json)
+      VALUES ('le-2', 'kp-chain', 2, 'activated', '2026-07-13T01:00:00Z', 'hash-1', 'hash-2', '{}');
+      INSERT OR IGNORE INTO artwork_lineage_events
+        (id, keeper_piece_id, sequence, event_type, event_at, previous_hash, event_hash, public_payload_json)
+      VALUES ('le-fork-2', 'kp-chain', 3, 'shipped', '2026-07-13T02:00:00Z', 'hash-1', 'fork-2', '{}');
+      SELECT COUNT(*) AS count FROM artwork_lineage_events;
+    `);
+    assert.equal(forkCount.count, 2);
+  });
+});
+
+describe('artwork lineage commitments', () => {
+  it('is deterministic, chained, and rejects private payload keys', async () => {
+    const input = { keeperPieceId: 'kp-1', sequence: 2, eventType: 'activated', eventAt: '2026-07-13T00:00:00.000Z', previousHash: 'a'.repeat(64), publicPayload: { plateStatus: 'active' } };
+    const first = await buildLineageEvent(input);
+    const second = await buildLineageEvent(input);
+    assert.deepEqual(first, second);
+    assert.match(first.eventHash, /^[a-f0-9]{64}$/);
+    await assert.rejects(() => buildLineageEvent({ ...input, publicPayload: { email: 'private@example.com' } }), /private lineage key/i);
+  });
 });
 
 // The contested-claim handoff opens a request on mandalacodes' SINGLE shared
@@ -1292,6 +1332,7 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
 // show-code-once and refuse-overwrite rules without a real database.
 function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?: boolean } = {}) {
   const rows: any[] = []; // keeper_pieces
+  const lineage: any[] = [];
   let collisionPending = Boolean(options.collideOnce);
   let backupStatusFailurePending = Boolean(options.failBackupStatusOnce);
 
@@ -1353,6 +1394,10 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
       }
       return { kind: 'run' };
     }
+    if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
+      lineage.push(params);
+      return { kind: 'run' };
+    }
     // List
     if (/^SELECT .* FROM keeper_pieces ORDER BY/i.test(s)) {
       return { kind: 'all', results: rows.slice() };
@@ -1361,6 +1406,7 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
   }
 
   const DB = {
+    async batch(statements: any[]) { return Promise.all(statements.map((statement) => statement.run())); },
     prepare(sql: string) {
       let bound: any[] = [];
       const stmt: any = {
@@ -1383,7 +1429,7 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
     },
   };
 
-  return { DB, rows };
+  return { DB, rows, lineage };
 }
 
 function makeBackupBucket({ fail = false } = {}) {
@@ -1478,7 +1524,7 @@ describe('admin piece registration', () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB, rows } = makeIssuanceDb();
+      const { DB, rows, lineage } = makeIssuanceDb();
       const bucket = makeBackupBucket();
       const env = { ...issuanceEnv(DB), ARTWORK_REGISTRY_BACKUP: bucket };
       const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'issue-atomic' }), env });
@@ -1490,6 +1536,9 @@ describe('admin piece registration', () => {
       assert.equal(rows[0].plate_status, 'generated');
       assert.equal(rows[0].front_svg_sha256, created.frontSha256);
       assert.equal(rows[0].back_svg_sha256, created.undersideSha256);
+      assert.equal(lineage.length, 1);
+      assert.equal(lineage[0][3], 'issued');
+      assert.doesNotMatch(JSON.stringify(lineage), /ownership|cipher|nonce|buyer@/i);
       assert.ok(rows[0].ownership_code_ciphertext);
       assert.ok(rows[0].ownership_code_nonce);
       assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(created.ownershipCode)), false);
@@ -1794,6 +1843,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     backup_reference: 'plates/AR-ABCDEFGH.json', backup_at: generatedAt,
   }];
   const audits: any[] = [];
+  const lineage: any[] = [];
   const operations: string[] = [];
 
   function statement(sql: string) {
@@ -1806,6 +1856,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
         if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(normalized)) {
           return rows.find((row) => row.id === params[0]) || null;
         }
+        if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(normalized)) return null;
         throw new Error(`lifecycle D1 first: ${normalized}`);
       },
       async run() {
@@ -1814,6 +1865,10 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
           if (options.failAudit) throw new Error('audit unavailable');
           const [id, keeper_piece_id, action, request_id, outcome, created_at] = params;
           audits.push({ id, keeper_piece_id, action, request_id, outcome, created_at });
+          return { success: true, meta: { changes: 1 } };
+        }
+        if (/^INSERT INTO artwork_lineage_events/i.test(normalized)) {
+          lineage.push(params);
           return { success: true, meta: { changes: 1 } };
         }
         if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(normalized)) {
@@ -1844,8 +1899,11 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     return stmt;
   }
 
-  const DB = { prepare: statement };
-  return { DB, rows, audits, operations, ownershipCode, plate };
+  const DB = {
+    prepare: statement,
+    async batch(statements: any[]) { return Promise.all(statements.map((item) => item.run())); },
+  };
+  return { DB, rows, audits, lineage, operations, ownershipCode, plate };
 }
 
 function lifecycleRequest(path: string, method: string, body?: unknown, options: {
@@ -2012,6 +2070,7 @@ describe('admin artwork plate lifecycle', () => {
     }, before);
     assert.equal(fixture.audits.at(-1).action, 'activate');
     assert.equal(fixture.audits.at(-1).outcome, 'activation_attempt');
+    assert.equal(fixture.lineage.at(-1)[3], 'activated');
 
     const repeated = await call(validActivation(fixture.plate));
     assert.equal(repeated.status, 200);
@@ -2067,7 +2126,7 @@ import { mock } from 'node:test';
 // The signed-in identity bind sees. Mutated per-test before each call so one
 // suite can play several different users (registrant never binds; first keeper;
 // a second, contesting user).
-let CURRENT_AUTH: { userId: string; email: string | null } | null = null;
+let CURRENT_AUTH: { userId: string; email: string | null; emailVerified?: boolean } | null = null;
 
 mock.module('../functions/api/_lib/clerk.js', {
   namedExports: {
@@ -2075,7 +2134,11 @@ mock.module('../functions/api/_lib/clerk.js', {
       if (!CURRENT_AUTH) {
         return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
       }
-      return { userId: CURRENT_AUTH.userId, email: CURRENT_AUTH.email };
+      return {
+        userId: CURRENT_AUTH.userId,
+        email: CURRENT_AUTH.email,
+        user: { emailVerified: CURRENT_AUTH.emailVerified === true },
+      };
     },
   },
 });
@@ -2089,6 +2152,8 @@ mock.module('../functions/api/_lib/clerk.js', {
 function makeKeeperDb() {
   const pieces: any[] = [];
   const fulfillments: any[] = [];
+  const lineage: any[] = [];
+  const evidence: any[] = [];
   const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
 
   function findActive(pieceId: string, edition: number) {
@@ -2190,6 +2255,19 @@ function makeKeeperDb() {
       if (row) row.claimed_at = claimedAt;
       return { kind: 'run', meta: { changes: row ? 1 : 0 } };
     }
+    if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(s)) {
+      const rows = lineage.filter((row) => row[1] === params[0]);
+      const last = rows.at(-1);
+      return { kind: 'first', row: last ? { sequence: last[2], event_hash: last[6] } : null };
+    }
+    if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
+      lineage.push(params);
+      return { kind: 'run', meta: { changes: 1 } };
+    }
+    if (/^INSERT INTO artwork_claim_evidence/i.test(s)) {
+      evidence.push(params);
+      return { kind: 'run', meta: { changes: 1 } };
+    }
 
     // list
     if (/^SELECT .* FROM keeper_pieces ORDER BY/i.test(s)) {
@@ -2199,6 +2277,7 @@ function makeKeeperDb() {
   }
 
   const DB = {
+    async batch(statements: any[]) { return Promise.all(statements.map((statement) => statement.run())); },
     prepare(sql: string) {
       let bound: any[] = [];
       const stmt: any = {
@@ -2221,13 +2300,17 @@ function makeKeeperDb() {
     },
   };
 
-  return { DB, pieces, users, fulfillments };
+  return { DB, pieces, users, fulfillments, lineage, evidence };
 }
 
 function bindReq(body: unknown) {
   return new Request('https://adrianrasmussen.com/api/keeper/bind', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'CF-Connecting-IP': '203.0.113.42',
+      'User-Agent': 'registry-test-agent',
+    },
     body: JSON.stringify(body),
   });
 }
@@ -2262,8 +2345,10 @@ function makeFulfillmentDb() {
   ];
   const fulfillments: any[] = [];
   const audits: any[] = [];
+  const lineage: any[] = [];
   let claimBeforeNextWrite: string | null = null;
   let claimFulfillmentBeforeNextCorrection: string | null = null;
+  let refundBeforeNextShip = false;
 
   const normalize = (sql: string) => sql.replace(/\s+/g, ' ').trim();
   function execute(sql: string, values: any[]) {
@@ -2317,7 +2402,14 @@ function makeFulfillmentDb() {
     if (/^UPDATE piece_fulfillments SET shipped_at = \?1/i.test(s)) {
       const [shippedAt, id] = values;
       const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
+      if (refundBeforeNextShip) {
+        orders.find((order) => order.id === 10).status = 'refunded';
+        refundBeforeNextShip = false;
+      }
       if (!row) return { changes: 0 };
+      const orderItem = orderItems.find((item) => item.id === row.order_item_id);
+      const order = orderItem && orders.find((candidate) => candidate.id === orderItem.order_id);
+      if (/assignment_type = 'manual'/i.test(s) && row.assignment_type !== 'manual' && order?.status !== 'paid') return { changes: 0 };
       row.shipped_at = shippedAt;
       return { changes: 1 };
     }
@@ -2325,10 +2417,20 @@ function makeFulfillmentDb() {
       audits.push({ keeper_piece_id: values[1], action: values[2], request_id: values[3], outcome: values[4], created_at: values[5] });
       return { changes: 1 };
     }
+    if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(s)) {
+      const rows = lineage.filter((row) => row[1] === values[0]);
+      const last = rows.at(-1);
+      return { row: last ? { sequence: last[2], event_hash: last[6] } : null };
+    }
+    if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
+      lineage.push(values);
+      return { changes: 1 };
+    }
     throw new Error(`fulfillment fake D1: unhandled statement: ${s}`);
   }
 
   const DB = {
+    async batch(statements: any[]) { return Promise.all(statements.map((statement) => statement.run())); },
     prepare(sql: string) {
       let values: any[] = [];
       const statement: any = {
@@ -2341,9 +2443,10 @@ function makeFulfillmentDb() {
     },
   };
   return {
-    DB, pieces, orders, orderItems, fulfillments, audits,
+    DB, pieces, orders, orderItems, fulfillments, audits, lineage,
     claimPieceBeforeNextWrite(id: string) { claimBeforeNextWrite = id; },
     claimFulfillmentBeforeNextCorrection(id: string) { claimFulfillmentBeforeNextCorrection = id; },
+    refundBeforeNextShipment() { refundBeforeNextShip = true; },
   };
 }
 
@@ -2448,7 +2551,18 @@ describe('admin piece fulfillment desk', () => {
     assert.equal(fixture.fulfillments[0].shipped_at, shippedAt);
     assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:late', reason: 'too late' }), env })).status, 409);
     assert.deepEqual(fixture.audits.map((row) => row.action), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
+    assert.deepEqual(fixture.lineage.map((row) => row[3]), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
     assert.doesNotMatch(JSON.stringify(fixture.audits), /studio:|buyer@/i);
+  });
+
+  it('does not ship a Stripe assignment that is refunded at write time', async () => {
+    const fixture = makeFulfillmentDb();
+    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
+    fixture.refundBeforeNextShipment();
+    const response = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: fixture.fulfillments[0].id }), env });
+    assert.equal(response.status, 409);
+    assert.equal(fixture.fulfillments[0].shipped_at, null);
   });
 });
 
@@ -2461,7 +2575,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users, fulfillments } = makeKeeperDb();
+      const { DB, pieces, users, fulfillments, lineage, evidence } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -2481,7 +2595,11 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
 
       // A new registry identity is not bindable until physical activation and
       // verified online backup are both complete.
-      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
+      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: false };
+      const unverifiedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(unverifiedRes.status, 403);
+      assert.equal((await unverifiedRes.json()).error, 'verified_email_required');
+      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
       const generatedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(generatedRes.status, 409);
       assert.equal((await generatedRes.json()).error, 'plate_not_ready');
@@ -2504,6 +2622,11 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(pieces[0].keeper_user_id, 'user-first');
       assert.ok(pieces[0].claimed_at);
       assert.equal(fulfillments[0].claimed_at, pieces[0].claimed_at);
+      assert.equal(lineage.at(-1)[3], 'first_bound');
+      assert.equal(evidence.at(-1)[6], 'first_bound');
+      assert.equal(evidence.at(-1)[3], 'first@example.com');
+      assert.equal(evidence.at(-1)[4], '203.0.113.42');
+      assert.doesNotMatch(lineage.at(-1)[7], /email|ip|ownership|cipher|nonce/i);
 
       // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
       const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
@@ -2524,7 +2647,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Seed the contesting user so getUserByClerkId resolves them, then bind AS
       // that user. user-first still holds the piece, so this is a genuine contest.
       users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
-      CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com' };
+      CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
 
       const contestRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(contestRes.status, 202);
@@ -2533,6 +2656,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(contestJson.status, 'claim_requested');
       assert.equal(contestJson.claim.outcome, 'opened');
       assert.equal(bridgeCalled, 1);
+      assert.equal(evidence.at(-1)[6], 'contested_attempt');
       // The binding was NOT stolen: user-first is still the keeper.
       assert.equal(pieces[0].keeper_user_id, 'user-first');
 
@@ -2552,7 +2676,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, issuanceKey: 'keeper-negative' }), env: adminEnv });
       await reg2.json();
-      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
+      CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
       const wrongRes = await bind({
         request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-101' }),
         env: bindEnv,

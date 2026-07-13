@@ -15,6 +15,7 @@ import {
   genKeeperPieceId,
 } from '../_lib/keeper.js';
 import { backupPlateEnvelope } from '../_lib/plateBackup.js';
+import { buildLineageEvent, lineageStatement } from '../_lib/lineage.js';
 
 const MAX_EDITION_WITHOUT_BOUND = 9999;
 const MAX_ISSUANCE_KEY_LENGTH = 128;
@@ -257,7 +258,7 @@ async function issuePiece(request, env) {
       };
 
       try {
-        await env.DB.prepare(
+        const insert = env.DB.prepare(
           `INSERT INTO keeper_pieces
              (id, piece_id, edition_number, recovery_code_hash, public_code,
               issuance_key, plate_status, plate_generated_at, front_svg_sha256,
@@ -269,7 +270,20 @@ async function issuePiece(request, env) {
           input.issuanceKey, 'generated', generatedAt, plate.frontSha256,
           plate.undersideSha256, envelope.ciphertext, envelope.nonce,
           envelope.keyVersion, 'pending', generatedAt,
-        ).run();
+        );
+        if (typeof env.DB.batch !== 'function') throw new Error('atomic write unavailable');
+        const issuedEvent = await buildLineageEvent({
+          keeperPieceId: id,
+          sequence: 1,
+          eventType: 'issued',
+          eventAt: generatedAt,
+          previousHash: null,
+          publicPayload: { pieceId: input.pieceId, editionNumber: input.editionNumber, publicCode },
+        });
+        await env.DB.batch([
+          insert,
+          lineageStatement(env, issuedEvent, { onlyIfPreviousChanged: true }),
+        ]);
       } catch (error) {
         if (/public_code/i.test(String(error?.message || '')) && /unique/i.test(String(error?.message || ''))) {
           continue;
