@@ -15,7 +15,7 @@ export type OwnershipCodeKeyEnvironment = Record<string, string | undefined>;
 const NONCE_BYTES = 12;
 const KEY_BYTES = 32;
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-const VERSION_PATTERN = /^\d+$/;
+const CANONICAL_POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 
@@ -44,9 +44,23 @@ function base64ToBytes(value: string, label: string): Uint8Array {
   return bytes;
 }
 
+export function isCanonicalOwnershipCodeKeyVersion(value: unknown): value is string {
+  if (typeof value !== 'string' || !CANONICAL_POSITIVE_INTEGER_PATTERN.test(value)) {
+    return false;
+  }
+  const numericVersion = Number(value);
+  return (
+    Number.isSafeInteger(numericVersion) &&
+    numericVersion > 0 &&
+    String(numericVersion) === value
+  );
+}
+
 function assertKeyVersion(value: string | undefined, label: string): string {
   if (!value) throw new Error(`${label} is required`);
-  if (!VERSION_PATTERN.test(value)) throw new Error(`${label} must be a numeric version`);
+  if (!isCanonicalOwnershipCodeKeyVersion(value)) {
+    throw new Error(`${label} must be a canonical positive safe-integer decimal string`);
+  }
   return value;
 }
 

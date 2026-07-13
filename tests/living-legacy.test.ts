@@ -259,13 +259,35 @@ describe('artwork plate fabrication package', () => {
     assert.match(plate.frontSvg, /<path fill="#000000"/);
     assert.doesNotMatch(plate.frontSvg, /stroke=/);
     assert.doesNotMatch(plate.frontSvg, /K7QM-9XTR/);
-    assert.match(plate.undersideSvg, /width="70mm" height="25mm"/);
+    assert.match(plate.undersideSvg, /width="50mm" height="62mm"/);
     assert.match(plate.undersideSvg, />OWNERSHIP CODE</);
     assert.match(plate.undersideSvg, /Register or transfer at adrianrasmussen\.com/);
     assert.match(plate.undersideSvg, /K7QM-9XTR-2PHV-N4WB/);
     assert.match(plate.undersideSvg, /SIG-100/);
     assert.equal(plate.manifest.ownershipCode, 'K7QM-9XTR-2PHV-N4WB');
     assert.equal(plate.manifest.artworkId, 'SIG-100');
+  });
+
+  it('renders both faces at the exact same 50 mm by 62 mm plate geometry', async () => {
+    const plate = await buildArtworkPlatePackage({
+      publicCode: 'AR-7KQ9M2WX',
+      ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      artworkId: 'UL-100',
+      editionNumber: 2,
+      generatedAt: '2026-07-13T10:20:30.000Z',
+    });
+
+    const physicalGeometry = /width="(\d+)mm" height="(\d+)mm" viewBox="([^"]+)"/;
+    assert.deepEqual(plate.frontSvg.match(physicalGeometry)?.slice(1), [
+      '50',
+      '62',
+      '0 0 500 620',
+    ]);
+    assert.deepEqual(plate.undersideSvg.match(physicalGeometry)?.slice(1), [
+      '50',
+      '62',
+      '0 0 500 620',
+    ]);
   });
 
   it('rasterizes to a QR that decodes to the exact permanent URL', async () => {
@@ -552,6 +574,54 @@ describe('ownership code authenticated encryption', () => {
         }),
       /32 bytes/i,
     );
+  });
+
+  it('accepts only canonical positive safe-integer key versions for issuance and recovery', async () => {
+    const invalidVersions = ['01', '0', '-1', '1.5', '+1', '9007199254740992'];
+
+    for (const keyVersion of invalidVersions) {
+      const keyedEnv = {
+        ...env,
+        OWNERSHIP_CODE_ACTIVE_KEY_VERSION: keyVersion,
+        [`OWNERSHIP_CODE_KEY_V${keyVersion}`]: keyV2,
+      };
+      await assert.rejects(
+        () => encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, keyedEnv),
+        /positive safe-integer/i,
+      );
+      await assert.rejects(
+        () =>
+          decryptOwnershipCode(
+            { ciphertext: 'AA==', nonce: Buffer.alloc(12).toString('base64'), keyVersion },
+            context,
+            keyedEnv,
+          ),
+        /positive safe-integer/i,
+      );
+    }
+
+    const maximumVersion = String(Number.MAX_SAFE_INTEGER);
+    const maximumVersionEnv = {
+      OWNERSHIP_CODE_ACTIVE_KEY_VERSION: maximumVersion,
+      [`OWNERSHIP_CODE_KEY_V${maximumVersion}`]: keyV1,
+    };
+    const envelope = await encryptOwnershipCode(
+      'AAAA-BBBB-CCCC-DDDD',
+      context,
+      maximumVersionEnv,
+    );
+    assert.equal(envelope.keyVersion, maximumVersion);
+    assert.equal(
+      await decryptOwnershipCode(envelope, context, maximumVersionEnv),
+      'AAAA-BBBB-CCCC-DDDD',
+    );
+
+    const [stored] = sqliteJson(`
+      CREATE TABLE version_round_trip (key_version INTEGER NOT NULL);
+      INSERT INTO version_round_trip (key_version) VALUES ('${maximumVersion}');
+      SELECT key_version, typeof(key_version) AS storage_type FROM version_round_trip;
+    `);
+    assert.deepEqual(stored, { key_version: Number.MAX_SAFE_INTEGER, storage_type: 'integer' });
   });
 
   it('decrypts stored envelopes with older configured key versions', async () => {
@@ -1871,6 +1941,34 @@ describe('admin piece registration', () => {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
+
+  it('rejects non-canonical or non-round-trippable key versions before issuance', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      for (const version of ['01', '0', '-1', '1.5', '+1', '9007199254740992']) {
+        const { DB, rows } = makeIssuanceDb();
+        const response = await adminPieces({
+          request: adminReq('POST', {
+            pieceId: 'UL-100', editionNumber: 0, issuanceKey: `bad-version-${version}`,
+          }),
+          env: {
+            ...issuanceEnv(DB),
+            OWNERSHIP_CODE_ACTIVE_KEY_VERSION: version,
+            [`OWNERSHIP_CODE_KEY_V${version}`]: OWNERSHIP_TEST_KEY,
+          },
+        });
+
+        assert.equal(response.status, 503);
+        assert.deepEqual(await response.json(), {
+          ok: false, error: 'ownership_code_crypto_not_configured',
+        });
+        assert.equal(rows.length, 0);
+      }
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
 });
 
 describe('encrypted plate backup adapter', () => {
@@ -1943,6 +2041,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     ownership_code_ciphertext: envelope.ciphertext,
     ownership_code_nonce: envelope.nonce,
     ownership_code_key_version: envelope.keyVersion,
+    recovery_code_hash: await hashRecoveryCode(ownershipCode),
     backup_status: options.backupStatus || 'verified',
     backup_reference: 'plates/AR-7KQ9M2WX.json', backup_at: generatedAt,
     lineage_head_hash: null, lineage_event_count: 0,
@@ -1952,7 +2051,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     plate_generated_at: generatedAt, plate_activated_at: null,
     front_svg_sha256: 'other-front', back_svg_sha256: 'other-back',
     ownership_code_ciphertext: 'other-ciphertext', ownership_code_nonce: 'other-nonce',
-    ownership_code_key_version: 1, backup_status: 'verified',
+    ownership_code_key_version: 1, recovery_code_hash: 'other-verifier', backup_status: 'verified',
     backup_reference: 'plates/AR-ABCDEFGH.json', backup_at: generatedAt,
     lineage_head_hash: null, lineage_event_count: 0,
   }];
@@ -2113,6 +2212,27 @@ describe('admin artwork plate lifecycle', () => {
     assert.equal(fixture.audits[0].action, 'reveal');
     assert.equal(JSON.stringify(fixture.audits).includes(fixture.ownershipCode), false);
     assert.equal(fixture.rows[1].ownership_code_ciphertext, 'other-ciphertext');
+  });
+
+  it('fails closed when decrypted Ownership Code does not match the stored verifier', async () => {
+    const fixture = await makePlateLifecycleFixture();
+    fixture.rows[0].recovery_code_hash = await hashRecoveryCode('AAAA-BBBB-CCCC-DDDD');
+
+    const response = await revealArtworkPlate({
+      request: lifecycleRequest(
+        '/api/admin/pieces/kp-one/reveal',
+        'POST',
+        { adminSecret: ADMIN_SECRET },
+      ),
+      env: lifecycleEnv(fixture.DB),
+      params: { id: 'kp-one' },
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 409);
+    assert.deepEqual(body, { ok: false, error: 'ownership_code_verifier_mismatch' });
+    assert.equal('ownershipCode' in body, false);
+    assert.equal('undersideSvg' in body, false);
   });
 
   it('refuses recovery when the required pre-decryption audit cannot be written', async () => {

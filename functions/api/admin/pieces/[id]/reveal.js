@@ -2,10 +2,12 @@ import { buildArtworkPlatePackage } from '../../../../../utils/artworkPlate.ts';
 import { decryptOwnershipCode } from '../../../../../utils/ownershipCodeCrypto.ts';
 import {
   jsonResponse,
+  constantTimeEqual,
   requireAdminPostStepUp,
   requireDb,
   writeOwnershipAudit,
 } from '../../../_lib/admin.js';
+import { hashRecoveryCode } from '../../../_lib/keeper.js';
 
 function envelope(row) {
   return {
@@ -48,6 +50,10 @@ export async function onRequest({ request, env, params }) {
     }
 
     const ownershipCode = await decryptOwnershipCode(envelope(row), identity(row), env);
+    const verifier = await hashRecoveryCode(ownershipCode);
+    if (!constantTimeEqual(verifier, row.recovery_code_hash)) {
+      return jsonResponse({ ok: false, error: 'ownership_code_verifier_mismatch' }, 409);
+    }
     const plate = await buildArtworkPlatePackage({
       publicCode: row.public_code,
       ownershipCode,

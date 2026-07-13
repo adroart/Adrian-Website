@@ -3,6 +3,7 @@ import { buildArtworkPlatePackage, generatePublicPlateCode } from '../../../util
 import {
   decryptOwnershipCode,
   encryptOwnershipCode,
+  isCanonicalOwnershipCodeKeyVersion,
 } from '../../../utils/ownershipCodeCrypto.ts';
 import { generateRecoveryCode } from '../../../utils/recoveryCode.ts';
 import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
@@ -155,7 +156,7 @@ async function replayIssuedPackage(row, input, env) {
 
 function cryptoConfigured(env) {
   const version = env.OWNERSHIP_CODE_ACTIVE_KEY_VERSION;
-  if (typeof version !== 'string' || !/^\d+$/.test(version)) return false;
+  if (!isCanonicalOwnershipCodeKeyVersion(version)) return false;
   const encodedKey = env[`OWNERSHIP_CODE_KEY_V${version}`];
   if (typeof encodedKey !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encodedKey)) {
     return false;
