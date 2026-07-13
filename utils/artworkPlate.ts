@@ -3,6 +3,8 @@ import { isWellFormedRecoveryCode, normalizeRecoveryCode } from './recoveryCode'
 
 const PUBLIC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PUBLIC_CODE_LENGTH = 8;
+const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
+const ARTWORK_ID_MAX_LENGTH = 7;
 
 export const PUBLIC_PLATE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 export const PLATE_QR_ERROR_CORRECTION = 'Q' as const;
@@ -145,12 +147,11 @@ export async function buildArtworkPlatePackage(
   ) {
     throw new Error('Invalid ownership code');
   }
+  const canonicalArtworkId =
+    typeof input.artworkId === 'string' ? input.artworkId.trim().toUpperCase() : '';
   if (
-    typeof input.artworkId !== 'string' ||
-    input.artworkId.length < 1 ||
-    input.artworkId.length > 80 ||
-    input.artworkId.trim() !== input.artworkId ||
-    /[\u0000-\u001f\u007f-\u009f]/.test(input.artworkId)
+    canonicalArtworkId.length > ARTWORK_ID_MAX_LENGTH ||
+    !ARTWORK_ID_PATTERN.test(canonicalArtworkId)
   ) {
     throw new Error('Invalid artwork ID');
   }
@@ -167,6 +168,7 @@ export async function buildArtworkPlatePackage(
   const canonicalInput: ArtworkPlateInput = {
     ...input,
     ownershipCode: normalizedOwnershipCode.match(/.{4}/g)!.join('-'),
+    artworkId: canonicalArtworkId,
   };
 
   const publicUrl = publicPlateUrl(input.publicCode);
@@ -181,7 +183,7 @@ export async function buildArtworkPlatePackage(
   const manifest: ArtworkPlateManifest = {
     schemaVersion: 1,
     publicCode: input.publicCode,
-    artworkId: input.artworkId,
+    artworkId: canonicalInput.artworkId,
     editionNumber: input.editionNumber,
     publicUrl,
     ownershipCode: canonicalInput.ownershipCode,

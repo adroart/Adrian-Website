@@ -109,7 +109,7 @@ describe('artwork plate fabrication package', () => {
     const plate = await buildArtworkPlatePackage({
       publicCode: 'AR-7KQ9M2WX',
       ownershipCode: 'k7qm 9xtr 2phv n4wb',
-      artworkId: 'UL-<100>&',
+      artworkId: ' sig-100 ',
       editionNumber: 2,
       generatedAt: '2026-07-13T10:20:30.000Z',
     });
@@ -123,7 +123,7 @@ describe('artwork plate fabrication package', () => {
       plate.frontSvg,
       />https:\/\/adrianrasmussen\.com\/qr\/AR-7KQ9M2WX</,
     );
-    assert.match(plate.frontSvg, />UL-&lt;100&gt;&amp; · edition 2</);
+    assert.match(plate.frontSvg, />SIG-100 · edition 2</);
     assert.match(plate.frontSvg, /<path fill="#000000"/);
     assert.doesNotMatch(plate.frontSvg, /stroke=/);
     assert.doesNotMatch(plate.frontSvg, /K7QM-9XTR/);
@@ -131,9 +131,9 @@ describe('artwork plate fabrication package', () => {
     assert.match(plate.undersideSvg, />OWNERSHIP CODE</);
     assert.match(plate.undersideSvg, /Register or transfer at adrianrasmussen\.com/);
     assert.match(plate.undersideSvg, /K7QM-9XTR-2PHV-N4WB/);
-    assert.doesNotMatch(plate.undersideSvg, /UL-<100>/);
-    assert.match(plate.undersideSvg, /UL-&lt;100&gt;&amp;/);
+    assert.match(plate.undersideSvg, /SIG-100/);
     assert.equal(plate.manifest.ownershipCode, 'K7QM-9XTR-2PHV-N4WB');
+    assert.equal(plate.manifest.artworkId, 'SIG-100');
   });
 
   it('rasterizes to a QR that decodes to the exact permanent URL', async () => {
@@ -171,7 +171,10 @@ describe('artwork plate fabrication package', () => {
       () => buildArtworkPlatePackage({ ...valid, ownershipCode: 'K7QM-9XTR-2PHV-N4WO' }),
       /invalid ownership code/i,
     );
-    for (const artworkId of ['', ' UL-100', `UL-${'X'.repeat(78)}`, 'UL-100\nFORGED']) {
+    const widestAccepted = await buildArtworkPlatePackage({ ...valid, artworkId: 'SIG-999' });
+    assert.match(widestAccepted.frontSvg, />SIG-999 · edition 2</);
+
+    for (const artworkId of ['', 'LONG-999', 'UL-10A', 'UL_100', 'UL-100\nFORGED']) {
       await assert.rejects(
         () => buildArtworkPlatePackage({ ...valid, artworkId }),
         /invalid artwork ID/i,
