@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
@@ -32,6 +34,176 @@ import {
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { LAUNCH_FLAGS } from '../launchFlags';
+
+const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
+const readMigration = (name: string) => readFileSync(migrationUrl(name), 'utf8');
+const legacyKeeperSchema = () =>
+  ['001_init.sql', '008_living_legacy.sql', '009_keeper_register.sql']
+    .map(readMigration)
+    .join('\n');
+const registrySchema = () =>
+  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}`;
+const sqliteJson = (sql: string) => {
+  const output = execFileSync('sqlite3', ['-json', ':memory:'], {
+    encoding: 'utf8',
+    input: sql,
+  }).trim();
+  return output ? JSON.parse(output) : [];
+};
+
+const legacyPieceInsert = `
+  INSERT INTO keeper_pieces
+    (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
+     current_display_location, registered_at, claimed_at, released_at)
+  VALUES
+    ('kp-legacy', 'UL-001', 0, 'keeper-legacy', 'legacy-hash',
+     'Bali', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', NULL);
+`;
+
+describe('artwork registry migrations', () => {
+  it('leaves the pre-010 legacy schema readable without registry tables', () => {
+    const rows = sqliteJson(`
+      ${legacyKeeperSchema()}
+      ${legacyPieceInsert}
+      SELECT id, piece_id, keeper_user_id, recovery_code_hash
+      FROM keeper_pieces WHERE id = 'kp-legacy';
+      SELECT name FROM sqlite_master
+      WHERE type = 'table' AND name IN ('ownership_code_audit', 'piece_fulfillments');
+    `);
+
+    assert.deepEqual(rows, [
+      {
+        id: 'kp-legacy',
+        piece_id: 'UL-001',
+        keeper_user_id: 'keeper-legacy',
+        recovery_code_hash: 'legacy-hash',
+      },
+    ]);
+  });
+
+  it('adds plate identity fields while preserving legacy keeper rows', () => {
+    const [row] = sqliteJson(`
+      ${legacyKeeperSchema()}
+      ${legacyPieceInsert}
+      ${readMigration('010_artwork_plate_identity.sql')}
+      SELECT id, piece_id, public_code, issuance_key, plate_status,
+             plate_generated_at, plate_activated_at, front_svg_sha256,
+             back_svg_sha256, ownership_code_ciphertext, ownership_code_nonce,
+             ownership_code_key_version, backup_status, backup_reference,
+             backup_at
+      FROM keeper_pieces WHERE id = 'kp-legacy';
+    `);
+
+    assert.deepEqual(row, {
+      id: 'kp-legacy',
+      piece_id: 'UL-001',
+      public_code: null,
+      issuance_key: null,
+      plate_status: 'legacy',
+      plate_generated_at: null,
+      plate_activated_at: null,
+      front_svg_sha256: null,
+      back_svg_sha256: null,
+      ownership_code_ciphertext: null,
+      ownership_code_nonce: null,
+      ownership_code_key_version: null,
+      backup_status: null,
+      backup_reference: null,
+      backup_at: null,
+    });
+  });
+
+  it('enforces unique issued identities and keeps ownership audit rows secret-free', () => {
+    const columns = sqliteJson(`
+      ${registrySchema()}
+      SELECT name FROM pragma_table_info('ownership_code_audit') ORDER BY cid;
+    `).map((column: { name: string }) => column.name);
+
+    assert.deepEqual(columns, [
+      'id',
+      'keeper_piece_id',
+      'action',
+      'request_id',
+      'outcome',
+      'created_at',
+    ]);
+    assert.equal(columns.some((name: string) => /cipher|nonce|secret|plaintext/i.test(name)), false);
+
+    const [publicCodeCount] = sqliteJson(`
+        ${registrySchema()}
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key)
+        VALUES ('kp-a', 'UL-010', 0, 'hash-a', 'AR-ABCDEFGH', 'issue-a');
+        INSERT OR IGNORE INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key)
+        VALUES ('kp-b', 'UL-011', 0, 'hash-b', 'AR-ABCDEFGH', 'issue-b');
+        SELECT COUNT(*) AS count FROM keeper_pieces;
+      `);
+    assert.equal(publicCodeCount.count, 1);
+
+    const [issuanceKeyCount] = sqliteJson(`
+        ${registrySchema()}
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, issuance_key)
+        VALUES ('kp-a', 'UL-010', 0, 'hash-a', 'issue-a');
+        INSERT OR IGNORE INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, issuance_key)
+        VALUES ('kp-b', 'UL-011', 0, 'hash-b', 'issue-a');
+        SELECT COUNT(*) AS count FROM keeper_pieces;
+      `);
+    assert.equal(issuanceKeyCount.count, 1);
+  });
+
+  it('links each piece and paid order item to at most one fulfillment', () => {
+    const [row] = sqliteJson(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces
+        (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-sale', 'UL-020', 0, 'hash-sale');
+      INSERT INTO orders
+        (id, stripe_session_id, email, status, amount_total, currency)
+      VALUES (1, 'cs_paid', 'buyer@example.com', 'paid', 10000, 'USD');
+      INSERT INTO order_items
+        (id, order_id, product_id, quantity, amount_subtotal)
+      VALUES (1, 1, 'UL-020', 1, 10000);
+      INSERT INTO piece_fulfillments
+        (id, keeper_piece_id, order_item_id, assignment_type,
+         intended_recipient_reference, assigned_at)
+      VALUES
+        ('pf-1', 'kp-sale', 1, 'stripe_order', 'order:1', '2026-07-13T00:00:00Z');
+      SELECT keeper_piece_id, order_item_id, assignment_type,
+             intended_recipient_reference, assigned_at, shipped_at, claimed_at,
+             corrected_at, correction_reason
+      FROM piece_fulfillments WHERE id = 'pf-1';
+    `);
+
+    assert.deepEqual(row, {
+      keeper_piece_id: 'kp-sale',
+      order_item_id: 1,
+      assignment_type: 'stripe_order',
+      intended_recipient_reference: 'order:1',
+      assigned_at: '2026-07-13T00:00:00Z',
+      shipped_at: null,
+      claimed_at: null,
+      corrected_at: null,
+      correction_reason: null,
+    });
+    const [duplicateCount] = sqliteJson(`
+        ${registrySchema()}
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash)
+        VALUES ('kp-a', 'UL-020', 0, 'hash-a'), ('kp-b', 'UL-021', 0, 'hash-b');
+        INSERT INTO piece_fulfillments
+          (id, keeper_piece_id, assignment_type, intended_recipient_reference, assigned_at)
+        VALUES ('pf-a', 'kp-a', 'manual', 'studio-handoff:one', '2026-07-13T00:00:00Z');
+        INSERT OR IGNORE INTO piece_fulfillments
+          (id, keeper_piece_id, assignment_type, intended_recipient_reference, assigned_at)
+        VALUES ('pf-b', 'kp-a', 'manual', 'studio-handoff:two', '2026-07-13T00:00:00Z');
+        SELECT COUNT(*) AS count FROM piece_fulfillments;
+      `);
+    assert.equal(duplicateCount.count, 1);
+  });
+});
 
 // The contested-claim handoff opens a request on mandalacodes' SINGLE shared
 // store, then leans on the escalation logic merged there. These pure modules
