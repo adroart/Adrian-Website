@@ -14,6 +14,7 @@ import {
     publicLineageDetails,
     PublicLineageEvent,
     PublicLineageResponse,
+    validatePublicLineageResponse,
 } from '../utils/publicLineage';
 
 const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
@@ -345,15 +346,9 @@ function usePublicLineage(publicCode: string | null, pieceId: string | undefined
                 return response.json() as Promise<PublicLineageResponse>;
             })
             .then((data) => {
-                if (
-                    data?.ok !== true ||
-                    data.artwork?.publicCode !== publicCode ||
-                    data.artwork?.pieceId !== pieceId ||
-                    !Array.isArray(data.events)
-                ) {
-                    throw new Error('lineage mismatch');
-                }
-                setState({ status: 'ready', events: data.events });
+                const validated = validatePublicLineageResponse(data, publicCode, pieceId);
+                if (!validated) throw new Error('lineage mismatch');
+                setState({ status: 'ready', events: validated.events });
             })
             .catch((error) => {
                 if (error?.name !== 'AbortError') setState({ status: 'error' });

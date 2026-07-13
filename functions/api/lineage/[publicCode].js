@@ -38,7 +38,8 @@ export async function onRequest({ request, env, params }) {
   let rows;
   try {
     artwork = await env.DB.prepare(
-      `SELECT id, piece_id, edition_number, public_code
+      `SELECT id, piece_id, edition_number, public_code,
+              lineage_head_hash, lineage_event_count
          FROM keeper_pieces
         WHERE public_code = ?1
           AND plate_status = 'active'`,
@@ -61,6 +62,11 @@ export async function onRequest({ request, env, params }) {
   const events = [];
   let previousHash = null;
   try {
+    if (
+      rows.length === 0
+      || !Number.isSafeInteger(artwork.lineage_event_count)
+      || artwork.lineage_event_count !== rows.length
+    ) throw new Error('lineage anchor count mismatch');
     for (let index = 0; index < rows.length; index += 1) {
       const row = rows[index];
       const sequence = index + 1;
@@ -81,15 +87,20 @@ export async function onRequest({ request, env, params }) {
         throw new Error('broken lineage hash');
       }
 
+      const projectedPayload = JSON.parse(recomputed.publicPayloadJson);
+
       events.push({
         sequence: row.sequence,
         eventType: row.event_type,
         eventAt: row.event_at,
         previousHash: row.previous_hash,
         eventHash: row.event_hash,
-        publicPayload,
+        publicPayload: projectedPayload,
       });
       previousHash = row.event_hash;
+    }
+    if (artwork.lineage_head_hash !== previousHash) {
+      throw new Error('lineage anchor head mismatch');
     }
   } catch {
     return json({ ok: false, error: 'lineage_integrity_error' }, 409);

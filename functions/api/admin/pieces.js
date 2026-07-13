@@ -15,7 +15,11 @@ import {
   genKeeperPieceId,
 } from '../_lib/keeper.js';
 import { backupPlateEnvelope } from '../_lib/plateBackup.js';
-import { buildLineageEvent, lineageStatement } from '../_lib/lineage.js';
+import {
+  buildLineageEvent,
+  lineageAnchorStatement,
+  lineageStatement,
+} from '../_lib/lineage.js';
 
 const MAX_EDITION_WITHOUT_BOUND = 9999;
 const MAX_ISSUANCE_KEY_LENGTH = 128;
@@ -283,6 +287,7 @@ async function issuePiece(request, env) {
         await env.DB.batch([
           insert,
           lineageStatement(env, issuedEvent, { onlyIfPreviousChanged: true }),
+          lineageAnchorStatement(env, issuedEvent, { onlyIfPreviousChanged: true }),
         ]);
       } catch (error) {
         if (/public_code/i.test(String(error?.message || '')) && /unique/i.test(String(error?.message || ''))) {

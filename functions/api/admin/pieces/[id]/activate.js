@@ -80,7 +80,11 @@ export async function onRequest({ request, env, params }) {
       publicPayload: { plateStatus: 'active' },
       onlyIfPreviousChanged: true,
     });
-    const [result] = await env.DB.batch([update, lineage.statement]);
+    const [result] = await env.DB.batch([
+      update,
+      lineage.statement,
+      lineage.anchorStatement,
+    ]);
     const changes = result?.meta?.changes;
     if (changes === 0) {
       const current = await env.DB.prepare(

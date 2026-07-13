@@ -55,7 +55,7 @@ import {
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
-import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import { buildLineageEvent, prepareNextLineageEvent } from '../functions/api/_lib/lineage.js';
 import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
 import { onRequest as readClaimEvidence } from '../functions/api/admin/pieces/[id]/claim-evidence.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
@@ -72,7 +72,7 @@ const legacyKeeperSchema = () =>
     .map(readMigration)
     .join('\n');
 const registrySchema = () =>
-  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}\n${readMigration('012_piece_fulfillment_guards.sql')}\n${readMigration('013_artwork_lineage.sql')}`;
+  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}\n${readMigration('012_piece_fulfillment_guards.sql')}\n${readMigration('013_artwork_lineage.sql')}\n${readMigration('014_artwork_lineage_anchor.sql')}`;
 const sqliteJson = (sql: string) => {
   const output = execFileSync('sqlite3', ['-json', ':memory:'], {
     encoding: 'utf8',
@@ -816,6 +816,24 @@ describe('artwork registry migrations', () => {
     `);
     assert.equal(forkCount.count, 2);
   });
+
+  it('adds a zero/null durable lineage anchor without inventing history', () => {
+    const columns = sqliteJson(
+      `${registrySchema()} SELECT name FROM pragma_table_info('keeper_pieces') ORDER BY cid;`,
+    ).map((row: any) => row.name);
+    assert.ok(columns.includes('lineage_head_hash'));
+    assert.ok(columns.includes('lineage_event_count'));
+    const [row] = sqliteJson(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-anchor', 'UL-061', 0, 'hash-anchor');
+      SELECT lineage_head_hash IS NULL AS head_is_null, lineage_event_count
+        FROM keeper_pieces WHERE id = 'kp-anchor';
+    `);
+    assert.equal(row.head_is_null, 1);
+    assert.equal(row.lineage_event_count, 0);
+    assert.match(readMigration('014_artwork_lineage_anchor.sql'), /zero pre-existing registry events/i);
+  });
 });
 
 describe('artwork lineage commitments', () => {
@@ -826,6 +844,46 @@ describe('artwork lineage commitments', () => {
     assert.deepEqual(first, second);
     assert.match(first.eventHash, /^[a-f0-9]{64}$/);
     await assert.rejects(() => buildLineageEvent({ ...input, publicPayload: { email: 'private@example.com' } }), /private lineage key/i);
+  });
+
+  it('preflights the event tail against the durable piece anchor', async () => {
+    const statements: Array<{ sql: string; values: unknown[] }> = [];
+    const env = {
+      DB: {
+        prepare(sql: string) {
+          const statement = {
+            bind(...values: unknown[]) { statements.push({ sql, values }); return statement; },
+            async first() {
+              if (/lineage_head_hash/.test(sql)) return { lineage_head_hash: null, lineage_event_count: 0 };
+              return null;
+            },
+          };
+          return statement;
+        },
+      },
+    };
+    const prepared = await prepareNextLineageEvent(env, {
+      keeperPieceId: 'kp-1', eventType: 'first_bound', eventAt: '2026-07-13T00:00:00Z', publicPayload: {},
+    });
+    assert.equal(prepared.event.sequence, 1);
+    assert.match(String(prepared.anchorStatement), /./);
+
+    const inconsistent = {
+      DB: {
+        prepare(sql: string) {
+          return {
+            bind() { return this; },
+            async first() {
+              if (/lineage_head_hash/.test(sql)) return { lineage_head_hash: 'a'.repeat(64), lineage_event_count: 2 };
+              return { sequence: 1, event_hash: 'b'.repeat(64) };
+            },
+          };
+        },
+      },
+    };
+    await assert.rejects(() => prepareNextLineageEvent(inconsistent, {
+      keeperPieceId: 'kp-1', eventType: 'first_bound', eventAt: '2026-07-13T00:00:00Z', publicPayload: {},
+    }), /anchor/i);
   });
 });
 
@@ -1421,6 +1479,8 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
         registered_at,
         claimed_at: null,
         released_at: null,
+        lineage_head_hash: null,
+        lineage_event_count: 0,
       });
       return { kind: 'run' };
     }
@@ -1440,6 +1500,14 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
     }
     if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
       lineage.push(params);
+      return { kind: 'run' };
+    }
+    if (/^UPDATE keeper_pieces SET lineage_head_hash = \?1/i.test(s)) {
+      const row = rows.find((candidate) => candidate.id === params[2]);
+      if (row) {
+        row.lineage_head_hash = params[0];
+        row.lineage_event_count = params[1];
+      }
       return { kind: 'run' };
     }
     // List
@@ -1877,6 +1945,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     ownership_code_key_version: envelope.keyVersion,
     backup_status: options.backupStatus || 'verified',
     backup_reference: 'plates/AR-7KQ9M2WX.json', backup_at: generatedAt,
+    lineage_head_hash: null, lineage_event_count: 0,
   }, {
     id: 'kp-other', piece_id: 'UL-101', edition_number: 1,
     public_code: 'AR-ABCDEFGH', plate_status: 'generated',
@@ -1885,6 +1954,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     ownership_code_ciphertext: 'other-ciphertext', ownership_code_nonce: 'other-nonce',
     ownership_code_key_version: 1, backup_status: 'verified',
     backup_reference: 'plates/AR-ABCDEFGH.json', backup_at: generatedAt,
+    lineage_head_hash: null, lineage_event_count: 0,
   }];
   const audits: any[] = [];
   const lineage: any[] = [];
@@ -1900,7 +1970,13 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
         if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(normalized)) {
           return rows.find((row) => row.id === params[0]) || null;
         }
-        if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(normalized)) return null;
+        if (/^SELECT lineage_head_hash, lineage_event_count FROM keeper_pieces/i.test(normalized)) {
+          return rows.find((row) => row.id === params[0]) || null;
+        }
+        if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(normalized)) {
+          const prior = lineage.filter((event) => event[1] === params[0]).at(-1);
+          return prior ? { sequence: prior[2], event_hash: prior[6] } : null;
+        }
         throw new Error(`lifecycle D1 first: ${normalized}`);
       },
       async run() {
@@ -1913,6 +1989,13 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
         }
         if (/^INSERT INTO artwork_lineage_events/i.test(normalized)) {
           lineage.push(params);
+          return { success: true, meta: { changes: 1 } };
+        }
+        if (/^UPDATE keeper_pieces SET lineage_head_hash = \?1/i.test(normalized)) {
+          const row = rows.find((item) => item.id === params[2]);
+          if (!row) return { success: true, meta: { changes: 0 } };
+          row.lineage_head_hash = params[0];
+          row.lineage_event_count = params[1];
           return { success: true, meta: { changes: 1 } };
         }
         if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(normalized)) {
@@ -2262,6 +2345,8 @@ function makeKeeperDb() {
         registered_at,
         claimed_at: null,
         released_at: null,
+        lineage_head_hash: null,
+        lineage_event_count: 0,
       });
       lastChanges = 1;
       return { kind: 'run', meta: { changes: 1 } };
@@ -2316,11 +2401,26 @@ function makeKeeperDb() {
       const last = rows.at(-1);
       return { kind: 'first', row: last ? { sequence: last[2], event_hash: last[6] } : null };
     }
+    if (/^SELECT lineage_head_hash, lineage_event_count FROM keeper_pieces/i.test(s)) {
+      return { kind: 'first', row: pieces.find((piece) => piece.id === params[0]) || null };
+    }
     if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
       if (params[8] === 1 && lastChanges === 0) return { kind: 'run', meta: { changes: 0 } };
       lineage.push(params);
       lastChanges = 1;
       return { kind: 'run', meta: { changes: 1 } };
+    }
+    if (/^UPDATE keeper_pieces SET lineage_head_hash = \?1/i.test(s)) {
+      if (params[5] === 1 && lastChanges === 0) {
+        return { kind: 'run', meta: { changes: 0 } };
+      }
+      const row = pieces.find((piece) => piece.id === params[2]);
+      if (row) {
+        row.lineage_head_hash = params[0];
+        row.lineage_event_count = params[1];
+      }
+      lastChanges = row ? 1 : 0;
+      return { kind: 'run', meta: { changes: lastChanges } };
     }
     if (/^INSERT INTO artwork_claim_evidence/i.test(s)) {
       const keeper = pieces.find((piece) => piece.id === params[1]);
@@ -2398,11 +2498,11 @@ function fulfillmentReq(method: string, body?: unknown) {
 
 function makeFulfillmentDb() {
   const pieces: any[] = [
-    { id: 'kp-ready', piece_id: 'UL-100', edition_number: 0, public_code: 'AR-ABCDEFGH', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
-    { id: 'kp-second', piece_id: 'UL-101', edition_number: 0, public_code: 'AR-BCDEFGHJ', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
-    { id: 'kp-generated', piece_id: 'UL-102', edition_number: 0, public_code: 'AR-CDEFGHJK', plate_status: 'generated', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
-    { id: 'kp-unbacked', piece_id: 'UL-103', edition_number: 0, public_code: 'AR-DEFGHJKL', plate_status: 'active', backup_status: 'pending', keeper_user_id: null, claimed_at: null, released_at: null },
-    { id: 'kp-claimed', piece_id: 'UL-104', edition_number: 0, public_code: 'AR-EFGHJKLM', plate_status: 'active', backup_status: 'verified', keeper_user_id: 'keeper-one', claimed_at: '2026-07-12T00:00:00Z', released_at: null },
+    { id: 'kp-ready', piece_id: 'UL-100', edition_number: 0, public_code: 'AR-ABCDEFGH', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
+    { id: 'kp-second', piece_id: 'UL-101', edition_number: 0, public_code: 'AR-BCDEFGHJ', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
+    { id: 'kp-generated', piece_id: 'UL-102', edition_number: 0, public_code: 'AR-CDEFGHJK', plate_status: 'generated', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
+    { id: 'kp-unbacked', piece_id: 'UL-103', edition_number: 0, public_code: 'AR-DEFGHJKL', plate_status: 'active', backup_status: 'pending', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
+    { id: 'kp-claimed', piece_id: 'UL-104', edition_number: 0, public_code: 'AR-EFGHJKLM', plate_status: 'active', backup_status: 'verified', keeper_user_id: 'keeper-one', claimed_at: '2026-07-12T00:00:00Z', released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
   ];
   const orders: any[] = [
     { id: 10, stripe_session_id: 'cs_paid', email: 'buyer@example.com', status: 'paid' },
@@ -2495,6 +2595,14 @@ function makeFulfillmentDb() {
     if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
       lineage.push(values);
       return { changes: 1 };
+    }
+    if (/^UPDATE keeper_pieces SET lineage_head_hash = \?1/i.test(s)) {
+      const row = pieces.find((piece) => piece.id === values[2]);
+      if (row) {
+        row.lineage_head_hash = values[0];
+        row.lineage_event_count = values[1];
+      }
+      return { changes: row ? 1 : 0 };
     }
     throw new Error(`fulfillment fake D1: unhandled statement: ${s}`);
   }
@@ -2792,6 +2900,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
         keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(legacyCode),
         claimed_at: null, released_at: null, public_code: null,
         plate_status: 'legacy', backup_status: null,
+        lineage_head_hash: null, lineage_event_count: 0,
       });
       const legacyRes = await bind({ request: bindReq({ ownershipCode: legacyCode, pieceId: 'UL-103' }), env: bindEnv });
       assert.equal(legacyRes.status, 200);

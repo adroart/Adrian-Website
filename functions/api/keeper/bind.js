@@ -333,6 +333,7 @@ export async function onRequest(context) {
     const [updated] = await env.DB.batch([
       keeperMutation,
       lineage.statement,
+      lineage.anchorStatement,
       fulfillmentMutation,
       evidence,
     ]);

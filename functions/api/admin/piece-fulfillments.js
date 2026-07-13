@@ -350,7 +350,7 @@ async function mutateCorrectionWithLineage(env, {
     publicPayload: {},
     onlyIfPreviousChanged: true,
   });
-  const statements = [mutation, incoming.statement];
+  const statements = [mutation, incoming.statement, incoming.anchorStatement];
   if (moved) {
     const outgoing = await prepareNextLineageEvent(env, {
       keeperPieceId: oldKeeperPieceId,
@@ -359,7 +359,7 @@ async function mutateCorrectionWithLineage(env, {
       publicPayload: {},
       onlyIfPreviousChanged: true,
     });
-    statements.push(outgoing.statement);
+    statements.push(outgoing.statement, outgoing.anchorStatement);
   }
   statements.push(auditStatement(
     env, newKeeperPieceId, 'fulfillment_correct', 'correction_attempt', correctedAt,
@@ -447,6 +447,11 @@ async function mutateWithAudit(env, mutation, keeperPieceId, action, outcome, cr
     publicPayload: {},
     onlyIfPreviousChanged: true,
   });
-  const [result] = await env.DB.batch([mutation, lineage.statement, audit]);
+  const [result] = await env.DB.batch([
+    mutation,
+    lineage.statement,
+    lineage.anchorStatement,
+    audit,
+  ]);
   return result;
 }

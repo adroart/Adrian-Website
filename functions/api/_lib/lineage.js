@@ -1,4 +1,15 @@
 const PRIVATE_KEY = /(?:email|ip|user.?agent|ownership|recovery|verifier|cipher|nonce|secret|password|token|key)/i;
+const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
+const EMPTY_PAYLOAD_EVENTS = new Set([
+  'fulfillment_assign',
+  'fulfillment_correct',
+  'fulfillment_correction_out',
+  'fulfillment_correction_in',
+  'fulfillment_ship',
+  'first_bound',
+  'migration_baseline',
+]);
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -18,6 +29,41 @@ function assertPublic(value) {
   }
 }
 
+function exactKeys(value, keys) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    && Object.keys(value).sort().join('\0') === [...keys].sort().join('\0');
+}
+
+export function projectLineagePublicPayload(eventType, publicPayload = {}) {
+  assertPublic(publicPayload);
+  if (eventType === 'issued') {
+    if (
+      !exactKeys(publicPayload, ['pieceId', 'editionNumber', 'publicCode'])
+      || typeof publicPayload.pieceId !== 'string'
+      || !ARTWORK_ID_PATTERN.test(publicPayload.pieceId)
+      || !Number.isSafeInteger(publicPayload.editionNumber)
+      || publicPayload.editionNumber < 0
+      || !PUBLIC_CODE_PATTERN.test(publicPayload.publicCode)
+    ) throw new Error('invalid issued lineage payload');
+    return {
+      pieceId: publicPayload.pieceId,
+      editionNumber: publicPayload.editionNumber,
+      publicCode: publicPayload.publicCode,
+    };
+  }
+  if (eventType === 'activated') {
+    if (!exactKeys(publicPayload, ['plateStatus']) || publicPayload.plateStatus !== 'active') {
+      throw new Error('invalid activated lineage payload');
+    }
+    return { plateStatus: 'active' };
+  }
+  if (EMPTY_PAYLOAD_EVENTS.has(eventType)) {
+    if (!exactKeys(publicPayload, [])) throw new Error(`invalid ${eventType} lineage payload`);
+    return {};
+  }
+  throw new Error('invalid lineage event type');
+}
+
 async function sha256Hex(value) {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -32,8 +78,8 @@ export async function buildLineageEvent({
   previousHash = null,
   publicPayload = {},
 }) {
-  assertPublic(publicPayload);
-  const publicPayloadJson = JSON.stringify(stable(publicPayload));
+  const projectedPayload = projectLineagePublicPayload(eventType, publicPayload);
+  const publicPayloadJson = JSON.stringify(stable(projectedPayload));
   const commitment = JSON.stringify({
     keeperPieceId,
     sequence,
@@ -56,19 +102,40 @@ export async function buildLineageEvent({
 }
 
 export async function prepareNextLineageEvent(env, details) {
+  const anchor = await env.DB.prepare(
+    `SELECT lineage_head_hash, lineage_event_count
+       FROM keeper_pieces WHERE id = ?1`,
+  ).bind(details.keeperPieceId).first();
+  if (!anchor) throw new Error('lineage anchor missing');
   const previous = await env.DB.prepare(
     `SELECT sequence, event_hash FROM artwork_lineage_events
       WHERE keeper_piece_id = ?1 ORDER BY sequence DESC LIMIT 1`,
   ).bind(details.keeperPieceId).first();
+  const anchoredCount = Number(anchor.lineage_event_count);
+  const anchoredHash = anchor.lineage_head_hash || null;
+  const tailCount = previous?.sequence || 0;
+  const tailHash = previous?.event_hash || null;
+  if (
+    !Number.isSafeInteger(anchoredCount)
+    || anchoredCount < 0
+    || anchoredCount !== tailCount
+    || anchoredHash !== tailHash
+  ) throw new Error('lineage anchor mismatch');
   const event = await buildLineageEvent({
     ...details,
-    sequence: (previous?.sequence || 0) + 1,
-    previousHash: previous?.event_hash || null,
+    sequence: anchoredCount + 1,
+    previousHash: anchoredHash,
   });
+  const onlyIfPreviousChanged = details.onlyIfPreviousChanged === true;
   return {
     event,
     statement: lineageStatement(env, event, {
-      onlyIfPreviousChanged: details.onlyIfPreviousChanged === true,
+      onlyIfPreviousChanged,
+    }),
+    anchorStatement: lineageAnchorStatement(env, event, {
+      expectedCount: anchoredCount,
+      expectedHash: anchoredHash,
+      onlyIfPreviousChanged,
     }),
   };
 }
@@ -83,6 +150,28 @@ export function lineageStatement(env, event, { onlyIfPreviousChanged = false } =
   ).bind(
     event.id, event.keeperPieceId, event.sequence, event.eventType, event.eventAt,
     event.previousHash, event.eventHash, event.publicPayloadJson,
+    onlyIfPreviousChanged ? 1 : 0,
+  );
+}
+
+export function lineageAnchorStatement(env, event, {
+  expectedCount = event.sequence - 1,
+  expectedHash = event.previousHash,
+  onlyIfPreviousChanged = false,
+} = {}) {
+  return env.DB.prepare(
+    `UPDATE keeper_pieces
+        SET lineage_head_hash = ?1, lineage_event_count = ?2
+      WHERE id = ?3
+        AND lineage_event_count = ?4
+        AND ((lineage_head_hash IS NULL AND ?5 IS NULL) OR lineage_head_hash = ?5)
+        AND (?6 = 0 OR changes() > 0)`,
+  ).bind(
+    event.eventHash,
+    event.sequence,
+    event.keeperPieceId,
+    expectedCount,
+    expectedHash,
     onlyIfPreviousChanged ? 1 : 0,
   );
 }

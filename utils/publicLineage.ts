@@ -51,3 +51,36 @@ export function publicLineageDetails(payload: Record<string, unknown>): Array<[s
         return [[label, display]];
     });
 }
+
+export function validatePublicLineageResponse(
+    value: unknown,
+    expectedPublicCode: string,
+    expectedPieceId: string,
+): PublicLineageResponse | null {
+    if (!value || typeof value !== 'object') return null;
+    const candidate = value as Partial<PublicLineageResponse>;
+    if (
+        candidate.ok !== true
+        || candidate.artwork?.publicCode !== expectedPublicCode
+        || candidate.artwork?.pieceId !== expectedPieceId
+        || !Number.isSafeInteger(candidate.artwork?.editionNumber)
+        || !Array.isArray(candidate.events)
+    ) return null;
+
+    for (let index = 0; index < candidate.events.length; index += 1) {
+        const event = candidate.events[index];
+        if (
+            !event || typeof event !== 'object'
+            || event.sequence !== index + 1
+            || typeof event.eventType !== 'string'
+            || typeof event.eventAt !== 'string'
+            || !Number.isFinite(Date.parse(event.eventAt))
+            || !/^[a-f0-9]{64}$/.test(event.eventHash)
+            || (event.previousHash !== null && !/^[a-f0-9]{64}$/.test(event.previousHash))
+            || !event.publicPayload
+            || typeof event.publicPayload !== 'object'
+            || Array.isArray(event.publicPayload)
+        ) return null;
+    }
+    return candidate as PublicLineageResponse;
+}

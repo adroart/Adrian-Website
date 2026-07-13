@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import { buildLineageEvent, projectLineagePublicPayload } from '../functions/api/_lib/lineage.js';
 import { onRequest } from '../functions/api/lineage/[publicCode].js';
-import { formatLineageEventLabel, publicLineageDetails } from '../utils/publicLineage';
+import {
+  formatLineageEventLabel,
+  publicLineageDetails,
+  validatePublicLineageResponse,
+} from '../utils/publicLineage';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
 
@@ -14,7 +18,7 @@ async function lineageRows() {
     eventType: 'issued',
     eventAt: '2026-07-13T00:00:00.000Z',
     previousHash: null,
-    publicPayload: { editionNumber: 2 },
+    publicPayload: { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE },
   });
   const second = await buildLineageEvent({
     keeperPieceId: 'kp-1',
@@ -40,7 +44,11 @@ function environment(options: {
   schemaFailure?: boolean;
 } = {}) {
   const piece = options.piece === undefined
-    ? { id: 'kp-1', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE }
+    ? {
+      id: 'kp-1', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+      lineage_event_count: options.events?.length ?? 0,
+      lineage_head_hash: options.events?.at(-1)?.event_hash ?? null,
+    }
     : options.piece;
   const statements: string[] = [];
   return {
@@ -51,7 +59,7 @@ function environment(options: {
           const normalized = sql.replace(/\s+/g, ' ').trim();
           statements.push(normalized);
           if (options.schemaFailure) throw new Error('no such table: keeper_pieces');
-          if (/SELECT id, piece_id, edition_number, public_code FROM keeper_pieces/i.test(normalized)) {
+          if (/SELECT id, piece_id, edition_number, public_code, lineage_head_hash, lineage_event_count FROM keeper_pieces/i.test(normalized)) {
             return {
               bind(value: string) {
                 assert.equal(value, PUBLIC_CODE);
@@ -122,6 +130,28 @@ describe('public artwork lineage history', () => {
     }
   });
 
+  it('fails closed on an active empty chain or a chain truncated before its anchor', async () => {
+    const empty = await onRequest({
+      request: request(),
+      env: environment({ events: [] }).env,
+      params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(empty.status, 409);
+
+    const events = await lineageRows();
+    const anchoredPiece = {
+      id: 'kp-1', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+      lineage_event_count: 2, lineage_head_hash: events[1].event_hash,
+    };
+    const truncated = await onRequest({
+      request: request(),
+      env: environment({ piece: anchoredPiece, events: events.slice(0, 1) }).env,
+      params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(truncated.status, 409);
+    assert.deepEqual(await truncated.json(), { ok: false, error: 'lineage_integrity_error' });
+  });
+
   it('does not reveal unknown or inactive artwork identities', async () => {
     for (const piece of [null, undefined]) {
       const response = await onRequest({
@@ -183,5 +213,47 @@ describe('public lineage presentation', () => {
       ['Confirmed', 'Yes'],
     ]);
     assert.deepEqual(publicLineageDetails({ nested: { email: 'hidden@example.com' }, list: ['private'], empty: null }), []);
+  });
+
+  it('validates API responses before the Works page renders them', () => {
+    const value = {
+      ok: true,
+      artwork: { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE },
+      events: [{
+        sequence: 1,
+        eventType: 'issued',
+        eventAt: '2026-07-13T00:00:00.000Z',
+        previousHash: null,
+        eventHash: 'a'.repeat(64),
+        publicPayload: { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE },
+      }],
+    };
+    assert.deepEqual(validatePublicLineageResponse(value, PUBLIC_CODE, 'UL-100'), value);
+    assert.equal(validatePublicLineageResponse({ ...value, artwork: { ...value.artwork, pieceId: 'UL-999' } }, PUBLIC_CODE, 'UL-100'), null);
+    assert.equal(validatePublicLineageResponse({ ...value, events: [{ ...value.events[0], eventHash: 'bad' }] }, PUBLIC_CODE, 'UL-100'), null);
+  });
+});
+
+describe('lineage public payload allowlist', () => {
+  it('accepts only the documented exact payload for each event type', () => {
+    assert.deepEqual(projectLineagePublicPayload('issued', {
+      pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE,
+    }), { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE });
+    assert.deepEqual(projectLineagePublicPayload('activated', { plateStatus: 'active' }), { plateStatus: 'active' });
+    assert.deepEqual(projectLineagePublicPayload('first_bound', {}), {});
+
+    for (const payload of [
+      { holderName: 'A Collector' },
+      { contact: '+1 555 0100' },
+      { phone: '+1 555 0100' },
+      { address: 'Private studio' },
+      { nested: { note: 'private' } },
+    ]) {
+      assert.throws(() => projectLineagePublicPayload('first_bound', payload), /payload/i);
+    }
+    assert.throws(() => projectLineagePublicPayload('activated', { plateStatus: 'active', contact: 'private' }), /payload/i);
+    assert.throws(() => projectLineagePublicPayload('issued', { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE, phone: 'private' }), /payload/i);
+    assert.throws(() => projectLineagePublicPayload('issued', { pieceId: 'buyer@example.com', editionNumber: 2, publicCode: PUBLIC_CODE }), /payload/i);
+    assert.throws(() => projectLineagePublicPayload('issued', { pieceId: '+15550100', editionNumber: 2, publicCode: PUBLIC_CODE }), /payload/i);
   });
 });
