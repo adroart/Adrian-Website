@@ -265,7 +265,7 @@ const AdminPieces: React.FC = () => {
     }
   };
 
-  const runRowAction = async (row: PieceRow, action: 'backup' | 'reveal') => {
+  const runRowAction = async (row: PieceRow, action: 'backup' | 'reveal' | 'package') => {
     if (!sensitive.stepUpSecret) {
       setRowError((current) => ({ ...current, [row.id]: 'Enter the admin step-up secret first.' }));
       return;
@@ -277,7 +277,22 @@ const AdminPieces: React.FC = () => {
       const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {
         adminSecret: sensitive.stepUpSecret,
       });
-      if (action === 'reveal') {
+      if (action === 'package') {
+        const recoveredPackage = {
+          ...projectIssuedPlateResponse(data),
+          backupStatus: row.backupStatus || undefined,
+        };
+        setSensitive((current) => ({
+          ...current,
+          issuanceKey: null,
+          package: recoveredPackage,
+          revealedForPieceId: null,
+          revealedOwnershipCode: null,
+          revealedUndersideSvg: null,
+        }));
+        setIssueSuccess('Full fabrication package recovered after audit.');
+        setRowSuccess((current) => ({ ...current, [row.id]: 'Full fabrication package recovered.' }));
+      } else if (action === 'reveal') {
         setSensitive((current) => ({
           ...current,
           revealedForPieceId: row.id,
@@ -527,6 +542,7 @@ const AdminPieces: React.FC = () => {
                         <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
                           {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
                           <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
+                          <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
                           {row.plateStatus === 'generated' && row.backupStatus === 'verified' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
                         </div>
                       )}
