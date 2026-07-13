@@ -1048,8 +1048,9 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
 // handler issues (a SELECT-by-piece, an INSERT, an UPDATE-of-hash, a list
 // SELECT), keyed by piece_id + edition_number. Enough to exercise the
 // show-code-once and refuse-overwrite rules without a real database.
-function makeFakeDb() {
+function makeIssuanceDb(options: { collideOnce?: boolean } = {}) {
   const rows: any[] = []; // keeper_pieces
+  let collisionPending = Boolean(options.collideOnce);
 
   function find(pieceId: string, edition: number) {
     return rows.find(
@@ -1059,13 +1060,21 @@ function makeFakeDb() {
 
   function exec(sql: string, params: any[]) {
     const s = sql.replace(/\s+/g, ' ').trim();
-    // SELECT one active row for a piece/edition
-    if (/^SELECT .* FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2 AND released_at IS NULL/i.test(s)) {
+    if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
+      return { kind: 'first', row: rows.find((row) => row.issuance_key === params[0]) || null };
+    }
+    if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
       return { kind: 'first', row: find(params[0], params[1]) || null };
     }
-    // INSERT a fresh registration (no keeper yet)
-    if (/^INSERT INTO keeper_pieces \(id, piece_id, edition_number, recovery_code_hash, registered_at\)/i.test(s)) {
-      const [id, piece_id, edition_number, recovery_code_hash, registered_at] = params;
+    if (/^INSERT INTO keeper_pieces/i.test(s)) {
+      const [id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+        plate_status, plate_generated_at, front_svg_sha256, back_svg_sha256,
+        ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
+        backup_status, registered_at] = params;
+      if (collisionPending) {
+        collisionPending = false;
+        throw new Error('UNIQUE constraint failed: keeper_pieces.public_code');
+      }
       if (rows.some((r) => r.recovery_code_hash === recovery_code_hash)) {
         throw new Error('UNIQUE constraint failed: keeper_pieces.recovery_code_hash');
       }
@@ -1076,8 +1085,10 @@ function makeFakeDb() {
         id,
         piece_id,
         edition_number,
-        keeper_user_id: null,
-        recovery_code_hash,
+        keeper_user_id: null, recovery_code_hash, public_code, issuance_key, plate_status,
+        plate_generated_at, front_svg_sha256, back_svg_sha256,
+        ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
+        backup_status,
         current_display_location: null,
         registered_at,
         claimed_at: null,
@@ -1085,13 +1096,13 @@ function makeFakeDb() {
       });
       return { kind: 'run' };
     }
-    // UPDATE hash on re-registration of an unclaimed row
-    if (/^UPDATE keeper_pieces SET recovery_code_hash = \?1, registered_at = \?2 WHERE id = \?3/i.test(s)) {
-      const [hash, registeredAt, id] = params;
+    if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(s)) {
+      const [status, reference, backupAt, id] = params;
       const row = rows.find((r) => r.id === id);
       if (row) {
-        row.recovery_code_hash = hash;
-        row.registered_at = registeredAt;
+        row.backup_status = status;
+        row.backup_reference = reference;
+        row.backup_at = backupAt;
       }
       return { kind: 'run' };
     }
@@ -1128,6 +1139,32 @@ function makeFakeDb() {
   return { DB, rows };
 }
 
+function makeBackupBucket({ fail = false } = {}) {
+  const objects = new Map<string, string>();
+  return {
+    objects,
+    async put(key: string, value: string) {
+      if (fail) throw new Error('backup unavailable');
+      objects.set(key, value);
+    },
+    async get(key: string) {
+      const value = objects.get(key);
+      return value === undefined ? null : { text: async () => value };
+    },
+  };
+}
+
+const OWNERSHIP_TEST_KEY = Buffer.alloc(32, 23).toString('base64');
+function issuanceEnv(DB: any, failBackup = false) {
+  return {
+    UPLOAD_SECRET: ADMIN_SECRET,
+    DB,
+    OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+    OWNERSHIP_CODE_KEY_V1: OWNERSHIP_TEST_KEY,
+    ARTWORK_REGISTRY_BACKUP: makeBackupBucket({ fail: failBackup }),
+  };
+}
+
 // A request carrying the admin cookie that requireAdmin() checks against
 // env.UPLOAD_SECRET. This is the same gate every admin endpoint uses.
 const ADMIN_SECRET = 'test-admin-secret';
@@ -1147,9 +1184,9 @@ describe('admin piece registration', () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = false;
     try {
-      const { DB } = makeFakeDb();
+      const { DB } = makeIssuanceDb();
       const res = await adminPieces({
-        request: adminReq('POST', { pieceId: 'UL-100' }),
+        request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'request-1' }),
         env: { UPLOAD_SECRET: ADMIN_SECRET, DB },
       });
       assert.equal(res.status, 404);
@@ -1162,7 +1199,7 @@ describe('admin piece registration', () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB } = makeFakeDb();
+      const { DB } = makeIssuanceDb();
       const noCookie = new Request('https://adrianrasmussen.com/api/admin/pieces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1175,36 +1212,48 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('returns a plaintext code ONCE on POST whose hash is what gets stored', async () => {
+  it('rejects unknown artworks, invalid editions, and missing issuance keys', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB, rows } = makeFakeDb();
-      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
-      assert.equal(res.status, 201);
-      const json = await res.json();
-      assert.equal(json.ok, true);
-      // The plaintext code came back, well-formed.
-      assert.ok(isWellFormedRecoveryCode(json.recoveryCode));
-      // The stored row holds ONLY the hash, and it matches the returned plaintext.
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(json.recoveryCode));
-      // The plaintext itself is nowhere in the stored row.
-      assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(json.recoveryCode)), false);
+      const { DB } = makeIssuanceDb();
+      const env = issuanceEnv(DB);
+      assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'NOPE', editionNumber: 0, issuanceKey: 'a' }), env })).status, 400);
+      assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: -1, issuanceKey: 'b' }), env })).status, 400);
+      assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 1.5, issuanceKey: 'c' }), env })).status, 400);
+      assert.equal((await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0 }), env })).status, 400);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
-  it('GET lists registered pieces and NEVER includes a code or its hash', async () => {
+  it('persists an issuance atomically and GET exposes only safe plate metadata', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB } = makeFakeDb();
-      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
-      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      const { DB, rows } = makeIssuanceDb();
+      const bucket = makeBackupBucket();
+      const env = { ...issuanceEnv(DB), ARTWORK_REGISTRY_BACKUP: bucket };
+      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'issue-atomic' }), env });
       const created = await post.json();
+      assert.equal(post.status, 201);
+      assert.ok(isWellFormedRecoveryCode(created.ownershipCode));
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(created.ownershipCode));
+      assert.equal(rows[0].plate_status, 'generated');
+      assert.equal(rows[0].front_svg_sha256, created.frontSha256);
+      assert.equal(rows[0].back_svg_sha256, created.undersideSha256);
+      assert.ok(rows[0].ownership_code_ciphertext);
+      assert.ok(rows[0].ownership_code_nonce);
+      assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(created.ownershipCode)), false);
+      const backup = JSON.parse(bucket.objects.get(`plates/${created.publicCode}.json`)!);
+      assert.equal(backup.publicCode, created.publicCode);
+      assert.equal(backup.envelope.ciphertext, rows[0].ownership_code_ciphertext);
+      assert.equal(backup.envelope.nonce, rows[0].ownership_code_nonce);
+      const backupBlob = JSON.stringify(backup);
+      assert.equal(backupBlob.includes(created.ownershipCode), false);
+      assert.equal(backupBlob.includes(rows[0].recovery_code_hash), false);
+      assert.equal(backupBlob.includes(created.frontSvg), false);
 
       const res = await adminPieces({ request: adminReq('GET'), env });
       assert.equal(res.status, 200);
@@ -1213,72 +1262,76 @@ describe('admin piece registration', () => {
       assert.equal(json.pieces.length, 1);
       const listed = json.pieces[0];
       assert.equal(listed.pieceId, 'UL-100');
-      assert.equal(listed.keeperBound, false); // awaiting a keeper
-      // No code, no hash field leaks in the list shape.
+      assert.equal(listed.publicCode, created.publicCode);
+      assert.equal(listed.plateStatus, 'generated');
+      assert.equal(listed.backupStatus, 'verified');
+      assert.equal(listed.frontSha256, created.frontSha256);
       const blob = JSON.stringify(json);
-      assert.equal('recoveryCode' in listed, false);
-      assert.equal('recovery_code_hash' in listed, false);
-      assert.equal(blob.includes(created.recoveryCode), false);
-      assert.equal(blob.includes(normalizeRecoveryCode(created.recoveryCode)), false);
+      for (const secret of ['ownershipCode', 'recovery_code_hash', 'ownership_code_ciphertext', 'ownership_code_nonce', 'ownership_code_key_version', 'frontSvg', 'undersideSvg']) {
+        assert.equal(secret in listed, false);
+      }
+      assert.equal(blob.includes(created.ownershipCode), false);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
-  it('re-registering an UNCLAIMED piece mints a fresh code and voids the old one', async () => {
+  it('replays the exact deterministic package for the same issuance key', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB, rows } = makeFakeDb();
-      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
-      const first = await (await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env })).json();
-      const second = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
-      const secondJson = await second.json();
-      assert.equal(second.status, 201);
-      assert.equal(secondJson.reRegistered, true);
-      assert.notEqual(secondJson.recoveryCode, first.recoveryCode);
-      // Still one row; it now holds the NEW hash (old printed code is void).
+      const { DB, rows } = makeIssuanceDb();
+      const env = issuanceEnv(DB);
+      const body = { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'same-request' };
+      const first = await (await adminPieces({ request: adminReq('POST', body), env })).json();
+      const secondRes = await adminPieces({ request: adminReq('POST', body), env });
+      const second = await secondRes.json();
+      assert.equal(secondRes.status, 200);
+      assert.deepEqual(second, first);
       assert.equal(rows.length, 1);
-      assert.equal(rows[0].recovery_code_hash, await hashRecoveryCode(secondJson.recoveryCode));
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
-  it('REFUSES to overwrite a live keeper binding (409, no new code)', async () => {
+  it('rejects a different issuance key for the same artwork edition', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB, rows } = makeFakeDb();
-      const env = { UPLOAD_SECRET: ADMIN_SECRET, DB };
-      // Register, then simulate a keeper having bound the piece.
-      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
-      rows[0].keeper_user_id = 'user-holder';
-      rows[0].claimed_at = '2026-06-23T00:00:00Z';
-      const boundHash = rows[0].recovery_code_hash;
-
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100' }), env });
+      const { DB } = makeIssuanceDb();
+      const env = issuanceEnv(DB);
+      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'one' }), env });
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'two' }), env });
       assert.equal(res.status, 409);
-      const json = await res.json();
-      assert.equal(json.ok, false);
-      assert.equal(json.error, 'keeper_bound');
-      assert.equal('recoveryCode' in json, false); // no code minted
-      // The live keeper's hash is untouched.
-      assert.equal(rows[0].recovery_code_hash, boundHash);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 
-  it('requires a pieceId', async () => {
+  it('retries a public-code collision and marks backup failures safely', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const { DB } = makeFakeDb();
-      const res = await adminPieces({ request: adminReq('POST', {}), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
-      assert.equal(res.status, 400);
-      const json = await res.json();
-      assert.equal(json.error, 'piece_id_required');
+      const { DB, rows } = makeIssuanceDb({ collideOnce: true });
+      const env = issuanceEnv(DB, true);
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'collision' }), env });
+      assert.equal(res.status, 201);
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].backup_status, 'failed');
+      assert.equal(rows[0].plate_status, 'generated');
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('returns a safe 503 when ownership-code crypto is not configured', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeIssuanceDb();
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'no-key' }), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
+      assert.equal(res.status, 503);
+      assert.equal(rows.length, 0);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
@@ -1352,22 +1405,21 @@ function makeKeeperDb() {
       return { kind: 'first', row: findAny(params[0], params[1]) || null };
     }
 
-    // admin SELECT: active row for a piece/edition (released filter)
-    if (
-      /^SELECT .* FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2 AND released_at IS NULL/i.test(
-        s,
-      )
-    ) {
-      return { kind: 'first', row: findActive(params[0], params[1]) || null };
+    if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
+      return { kind: 'first', row: pieces.find((row) => row.issuance_key === params[0]) || null };
+    }
+    if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
+      return { kind: 'first', row: findAny(params[0], params[1]) || null };
     }
 
     // admin INSERT: fresh registration (no keeper yet)
     if (
-      /^INSERT INTO keeper_pieces \(id, piece_id, edition_number, recovery_code_hash, registered_at\)/i.test(
-        s,
-      )
+      /^INSERT INTO keeper_pieces/i.test(s)
     ) {
-      const [id, piece_id, edition_number, recovery_code_hash, registered_at] = params;
+      const [id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+        plate_status, plate_generated_at, front_svg_sha256, back_svg_sha256,
+        ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
+        backup_status, registered_at] = params;
       if (pieces.some((r) => r.recovery_code_hash === recovery_code_hash)) {
         throw new Error('UNIQUE constraint failed: keeper_pieces.recovery_code_hash');
       }
@@ -1379,7 +1431,9 @@ function makeKeeperDb() {
         piece_id,
         edition_number,
         keeper_user_id: null,
-        recovery_code_hash,
+        recovery_code_hash, public_code, issuance_key, plate_status, plate_generated_at,
+        front_svg_sha256, back_svg_sha256, ownership_code_ciphertext,
+        ownership_code_nonce, ownership_code_key_version, backup_status,
         current_display_location: null,
         registered_at,
         claimed_at: null,
@@ -1388,13 +1442,13 @@ function makeKeeperDb() {
       return { kind: 'run', meta: { changes: 1 } };
     }
 
-    // admin UPDATE: re-register an unclaimed row's hash
-    if (/^UPDATE keeper_pieces SET recovery_code_hash = \?1, registered_at = \?2 WHERE id = \?3/i.test(s)) {
-      const [hash, registeredAt, id] = params;
+    if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(s)) {
+      const [status, reference, backupAt, id] = params;
       const row = pieces.find((r) => r.id === id);
       if (row) {
-        row.recovery_code_hash = hash;
-        row.registered_at = registeredAt;
+        row.backup_status = status;
+        row.backup_reference = reference;
+        row.backup_at = backupAt;
       }
       return { kind: 'run', meta: { changes: row ? 1 : 0 } };
     }
@@ -1468,13 +1522,13 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
       const { DB, pieces, users } = makeKeeperDb();
-      const adminEnv = { UPLOAD_SECRET: ADMIN_SECRET, DB };
+      const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
-      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-200' }), env: adminEnv });
+      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'keeper-lifecycle' }), env: adminEnv });
       assert.equal(reg.status, 201);
       const regJson = await reg.json();
-      const recoveryCode: string = regJson.recoveryCode;
+      const recoveryCode: string = regJson.ownershipCode;
       assert.ok(isWellFormedRecoveryCode(recoveryCode));
       // Row exists, registered but unclaimed.
       assert.equal(pieces.length, 1);
@@ -1486,11 +1540,11 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
 
       // 2) FIRST BIND: the holder scans, enters the printed code → they bind.
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
-      const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(firstRes.status, 200);
       const firstJson = await firstRes.json();
       assert.equal(firstJson.ok, true);
-      assert.equal(firstJson.keeper.pieceId, 'UL-200');
+      assert.equal(firstJson.keeper.pieceId, 'UL-100');
       assert.ok(firstJson.keeper.claimedAt);
       // The row now carries the first keeper; still the SAME row (UPDATE, not INSERT).
       assert.equal(pieces.length, 1);
@@ -1498,7 +1552,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.ok(pieces[0].claimed_at);
 
       // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
-      const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(againRes.status, 200);
       const againJson = await againRes.json();
       assert.equal(againJson.ok, true);
@@ -1518,7 +1572,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
       CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com' };
 
-      const contestRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-200' }), env: bindEnv });
+      const contestRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(contestRes.status, 202);
       const contestJson = await contestRes.json();
       assert.equal(contestJson.ok, true);
@@ -1529,11 +1583,11 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(pieces[0].keeper_user_id, 'user-first');
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
-      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-201' }), env: adminEnv });
+      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, issuanceKey: 'keeper-negative' }), env: adminEnv });
       await reg2.json();
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
       const wrongRes = await bind({
-        request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-201' }),
+        request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-101' }),
         env: bindEnv,
       });
       assert.equal(wrongRes.status, 403);
@@ -1541,7 +1595,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(wrongJson.ok, false);
       assert.equal(wrongJson.error, 'code_mismatch');
       // Still unclaimed: a wrong code never binds.
-      const row201 = pieces.find((r) => r.piece_id === 'UL-201');
+      const row201 = pieces.find((r) => r.piece_id === 'UL-101');
       assert.equal(row201.keeper_user_id, null);
 
       // 5) Binding an UNREGISTERED piece is rejected (no row → not_registered).

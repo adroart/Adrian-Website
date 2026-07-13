@@ -9,6 +9,10 @@ pages_build_output_dir = "dist"
 binding = "MUSIC_BUCKET"
 bucket_name = "adrian-music"
 
+[[r2_buckets]]
+binding = "ARTWORK_REGISTRY_BACKUP"
+bucket_name = "adrian-artwork-registry-backup"
+
 # D1 database for user accounts, profiles, orders, cart, collections, and invoices.
 # Provisioned 2026-06-05 via:
 #   npx wrangler d1 create adrian-website
