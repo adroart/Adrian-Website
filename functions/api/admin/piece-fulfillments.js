@@ -272,6 +272,9 @@ async function correctFulfillment(env, body) {
   if (existing.shipped_at) {
     return jsonResponse({ ok: false, error: 'fulfillment_already_shipped' }, 409);
   }
+  if (existing.claimed_at) {
+    return jsonResponse({ ok: false, error: 'fulfillment_already_claimed' }, 409);
+  }
 
   const piece = await loadAssignablePiece(env, body?.keeperPieceId);
   if (!piece) return jsonResponse({ ok: false, error: 'piece_not_found' }, 404);
@@ -290,7 +293,7 @@ async function correctFulfillment(env, body) {
         SET keeper_piece_id = ?1, order_item_id = ?2, assignment_type = ?3,
             intended_recipient_reference = ?4, corrected_at = ?5,
             correction_reason = ?6
-      WHERE id = ?7 AND shipped_at IS NULL
+      WHERE id = ?7 AND shipped_at IS NULL AND claimed_at IS NULL
         AND EXISTS (
           SELECT 1 FROM keeper_pieces kp
            WHERE kp.id = ?1

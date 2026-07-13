@@ -6,8 +6,8 @@
  * Binds the signed-in user as the keeper of a physical piece. The proof of
  * ownership is the permanent Ownership Code printed on the underside
  * of the art (utils/recoveryCode.ts) — distinct from the public QR number,
- * which is look-only. Its verifier is matched; the plaintext is never
- * stored or logged.
+ * which is look-only. Its verifier is matched; readable ciphertext is stored
+ * online for authorized recovery, while plaintext never enters logs.
  *
  * REGISTRATION IS THE GATE. A piece row is born when the artist registers it
  * (functions/api/admin/pieces.js), which mints the Ownership Code, stores its
@@ -15,7 +15,8 @@
  * claimed_at NULL. Binding never creates a row: with no registered verifier there is nothing to prove
  * possession against. The state machine on a POST is exactly five arms:
  *   1. No row for this piece/edition      → 404 not_registered (register first).
- *   2. Registered, unclaimed, code MATCHES → FIRST BIND: stamp keeper + claimed_at.
+ *   2. Ready registry plate or legacy row, unclaimed, code MATCHES
+ *                                      → FIRST BIND: stamp keeper + claimed_at.
  *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that).
  *   4. Live keeper bound (released_at NULL)→ idempotent if it is YOU, else the
  *                                            contested-claim handoff (202).
@@ -125,7 +126,8 @@ export async function onRequest(context) {
     // piece remains in the governed claim path.
     const existing = await env.DB
       .prepare(
-        `SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at
+        `SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at,
+                public_code, plate_status, backup_status
            FROM keeper_pieces
           WHERE piece_id = ?1 AND edition_number = ?2`,
       )
@@ -258,6 +260,23 @@ export async function onRequest(context) {
       );
     }
 
+    // New permanent identities are not bearer-bindable while fabrication or
+    // online backup verification is incomplete. Pre-registry rows have no
+    // public_code and retain their established direct first-bind behavior.
+    if (
+      existing.public_code &&
+      (existing.plate_status !== 'active' || existing.backup_status !== 'verified')
+    ) {
+      return json(
+        {
+          ok: false,
+          error: 'plate_not_ready',
+          message: 'This artwork plate is not active with a verified backup yet.',
+        },
+        409,
+      );
+    }
+
     // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
     // Only a never-claimed row reaches here. Stamp this user as the keeper and
     // record claimed_at and close its fulfillment. D1 batch keeps these stamps
@@ -266,7 +285,11 @@ export async function onRequest(context) {
       `UPDATE keeper_pieces
           SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
         WHERE id = ?3
-          AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL`,
+          AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL
+          AND (
+            public_code IS NULL
+            OR (plate_status = 'active' AND backup_status = 'verified')
+          )`,
     ).bind(auth.userId, nowIso, existing.id);
     const fulfillmentMutation = fulfillmentClaimStatement(env, existing.id, nowIso);
     let updated;

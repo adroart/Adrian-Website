@@ -2074,7 +2074,7 @@ function makeKeeperDb() {
 
     // bind SELECT: the row regardless of released_at (no released filter)
     if (
-      /^SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2$/i.test(
+      /^SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at(?:, public_code, plate_status, backup_status)? FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2$/i.test(
         s,
       )
     ) {
@@ -2226,6 +2226,7 @@ function makeFulfillmentDb() {
   const fulfillments: any[] = [];
   const audits: any[] = [];
   let claimBeforeNextWrite: string | null = null;
+  let claimFulfillmentBeforeNextCorrection: string | null = null;
 
   const normalize = (sql: string) => sql.replace(/\s+/g, ' ').trim();
   function execute(sql: string, values: any[]) {
@@ -2261,12 +2262,17 @@ function makeFulfillmentDb() {
     if (/^UPDATE piece_fulfillments SET keeper_piece_id = \?1/i.test(s)) {
       const [keeperPieceId, orderItemId, assignmentType, reference, correctedAt, reason, id] = values;
       const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
+      if (row && claimFulfillmentBeforeNextCorrection === id) {
+        row.claimed_at = '2026-07-13T13:00:00Z';
+        claimFulfillmentBeforeNextCorrection = null;
+      }
       if (claimBeforeNextWrite === keeperPieceId) {
         pieces.find((piece) => piece.id === keeperPieceId).claimed_at = '2026-07-13T13:00:00Z';
         claimBeforeNextWrite = null;
       }
       const piece = pieces.find((candidate) => candidate.id === keeperPieceId);
       if (/EXISTS \(\s*SELECT 1 FROM keeper_pieces/i.test(s) && (!piece || piece.plate_status !== 'active' || piece.backup_status !== 'verified' || piece.keeper_user_id || piece.claimed_at || piece.released_at)) return { changes: 0 };
+      if (/WHERE id = \?7 AND shipped_at IS NULL AND claimed_at IS NULL/i.test(s) && row?.claimed_at) return { changes: 0 };
       if (!row) return { changes: 0 };
       Object.assign(row, { keeper_piece_id: keeperPieceId, order_item_id: orderItemId, assignment_type: assignmentType, intended_recipient_reference: reference, corrected_at: correctedAt, correction_reason: reason });
       return { changes: 1 };
@@ -2300,6 +2306,7 @@ function makeFulfillmentDb() {
   return {
     DB, pieces, orders, orderItems, fulfillments, audits,
     claimPieceBeforeNextWrite(id: string) { claimBeforeNextWrite = id; },
+    claimFulfillmentBeforeNextCorrection(id: string) { claimFulfillmentBeforeNextCorrection = id; },
   };
 }
 
@@ -2369,6 +2376,24 @@ describe('admin piece fulfillment desk', () => {
     assert.equal(correctRace.fulfillments[0].keeper_piece_id, 'kp-ready');
   });
 
+  it('never corrects a fulfillment that is claimed or becomes claimed at write time', async () => {
+    const claimed = makeFulfillmentDb();
+    const claimedEnv = { DB: claimed.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claimed' }), env: claimedEnv });
+    claimed.fulfillments[0].claimed_at = '2026-07-13T12:00:00Z';
+    const existingClaim = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: claimed.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claimed-corrected', reason: 'Must not move' }), env: claimedEnv });
+    assert.equal(existingClaim.status, 409);
+    assert.equal(claimed.fulfillments[0].keeper_piece_id, 'kp-ready');
+
+    const raced = makeFulfillmentDb();
+    const racedEnv = { DB: raced.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claim-race' }), env: racedEnv });
+    raced.claimFulfillmentBeforeNextCorrection(raced.fulfillments[0].id);
+    const raceResponse = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: raced.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claim-race-corrected', reason: 'Race' }), env: racedEnv });
+    assert.equal(raceResponse.status, 409);
+    assert.equal(raced.fulfillments[0].keeper_piece_id, 'kp-ready');
+  });
+
   it('corrects only before shipment, ships only ready plates, and makes shipment idempotent', async () => {
     const fixture = makeFulfillmentDb();
     const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
@@ -2417,8 +2442,20 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Bind env: the bridge secret is set so the contested path actually fires.
       const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
 
-      // 2) FIRST BIND: the holder scans, enters the printed code → they bind.
+      // A new registry identity is not bindable until physical activation and
+      // verified online backup are both complete.
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com' };
+      const generatedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(generatedRes.status, 409);
+      assert.equal((await generatedRes.json()).error, 'plate_not_ready');
+      pieces[0].plate_status = 'active';
+      pieces[0].backup_status = 'pending';
+      const unbackedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(unbackedRes.status, 409);
+      assert.equal((await unbackedRes.json()).error, 'plate_not_ready');
+
+      // 2) FIRST BIND: active + verified, so the holder can bind.
+      pieces[0].backup_status = 'verified';
       const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(firstRes.status, 200);
       const firstJson = await firstRes.json();
@@ -2490,6 +2527,19 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Still unclaimed: a wrong code never binds.
       const row201 = pieces.find((r) => r.piece_id === 'UL-101');
       assert.equal(row201.keeper_user_id, null);
+
+      // Legacy rows have no permanent public identity and remain compatible;
+      // their pre-registry verifier is sufficient for a direct first bind.
+      const legacyCode = 'ZZZZ-YYYY-XXXX-WWWW';
+      pieces.push({
+        id: 'kp-legacy-bind', piece_id: 'UL-103', edition_number: 0,
+        keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(legacyCode),
+        claimed_at: null, released_at: null, public_code: null,
+        plate_status: 'legacy', backup_status: null,
+      });
+      const legacyRes = await bind({ request: bindReq({ ownershipCode: legacyCode, pieceId: 'UL-103' }), env: bindEnv });
+      assert.equal(legacyRes.status, 200);
+      assert.equal(pieces.find((row) => row.id === 'kp-legacy-bind').keeper_user_id, 'user-first');
 
       // 5) Binding an UNREGISTERED piece is rejected (no row → not_registered).
       const unregRes = await bind({
