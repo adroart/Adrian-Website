@@ -46,6 +46,7 @@ import {
 // the flag on inside the registration suite (and restore it) so the same handler
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
+import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
 const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
@@ -1297,6 +1298,55 @@ describe('admin piece registration', () => {
   it('rejects a different issuance key for the same artwork edition', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
+  it('rejects issuance-key reuse for a different artwork identity without revealing a code', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB } = makeIssuanceDb();
+      const env = issuanceEnv(DB);
+      await adminPieces({
+        request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'identity-bound' }),
+        env,
+      });
+      const conflict = await adminPieces({
+        request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, issuanceKey: 'identity-bound' }),
+        env,
+      });
+      assert.equal(conflict.status, 409);
+      const body = await conflict.json();
+      assert.deepEqual(body, { ok: false, error: 'idempotency_conflict' });
+      assert.equal('ownershipCode' in body, false);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('never decrypts or replays a package after the plate leaves generated state', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeIssuanceDb();
+      const env = issuanceEnv(DB);
+      const request = adminReq('POST', {
+        pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'locked-after-activation',
+      });
+      await adminPieces({ request, env });
+      rows[0].plate_status = 'active';
+      rows[0].ownership_code_ciphertext = 'not-valid-base64';
+
+      const locked = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'locked-after-activation',
+        }),
+        env,
+      });
+      assert.equal(locked.status, 409);
+      assert.deepEqual(await locked.json(), { ok: false, error: 'plate_identity_locked' });
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
     try {
       const { DB } = makeIssuanceDb();
       const env = issuanceEnv(DB);
@@ -1341,6 +1391,42 @@ describe('admin piece registration', () => {
 // ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
 // These exercise functions/api/keeper/bind.js against the SAME in-memory D1
 // stand-in the admin suite uses, extended to the few extra statement shapes
+describe('encrypted plate backup adapter', () => {
+  it('retries the identical stored envelope without a decryption path', async () => {
+    const writes: Array<{ key: string; value: string }> = [];
+    const bucket = {
+      async put(key: string, value: string) {
+        writes.push({ key, value });
+      },
+      async get(key: string) {
+        const stored = [...writes].reverse().find((write) => write.key === key);
+        return stored ? { text: async () => stored.value } : null;
+      },
+    };
+    const encryptedRow = {
+      public_code: 'AR-ABCDEFGH',
+      piece_id: 'UL-100',
+      edition_number: 0,
+      plate_generated_at: '2026-07-13T00:00:00.000Z',
+      ownership_code_ciphertext: 'stored-ciphertext',
+      ownership_code_nonce: 'stored-nonce',
+      ownership_code_key_version: 7,
+    };
+
+    assert.deepEqual(await backupPlateEnvelope(bucket, encryptedRow), {
+      status: 'verified', reference: 'plates/AR-ABCDEFGH.json',
+    });
+    assert.deepEqual(await backupPlateEnvelope(bucket, encryptedRow), {
+      status: 'verified', reference: 'plates/AR-ABCDEFGH.json',
+    });
+    assert.equal(writes.length, 2);
+    assert.equal(writes[0].value, writes[1].value);
+    assert.deepEqual(JSON.parse(writes[1].value).envelope, {
+      ciphertext: 'stored-ciphertext', nonce: 'stored-nonce', keyVersion: '7',
+    });
+  });
+});
+
 // bind issues (the no-released-filter SELECT, the keeper UPDATE, and the users
 // lookup getUserByClerkId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth

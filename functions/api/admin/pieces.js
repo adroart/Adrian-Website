@@ -132,6 +132,16 @@ async function packageFromStoredRow(row, env) {
   return { ok: true, ownershipCode, ...plate };
 }
 
+async function replayIssuedPackage(row, input, env) {
+  if (row.piece_id !== input.pieceId || row.edition_number !== input.editionNumber) {
+    return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+  }
+  if (row.plate_status !== 'generated') {
+    return jsonResponse({ ok: false, error: 'plate_identity_locked' }, 409);
+  }
+  return jsonResponse(await packageFromStoredRow(row, env), 200);
+}
+
 function cryptoConfigured(env) {
   const version = env.OWNERSHIP_CODE_ACTIVE_KEY_VERSION;
   return typeof version === 'string' && /^\d+$/.test(version) && Boolean(env[`OWNERSHIP_CODE_KEY_V${version}`]);
@@ -168,7 +178,7 @@ async function issuePiece(request, env) {
 
   try {
     const replay = await findByIssuanceKey(env, input.issuanceKey);
-    if (replay) return jsonResponse(await packageFromStoredRow(replay, env), 200);
+    if (replay) return replayIssuedPackage(replay, input, env);
 
     const duplicate = await env.DB.prepare(
       `SELECT id FROM keeper_pieces WHERE piece_id = ?1 AND edition_number = ?2`,
@@ -224,7 +234,7 @@ async function issuePiece(request, env) {
         }
         if (/unique/i.test(String(error?.message || ''))) {
           const concurrentReplay = await findByIssuanceKey(env, input.issuanceKey);
-          if (concurrentReplay) return jsonResponse(await packageFromStoredRow(concurrentReplay, env), 200);
+          if (concurrentReplay) return replayIssuedPackage(concurrentReplay, input, env);
           return jsonResponse({ ok: false, error: 'issuance_conflict' }, 409);
         }
         throw error;
