@@ -23,6 +23,13 @@ import {
   publicPlateUrl,
 } from '../utils/artworkPlate';
 import {
+  activationChecklistComplete,
+  beginIssuanceAttempt,
+  clearSensitivePlateState,
+  projectPlateDownloads,
+  type SensitivePlateState,
+} from '../utils/adminArtworkRegistry';
+import {
   birthdayWindowState,
   canSetMotivation,
   canConfirmMotivation,
@@ -83,6 +90,82 @@ const legacyPieceInsert = `
     ('kp-legacy', 'UL-001', 0, 'keeper-legacy', 'legacy-hash',
      'Bali', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', NULL);
 `;
+
+describe('artwork registry admin helpers', () => {
+  it('keeps one issuance key stable for a retry and replaces it for the next attempt', () => {
+    const first = beginIssuanceAttempt(null, () => 'issue-a');
+    assert.equal(beginIssuanceAttempt(first, () => 'issue-b'), 'issue-a');
+    assert.equal(beginIssuanceAttempt(null, () => 'issue-b'), 'issue-b');
+  });
+
+  it('projects exact private fabrication downloads with safe filenames', () => {
+    const downloads = projectPlateDownloads({
+      publicCode: 'AR-ABCDEFGH',
+      frontSvg: '<svg>front</svg>',
+      undersideSvg: '<svg>private</svg>',
+      manifest: {
+        schemaVersion: 1,
+        publicCode: 'AR-ABCDEFGH',
+        artworkId: 'UL-100',
+        editionNumber: 2,
+        publicUrl: 'https://adrianrasmussen.com/qr/AR-ABCDEFGH',
+        ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+        frontSha256: 'front-hash',
+        undersideSha256: 'back-hash',
+        generatedAt: '2026-07-13T00:00:00.000Z',
+      },
+    });
+    assert.deepEqual(downloads.map(({ filename, mimeType }) => ({ filename, mimeType })), [
+      { filename: 'AR-ABCDEFGH-front.svg', mimeType: 'image/svg+xml' },
+      { filename: 'AR-ABCDEFGH-underside-private.svg', mimeType: 'image/svg+xml' },
+      { filename: 'AR-ABCDEFGH-manifest-private.json', mimeType: 'application/json' },
+    ]);
+    assert.equal(downloads[0].content, '<svg>front</svg>');
+    assert.equal(downloads[2].content.includes('K7QM-9XTR-2PHV-N4WB'), true);
+  });
+
+  it('requires every physical confirmation and the exact stored hashes', () => {
+    const complete = {
+      realMetalQrScanned: true,
+      artworkEditionPublicCodeMatch: true,
+      undersideOwnershipCodeMatch: true,
+      attachmentAndAbrasionInspected: true,
+      frontSha256: 'front-hash',
+      undersideSha256: 'back-hash',
+    };
+    assert.equal(activationChecklistComplete(complete, 'front-hash', 'back-hash'), true);
+    assert.equal(activationChecklistComplete({ ...complete, realMetalQrScanned: false }, 'front-hash', 'back-hash'), false);
+    assert.equal(activationChecklistComplete(complete, 'different', 'back-hash'), false);
+  });
+
+  it('clears all immediate Ownership Code and step-up state after activation or dismissal', () => {
+    const sensitive: SensitivePlateState = {
+      issuanceKey: 'issue-a',
+      package: {
+        ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+        publicCode: 'AR-ABCDEFGH',
+        publicUrl: 'https://adrianrasmussen.com/qr/AR-ABCDEFGH',
+        frontSvg: '<svg/>',
+        undersideSvg: '<svg/>',
+        frontSha256: 'front-hash',
+        undersideSha256: 'back-hash',
+        manifest: {} as NonNullable<SensitivePlateState['package']>['manifest'],
+      },
+      revealedForPieceId: 'kp-1',
+      revealedOwnershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      revealedUndersideSvg: '<svg/>',
+      stepUpSecret: 'admin-secret',
+    };
+    assert.deepEqual(clearSensitivePlateState(sensitive), {
+      issuanceKey: null,
+      package: null,
+      revealedForPieceId: null,
+      revealedOwnershipCode: null,
+      revealedUndersideSvg: null,
+      stepUpSecret: '',
+    });
+  });
+});
 
 describe('artwork plate fabrication package', () => {
   it('generates stateless public-code candidates from the human-safe alphabet', () => {
