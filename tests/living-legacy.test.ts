@@ -61,7 +61,7 @@ const legacyKeeperSchema = () =>
     .map(readMigration)
     .join('\n');
 const registrySchema = () =>
-  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}`;
+  `${legacyKeeperSchema()}\n${readMigration('010_artwork_plate_identity.sql')}\n${readMigration('011_piece_fulfillments.sql')}\n${readMigration('012_piece_fulfillment_guards.sql')}`;
 const sqliteJson = (sql: string) => {
   const output = execFileSync('sqlite3', ['-json', ':memory:'], {
     encoding: 'utf8',
@@ -644,6 +644,23 @@ describe('artwork registry migrations', () => {
     `);
     assert.notEqual(orphanOrderItem.status, 0);
     assert.match(orphanOrderItem.stderr, /FOREIGN KEY constraint failed/);
+  });
+
+  it('makes an opaque manual handoff reference one-to-one', () => {
+    const [row] = sqliteJson(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces
+        (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-a', 'UL-050', 0, 'hash-a'), ('kp-b', 'UL-051', 0, 'hash-b');
+      INSERT INTO piece_fulfillments
+        (id, keeper_piece_id, assignment_type, intended_recipient_reference, assigned_at)
+      VALUES ('pf-a', 'kp-a', 'manual', 'studio-handoff:one', '2026-07-13T00:00:00Z');
+      INSERT OR IGNORE INTO piece_fulfillments
+        (id, keeper_piece_id, assignment_type, intended_recipient_reference, assigned_at)
+      VALUES ('pf-b', 'kp-b', 'manual', 'studio-handoff:one', '2026-07-13T00:00:00Z');
+      SELECT COUNT(*) AS count FROM piece_fulfillments;
+    `);
+    assert.equal(row.count, 1);
   });
 });
 
@@ -2125,6 +2142,7 @@ function makeFulfillmentDb() {
   ];
   const fulfillments: any[] = [];
   const audits: any[] = [];
+  let claimBeforeNextWrite: string | null = null;
 
   const normalize = (sql: string) => sql.replace(/\s+/g, ' ').trim();
   function execute(sql: string, values: any[]) {
@@ -2147,13 +2165,25 @@ function makeFulfillmentDb() {
     if (/^SELECT .* FROM piece_fulfillments WHERE id = \?1/i.test(s)) return { row: fulfillments.find((f) => f.id === values[0]) || null };
     if (/^INSERT INTO piece_fulfillments/i.test(s)) {
       const [id, keeper_piece_id, order_item_id, assignment_type, reference, at] = values;
-      if (fulfillments.some((f) => f.keeper_piece_id === keeper_piece_id || (order_item_id != null && f.order_item_id === order_item_id))) throw new Error('UNIQUE constraint failed');
+      if (claimBeforeNextWrite === keeper_piece_id) {
+        pieces.find((piece) => piece.id === keeper_piece_id).claimed_at = '2026-07-13T13:00:00Z';
+        claimBeforeNextWrite = null;
+      }
+      const piece = pieces.find((candidate) => candidate.id === keeper_piece_id);
+      if (/INSERT INTO piece_fulfillments .* SELECT/i.test(s) && (!piece || piece.plate_status !== 'active' || piece.backup_status !== 'verified' || piece.keeper_user_id || piece.claimed_at || piece.released_at)) return { changes: 0 };
+      if (fulfillments.some((f) => f.keeper_piece_id === keeper_piece_id || (order_item_id != null && f.order_item_id === order_item_id) || (assignment_type === 'manual' && f.assignment_type === 'manual' && f.intended_recipient_reference === reference))) throw new Error('UNIQUE constraint failed');
       fulfillments.push({ id, keeper_piece_id, order_item_id, assignment_type, intended_recipient_reference: reference, assigned_at: at, shipped_at: null, claimed_at: null, corrected_at: null, correction_reason: null });
       return { changes: 1 };
     }
     if (/^UPDATE piece_fulfillments SET keeper_piece_id = \?1/i.test(s)) {
       const [keeperPieceId, orderItemId, assignmentType, reference, correctedAt, reason, id] = values;
       const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
+      if (claimBeforeNextWrite === keeperPieceId) {
+        pieces.find((piece) => piece.id === keeperPieceId).claimed_at = '2026-07-13T13:00:00Z';
+        claimBeforeNextWrite = null;
+      }
+      const piece = pieces.find((candidate) => candidate.id === keeperPieceId);
+      if (/EXISTS \(\s*SELECT 1 FROM keeper_pieces/i.test(s) && (!piece || piece.plate_status !== 'active' || piece.backup_status !== 'verified' || piece.keeper_user_id || piece.claimed_at || piece.released_at)) return { changes: 0 };
       if (!row) return { changes: 0 };
       Object.assign(row, { keeper_piece_id: keeperPieceId, order_item_id: orderItemId, assignment_type: assignmentType, intended_recipient_reference: reference, corrected_at: correctedAt, correction_reason: reason });
       return { changes: 1 };
@@ -2184,7 +2214,10 @@ function makeFulfillmentDb() {
       return statement;
     },
   };
-  return { DB, pieces, orders, orderItems, fulfillments, audits };
+  return {
+    DB, pieces, orders, orderItems, fulfillments, audits,
+    claimPieceBeforeNextWrite(id: string) { claimBeforeNextWrite = id; },
+  };
 }
 
 describe('admin piece fulfillment desk', () => {
@@ -2216,6 +2249,41 @@ describe('admin piece fulfillment desk', () => {
     assert.equal(manual.status, 201);
     assert.equal(fixture.fulfillments[1].assignment_type, 'manual');
     assert.equal(fixture.audits.filter((row) => row.action === 'fulfillment_assign').length, 2);
+  });
+
+  it('requires the canonical Stripe product artwork to match the selected physical piece', async () => {
+    const fixture = makeFulfillmentDb();
+    const response = await adminPieceFulfillments({
+      request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 100 }),
+      env: { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET },
+    });
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { ok: false, error: 'order_item_piece_mismatch' });
+    assert.equal(fixture.fulfillments.length, 0);
+  });
+
+  it('rejects reuse of an opaque manual handoff reference', async () => {
+    const fixture = makeFulfillmentDb();
+    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:gift-8' }), env })).status, 201);
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', manualReference: 'studio:gift-8' }), env })).status, 409);
+    assert.equal(fixture.fulfillments.length, 1);
+  });
+
+  it('rechecks plate eligibility inside assign and correction mutations', async () => {
+    const assignRace = makeFulfillmentDb();
+    assignRace.claimPieceBeforeNextWrite('kp-ready');
+    const racedAssign = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:race-assign' }), env: { DB: assignRace.DB, UPLOAD_SECRET: ADMIN_SECRET } });
+    assert.equal(racedAssign.status, 409);
+    assert.equal(assignRace.fulfillments.length, 0);
+
+    const correctRace = makeFulfillmentDb();
+    const env = { DB: correctRace.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:before-race' }), env });
+    correctRace.claimPieceBeforeNextWrite('kp-second');
+    const racedCorrection = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: correctRace.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:after-race', reason: 'Race test' }), env });
+    assert.equal(racedCorrection.status, 409);
+    assert.equal(correctRace.fulfillments[0].keeper_piece_id, 'kp-ready');
   });
 
   it('corrects only before shipment, ships only ready plates, and makes shipment idempotent', async () => {

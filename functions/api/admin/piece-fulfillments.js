@@ -170,7 +170,7 @@ async function resolveAssignment(env, body) {
   }
 
   const orderItem = await env.DB.prepare(
-    `SELECT oi.id, oi.order_id, oi.quantity, o.status AS order_status,
+    `SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, o.status AS order_status,
             ('order:' || o.id) AS order_reference
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
@@ -189,6 +189,7 @@ async function resolveAssignment(env, body) {
     orderItemId: orderItem.id,
     assignmentType: 'stripe_order',
     reference: orderItem.order_reference,
+    productId: orderItem.product_id,
   };
 }
 
@@ -200,6 +201,12 @@ async function assignFulfillment(env, body) {
   }
   const assignment = await resolveAssignment(env, body);
   if (assignment.response) return assignment.response;
+  // order_items.product_id is the canonical artwork id captured from Stripe
+  // product metadata.product_id by the webhook. Stripe product/price ids are
+  // only legacy fallbacks and therefore cannot be assigned to a physical row.
+  if (assignment.assignmentType === 'stripe_order' && assignment.productId !== piece.piece_id) {
+    return jsonResponse({ ok: false, error: 'order_item_piece_mismatch' }, 409);
+  }
 
   const id = crypto.randomUUID();
   const assignedAt = new Date().toISOString();
@@ -207,7 +214,27 @@ async function assignFulfillment(env, body) {
     `INSERT INTO piece_fulfillments
        (id, keeper_piece_id, order_item_id, assignment_type,
         intended_recipient_reference, assigned_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+     SELECT ?1, kp.id, ?3, ?4, ?5, ?6
+       FROM keeper_pieces kp
+      WHERE kp.id = ?2
+        AND kp.plate_status = 'active'
+        AND kp.backup_status = 'verified'
+        AND kp.keeper_user_id IS NULL
+        AND kp.claimed_at IS NULL
+        AND kp.released_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM piece_fulfillments occupied
+           WHERE occupied.keeper_piece_id = kp.id
+        )
+        AND (
+          ?4 = 'manual'
+          OR EXISTS (
+            SELECT 1 FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            WHERE oi.id = ?3 AND oi.quantity = 1 AND o.status = 'paid'
+              AND oi.product_id = kp.piece_id
+          )
+        )`,
   ).bind(
     id,
     piece.id,
@@ -216,7 +243,17 @@ async function assignFulfillment(env, body) {
     assignment.reference,
     assignedAt,
   );
-  await mutateWithAudit(env, mutation, piece.id, 'fulfillment_assign', 'assigned', assignedAt);
+  const result = await mutateWithAudit(
+    env,
+    mutation,
+    piece.id,
+    'fulfillment_assign',
+    'assignment_attempt',
+    assignedAt,
+  );
+  if ((result?.meta?.changes ?? 0) === 0) {
+    return jsonResponse({ ok: false, error: 'assignment_conflict' }, 409);
+  }
   return jsonResponse({ ok: true, fulfillment: { id, keeperPieceId: piece.id, assignedAt } }, 201);
 }
 
@@ -243,6 +280,9 @@ async function correctFulfillment(env, body) {
   }
   const assignment = await resolveAssignment(env, body);
   if (assignment.response) return assignment.response;
+  if (assignment.assignmentType === 'stripe_order' && assignment.productId !== piece.piece_id) {
+    return jsonResponse({ ok: false, error: 'order_item_piece_mismatch' }, 409);
+  }
 
   const correctedAt = new Date().toISOString();
   const mutation = env.DB.prepare(
@@ -250,7 +290,29 @@ async function correctFulfillment(env, body) {
         SET keeper_piece_id = ?1, order_item_id = ?2, assignment_type = ?3,
             intended_recipient_reference = ?4, corrected_at = ?5,
             correction_reason = ?6
-      WHERE id = ?7 AND shipped_at IS NULL`,
+      WHERE id = ?7 AND shipped_at IS NULL
+        AND EXISTS (
+          SELECT 1 FROM keeper_pieces kp
+           WHERE kp.id = ?1
+             AND kp.plate_status = 'active'
+             AND kp.backup_status = 'verified'
+             AND kp.keeper_user_id IS NULL
+             AND kp.claimed_at IS NULL
+             AND kp.released_at IS NULL
+             AND NOT EXISTS (
+               SELECT 1 FROM piece_fulfillments occupied
+                WHERE occupied.keeper_piece_id = kp.id AND occupied.id <> ?7
+             )
+             AND (
+               ?3 = 'manual'
+               OR EXISTS (
+                 SELECT 1 FROM order_items oi
+                 JOIN orders o ON o.id = oi.order_id
+                 WHERE oi.id = ?2 AND oi.quantity = 1 AND o.status = 'paid'
+                   AND oi.product_id = kp.piece_id
+               )
+             )
+        )`,
   ).bind(
     piece.id,
     assignment.orderItemId,
@@ -265,11 +327,11 @@ async function correctFulfillment(env, body) {
     mutation,
     piece.id,
     'fulfillment_correct',
-    'corrected',
+    'correction_attempt',
     correctedAt,
   );
   if ((result?.meta?.changes ?? 0) === 0) {
-    return jsonResponse({ ok: false, error: 'fulfillment_already_shipped' }, 409);
+    return jsonResponse({ ok: false, error: 'correction_conflict' }, 409);
   }
   return jsonResponse({ ok: true, fulfillment: { id: existing.id, correctedAt } });
 }

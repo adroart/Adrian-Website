@@ -6,13 +6,13 @@
  * Binds the signed-in user as the keeper of a physical piece. The proof of
  * ownership is the permanent Ownership Code printed on the underside
  * of the art (utils/recoveryCode.ts) — distinct from the public QR number,
- * which is look-only. The code is hashed and matched; the plaintext is never
+ * which is look-only. Its verifier is matched; the plaintext is never
  * stored or logged.
  *
  * REGISTRATION IS THE GATE. A piece row is born when the artist registers it
- * (functions/api/admin/pieces.js), which mints the recovery code, stores ONLY
- * its hash, and leaves keeper_user_id / claimed_at NULL (migration 009). Binding
- * never creates a row: with no registered hash there is nothing to prove
+ * (functions/api/admin/pieces.js), which mints the Ownership Code, stores its
+ * verifier plus a recoverable encrypted envelope, and leaves keeper_user_id /
+ * claimed_at NULL. Binding never creates a row: with no registered verifier there is nothing to prove
  * possession against. The state machine on a POST is exactly five arms:
  *   1. No row for this piece/edition      → 404 not_registered (register first).
  *   2. Registered, unclaimed, code MATCHES → FIRST BIND: stamp keeper + claimed_at.
@@ -55,7 +55,7 @@
  *
  * INVARIANT: nothing written here enters a ledger hash. keeper_pieces is mutable
  * D1; the chain (mandalacodes side) carries only opaque ids + salted
- * commitments. The recovery_code_hash is a SHA-256 hash, never the plaintext.
+ * commitments. recovery_code_hash is the online verifier; plaintext never enters logs.
  *
  * Auth: Better Auth session cookie (requireUser). The email-fallback identity
  * claim that mandalacodes' steward bind allows is NOT used here — binding keys
@@ -121,9 +121,8 @@ export async function onRequest(context) {
   try {
     // Fetch THE row for this piece/edition. UNIQUE(piece_id, edition_number)
     // guarantees at most one, so we do not filter on released_at here: we want
-    // to see a released row too, because a released piece is re-bindable by the
-    // next holder of the printed code (case 5 below). registered_at + claimed_at
-    // + released_at together tell us which state-machine arm to take.
+    // to see released rows too: claimed_at is the permanent signal that the
+    // piece remains in the governed claim path.
     const existing = await env.DB
       .prepare(
         `SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at
@@ -135,8 +134,8 @@ export async function onRequest(context) {
 
     // ── Case 1: no row at all ────────────────────────────────────────────────
     // Registration is the gate. A piece must be registered by the admin (which
-    // mints + hashes the recovery code) before anyone can claim it. We do NOT
-    // silently create a binding here: with no registered hash there is nothing
+    // mints and protects the Ownership Code) before anyone can claim it. We do NOT
+    // silently create a binding here: with no registered verifier there is nothing
     // to prove possession against, and an auto-create would let any signed-in
     // user seize an unregistered piece by inventing a code. Reject clearly.
     if (!existing) {
