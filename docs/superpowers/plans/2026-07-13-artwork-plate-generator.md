@@ -1,5 +1,11 @@
 # Adrian Rasmussen Artwork Plate Generator Implementation Plan
 
+> **Storage amendment, 2026-07-13:** The approved design now requires recoverable online Ownership
+> Codes encrypted in the primary database plus a separately encrypted online backup. Sections below
+> that require one-time-only plaintext, no recoverable persistence, browser-only manifests, or the
+> name “Lineage Code” are stale and must be rewritten before this plan is executed. Do not implement
+> those requirements as written.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the Adrian Rasmussen backend generator that registers one immutable physical artwork instance and returns its permanent public QR SVG, permanent underside Lineage Code SVG, and private fabrication manifest.
