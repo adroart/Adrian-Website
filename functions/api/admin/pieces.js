@@ -139,12 +139,29 @@ async function replayIssuedPackage(row, input, env) {
   if (row.plate_status !== 'generated') {
     return jsonResponse({ ok: false, error: 'plate_identity_locked' }, 409);
   }
-  return jsonResponse(await packageFromStoredRow(row, env), 200);
+  const backup = row.backup_status === 'verified'
+    ? { status: 'verified' }
+    : await backupAndRecord(env, row);
+  return jsonResponse(
+    withBackupOutcome(await packageFromStoredRow(row, env), backup),
+    200,
+  );
 }
 
 function cryptoConfigured(env) {
   const version = env.OWNERSHIP_CODE_ACTIVE_KEY_VERSION;
-  return typeof version === 'string' && /^\d+$/.test(version) && Boolean(env[`OWNERSHIP_CODE_KEY_V${version}`]);
+  if (typeof version !== 'string' || !/^\d+$/.test(version)) return false;
+  const encodedKey = env[`OWNERSHIP_CODE_KEY_V${version}`];
+  if (typeof encodedKey !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encodedKey)) {
+    return false;
+  }
+  try {
+    const binary = atob(encodedKey);
+    if (binary.length !== 32) return false;
+    return btoa(binary) === encodedKey;
+  } catch {
+    return false;
+  }
 }
 
 async function findByIssuanceKey(env, issuanceKey) {
@@ -160,6 +177,31 @@ async function recordBackupResult(env, row, result) {
         SET backup_status = ?1, backup_reference = ?2, backup_at = ?3
       WHERE id = ?4`,
   ).bind(result.status, result.reference, at, row.id).run();
+}
+
+async function backupAndRecord(env, row) {
+  const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
+  try {
+    await recordBackupResult(env, row, result);
+    row.backup_status = result.status;
+    return {
+      status: result.status,
+      warning: result.status === 'failed' ? 'online_backup_failed' : undefined,
+    };
+  } catch {
+    return {
+      status: row.backup_status || 'pending',
+      warning: 'backup_status_record_failed',
+    };
+  }
+}
+
+function withBackupOutcome(packageBody, backup) {
+  return {
+    ...packageBody,
+    backupStatus: backup.status,
+    ...(backup.warning ? { warning: backup.warning } : {}),
+  };
 }
 
 async function issuePiece(request, env) {
@@ -240,9 +282,11 @@ async function issuePiece(request, env) {
         throw error;
       }
 
-      const backup = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
-      await recordBackupResult(env, row, backup);
-      return jsonResponse({ ok: true, ownershipCode, ...plate }, 201);
+      const backup = await backupAndRecord(env, { ...row, backup_status: 'pending' });
+      return jsonResponse(
+        withBackupOutcome({ ok: true, ownershipCode, ...plate }, backup),
+        201,
+      );
     }
     return jsonResponse({ ok: false, error: 'public_code_collision' }, 503);
   } catch (error) {

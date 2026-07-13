@@ -1055,6 +1055,7 @@ function makeIssuanceDb(options: { collideOnce?: boolean } = {}) {
 
   function find(pieceId: string, edition: number) {
     return rows.find(
+  let backupStatusFailurePending = Boolean(options.failBackupStatusOnce);
       (r) => r.piece_id === pieceId && r.edition_number === edition && !r.released_at,
     );
   }
@@ -1101,6 +1102,10 @@ function makeIssuanceDb(options: { collideOnce?: boolean } = {}) {
       const [status, reference, backupAt, id] = params;
       const row = rows.find((r) => r.id === id);
       if (row) {
+      if (backupStatusFailurePending) {
+        backupStatusFailurePending = false;
+        throw new Error('D1 status update unavailable');
+      }
         row.backup_status = status;
         row.backup_reference = reference;
         row.backup_at = backupAt;
@@ -1377,6 +1382,57 @@ describe('admin piece registration', () => {
   it('returns a safe 503 when ownership-code crypto is not configured', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
+  it('returns the committed package when backup status recording fails and repairs it on replay', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeIssuanceDb({ failBackupStatusOnce: true });
+      const env = issuanceEnv(DB);
+      const body = { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'repair-status' };
+
+      const issued = await adminPieces({ request: adminReq('POST', body), env });
+      assert.equal(issued.status, 201);
+      const issuedBody = await issued.json();
+      assert.equal(issuedBody.backupStatus, 'pending');
+      assert.equal(issuedBody.warning, 'backup_status_record_failed');
+      assert.ok(issuedBody.ownershipCode);
+      assert.equal(rows[0].backup_status, 'pending');
+
+      const replayed = await adminPieces({ request: adminReq('POST', body), env });
+      assert.equal(replayed.status, 200);
+      const replayedBody = await replayed.json();
+      assert.equal(replayedBody.backupStatus, 'verified');
+      assert.equal('warning' in replayedBody, false);
+      assert.equal(replayedBody.ownershipCode, issuedBody.ownershipCode);
+      assert.equal(rows[0].backup_status, 'verified');
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('returns an honest failed backup state while keeping the committed plate generated', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeIssuanceDb();
+      const env = issuanceEnv(DB, true);
+      const issued = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'failed-backup-state',
+        }),
+        env,
+      });
+      assert.equal(issued.status, 201);
+      const body = await issued.json();
+      assert.equal(body.backupStatus, 'failed');
+      assert.equal(body.warning, 'online_backup_failed');
+      assert.equal(rows[0].backup_status, 'failed');
+      assert.equal(rows[0].plate_status, 'generated');
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
     try {
       const { DB, rows } = makeIssuanceDb();
       const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'no-key' }), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
@@ -1389,6 +1445,33 @@ describe('admin piece registration', () => {
 });
 
 // ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
+
+  it('returns a safe 503 for malformed ownership-code keys before inserting', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      for (const key of ['not-base64!', Buffer.alloc(31).toString('base64')]) {
+        const { DB, rows } = makeIssuanceDb();
+        const env = {
+          ...issuanceEnv(DB),
+          OWNERSHIP_CODE_KEY_V1: key,
+        };
+        const response = await adminPieces({
+          request: adminReq('POST', {
+            pieceId: 'UL-100', editionNumber: 0, issuanceKey: `bad-key-${key.length}`,
+          }),
+          env,
+        });
+        assert.equal(response.status, 503);
+        assert.deepEqual(await response.json(), {
+          ok: false, error: 'ownership_code_crypto_not_configured',
+        });
+        assert.equal(rows.length, 0);
+      }
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
 // These exercise functions/api/keeper/bind.js against the SAME in-memory D1
 // stand-in the admin suite uses, extended to the few extra statement shapes
 describe('encrypted plate backup adapter', () => {
