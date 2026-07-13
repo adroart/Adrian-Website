@@ -9,6 +9,12 @@ import { LAUNCH_FLAGS } from '../launchFlags';
 import ArrivalGate from './legacy/ArrivalGate';
 import PieceConstellation from './legacy/PieceConstellation';
 import KeeperPanel from './legacy/KeeperPanel';
+import {
+    formatLineageEventLabel,
+    publicLineageDetails,
+    PublicLineageEvent,
+    PublicLineageResponse,
+} from '../utils/publicLineage';
 
 const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
     created: 'Created',
@@ -30,6 +36,8 @@ const WorksPage: React.FC = () => {
     // visit goes straight to the certificate so nothing feels withheld.
     const legacyOn = LAUNCH_FLAGS.livingLegacy;
     const arrivedByScan = searchParams.get('ref') === 'qr';
+    const instanceCode = searchParams.get('instance');
+    const lineage = usePublicLineage(instanceCode, id);
 
     useMetaTags(
         artwork
@@ -176,6 +184,10 @@ const WorksPage: React.FC = () => {
                             </div>
                         )}
 
+                        {instanceCode && /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(instanceCode) && (
+                            <PublicLineageHistory publicCode={instanceCode} state={lineage} />
+                        )}
+
                         {/* Signature line */}
                         <div className="flex items-center justify-center gap-4 mb-8 mt-10">
                             <div className="h-px w-12 bg-bronze-300" />
@@ -308,6 +320,136 @@ function hasBookContent(b: BookContent): boolean {
         b.materialsStory ||
         b.inspiration
     );
+}
+
+type LineageState =
+    | { status: 'idle' | 'loading' }
+    | { status: 'ready'; events: PublicLineageEvent[] }
+    | { status: 'error' };
+
+function usePublicLineage(publicCode: string | null, pieceId: string | undefined): LineageState {
+    const validCode = Boolean(publicCode && /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(publicCode));
+    const [state, setState] = useState<LineageState>({ status: validCode ? 'loading' : 'idle' });
+
+    useEffect(() => {
+        if (!validCode || !publicCode || !pieceId) {
+            setState({ status: 'idle' });
+            return;
+        }
+
+        const controller = new AbortController();
+        setState({ status: 'loading' });
+        fetch(`/api/lineage/${encodeURIComponent(publicCode)}`, { signal: controller.signal })
+            .then(async (response) => {
+                if (!response.ok) throw new Error('lineage unavailable');
+                return response.json() as Promise<PublicLineageResponse>;
+            })
+            .then((data) => {
+                if (
+                    data?.ok !== true ||
+                    data.artwork?.publicCode !== publicCode ||
+                    data.artwork?.pieceId !== pieceId ||
+                    !Array.isArray(data.events)
+                ) {
+                    throw new Error('lineage mismatch');
+                }
+                setState({ status: 'ready', events: data.events });
+            })
+            .catch((error) => {
+                if (error?.name !== 'AbortError') setState({ status: 'error' });
+            });
+
+        return () => controller.abort();
+    }, [pieceId, publicCode, validCode]);
+
+    return state;
+}
+
+function PublicLineageHistory({ publicCode, state }: { publicCode: string; state: LineageState }) {
+    return (
+        <section className="max-w-md mx-auto mb-10" aria-labelledby="registry-history-heading">
+            <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="h-px w-8 bg-wood-100" />
+                <h2
+                    id="registry-history-heading"
+                    className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold"
+                >
+                    Registry history
+                </h2>
+                <div className="h-px w-8 bg-wood-100" />
+            </div>
+            <p className="font-sans text-[12px] text-wood-400 text-center mb-6">
+                Permanent record for <span className="font-medium text-wood-600">{publicCode}</span>
+            </p>
+
+            {state.status === 'loading' && (
+                <div className="space-y-4" aria-live="polite" aria-label="Loading registry history">
+                    {[0, 1, 2].map((item) => (
+                        <div key={item} className="border-l border-wood-100 pl-5 py-1 animate-pulse">
+                            <div className="h-3 bg-wood-100 w-28 mb-2" />
+                            <div className="h-2 bg-wood-100 w-44" />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {state.status === 'error' && (
+                <p className="border-l border-bronze-300 pl-4 py-1 font-sans text-[13px] leading-relaxed text-wood-600" role="status">
+                    This history could not be verified right now. The artwork record remains unchanged.
+                </p>
+            )}
+
+            {state.status === 'ready' && state.events.length === 0 && (
+                <p className="font-sans text-[13px] leading-relaxed text-wood-500 text-center">
+                    No public registry events have been recorded yet.
+                </p>
+            )}
+
+            {state.status === 'ready' && state.events.length > 0 && (
+                <ol className="space-y-5">
+                    {state.events.map((event) => {
+                        const details = publicLineageDetails(event.publicPayload);
+                        return (
+                            <li key={event.eventHash} className="relative border-l border-bronze-200 pl-5 py-0.5">
+                                <span className="absolute -left-[3px] top-2 block h-[5px] w-[5px] rotate-45 bg-bronze-500" aria-hidden="true" />
+                                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
+                                    <p className="font-sans text-[13px] text-wood-700 font-medium">
+                                        {formatLineageEventLabel(event.eventType)}
+                                    </p>
+                                    <time className="font-sans text-[11px] text-wood-400 tabular-nums" dateTime={event.eventAt}>
+                                        {formatLineageDate(event.eventAt)}
+                                    </time>
+                                </div>
+                                {details.length > 0 && (
+                                    <p className="mt-1 font-sans text-[11px] text-wood-500 leading-relaxed">
+                                        {details.map(([label, value]) => `${label}: ${value}`).join(' · ')}
+                                    </p>
+                                )}
+                                <p
+                                    className="mt-2 font-mono text-[9px] leading-relaxed tracking-[0.03em] text-wood-300 break-all"
+                                    title="Tamper-evident event hash"
+                                >
+                                    {event.eventHash}
+                                </p>
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
+        </section>
+    );
+}
+
+function formatLineageDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Date unavailable';
+    return new Intl.DateTimeFormat(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(date);
 }
 
 /** A titled block in the book, with an ornamental rule above the label. */
