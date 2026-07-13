@@ -628,7 +628,14 @@ const AdminPieces: React.FC = () => {
               {correctingId && <div className="mt-4"><label className={labelClass} htmlFor="correction-reason">Correction reason</label><input id="correction-reason" className={inputClass} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} placeholder="Why this pre-shipment assignment must change" /></div>}
               <div className="flex flex-wrap gap-3 mt-5">
                 <button type="button" className={buttonClass} disabled={deskBusy || (!correctingId && desk.availablePlates.length === 0)} onClick={() => void submitAssignment()}>{deskBusy ? 'Saving…' : correctingId ? 'Save correction' : 'Assign exact plate'}</button>
-                {correctingId && <button type="button" className={quietButtonClass} onClick={() => { setCorrectingId(null); setCorrectionReason(''); }}>Cancel correction</button>}
+                {correctingId && <button type="button" className={quietButtonClass} onClick={() => {
+                  setCorrectingId(null);
+                  setSelectedPlateId('');
+                  setSelectedOrderItemId('');
+                  setManualReference('');
+                  setAssignmentSource('order');
+                  setCorrectionReason('');
+                }}>Cancel correction</button>}
               </div>
               {deskError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{deskError}</p>}
               {deskSuccess && <p className="font-sans text-sm text-green-800 mt-3" role="status">{deskSuccess}</p>}

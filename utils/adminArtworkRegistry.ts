@@ -108,7 +108,17 @@ export function projectIssuedPlateResponse(value: unknown): IssuedPlatePackage {
     undersideSvg: value.undersideSvg as string,
     frontSha256: value.frontSha256 as string,
     undersideSha256: value.undersideSha256 as string,
-    manifest: manifest as unknown as ArtworkPlateManifest,
+    manifest: {
+      schemaVersion: 1,
+      publicCode: manifest.publicCode as string,
+      artworkId: manifest.artworkId as string,
+      editionNumber: manifest.editionNumber as number,
+      publicUrl: manifest.publicUrl as string,
+      ownershipCode: manifest.ownershipCode as string,
+      frontSha256: manifest.frontSha256 as string,
+      undersideSha256: manifest.undersideSha256 as string,
+      generatedAt: manifest.generatedAt as string,
+    },
     ...(typeof value.backupStatus === 'string' ? { backupStatus: value.backupStatus } : {}),
     ...(typeof value.warning === 'string' ? { warning: value.warning } : {}),
   };

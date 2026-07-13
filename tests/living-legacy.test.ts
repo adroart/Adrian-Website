@@ -144,11 +144,13 @@ describe('artwork registry admin helpers', () => {
         frontSha256: 'front-hash',
         undersideSha256: 'back-hash',
         generatedAt: '2026-07-13T00:00:00.000Z',
+        internalEnvelope: 'nested-must-not-pass-through',
       },
       backupStatus: 'verified',
       internalEnvelope: 'must-not-pass-through',
     });
     assert.equal('internalEnvelope' in projected, false);
+    assert.equal('internalEnvelope' in projected.manifest, false);
     assert.deepEqual(Object.keys(projected).sort(), [
       'backupStatus', 'frontSha256', 'frontSvg', 'manifest', 'ownershipCode',
       'publicCode', 'publicUrl', 'undersideSha256', 'undersideSvg',
