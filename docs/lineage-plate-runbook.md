@@ -74,7 +74,25 @@ npx wrangler r2 bucket create adrian-artwork-registry-backup
 R2 receives ciphertext, nonce, key version, and non-secret identity metadata.
 It must never receive a plaintext Ownership Code or encryption key.
 
-### 3. Export D1 before migration
+### 3. Subscribe Stripe order-state events
+
+The shipment gate relies on the local order status being current. In the Stripe
+Dashboard, configure the existing signed webhook endpoint to receive:
+
+- `checkout.session.completed`;
+- `checkout.session.async_payment_succeeded`;
+- `checkout.session.async_payment_failed`;
+- `charge.refunded` (including partial refunds);
+- `charge.dispute.created`;
+- `payment_intent.canceled`;
+- `payment_intent.payment_failed`.
+
+Confirm `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY` are provisioned. Send a
+test event for each reversal path and confirm the order leaves `paid`. A Stripe
+assignment cannot be marked shipped unless its order is still `paid` at the
+exact shipment write.
+
+### 4. Export D1 before migration
 
 Create a dated export outside the repository and verify that it is non-empty:
 
@@ -90,7 +108,7 @@ not a source-control artifact.
 This pre-migration export is rollback evidence only. It does not contain a
 registry canary and cannot prove that a plate can be recovered.
 
-### 4. Apply migrations
+### 5. Apply migrations
 
 First apply all migrations to a local disposable D1 and run the application
 tests. Then apply to production:
@@ -113,7 +131,7 @@ switch the binding. Do not overwrite the live database or delete issued rows as
 an improvised rollback. Once a plate is active, its public code and Ownership
 Code are permanent records.
 
-### 5. Issue a canary and create a post-issuance recovery set
+### 6. Issue a canary and create a post-issuance recovery set
 
 After migrations, secrets, and R2 are configured, issue one clearly labeled
 non-production canary plate through the admin desk. Confirm its encrypted R2
@@ -135,7 +153,7 @@ R2 is defense in depth for encrypted Ownership Codes. It is not a standalone
 database backup: it deliberately omits keeper accounts, private claim evidence,
 fulfillment state, and lineage history.
 
-### 6. Prove restoration and decryption before engraving
+### 7. Prove restoration and decryption before engraving
 
 Use a disposable local or Cloudflare scratch database, never production:
 
@@ -265,9 +283,19 @@ the permanent Ownership Code from the underside. A never-claimed piece binds to
 that account and stamps the fulfillment as claimed. A rescan by the same keeper
 is idempotent.
 
+Email-code and supported social sign-in establish email verification. A
+password account that has not verified its email cannot claim; sign out and use
+the emailed one-time code before retrying.
+
 After any keeper has ever claimed the piece, the permanent code never becomes a
 bearer override again. A different account is routed into the governed claim
 process; it cannot silently take control.
+
+Code-valid first and contested claim attempts create a private evidence record
+containing the verified account identity, email, request IP when Cloudflare
+provides it, user agent, outcome, and time. This evidence is never public and is
+read only through the admin step-up endpoint in bounded pages. Do not copy it
+into certificates, public lineage payloads, support tickets, or ordinary logs.
 
 ## Incident rules
 
