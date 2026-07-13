@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
+import { createHash } from 'node:crypto';
 
 import {
   generateRecoveryCode,
@@ -13,6 +14,12 @@ import {
   decryptOwnershipCode,
   encryptOwnershipCode,
 } from '../utils/ownershipCodeCrypto';
+import {
+  buildArtworkPlatePackage,
+  generatePublicPlateCode,
+  isPublicPlateCode,
+  publicPlateUrl,
+} from '../utils/artworkPlate';
 import {
   birthdayWindowState,
   canSetMotivation,
@@ -68,6 +75,89 @@ const legacyPieceInsert = `
     ('kp-legacy', 'UL-001', 0, 'keeper-legacy', 'legacy-hash',
      'Bali', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', NULL);
 `;
+
+describe('artwork plate fabrication package', () => {
+  it('generates stateless public-code candidates from the human-safe alphabet', () => {
+    for (let index = 0; index < 100; index += 1) {
+      const code = generatePublicPlateCode();
+      assert.match(code, /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/);
+      assert.equal(isPublicPlateCode(code), true);
+      assert.doesNotMatch(code, /[OI01]/);
+    }
+
+    const fixedRandom = {
+      getRandomValues<T extends ArrayBufferView>(array: T): T {
+        new Uint8Array(array.buffer, array.byteOffset, array.byteLength).fill(0);
+        return array;
+      },
+    };
+    assert.equal(generatePublicPlateCode(fixedRandom), 'AR-AAAAAAAA');
+    assert.equal(generatePublicPlateCode(fixedRandom), 'AR-AAAAAAAA');
+  });
+
+  it('uses the exact permanent Adrian URL and rejects invalid public codes', () => {
+    assert.equal(
+      publicPlateUrl('AR-7KQ9M2WX'),
+      'https://adrianrasmussen.com/qr/AR-7KQ9M2WX',
+    );
+    assert.throws(() => publicPlateUrl('AR-O0000000'), /invalid public plate code/i);
+  });
+
+  it('renders engraving-ready QR and underside SVGs with safe text', async () => {
+    const plate = await buildArtworkPlatePackage({
+      publicCode: 'AR-7KQ9M2WX',
+      ownershipCode: 'K7QM-9XTR-2PHV-N4W&',
+      artworkId: 'UL-<100>',
+      editionNumber: 2,
+      generatedAt: '2026-07-13T10:20:30.000Z',
+    });
+
+    assert.equal(plate.publicUrl, 'https://adrianrasmussen.com/qr/AR-7KQ9M2WX');
+    assert.match(plate.frontSvg, /width="42mm" height="42mm"/);
+    assert.match(plate.frontSvg, /data-error-correction="Q"/);
+    assert.match(plate.frontSvg, /data-quiet-zone="4"/);
+    assert.doesNotMatch(plate.frontSvg, /K7QM-9XTR/);
+    assert.match(plate.undersideSvg, /width="70mm" height="25mm"/);
+    assert.match(plate.undersideSvg, />OWNERSHIP CODE</);
+    assert.match(plate.undersideSvg, /Register or transfer at adrianrasmussen\.com/);
+    assert.match(plate.undersideSvg, /K7QM-9XTR-2PHV-N4W&amp;/);
+    assert.doesNotMatch(plate.undersideSvg, /UL-<100>/);
+    assert.match(plate.undersideSvg, /UL-&lt;100&gt;/);
+  });
+
+  it('hashes exact SVG bytes and returns a complete deterministic private manifest', async () => {
+    const input = {
+      publicCode: 'AR-7KQ9M2WX',
+      ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      artworkId: 'UL-100',
+      editionNumber: 2,
+      generatedAt: '2026-07-13T10:20:30.000Z',
+    };
+    const first = await buildArtworkPlatePackage(input);
+    const second = await buildArtworkPlatePackage(input);
+
+    assert.deepEqual(first, second);
+    assert.equal(
+      first.frontSha256,
+      createHash('sha256').update(Buffer.from(first.frontSvg, 'utf8')).digest('hex'),
+    );
+    assert.equal(
+      first.undersideSha256,
+      createHash('sha256').update(Buffer.from(first.undersideSvg, 'utf8')).digest('hex'),
+    );
+    assert.deepEqual(first.manifest, {
+      schemaVersion: 1,
+      publicCode: input.publicCode,
+      artworkId: input.artworkId,
+      editionNumber: input.editionNumber,
+      publicUrl: 'https://adrianrasmussen.com/qr/AR-7KQ9M2WX',
+      ownershipCode: input.ownershipCode,
+      frontSha256: first.frontSha256,
+      undersideSha256: first.undersideSha256,
+      generatedAt: input.generatedAt,
+    });
+  });
+});
 
 describe('ownership code authenticated encryption', () => {
   const keyV1 = Buffer.from(Uint8Array.from({ length: 32 }, (_, index) => index + 1)).toString(
