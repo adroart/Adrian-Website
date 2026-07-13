@@ -87,6 +87,9 @@ npx wrangler d1 export adrian-website --remote \
 Keep the export encrypted at rest. It contains account and commerce data and is
 not a source-control artifact.
 
+This pre-migration export is rollback evidence only. It does not contain a
+registry canary and cannot prove that a plate can be recovered.
+
 ### 4. Apply migrations
 
 First apply all migrations to a local disposable D1 and run the application
@@ -110,11 +113,33 @@ switch the binding. Do not overwrite the live database or delete issued rows as
 an improvised rollback. Once a plate is active, its public code and Ownership
 Code are permanent records.
 
-### 5. Prove restoration and decryption before engraving
+### 5. Issue a canary and create a post-issuance recovery set
+
+After migrations, secrets, and R2 are configured, issue one clearly labeled
+non-production canary plate through the admin desk. Confirm its encrypted R2
+backup is verified, then create a new D1 export:
+
+```bash
+npx wrangler d1 export adrian-website --remote \
+  --output "$HOME/secure-backups/adrian-registry/adrian-website-with-registry-canary.sql"
+```
+
+The recovery set is all three of the following:
+
+1. the **post-issuance** D1 export containing the full registry row and event
+   history;
+2. the matching R2 encrypted envelope;
+3. the separately escrowed versioned encryption key.
+
+R2 is defense in depth for encrypted Ownership Codes. It is not a standalone
+database backup: it deliberately omits keeper accounts, private claim evidence,
+fulfillment state, and lineage history.
+
+### 6. Prove restoration and decryption before engraving
 
 Use a disposable local or Cloudflare scratch database, never production:
 
-1. Restore the exported SQL into the scratch database.
+1. Restore `adrian-website-with-registry-canary.sql` into the scratch database.
 2. Bind a scratch R2 bucket containing one copied encrypted plate envelope.
 3. Configure the scratch environment with the escrowed versioned key.
 4. Start the full Pages runtime and sign in as an admin.
@@ -127,6 +152,11 @@ Use a disposable local or Cloudflare scratch database, never production:
 
 Do not engrave if the D1 export, R2 envelope, and escrowed key have not been
 proven together in this canary.
+
+After the canary passes, set `LAUNCH_FLAGS.livingLegacy` to `true`, build again,
+and deploy deliberately. It remains `false` in source until this gate is
+complete so an unrelated deployment cannot expose a partially provisioned
+claim surface.
 
 ## Issue a plate
 
@@ -144,6 +174,8 @@ proven together in this canary.
    SHA-256 hashes with the manifest before sending files to the engraver.
 7. Keep the manifest private. It contains the Ownership Code and is not a
    certificate for the buyer.
+8. After issuance and before engraving, create a fresh encrypted D1 export. A
+   pre-issuance export plus R2 is not sufficient to reconstruct the registry.
 
 If backup fails, use **Retry encrypted backup**. Do not activate, assign, or ship
 the plate while the backup is unverified.
@@ -265,4 +297,3 @@ Before every new batch, and at least quarterly while pieces are circulating:
 4. Review reveal, activation, fulfillment correction, and shipment audit events.
 5. Confirm the Adrian domain, Cloudflare project, D1 database, R2 bucket, and
    password-manager escrow remain under the intended custodian's control.
-

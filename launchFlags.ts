@@ -106,6 +106,7 @@ export const LAUNCH_FLAGS = {
    *
    * Production configuration, migrations, restore checks, fabrication, and
    * first-shipment procedure are documented in docs/lineage-plate-runbook.md.
+   * Keep this false until that runbook's production and prototype gates pass.
    */
-  livingLegacy: true,
+  livingLegacy: false,
 };
