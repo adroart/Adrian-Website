@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
@@ -46,10 +46,15 @@ const registrySchema = () =>
 const sqliteJson = (sql: string) => {
   const output = execFileSync('sqlite3', ['-json', ':memory:'], {
     encoding: 'utf8',
-    input: sql,
+    input: `PRAGMA foreign_keys = ON;\n${sql}`,
   }).trim();
   return output ? JSON.parse(output) : [];
 };
+const sqliteResult = (sql: string) =>
+  spawnSync('sqlite3', [':memory:'], {
+    encoding: 'utf8',
+    input: `PRAGMA foreign_keys = ON;\n${sql}`,
+  });
 
 const legacyPieceInsert = `
   INSERT INTO keeper_pieces
@@ -213,6 +218,53 @@ describe('artwork registry migrations', () => {
         SELECT COUNT(*) AS count FROM piece_fulfillments;
       `);
     assert.equal(duplicateCount.count, 1);
+
+    const [duplicateOrderItemCount] = sqliteJson(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces
+        (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-a', 'UL-030', 0, 'hash-a'), ('kp-b', 'UL-031', 0, 'hash-b');
+      INSERT INTO orders
+        (id, stripe_session_id, email, status, amount_total, currency)
+      VALUES (1, 'cs_paid', 'buyer@example.com', 'paid', 10000, 'USD');
+      INSERT INTO order_items
+        (id, order_id, product_id, quantity, amount_subtotal)
+      VALUES (1, 1, 'UL-030', 1, 10000);
+      INSERT INTO piece_fulfillments
+        (id, keeper_piece_id, order_item_id, assignment_type,
+         intended_recipient_reference, assigned_at)
+      VALUES ('pf-a', 'kp-a', 1, 'stripe_order', 'order:1', '2026-07-13T00:00:00Z');
+      INSERT OR IGNORE INTO piece_fulfillments
+        (id, keeper_piece_id, order_item_id, assignment_type,
+         intended_recipient_reference, assigned_at)
+      VALUES ('pf-b', 'kp-b', 1, 'stripe_order', 'order:1', '2026-07-13T00:00:00Z');
+      SELECT COUNT(*) AS count FROM piece_fulfillments;
+    `);
+    assert.equal(duplicateOrderItemCount.count, 1);
+  });
+
+  it('rejects fulfillment references to missing pieces and order items', () => {
+    const orphanPiece = sqliteResult(`
+      ${registrySchema()}
+      INSERT INTO piece_fulfillments
+        (id, keeper_piece_id, assignment_type, intended_recipient_reference, assigned_at)
+      VALUES ('pf-orphan', 'kp-missing', 'manual', 'studio-handoff:one', '2026-07-13T00:00:00Z');
+    `);
+    assert.notEqual(orphanPiece.status, 0);
+    assert.match(orphanPiece.stderr, /FOREIGN KEY constraint failed/);
+
+    const orphanOrderItem = sqliteResult(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces
+        (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-sale', 'UL-040', 0, 'hash-sale');
+      INSERT INTO piece_fulfillments
+        (id, keeper_piece_id, order_item_id, assignment_type,
+         intended_recipient_reference, assigned_at)
+      VALUES ('pf-orphan', 'kp-sale', 999, 'stripe_order', 'order:999', '2026-07-13T00:00:00Z');
+    `);
+    assert.notEqual(orphanOrderItem.status, 0);
+    assert.match(orphanOrderItem.stderr, /FOREIGN KEY constraint failed/);
   });
 });
 
