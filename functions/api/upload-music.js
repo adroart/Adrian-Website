@@ -7,21 +7,12 @@
  * R2 binding: MUSIC_BUCKET → adrian-music bucket
  */
 
+import { isAdminAuthed } from './_lib/admin.js';
+
 const PUBLIC_BASE = 'https://audio.adrianrasmussen.com';
-const COOKIE_NAME = 'admin_session';
-
-function getCookie(request, name) {
-  const header = request.headers.get('Cookie') || '';
-  const match = header.split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
-  return match ? match.slice(name.length + 1) : null;
-}
-
-function isAuthed(request, env) {
-  return getCookie(request, COOKIE_NAME) === env.UPLOAD_SECRET;
-}
 
 export async function onRequestPost({ request, env }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAdminAuthed(request, env))) {
     return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
       status: 401, headers: { 'Content-Type': 'application/json' },
     });
@@ -59,7 +50,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAdminAuthed(request, env))) {
     return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
       status: 401, headers: { 'Content-Type': 'application/json' },
     });

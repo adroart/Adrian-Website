@@ -5,7 +5,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { ensureUser } from '../_lib/db.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -15,7 +15,7 @@ export async function onRequest(context) {
   if (auth instanceof Response) return auth;
   if (!env.DB) return jsonResponse([], { status: 200 }, request, env);
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
   if (!user) return jsonResponse([], { status: 200 }, request, env);
 
   const { results: cols } = await env.DB

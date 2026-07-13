@@ -6,18 +6,9 @@
  * Storage: a single `poems/index.json` object in the existing R2 audio bucket (MUSIC_BUCKET).
  */
 
-const COOKIE_NAME = 'admin_session';
+import { isAdminAuthed } from './_lib/admin.js';
+
 const KEY = 'poems/index.json';
-
-function getCookie(request, name) {
-    const header = request.headers.get('Cookie') || '';
-    const match = header.split(';').map(c => c.trim()).find(c => c.startsWith(`${name}=`));
-    return match ? match.slice(name.length + 1) : null;
-}
-
-function isAuthed(request, env) {
-    return getCookie(request, COOKIE_NAME) === env.UPLOAD_SECRET;
-}
 
 async function readPoems(env) {
     const obj = await env.MUSIC_BUCKET.get(KEY);
@@ -57,7 +48,7 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-    if (!isAuthed(request, env)) return json({ ok: false, error: 'Unauthorized' }, 401);
+    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
 
     let body;
     try {
@@ -85,7 +76,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-    if (!isAuthed(request, env)) return json({ ok: false, error: 'Unauthorized' }, 401);
+    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
 
     const slug = new URL(request.url).searchParams.get('slug');
     if (!slug) return json({ ok: false, error: 'Missing slug' }, 400);

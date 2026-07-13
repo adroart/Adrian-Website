@@ -10,7 +10,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { ensureUser } from '../_lib/db.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -21,7 +21,7 @@ export async function onRequest(context) {
 
   if (!env.DB) return jsonResponse([], { status: 200 }, request, env);
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
   if (!user) return jsonResponse([], { status: 200 }, request, env);
 
   const { results: ordersRows } = await env.DB
@@ -64,7 +64,7 @@ export async function onRequest(context) {
     stripePaymentIntentId: o.stripe_payment_intent_id ?? null,
     status: o.status,
     amountTotal: o.amount_total,
-    currency: o.currency,
+    currency: (o.currency || '').toUpperCase(),
     createdAt: new Date(o.created_at * 1000).toISOString(),
     items: itemsByOrder.get(o.id) ?? [],
   }));

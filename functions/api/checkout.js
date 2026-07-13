@@ -159,7 +159,7 @@ export async function onRequestPost(context) {
   // to verify it, attach the user's Stripe Customer ID so the order rolls
   // up into a single Stripe customer record per Adrian's customer.
   let stripeCustomerId = null;
-  if (env.CLERK_SECRET_KEY && env.DB) {
+  if (env.DB) {
     try {
       const { verifyRequest } = await import('./_lib/clerk.js');
       const { getUserByClerkId } = await import('./_lib/db.js');

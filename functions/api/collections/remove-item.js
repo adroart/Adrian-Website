@@ -4,7 +4,7 @@
  */
 
 import { requireUser, jsonResponse } from '../_lib/clerk.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { ensureUser } from '../_lib/db.js';
 
 const KINDS = new Set(['card', 'artwork', 'product']);
 
@@ -18,7 +18,7 @@ export async function onRequest(context) {
   if (auth instanceof Response) return auth;
   if (!env.DB) return jsonResponse({ error: 'db_not_configured' }, { status: 503 }, request, env);
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await ensureUser(env.DB, { userId: auth.userId, email: auth.email });
   if (!user) return jsonResponse({ ok: true }, { status: 200 }, request, env);
 
   let body;

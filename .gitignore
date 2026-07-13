@@ -33,6 +33,9 @@ dist-ssr
 .env.*
 !.env.production
 
+# Wrangler / Miniflare local emulator state (local D1 + R2 data, never commit)
+.wrangler/
+
 # Claude Code
 .claude/
 .codex/
