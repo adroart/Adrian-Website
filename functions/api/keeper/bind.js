@@ -1,10 +1,10 @@
 /**
  * POST /api/keeper/bind
  *
- * Body: { recoveryCode: string, pieceId: string, editionNumber?: number }
+ * Body: { ownershipCode: string, pieceId: string, editionNumber?: number }
  *
  * Binds the signed-in user as the keeper of a physical piece. The proof of
- * ownership is the long recovery code printed under a scratch panel on the back
+ * ownership is the permanent Ownership Code printed on the underside
  * of the art (utils/recoveryCode.ts) — distinct from the public QR number,
  * which is look-only. The code is hashed and matched; the plaintext is never
  * stored or logged.
@@ -19,8 +19,7 @@
  *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that).
  *   4. Live keeper bound (released_at NULL)→ idempotent if it is YOU, else the
  *                                            contested-claim handoff (202).
- *   5. Released piece (released_at set)    → re-bindable like case 2: the printed
- *                                            code re-binds the next holder.
+ *   5. Any row ever claimed, even released → governed contested-claim handoff.
  *
  * Returns: { ok: true, keeper: { pieceId, editionNumber, claimedAt } } on a
  * fresh bind; the same shape (idempotent) when the caller is already the keeper.
@@ -93,7 +92,11 @@ export async function onRequest(context) {
   }
 
   // Whitelist discipline: the server decides what reaches D1.
-  const recoveryCode = typeof body?.recoveryCode === 'string' ? body.recoveryCode : '';
+  // ownershipCode is canonical; recoveryCode remains an input alias for older
+  // clients during the terminology migration.
+  const ownershipCode = typeof body?.ownershipCode === 'string'
+    ? body.ownershipCode
+    : (typeof body?.recoveryCode === 'string' ? body.recoveryCode : '');
   const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim() : '';
   const editionNumber = Number.isInteger(body?.editionNumber) ? body.editionNumber : 0;
   // Optional evidence note, used ONLY on the contested-claim path ("bought at
@@ -101,8 +104,8 @@ export async function onRequest(context) {
   // required, capped to mandalacodes' CLAIM_REQUEST_NOTE_MAX (500).
   const note =
     typeof body?.note === 'string' && body.note.trim() ? body.note.trim().slice(0, 500) : undefined;
-  if (!recoveryCode || !pieceId) {
-    return json({ ok: false, error: 'recoveryCode and pieceId are required' }, 400);
+  if (!ownershipCode || !pieceId) {
+    return json({ ok: false, error: 'ownershipCode and pieceId are required' }, 400);
   }
 
   // Resolve the internal user row (keeper_user_id is the opaque Better Auth id).
@@ -112,7 +115,7 @@ export async function onRequest(context) {
     return json({ ok: false, error: 'account_not_synced' }, 409);
   }
 
-  const codeHash = await hashRecoveryCode(recoveryCode);
+  const codeHash = await hashRecoveryCode(ownershipCode);
   const nowIso = new Date().toISOString();
 
   try {
@@ -148,18 +151,34 @@ export async function onRequest(context) {
       );
     }
 
-    // ── Case 4: a LIVE keeper already holds this piece ───────────────────────
-    // keeper_user_id set AND released_at NULL. This is the only arm that routes
-    // into the contested-claim handoff. A registered-but-unclaimed row (no
-    // keeper) must NOT reach here — that is the bug this rewrite kills.
-    if (existing.keeper_user_id && !existing.released_at) {
-      // Already bound to THIS user → idempotent success (re-scan / refresh).
-      if (existing.keeper_user_id === auth.userId) {
-        return json({
-          ok: true,
-          keeper: { pieceId, editionNumber, claimedAt: existing.claimed_at },
-        });
-      }
+    // Possession of the exact permanent Ownership Code is required before any
+    // direct bind or governed claim. A guessed code cannot notify a keeper or
+    // create claim traffic.
+    if (existing.recovery_code_hash !== codeHash) {
+      return json(
+        {
+          ok: false,
+          error: 'code_mismatch',
+          message: 'That Ownership Code did not match. Check the code on the underside of the art.',
+        },
+        403,
+      );
+    }
+
+    // A current keeper's re-scan is idempotent. It also repairs fulfillment
+    // claimed_at if an earlier non-batch D1 fallback bound the keeper before
+    // that secondary stamp completed.
+    if (existing.keeper_user_id === auth.userId && !existing.released_at) {
+      await repairFulfillmentClaim(env, existing.id, existing.claimed_at || nowIso);
+      return json({
+        ok: true,
+        keeper: { pieceId, editionNumber, claimedAt: existing.claimed_at },
+      });
+    }
+
+    // Any row that has ever been claimed remains governed forever. Release
+    // does not turn the permanent Ownership Code back into a bearer instrument.
+    if (existing.claimed_at || existing.keeper_user_id) {
       // Bound to someone else → a CONTESTED claim. We do NOT 409 and we do NOT
       // steal the binding. We open a pending claim request on the shared store
       // (mandalacodes) and hand the requester into the patient escalation
@@ -240,50 +259,26 @@ export async function onRequest(context) {
       );
     }
 
-    // ── Cases 2, 3, 5: the row is bindable (registered-unclaimed, OR released) ─
-    // Reaching here means there is NO live keeper: either the piece was
-    // registered and never claimed (keeper_user_id NULL), or it was released
-    // (released_at set) and is back in circulation for the next holder. Both
-    // resolve the same way: the printed recovery code is the proof. We compare
-    // the incoming code's hash to the stored hash and bind on a match.
-    //
-    // Released pieces (case 5) route through this same unclaimed-and-registered
-    // path on purpose: a release puts the piece back to "awaiting its first new
-    // keeper", and whoever physically holds it (and thus the printed code) is
-    // the legitimate next keeper. We do NOT route a release into the contested
-    // path, because there is no live holder to contest. If the artist wanted a
-    // fresh code on release, re-registration mints one; the stored hash is
-    // whatever currently anchors the piece.
-    if (existing.recovery_code_hash !== codeHash) {
-      // ── Case 3: code does NOT match ────────────────────────────────────────
-      // Reject. We do not reveal whether the piece exists beyond "the code did
-      // not match" — same message whether unclaimed or released.
-      return json(
-        {
-          ok: false,
-          error: 'code_mismatch',
-          message: 'That recovery code did not match. Check the code on the back of the art.',
-        },
-        403,
-      );
+    // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
+    // Only a never-claimed row reaches here. Stamp this user as the keeper and
+    // record claimed_at and close its fulfillment. D1 batch keeps these stamps
+    // atomic; runtimes without batch use a guarded bind plus repairable stamp.
+    const keeperMutation = env.DB.prepare(
+      `UPDATE keeper_pieces
+          SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
+        WHERE id = ?3
+          AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL`,
+    ).bind(auth.userId, nowIso, existing.id);
+    const fulfillmentMutation = fulfillmentClaimStatement(env, existing.id, nowIso);
+    let updated;
+    if (typeof env.DB.batch === 'function') {
+      [updated] = await env.DB.batch([keeperMutation, fulfillmentMutation]);
+    } else {
+      updated = await keeperMutation.run();
+      if (updated?.success && (updated.meta?.changes ?? 0) > 0) {
+        await repairFulfillmentClaim(env, existing.id, nowIso);
+      }
     }
-
-    // ── Case 2 (and case 5 on a matching code): FIRST BIND ───────────────────
-    // The code matches the registered hash. Stamp this user as the keeper and
-    // record claimed_at. UPDATE (not INSERT): the row already exists from
-    // registration. We bind only when there is no live keeper, so the WHERE
-    // guard (keeper_user_id IS NULL AND released_at NULL, OR released_at set)
-    // also defends against a concurrent first-bind racing us. On release we
-    // clear released_at so the row is active again under the new keeper.
-    const updated = await env.DB
-      .prepare(
-        `UPDATE keeper_pieces
-            SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
-          WHERE id = ?3
-            AND (keeper_user_id IS NULL OR released_at IS NOT NULL)`,
-      )
-      .bind(auth.userId, nowIso, existing.id)
-      .run();
 
     if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
       // The guard matched no row → a concurrent bind beat us to this piece.
@@ -308,5 +303,22 @@ export async function onRequest(context) {
     // the hash anyway).
     console.error('[keeper/bind] error:', err?.message);
     return json({ ok: false, error: 'bind_failed' }, 500);
+  }
+}
+
+function fulfillmentClaimStatement(env, keeperPieceId, claimedAt) {
+  return env.DB.prepare(
+    `UPDATE piece_fulfillments SET claimed_at = ?1
+      WHERE keeper_piece_id = ?2 AND claimed_at IS NULL`,
+  ).bind(claimedAt, keeperPieceId);
+}
+
+async function repairFulfillmentClaim(env, keeperPieceId, claimedAt) {
+  try {
+    await fulfillmentClaimStatement(env, keeperPieceId, claimedAt).run();
+  } catch (error) {
+    // The keeper bind remains valid in runtimes lacking D1 batch. A later
+    // idempotent re-scan repairs this secondary lifecycle stamp.
+    console.error('[keeper/bind] fulfillment claim stamp failed:', error?.message);
   }
 }

@@ -46,6 +46,7 @@ import {
 // the flag on inside the registration suite (and restore it) so the same handler
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
+import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
@@ -1950,6 +1951,7 @@ mock.module('../functions/api/_lib/clerk.js', {
 // edition_number); UNIQUE(piece_id, edition_number) is honoured.
 function makeKeeperDb() {
   const pieces: any[] = [];
+  const fulfillments: any[] = [];
   const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
 
   function findActive(pieceId: string, edition: number) {
@@ -2027,15 +2029,15 @@ function makeKeeperDb() {
       return { kind: 'run', meta: { changes: row ? 1 : 0 } };
     }
 
-    // bind UPDATE: first bind / re-bind a released piece (guarded WHERE)
+    // bind UPDATE: first bind only (guarded WHERE)
     if (
-      /^UPDATE keeper_pieces SET keeper_user_id = \?1, claimed_at = \?2, released_at = NULL WHERE id = \?3 AND \(keeper_user_id IS NULL OR released_at IS NOT NULL\)/i.test(
+      /^UPDATE keeper_pieces SET keeper_user_id = \?1, claimed_at = \?2, released_at = NULL WHERE id = \?3 AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL/i.test(
         s,
       )
     ) {
       const [keeperUserId, claimedAt, id] = params;
       const row = pieces.find((r) => r.id === id);
-      const guardPasses = row && (row.keeper_user_id == null || row.released_at != null);
+      const guardPasses = row && row.keeper_user_id == null && row.claimed_at == null && row.released_at == null;
       if (row && guardPasses) {
         row.keeper_user_id = keeperUserId;
         row.claimed_at = claimedAt;
@@ -2043,6 +2045,13 @@ function makeKeeperDb() {
         return { kind: 'run', meta: { changes: 1 } };
       }
       return { kind: 'run', meta: { changes: 0 } };
+    }
+
+    if (/^UPDATE piece_fulfillments SET claimed_at = \?1 WHERE keeper_piece_id = \?2 AND claimed_at IS NULL/i.test(s)) {
+      const [claimedAt, keeperPieceId] = params;
+      const row = fulfillments.find((f) => f.keeper_piece_id === keeperPieceId && !f.claimed_at);
+      if (row) row.claimed_at = claimedAt;
+      return { kind: 'run', meta: { changes: row ? 1 : 0 } };
     }
 
     // list
@@ -2075,7 +2084,7 @@ function makeKeeperDb() {
     },
   };
 
-  return { DB, pieces, users };
+  return { DB, pieces, users, fulfillments };
 }
 
 function bindReq(body: unknown) {
@@ -2086,6 +2095,150 @@ function bindReq(body: unknown) {
   });
 }
 
+function fulfillmentReq(method: string, body?: unknown) {
+  return new Request('https://adrianrasmussen.com/api/admin/piece-fulfillments', {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: `admin_session=${ADMIN_SECRET}`,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+function makeFulfillmentDb() {
+  const pieces: any[] = [
+    { id: 'kp-ready', piece_id: 'UL-100', edition_number: 0, public_code: 'AR-ABCDEFGH', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
+    { id: 'kp-second', piece_id: 'UL-101', edition_number: 0, public_code: 'AR-BCDEFGHJ', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
+    { id: 'kp-generated', piece_id: 'UL-102', edition_number: 0, public_code: 'AR-CDEFGHJK', plate_status: 'generated', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null },
+    { id: 'kp-unbacked', piece_id: 'UL-103', edition_number: 0, public_code: 'AR-DEFGHJKL', plate_status: 'active', backup_status: 'pending', keeper_user_id: null, claimed_at: null, released_at: null },
+    { id: 'kp-claimed', piece_id: 'UL-104', edition_number: 0, public_code: 'AR-EFGHJKLM', plate_status: 'active', backup_status: 'verified', keeper_user_id: 'keeper-one', claimed_at: '2026-07-12T00:00:00Z', released_at: null },
+  ];
+  const orders: any[] = [
+    { id: 10, stripe_session_id: 'cs_paid', email: 'buyer@example.com', status: 'paid' },
+    { id: 11, stripe_session_id: 'cs_pending', email: 'wait@example.com', status: 'pending' },
+  ];
+  const orderItems: any[] = [
+    { id: 100, order_id: 10, product_id: 'UL-100', description: 'Original', quantity: 1, amount_subtotal: 10000 },
+    { id: 101, order_id: 11, product_id: 'UL-101', description: 'Pending original', quantity: 1, amount_subtotal: 10000 },
+    { id: 102, order_id: 10, product_id: 'UL-101', description: 'Two prints', quantity: 2, amount_subtotal: 20000 },
+  ];
+  const fulfillments: any[] = [];
+  const audits: any[] = [];
+
+  const normalize = (sql: string) => sql.replace(/\s+/g, ' ').trim();
+  function execute(sql: string, values: any[]) {
+    const s = normalize(sql);
+    if (/^SELECT .* FROM keeper_pieces kp LEFT JOIN piece_fulfillments/i.test(s)) {
+      return { results: pieces.filter((p) => p.plate_status === 'active' && p.backup_status === 'verified' && !p.keeper_user_id && !p.claimed_at && !fulfillments.some((f) => f.keeper_piece_id === p.id)) };
+    }
+    if (/^SELECT .* FROM piece_fulfillments pf JOIN keeper_pieces/i.test(s)) {
+      return { results: fulfillments.map((f) => ({ ...f, ...pieces.find((p) => p.id === f.keeper_piece_id), keeper_piece_id: f.keeper_piece_id })) };
+    }
+    if (/^SELECT .* FROM keeper_pieces WHERE id = \?1/i.test(s)) return { row: pieces.find((p) => p.id === values[0]) || null };
+    if (/^SELECT .* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.id = \?1/i.test(s)) {
+      const oi = orderItems.find((item) => item.id === values[0]);
+      const order = oi && orders.find((candidate) => candidate.id === oi.order_id);
+      return { row: oi && order ? { ...oi, order_status: order.status, order_reference: `order:${order.id}` } : null };
+    }
+    if (/^SELECT .* FROM order_items oi JOIN orders o/i.test(s)) {
+      return { results: orderItems.filter((oi) => orders.find((o) => o.id === oi.order_id)?.status === 'paid' && oi.quantity === 1 && !fulfillments.some((f) => f.order_item_id === oi.id)).map((oi) => ({ ...oi, order_status: 'paid', order_reference: `order:${oi.order_id}`, buyer_email: orders.find((o) => o.id === oi.order_id)?.email })) };
+    }
+    if (/^SELECT .* FROM piece_fulfillments WHERE id = \?1/i.test(s)) return { row: fulfillments.find((f) => f.id === values[0]) || null };
+    if (/^INSERT INTO piece_fulfillments/i.test(s)) {
+      const [id, keeper_piece_id, order_item_id, assignment_type, reference, at] = values;
+      if (fulfillments.some((f) => f.keeper_piece_id === keeper_piece_id || (order_item_id != null && f.order_item_id === order_item_id))) throw new Error('UNIQUE constraint failed');
+      fulfillments.push({ id, keeper_piece_id, order_item_id, assignment_type, intended_recipient_reference: reference, assigned_at: at, shipped_at: null, claimed_at: null, corrected_at: null, correction_reason: null });
+      return { changes: 1 };
+    }
+    if (/^UPDATE piece_fulfillments SET keeper_piece_id = \?1/i.test(s)) {
+      const [keeperPieceId, orderItemId, assignmentType, reference, correctedAt, reason, id] = values;
+      const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
+      if (!row) return { changes: 0 };
+      Object.assign(row, { keeper_piece_id: keeperPieceId, order_item_id: orderItemId, assignment_type: assignmentType, intended_recipient_reference: reference, corrected_at: correctedAt, correction_reason: reason });
+      return { changes: 1 };
+    }
+    if (/^UPDATE piece_fulfillments SET shipped_at = \?1/i.test(s)) {
+      const [shippedAt, id] = values;
+      const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
+      if (!row) return { changes: 0 };
+      row.shipped_at = shippedAt;
+      return { changes: 1 };
+    }
+    if (/^INSERT INTO ownership_code_audit/i.test(s)) {
+      audits.push({ keeper_piece_id: values[1], action: values[2], request_id: values[3], outcome: values[4], created_at: values[5] });
+      return { changes: 1 };
+    }
+    throw new Error(`fulfillment fake D1: unhandled statement: ${s}`);
+  }
+
+  const DB = {
+    prepare(sql: string) {
+      let values: any[] = [];
+      const statement: any = {
+        bind(...bound: any[]) { values = bound; return statement; },
+        async first() { return execute(sql, values).row ?? null; },
+        async all() { return { results: execute(sql, values).results || [] }; },
+        async run() { const result = execute(sql, values); return { success: true, meta: { changes: result.changes ?? 0 } }; },
+      };
+      return statement;
+    },
+  };
+  return { DB, pieces, orders, orderItems, fulfillments, audits };
+}
+
+describe('admin piece fulfillment desk', () => {
+  it('safely lists only ready unassigned plates, paid single order items, and assignments', async () => {
+    const fixture = makeFulfillmentDb();
+    const response = await adminPieceFulfillments({ request: fulfillmentReq('GET'), env: { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET } });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.deepEqual(body.availablePlates.map((row: any) => row.id), ['kp-ready', 'kp-second']);
+    assert.deepEqual(body.availableOrderItems.map((row: any) => row.id), [100]);
+    assert.equal(body.availableOrderItems[0].buyerEmail, 'buyer@example.com');
+    assert.doesNotMatch(JSON.stringify(body), /ownership|recovery|ciphertext|nonce|postal|shipping_address/i);
+  });
+
+  it('assigns exactly one paid order item or opaque manual reference and rejects unsafe pieces', async () => {
+    const fixture = makeFulfillmentDb();
+    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const sale = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
+    assert.equal(sale.status, 201, JSON.stringify(await sale.clone().json()));
+    assert.equal(fixture.fulfillments[0].intended_recipient_reference, 'order:10');
+    assert.equal(JSON.stringify(fixture.fulfillments).includes('buyer@example.com'), false);
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 100 }), env })).status, 409);
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 101 }), env })).status, 409);
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 102 }), env })).status, 400);
+    for (const keeperPieceId of ['kp-generated', 'kp-unbacked', 'kp-claimed']) {
+      assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId, manualReference: `studio:${keeperPieceId}` }), env })).status, 409);
+    }
+    const manual = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', manualReference: 'studio-handoff:gift-7' }), env });
+    assert.equal(manual.status, 201);
+    assert.equal(fixture.fulfillments[1].assignment_type, 'manual');
+    assert.equal(fixture.audits.filter((row) => row.action === 'fulfillment_assign').length, 2);
+  });
+
+  it('corrects only before shipment, ships only ready plates, and makes shipment idempotent', async () => {
+    const fixture = makeFulfillmentDb();
+    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:wrong' }), env });
+    const id = fixture.fulfillments[0].id;
+    const correction = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-second', manualReference: 'studio:right', reason: 'Packing selection corrected' }), env });
+    assert.equal(correction.status, 200);
+    assert.equal(fixture.fulfillments[0].keeper_piece_id, 'kp-second');
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:x' }), env })).status, 400);
+    const shipped = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: id }), env });
+    assert.equal(shipped.status, 200);
+    const shippedAt = fixture.fulfillments[0].shipped_at;
+    const reshipped = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: id }), env });
+    assert.equal(reshipped.status, 200);
+    assert.equal(fixture.fulfillments[0].shipped_at, shippedAt);
+    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:late', reason: 'too late' }), env })).status, 409);
+    assert.deepEqual(fixture.audits.map((row) => row.action), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
+    assert.doesNotMatch(JSON.stringify(fixture.audits), /studio:|buyer@/i);
+  });
+});
+
 describe('keeper bind lifecycle (register → first-bind → contested)', () => {
   it('walks the full happy path and the contested handoff', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
@@ -2095,7 +2248,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users } = makeKeeperDb();
+      const { DB, pieces, users, fulfillments } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -2108,6 +2261,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(pieces.length, 1);
       assert.equal(pieces[0].keeper_user_id, null);
       assert.equal(pieces[0].claimed_at, null);
+      fulfillments.push({ id: 'pf-bind', keeper_piece_id: pieces[0].id, claimed_at: null });
 
       // Bind env: the bridge secret is set so the contested path actually fires.
       const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
@@ -2124,6 +2278,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(pieces.length, 1);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
       assert.ok(pieces[0].claimed_at);
+      assert.equal(fulfillments[0].claimed_at, pieces[0].claimed_at);
 
       // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
       const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
@@ -2155,6 +2310,19 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(bridgeCalled, 1);
       // The binding was NOT stolen: user-first is still the keeper.
       assert.equal(pieces[0].keeper_user_id, 'user-first');
+
+      // A copied permanent code is not enough to open a governed claim.
+      const wrongContest = await bind({ request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(wrongContest.status, 403);
+      assert.equal(bridgeCalled, 1);
+
+      // Once claimed, release never turns the permanent Ownership Code back
+      // into a bearer instrument. A later holder enters the governed path.
+      pieces[0].released_at = '2026-07-13T12:00:00Z';
+      const releasedContest = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(releasedContest.status, 202);
+      assert.equal(pieces[0].keeper_user_id, 'user-first');
+      assert.equal(bridgeCalled, 2);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, issuanceKey: 'keeper-negative' }), env: adminEnv });
