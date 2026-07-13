@@ -1,3 +1,8 @@
+-- Deployment precondition: production was audited with zero keeper_pieces rows,
+-- so no migration_baseline events need to be synthesized. If a non-empty
+-- environment is migrated later, create one migration_baseline genesis event
+-- per existing keeper_pieces row before enabling lineage-writing application code.
+
 -- Private proof retained for governed ownership claims. This table is admin-only.
 CREATE TABLE IF NOT EXISTS artwork_claim_evidence (
   id TEXT PRIMARY KEY,
@@ -18,7 +23,11 @@ CREATE TABLE IF NOT EXISTS artwork_lineage_events (
   id TEXT PRIMARY KEY,
   keeper_piece_id TEXT NOT NULL REFERENCES keeper_pieces(id) ON DELETE RESTRICT,
   sequence INTEGER NOT NULL CHECK (sequence > 0),
-  event_type TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN (
+    'issued', 'activated', 'fulfillment_assign', 'fulfillment_correct',
+    'fulfillment_correction_out', 'fulfillment_correction_in',
+    'fulfillment_ship', 'first_bound', 'migration_baseline'
+  )),
   event_at TEXT NOT NULL,
   previous_hash TEXT,
   event_hash TEXT NOT NULL,

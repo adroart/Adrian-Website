@@ -92,7 +92,7 @@ export async function onRequest(context) {
       {
         ok: false,
         error: 'verified_email_required',
-        message: 'Verify your account email before claiming artwork.',
+        message: 'Verify your email before claiming artwork. If you just verified it, sign out and sign in again with the email code.',
       },
       403,
     );
@@ -305,7 +305,9 @@ export async function onRequest(context) {
             OR (plate_status = 'active' AND backup_status = 'verified')
           )`,
     ).bind(auth.userId, nowIso, existing.id);
-    const fulfillmentMutation = fulfillmentClaimStatement(env, existing.id, nowIso);
+    const fulfillmentMutation = fulfillmentClaimStatement(
+      env, existing.id, nowIso, auth.userId,
+    );
     if (typeof env.DB.batch !== 'function') {
       return json({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }
@@ -324,6 +326,8 @@ export async function onRequest(context) {
       userAgent: request.headers.get('User-Agent'),
       outcome: 'first_bound',
       createdAt: nowIso,
+      requireKeeperUserId: auth.userId,
+      requireClaimedAt: nowIso,
     });
     const [updated] = await env.DB.batch([
       keeperMutation,
@@ -358,11 +362,15 @@ export async function onRequest(context) {
   }
 }
 
-function fulfillmentClaimStatement(env, keeperPieceId, claimedAt) {
+function fulfillmentClaimStatement(env, keeperPieceId, claimedAt, keeperUserId = null) {
   return env.DB.prepare(
     `UPDATE piece_fulfillments SET claimed_at = ?1
-      WHERE keeper_piece_id = ?2 AND claimed_at IS NULL`,
-  ).bind(claimedAt, keeperPieceId);
+      WHERE keeper_piece_id = ?2 AND claimed_at IS NULL
+        AND (?3 IS NULL OR EXISTS (
+          SELECT 1 FROM keeper_pieces
+           WHERE id = ?2 AND keeper_user_id = ?3 AND claimed_at = ?1
+        ))`,
+  ).bind(claimedAt, keeperPieceId, keeperUserId);
 }
 
 async function repairFulfillmentClaim(env, keeperPieceId, claimedAt) {

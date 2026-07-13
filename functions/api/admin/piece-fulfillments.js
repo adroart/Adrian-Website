@@ -326,18 +326,46 @@ async function correctFulfillment(env, body) {
     reason,
     existing.id,
   );
-  const result = await mutateWithAudit(
-    env,
+  const result = await mutateCorrectionWithLineage(env, {
     mutation,
-    piece.id,
-    'fulfillment_correct',
-    'correction_attempt',
+    oldKeeperPieceId: existing.keeper_piece_id,
+    newKeeperPieceId: piece.id,
     correctedAt,
-  );
+  });
   if ((result?.meta?.changes ?? 0) === 0) {
     return jsonResponse({ ok: false, error: 'correction_conflict' }, 409);
   }
   return jsonResponse({ ok: true, fulfillment: { id: existing.id, correctedAt } });
+}
+
+async function mutateCorrectionWithLineage(env, {
+  mutation, oldKeeperPieceId, newKeeperPieceId, correctedAt,
+}) {
+  if (typeof env.DB.batch !== 'function') throw new Error('atomic write unavailable');
+  const moved = oldKeeperPieceId !== newKeeperPieceId;
+  const incoming = await prepareNextLineageEvent(env, {
+    keeperPieceId: newKeeperPieceId,
+    eventType: moved ? 'fulfillment_correction_in' : 'fulfillment_correct',
+    eventAt: correctedAt,
+    publicPayload: {},
+    onlyIfPreviousChanged: true,
+  });
+  const statements = [mutation, incoming.statement];
+  if (moved) {
+    const outgoing = await prepareNextLineageEvent(env, {
+      keeperPieceId: oldKeeperPieceId,
+      eventType: 'fulfillment_correction_out',
+      eventAt: correctedAt,
+      publicPayload: {},
+      onlyIfPreviousChanged: true,
+    });
+    statements.push(outgoing.statement);
+  }
+  statements.push(auditStatement(
+    env, newKeeperPieceId, 'fulfillment_correct', 'correction_attempt', correctedAt,
+  ));
+  const [result] = await env.DB.batch(statements);
+  return result;
 }
 
 async function shipFulfillment(env, body) {
@@ -375,7 +403,7 @@ async function shipFulfillment(env, body) {
     mutation,
     existing.keeper_piece_id,
     'fulfillment_ship',
-    'shipped',
+    'shipment_attempt',
     shippedAt,
   );
   if ((result?.meta?.changes ?? 0) === 0) {

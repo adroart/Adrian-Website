@@ -56,6 +56,7 @@ import {
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
 import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import { applyOrderStatusEvent } from '../functions/api/stripe/webhook.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
@@ -824,6 +825,25 @@ describe('artwork lineage commitments', () => {
     assert.deepEqual(first, second);
     assert.match(first.eventHash, /^[a-f0-9]{64}$/);
     await assert.rejects(() => buildLineageEvent({ ...input, publicPayload: { email: 'private@example.com' } }), /private lineage key/i);
+  });
+});
+
+describe('Stripe order reversals', () => {
+  it('moves paid orders to refunded, canceled, failed, or disputed idempotently', async () => {
+    const orders = [{ stripe_session_id: 'cs_paid', stripe_payment_intent_id: 'pi_1', status: 'paid' }];
+    const DB = { prepare(sql: string) { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async run() { const row = orders.find((item) => sql.includes('stripe_session_id') ? item.stripe_session_id === values[1] : item.stripe_payment_intent_id === values[1]); if (row) row.status = values[0]; return { success: true, meta: { changes: row ? 1 : 0 } }; } }; return statement; } };
+    await applyOrderStatusEvent({ DB }, { type: 'charge.refunded', data: { object: { payment_intent: 'pi_1' } } });
+    assert.equal(orders[0].status, 'refunded');
+    await applyOrderStatusEvent({ DB }, { type: 'payment_intent.canceled', data: { object: { id: 'pi_1' } } });
+    assert.equal(orders[0].status, 'canceled');
+    await applyOrderStatusEvent({ DB }, { type: 'payment_intent.payment_failed', data: { object: { id: 'pi_1' } } });
+    assert.equal(orders[0].status, 'failed');
+    await applyOrderStatusEvent({ DB }, { type: 'charge.dispute.created', data: { object: { charge: { payment_intent: 'pi_1' } } } });
+    assert.equal(orders[0].status, 'disputed');
+    await assert.rejects(
+      () => applyOrderStatusEvent({ DB }, { type: 'charge.refunded', data: { object: {} } }),
+      /unresolved/i,
+    );
   });
 });
 
@@ -2154,6 +2174,8 @@ function makeKeeperDb() {
   const fulfillments: any[] = [];
   const lineage: any[] = [];
   const evidence: any[] = [];
+  let loseNextFirstBind = false;
+  let lastChanges = 0;
   const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
 
   function findActive(pieceId: string, edition: number) {
@@ -2217,6 +2239,7 @@ function makeKeeperDb() {
         claimed_at: null,
         released_at: null,
       });
+      lastChanges = 1;
       return { kind: 'run', meta: { changes: 1 } };
     }
 
@@ -2239,21 +2262,30 @@ function makeKeeperDb() {
     ) {
       const [keeperUserId, claimedAt, id] = params;
       const row = pieces.find((r) => r.id === id);
+      if (loseNextFirstBind) {
+        loseNextFirstBind = false;
+        lastChanges = 0;
+        return { kind: 'run', meta: { changes: 0 } };
+      }
       const guardPasses = row && row.keeper_user_id == null && row.claimed_at == null && row.released_at == null;
       if (row && guardPasses) {
         row.keeper_user_id = keeperUserId;
         row.claimed_at = claimedAt;
         row.released_at = null;
+        lastChanges = 1;
         return { kind: 'run', meta: { changes: 1 } };
       }
+      lastChanges = 0;
       return { kind: 'run', meta: { changes: 0 } };
     }
 
     if (/^UPDATE piece_fulfillments SET claimed_at = \?1 WHERE keeper_piece_id = \?2 AND claimed_at IS NULL/i.test(s)) {
       const [claimedAt, keeperPieceId] = params;
       const row = fulfillments.find((f) => f.keeper_piece_id === keeperPieceId && !f.claimed_at);
-      if (row) row.claimed_at = claimedAt;
-      return { kind: 'run', meta: { changes: row ? 1 : 0 } };
+      const keeper = pieces.find((piece) => piece.id === keeperPieceId);
+      const allowed = params[2] == null || (keeper?.keeper_user_id === params[2] && keeper?.claimed_at === claimedAt);
+      if (row && allowed) row.claimed_at = claimedAt;
+      return { kind: 'run', meta: { changes: row && allowed ? 1 : 0 } };
     }
     if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(s)) {
       const rows = lineage.filter((row) => row[1] === params[0]);
@@ -2261,10 +2293,14 @@ function makeKeeperDb() {
       return { kind: 'first', row: last ? { sequence: last[2], event_hash: last[6] } : null };
     }
     if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
+      if (params[8] === 1 && lastChanges === 0) return { kind: 'run', meta: { changes: 0 } };
       lineage.push(params);
+      lastChanges = 1;
       return { kind: 'run', meta: { changes: 1 } };
     }
     if (/^INSERT INTO artwork_claim_evidence/i.test(s)) {
+      const keeper = pieces.find((piece) => piece.id === params[1]);
+      if (params[8] && (keeper?.keeper_user_id !== params[8] || keeper?.claimed_at !== params[9])) return { kind: 'run', meta: { changes: 0 } };
       evidence.push(params);
       return { kind: 'run', meta: { changes: 1 } };
     }
@@ -2300,7 +2336,10 @@ function makeKeeperDb() {
     },
   };
 
-  return { DB, pieces, users, fulfillments, lineage, evidence };
+  return {
+    DB, pieces, users, fulfillments, lineage, evidence,
+    loseNextFirstBind() { loseNextFirstBind = true; },
+  };
 }
 
 function bindReq(body: unknown) {
@@ -2551,7 +2590,12 @@ describe('admin piece fulfillment desk', () => {
     assert.equal(fixture.fulfillments[0].shipped_at, shippedAt);
     assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:late', reason: 'too late' }), env })).status, 409);
     assert.deepEqual(fixture.audits.map((row) => row.action), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
-    assert.deepEqual(fixture.lineage.map((row) => row[3]), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
+    assert.deepEqual(fixture.lineage.map((row) => row[3]), [
+      'fulfillment_assign',
+      'fulfillment_correction_in',
+      'fulfillment_correction_out',
+      'fulfillment_ship',
+    ]);
     assert.doesNotMatch(JSON.stringify(fixture.audits), /studio:|buyer@/i);
   });
 
@@ -2563,6 +2607,8 @@ describe('admin piece fulfillment desk', () => {
     const response = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: fixture.fulfillments[0].id }), env });
     assert.equal(response.status, 409);
     assert.equal(fixture.fulfillments[0].shipped_at, null);
+    assert.equal(fixture.audits.at(-1).outcome, 'shipment_attempt');
+    assert.equal(fixture.audits.some((row) => row.outcome === 'shipped'), false);
   });
 });
 
@@ -2575,7 +2621,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users, fulfillments, lineage, evidence } = makeKeeperDb();
+      const { DB, pieces, users, fulfillments, lineage, evidence, loseNextFirstBind } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -2611,6 +2657,16 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
 
       // 2) FIRST BIND: active + verified, so the holder can bind.
       pieces[0].backup_status = 'verified';
+      const fixtureState = { lineage: lineage.length, evidence: evidence.length };
+      // Simulate a competing keeper winning after the read but before UPDATE.
+      // The losing batch must not stamp fulfillment, lineage, or evidence.
+      loseNextFirstBind();
+      const lostRace = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      assert.equal(lostRace.status, 409);
+      assert.equal(pieces[0].keeper_user_id, null);
+      assert.equal(fulfillments[0].claimed_at, null);
+      assert.equal(lineage.length, fixtureState.lineage);
+      assert.equal(evidence.length, fixtureState.evidence);
       const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(firstRes.status, 200);
       const firstJson = await firstRes.json();

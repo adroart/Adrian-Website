@@ -25,6 +25,13 @@ export async function onRequest(context) {
   if (!verified) return new Response('invalid_signature', { status: 400 });
 
   const { event } = verified;
+  try {
+    if (await applyOrderStatusEvent(env, event)) {
+      return new Response('ok', { status: 200 });
+    }
+  } catch {
+    return new Response('order_status_update_failed', { status: 503 });
+  }
   if (
     event.type !== 'checkout.session.completed' &&
     event.type !== 'checkout.session.async_payment_succeeded'
@@ -144,4 +151,45 @@ export async function onRequest(context) {
   }
 
   return new Response('ok', { status: 200 });
+}
+
+export async function applyOrderStatusEvent(env, event) {
+  const object = event?.data?.object || {};
+  let status = null;
+  let column = null;
+  let reference = null;
+  if (event?.type === 'checkout.session.async_payment_failed') {
+    status = 'failed'; column = 'stripe_session_id'; reference = object.id;
+  } else if (event?.type === 'charge.refunded') {
+    status = 'refunded'; column = 'stripe_payment_intent_id';
+    reference = typeof object.payment_intent === 'string' ? object.payment_intent : object.payment_intent?.id;
+  } else if (event?.type === 'payment_intent.canceled') {
+    status = 'canceled'; column = 'stripe_payment_intent_id'; reference = object.id;
+  } else if (event?.type === 'payment_intent.payment_failed') {
+    status = 'failed'; column = 'stripe_payment_intent_id'; reference = object.id;
+  } else if (event?.type === 'charge.dispute.created') {
+    status = 'disputed'; column = 'stripe_payment_intent_id';
+    reference = typeof object.charge === 'object'
+      ? (typeof object.charge.payment_intent === 'string' ? object.charge.payment_intent : object.charge.payment_intent?.id)
+      : null;
+    if (!reference && typeof object.charge === 'string' && env.STRIPE_SECRET_KEY) {
+      const response = await fetch(`https://api.stripe.com/v1/charges/${encodeURIComponent(object.charge)}`, {
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      if (response.ok) {
+        const charge = await response.json();
+        reference = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
+      }
+    }
+  }
+  if (!status) return false;
+  if (!reference || (column !== 'stripe_session_id' && column !== 'stripe_payment_intent_id')) {
+    throw new Error('order status reference unresolved');
+  }
+  const result = await env.DB.prepare(`UPDATE orders SET status = ?1 WHERE ${column} = ?2`)
+      .bind(status, reference).run();
+  if (!result?.success || (result.meta?.changes ?? 0) === 0) {
+    throw new Error('order status target unresolved');
+  }
+  return true;
 }
