@@ -32,3 +32,13 @@ export async function backupPlateEnvelope(bucket, row) {
     return { status: 'failed', reference };
   }
 }
+
+export async function recordPlateBackupResult(db, keeperPieceId, result) {
+  const at = result.status === 'verified' ? new Date().toISOString() : null;
+  await db.prepare(
+    `UPDATE keeper_pieces
+        SET backup_status = ?1, backup_reference = ?2, backup_at = ?3
+      WHERE id = ?4`,
+  ).bind(result.status, result.reference, at, keeperPieceId).run();
+  return at;
+}

@@ -47,6 +47,9 @@ import {
 // can be exercised; with the flag off it correctly 404s, which we also assert.
 import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
+import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
+import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
+import { onRequest as activateArtworkPlate } from '../functions/api/admin/pieces/[id]/activate.js';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
 const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
@@ -1510,6 +1513,272 @@ describe('encrypted plate backup adapter', () => {
   });
 });
 
+type LifecycleFixtureOptions = {
+  status?: 'generated' | 'active';
+  backupStatus?: 'pending' | 'failed' | 'verified';
+  failAudit?: boolean;
+};
+
+async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) {
+  const ownershipCode = 'K7QM-9XTR-2PHV-N4WB';
+  const generatedAt = '2026-07-13T10:20:30.000Z';
+  const plate = await buildArtworkPlatePackage({
+    publicCode: 'AR-7KQ9M2WX',
+    ownershipCode,
+    artworkId: 'UL-100',
+    editionNumber: 2,
+    generatedAt,
+  });
+  const envelope = await encryptOwnershipCode(
+    ownershipCode,
+    { publicCode: 'AR-7KQ9M2WX', pieceId: 'UL-100', editionNumber: 2 },
+    {
+      OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+      OWNERSHIP_CODE_KEY_V1: OWNERSHIP_TEST_KEY,
+    },
+  );
+  const rows: any[] = [{
+    id: 'kp-one', piece_id: 'UL-100', edition_number: 2,
+    public_code: 'AR-7KQ9M2WX', plate_status: options.status || 'generated',
+    plate_generated_at: generatedAt,
+    plate_activated_at: options.status === 'active' ? '2026-07-13T12:00:00.000Z' : null,
+    front_svg_sha256: plate.frontSha256, back_svg_sha256: plate.undersideSha256,
+    ownership_code_ciphertext: envelope.ciphertext,
+    ownership_code_nonce: envelope.nonce,
+    ownership_code_key_version: envelope.keyVersion,
+    backup_status: options.backupStatus || 'verified',
+    backup_reference: 'plates/AR-7KQ9M2WX.json', backup_at: generatedAt,
+  }, {
+    id: 'kp-other', piece_id: 'UL-101', edition_number: 1,
+    public_code: 'AR-ABCDEFGH', plate_status: 'generated',
+    plate_generated_at: generatedAt, plate_activated_at: null,
+    front_svg_sha256: 'other-front', back_svg_sha256: 'other-back',
+    ownership_code_ciphertext: 'other-ciphertext', ownership_code_nonce: 'other-nonce',
+    ownership_code_key_version: 1, backup_status: 'verified',
+    backup_reference: 'plates/AR-ABCDEFGH.json', backup_at: generatedAt,
+  }];
+  const audits: any[] = [];
+  const operations: string[] = [];
+
+  function statement(sql: string) {
+    let params: any[] = [];
+    const normalized = sql.replace(/\s+/g, ' ').trim();
+    const stmt: any = {
+      bind(...values: any[]) { params = values; return stmt; },
+      async first() {
+        operations.push(normalized);
+        if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(normalized)) {
+          return rows.find((row) => row.id === params[0]) || null;
+        }
+        throw new Error(`lifecycle D1 first: ${normalized}`);
+      },
+      async run() {
+        operations.push(normalized);
+        if (/^INSERT INTO ownership_code_audit/i.test(normalized)) {
+          if (options.failAudit) throw new Error('audit unavailable');
+          const [id, keeper_piece_id, action, request_id, outcome, created_at] = params;
+          audits.push({ id, keeper_piece_id, action, request_id, outcome, created_at });
+          return { success: true, meta: { changes: 1 } };
+        }
+        if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(normalized)) {
+          const [status, reference, at, id] = params;
+          const row = rows.find((item) => item.id === id);
+          if (!row) return { success: true, meta: { changes: 0 } };
+          Object.assign(row, { backup_status: status, backup_reference: reference, backup_at: at });
+          return { success: true, meta: { changes: 1 } };
+        }
+        if (/^UPDATE keeper_pieces SET plate_status = 'active'/i.test(normalized)) {
+          const [activatedAt, id] = params;
+          const row = rows.find((item) => item.id === id && item.plate_status === 'generated');
+          if (!row) return { success: true, meta: { changes: 0 } };
+          row.plate_status = 'active';
+          row.plate_activated_at = activatedAt;
+          return { success: true, meta: { changes: 1 } };
+        }
+        throw new Error(`lifecycle D1 run: ${normalized}`);
+      },
+    };
+    return stmt;
+  }
+
+  const DB = { prepare: statement };
+  return { DB, rows, audits, operations, ownershipCode, plate };
+}
+
+function lifecycleRequest(path: string, method: string, body?: unknown, options: {
+  cookie?: boolean; origin?: string;
+} = {}) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (options.cookie !== false) headers.Cookie = `admin_session=${ADMIN_SECRET}`;
+  if (options.origin !== '') headers.Origin = options.origin || 'https://adrianrasmussen.com';
+  return new Request(`https://adrianrasmussen.com${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+function lifecycleEnv(DB: any, bucket: any = makeBackupBucket()) {
+  return {
+    UPLOAD_SECRET: ADMIN_SECRET,
+    DB,
+    OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+    OWNERSHIP_CODE_KEY_V1: OWNERSHIP_TEST_KEY,
+    ARTWORK_REGISTRY_BACKUP: bucket,
+  };
+}
+
+const validActivation = (plate: { frontSha256: string; undersideSha256: string }) => ({
+  adminSecret: ADMIN_SECRET,
+  frontSha256: plate.frontSha256,
+  undersideSha256: plate.undersideSha256,
+  realMetalQrScanned: true,
+  artworkEditionPublicCodeMatch: true,
+  undersideOwnershipCodeMatch: true,
+  attachmentAndAbrasionInspected: true,
+});
+
+describe('admin artwork plate lifecycle', () => {
+  it('allows POST only and requires cookie auth, same origin, and constant-time step-up input', async () => {
+    const fixture = await makePlateLifecycleFixture();
+    const env = lifecycleEnv(fixture.DB);
+    const path = '/api/admin/pieces/kp-one/reveal';
+
+    const method = await revealArtworkPlate({ request: lifecycleRequest(path, 'GET'), env, params: { id: 'kp-one' } });
+    assert.equal(method.status, 405);
+    assert.equal(method.headers.get('Cache-Control'), 'no-store');
+    assert.equal((await revealArtworkPlate({
+      request: lifecycleRequest(path, 'POST', { adminSecret: ADMIN_SECRET }, { cookie: false }),
+      env, params: { id: 'kp-one' },
+    })).status, 401);
+    assert.equal((await revealArtworkPlate({
+      request: lifecycleRequest(path, 'POST', { adminSecret: ADMIN_SECRET }, { origin: '' }),
+      env, params: { id: 'kp-one' },
+    })).status, 403);
+    assert.equal((await revealArtworkPlate({
+      request: lifecycleRequest(path, 'POST', { adminSecret: 'wrong-secret' }),
+      env, params: { id: 'kp-one' },
+    })).status, 401);
+    assert.equal(fixture.audits.length, 0);
+  });
+
+  it('audits before decrypting and reveals only the requested existing identity package', async () => {
+    const fixture = await makePlateLifecycleFixture();
+    const response = await revealArtworkPlate({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', { adminSecret: ADMIN_SECRET }),
+      env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.equal(body.ownershipCode, fixture.ownershipCode);
+    assert.equal(body.publicCode, 'AR-7KQ9M2WX');
+    assert.equal(body.frontSha256, fixture.plate.frontSha256);
+    assert.equal(body.undersideSha256, fixture.plate.undersideSha256);
+    assert.equal(body.undersideSvg, fixture.plate.undersideSvg);
+    assert.equal(fixture.audits.length, 1);
+    assert.equal(fixture.audits[0].keeper_piece_id, 'kp-one');
+    assert.equal(fixture.audits[0].action, 'reveal');
+    assert.equal(JSON.stringify(fixture.audits).includes(fixture.ownershipCode), false);
+    assert.equal(fixture.rows[1].ownership_code_ciphertext, 'other-ciphertext');
+  });
+
+  it('refuses recovery when the required pre-decryption audit cannot be written', async () => {
+    const fixture = await makePlateLifecycleFixture({ failAudit: true });
+    fixture.rows[0].ownership_code_ciphertext = 'malformed-ciphertext';
+    const response = await revealArtworkPlate({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', { adminSecret: ADMIN_SECRET }),
+      env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
+    });
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { ok: false, error: 'audit_unavailable' });
+  });
+
+  it('retries R2 from the stored envelope without decrypting and records verified or failed honestly', async () => {
+    const fixture = await makePlateLifecycleFixture({ backupStatus: 'failed' });
+    fixture.rows[0].ownership_code_ciphertext = 'stored-ciphertext-without-a-valid-key-envelope';
+    const writes: string[] = [];
+    let fail = false;
+    const bucket = {
+      async put(_key: string, value: string) { if (fail) throw new Error('R2 down'); writes.push(value); },
+      async get(key: string) {
+        if (fail) throw new Error('R2 down');
+        const value = writes.at(-1);
+        return value ? { text: async () => value } : null;
+      },
+    };
+    const env = lifecycleEnv(fixture.DB, bucket);
+    const request = () => lifecycleRequest('/api/admin/pieces/kp-one/backup', 'POST', { adminSecret: ADMIN_SECRET });
+
+    const verified = await retryArtworkPlateBackup({ request: request(), env, params: { id: 'kp-one' } });
+    assert.equal(verified.status, 200);
+    assert.equal((await verified.json()).backupStatus, 'verified');
+    assert.equal(fixture.rows[0].backup_status, 'verified');
+    assert.match(writes[0], /stored-ciphertext-without-a-valid-key-envelope/);
+
+    fail = true;
+    const failed = await retryArtworkPlateBackup({ request: request(), env, params: { id: 'kp-one' } });
+    assert.equal(failed.status, 503);
+    assert.equal((await failed.json()).backupStatus, 'failed');
+    assert.equal(fixture.rows[0].backup_status, 'failed');
+    assert.equal(failed.headers.get('Cache-Control'), 'no-store');
+  });
+
+  it('requires verified backup, exact hashes, and every physical inspection confirmation', async () => {
+    const fixture = await makePlateLifecycleFixture({ backupStatus: 'failed' });
+    const env = lifecycleEnv(fixture.DB);
+    const path = '/api/admin/pieces/kp-one/activate';
+    const call = (body: unknown) => activateArtworkPlate({
+      request: lifecycleRequest(path, 'POST', body), env, params: { id: 'kp-one' },
+    });
+
+    assert.equal((await call(validActivation(fixture.plate))).status, 409);
+    fixture.rows[0].backup_status = 'verified';
+    assert.equal((await call({ ...validActivation(fixture.plate), frontSha256: 'wrong' })).status, 409);
+    assert.equal((await call({ ...validActivation(fixture.plate), realMetalQrScanned: false })).status, 400);
+    assert.equal(fixture.rows[0].plate_status, 'generated');
+    assert.equal(fixture.audits.length, 0);
+  });
+
+  it('conditionally activates once, preserves both codes, audits activation, and is idempotent only for matching inputs', async () => {
+    const fixture = await makePlateLifecycleFixture();
+    const env = lifecycleEnv(fixture.DB);
+    const path = '/api/admin/pieces/kp-one/activate';
+    const before = {
+      publicCode: fixture.rows[0].public_code,
+      ciphertext: fixture.rows[0].ownership_code_ciphertext,
+      nonce: fixture.rows[0].ownership_code_nonce,
+    };
+    const call = (body: unknown) => activateArtworkPlate({
+      request: lifecycleRequest(path, 'POST', body), env, params: { id: 'kp-one' },
+    });
+
+    const activated = await call(validActivation(fixture.plate));
+    assert.equal(activated.status, 200);
+    assert.equal((await activated.json()).plateStatus, 'active');
+    assert.equal(fixture.rows[0].plate_status, 'active');
+    assert.ok(fixture.rows[0].plate_activated_at);
+    assert.deepEqual({
+      publicCode: fixture.rows[0].public_code,
+      ciphertext: fixture.rows[0].ownership_code_ciphertext,
+      nonce: fixture.rows[0].ownership_code_nonce,
+    }, before);
+    assert.equal(fixture.audits.at(-1).action, 'activate');
+    assert.equal(fixture.audits.at(-1).outcome, 'activated');
+
+    const repeated = await call(validActivation(fixture.plate));
+    assert.equal(repeated.status, 200);
+    assert.equal((await repeated.json()).idempotent, true);
+    const mismatch = await call({ ...validActivation(fixture.plate), undersideSha256: 'wrong' });
+    assert.equal(mismatch.status, 409);
+    assert.equal(fixture.rows[0].plate_status, 'active');
+  });
+});
+
+// ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
+// These exercise functions/api/keeper/bind.js against the SAME in-memory D1
+// stand-in the admin suite uses, extended to the few extra statement shapes
 // bind issues (the no-released-filter SELECT, the keeper UPDATE, and the users
 // lookup getUserByClerkId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth
