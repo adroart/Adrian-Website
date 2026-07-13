@@ -1290,13 +1290,13 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
 // handler issues (a SELECT-by-piece, an INSERT, an UPDATE-of-hash, a list
 // SELECT), keyed by piece_id + edition_number. Enough to exercise the
 // show-code-once and refuse-overwrite rules without a real database.
-function makeIssuanceDb(options: { collideOnce?: boolean } = {}) {
+function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?: boolean } = {}) {
   const rows: any[] = []; // keeper_pieces
   let collisionPending = Boolean(options.collideOnce);
+  let backupStatusFailurePending = Boolean(options.failBackupStatusOnce);
 
   function find(pieceId: string, edition: number) {
     return rows.find(
-  let backupStatusFailurePending = Boolean(options.failBackupStatusOnce);
       (r) => r.piece_id === pieceId && r.edition_number === edition && !r.released_at,
     );
   }
@@ -1340,13 +1340,13 @@ function makeIssuanceDb(options: { collideOnce?: boolean } = {}) {
       return { kind: 'run' };
     }
     if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(s)) {
-      const [status, reference, backupAt, id] = params;
-      const row = rows.find((r) => r.id === id);
-      if (row) {
       if (backupStatusFailurePending) {
         backupStatusFailurePending = false;
         throw new Error('D1 status update unavailable');
       }
+      const [status, reference, backupAt, id] = params;
+      const row = rows.find((r) => r.id === id);
+      if (row) {
         row.backup_status = status;
         row.backup_reference = reference;
         row.backup_at = backupAt;
@@ -1541,9 +1541,6 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('rejects a different issuance key for the same artwork edition', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
   it('rejects issuance-key reuse for a different artwork identity without revealing a code', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
@@ -1593,6 +1590,9 @@ describe('admin piece registration', () => {
     }
   });
 
+  it('rejects a different issuance key for the same artwork edition', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
     try {
       const { DB } = makeIssuanceDb();
       const env = issuanceEnv(DB);
@@ -1620,9 +1620,6 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('returns a safe 503 when ownership-code crypto is not configured', async () => {
-    const wasOn = LAUNCH_FLAGS.livingLegacy;
-    LAUNCH_FLAGS.livingLegacy = true;
   it('returns the committed package when backup status recording fails and repairs it on replay', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
@@ -1674,6 +1671,9 @@ describe('admin piece registration', () => {
     }
   });
 
+  it('returns a safe 503 when ownership-code crypto is not configured', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
     try {
       const { DB, rows } = makeIssuanceDb();
       const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'no-key' }), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
@@ -1683,9 +1683,6 @@ describe('admin piece registration', () => {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
-});
-
-// ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
 
   it('returns a safe 503 for malformed ownership-code keys before inserting', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
@@ -1713,8 +1710,8 @@ describe('admin piece registration', () => {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
-// These exercise functions/api/keeper/bind.js against the SAME in-memory D1
-// stand-in the admin suite uses, extended to the few extra statement shapes
+});
+
 describe('encrypted plate backup adapter', () => {
   it('retries the identical stored envelope without a decryption path', async () => {
     const writes: Array<{ key: string; value: string }> = [];
