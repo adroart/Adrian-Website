@@ -14,6 +14,7 @@ import {
     publicLineageDetails,
     PublicLineageEvent,
     PublicLineageResponse,
+    shouldLoadPublicLineage,
     validatePublicLineageResponse,
 } from '../utils/publicLineage';
 
@@ -38,7 +39,8 @@ const WorksPage: React.FC = () => {
     const legacyOn = LAUNCH_FLAGS.livingLegacy;
     const arrivedByScan = searchParams.get('ref') === 'qr';
     const instanceCode = searchParams.get('instance');
-    const lineage = usePublicLineage(instanceCode, id);
+    const showPublicLineage = shouldLoadPublicLineage(legacyOn, instanceCode, id);
+    const lineage = usePublicLineage(showPublicLineage, instanceCode, id);
 
     useMetaTags(
         artwork
@@ -185,7 +187,7 @@ const WorksPage: React.FC = () => {
                             </div>
                         )}
 
-                        {instanceCode && /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(instanceCode) && (
+                        {showPublicLineage && instanceCode && (
                             <PublicLineageHistory publicCode={instanceCode} state={lineage} />
                         )}
 
@@ -328,12 +330,15 @@ type LineageState =
     | { status: 'ready'; events: PublicLineageEvent[] }
     | { status: 'error' };
 
-function usePublicLineage(publicCode: string | null, pieceId: string | undefined): LineageState {
-    const validCode = Boolean(publicCode && /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(publicCode));
-    const [state, setState] = useState<LineageState>({ status: validCode ? 'loading' : 'idle' });
+function usePublicLineage(
+    enabled: boolean,
+    publicCode: string | null,
+    pieceId: string | undefined,
+): LineageState {
+    const [state, setState] = useState<LineageState>({ status: enabled ? 'loading' : 'idle' });
 
     useEffect(() => {
-        if (!validCode || !publicCode || !pieceId) {
+        if (!enabled || !publicCode || !pieceId) {
             setState({ status: 'idle' });
             return;
         }
@@ -355,7 +360,7 @@ function usePublicLineage(publicCode: string | null, pieceId: string | undefined
             });
 
         return () => controller.abort();
-    }, [pieceId, publicCode, validCode]);
+    }, [enabled, pieceId, publicCode]);
 
     return state;
 }

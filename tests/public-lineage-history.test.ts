@@ -1,15 +1,22 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { after, before, describe, it } from 'node:test';
 
 import { buildLineageEvent, projectLineagePublicPayload } from '../functions/api/_lib/lineage.js';
 import { onRequest } from '../functions/api/lineage/[publicCode].js';
+import { LAUNCH_FLAGS } from '../launchFlags';
 import {
   formatLineageEventLabel,
   publicLineageDetails,
+  shouldLoadPublicLineage,
   validatePublicLineageResponse,
 } from '../utils/publicLineage';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
+const originalLegacyFlag = LAUNCH_FLAGS.livingLegacy;
+
+before(() => { LAUNCH_FLAGS.livingLegacy = true; });
+after(() => { LAUNCH_FLAGS.livingLegacy = originalLegacyFlag; });
 
 async function lineageRows() {
   const first = await buildLineageEvent({
@@ -89,6 +96,23 @@ function request(method = 'GET') {
 }
 
 describe('public artwork lineage history', () => {
+  it('stays invisible and never queries D1 while the public flag is off', async () => {
+    LAUNCH_FLAGS.livingLegacy = false;
+    try {
+      const { env, statements } = environment();
+      for (const method of ['GET', 'POST']) {
+        const response = await onRequest({
+          request: request(method), env, params: { publicCode: PUBLIC_CODE },
+        });
+        assert.equal(response.status, 404);
+        assert.deepEqual(await response.json(), { ok: false, error: 'not_found' });
+      }
+      assert.equal(statements.length, 0);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = true;
+    }
+  });
+
   it('returns a verified, ordered, secret-free public chain', async () => {
     const events = await lineageRows();
     const { env, statements } = environment({ events });
@@ -195,6 +219,15 @@ describe('public artwork lineage history', () => {
 });
 
 describe('public lineage presentation', () => {
+  it('does not fetch or render registry history while the public flag is off', () => {
+    assert.equal(shouldLoadPublicLineage(false, PUBLIC_CODE, 'UL-100'), false);
+    assert.equal(shouldLoadPublicLineage(true, PUBLIC_CODE, 'UL-100'), true);
+
+    const worksPage = readFileSync(new URL('../components/WorksPage.tsx', import.meta.url), 'utf8');
+    assert.match(worksPage, /shouldLoadPublicLineage\(legacyOn, instanceCode, id\)/);
+    assert.match(worksPage, /showPublicLineage\s*&&\s*instanceCode\s*&&\s*\(/);
+  });
+
   it('uses friendly labels for registry lifecycle events', () => {
     assert.equal(formatLineageEventLabel('issued'), 'Plate issued');
     assert.equal(formatLineageEventLabel('activated'), 'Plate activated');
@@ -255,5 +288,23 @@ describe('lineage public payload allowlist', () => {
     assert.throws(() => projectLineagePublicPayload('issued', { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE, phone: 'private' }), /payload/i);
     assert.throws(() => projectLineagePublicPayload('issued', { pieceId: 'buyer@example.com', editionNumber: 2, publicCode: PUBLIC_CODE }), /payload/i);
     assert.throws(() => projectLineagePublicPayload('issued', { pieceId: '+15550100', editionNumber: 2, publicCode: PUBLIC_CODE }), /payload/i);
+  });
+});
+
+describe('registry rollout boundary', () => {
+  it('keeps scratch admin explicit and delays the public flip until after metal qualification', () => {
+    const runbook = readFileSync(new URL('../docs/lineage-plate-runbook.md', import.meta.url), 'utf8');
+    const scratchStart = runbook.indexOf('### 7. Prove restoration and decryption before engraving');
+    const prototypeStart = runbook.indexOf('## Prototype qualification');
+    const activationGate = runbook.indexOf('Only after all checks pass', prototypeStart);
+    const publicFlip = runbook.indexOf('set `LAUNCH_FLAGS.livingLegacy` to `true`');
+
+    assert.ok(scratchStart >= 0 && prototypeStart > scratchStart);
+    assert.match(runbook.slice(scratchStart, prototypeStart), /ARTWORK_REGISTRY_ADMIN_ENABLED=true/);
+    assert.ok(activationGate >= 0);
+    assert.ok(publicFlip > activationGate);
+
+    const qrResolver = readFileSync(new URL('../functions/qr/[number].js', import.meta.url), 'utf8');
+    assert.doesNotMatch(qrResolver, /legacyEnabled|livingLegacy/);
   });
 });

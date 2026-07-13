@@ -1,4 +1,5 @@
 import { buildLineageEvent } from '../_lib/lineage.js';
+import { legacyEnabled, notFound } from '../_lib/keeper.js';
 
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 
@@ -22,6 +23,7 @@ function parsePublicPayload(value) {
 }
 
 export async function onRequest({ request, env, params }) {
+  if (!legacyEnabled()) return notFound();
   if (request.method !== 'GET') {
     return json({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET' });
   }

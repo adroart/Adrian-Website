@@ -32,6 +32,19 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const PRIVATE_KEY = /(?:email|ip|user.?agent|ownership|recovery|verifier|cipher|nonce|secret|password|token|key)/i;
+const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+
+export function shouldLoadPublicLineage(
+    enabled: boolean,
+    publicCode: string | null,
+    pieceId: string | undefined,
+): boolean {
+    return enabled === true
+        && typeof publicCode === 'string'
+        && PUBLIC_CODE_PATTERN.test(publicCode)
+        && typeof pieceId === 'string'
+        && pieceId.length > 0;
+}
 
 export function formatLineageEventLabel(eventType: string): string {
     return EVENT_LABELS[eventType] || 'Registry event';

@@ -182,7 +182,13 @@ prove recovery.
    scratch copy if you want independent operator evidence that the operation
    cannot use them; the recovery endpoint does not select either column.
 4. Configure the scratch environment with the **escrowed versioned key**, not a
-   value copied from the live Pages environment.
+   value copied from the live Pages environment. Keep the public launch flag
+   off and explicitly enable only the private scratch administration runtime:
+
+   ```text
+   ARTWORK_REGISTRY_ADMIN_ENABLED=true
+   ```
+
 5. Start the full Pages runtime, sign in as an admin, enter the step-up secret,
    and click **Verify R2 recovery** for the non-production canary.
 6. Require a pass showing the exact public code, artwork ID, edition, R2
@@ -197,12 +203,10 @@ prove recovery.
 Do not engrave if the D1 export, R2 envelope, and escrowed key have not been
 proven together in this canary.
 
-After the canary passes, set `LAUNCH_FLAGS.livingLegacy` to `true`, build again,
-and deploy deliberately. The public flag remains `false` in source until this
-gate is complete so an unrelated deployment cannot expose a partially
-provisioned claim surface. After the public deployment is verified, the
-`ARTWORK_REGISTRY_ADMIN_ENABLED` variable may be removed because the public
-flag also keeps private administration available.
+After the canary passes, keep `LAUNCH_FLAGS.livingLegacy` set to `false` and
+continue to fabrication and prototype qualification. The permanent QR resolver
+remains available for physical prelaunch scans, while public lineage history,
+keeper claims, and Living Legacy UI remain invisible.
 
 ## Issue a plate
 
@@ -263,6 +267,19 @@ Then inspect and compare:
 Only after all checks pass, enter the admin step-up secret, tick every physical
 confirmation, submit the stored hashes, and activate. Activation is the moment
 the two permanent codes are locked. Never activate from a vendor proof.
+
+### Public registry launch
+
+Flip the public flag only after all three gates have passed: the copied-artifact
+R2 recovery canary, the real engraved-metal phone tests above, and physical
+activation of that qualified plate. Then set `LAUNCH_FLAGS.livingLegacy` to `true`,
+build, and deploy deliberately. Verify that the same physical QR now
+shows the exact public lineage before using the system for a sale.
+
+The public flag remains `false` in source until this point so an unrelated
+deployment cannot expose a partially qualified registry. After the public
+deployment is verified, `ARTWORK_REGISTRY_ADMIN_ENABLED` may be removed because
+the public flag also keeps private administration available.
 
 ## Assign the exact sale or handoff
 
