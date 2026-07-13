@@ -140,8 +140,13 @@ describe('ownership code authenticated encryption', () => {
     ]) {
       await assert.rejects(() => decryptOwnershipCode(envelope, mismatchedContext, env));
     }
+    const sameKeyAcrossVersionsEnv = { ...env, OWNERSHIP_CODE_KEY_V1: keyV2 };
     await assert.rejects(() =>
-      decryptOwnershipCode({ ...envelope, keyVersion: '1' }, context, env),
+      decryptOwnershipCode(
+        { ...envelope, keyVersion: '1' },
+        context,
+        sameKeyAcrossVersionsEnv,
+      ),
     );
   });
 
