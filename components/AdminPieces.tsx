@@ -15,6 +15,7 @@ import {
   beginIssuanceAttempt,
   clearSensitivePlateState,
   projectPlateDownloads,
+  projectIssuedPlateResponse,
   type ActivationChecklist,
   type IssuedPlatePackage,
   type SensitivePlateState,
@@ -25,9 +26,9 @@ const inputClass =
 const labelClass =
   'font-label text-[11px] uppercase tracking-[0.12em] text-wood-600 font-semibold block mb-2';
 const buttonClass =
-  'font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
+  'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
 const quietButtonClass =
-  'font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
+  'min-h-11 font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 border border-wood-300 px-4 py-2 hover:border-wood-500 hover:text-wood-900 active:translate-y-px disabled:opacity-50 disabled:translate-y-0 transition-colors';
 
 interface PieceRow {
   id: string;
@@ -174,6 +175,7 @@ const AdminPieces: React.FC = () => {
     availablePlates: [], availableOrderItems: [], fulfillments: [],
   });
   const [deskLoading, setDeskLoading] = useState(true);
+  const [deskLoadError, setDeskLoadError] = useState('');
   const [deskError, setDeskError] = useState('');
   const [deskSuccess, setDeskSuccess] = useState('');
   const [deskBusy, setDeskBusy] = useState(false);
@@ -205,7 +207,7 @@ const AdminPieces: React.FC = () => {
 
   const loadDesk = useCallback(async () => {
     setDeskLoading(true);
-    setDeskError('');
+    setDeskLoadError('');
     try {
       const data = await jsonRequest('/api/admin/piece-fulfillments');
       setDesk({
@@ -214,7 +216,7 @@ const AdminPieces: React.FC = () => {
         fulfillments: data.fulfillments || [],
       });
     } catch (error) {
-      setDeskError(errorMessage(error, 'Could not load fulfillment records.'));
+      setDeskLoadError(errorMessage(error, 'Could not load fulfillment records.'));
     } finally {
       setDeskLoading(false);
     }
@@ -250,18 +252,7 @@ const AdminPieces: React.FC = () => {
         editionNumber: parsedEdition,
         issuanceKey,
       });
-      const issuedPackage: IssuedPlatePackage = {
-        ownershipCode: data.ownershipCode,
-        publicCode: data.publicCode,
-        publicUrl: data.publicUrl,
-        frontSvg: data.frontSvg,
-        undersideSvg: data.undersideSvg,
-        frontSha256: data.frontSha256,
-        undersideSha256: data.undersideSha256,
-        manifest: data.manifest,
-        backupStatus: data.backupStatus,
-        warning: data.warning,
-      };
+      const issuedPackage: IssuedPlatePackage = projectIssuedPlateResponse(data);
       setSensitive((current) => ({ ...current, issuanceKey, package: issuedPackage }));
       setIssueSuccess(data.backupStatus === 'verified'
         ? 'Plate package issued and encrypted backup verified.'
@@ -307,11 +298,7 @@ const AdminPieces: React.FC = () => {
 
   const openActivation = (row: PieceRow) => {
     setActivationPieceId(row.id);
-    setActivationChecks({
-      ...emptyChecklist,
-      frontSha256: row.frontSha256 || '',
-      undersideSha256: row.undersideSha256 || '',
-    });
+    setActivationChecks(emptyChecklist);
   };
 
   const activatePlate = async (row: PieceRow) => {
@@ -392,9 +379,10 @@ const AdminPieces: React.FC = () => {
 
   const beginCorrection = (fulfillment: Fulfillment) => {
     setCorrectingId(fulfillment.id);
-    setSelectedPlateId('');
-    setSelectedOrderItemId('');
-    setManualReference('');
+    setSelectedPlateId(fulfillment.keeperPieceId);
+    setAssignmentSource(fulfillment.assignmentType === 'stripe_order' ? 'order' : 'manual');
+    setSelectedOrderItemId(fulfillment.orderItemId ? String(fulfillment.orderItemId) : '');
+    setManualReference(fulfillment.assignmentType === 'manual' ? fulfillment.intendedRecipientReference : '');
     setCorrectionReason('');
     setDeskError('');
     document.getElementById('fulfillment-editor')?.scrollIntoView({ behavior: 'smooth' });
@@ -446,6 +434,7 @@ const AdminPieces: React.FC = () => {
               <div className="grid md:grid-cols-[1fr_auto] gap-6 items-start">
                 <div>
                   <p className="font-title text-xl text-wood-900 mb-2">{issued.publicCode}</p>
+                  <p className="font-sans text-sm text-wood-600 mb-2">{titleFor(issued.manifest.artworkId)} · {issued.manifest.artworkId} · edition {issued.manifest.editionNumber}</p>
                   <p className="font-title text-2xl md:text-3xl text-wood-900 tracking-[0.15em] break-all mb-3">
                     {issued.ownershipCode}
                   </p>
@@ -479,19 +468,20 @@ const AdminPieces: React.FC = () => {
             <div className="grid sm:grid-cols-[1fr_9rem] gap-4 items-end">
               <div>
                 <label className={labelClass} htmlFor="piece-select">Artwork</label>
-                <select id="piece-select" value={pieceId} onChange={(event) => { setPieceId(event.target.value); setSensitive((current) => ({ ...current, issuanceKey: null })); }} className={inputClass}>
+                <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setPieceId(event.target.value)} className={inputClass}>
                   <option value="">Choose an artwork</option>
                   {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass} htmlFor="edition-input">Exact edition</label>
-                <input id="edition-input" type="number" min={0} step={1} value={editionNumber} onChange={(event) => { setEditionNumber(event.target.value); setSensitive((current) => ({ ...current, issuanceKey: null })); }} placeholder="0" className={inputClass} />
+                <input id="edition-input" type="number" min={0} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} placeholder="0" className={inputClass} />
               </div>
             </div>
             <div className="mt-5 flex items-center gap-4 flex-wrap">
               <button type="button" onClick={issuePlate} disabled={issuing || Boolean(issued)} className={buttonClass}>{issuing ? 'Issuing plate…' : 'Issue fabrication package'}</button>
               {sensitive.issuanceKey && !issued && <span className="font-sans text-xs text-wood-500">This retry will reuse the same issuance attempt.</span>}
+              {sensitive.issuanceKey && !issued && !issuing && <button type="button" className={quietButtonClass} onClick={() => { dismissSensitiveState(); setIssueError(''); }}>Abandon attempt and start new</button>}
             </div>
             {issueError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{issueError}</p>}
           </section>
@@ -506,11 +496,13 @@ const AdminPieces: React.FC = () => {
             </div>
             <div className="border border-wood-200 bg-white p-4 mb-4">
               <label className={labelClass} htmlFor="step-up-secret">Admin step-up secret</label>
-              <input id="step-up-secret" type="password" autoComplete="current-password" value={sensitive.stepUpSecret} onChange={(event) => setSensitive((current) => ({ ...current, stepUpSecret: event.target.value }))} className={inputClass} placeholder="Required for backup, reveal, and activation" />
+              <input id="step-up-secret" type="password" autoComplete="new-password" value={sensitive.stepUpSecret} onChange={(event) => setSensitive((current) => ({ ...current, stepUpSecret: event.target.value }))} className={inputClass} placeholder="Required for backup, reveal, and activation" />
               <p className="font-sans text-xs text-wood-500 mt-2">Kept only in this page's memory and cleared after activation or dismissal.</p>
+              {(sensitive.stepUpSecret || sensitive.revealedOwnershipCode) && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state and secret</button>}
             </div>
-            {listError && <p className="font-sans text-sm text-red-700 mb-3" role="alert">{listError}</p>}
-            {listLoading && rows.length === 0 ? (
+            {listError ? (
+              <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{listError}</p></div>
+            ) : listLoading && rows.length === 0 ? (
               <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading registry…</p></div>
             ) : rows.length === 0 ? (
               <div className="border border-wood-200 bg-white p-8 text-center"><p className="font-serif text-wood-600">No plate identities have been issued.</p></div>
@@ -553,6 +545,7 @@ const AdminPieces: React.FC = () => {
                       <div className="border-t border-wood-200 mt-5 pt-5">
                         <h4 className="font-title text-lg text-wood-900 mb-2">Physical activation checks</h4>
                         <p className="font-serif text-sm text-wood-600 mb-4">Activation permanently locks this plate identity. Compare the actual metal plate, not a screen preview.</p>
+                        <p className="font-sans text-sm text-wood-700 mb-4">Paste both SHA-256 values from the downloaded private manifest. They begin empty so this check cannot be confirmed by copied screen state.</p>
                         <div className="grid gap-3">
                           {([
                             ['realMetalQrScanned', 'Scanned the engraved metal QR on a phone'],
@@ -597,6 +590,12 @@ const AdminPieces: React.FC = () => {
                   <label className={labelClass} htmlFor="fulfillment-plate">Active backed-up plate</label>
                   <select id="fulfillment-plate" className={inputClass} value={selectedPlateId} onChange={(event) => setSelectedPlateId(event.target.value)}>
                     <option value="">Choose the exact plate</option>
+                    {correctingId && (() => {
+                      const current = desk.fulfillments.find((item) => item.id === correctingId);
+                      return current && !desk.availablePlates.some((plate) => plate.id === current.keeperPieceId)
+                        ? <option value={current.keeperPieceId}>{current.publicCode} · {titleFor(current.pieceId)} · edition {current.editionNumber} · current</option>
+                        : null;
+                    })()}
                     {desk.availablePlates.map((plate) => <option key={plate.id} value={plate.id}>{plate.publicCode} · {titleFor(plate.pieceId)} · edition {plate.editionNumber}</option>)}
                   </select>
                   {desk.availablePlates.length === 0 && <p className="font-sans text-xs text-wood-500 mt-2">No unassigned active plates with verified backups.</p>}
@@ -604,12 +603,18 @@ const AdminPieces: React.FC = () => {
                 <fieldset>
                   <legend className={labelClass}>Assignment source</legend>
                   <div className="flex flex-wrap gap-5 font-sans text-sm text-wood-700 mb-3">
-                    <label className="flex items-center gap-2"><input type="radio" checked={assignmentSource === 'order'} onChange={() => setAssignmentSource('order')} /> Paid order</label>
-                    <label className="flex items-center gap-2"><input type="radio" checked={assignmentSource === 'manual'} onChange={() => setAssignmentSource('manual')} /> Manual handoff</label>
+                    <label className="flex items-center gap-2"><input type="radio" name="assignment-source" checked={assignmentSource === 'order'} onChange={() => setAssignmentSource('order')} /> Paid order</label>
+                    <label className="flex items-center gap-2"><input type="radio" name="assignment-source" checked={assignmentSource === 'manual'} onChange={() => setAssignmentSource('manual')} /> Manual handoff</label>
                   </div>
                   {assignmentSource === 'order' ? (
                     <select aria-label="Paid order item" className={inputClass} value={selectedOrderItemId} onChange={(event) => setSelectedOrderItemId(event.target.value)}>
                       <option value="">Choose one paid order item</option>
+                      {correctingId && (() => {
+                        const current = desk.fulfillments.find((item) => item.id === correctingId);
+                        return current?.orderItemId && !desk.availableOrderItems.some((item) => item.id === current.orderItemId)
+                          ? <option value={current.orderItemId}>{current.intendedRecipientReference} · {current.buyerEmail || 'current paid order'} · current</option>
+                          : null;
+                      })()}
                       {desk.availableOrderItems.map((item) => <option key={item.id} value={item.id}>{item.orderReference} · {item.description || item.productId} · {item.buyerEmail}</option>)}
                     </select>
                   ) : (
@@ -622,7 +627,7 @@ const AdminPieces: React.FC = () => {
               </div>
               {correctingId && <div className="mt-4"><label className={labelClass} htmlFor="correction-reason">Correction reason</label><input id="correction-reason" className={inputClass} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} placeholder="Why this pre-shipment assignment must change" /></div>}
               <div className="flex flex-wrap gap-3 mt-5">
-                <button type="button" className={buttonClass} disabled={deskBusy || desk.availablePlates.length === 0} onClick={() => void submitAssignment()}>{deskBusy ? 'Saving…' : correctingId ? 'Save correction' : 'Assign exact plate'}</button>
+                <button type="button" className={buttonClass} disabled={deskBusy || (!correctingId && desk.availablePlates.length === 0)} onClick={() => void submitAssignment()}>{deskBusy ? 'Saving…' : correctingId ? 'Save correction' : 'Assign exact plate'}</button>
                 {correctingId && <button type="button" className={quietButtonClass} onClick={() => { setCorrectingId(null); setCorrectionReason(''); }}>Cancel correction</button>}
               </div>
               {deskError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{deskError}</p>}
@@ -630,7 +635,9 @@ const AdminPieces: React.FC = () => {
             </div>
 
             <h3 className="font-title text-lg text-wood-900 mb-3">Assignments</h3>
-            {deskLoading && desk.fulfillments.length === 0 ? (
+            {deskLoadError ? (
+              <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{deskLoadError}</p></div>
+            ) : deskLoading && desk.fulfillments.length === 0 ? (
               <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading assignments…</p></div>
             ) : desk.fulfillments.length === 0 ? (
               <div className="border border-wood-200 bg-white p-8 text-center"><p className="font-serif text-wood-600">No physical plates have been assigned.</p></div>

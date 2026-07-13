@@ -97,33 +97,15 @@ export const LAUNCH_FLAGS = {
   pricingExplorer: false,
 
   /**
-   * LIVING LEGACY — the QR "front door" for physical pieces: scan → temple-paced
-   * arrival + substantive certificate, keeper binding via a recovery code, and
-   * the yearly birthday-locked INTENTION ritual (confirm-before-it-sets).
-   * Adrian-Website is the canonical ledger/record home; the chain itself is
-   * written through the shared inscription path (mandalacodes side).
+   * LIVING LEGACY — Adrian-Website is the canonical registry for permanent
+   * physical artwork identities and keeper binding. Each plate has a public QR
+   * identity and a permanent Ownership Code. D1 stores its verifier plus an
+   * encrypted recoverable envelope; R2 mirrors only that encrypted envelope.
+   * Plate issuance, recovery, physical activation, fulfillment, and keeper
+   * binding remain gated together so the registry cannot ship partially.
    *
-   * Disabled because: the D1 migration 008_living_legacy.sql is not yet applied
-   * to the shared `adrian-website` database, real per-piece recovery codes have
-   * not been generated/printed, and the experience is still being built out
-   * (Phase 1 vertical slice only). With this flag false the site behaves exactly
-   * as before — no arrival treatment, no keeper UI, and the keeper API endpoints
-   * answer 404 — so nothing ships half-built.
-   *
-   * To re-enable:
-   *   1. Apply migration 008 (wrangler d1 migrations apply adrian-website --remote).
-   *   2. Generate a recovery code per piece (utils/recoveryCode.ts), print it on
-   *      the back of the art, store ONLY the hash in data/qrRegistry.ts + the
-   *      keeper bind row. Never commit the plaintext.
-   *   3. Confirm the keeper birthday source (lib/profile / a stored MM-DD field).
-   *   4. Flip to true.
-   *
-   * Files affected:
-   *   - components/WorksPage.tsx (arrival treatment + keeper doors + intention UI)
-   *   - components/legacy/* (PieceConstellation, KeeperPanel, IntentionRitual)
-   *   - functions/api/keeper/bind.js, functions/api/keeper/intention.js (404 when off)
-   *   - functions/api/atlas/mirror.js (piece-lens read; 404 when off)
-   *   - data/qrRegistry.ts (recoveryCodeHash on artwork entries)
+   * Production configuration, migrations, restore checks, fabrication, and
+   * first-shipment procedure are documented in docs/lineage-plate-runbook.md.
    */
   livingLegacy: true,
 };

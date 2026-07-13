@@ -27,6 +27,7 @@ import {
   beginIssuanceAttempt,
   clearSensitivePlateState,
   projectPlateDownloads,
+  projectIssuedPlateResponse,
   type SensitivePlateState,
 } from '../utils/adminArtworkRegistry';
 import {
@@ -122,6 +123,43 @@ describe('artwork registry admin helpers', () => {
     ]);
     assert.equal(downloads[0].content, '<svg>front</svg>');
     assert.equal(downloads[2].content.includes('K7QM-9XTR-2PHV-N4WB'), true);
+  });
+
+  it('projects only the expected private issuance package fields from an API response', () => {
+    const projected = projectIssuedPlateResponse({
+      ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      publicCode: 'AR-ABCDEFGH',
+      publicUrl: 'https://adrianrasmussen.com/qr/AR-ABCDEFGH',
+      frontSvg: '<svg>front</svg>',
+      undersideSvg: '<svg>private</svg>',
+      frontSha256: 'front-hash',
+      undersideSha256: 'back-hash',
+      manifest: {
+        schemaVersion: 1,
+        publicCode: 'AR-ABCDEFGH',
+        artworkId: 'UL-100',
+        editionNumber: 2,
+        publicUrl: 'https://adrianrasmussen.com/qr/AR-ABCDEFGH',
+        ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+        frontSha256: 'front-hash',
+        undersideSha256: 'back-hash',
+        generatedAt: '2026-07-13T00:00:00.000Z',
+      },
+      backupStatus: 'verified',
+      internalEnvelope: 'must-not-pass-through',
+    });
+    assert.equal('internalEnvelope' in projected, false);
+    assert.deepEqual(Object.keys(projected).sort(), [
+      'backupStatus', 'frontSha256', 'frontSvg', 'manifest', 'ownershipCode',
+      'publicCode', 'publicUrl', 'undersideSha256', 'undersideSvg',
+    ]);
+    for (const field of ['publicCode', 'publicUrl', 'ownershipCode', 'frontSha256', 'undersideSha256'] as const) {
+      assert.throws(
+        () => projectIssuedPlateResponse({ ...projected, [field]: `mismatched-${field}` }),
+        /mismatch/i,
+      );
+    }
+    assert.throws(() => projectIssuedPlateResponse({ publicCode: 'AR-ABCDEFGH' }), /incomplete/i);
   });
 
   it('requires every physical confirmation and the exact stored hashes', () => {

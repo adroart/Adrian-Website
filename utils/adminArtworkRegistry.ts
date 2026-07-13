@@ -66,6 +66,54 @@ export function projectPlateDownloads(
   ];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function projectIssuedPlateResponse(value: unknown): IssuedPlatePackage {
+  if (!isRecord(value) || !isRecord(value.manifest)) {
+    throw new Error('Incomplete issuance package');
+  }
+  const requiredStrings = [
+    'ownershipCode', 'publicCode', 'publicUrl', 'frontSvg', 'undersideSvg',
+    'frontSha256', 'undersideSha256',
+  ] as const;
+  if (requiredStrings.some((field) => typeof value[field] !== 'string' || !value[field])) {
+    throw new Error('Incomplete issuance package');
+  }
+  const manifest = value.manifest;
+  if (
+    manifest.schemaVersion !== 1 ||
+    typeof manifest.publicCode !== 'string' ||
+    typeof manifest.artworkId !== 'string' ||
+    !Number.isSafeInteger(manifest.editionNumber) ||
+    typeof manifest.publicUrl !== 'string' ||
+    typeof manifest.ownershipCode !== 'string' ||
+    typeof manifest.frontSha256 !== 'string' ||
+    typeof manifest.undersideSha256 !== 'string' ||
+    typeof manifest.generatedAt !== 'string'
+  ) {
+    throw new Error('Incomplete issuance package manifest');
+  }
+  for (const field of ['publicCode', 'publicUrl', 'ownershipCode', 'frontSha256', 'undersideSha256'] as const) {
+    if (value[field] !== manifest[field]) {
+      throw new Error(`Issuance package mismatch: ${field}`);
+    }
+  }
+  return {
+    ownershipCode: value.ownershipCode as string,
+    publicCode: value.publicCode as string,
+    publicUrl: value.publicUrl as string,
+    frontSvg: value.frontSvg as string,
+    undersideSvg: value.undersideSvg as string,
+    frontSha256: value.frontSha256 as string,
+    undersideSha256: value.undersideSha256 as string,
+    manifest: manifest as unknown as ArtworkPlateManifest,
+    ...(typeof value.backupStatus === 'string' ? { backupStatus: value.backupStatus } : {}),
+    ...(typeof value.warning === 'string' ? { warning: value.warning } : {}),
+  };
+}
+
 export function activationChecklistComplete(
   checklist: ActivationChecklist,
   storedFrontSha256: string,

@@ -52,9 +52,9 @@ const TOOLS: AdminTool[] = [
   ...(LAUNCH_FLAGS.livingLegacy
     ? [
         {
-          title: 'Pieces',
+          title: 'Plate and fulfillment desk',
           description:
-            'Register a physical piece into Living Legacy. Pick the piece, generate its recovery code, and print the code on the back of the art. You see the code once; the site keeps only its fingerprint.',
+            'Issue a permanent artwork QR and encrypted recoverable Ownership Code, verify and activate its metal plate, then assign that exact plate for fulfillment.',
           href: '/admin/pieces',
         },
       ]
