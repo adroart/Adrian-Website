@@ -23,7 +23,7 @@
  * the typed-secret flow does not. So the existing /works/:code path suffices.
  */
 
-export function onRequest({ params, request }) {
+export async function onRequest({ params, request, env }) {
   const code = params.number;
 
   // Oracle deck home
@@ -41,6 +41,40 @@ export function onRequest({ params, request }) {
       `https://mandalacodes.com/oracle/universal-language/${n}?ref=qr`,
       302,
     );
+  }
+
+  // Issued physical artwork instances
+  if (/^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(code)) {
+    if (!env?.DB) return new Response('Registry unavailable', { status: 503 });
+
+    const row = await env.DB
+      .prepare(
+        `SELECT piece_id, edition_number
+           FROM keeper_pieces
+          WHERE public_code = ?1
+            AND plate_status IN ('generated', 'active')`,
+      )
+      .bind(code)
+      .first();
+
+    if (!row) return new Response('Not found', { status: 404 });
+
+    const origin = new URL(request.url).origin;
+    const query = new URLSearchParams({
+      instance: code,
+      edition: String(row.edition_number ?? 0),
+      ref: 'qr',
+    });
+    return Response.redirect(
+      `${origin}/works/${encodeURIComponent(row.piece_id)}?${query.toString()}`,
+      302,
+    );
+  }
+
+  // AR- is reserved for issued physical identities. Invalid values must not
+  // collide with static artwork IDs or create plausible-looking work routes.
+  if (code.startsWith('AR-')) {
+    return new Response('Not found', { status: 404 });
   }
 
   // Everything else → artwork record on this domain

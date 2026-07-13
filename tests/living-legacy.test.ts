@@ -50,6 +50,7 @@ import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
 import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
 import { onRequest as activateArtworkPlate } from '../functions/api/admin/pieces/[id]/activate.js';
+import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
 const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
@@ -223,6 +224,102 @@ describe('artwork plate fabrication package', () => {
       undersideSha256: first.undersideSha256,
       generatedAt: input.generatedAt,
     });
+  });
+});
+
+function plateLookupDb(row: { piece_id: string; edition_number: number } | null) {
+  const calls: Array<{ sql: string; values: unknown[] }> = [];
+  return {
+    calls,
+    DB: {
+      prepare(sql: string) {
+        let values: unknown[] = [];
+        const statement = {
+          bind(...bound: unknown[]) {
+            values = bound;
+            return statement;
+          },
+          async first() {
+            calls.push({ sql, values });
+            return row;
+          },
+        };
+        return statement;
+      },
+    },
+  };
+}
+
+const qrRequest = (number: string, env: Record<string, unknown> = {}) =>
+  resolveArtworkQr({
+    params: { number },
+    request: new Request(`https://adrianrasmussen.com/qr/${encodeURIComponent(number)}`),
+    env,
+  });
+
+describe('permanent artwork QR resolver', () => {
+  it('resolves an issued AR code through D1 with encoded instance and edition values', async () => {
+    const lookup = plateLookupDb({ piece_id: 'UL 100/α', edition_number: 2 });
+    const response = await qrRequest('AR-7KQ9M2WX', { DB: lookup.DB });
+
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get('location'),
+      'https://adrianrasmussen.com/works/UL%20100%2F%CE%B1?instance=AR-7KQ9M2WX&edition=2&ref=qr',
+    );
+    assert.equal(lookup.calls.length, 1);
+    assert.deepEqual(lookup.calls[0].values, ['AR-7KQ9M2WX']);
+    assert.match(lookup.calls[0].sql, /SELECT\s+piece_id,\s*edition_number\s+FROM/i);
+    assert.doesNotMatch(
+      lookup.calls[0].sql,
+      /ownership|recovery|ciphertext|nonce|verifier|hash/i,
+    );
+  });
+
+  it('returns 404 for an unknown valid AR code instead of inventing a work route', async () => {
+    const lookup = plateLookupDb(null);
+    const response = await qrRequest('AR-7KQ9M2WX', { DB: lookup.DB });
+
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('location'), null);
+  });
+
+  it('returns 503 when the artwork registry binding is unavailable', async () => {
+    const response = await qrRequest('AR-7KQ9M2WX');
+
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('location'), null);
+  });
+
+  it('rejects malformed AR-like values without treating them as legacy artwork IDs', async () => {
+    for (const code of ['AR-O0000000', 'AR-TOO-SHORT', 'AR-abcdefgh']) {
+      const response = await qrRequest(code);
+      assert.equal(response.status, 404, code);
+      assert.equal(response.headers.get('location'), null, code);
+    }
+  });
+
+  it('preserves oracle, numeric 1..64, and static artwork redirects', async () => {
+    assert.equal(
+      (await qrRequest('oracle')).headers.get('location'),
+      'https://mandalacodes.com/oracle/universal-language?ref=qr',
+    );
+    assert.equal(
+      (await qrRequest('1')).headers.get('location'),
+      'https://mandalacodes.com/oracle/universal-language/1?ref=qr',
+    );
+    assert.equal(
+      (await qrRequest('64')).headers.get('location'),
+      'https://mandalacodes.com/oracle/universal-language/64?ref=qr',
+    );
+    assert.equal(
+      (await qrRequest('UL-100')).headers.get('location'),
+      'https://adrianrasmussen.com/works/UL-100?ref=qr',
+    );
+    assert.equal(
+      (await qrRequest('01')).headers.get('location'),
+      'https://adrianrasmussen.com/works/01?ref=qr',
+    );
   });
 });
 
