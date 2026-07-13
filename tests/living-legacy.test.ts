@@ -62,6 +62,16 @@ const legacyPieceInsert = `
 
 describe('artwork registry migrations', () => {
   it('leaves the pre-010 legacy schema readable without registry tables', () => {
+    const registryColumns = sqliteJson(`
+      ${legacyKeeperSchema()}
+      SELECT name FROM pragma_table_info('keeper_pieces')
+      WHERE name IN (
+        'public_code', 'issuance_key', 'plate_status', 'plate_generated_at',
+        'plate_activated_at', 'front_svg_sha256', 'back_svg_sha256',
+        'ownership_code_ciphertext', 'ownership_code_nonce',
+        'ownership_code_key_version', 'backup_status', 'backup_reference', 'backup_at'
+      ) ORDER BY cid;
+    `);
     const rows = sqliteJson(`
       ${legacyKeeperSchema()}
       ${legacyPieceInsert}
@@ -71,6 +81,7 @@ describe('artwork registry migrations', () => {
       WHERE type = 'table' AND name IN ('ownership_code_audit', 'piece_fulfillments');
     `);
 
+    assert.deepEqual(registryColumns, []);
     assert.deepEqual(rows, [
       {
         id: 'kp-legacy',
