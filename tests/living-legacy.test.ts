@@ -10,6 +10,10 @@ import {
   isWellFormedRecoveryCode,
 } from '../utils/recoveryCode';
 import {
+  decryptOwnershipCode,
+  encryptOwnershipCode,
+} from '../utils/ownershipCodeCrypto';
+import {
   birthdayWindowState,
   canSetMotivation,
   canConfirmMotivation,
@@ -64,6 +68,121 @@ const legacyPieceInsert = `
     ('kp-legacy', 'UL-001', 0, 'keeper-legacy', 'legacy-hash',
      'Bali', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', NULL);
 `;
+
+describe('ownership code authenticated encryption', () => {
+  const keyV1 = Buffer.from(Uint8Array.from({ length: 32 }, (_, index) => index + 1)).toString(
+    'base64',
+  );
+  const keyV2 = Buffer.from(Uint8Array.from({ length: 32 }, (_, index) => 255 - index)).toString(
+    'base64',
+  );
+  const env = {
+    OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '2',
+    OWNERSHIP_CODE_KEY_V1: keyV1,
+    OWNERSHIP_CODE_KEY_V2: keyV2,
+  };
+  const context = {
+    publicCode: 'AR-ABCDEFGH',
+    pieceId: 'UL-001',
+    editionNumber: 3,
+  };
+
+  it('round-trips with AES-GCM and exposes only a base64 envelope', async () => {
+    const envelope = await encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, env);
+
+    assert.deepEqual(Object.keys(envelope).sort(), ['ciphertext', 'keyVersion', 'nonce']);
+    assert.equal(envelope.keyVersion, '2');
+    assert.match(envelope.ciphertext, /^[A-Za-z0-9+/]+={0,2}$/);
+    assert.match(envelope.nonce, /^[A-Za-z0-9+/]+={0,2}$/);
+    assert.equal(Buffer.from(envelope.nonce, 'base64').byteLength, 12);
+    assert.equal(
+      await decryptOwnershipCode(envelope, context, env),
+      'AAAA-BBBB-CCCC-DDDD',
+    );
+  });
+
+  it('uses a fresh 96-bit nonce for every encryption', async () => {
+    const first = await encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, env);
+    const second = await encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, env);
+
+    assert.equal(Buffer.from(first.nonce, 'base64').byteLength, 12);
+    assert.equal(Buffer.from(second.nonce, 'base64').byteLength, 12);
+    assert.notEqual(first.nonce, second.nonce);
+    assert.notEqual(first.ciphertext, second.ciphertext);
+  });
+
+  it('rejects a wrong key and tampered ciphertext', async () => {
+    const envelope = await encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, env);
+    const wrongKeyEnv = {
+      ...env,
+      OWNERSHIP_CODE_KEY_V2: Buffer.alloc(32, 42).toString('base64'),
+    };
+    await assert.rejects(() => decryptOwnershipCode(envelope, context, wrongKeyEnv));
+
+    const ciphertext = Buffer.from(envelope.ciphertext, 'base64');
+    ciphertext[0] ^= 1;
+    await assert.rejects(() =>
+      decryptOwnershipCode(
+        { ...envelope, ciphertext: ciphertext.toString('base64') },
+        context,
+        env,
+      ),
+    );
+  });
+
+  it('authenticates every identity field through stable AAD', async () => {
+    const envelope = await encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, env);
+
+    for (const mismatchedContext of [
+      { ...context, publicCode: 'AR-ZZZZZZZZ' },
+      { ...context, pieceId: 'UL-999' },
+      { ...context, editionNumber: 4 },
+    ]) {
+      await assert.rejects(() => decryptOwnershipCode(envelope, mismatchedContext, env));
+    }
+    await assert.rejects(() =>
+      decryptOwnershipCode({ ...envelope, keyVersion: '1' }, context, env),
+    );
+  });
+
+  it('rejects missing, malformed, and non-256-bit keys', async () => {
+    await assert.rejects(
+      () => encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, {}),
+      /active ownership code key version/i,
+    );
+    await assert.rejects(
+      () =>
+        encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, {
+          OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+          OWNERSHIP_CODE_KEY_V1: 'not-base64!',
+        }),
+      /base64/i,
+    );
+    await assert.rejects(
+      () =>
+        encryptOwnershipCode('AAAA-BBBB-CCCC-DDDD', context, {
+          OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+          OWNERSHIP_CODE_KEY_V1: Buffer.alloc(16).toString('base64'),
+        }),
+      /32 bytes/i,
+    );
+  });
+
+  it('decrypts stored envelopes with older configured key versions', async () => {
+    const oldEnvelope = await encryptOwnershipCode(
+      'AAAA-BBBB-CCCC-DDDD',
+      context,
+      env,
+      '1',
+    );
+    assert.equal(oldEnvelope.keyVersion, '1');
+
+    assert.equal(
+      await decryptOwnershipCode(oldEnvelope, context, env),
+      'AAAA-BBBB-CCCC-DDDD',
+    );
+  });
+});
 
 describe('artwork registry migrations', () => {
   it('leaves the pre-010 legacy schema readable without registry tables', () => {
