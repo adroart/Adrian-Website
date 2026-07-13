@@ -9,7 +9,7 @@ import IntentionRitual from './IntentionRitual';
 /**
  * KeeperPanel — the two doors beneath the certificate (spec 1.4):
  *   (a) "Register / certify this piece" — the universal door. Bind yourself as
- *       the keeper with the long recovery code on the back of the art.
+ *       the keeper with the permanent Ownership Code on the underside.
  *   (b) "Begin your intention" — the deep door, opened once the piece is yours.
  *
  * Nobody is pushed. A keeper who only wants the certificate stops at (a). The
@@ -91,7 +91,7 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
             <div className="grid sm:grid-cols-2 gap-5">
               <DoorCard
                 title="Register this piece"
-                body="Bind it to your keeping with the recovery code on the back of the art. This certifies it is yours."
+                body="Bind it to your keeping with the Ownership Code on the underside of the art. This certifies it is yours."
                 cta="Register"
                 onClick={() => setDoor('register')}
               />
@@ -181,7 +181,7 @@ function DoorCard({
   );
 }
 
-// ── The recovery-code bind form ──
+// ── The Ownership Code bind form ──
 
 function RegisterForm({
   artwork,
@@ -204,7 +204,7 @@ function RegisterForm({
   const submit = async () => {
     setError(null);
     if (!wellFormed) {
-      setError('That code does not look complete. Check the panel on the back of the piece.');
+      setError('That Ownership Code does not look complete. Check the underside of the piece.');
       return;
     }
     setBusy(true);
@@ -216,7 +216,7 @@ function RegisterForm({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.message || 'That code did not bind this piece. Please check it and try again.');
+        setError(data.message || 'That Ownership Code did not bind this piece. Please check it and try again.');
         return;
       }
       onBound();
@@ -229,7 +229,7 @@ function RegisterForm({
     <div className="max-w-md mx-auto text-center">
       <h3 className="font-serif text-2xl text-wood-900 mb-3">Register {artwork.title}</h3>
       <p className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
-        Enter the long code printed under the panel on the back of the art. It is not the QR number.
+        Enter the Ownership Code engraved on the underside of the art. It is not the public QR number.
       </p>
       <input
         value={code}

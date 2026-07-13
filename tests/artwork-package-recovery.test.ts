@@ -4,6 +4,7 @@ import { before, describe, it } from 'node:test';
 import { buildArtworkPlatePackage } from '../utils/artworkPlate';
 import { encryptOwnershipCode } from '../utils/ownershipCodeCrypto';
 import { onRequest as recoverArtworkPackage } from '../functions/api/admin/pieces/[id]/package.js';
+import { hashRecoveryCode } from '../functions/api/_lib/keeper.js';
 
 const ADMIN_SECRET = 'registry-admin-secret';
 const KEY = Buffer.alloc(32, 7).toString('base64');
@@ -43,6 +44,7 @@ before(async () => {
     ownership_code_ciphertext: envelope.ciphertext,
     ownership_code_nonce: envelope.nonce,
     ownership_code_key_version: envelope.keyVersion,
+    recovery_code_hash: await hashRecoveryCode(OWNERSHIP_CODE),
   };
 });
 
@@ -141,9 +143,21 @@ describe('audited fabrication-package recovery', () => {
   });
 
   it('accepts only generated or active registry identities', async () => {
+    const active = environment({ row: { ...fixtureRow, plate_status: 'active' } });
+    const activeResponse = await recoverArtworkPackage({ request: request(), env: active.env, params: { id: 'kp-package-1' } });
+    assert.equal(activeResponse.status, 200);
+    assert.equal((await activeResponse.json()).ownershipCode, OWNERSHIP_CODE);
+
     const legacy = environment({ row: { ...fixtureRow, plate_status: 'legacy' } });
     assert.equal((await recoverArtworkPackage({ request: request(), env: legacy.env, params: { id: 'kp-package-1' } })).status, 404);
     const missing = environment({ row: null });
     assert.equal((await recoverArtworkPackage({ request: request(), env: missing.env, params: { id: 'kp-package-1' } })).status, 404);
+  });
+
+  it('fails closed when decrypted Ownership Code does not match its stored verifier', async () => {
+    const mismatch = environment({ row: { ...fixtureRow, recovery_code_hash: '0'.repeat(64) } });
+    const response = await recoverArtworkPackage({ request: request(), env: mismatch.env, params: { id: 'kp-package-1' } });
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { ok: false, error: 'ownership_code_verifier_mismatch' });
   });
 });
