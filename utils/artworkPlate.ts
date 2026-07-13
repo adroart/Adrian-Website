@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { isWellFormedRecoveryCode, normalizeRecoveryCode } from './recoveryCode';
 
 const PUBLIC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PUBLIC_CODE_LENGTH = 8;
@@ -78,13 +79,25 @@ function escapeXml(value: string): string {
 }
 
 async function renderFrontSvg(input: ArtworkPlateInput, publicUrl: string): Promise<string> {
-  const qrSvg = await QRCode.toString(publicUrl, {
-    type: 'svg',
+  const qr = QRCode.create(publicUrl, {
     errorCorrectionLevel: PLATE_QR_ERROR_CORRECTION,
-    margin: PLATE_QR_QUIET_ZONE,
-    color: { dark: '#000000', light: '#ffffff' },
   });
-  const qrContents = qrSvg.slice(qrSvg.indexOf('>') + 1, qrSvg.lastIndexOf('</svg>'));
+  const pathParts: string[] = [];
+  for (let y = 0; y < qr.modules.size; y += 1) {
+    let x = 0;
+    while (x < qr.modules.size) {
+      if (!qr.modules.get(x, y)) {
+        x += 1;
+        continue;
+      }
+      const start = x;
+      while (x < qr.modules.size && qr.modules.get(x, y)) x += 1;
+      const run = x - start;
+      pathParts.push(
+        `M${start + PLATE_QR_QUIET_ZONE} ${y + PLATE_QR_QUIET_ZONE}h${run}v1h-${run}z`,
+      );
+    }
+  }
   const publicCode = escapeXml(input.publicCode);
   const artworkIdentity = escapeXml(`${input.artworkId} · edition ${input.editionNumber}`);
   const visibleUrl = escapeXml(publicUrl);
@@ -92,7 +105,7 @@ async function renderFrontSvg(input: ArtworkPlateInput, publicUrl: string): Prom
   return '<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="62mm" viewBox="0 0 500 620" ' +
     'shape-rendering="crispEdges" data-error-correction="Q" data-quiet-zone="4">' +
     '<rect width="500" height="620" fill="#fff"/>' +
-    `<g transform="translate(45 15) scale(10)">${qrContents}</g>` +
+    `<path fill="#000000" transform="translate(45 15) scale(10)" d="${pathParts.join('')}"/>` +
     `<text x="250" y="468" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" letter-spacing="3">${publicCode}</text>` +
     `<text x="250" y="515" text-anchor="middle" font-family="Arial,sans-serif" font-size="12">${visibleUrl}</text>` +
     `<text x="250" y="558" text-anchor="middle" font-family="Arial,sans-serif" font-size="15">${artworkIdentity}</text>` +
@@ -126,13 +139,40 @@ export async function buildArtworkPlatePackage(
   if (!Number.isInteger(input.editionNumber) || input.editionNumber < 0) {
     throw new Error('Invalid edition number');
   }
-  if (!input.artworkId) throw new Error('Invalid artwork ID');
-  if (!input.generatedAt) throw new Error('Invalid generation time');
+  if (
+    typeof input.ownershipCode !== 'string' ||
+    !isWellFormedRecoveryCode(input.ownershipCode)
+  ) {
+    throw new Error('Invalid ownership code');
+  }
+  if (
+    typeof input.artworkId !== 'string' ||
+    input.artworkId.length < 1 ||
+    input.artworkId.length > 80 ||
+    input.artworkId.trim() !== input.artworkId ||
+    /[\u0000-\u001f\u007f-\u009f]/.test(input.artworkId)
+  ) {
+    throw new Error('Invalid artwork ID');
+  }
+  if (
+    typeof input.generatedAt !== 'string' ||
+    input.generatedAt.length !== 24 ||
+    !Number.isFinite(Date.parse(input.generatedAt)) ||
+    new Date(input.generatedAt).toISOString() !== input.generatedAt
+  ) {
+    throw new Error('Invalid generation time');
+  }
+
+  const normalizedOwnershipCode = normalizeRecoveryCode(input.ownershipCode);
+  const canonicalInput: ArtworkPlateInput = {
+    ...input,
+    ownershipCode: normalizedOwnershipCode.match(/.{4}/g)!.join('-'),
+  };
 
   const publicUrl = publicPlateUrl(input.publicCode);
   const [frontSvg, undersideSvg] = await Promise.all([
-    renderFrontSvg(input, publicUrl),
-    Promise.resolve(renderUndersideSvg(input)),
+    renderFrontSvg(canonicalInput, publicUrl),
+    Promise.resolve(renderUndersideSvg(canonicalInput)),
   ]);
   const [frontSha256, undersideSha256] = await Promise.all([
     sha256Utf8(frontSvg),
@@ -144,7 +184,7 @@ export async function buildArtworkPlatePackage(
     artworkId: input.artworkId,
     editionNumber: input.editionNumber,
     publicUrl,
-    ownershipCode: input.ownershipCode,
+    ownershipCode: canonicalInput.ownershipCode,
     frontSha256,
     undersideSha256,
     generatedAt: input.generatedAt,

@@ -3,6 +3,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { createHash } from 'node:crypto';
+import jsQR from 'jsqr';
+import sharp from 'sharp';
 
 import {
   generateRecoveryCode,
@@ -106,8 +108,8 @@ describe('artwork plate fabrication package', () => {
   it('renders engraving-ready QR and underside SVGs with safe text', async () => {
     const plate = await buildArtworkPlatePackage({
       publicCode: 'AR-7KQ9M2WX',
-      ownershipCode: 'K7QM-9XTR-2PHV-N4W&',
-      artworkId: 'UL-<100>',
+      ownershipCode: 'k7qm 9xtr 2phv n4wb',
+      artworkId: 'UL-<100>&',
       editionNumber: 2,
       generatedAt: '2026-07-13T10:20:30.000Z',
     });
@@ -121,14 +123,66 @@ describe('artwork plate fabrication package', () => {
       plate.frontSvg,
       />https:\/\/adrianrasmussen\.com\/qr\/AR-7KQ9M2WX</,
     );
-    assert.match(plate.frontSvg, />UL-&lt;100&gt; · edition 2</);
+    assert.match(plate.frontSvg, />UL-&lt;100&gt;&amp; · edition 2</);
+    assert.match(plate.frontSvg, /<path fill="#000000"/);
+    assert.doesNotMatch(plate.frontSvg, /stroke=/);
     assert.doesNotMatch(plate.frontSvg, /K7QM-9XTR/);
     assert.match(plate.undersideSvg, /width="70mm" height="25mm"/);
     assert.match(plate.undersideSvg, />OWNERSHIP CODE</);
     assert.match(plate.undersideSvg, /Register or transfer at adrianrasmussen\.com/);
-    assert.match(plate.undersideSvg, /K7QM-9XTR-2PHV-N4W&amp;/);
+    assert.match(plate.undersideSvg, /K7QM-9XTR-2PHV-N4WB/);
     assert.doesNotMatch(plate.undersideSvg, /UL-<100>/);
-    assert.match(plate.undersideSvg, /UL-&lt;100&gt;/);
+    assert.match(plate.undersideSvg, /UL-&lt;100&gt;&amp;/);
+    assert.equal(plate.manifest.ownershipCode, 'K7QM-9XTR-2PHV-N4WB');
+  });
+
+  it('rasterizes to a QR that decodes to the exact permanent URL', async () => {
+    const plate = await buildArtworkPlatePackage({
+      publicCode: 'AR-7KQ9M2WX',
+      ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      artworkId: 'UL-100',
+      editionNumber: 2,
+      generatedAt: '2026-07-13T10:20:30.000Z',
+    });
+    const { data, info } = await sharp(Buffer.from(plate.frontSvg))
+      .resize({ width: 1000 })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const decoded = jsQR(
+      new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength),
+      info.width,
+      info.height,
+    );
+
+    assert.equal(decoded?.data, 'https://adrianrasmussen.com/qr/AR-7KQ9M2WX');
+  });
+
+  it('rejects malformed or unbounded engraving inputs', async () => {
+    const valid = {
+      publicCode: 'AR-7KQ9M2WX',
+      ownershipCode: 'K7QM-9XTR-2PHV-N4WB',
+      artworkId: 'UL-100',
+      editionNumber: 2,
+      generatedAt: '2026-07-13T10:20:30.000Z',
+    };
+
+    await assert.rejects(
+      () => buildArtworkPlatePackage({ ...valid, ownershipCode: 'K7QM-9XTR-2PHV-N4WO' }),
+      /invalid ownership code/i,
+    );
+    for (const artworkId of ['', ' UL-100', `UL-${'X'.repeat(78)}`, 'UL-100\nFORGED']) {
+      await assert.rejects(
+        () => buildArtworkPlatePackage({ ...valid, artworkId }),
+        /invalid artwork ID/i,
+      );
+    }
+    for (const generatedAt of ['', 'not-a-date', '2026-07-13T10:20:30Z']) {
+      await assert.rejects(
+        () => buildArtworkPlatePackage({ ...valid, generatedAt }),
+        /invalid generation time/i,
+      );
+    }
   });
 
   it('hashes exact SVG bytes and returns a complete deterministic private manifest', async () => {
