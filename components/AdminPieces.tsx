@@ -265,7 +265,10 @@ const AdminPieces: React.FC = () => {
     }
   };
 
-  const runRowAction = async (row: PieceRow, action: 'backup' | 'reveal' | 'package') => {
+  const runRowAction = async (
+    row: PieceRow,
+    action: 'backup' | 'reveal' | 'package' | 'verify-recovery',
+  ) => {
     if (!sensitive.stepUpSecret) {
       setRowError((current) => ({ ...current, [row.id]: 'Enter the admin step-up secret first.' }));
       return;
@@ -277,7 +280,12 @@ const AdminPieces: React.FC = () => {
       const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {
         adminSecret: sensitive.stepUpSecret,
       });
-      if (action === 'package') {
+      if (action === 'verify-recovery') {
+        setRowSuccess((current) => ({
+          ...current,
+          [row.id]: `R2 recovery passed with key version ${data.keyVersion}. Both fabrication hashes match.`,
+        }));
+      } else if (action === 'package') {
         const recoveredPackage = {
           ...projectIssuedPlateResponse(data),
           backupStatus: row.backupStatus || undefined,
@@ -511,7 +519,7 @@ const AdminPieces: React.FC = () => {
             </div>
             <div className="border border-wood-200 bg-white p-4 mb-4">
               <label className={labelClass} htmlFor="step-up-secret">Admin step-up secret</label>
-              <input id="step-up-secret" type="password" autoComplete="new-password" value={sensitive.stepUpSecret} onChange={(event) => setSensitive((current) => ({ ...current, stepUpSecret: event.target.value }))} className={inputClass} placeholder="Required for backup, reveal, and activation" />
+              <input id="step-up-secret" type="password" autoComplete="new-password" value={sensitive.stepUpSecret} onChange={(event) => setSensitive((current) => ({ ...current, stepUpSecret: event.target.value }))} className={inputClass} placeholder="Required for backup, recovery, reveal, and activation" />
               <p className="font-sans text-xs text-wood-500 mt-2">Kept only in this page's memory and cleared after activation or dismissal.</p>
               {(sensitive.stepUpSecret || sensitive.revealedOwnershipCode) && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state and secret</button>}
             </div>
@@ -541,6 +549,7 @@ const AdminPieces: React.FC = () => {
                       {row.publicCode && (
                         <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
                           {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
+                          {row.backupStatus === 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'verify-recovery')}>{rowBusy === `${row.id}:verify-recovery` ? 'Verifying R2…' : 'Verify R2 recovery'}</button>}
                           <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
                           <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
                           {row.plateStatus === 'generated' && row.backupStatus === 'verified' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}

@@ -155,18 +155,32 @@ fulfillment state, and lineage history.
 
 ### 7. Prove restoration and decryption before engraving
 
-Use a disposable local or Cloudflare scratch database, never production:
+Use a disposable local or Cloudflare scratch environment, never production.
+This drill must use copies of the independently held recovery artifacts; pointing
+the scratch runtime back at the production D1 or production R2 bucket does not
+prove recovery.
 
-1. Restore `adrian-website-with-registry-canary.sql` into the scratch database.
-2. Bind a scratch R2 bucket containing one copied encrypted plate envelope.
-3. Configure the scratch environment with the escrowed versioned key.
-4. Start the full Pages runtime and sign in as an admin.
-5. Reveal exactly one non-production canary plate using step-up authentication.
-6. Confirm the revealed Ownership Code regenerates the same underside SVG and
-   the same stored SHA-256 hash.
+1. Restore the **post-issuance D1 export**
+   `adrian-website-with-registry-canary.sql` into a new scratch database.
+2. Copy the canary's R2 object from its recorded `backup_reference` into a new
+   scratch R2 bucket at the identical object key. Use the copied R2 object, not
+   a new backup generated from the restored D1 row.
+3. Bind the scratch runtime only to that scratch database and scratch bucket.
+   Temporarily remove or rename the D1 ciphertext and nonce columns in the
+   scratch copy if you want independent operator evidence that the operation
+   cannot use them; the recovery endpoint does not select either column.
+4. Configure the scratch environment with the **escrowed versioned key**, not a
+   value copied from the live Pages environment.
+5. Start the full Pages runtime, sign in as an admin, enter the step-up secret,
+   and click **Verify R2 recovery** for the non-production canary.
+6. Require a pass showing the exact public code, artwork ID, edition, R2
+   reference, key version, and both matching SVG hashes. The operation reads the
+   encrypted envelope from R2, decrypts only in memory, verifies the D1 code
+   commitment, regenerates both fabrication files, and returns no Ownership Code
+   or SVG content.
 7. Confirm the public QR resolves without revealing the Ownership Code.
-8. Delete the scratch plaintext output and record only the date, tester, public
-   code, key version, hash result, and pass/fail outcome.
+8. Record only the date, tester, public code, key version, hash result, and
+   pass/fail outcome. The operation does not create plaintext output to retain.
 
 Do not engrave if the D1 export, R2 envelope, and escrowed key have not been
 proven together in this canary.
