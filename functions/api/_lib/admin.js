@@ -66,6 +66,13 @@ function base64urlToBytes(str) {
   }
 }
 
+function canonicalBase64urlBytes(value) {
+  if (typeof value !== 'string' || !value || !/^[A-Za-z0-9_-]+$/.test(value)) return null;
+  const bytes = base64urlToBytes(value);
+  if (!bytes || !constantTimeEqual(value, bytesToBase64url(bytes))) return null;
+  return bytes;
+}
+
 /** Constant-time equality for two Uint8Arrays. */
 function timingSafeEqual(a, b) {
   if (!a || !b || a.length !== b.length) return false;
@@ -226,12 +233,11 @@ export async function readRegistryUnlockToken(request, env, identity) {
   const parts = token.split('.');
   if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
   const [payloadB64, signatureB64] = parts;
-  const [expected, received, payloadBytes] = await Promise.all([
-    hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:token:${payloadB64}`),
-    Promise.resolve(base64urlToBytes(signatureB64)),
-    Promise.resolve(base64urlToBytes(payloadB64)),
-  ]);
-  if (!timingSafeEqual(expected, received) || !payloadBytes) return null;
+  const received = canonicalBase64urlBytes(signatureB64);
+  const payloadBytes = canonicalBase64urlBytes(payloadB64);
+  if (!received || !payloadBytes) return null;
+  const expected = await hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:token:${payloadB64}`);
+  if (!timingSafeEqual(expected, received)) return null;
 
   try {
     const payload = JSON.parse(new TextDecoder().decode(payloadBytes));
@@ -254,9 +260,8 @@ export async function readRegistryUnlockToken(request, env, identity) {
   }
 }
 
-export function registryUnlockCookie(token, request, maxAge = REGISTRY_UNLOCK_TTL_SECONDS) {
-  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
-  return `${REGISTRY_UNLOCK_COOKIE_NAME}=${token}; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
+export function registryUnlockCookie(token, _request, maxAge = REGISTRY_UNLOCK_TTL_SECONDS) {
+  return `${REGISTRY_UNLOCK_COOKIE_NAME}=${token}; Path=/api/admin; HttpOnly; SameSite=Strict; Secure; Max-Age=${maxAge}`;
 }
 
 export function clearRegistryUnlockCookie(request) {

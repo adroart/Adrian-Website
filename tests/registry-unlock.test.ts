@@ -78,6 +78,15 @@ describe('registry unlock exchange', () => {
     assert.doesNotMatch(cookie, /registry-secret/);
   });
 
+  it('always marks the unlock cookie Secure, including local HTTP runtimes', async () => {
+    const { registryUnlockCookie } = await helpers();
+    const cookie = registryUnlockCookie(
+      'signed-token',
+      new Request('http://localhost:8788/api/admin/registry-unlock'),
+    );
+    assert.match(cookie, /; Secure(?:;|$)/);
+  });
+
   it('requires a current administrator and the exact request origin', async () => {
     const { onRequestPost } = await endpoint();
     sessionData = null;
@@ -180,6 +189,29 @@ describe('registry unlock authorization', () => {
       assert.equal(result.status, 403);
       assert.equal(result.headers.get('Cache-Control'), 'no-store');
     }
+  });
+
+  it('rejects a non-canonical signature encoding even when it decodes to the same bytes', async () => {
+    const { createRegistryUnlockToken, requireRegistryUnlock } = await helpers();
+    const identity = { userId: 'admin-1', email: 'artist@example.com' };
+    const token = await createRegistryUnlockToken(environment(), identity);
+    const [payload, signature] = token.split('.');
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    const lastIndex = alphabet.indexOf(signature.at(-1) || '');
+    assert.equal(lastIndex % 4, 0, 'canonical SHA-256 base64url has zero final pad bits');
+    const alternateSignature = `${signature.slice(0, -1)}${alphabet[lastIndex + 1]}`;
+    assert.deepEqual(
+      Buffer.from(alternateSignature, 'base64url'),
+      Buffer.from(signature, 'base64url'),
+      'fixture must change only ignored base64 pad bits',
+    );
+
+    const result = await requireRegistryUnlock(
+      request('GET', { cookie: `registry_unlock=${payload}.${alternateSignature}` }),
+      environment(),
+    );
+    assert.ok(result instanceof Response);
+    assert.equal(result.status, 403);
   });
 
   it('reports safe status and clears the scoped cookie', async () => {
