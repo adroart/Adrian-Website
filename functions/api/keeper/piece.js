@@ -4,17 +4,17 @@
  * GET  ?pieceId=...&editionNumber=0
  *   Tells the signed-in user their relationship to this piece:
  *     { ok: true, kept: boolean, byYou: boolean, currentDisplayLocation?: string }
- *   - kept:  does an active keeper binding exist at all (any user)?
- *   - byYou: is the signed-in user that keeper?
- *   currentDisplayLocation is returned only to the piece's own keeper.
+ *   - kept:  does an active steward binding exist at all (any user)?
+ *   - byYou: is the signed-in user that steward?
+ *   currentDisplayLocation is returned only to the piece's own steward.
  *
  * PUT  { pieceId, editionNumber?, currentDisplayLocation }
- *   The keeper edits where the piece currently lives. Presentation state only:
+ *   The steward edits where the piece currently lives. Presentation state only:
  *   it is shown on the certificate's provenance and NEVER enters the ledger
  *   chain. Pass an empty string to clear it.
  *
  * Gated behind the `livingLegacy` flag (404 when off). Auth: Better Auth
- * session (requireUser). This endpoint reads no other keeper's data.
+ * session (requireUser). This endpoint reads no other steward's data.
  */
 
 import { requireUser } from '../_lib/clerk.js';
@@ -74,7 +74,7 @@ async function handleGet(context, auth) {
     ok: true,
     kept: true,
     byYou,
-    // Display location is the keeper's own data; only surface it to them.
+    // Display location is the steward's own data; only surface it to them.
     ...(byYou ? { currentDisplayLocation: row.current_display_location ?? null } : {}),
   });
 }
@@ -105,7 +105,7 @@ async function handlePut(context, auth) {
     .run();
 
   if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
-    // No row updated → caller is not the keeper of this piece.
+    // No row updated → caller is not the steward of this piece.
     return json({ ok: false, error: 'not_your_piece' }, 403);
   }
   return json({ ok: true, currentDisplayLocation: location || null });

@@ -7,12 +7,12 @@
  *   - mandalacodes renders the MANDALA / codon lens (the deck's 64 codons as
  *     rings on a globe) over the shared public atlas state.
  *   - Adrian-Website renders the PIECE lens (a physical artwork as one star,
- *     its keeper's home, its lineage) over the SAME source.
+ *     its steward's home, its lineage) over the SAME source.
  *
  * The canonical, append-only ledger and its public projection live on
  * mandalacodes (atlas/public.json in R2, served at https://mandalacodes.com/api/atlas).
  * This endpoint does NOT rebuild any of that — it fetches that one public
- * source and projects just the requested piece's presence out of it. No keeper
+ * source and projects just the requested piece's presence out of it. No steward
  * identity, no personal data, no chain mutation happens here; it is a read.
  *
  * Gated behind the `livingLegacy` flag — 404 when off so the surface is

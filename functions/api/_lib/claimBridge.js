@@ -1,8 +1,8 @@
 /**
  * requestContestedClaim(env, claim)
  *
- * Fires a CONTESTED-claim handoff to mandalacodes when a keeper bind hits a
- * piece that already has a living keeper. Adrian-Website is the front door a
+ * Fires a CONTESTED-claim handoff to mandalacodes when a steward bind hits a
+ * piece that already has a current steward. Adrian-Website is the front door a
  * collector scans, but the patient multi-warning escalation window and the
  * one claim-request store (R2 atlas/claimRequests.json) both live on the
  * mandalacodes side. Rather than fork that store or duplicate the escalation

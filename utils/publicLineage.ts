@@ -27,7 +27,7 @@ const EVENT_LABELS: Record<string, string> = {
     fulfillment_correction_out: 'Assignment corrected',
     fulfillment_correction_in: 'Assignment corrected',
     fulfillment_ship: 'Shipped',
-    first_bound: 'First keeper registered',
+    first_bound: 'First steward registered',
     migration_baseline: 'Registry history established',
 };
 

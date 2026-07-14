@@ -236,7 +236,7 @@ describe('public lineage presentation', () => {
     assert.equal(formatLineageEventLabel('fulfillment_correction_out'), 'Assignment corrected');
     assert.equal(formatLineageEventLabel('fulfillment_correction_in'), 'Assignment corrected');
     assert.equal(formatLineageEventLabel('fulfillment_ship'), 'Shipped');
-    assert.equal(formatLineageEventLabel('first_bound'), 'First keeper registered');
+    assert.equal(formatLineageEventLabel('first_bound'), 'First steward registered');
   });
 
   it('presents only shallow simple public payload values', () => {

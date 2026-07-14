@@ -4,7 +4,7 @@ import { useAccount } from '../../lib/account/useAccount';
 /**
  * IntentionRitual — the deep door's ceremony: compose → confirm-before-it-sets
  * → locked for the year. Journaling stays open anytime; only the yearly
- * motivation locks (and only inside the keeper's birthday window).
+ * motivation locks (and only inside the steward's birthday window).
  *
  * The body never touches the chain: the server stores it with a random salt and
  * writes only a salted commitment toward the ledger. This component only ever

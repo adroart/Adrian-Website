@@ -9,7 +9,7 @@
  * Two kinds of entry, mirroring the spec:
  *   - 'motivation' — the yearly fused intention. It is the only entry that
  *     LOCKS. It may be set/changed only ONCE a year, inside a window around the
- *     keeper's birthday, and only after a confirm-before-it-sets grace step.
+ *     steward's birthday, and only after a confirm-before-it-sets grace step.
  *   - 'journal'    — anytime reflection. Never locks, no birthday gate, no
  *     confirm step. Journaling stays allowed always.
  *
@@ -31,20 +31,20 @@ export type IntentionKind = (typeof INTENTION_KINDS)[number];
 export const INTENTION_MAX_LENGTH = 2000;
 
 /**
- * How many days on each side of the keeper's birthday the yearly motivation may
- * be set or changed. A wide-enough window that a keeper who misses the exact day
+ * How many days on each side of the steward's birthday the yearly motivation may
+ * be set or changed. A wide-enough window means a steward who misses the exact day
  * still gets their turn, narrow enough that the motivation is genuinely a
  * once-a-year act tied to the birthday and not an anytime edit.
  */
 export const BIRTHDAY_WINDOW_DAYS = 7;
 
 /**
- * The confirm-before-it-sets grace window, in milliseconds. After a keeper
+ * The confirm-before-it-sets grace window, in milliseconds. After a steward
  * composes a motivation it is written PENDING (confirmed_at NULL); they then
  * confirm ("see it as the field will see it") and it LOCKS. The grace window is
  * the minimum time the pending draft must be allowed to exist so the confirm is
  * a conscious second act, not a double-click. It is a floor, not a ceiling — a
- * keeper may take as long as they like before confirming.
+ * steward may take as long as they like before confirming.
  */
 export const CONFIRM_GRACE_MS = 30 * 1000; // 30 seconds
 
@@ -168,12 +168,12 @@ export interface BirthdayWindowResult {
 }
 
 /**
- * Is the keeper inside their birthday window right now? The birthday source is
+ * Is the steward inside their birthday window right now? The birthday source is
  * a stored "MM-DD" string for this slice (the year is irrelevant — only the
  * anniversary matters). `nowIso` is any ISO date/timestamp.
  *
  * Returns open:false with distanceDays:Infinity when the birthday string is
- * missing or malformed, so a keeper with no birthday on file simply cannot lock
+ * missing or malformed, so a steward with no birthday on file simply cannot lock
  * a motivation until they provide one — a fail-closed default.
  */
 export function birthdayWindowState(
@@ -245,7 +245,7 @@ export function intentionState(
 export interface SetMotivationContext {
   /** Existing CONFIRMED, non-erased motivation rows for this piece/edition. */
   lockedYears: number[];
-  /** The keeper's birthday window state at `now`. */
+  /** The steward's birthday window state at `now`. */
   birthday: BirthdayWindowResult;
   /** Calendar year the new motivation would set for (UTC year of `now`). */
   year: number;
@@ -260,7 +260,7 @@ export interface SetMotivationDecision {
 }
 
 /**
- * May a keeper SET (compose, pending) a new yearly motivation right now? The
+ * May a steward SET (compose, pending) a new yearly motivation right now? The
  * gate runs BEFORE the pending row is written, so a closed window or an
  * already-locked year stops the ritual at the door rather than after a draft.
  *
@@ -297,7 +297,7 @@ export interface ConfirmDecision {
   ok: boolean;
   reason?: 'too_soon' | 'grace_not_elapsed';
   message?: string;
-  /** Milliseconds the keeper must still wait before confirming. */
+  /** Milliseconds the steward must still wait before confirming. */
   waitMs?: number;
 }
 
@@ -325,7 +325,7 @@ export function canConfirmMotivation(ctx: ConfirmContext): ConfirmDecision {
   return { ok: true };
 }
 
-// ---------- Read projection (what the keeper sees) ----------
+// ---------- Read projection (what the steward sees) ----------
 
 export interface IntentionView {
   id: string;

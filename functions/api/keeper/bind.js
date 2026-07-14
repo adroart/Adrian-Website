@@ -3,7 +3,7 @@
  *
  * Body: { ownershipCode: string, pieceId: string, editionNumber?: number }
  *
- * Binds the signed-in user as the keeper of a physical piece. The proof of
+ * Binds the signed-in user as the steward of a physical piece. The proof of
  * ownership is the permanent Ownership Code printed on the underside
  * of the art (utils/recoveryCode.ts) — distinct from the public QR number,
  * which is look-only. Its verifier is matched; readable ciphertext is stored
@@ -16,19 +16,19 @@
  * possession against. The state machine on a POST is exactly five arms:
  *   1. No row for this piece/edition      → 404 not_registered (register first).
  *   2. Ready registry plate or legacy row, unclaimed, code MATCHES
- *                                      → FIRST BIND: stamp keeper + claimed_at.
+ *                                      → FIRST BIND: stamp steward + claimed_at.
  *   3. Registered, unclaimed, code WRONG   → 403 code_mismatch (no leak beyond that).
- *   4. Live keeper bound (released_at NULL)→ idempotent if it is YOU, else the
+ *   4. Live steward bound (released_at NULL)→ idempotent if it is YOU, else the
  *                                            contested-claim handoff (202).
  *   5. Any row ever claimed, even released → governed contested-claim handoff.
  *
- * Returns: { ok: true, keeper: { pieceId, editionNumber, claimedAt } } on a
- * fresh bind; the same shape (idempotent) when the caller is already the keeper.
- * On a CONTESTED bind (the piece already has a living keeper) it does NOT 409:
+ * Returns the legacy compatibility key `keeper` on a fresh bind and the same
+ * shape when the caller is already the steward.
+ * On a CONTESTED bind (the piece already has a current steward) it does NOT 409:
  * it opens a claim request and returns 202 with { ok: true, status: 'claim_requested', claim }.
  *
  * CONTESTED CLAIMS, the handoff into the patient escalation window:
- * A piece that already has an active keeper no longer hits a dead 409. Instead
+ * A piece that already has an active steward no longer hits a dead 409. Instead
  * this opens a pending CLAIM REQUEST that routes (per the existing routing) to
  * the current holder, and the response tells the requester their claim has
  * started, the holder is being notified, and it resolves over a patient window.
@@ -59,7 +59,7 @@
  * commitments. recovery_code_hash is the online verifier; plaintext never enters logs.
  *
  * Auth: Better Auth session cookie (requireUser). The email-fallback identity
- * claim that mandalacodes' steward bind allows is NOT used here — binding keys
+ * claim that mandalacodes' steward bind allows is NOT used here. Binding keys
  * strictly off the verified session userId.
  */
 
@@ -168,7 +168,7 @@ export async function onRequest(context) {
     }
 
     // Possession of the exact permanent Ownership Code is required before any
-    // direct bind or governed claim. A guessed code cannot notify a keeper or
+    // direct bind or governed claim. A guessed code cannot notify a steward or
     // create claim traffic.
     if (existing.recovery_code_hash !== codeHash) {
       return json(
@@ -181,8 +181,8 @@ export async function onRequest(context) {
       );
     }
 
-    // A current keeper's re-scan is idempotent. It also repairs fulfillment
-    // claimed_at if an earlier non-batch D1 fallback bound the keeper before
+    // A current steward's re-scan is idempotent. It also repairs fulfillment
+    // claimed_at if an earlier non-batch D1 fallback bound the steward before
     // that secondary stamp completed.
     if (existing.keeper_user_id === auth.userId && !existing.released_at) {
       await repairFulfillmentClaim(env, existing.id, existing.claimed_at || nowIso);
@@ -238,7 +238,7 @@ export async function onRequest(context) {
               ok: false,
               error: 'claim_handoff_unconfigured',
               message:
-                'Stewardship transfers are not switched on yet. The current keeper has not been notified. Please try again later.',
+                'Stewardship transfers are not switched on yet. The current steward has not been notified. Please try again later.',
             },
             503,
           );
@@ -248,7 +248,7 @@ export async function onRequest(context) {
             ok: false,
             error: 'claim_handoff_failed',
             message:
-              'We could not start your claim just now. The current keeper has not been notified. Please try again shortly.',
+              'We could not start your claim just now. The current steward has not been notified. Please try again shortly.',
           },
           502,
         );
@@ -264,7 +264,7 @@ export async function onRequest(context) {
           ok: true,
           status: 'claim_requested',
           message:
-            'This piece already has a keeper, so your claim has begun. The current keeper is being notified and your request resolves over a patient window. A keeper can decline at any time, which ends the claim; only unanswered silence across the full window frees the piece.',
+            'This piece already has a current steward, so your claim has begun. The current steward is being notified and your request resolves over a patient window. The steward can decline at any time, which ends the claim; only unanswered silence across the full window frees the piece.',
           claim: {
             pieceId,
             editionNumber,
@@ -293,7 +293,7 @@ export async function onRequest(context) {
     }
 
     // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
-    // Only a never-claimed row reaches here. Stamp this user as the keeper and
+    // Only a never-claimed row reaches here. Stamp this user as the steward and
     // record claimed_at and close its fulfillment. D1 batch keeps these stamps
     // atomic; runtimes without batch use a guarded bind plus repairable stamp.
     const keeperMutation = env.DB.prepare(
@@ -379,7 +379,7 @@ async function repairFulfillmentClaim(env, keeperPieceId, claimedAt) {
   try {
     await fulfillmentClaimStatement(env, keeperPieceId, claimedAt).run();
   } catch (error) {
-    // The keeper bind remains valid in runtimes lacking D1 batch. A later
+    // The steward bind remains valid in runtimes lacking D1 batch. A later
     // idempotent re-scan repairs this secondary lifecycle stamp.
     console.error('[keeper/bind] fulfillment claim stamp failed:', error?.message);
   }
