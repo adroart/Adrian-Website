@@ -540,7 +540,7 @@ const AdminPieces: React.FC = () => {
                         <dl className="grid sm:grid-cols-3 gap-3 mt-4 font-sans text-xs text-wood-600">
                           <div><dt className="font-semibold">Plate</dt><dd>{row.plateStatus}</dd></div>
                           <div><dt className="font-semibold">Online backup</dt><dd>{row.backupStatus || 'not available'}{row.backupAt ? ` · ${formatDate(row.backupAt)}` : ''}</dd></div>
-                          <div><dt className="font-semibold">Keeper</dt><dd>{row.keeperBound ? 'Claimed' : row.claimedAt ? 'Previously claimed' : 'Not claimed'}</dd></div>
+                          <div><dt className="font-semibold">Steward</dt><dd>{row.keeperBound ? 'Claimed' : row.claimedAt ? 'Previously claimed' : 'Not claimed'}</dd></div>
                           <div><dt className="font-semibold">Generated</dt><dd>{formatDate(row.plateGeneratedAt)}</dd></div>
                           <div><dt className="font-semibold">Activated</dt><dd>{formatDate(row.plateActivatedAt)}</dd></div>
                           <div><dt className="font-semibold">Backup reference</dt><dd className="break-all">{row.backupReference || 'Not yet'}</dd></div>

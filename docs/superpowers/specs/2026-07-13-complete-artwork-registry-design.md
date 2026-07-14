@@ -10,33 +10,36 @@ controls refined through feasibility and security review
 Complete the artwork registry so a physical artwork can receive one permanent
 public QR identity and one permanent private Ownership Code, pass a provable
 fabrication and recovery process, accumulate a private and selectively public
-life story, and transfer between verified keepers without splitting authority
+life story, and transfer between verified stewards without splitting authority
 between websites.
 
 The registry must remain usable when Mandala Codes is unavailable. Physical
 possession plus the permanent Ownership Code is the ultimate recovery path, but
-the code must never silently override an active keeper.
+the code must never silently override an active steward.
 
 ## Non-negotiable rules
 
 1. AdrianRasmussen.com is the only writable source of truth for artwork identity,
-   keeper state, claims, transfers, inscriptions, provenance and recovery state.
+   steward state, claims, transfers, inscriptions, provenance and recovery state.
 2. Mandala Codes consumes a signed projection. It may present, filter and map the
    data but may not adjudicate or write ownership.
 3. A plate's public QR and private Ownership Code never change after activation.
 4. The Ownership Code never appears in a URL, email, public payload, ordinary
    log, certificate or projection.
-5. A current keeper may approve a transfer immediately. Explicit denial stops
+5. A current steward may approve a transfer immediately. Explicit denial stops
    automatic transfer. Only complete nonresponse enters the 30-day path.
 6. With physical possession and the correct Ownership Code, an unanswered claim
    eventually transfers after 30 days. Email delivery failures are evidence, not
    a permanent orphaning condition.
 7. Permanent history is append-only. Public visibility is a reversible
    presentation choice and does not delete or rewrite the private record.
-8. A confirmed new keeper unlocks the complete artwork-attached private history,
-   but not prior keepers' account-security profiles or unrelated personal data.
-9. The infrastructure custodian can preserve and restore the registry but cannot
+8. A confirmed new steward unlocks the complete artwork-attached private history,
+   but not prior stewards' account-security profiles or unrelated personal data.
+9. The registry custodian can preserve and restore the registry but cannot
    transfer artwork, resolve claims or rewrite history.
+10. Steward is the only product term for the current registered person. Legacy
+    implementation identifiers containing `keeper` remain private compatibility
+    details and must never appear in customer-facing copy.
 
 ## System boundaries
 
@@ -45,7 +48,7 @@ the code must never silently override an active keeper.
 Adrian's D1 database stores:
 
 - permanent artwork and plate identity;
-- current and historical keeper relationships;
+- current and historical steward relationships;
 - claim and transfer state;
 - private technical evidence;
 - public append-only lineage events and anchors;
@@ -56,10 +59,10 @@ Adrian's D1 database stores:
 - recovery drills, physical qualification and readiness state;
 - projection and checkpoint state.
 
-All keeper-changing mutations occur in a D1 transaction or guarded D1 batch and
+All steward-changing mutations occur in a D1 transaction or guarded D1 batch and
 append the corresponding lineage event in the same atomic operation.
 
-### Registry steward
+### Claim scheduler
 
 A companion Cloudflare Worker with a scheduled trigger owns time-dependent work:
 
@@ -79,7 +82,7 @@ that an external email provider can guarantee exactly-once delivery.
 ### Mandala projection
 
 Mandala receives a versioned, signed, privacy-filtered document containing the
-public artwork map, public lineage and explicitly public keeper/profile content.
+public artwork map, public lineage and explicitly public steward/profile content.
 Both sites may display all Adrian Rasmussen artworks. Adrian defaults to the
 complete collection; Mandala defaults to its Mandala-focused filter.
 
@@ -178,7 +181,7 @@ browser history and synchronized folders remain their responsibility.
 ### Prelaunch scan
 
 An issued QR always reaches a server-verified public identity view showing the
-public code, artwork and edition. Before full launch it shows no keeper, lineage,
+public code, artwork and edition. Before full launch it shows no steward, lineage,
 claim controls or private data. Query-string values alone are never trusted for
 the displayed identity.
 
@@ -215,7 +218,7 @@ health may block only Stripe-linked fulfillment.
 
 ## Release 2: canonical ownership and claims
 
-### Keeper onboarding
+### Steward onboarding
 
 First registration requires:
 
@@ -225,17 +228,17 @@ First registration requires:
 - private birthdate;
 - correct physical Ownership Code.
 
-The chart-coherence setting is visibly explained and preselected during keeper
+The chart-coherence setting is visibly explained and preselected during steward
 onboarding. It can be disabled at onboarding or later. Birthdate and coherence
 settings are never public.
 
 ### Claim state machine
 
-A claim has one canonical row. At most one keeper-changing claim may be active
+A claim has one canonical row. At most one steward-changing claim may be active
 for an artwork at a time; later valid claimants receive a queue/conflict response
 and cannot mature concurrently. States are:
 
-- `pending_keeper`;
+- `pending_keeper` (private legacy compatibility identifier; never customer-facing);
 - `approved`;
 - `denied`;
 - `paused_review`;
@@ -246,46 +249,46 @@ and cannot mature concurrently. States are:
 The claimant supplies the Ownership Code, a self-attested full name backed by a
 verified email account, and an optional
 explanation. The server verifies the code before creating claim traffic. The
-current keeper sees the claimant's verified name, email and explanation. Only
+current steward sees the claimant's verified name, email and explanation. Only
 the registry administrator can see IP address, user agent and technical evidence.
 This privacy boundary supersedes the earlier idea of showing collectors one
-another's IP addresses. A code-valid claimant sees the keeper's public profile
+another's IP addresses. A code-valid claimant sees the steward's public profile
 when enabled and otherwise communicates through a masked email relay; the
-keeper's private email is not disclosed automatically.
+steward's private email is not disclosed automatically.
 
 Warnings are scheduled at claim opening, day 10, day 20 and day 27. Delivery and
-bounce outcomes are persisted. The keeper may:
+bounce outcomes are persisted. The steward may:
 
 - approve, causing an immediate atomic transfer;
 - deny with a reason, permanently stopping that automatic claim;
 - respond or request contact, pausing automation for human resolution;
 - remain silent.
 
-At the first successful steward run at or after day 30, a still-silent valid
+At the first successful run of the claim scheduler at or after day 30, a still-silent valid
 claim transfers even when the old mailbox hard-bounced. This ensures the
 physical artwork cannot be orphaned forever. A provider-wide delivery outage
 pauses due claims; an individual dead mailbox does not. Delivery and bounce
 status comes from authenticated Resend callbacks, not merely API acceptance.
-Any authenticated keeper response before the conditional execution prevents the
+Any authenticated steward response before the conditional execution prevents the
 automatic mutation.
 
 A denial reason is disclosed to the claimant through the relay and starts a
 90-day refiling cooldown for the same claimant/artwork pair. A disputed theft
-claim remains frozen until keeper approval or a documented external legal
+claim remains frozen until steward approval or a documented external legal
 resolution. Executing a court or equivalent legal determination requires a
 separate legal-resolution role with two independent approvers; neither the
-ordinary admin nor infrastructure custodian can act alone.
+ordinary admin nor registry custodian can act alone.
 
 ### Transfer transaction
 
 An approved or silence-resolved transfer atomically:
 
-1. closes the prior keeper interval;
-2. opens the new keeper interval;
-3. updates the current keeper projection;
+1. closes the prior steward interval;
+2. opens the new steward interval;
+3. updates the current steward projection;
 4. closes the claim;
 5. appends the transfer lineage event and advances its durable anchor;
-6. grants the new keeper access to the complete private archive;
+6. grants the new steward access to the complete private archive;
 7. writes notification and projection intents into the transactional outbox.
 
 The permanent Ownership Code remains unchanged. Concurrent approval, denial and
@@ -307,12 +310,12 @@ The private archive supports structured records for:
 - financial history, currency, channel and supporting documents;
 - private notes, photographs and certificates.
 
-Every confirmed keeper receives the complete artwork-attached archive, including
-prior price, currency and artwork documents. It excludes prior keepers'
+Every confirmed steward receives the complete artwork-attached archive, including
+prior price, currency and artwork documents. It excludes prior stewards'
 birthdates, authentication/network evidence, payment credentials, unrelated
 account notes and exact private addresses. Invoices and documents are redacted
 of unrelated counterparty data before becoming artwork-attached history. Before
-transfer a claimant may request temporary disclosure. The current keeper selects
+transfer a claimant may request temporary disclosure. The current steward selects
 individual records and a short expiry; access never implies permission to
 download undisclosed attachments.
 
@@ -333,7 +336,7 @@ reason and superseding correction event. The registry never promises permanent
 retention of harmful plaintext personal data.
 
 Exact private addresses are never public. Public location is limited to an
-explicit venue, city, region or keeper-authored description.
+explicit venue, city, region or steward-authored description.
 
 ### Inscriptions and dedications
 
@@ -341,13 +344,13 @@ Supported authored story types are:
 
 - one creator inscription;
 - one purchaser gift dedication before recipient claim;
-- one origin inscription for the first keeper;
-- one annual keeper inscription per eligible year.
+- one origin inscription for the first steward;
+- one annual steward inscription per eligible year.
 
-Annual eligibility runs from 14 days before through 14 days after the keeper's
-birthday in their private IANA timezone. February 29 keepers use February 28 in
+Annual eligibility runs from 14 days before through 14 days after the steward's
+birthday in their private IANA timezone. February 29 stewards use February 28 in
 non-leap years. Each inscription begins as a private draft with a seven-day editing
-period. The author may confirm and seal early. Otherwise the steward seals it at
+period. The author may confirm and seal early. Otherwise the claim scheduler seals it at
 the deadline. Sealed content is immutable; a correction is a new linked record.
 
 Visibility remains reversible. The sealed story persists privately even while
@@ -361,11 +364,11 @@ artwork. Its seven-day editing period begins on first submission. Before shipmen
 the admin may revoke and reissue an unused entitlement after correcting the
 fulfillment; every revocation is audited.
 
-### Public keeper profile and dream graph
+### Public steward profile and dream graph
 
-A keeper may opt into a public profile containing selected name, dream/purpose,
+A steward may opt into a public profile containing selected name, dream/purpose,
 website, social links and broad location. Each field can be shown or hidden
-independently and later re-enabled. A hidden profile leaves an anonymous keeper
+independently and later re-enabled. A hidden profile leaves an anonymous steward
 period in public lineage rather than breaking history.
 
 Websites and social links are mutable presentation data, not immutable historical
@@ -374,15 +377,15 @@ an inscription. Public profiles and opted-in coherence relationships form the
 people, artworks and dreams graph used by both map presentations.
 
 Adrian may add creation, storage, exhibition, restoration and location records
-while he is the keeper. After transfer the current keeper controls new custody
+while he is the steward. After transfer the current steward controls new custody
 and location records. Adrian may propose a historical or exhibition record, but
-the current keeper confirms it before private location data is stored or shown.
+the current steward confirms it before private location data is stored or shown.
 
 ## Release 4: permanence, projection and custody
 
 ### Backups and checkpoints
 
-Encrypted backups include the canonical registry, keeper intervals, claims,
+Encrypted backups include the canonical registry, steward intervals, claims,
 private evidence, inscriptions, provenance, notification state and lineage, not
 only Ownership Code envelopes.
 
@@ -394,7 +397,7 @@ manifest and escrowed keys. Large exports use chunked authenticated envelope
 encryption with a unique nonce per chunk, wrapped data key and manifest root;
 ordinary Cloudflare-managed R2 encryption is not treated as independent escrow.
 
-Each day the steward computes a deterministic checkpoint over artwork anchors and
+Each day the claim scheduler computes a deterministic checkpoint over artwork anchors and
 the prior checkpoint. It signs the checkpoint, publishes it on Adrian, mirrors it
 to Mandala, stores it under an immutable sequence key protected by an R2 retention
 lock, and submits its hash to an independent witness outside the primary
@@ -404,7 +407,7 @@ prove that a restored database matches the historical checkpoint sequence.
 This is tamper evidence and recoverability, not a claim that Cloudflare storage
 is metaphysically immutable.
 
-### Custodian role
+### Registry custodian role
 
 Custody uses separation of duties rather than one omnipotent credential. A
 recovery operator can retrieve encrypted exports but cannot decrypt them. A
@@ -412,7 +415,7 @@ separate key guardian holds decryption material but no deployment or database
 credential. Restoring production, changing bindings or rotating recovery keys
 requires both roles and creates independently delivered audit alerts.
 
-The normal custodian application role can:
+The normal registry custodian application role can:
 
 - retrieve encrypted recovery exports;
 - restore a scratch or replacement registry;
@@ -421,7 +424,7 @@ The normal custodian application role can:
 - request infrastructure credential rotation through the dual-control ceremony.
 
 It cannot create, edit, hide or delete artwork records; view ordinary private
-keeper content; approve or deny claims; or transfer ownership. Museum outreach
+steward content; approve or deny claims; or transfer ownership. Museum outreach
 and recipient ordering remain inactive until institutions agree to participate.
 Cloudflare account administrators remain a privileged procedural trust boundary;
 the design does not falsely claim that a deploy-capable super-administrator is
@@ -429,8 +432,8 @@ cryptographically incapable of abuse.
 
 ## Privacy and authorization
 
-Roles are creator/admin, current keeper, transfer claimant, temporary disclosure
-recipient, public visitor, projection consumer and infrastructure custodian.
+Roles are creator/admin, current steward, transfer claimant, temporary disclosure
+recipient, public visitor, projection consumer and registry custodian.
 Every endpoint defines one role and an explicit response allowlist.
 
 Private financial, biographical, location and technical evidence is encrypted at
@@ -451,7 +454,7 @@ access requires step-up authentication and creates an immutable audit event.
 - Concurrent claim actions resolve through conditional writes with one winner.
 - Projection or checkpoint verification failure fails closed and alerts admin.
 - A provider-wide notification outage pauses automatic transfer. An individual
-  keeper mailbox bounce remains evidence of unreachable custody and does not
+  steward mailbox bounce remains evidence of unreachable custody and does not
   orphan the physical artwork indefinitely.
 
 ## Verification gates
@@ -468,9 +471,9 @@ The implementation requires:
 - private disclosure authorization and expiry tests;
 - inscription draft, early seal, auto-seal and birthday-boundary tests;
 - public visibility hide/show tests without source mutation;
-- keeper-profile and coherence-consent tests;
+- steward-profile and coherence-consent tests;
 - checkpoint creation, restoration and tamper-detection tests;
-- browser journeys for admin, first keeper, seller, buyer, claimant and custodian;
+- browser journeys for admin, first steward, seller, buyer, claimant and registry custodian;
 - one production recovery canary;
 - real metal tests on current iPhone and Android devices.
 
@@ -482,13 +485,13 @@ attachment, abrasion or cleaning tests without the actual plate.
 1. Ship fabrication readiness and complete the recovery canary.
 2. Qualify one real metal plate and enable the verified public identity surface.
 3. Disable Mandala ownership mutation paths, ship canonical Adrian ownership,
-   and run a real first-keeper and immediate-transfer
+   and run a real first-steward and immediate-transfer
    canary with controlled accounts.
 4. Enable Mandala's signed read projection only after its mutation paths are
    confirmed unavailable.
-5. Ship provenance, inscriptions and keeper profiles behind private account gates.
+5. Ship provenance, inscriptions and steward profiles behind private account gates.
 6. Publish the dual maps and checkpoint verification.
-7. Provision the limited custodian ceremony; leave museum outreach disabled.
+7. Provision the ceremony for the limited registry custodian role; leave museum outreach disabled.
 
 No rollout step represents later features as available before its live canary
 passes.

@@ -673,7 +673,7 @@ describe('artwork registry migrations', () => {
     ]);
   });
 
-  it('adds plate identity fields while preserving legacy keeper rows', () => {
+  it('adds plate identity fields while preserving legacy steward rows', () => {
     const [row] = sqliteJson(`
       ${legacyKeeperSchema()}
       ${legacyPieceInsert}
@@ -1484,12 +1484,12 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
       request: baseRequest,
       holderResponded: false,
       nowIso: past,
-      warnings: [], // nothing actually delivered to the keeper yet
+      warnings: [], // nothing actually delivered to the steward yet
     });
     assert.notEqual(notFreed.status, 'frees-to-requester');
   });
 
-  it('any keeper response keeps the piece blocked (engagement never frees)', () => {
+  it('any steward response keeps the piece blocked (engagement never frees)', () => {
     const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
     const held = evaluateClaimWindow({
       request: baseRequest,
@@ -2361,10 +2361,10 @@ describe('admin artwork plate lifecycle', () => {
   });
 });
 
-// ── Keeper bind: the full register → first-bind → contested lifecycle ─────────
+// ── Steward bind: the full register → first-bind → contested lifecycle ─────────
 // These exercise functions/api/keeper/bind.js against the SAME in-memory D1
 // stand-in the admin suite uses, extended to the few extra statement shapes
-// bind issues (the no-released-filter SELECT, the keeper UPDATE, and the users
+// bind issues (the no-released-filter SELECT, the legacy keeper_user_id UPDATE, and the users
 // lookup getUserByClerkId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth
 // cookie; the contested-claim bridge fetch is stubbed at globalThis.fetch.
@@ -2376,7 +2376,7 @@ describe('admin artwork plate lifecycle', () => {
 import { mock } from 'node:test';
 
 // The signed-in identity bind sees. Mutated per-test before each call so one
-// suite can play several different users (registrant never binds; first keeper;
+// suite can play several different users (registrant never binds; first steward;
 // a second, contesting user).
 let CURRENT_AUTH: { userId: string; email: string | null; emailVerified?: boolean } | null = null;
 
@@ -2399,7 +2399,7 @@ mock.module('../functions/api/_lib/clerk.js', {
 // not mock db.js; we just make the fake DB answer that statement.
 
 // A fuller fake D1 that serves BOTH the admin registration statements and the
-// keeper-bind statements, plus the users lookup. Same key (piece_id +
+// steward-bind statements, plus the users lookup. Same key (piece_id +
 // edition_number); UNIQUE(piece_id, edition_number) is honoured.
 function makeKeeperDb() {
   const pieces: any[] = [];
@@ -2444,7 +2444,7 @@ function makeKeeperDb() {
       return { kind: 'first', row: findAny(params[0], params[1]) || null };
     }
 
-    // admin INSERT: fresh registration (no keeper yet)
+    // admin INSERT: fresh registration (no steward yet)
     if (
       /^INSERT INTO keeper_pieces/i.test(s)
     ) {
@@ -2516,8 +2516,8 @@ function makeKeeperDb() {
     if (/^UPDATE piece_fulfillments SET claimed_at = \?1 WHERE keeper_piece_id = \?2 AND claimed_at IS NULL/i.test(s)) {
       const [claimedAt, keeperPieceId] = params;
       const row = fulfillments.find((f) => f.keeper_piece_id === keeperPieceId && !f.claimed_at);
-      const keeper = pieces.find((piece) => piece.id === keeperPieceId);
-      const allowed = params[2] == null || (keeper?.keeper_user_id === params[2] && keeper?.claimed_at === claimedAt);
+      const steward = pieces.find((piece) => piece.id === keeperPieceId);
+      const allowed = params[2] == null || (steward?.keeper_user_id === params[2] && steward?.claimed_at === claimedAt);
       if (row && allowed) row.claimed_at = claimedAt;
       return { kind: 'run', meta: { changes: row && allowed ? 1 : 0 } };
     }
@@ -2548,8 +2548,8 @@ function makeKeeperDb() {
       return { kind: 'run', meta: { changes: lastChanges } };
     }
     if (/^INSERT INTO artwork_claim_evidence/i.test(s)) {
-      const keeper = pieces.find((piece) => piece.id === params[1]);
-      if (params[8] && (keeper?.keeper_user_id !== params[8] || keeper?.claimed_at !== params[9])) return { kind: 'run', meta: { changes: 0 } };
+      const steward = pieces.find((piece) => piece.id === params[1]);
+      if (params[8] && (steward?.keeper_user_id !== params[8] || steward?.claimed_at !== params[9])) return { kind: 'run', meta: { changes: 0 } };
       if (params[10]) {
         const cutoff = Date.parse(params[7]) - params[10] * 1000;
         const duplicate = evidence.some((prior) => prior[1] === params[1]
@@ -2876,7 +2876,7 @@ describe('admin piece fulfillment desk', () => {
   });
 });
 
-describe('keeper bind lifecycle (register → first-bind → contested)', () => {
+describe('steward bind lifecycle (register → first-bind → contested)', () => {
   it('walks the full happy path and the contested handoff', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
@@ -2922,7 +2922,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       // 2) FIRST BIND: active + verified, so the holder can bind.
       pieces[0].backup_status = 'verified';
       const fixtureState = { lineage: lineage.length, evidence: evidence.length };
-      // Simulate a competing keeper winning after the read but before UPDATE.
+      // Simulate a competing steward winning after the read but before UPDATE.
       // The losing batch must not stamp fulfillment, lineage, or evidence.
       loseNextFirstBind();
       const lostRace = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
@@ -2937,7 +2937,7 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(firstJson.ok, true);
       assert.equal(firstJson.keeper.pieceId, 'UL-100');
       assert.ok(firstJson.keeper.claimedAt);
-      // The row now carries the first keeper; still the SAME row (UPDATE, not INSERT).
+      // The row now carries the first steward; still the SAME row (UPDATE, not INSERT).
       assert.equal(pieces.length, 1);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
       assert.ok(pieces[0].claimed_at);
@@ -2975,9 +2975,11 @@ describe('keeper bind lifecycle (register → first-bind → contested)', () => 
       assert.equal(contestJson.ok, true);
       assert.equal(contestJson.status, 'claim_requested');
       assert.equal(contestJson.claim.outcome, 'opened');
+      assert.match(contestJson.message, /current steward/i);
+      assert.doesNotMatch(contestJson.message, /\bkeeper\b/i);
       assert.equal(bridgeCalled, 1);
       assert.equal(evidence.at(-1)[6], 'contested_attempt');
-      // The binding was NOT stolen: user-first is still the keeper.
+      // The binding was NOT stolen: user-first is still the steward.
       assert.equal(pieces[0].keeper_user_id, 'user-first');
 
       // Retries still reach the governed bridge, but private evidence is

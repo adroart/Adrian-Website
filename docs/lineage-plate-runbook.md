@@ -9,13 +9,13 @@ final packed piece has been scanned again.
 The permanent public identity is `AR-XXXXXXXX`. The permanent private credential
 is the **Ownership Code** etched on the underside. The QR never contains the
 Ownership Code. Possessing the Ownership Code can begin a claim, but it cannot
-silently replace a registered keeper.
+silently replace a registered steward.
 
 ## Current release boundary
 
 This release supports issuance, encrypted recovery, encrypted online backup,
 physical activation, exact paid-sale or manual-handoff assignment, shipment
-locking, QR lookup, and first keeper binding.
+locking, QR lookup, and first steward binding.
 
 It does **not** switch on the public shop, automate ordinary transfers or the
 30-day claim process, add annual inscriptions, migrate the Mandala map, or set
@@ -70,7 +70,7 @@ ARTWORK_REGISTRY_ADMIN_ENABLED=true
 ```
 
 That runtime gate enables only the authenticated private plate desk and its
-admin API. It does not expose the public keeper, claim, map, or lineage UI. This
+admin API. It does not expose the public steward, claim, map, or lineage UI. This
 separate gate is what makes it possible to issue and prove a canary before the
 public launch flag is changed.
 
@@ -162,7 +162,7 @@ The recovery set is all three of the following:
 3. the separately escrowed versioned encryption key.
 
 R2 is defense in depth for encrypted Ownership Codes. It is not a standalone
-database backup: it deliberately omits keeper accounts, private claim evidence,
+database backup: it deliberately omits steward accounts, private claim evidence,
 fulfillment state, and lineage history.
 
 ### 7. Prove restoration and decryption before engraving
@@ -206,7 +206,7 @@ proven together in this canary.
 After the canary passes, keep `LAUNCH_FLAGS.livingLegacy` set to `false` and
 continue to fabrication and prototype qualification. The permanent QR resolver
 remains available for physical prelaunch scans, while public lineage history,
-keeper claims, and Living Legacy UI remain invisible.
+steward claims, and Living Legacy UI remain invisible.
 
 ## Issue a plate
 
@@ -329,14 +329,14 @@ the artwork/plate/order relationship cannot be corrected through the normal UI.
 
 The recipient signs in with a verified email, scans the public QR, and enters
 the permanent Ownership Code from the underside. A never-claimed piece binds to
-that account and stamps the fulfillment as claimed. A rescan by the same keeper
+that account and stamps the fulfillment as claimed. A rescan by the same steward
 is idempotent.
 
 Email-code and supported social sign-in establish email verification. A
 password account that has not verified its email cannot claim; sign out and use
 the emailed one-time code before retrying.
 
-After any keeper has ever claimed the piece, the permanent code never becomes a
+After any steward has ever claimed the piece, the permanent code never becomes a
 bearer override again. A different account is routed into the governed claim
 process; it cannot silently take control.
 
@@ -373,4 +373,4 @@ Before every new batch, and at least quarterly while pieces are circulating:
    key versions.
 4. Review reveal, activation, fulfillment correction, and shipment audit events.
 5. Confirm the Adrian domain, Cloudflare project, D1 database, R2 bucket, and
-   password-manager escrow remain under the intended custodian's control.
+   password-manager escrow remain under the intended registry custodian's control.

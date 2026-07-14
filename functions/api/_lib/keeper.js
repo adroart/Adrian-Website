@@ -1,5 +1,5 @@
 /**
- * Shared helpers for the Living Legacy keeper endpoints
+ * Shared helpers for the Living Legacy steward endpoints
  * (functions/api/keeper/*).
  *
  * Centralizes:
@@ -10,7 +10,7 @@
  *     utils/intentions.ts byte-for-byte (so a hash computed in the browser, a
  *     test, or here all agree),
  *   - the internal-user lookup (Better Auth userId → users row), reused so a
- *     keeper row keys off the same opaque id everywhere.
+ *     steward row keys off the same opaque id everywhere.
  *
  * No personal data ever leaves these helpers toward a ledger hash. The chain is
  * written on the mandalacodes side via the shared inscription path; this site
@@ -19,7 +19,7 @@
 
 import { LAUNCH_FLAGS } from '../../../launchFlags.ts';
 
-/** 404 used to keep the whole keeper surface invisible while the flag is off. */
+/** 404 used to keep the whole steward surface invisible while the flag is off. */
 export function notFound() {
   return new Response(JSON.stringify({ ok: false, error: 'not_found' }), {
     status: 404,
@@ -40,7 +40,7 @@ export function legacyEnabled() {
 }
 
 /**
- * Private registry operations can be staged before the public keeper surface.
+ * Private registry operations can be staged before the public steward surface.
  * This runtime gate is separate from the compile-time public flag so a canary
  * can be issued and recovery-tested without exposing collector claims.
  */
@@ -54,7 +54,7 @@ export function migrationNotApplied() {
     {
       ok: false,
       error:
-        'The keeper record is not available yet — D1 migration 008_living_legacy has not been applied to the shared database.',
+        'The steward record is not available yet. D1 migration 008_living_legacy has not been applied to the shared database.',
     },
     503,
   );
@@ -90,7 +90,7 @@ export async function computeContentHash(saltHex, body) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Opaque keeper-piece binding id. */
+/** Opaque legacy binding id; the exported name remains for compatibility. */
 export function genKeeperPieceId() {
   const rnd = crypto.getRandomValues(new Uint8Array(8));
   const hex = [...rnd].map((b) => b.toString(16).padStart(2, '0')).join('');

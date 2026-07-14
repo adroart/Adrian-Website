@@ -275,7 +275,7 @@ const WorksPage: React.FC = () => {
                     </p>
                 </div>
 
-                {/* ── Living Legacy (gated): constellation lens + keeper doors ── */}
+                {/* Living Legacy (gated): constellation lens and steward doors. */}
                 {legacyOn && (
                     <>
                         <div className="mt-20 print:hidden">

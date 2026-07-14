@@ -38,8 +38,7 @@ export interface QREntry {
    * The SHA-256 hash of the long recovery code printed on the BACK of the
    * physical piece, under a scratch panel. This is distinct from `code` (the
    * public QR number, which is look-only and binds nobody). The recovery code
-   * is the secret that lets a signed-in user bind themselves as the piece's
-   * keeper.
+   * is the secret that lets a signed-in user register as the piece's steward.
    *
    * NEVER store the plaintext recovery code here or anywhere in the repo. Only
    * the hash lives in source. Generate the code with
@@ -47,7 +46,7 @@ export interface QREntry {
    * with hashRecoveryCode(), and paste ONLY the hash here. Adrian keeps the
    * plaintext offline (the physical scratch panel is the only durable copy).
    *
-   * The keeper-side bind also writes this hash into keeper_pieces; the registry
+   * The steward-side bind also writes this hash into legacy `keeper_pieces`; the registry
    * copy is the artist-side worked example and a recovery anchor.
    */
   recoveryCodeHash?: string;
@@ -91,7 +90,7 @@ export const QR_REGISTRY: QREntry[] = [
 
   // Living Legacy worked example (gated behind the `livingLegacy` flag).
   // UL-100 ("Art of Living - 32") is a real piece in FULL_ARCHIVE. The public
-  // QR (code 'UL-100') is look-only and routes to /works/UL-100. The keeper
+  // QR (code 'UL-100') is look-only and routes to /works/UL-100. The steward
   // binds with a LONG recovery code printed under a scratch panel on the back
   // of the art, distinct from this public number. Only the SHA-256 hash of that
   // code lives in source; the plaintext stays offline on the physical piece.
@@ -110,6 +109,6 @@ export const QR_REGISTRY: QREntry[] = [
     recoveryCodeHash:
       '4f7f0287d2909b11da94d68e90524cf37f5b93cbc77ebd28a1ab701a27d12c62',
     notes:
-      'Living Legacy keeper piece. Recovery code is on the back of the art, not this QR number.',
+      'Living Lineage steward record. The Ownership Code is on the back of the art, not in this QR number.',
   },
 ];

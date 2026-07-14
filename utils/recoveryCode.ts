@@ -1,5 +1,5 @@
 /**
- * Recovery codes for Living Legacy keeper binding (Decision C: "long code on
+ * Recovery codes for Living Legacy steward binding (Decision C: "long code on
  * the back of the art").
  *
  * Two distinct identifiers live on a physical piece:
@@ -8,7 +8,7 @@
  *     anyone holding (or photographing) the piece.
  *   - the RECOVERY CODE (this file) — a long code under a scratch panel on the
  *     back of the art. It is the secret that BINDS a signed-in user as the
- *     keeper. Possession of the physical object (and therefore the code) is the
+ *     steward. Possession of the physical object (and therefore the code) is the
  *     proof of ownership.
  *
  * Everything here is pure and isomorphic — Web Crypto only (crypto.subtle,

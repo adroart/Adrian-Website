@@ -89,7 +89,7 @@ export const PieceConstellation: React.FC<{ artwork: Artwork; editionNumber?: nu
         {loaded
           ? onMap
             ? 'It already shines on the shared constellation, beside every other piece that has woken up.'
-            : 'When its keeper sets it on the map, it will join the constellation beside every other piece.'
+            : 'When its steward sets it on the map, it will join the constellation beside every other piece.'
           : 'Finding this piece on the shared constellation.'}
       </p>
 

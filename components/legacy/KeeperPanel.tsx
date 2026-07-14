@@ -7,12 +7,12 @@ import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
 import IntentionRitual from './IntentionRitual';
 
 /**
- * KeeperPanel — the two doors beneath the certificate (spec 1.4):
- *   (a) "Register / certify this piece" — the universal door. Bind yourself as
- *       the keeper with the permanent Ownership Code on the underside.
- *   (b) "Begin your intention" — the deep door, opened once the piece is yours.
+ * KeeperPanel is the legacy implementation name for the two steward doors:
+ *   (a) "Register / certify this piece" is the universal door. Bind yourself as
+ *       the steward with the permanent Ownership Code on the underside.
+ *   (b) "Begin your intention" is the deep door, opened once the piece is yours.
  *
- * Nobody is pushed. A keeper who only wants the certificate stops at (a). The
+ * Nobody is pushed. A steward who only wants the certificate stops at (a). The
  * intention ritual (IntentionRitual) is offered, never forced.
  *
  * Gated behind the `livingLegacy` flag. When the visitor is not signed in, the
@@ -24,7 +24,7 @@ import IntentionRitual from './IntentionRitual';
  * no em dashes, no icons, no badges, nothing over the artwork.
  */
 
-interface KeeperStatus {
+interface StewardStatus {
   kept: boolean;
   byYou: boolean;
   currentDisplayLocation?: string | null;
@@ -35,7 +35,7 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
   editionNumber = 0,
 }) => {
   const { isSignedIn, isLoaded, available, fetchAuthed } = useAccount();
-  const [status, setStatus] = useState<KeeperStatus | null>(null);
+  const [status, setStatus] = useState<StewardStatus | null>(null);
   const [door, setDoor] = useState<'closed' | 'register' | 'intention'>('closed');
 
   const loadStatus = React.useCallback(async () => {
@@ -72,7 +72,7 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
       {!isSignedIn && (
         <div className="max-w-md mx-auto text-center">
           <p className="font-serif text-[17px] text-wood-700 leading-[1.9] mb-6">
-            If you hold this piece, you can register it in your keeping and, when you wish, fuse a
+            If you hold this piece, you can register as its steward and, when you wish, fuse a
             yearly intention into it.
           </p>
           <Link
@@ -84,20 +84,20 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
         </div>
       )}
 
-      {/* Signed in, not yet the keeper, free to claim. */}
+      {/* Signed in, not yet the steward, free to claim. */}
       {isSignedIn && !youKeep && !keptByOther && (
         <div className="max-w-lg mx-auto">
           {door !== 'register' ? (
             <div className="grid sm:grid-cols-2 gap-5">
               <DoorCard
                 title="Register this piece"
-                body="Bind it to your keeping with the Ownership Code on the underside of the art. This certifies it is yours."
-                cta="Register"
+                body="Register as its steward with the Ownership Code on the underside of the art."
+                cta="Register as the steward"
                 onClick={() => setDoor('register')}
               />
               <DoorCard
                 title="Begin your intention"
-                body="The deeper door. Set a yearly intention into the piece, around your birthday. Opens once it is in your keeping."
+                body="The deeper door. Set a yearly intention into the piece around your birthday. Opens once you are its steward."
                 cta="About this"
                 muted
                 onClick={() => setDoor('register')}
@@ -120,16 +120,16 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
       {/* Already kept by someone else. */}
       {keptByOther && (
         <p className="max-w-md mx-auto text-center font-serif text-[16px] text-wood-600 leading-[1.9]">
-          This piece already rests in someone’s keeping. A transfer of stewardship moves through a
+          This piece already has a steward. A transfer of stewardship moves through a
           separate, patient process.
         </p>
       )}
 
-      {/* You are the keeper. */}
+      {/* You are the steward. */}
       {youKeep && (
         <div className="max-w-xl mx-auto">
           <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
-            In your keeping
+            You are the current steward
           </p>
 
           <DisplayLocation
@@ -259,7 +259,7 @@ function RegisterForm({
   );
 }
 
-// ── Keeper-editable current display location ──
+// Current display location, editable by the steward.
 
 function DisplayLocation({
   artwork,

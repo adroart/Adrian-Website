@@ -11,7 +11,7 @@
 - Public artwork QR namespace and resolver.
 - Physical-instance registry.
 - Permanent Ownership Codes.
-- Keeper registration and private contact records.
+- Steward registration and private contact records.
 - Fabrication manifests and plate lifecycle.
 - The public certificate/provenance arrival page.
 
@@ -24,11 +24,11 @@ The existing historical hash ledger remains on Mandala Codes during this shipmen
 - `functions/qr/[number].js` permanently resolves `adrianrasmussen.com/qr/:code`.
 - `functions/api/admin/pieces.js` registers a piece and currently returns one plaintext recovery code once.
 - `utils/recoveryCode.ts` generates the existing 16-character, human-safe, approximately 80-bit code.
-- D1 `keeper_pieces` currently stores only the recovery-code digest and keeper binding.
+- D1 `keeper_pieces` currently stores only the recovery-code digest and steward binding.
 - `components/AdminPieces.tsx` is the artist's registration desk.
 - `/works/:id` is the public artwork/certificate page.
 
-The existing recovery code becomes the permanent **Ownership Code**. It does not rotate during ordinary ownership transfers. It is the physical ownership credential attached to the artwork. An existing registered keeper and the governed claim process prevent the code alone from silently overriding a current registration.
+The existing recovery code becomes the permanent **Ownership Code**. It does not rotate during ordinary ownership transfers. It is the physical ownership credential attached to the artwork. An existing registered steward and the governed claim process prevent the code alone from silently overriding a current registration.
 
 ## Physical-instance identity
 
@@ -40,7 +40,7 @@ The eight characters use the recovery-code alphabet without ambiguous glyphs. Th
 
 The D1 registration maps:
 
-`public plate code -> artwork ID + edition number -> keeper binding + Ownership Code verifier + encrypted recoverable code`
+`public plate code -> artwork ID + edition number -> steward binding + Ownership Code verifier + encrypted recoverable code`
 
 Renaming an artwork or changing its web presentation never changes the public plate code.
 
@@ -78,7 +78,7 @@ Assets are content blocks with explicit millimetre dimensions and scalable vecto
 
 New registrations begin as `generated`. Adrian downloads both SVGs and the manifest, fabricates the plate, scans the real metal QR, checks the underside code, and then marks the registration `active`.
 
-Before activation, Adrian may regenerate an unclaimed piece if fabrication failed. Activation permanently locks its public plate code and Ownership Code. An active plate cannot be silently regenerated, even before the first keeper claim. An authorized recovery action may reproduce the existing code for a replacement plate but may not generate a different code.
+Before activation, Adrian may regenerate an unclaimed piece if fabrication failed. Activation permanently locks its public plate code and Ownership Code. An active plate cannot be silently regenerated, even before the first steward claim. An authorized recovery action may reproduce the existing code for a replacement plate but may not generate a different code.
 
 ## Resolver
 
@@ -103,7 +103,7 @@ This implementation delivers only what is required to create and verify permanen
 The following remain separate projects:
 
 - Moving the full event ledger from Mandala Codes to Adrian Rasmussen.
-- The complete 30-day email scheduler and automatic-transfer worker.
+- The complete 30-day claim scheduler and automatic-transfer worker.
 - Founder Succession Key and museum custodial relay.
 - Redesigning the public certificate page.
 

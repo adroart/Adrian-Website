@@ -2,7 +2,7 @@
  * /api/keeper/intention
  *
  * GET  ?pieceId=...&editionNumber=0
- *   Returns the signed-in keeper's own intentions for a piece they keep:
+ *   Returns the signed-in steward's own intentions for a piece they steward:
  *     { ok: true, intentions: IntentionView[], birthdayWindow: {...} }
  *
  * POST { pieceId, editionNumber?, action, kind?, body?, intentionId? }
@@ -62,7 +62,7 @@ async function findActiveBinding(env, userId, pieceId, editionNumber) {
     .first();
 }
 
-/** Read the keeper's birthday as "MM-DD" from their saved profile, or null. */
+/** Read the steward's birthday as "MM-DD" from their saved profile, or null. */
 async function readKeeperBirthdayMonthDay(env, internalUserId) {
   const row = await env.DB
     .prepare('SELECT birth_date FROM profiles WHERE user_id = ?1')
