@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -37,12 +37,76 @@ type SignInModalProps = {
   destination?: string;
 };
 
+type FocusTarget = { focus: () => void };
+type DialogLike = { querySelectorAll: (selector: string) => ArrayLike<FocusTarget> };
+type DialogKeyEvent = { key: string; shiftKey?: boolean; preventDefault: () => void };
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+export function closeAndNavigate(
+  onClose: () => void,
+  navigate: (destination: string) => void,
+  destination: string,
+) {
+  onClose();
+  navigate(destination);
+}
+
+export function handleDialogKeyDown(
+  event: DialogKeyEvent,
+  dialog: DialogLike,
+  onClose: () => void,
+  activeElement: FocusTarget | null,
+) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    onClose();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+
+  const focusable = Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTOR));
+  if (focusable.length === 0) {
+    event.preventDefault();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  } else if (!focusable.includes(activeElement as FocusTarget)) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+export function restoreDialogFocus(target: FocusTarget | null) {
+  target?.focus();
+}
+
 const SignInModal: React.FC<SignInModalProps> = ({
   onClose,
   onSignedIn,
   destination,
 }) => {
   const navigate = useNavigate();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(
+    typeof document !== 'undefined' && document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null,
+  );
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -67,10 +131,20 @@ const SignInModal: React.FC<SignInModalProps> = ({
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!dialogRef.current) return;
+      handleDialogKeyDown(event, dialogRef.current, onClose, document.activeElement as HTMLElement | null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  useEffect(() => () => restoreDialogFocus(previousFocusRef.current), []);
+
   const done = () => {
     onSignedIn?.();
-    onClose();
-    navigate(returnTo, { replace: true });
+    closeAndNavigate(onClose, (destination) => navigate(destination, { replace: true }), returnTo);
   };
 
   const doGoogle = async () => {
@@ -184,6 +258,7 @@ const SignInModal: React.FC<SignInModalProps> = ({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sign-in-title"
@@ -196,6 +271,7 @@ const SignInModal: React.FC<SignInModalProps> = ({
       >
         <button
           type="button"
+          autoFocus
           aria-label="Close sign-in dialog"
           onClick={onClose}
           style={{ ...linkStyle, display: 'block', marginLeft: 'auto' }}
@@ -269,7 +345,11 @@ const SignInModal: React.FC<SignInModalProps> = ({
               <button
                 type="button"
                 style={{ ...linkStyle, color: C.sub }}
-                onClick={() => navigate(`/account/reset-password?returnTo=${encodeURIComponent(returnTo)}`)}
+                onClick={() => closeAndNavigate(
+                  onClose,
+                  (destination) => navigate(destination),
+                  `/account/reset-password?returnTo=${encodeURIComponent(returnTo)}`,
+                )}
               >
                 Forgot password?
               </button>

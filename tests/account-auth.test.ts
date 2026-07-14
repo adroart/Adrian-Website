@@ -77,6 +77,8 @@ describe('secure Better Auth configuration', () => {
 describe('account client and sign-in UI', () => {
   it('validates same-site destinations for every sign-in method', () => {
     const client = source('lib/account/authClient.ts');
+    assert.doesNotMatch(client, /sign-in \(no passwords\)/);
+    assert.match(client, /password/i);
     assert.match(client, /export function safeAuthDestination/);
     assert.match(client, /callbackURL:\s*safeAuthDestination\(destination\)/);
     assert.match(client, /requestPasswordReset\(\{\s*email\s*\}\)/);
@@ -86,6 +88,60 @@ describe('account client and sign-in UI', () => {
     assert.equal(safeAuthDestination('//example.com/steal'), '/');
     assert.equal(safeAuthDestination('/\\example.com/steal'), '/');
     assert.equal(safeAuthDestination('/account\nHeader: injected'), '/');
+  });
+
+  it('closes before navigating away from the modal', async () => {
+    const modal = await import('../components/account/SignInModal.tsx');
+    assert.equal(typeof modal.closeAndNavigate, 'function');
+    const calls: string[] = [];
+
+    modal.closeAndNavigate(
+      () => calls.push('close'),
+      (destination: string) => calls.push(`navigate:${destination}`),
+      '/account/reset-password',
+    );
+
+    assert.deepEqual(calls, ['close', 'navigate:/account/reset-password']);
+  });
+
+  it('closes on Escape and wraps keyboard focus inside the dialog', async () => {
+    const modal = await import('../components/account/SignInModal.tsx');
+    assert.equal(typeof modal.handleDialogKeyDown, 'function');
+    const calls: string[] = [];
+    const first = { focus: () => calls.push('first') };
+    const middle = { focus: () => calls.push('middle') };
+    const last = { focus: () => calls.push('last') };
+    const dialog = {
+      querySelectorAll: () => [first, middle, last],
+    };
+    const event = (key: string, shiftKey = false) => ({
+      key,
+      shiftKey,
+      preventDefault: () => calls.push('prevent'),
+    });
+
+    modal.handleDialogKeyDown(event('Escape'), dialog, () => calls.push('close'), middle);
+    assert.deepEqual(calls, ['prevent', 'close']);
+
+    calls.length = 0;
+    modal.handleDialogKeyDown(event('Tab'), dialog, () => calls.push('close'), last);
+    assert.deepEqual(calls, ['prevent', 'first']);
+
+    calls.length = 0;
+    modal.handleDialogKeyDown(event('Tab', true), dialog, () => calls.push('close'), first);
+    assert.deepEqual(calls, ['prevent', 'last']);
+
+    calls.length = 0;
+    modal.handleDialogKeyDown(event('Tab'), dialog, () => calls.push('close'), middle);
+    assert.deepEqual(calls, []);
+  });
+
+  it('restores focus to the trigger when the modal closes', async () => {
+    const modal = await import('../components/account/SignInModal.tsx');
+    assert.equal(typeof modal.restoreDialogFocus, 'function');
+    let restored = false;
+    modal.restoreDialogFocus({ focus: () => { restored = true; } });
+    assert.equal(restored, true);
   });
 
   it('shows configured Google first and handles returned and thrown auth errors', () => {
