@@ -112,6 +112,10 @@ const privilegedEndpoints: EndpointCase[] = [
     load: async () => (await import('../functions/api/admin/viewings.js')).onRequest,
   },
   {
+    name: 'piece fulfillment desk', path: '/api/admin/piece-fulfillments', method: 'GET', unsafeMethod: 'POST', allowedStatus: 200,
+    load: async () => (await import('../functions/api/admin/piece-fulfillments.js')).onRequest,
+  },
+  {
     name: 'book writes', path: '/api/book', method: 'POST', body: { entry: { id: 'UL-1' } }, allowedStatus: 200,
     load: async () => (await import('../functions/api/book.js')).onRequestPost,
   },
@@ -151,6 +155,13 @@ async function invoke(endpoint: EndpointCase, origin?: string, method = endpoint
 }
 
 describe('ordinary privileged endpoint security matrix', () => {
+  it('includes the piece fulfillment desk in the runtime matrix', () => {
+    assert.equal(
+      privilegedEndpoints.some(endpoint => endpoint.path === '/api/admin/piece-fulfillments'),
+      true,
+    );
+  });
+
   for (const endpoint of privilegedEndpoints) {
     it(`${endpoint.name}: guest 401, non-admin 403, allowlisted admin reaches business behavior`, async () => {
       const guest = await invoke(endpoint, ORIGIN);
@@ -243,6 +254,7 @@ describe('legacy password administration retirement', () => {
       'functions/api/admin/payment-presets.js',
       'functions/api/admin/payment-presets/[id].js',
       'functions/api/admin/viewings.js',
+      'functions/api/admin/piece-fulfillments.js',
       'functions/api/book.js',
       'functions/api/poems.js',
       'functions/api/upload-music.js',
