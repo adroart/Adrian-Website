@@ -17,6 +17,8 @@
  * this change and the admin simply signs in again.
  */
 
+import { requireAdmin as authorizeAdmin } from './auth.js';
+
 const COOKIE_NAME = 'admin_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
@@ -128,8 +130,8 @@ export async function isAdminAuthed(request, env) {
 }
 
 export async function requireAdmin(request, env) {
-  if (await isAdminAuthed(request, env)) return null;
-  return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
+  const authorization = await authorizeAdmin(request, env);
+  return authorization instanceof Response ? authorization : null;
 }
 
 export function requireDb(env) {
