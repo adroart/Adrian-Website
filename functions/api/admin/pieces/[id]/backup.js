@@ -1,6 +1,6 @@
 import {
   jsonResponse,
-  requireAdminPostStepUp,
+  requireRegistryUnlock,
   requireDb,
 } from '../../../_lib/admin.js';
 import {
@@ -9,8 +9,9 @@ import {
 } from '../../../_lib/plateBackup.js';
 
 export async function onRequest({ request, env, params }) {
-  const authorization = await requireAdminPostStepUp(request, env);
-  if (authorization.response) return authorization.response;
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+  const authorization = await requireRegistryUnlock(request, env);
+  if (authorization instanceof Response) return authorization;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
 

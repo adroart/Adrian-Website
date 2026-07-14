@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 import { createHash } from 'node:crypto';
 import jsQR from 'jsqr';
 import sharp from 'sharp';
@@ -50,21 +50,56 @@ import {
   CLAIM_REQUEST_NOTE_MAX,
 } from '../functions/api/_lib/claimBridge.js';
 
-// Admin piece-registration endpoint + the launch flag it hides behind. We flip
-// the flag on inside the registration suite (and restore it) so the same handler
-// can be exercised; with the flag off it correctly 404s, which we also assert.
-import { onRequest as adminPieces } from '../functions/api/admin/pieces.js';
-import { onRequest as adminPieceFulfillments } from '../functions/api/admin/piece-fulfillments.js';
 import { buildLineageEvent, prepareNextLineageEvent } from '../functions/api/_lib/lineage.js';
 import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
-import { onRequest as readClaimEvidence } from '../functions/api/admin/pieces/[id]/claim-evidence.js';
 import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
-import { onRequest as revealArtworkPlate } from '../functions/api/admin/pieces/[id]/reveal.js';
-import { onRequest as retryArtworkPlateBackup } from '../functions/api/admin/pieces/[id]/backup.js';
-import { onRequest as activateArtworkPlate } from '../functions/api/admin/pieces/[id]/activate.js';
 import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
-import { createAdminSessionToken } from '../functions/api/_lib/admin.js';
 import { LAUNCH_FLAGS } from '../launchFlags';
+
+const ADMIN_SECRET = 'test-admin-secret';
+const ADMIN_IDENTITY = {
+  userId: 'admin-user', email: 'artist@example.com',
+  user: { id: 'admin-user', email: 'artist@example.com', emailVerified: true },
+  session: { id: 'admin-session' },
+};
+let CURRENT_AUTH: { userId: string; email: string | null; emailVerified?: boolean } | null = null;
+
+mock.module('../functions/api/_lib/auth.js', {
+  namedExports: {
+    requireUser: async () => {
+      if (!CURRENT_AUTH) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
+      }
+      return {
+        userId: CURRENT_AUTH.userId,
+        email: CURRENT_AUTH.email,
+        user: { emailVerified: CURRENT_AUTH.emailVerified === true },
+      };
+    },
+    requireAdmin: async (request: Request) => {
+      if (!request.headers.get('Cookie')?.includes('better-auth.session_token=admin-session')) {
+        return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), { status: 401 });
+      }
+      if (request.method !== 'GET' && request.headers.get('Origin') !== new URL(request.url).origin) {
+        return new Response(JSON.stringify({ ok: false, error: 'origin_forbidden' }), { status: 403 });
+      }
+      return ADMIN_IDENTITY;
+    },
+  },
+});
+
+const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
+  { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET },
+  ADMIN_IDENTITY,
+);
+const ADMIN_COOKIES = `better-auth.session_token=admin-session; registry_unlock=${REGISTRY_UNLOCK_TOKEN}`;
+const { onRequest: adminPieces } = await import('../functions/api/admin/pieces.js');
+const { onRequest: adminPieceFulfillments } = await import('../functions/api/admin/piece-fulfillments.js');
+const { onRequest: readClaimEvidence } = await import('../functions/api/admin/pieces/[id]/claim-evidence.js');
+const { onRequest: revealArtworkPlate } = await import('../functions/api/admin/pieces/[id]/reveal.js');
+const { onRequest: retryArtworkPlateBackup } = await import('../functions/api/admin/pieces/[id]/backup.js');
+const { onRequest: activateArtworkPlate } = await import('../functions/api/admin/pieces/[id]/activate.js');
 
 const migrationUrl = (name: string) => new URL(`../migrations/${name}`, import.meta.url);
 const readMigration = (name: string) => readFileSync(migrationUrl(name), 'utf8');
@@ -989,13 +1024,13 @@ describe('private claim evidence pagination', () => {
     const DB = { prepare() { let values: any[] = []; const statement: any = { bind(...next: any[]) { values = next; return statement; }, async all() { const [, beforeAt, beforeId, limit] = values; return { results: rows.filter((row) => !beforeAt || row.created_at < beforeAt || (row.created_at === beforeAt && row.id < beforeId)).slice(0, limit) }; } }; return statement; } };
     const request = (before?: { createdAt: string; id: string }) => new Request('https://adrianrasmussen.com/api/admin/pieces/kp-one/claim-evidence', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Origin: 'https://adrianrasmussen.com', Cookie: `admin_session=${ADMIN_SESSION_TOKEN}` },
-      body: JSON.stringify({ adminSecret: ADMIN_SECRET, limit: 2, before }),
+      headers: { 'Content-Type': 'application/json', Origin: 'https://adrianrasmussen.com', Cookie: ADMIN_COOKIES },
+      body: JSON.stringify({ limit: 2, before }),
     });
-    const first = await (await readClaimEvidence({ request: request(), env: { DB, UPLOAD_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
+    const first = await (await readClaimEvidence({ request: request(), env: { DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
     assert.deepEqual(first.evidence.map((row: any) => row.id), ['evidence-c', 'evidence-b']);
     assert.deepEqual(first.nextBefore, { createdAt, id: 'evidence-b' });
-    const second = await (await readClaimEvidence({ request: request(first.nextBefore), env: { DB, UPLOAD_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
+    const second = await (await readClaimEvidence({ request: request(first.nextBefore), env: { DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET }, params: { id: 'kp-one' } })).json();
     assert.deepEqual(second.evidence.map((row: any) => row.id), ['evidence-a']);
   });
 });
@@ -1636,7 +1671,7 @@ function makeBackupBucket({ fail = false } = {}) {
 const OWNERSHIP_TEST_KEY = Buffer.alloc(32, 23).toString('base64');
 function issuanceEnv(DB: any, failBackup = false) {
   return {
-    UPLOAD_SECRET: ADMIN_SECRET,
+    REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
     DB,
     OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
     OWNERSHIP_CODE_KEY_V1: OWNERSHIP_TEST_KEY,
@@ -1644,16 +1679,13 @@ function issuanceEnv(DB: any, failBackup = false) {
   };
 }
 
-// A request carrying the admin cookie that requireAdmin() checks against
-// env.UPLOAD_SECRET. This is the same gate every admin endpoint uses.
-const ADMIN_SECRET = 'test-admin-secret';
-const ADMIN_SESSION_TOKEN = await createAdminSessionToken({ UPLOAD_SECRET: ADMIN_SECRET });
 function adminReq(method: string, body?: unknown) {
   return new Request('https://adrianrasmussen.com/api/admin/pieces', {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
+      Cookie: ADMIN_COOKIES,
+      Origin: 'https://adrianrasmussen.com',
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -1667,7 +1699,7 @@ describe('admin piece registration', () => {
       const { DB } = makeIssuanceDb();
       const res = await adminPieces({
         request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'request-1' }),
-        env: { UPLOAD_SECRET: ADMIN_SECRET, DB },
+        env: { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET, DB },
       });
       assert.equal(res.status, 404);
     } finally {
@@ -1685,8 +1717,26 @@ describe('admin piece registration', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pieceId: 'UL-100' }),
       });
-      const res = await adminPieces({ request: noCookie, env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
+      const res = await adminPieces({ request: noCookie, env: { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET, DB } });
       assert.equal(res.status, 401);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('requires a recent identity-bound registry unlock before issuance', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const { DB, rows } = makeIssuanceDb();
+      const lockedRequest = adminReq('POST', {
+        pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'locked-issuance',
+      });
+      lockedRequest.headers.set('Cookie', 'better-auth.session_token=admin-session');
+      const response = await adminPieces({ request: lockedRequest, env: issuanceEnv(DB) });
+      assert.equal(response.status, 403);
+      assert.deepEqual(await response.json(), { ok: false, error: 'registry_locked' });
+      assert.equal(rows.length, 0);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
@@ -1912,7 +1962,7 @@ describe('admin piece registration', () => {
     LAUNCH_FLAGS.livingLegacy = true;
     try {
       const { DB, rows } = makeIssuanceDb();
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'no-key' }), env: { UPLOAD_SECRET: ADMIN_SECRET, DB } });
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, issuanceKey: 'no-key' }), env: { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET, DB } });
       assert.equal(res.status, 503);
       assert.equal(rows.length, 0);
     } finally {
@@ -2138,10 +2188,14 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
 }
 
 function lifecycleRequest(path: string, method: string, body?: unknown, options: {
-  cookie?: boolean; origin?: string;
+  cookie?: boolean; unlock?: boolean; origin?: string;
 } = {}) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (options.cookie !== false) headers.Cookie = `admin_session=${ADMIN_SESSION_TOKEN}`;
+  if (options.cookie !== false) {
+    headers.Cookie = options.unlock === false
+      ? 'better-auth.session_token=admin-session'
+      : ADMIN_COOKIES;
+  }
   if (options.origin !== '') headers.Origin = options.origin || 'https://adrianrasmussen.com';
   return new Request(`https://adrianrasmussen.com${path}`, {
     method,
@@ -2152,7 +2206,7 @@ function lifecycleRequest(path: string, method: string, body?: unknown, options:
 
 function lifecycleEnv(DB: any, bucket: any = makeBackupBucket()) {
   return {
-    UPLOAD_SECRET: ADMIN_SECRET,
+    REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
     DB,
     OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
     OWNERSHIP_CODE_KEY_V1: OWNERSHIP_TEST_KEY,
@@ -2161,7 +2215,6 @@ function lifecycleEnv(DB: any, bucket: any = makeBackupBucket()) {
 }
 
 const validActivation = (plate: { frontSha256: string; undersideSha256: string }) => ({
-  adminSecret: ADMIN_SECRET,
   frontSha256: plate.frontSha256,
   undersideSha256: plate.undersideSha256,
   realMetalQrScanned: true,
@@ -2171,7 +2224,7 @@ const validActivation = (plate: { frontSha256: string; undersideSha256: string }
 });
 
 describe('admin artwork plate lifecycle', () => {
-  it('allows POST only and requires cookie auth, same origin, and constant-time step-up input', async () => {
+  it('allows POST only and requires central admin, same origin, and a recent registry unlock', async () => {
     const fixture = await makePlateLifecycleFixture();
     const env = lifecycleEnv(fixture.DB);
     const path = '/api/admin/pieces/kp-one/reveal';
@@ -2180,24 +2233,24 @@ describe('admin artwork plate lifecycle', () => {
     assert.equal(method.status, 405);
     assert.equal(method.headers.get('Cache-Control'), 'no-store');
     assert.equal((await revealArtworkPlate({
-      request: lifecycleRequest(path, 'POST', { adminSecret: ADMIN_SECRET }, { cookie: false }),
+      request: lifecycleRequest(path, 'POST', {}, { cookie: false }),
       env, params: { id: 'kp-one' },
     })).status, 401);
     assert.equal((await revealArtworkPlate({
-      request: lifecycleRequest(path, 'POST', { adminSecret: ADMIN_SECRET }, { origin: '' }),
+      request: lifecycleRequest(path, 'POST', {}, { origin: '' }),
       env, params: { id: 'kp-one' },
     })).status, 403);
     assert.equal((await revealArtworkPlate({
-      request: lifecycleRequest(path, 'POST', { adminSecret: 'wrong-secret' }),
+      request: lifecycleRequest(path, 'POST', {}, { unlock: false }),
       env, params: { id: 'kp-one' },
-    })).status, 401);
+    })).status, 403);
     assert.equal(fixture.audits.length, 0);
   });
 
   it('audits before decrypting and reveals only the requested existing identity package', async () => {
     const fixture = await makePlateLifecycleFixture();
     const response = await revealArtworkPlate({
-      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', { adminSecret: ADMIN_SECRET }),
+      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', {}),
       env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
     });
     const body = await response.json();
@@ -2227,7 +2280,7 @@ describe('admin artwork plate lifecycle', () => {
       request: lifecycleRequest(
         '/api/admin/pieces/kp-one/reveal',
         'POST',
-        { adminSecret: ADMIN_SECRET },
+        {},
       ),
       env: lifecycleEnv(fixture.DB),
       params: { id: 'kp-one' },
@@ -2244,7 +2297,7 @@ describe('admin artwork plate lifecycle', () => {
     const fixture = await makePlateLifecycleFixture({ failAudit: true });
     fixture.rows[0].ownership_code_ciphertext = 'malformed-ciphertext';
     const response = await revealArtworkPlate({
-      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', { adminSecret: ADMIN_SECRET }),
+      request: lifecycleRequest('/api/admin/pieces/kp-one/reveal', 'POST', {}),
       env: lifecycleEnv(fixture.DB), params: { id: 'kp-one' },
     });
     assert.equal(response.status, 503);
@@ -2265,7 +2318,7 @@ describe('admin artwork plate lifecycle', () => {
       },
     };
     const env = lifecycleEnv(fixture.DB, bucket);
-    const request = () => lifecycleRequest('/api/admin/pieces/kp-one/backup', 'POST', { adminSecret: ADMIN_SECRET });
+    const request = () => lifecycleRequest('/api/admin/pieces/kp-one/backup', 'POST', {});
 
     const verified = await retryArtworkPlateBackup({ request: request(), env, params: { id: 'kp-one' } });
     assert.equal(verified.status, 200);
@@ -2372,28 +2425,6 @@ describe('admin artwork plate lifecycle', () => {
 // Run note: this section uses node:test's mock.module, so the suite is invoked
 // with `npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts`.
 // The flag is benign for every other test in this file.
-
-import { mock } from 'node:test';
-
-// The signed-in identity bind sees. Mutated per-test before each call so one
-// suite can play several different users (registrant never binds; first steward;
-// a second, contesting user).
-let CURRENT_AUTH: { userId: string; email: string | null; emailVerified?: boolean } | null = null;
-
-mock.module('../functions/api/_lib/auth.js', {
-  namedExports: {
-    requireUser: async () => {
-      if (!CURRENT_AUTH) {
-        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
-      }
-      return {
-        userId: CURRENT_AUTH.userId,
-        email: CURRENT_AUTH.email,
-        user: { emailVerified: CURRENT_AUTH.emailVerified === true },
-      };
-    },
-  },
-});
 
 // getUserByClerkId is satisfied by the fake DB's users SELECT below, so we do
 // not mock db.js; we just make the fake DB answer that statement.
@@ -2615,7 +2646,8 @@ function fulfillmentReq(method: string, body?: unknown) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
+      Cookie: ADMIN_COOKIES,
+      Origin: 'https://adrianrasmussen.com',
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -2756,7 +2788,7 @@ function makeFulfillmentDb() {
 describe('admin piece fulfillment desk', () => {
   it('safely lists only ready unassigned plates, paid single order items, and assignments', async () => {
     const fixture = makeFulfillmentDb();
-    const response = await adminPieceFulfillments({ request: fulfillmentReq('GET'), env: { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET } });
+    const response = await adminPieceFulfillments({ request: fulfillmentReq('GET'), env: { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET } });
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.deepEqual(body.availablePlates.map((row: any) => row.id), ['kp-ready', 'kp-second']);
@@ -2767,7 +2799,7 @@ describe('admin piece fulfillment desk', () => {
 
   it('assigns exactly one paid order item or opaque manual reference and rejects unsafe pieces', async () => {
     const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     const sale = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
     assert.equal(sale.status, 201, JSON.stringify(await sale.clone().json()));
     assert.equal(fixture.fulfillments[0].intended_recipient_reference, 'order:10');
@@ -2788,7 +2820,7 @@ describe('admin piece fulfillment desk', () => {
     const fixture = makeFulfillmentDb();
     const response = await adminPieceFulfillments({
       request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 100 }),
-      env: { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET },
+      env: { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET },
     });
     assert.equal(response.status, 409);
     assert.deepEqual(await response.json(), { ok: false, error: 'order_item_piece_mismatch' });
@@ -2797,7 +2829,7 @@ describe('admin piece fulfillment desk', () => {
 
   it('rejects reuse of an opaque manual handoff reference', async () => {
     const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:gift-8' }), env })).status, 201);
     assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', manualReference: 'studio:gift-8' }), env })).status, 409);
     assert.equal(fixture.fulfillments.length, 1);
@@ -2806,12 +2838,12 @@ describe('admin piece fulfillment desk', () => {
   it('rechecks plate eligibility inside assign and correction mutations', async () => {
     const assignRace = makeFulfillmentDb();
     assignRace.claimPieceBeforeNextWrite('kp-ready');
-    const racedAssign = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:race-assign' }), env: { DB: assignRace.DB, UPLOAD_SECRET: ADMIN_SECRET } });
+    const racedAssign = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:race-assign' }), env: { DB: assignRace.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET } });
     assert.equal(racedAssign.status, 409);
     assert.equal(assignRace.fulfillments.length, 0);
 
     const correctRace = makeFulfillmentDb();
-    const env = { DB: correctRace.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const env = { DB: correctRace.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:before-race' }), env });
     correctRace.claimPieceBeforeNextWrite('kp-second');
     const racedCorrection = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: correctRace.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:after-race', reason: 'Race test' }), env });
@@ -2821,7 +2853,7 @@ describe('admin piece fulfillment desk', () => {
 
   it('never corrects a fulfillment that is claimed or becomes claimed at write time', async () => {
     const claimed = makeFulfillmentDb();
-    const claimedEnv = { DB: claimed.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const claimedEnv = { DB: claimed.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claimed' }), env: claimedEnv });
     claimed.fulfillments[0].claimed_at = '2026-07-13T12:00:00Z';
     const existingClaim = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: claimed.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claimed-corrected', reason: 'Must not move' }), env: claimedEnv });
@@ -2829,7 +2861,7 @@ describe('admin piece fulfillment desk', () => {
     assert.equal(claimed.fulfillments[0].keeper_piece_id, 'kp-ready');
 
     const raced = makeFulfillmentDb();
-    const racedEnv = { DB: raced.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const racedEnv = { DB: raced.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claim-race' }), env: racedEnv });
     raced.claimFulfillmentBeforeNextCorrection(raced.fulfillments[0].id);
     const raceResponse = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: raced.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claim-race-corrected', reason: 'Race' }), env: racedEnv });
@@ -2839,7 +2871,7 @@ describe('admin piece fulfillment desk', () => {
 
   it('corrects only before shipment, ships only ready plates, and makes shipment idempotent', async () => {
     const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:wrong' }), env });
     const id = fixture.fulfillments[0].id;
     const correction = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-second', manualReference: 'studio:right', reason: 'Packing selection corrected' }), env });
@@ -2865,7 +2897,7 @@ describe('admin piece fulfillment desk', () => {
 
   it('does not ship a Stripe assignment that is refunded at write time', async () => {
     const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, UPLOAD_SECRET: ADMIN_SECRET };
+    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
     await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
     fixture.refundBeforeNextShipment();
     const response = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: fixture.fulfillments[0].id }), env });

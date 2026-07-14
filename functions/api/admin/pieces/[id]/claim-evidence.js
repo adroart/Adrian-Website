@@ -1,18 +1,25 @@
-import { jsonResponse, requireAdminPostStepUp, requireDb } from '../../../_lib/admin.js';
+import { jsonResponse, requireRegistryUnlock, requireDb } from '../../../_lib/admin.js';
 
 export async function onRequest({ request, env, params }) {
-  const authorization = await requireAdminPostStepUp(request, env);
-  if (authorization.response) return authorization.response;
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+  const authorization = await requireRegistryUnlock(request, env);
+  if (authorization instanceof Response) return authorization;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
-  const limit = Math.min(100, Math.max(1, Number.isSafeInteger(authorization.body?.limit) ? authorization.body.limit : 50));
-  const beforeCreatedAt = typeof authorization.body?.before?.createdAt === 'string'
-    && authorization.body.before.createdAt
-    ? authorization.body.before.createdAt
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+  }
+  const limit = Math.min(100, Math.max(1, Number.isSafeInteger(body?.limit) ? body.limit : 50));
+  const beforeCreatedAt = typeof body?.before?.createdAt === 'string'
+    && body.before.createdAt
+    ? body.before.createdAt
     : null;
-  const beforeId = beforeCreatedAt && typeof authorization.body?.before?.id === 'string'
-    && authorization.body.before.id
-    ? authorization.body.before.id
+  const beforeId = beforeCreatedAt && typeof body?.before?.id === 'string'
+    && body.before.id
+    ? body.before.id
     : null;
   if (beforeCreatedAt && !beforeId) {
     return jsonResponse({ ok: false, error: 'invalid_cursor' }, 400);

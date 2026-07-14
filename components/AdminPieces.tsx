@@ -7,19 +7,20 @@
  * are never written to browser storage and are cleared on dismissal or plate
  * activation. AdminLayout supplies the authenticated admin boundary.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
   activationChecklistComplete,
   beginIssuanceAttempt,
-  clearSensitivePlateState,
   projectPlateDownloads,
   projectIssuedPlateResponse,
   type ActivationChecklist,
   type IssuedPlatePackage,
   type SensitivePlateState,
 } from '../utils/adminArtworkRegistry';
+
+type RegistrySensitiveState = Omit<SensitivePlateState, 'stepUpSecret'>;
 
 const inputClass =
   'w-full border border-wood-300 bg-white px-3 py-2.5 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-500';
@@ -94,13 +95,12 @@ interface FulfillmentDesk {
   fulfillments: Fulfillment[];
 }
 
-const emptySensitiveState: SensitivePlateState = {
+const emptySensitiveState: RegistrySensitiveState = {
   issuanceKey: null,
   package: null,
   revealedForPieceId: null,
   revealedOwnershipCode: null,
   revealedUndersideSvg: null,
-  stepUpSecret: '',
 };
 
 const emptyChecklist: ActivationChecklist = {
@@ -164,7 +164,11 @@ const AdminPieces: React.FC = () => {
   const [issuing, setIssuing] = useState(false);
   const [issueError, setIssueError] = useState('');
   const [issueSuccess, setIssueSuccess] = useState('');
-  const [sensitive, setSensitive] = useState<SensitivePlateState>(emptySensitiveState);
+  const [sensitive, setSensitive] = useState<RegistrySensitiveState>(emptySensitiveState);
+  const unlockInputRef = useRef<HTMLInputElement>(null);
+  const [registryUnlocked, setRegistryUnlocked] = useState(false);
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const [unlockError, setUnlockError] = useState('');
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [rowError, setRowError] = useState<Record<string, string>>({});
   const [rowSuccess, setRowSuccess] = useState<Record<string, string>>({});
@@ -186,6 +190,15 @@ const AdminPieces: React.FC = () => {
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [correctionReason, setCorrectionReason] = useState('');
   const [shippingConfirmed, setShippingConfirmed] = useState<Record<string, boolean>>({});
+
+  const registryErrorMessage = (error: unknown, fallback: string) => {
+    const message = errorMessage(error, fallback);
+    if (message === 'registry_locked') {
+      setRegistryUnlocked(false);
+      return 'Private registry access expired. Unlock it again.';
+    }
+    return message;
+  };
 
   const sortedPieces = useMemo(
     () => [...FULL_ARCHIVE].sort((a, b) => a.title.localeCompare(b.title)),
@@ -224,14 +237,46 @@ const AdminPieces: React.FC = () => {
 
   useEffect(() => {
     void Promise.all([loadPieces(), loadDesk()]);
+    void jsonRequest('/api/admin/registry-unlock')
+      .then((data) => setRegistryUnlocked(data.unlocked === true))
+      .catch(() => setRegistryUnlocked(false));
   }, [loadDesk, loadPieces]);
 
   const dismissSensitiveState = () => {
-    setSensitive((current) => clearSensitivePlateState(current));
+    setSensitive(emptySensitiveState);
     setIssueSuccess('');
   };
 
+  const unlockRegistry = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const input = unlockInputRef.current;
+    if (!input?.value) return;
+    setUnlockBusy(true);
+    setUnlockError('');
+    const body = JSON.stringify({ secret: input.value });
+    input.value = '';
+    try {
+      const response = await fetch('/api/admin/registry-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unlock failed');
+      setRegistryUnlocked(true);
+    } catch (error) {
+      setRegistryUnlocked(false);
+      setUnlockError(errorMessage(error, 'Could not unlock the registry.'));
+    } finally {
+      setUnlockBusy(false);
+    }
+  };
+
   const issuePlate = async () => {
+    if (!registryUnlocked) {
+      setIssueError('Unlock the private registry first.');
+      return;
+    }
     if (!pieceId) {
       setIssueError('Choose an artwork first.');
       return;
@@ -259,7 +304,7 @@ const AdminPieces: React.FC = () => {
         : 'Plate package issued. Repair the online backup before activation.');
       await loadPieces();
     } catch (error) {
-      setIssueError(`${errorMessage(error, 'Could not issue the plate.')} Retry keeps this issuance attempt and will not mint a second identity.`);
+      setIssueError(`${registryErrorMessage(error, 'Could not issue the plate.')} Retry keeps this issuance attempt and will not mint a second identity.`);
     } finally {
       setIssuing(false);
     }
@@ -269,17 +314,15 @@ const AdminPieces: React.FC = () => {
     row: PieceRow,
     action: 'backup' | 'reveal' | 'package' | 'verify-recovery',
   ) => {
-    if (!sensitive.stepUpSecret) {
-      setRowError((current) => ({ ...current, [row.id]: 'Enter the admin step-up secret first.' }));
+    if (!registryUnlocked) {
+      setRowError((current) => ({ ...current, [row.id]: 'Unlock the private registry first.' }));
       return;
     }
     setRowBusy(`${row.id}:${action}`);
     setRowError((current) => ({ ...current, [row.id]: '' }));
     setRowSuccess((current) => ({ ...current, [row.id]: '' }));
     try {
-      const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {
-        adminSecret: sensitive.stepUpSecret,
-      });
+      const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {});
       if (action === 'verify-recovery') {
         setRowSuccess((current) => ({
           ...current,
@@ -313,7 +356,8 @@ const AdminPieces: React.FC = () => {
         await Promise.all([loadPieces(), loadDesk()]);
       }
     } catch (error) {
-      setRowError((current) => ({ ...current, [row.id]: errorMessage(error, `Could not ${action} this plate.`) }));
+      const message = registryErrorMessage(error, `Could not ${action} this plate.`);
+      setRowError((current) => ({ ...current, [row.id]: message }));
     } finally {
       setRowBusy(null);
     }
@@ -325,8 +369,8 @@ const AdminPieces: React.FC = () => {
   };
 
   const activatePlate = async (row: PieceRow) => {
-    if (!sensitive.stepUpSecret) {
-      setRowError((current) => ({ ...current, [row.id]: 'Enter the admin step-up secret first.' }));
+    if (!registryUnlocked) {
+      setRowError((current) => ({ ...current, [row.id]: 'Unlock the private registry first.' }));
       return;
     }
     if (!activationChecklistComplete(
@@ -341,16 +385,16 @@ const AdminPieces: React.FC = () => {
     setRowError((current) => ({ ...current, [row.id]: '' }));
     try {
       await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/activate`, {
-        adminSecret: sensitive.stepUpSecret,
         ...activationChecks,
       });
-      setSensitive((current) => clearSensitivePlateState(current));
+      setSensitive(emptySensitiveState);
       setActivationPieceId(null);
       setActivationChecks(emptyChecklist);
       setRowSuccess((current) => ({ ...current, [row.id]: 'Plate identity activated and locked.' }));
       await Promise.all([loadPieces(), loadDesk()]);
     } catch (error) {
-      setRowError((current) => ({ ...current, [row.id]: errorMessage(error, 'Could not activate this plate.') }));
+      const message = registryErrorMessage(error, 'Could not activate this plate.');
+      setRowError((current) => ({ ...current, [row.id]: message }));
     } finally {
       setRowBusy(null);
     }
@@ -517,12 +561,16 @@ const AdminPieces: React.FC = () => {
               </div>
               <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
             </div>
-            <div className="border border-wood-200 bg-white p-4 mb-4">
-              <label className={labelClass} htmlFor="step-up-secret">Admin step-up secret</label>
-              <input id="step-up-secret" type="password" autoComplete="new-password" value={sensitive.stepUpSecret} onChange={(event) => setSensitive((current) => ({ ...current, stepUpSecret: event.target.value }))} className={inputClass} placeholder="Required for backup, recovery, reveal, and activation" />
-              <p className="font-sans text-xs text-wood-500 mt-2">Kept only in this page's memory and cleared after activation or dismissal.</p>
-              {(sensitive.stepUpSecret || sensitive.revealedOwnershipCode) && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state and secret</button>}
-            </div>
+            <form className="border border-wood-200 bg-white p-4 mb-4" onSubmit={unlockRegistry}>
+              <label className={labelClass} htmlFor="registry-secret">Private registry unlock</label>
+              <div className="flex flex-wrap gap-3">
+                <input ref={unlockInputRef} id="registry-secret" type="password" autoComplete="off" className={`${inputClass} flex-1`} placeholder="Required for private registry operations" />
+                <button type="submit" className={buttonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : registryUnlocked ? 'Unlock again' : 'Unlock registry'}</button>
+              </div>
+              <p className="font-sans text-xs text-wood-500 mt-2">{registryUnlocked ? 'Private registry unlocked for this signed-in administrator.' : 'The secret is submitted once, cleared immediately, and never attached to later requests.'}</p>
+              {unlockError && <p className="font-sans text-sm text-red-700 mt-2" role="alert">{unlockError}</p>}
+              {sensitive.revealedOwnershipCode && <button type="button" className={`${quietButtonClass} mt-3`} onClick={dismissSensitiveState}>Clear private state</button>}
+            </form>
             {listError ? (
               <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{listError}</p></div>
             ) : listLoading && rows.length === 0 ? (

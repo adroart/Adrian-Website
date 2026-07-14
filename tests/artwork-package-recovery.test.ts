@@ -1,16 +1,38 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { before, describe, it } from 'node:test';
+import { before, describe, it, mock } from 'node:test';
 
 import { buildArtworkPlatePackage } from '../utils/artworkPlate';
 import { encryptOwnershipCode } from '../utils/ownershipCodeCrypto';
-import { onRequest as recoverArtworkPackage } from '../functions/api/admin/pieces/[id]/package.js';
-import { onRequest as verifyR2Recovery } from '../functions/api/admin/pieces/[id]/verify-recovery.js';
-import { hashRecoveryCode } from '../functions/api/_lib/keeper.js';
-import { createAdminSessionToken } from '../functions/api/_lib/admin.js';
-
 const ADMIN_SECRET = 'registry-admin-secret';
-const ADMIN_SESSION_TOKEN = await createAdminSessionToken({ UPLOAD_SECRET: ADMIN_SECRET });
+const ADMIN_IDENTITY = {
+  userId: 'admin-user', email: 'artist@example.com',
+  user: { id: 'admin-user', email: 'artist@example.com', emailVerified: true },
+  session: { id: 'admin-session' },
+};
+
+mock.module('../functions/api/_lib/auth.js', {
+  namedExports: {
+    requireAdmin: async (request: Request) => {
+      if (!request.headers.get('Cookie')?.includes('better-auth.session_token=admin-session')) {
+        return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), { status: 401 });
+      }
+      if (request.method !== 'GET' && request.headers.get('Origin') !== new URL(request.url).origin) {
+        return new Response(JSON.stringify({ ok: false, error: 'origin_forbidden' }), { status: 403 });
+      }
+      return ADMIN_IDENTITY;
+    },
+  },
+});
+
+const { onRequest: recoverArtworkPackage } = await import('../functions/api/admin/pieces/[id]/package.js');
+const { onRequest: verifyR2Recovery } = await import('../functions/api/admin/pieces/[id]/verify-recovery.js');
+const { hashRecoveryCode } = await import('../functions/api/_lib/keeper.js');
+const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
+  { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET },
+  ADMIN_IDENTITY,
+);
 const KEY = Buffer.alloc(32, 7).toString('base64');
 const OWNERSHIP_CODE = 'K7QM-9XTR-2PHV-N4WB';
 
@@ -52,11 +74,11 @@ before(async () => {
   };
 });
 
-function request(method = 'POST', body: Record<string, unknown> = { adminSecret: ADMIN_SECRET }) {
+function request(method = 'POST', body: Record<string, unknown> = {}) {
   return new Request('https://adrianrasmussen.com/api/admin/pieces/kp-package-1/package', {
     method,
     headers: {
-      Cookie: `admin_session=${ADMIN_SESSION_TOKEN}`,
+      Cookie: `better-auth.session_token=admin-session; registry_unlock=${REGISTRY_UNLOCK_TOKEN}`,
       Origin: 'https://adrianrasmussen.com',
       'Content-Type': 'application/json',
     },
@@ -94,7 +116,7 @@ function environment(options: {
   return {
     env: {
       DB,
-      UPLOAD_SECRET: ADMIN_SECRET,
+      REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
       OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
       OWNERSHIP_CODE_KEY_V1: KEY,
     },
@@ -112,7 +134,10 @@ describe('audited fabrication-package recovery', () => {
     const crossOrigin = request();
     crossOrigin.headers.set('Origin', 'https://example.com');
     assert.equal((await recoverArtworkPackage({ request: crossOrigin, env, params: { id: 'kp-package-1' } })).status, 403);
-    assert.equal((await recoverArtworkPackage({ request: request('POST', { adminSecret: 'wrong' }), env, params: { id: 'kp-package-1' } })).status, 401);
+    const locked = request();
+    locked.headers.set('Cookie', 'better-auth.session_token=admin-session');
+    assert.equal((await recoverArtworkPackage({ request: locked, env, params: { id: 'kp-package-1' } })).status, 403);
+    assert.equal((await recoverArtworkPackage({ request: request(), env, params: { id: 'kp-package-1' } })).status, 200);
     assert.equal((await recoverArtworkPackage({ request: request(), env: { ...env, DB: undefined }, params: { id: 'kp-package-1' } })).status, 503);
   });
 
@@ -236,7 +261,7 @@ function r2RecoveryEnvironment(options: {
     env: {
       DB,
       ARTWORK_REGISTRY_BACKUP: bucket,
-      UPLOAD_SECRET: ADMIN_SECRET,
+      REGISTRY_STEP_UP_SECRET: ADMIN_SECRET,
       OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
       OWNERSHIP_CODE_KEY_V1: KEY,
     },
