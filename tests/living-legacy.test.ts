@@ -2380,7 +2380,7 @@ import { mock } from 'node:test';
 // a second, contesting user).
 let CURRENT_AUTH: { userId: string; email: string | null; emailVerified?: boolean } | null = null;
 
-mock.module('../functions/api/_lib/clerk.js', {
+mock.module('../functions/api/_lib/auth.js', {
   namedExports: {
     requireUser: async () => {
       if (!CURRENT_AUTH) {

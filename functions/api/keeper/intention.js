@@ -30,7 +30,7 @@
  * intentions for a piece they actively keep (keeper_pieces binding).
  */
 
-import { requireUser } from '../_lib/clerk.js';
+import { requireUser } from '../_lib/auth.js';
 import { getUserByClerkId } from '../_lib/db.js';
 import {
   legacyEnabled,

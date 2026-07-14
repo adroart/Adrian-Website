@@ -7,7 +7,7 @@
  * client posts the full cart on every change.
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { ensureUser } from '../_lib/db.js';
 
 const MAX_ROWS = 64;

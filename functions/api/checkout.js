@@ -155,13 +155,13 @@ export async function onRequestPost(context) {
     ])
   );
 
-  // If the request carries a Clerk bearer token AND we have the bindings
-  // to verify it, attach the user's Stripe Customer ID so the order rolls
+  // If the request carries a valid Better Auth session and we have the bindings,
+  // attach the user's Stripe Customer ID so the order rolls
   // up into a single Stripe customer record per Adrian's customer.
   let stripeCustomerId = null;
   if (env.DB) {
     try {
-      const { verifyRequest } = await import('./_lib/clerk.js');
+      const { verifyRequest } = await import('./_lib/auth.js');
       const { getUserByClerkId } = await import('./_lib/db.js');
       const auth = await verifyRequest(request, env);
       if (auth) {

@@ -4,7 +4,7 @@
  * Returns all of the signed-in user's collections with their items.
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { ensureUser } from '../_lib/db.js';
 
 export async function onRequest(context) {

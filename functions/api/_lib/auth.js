@@ -1,6 +1,11 @@
 import { createAuth } from '../../../lib/account/auth.server.js';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const ALLOWED_ORIGINS = [
+  'https://adrianrasmussen.com',
+  'https://www.adrianrasmussen.com',
+  'https://adrian-rasmussen-art.pages.dev',
+];
 
 export function privateJsonResponse(body, status = 200, headers = {}) {
   return new Response(JSON.stringify(body), {
@@ -9,6 +14,46 @@ export function privateJsonResponse(body, status = 200, headers = {}) {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
       ...headers,
+    },
+  });
+}
+
+export function isAllowedOrigin(origin, env) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  const isDev = !env?.BETTER_AUTH_URL || env.BETTER_AUTH_URL.includes('localhost');
+  if (isDev) {
+    try {
+      const url = new URL(origin);
+      return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+export function corsHeaders(origin, env) {
+  if (!isAllowedOrigin(origin, env)) return {};
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+    Vary: 'Origin',
+  };
+}
+
+export function jsonResponse(body, init = {}, request = null, env = null) {
+  const origin = request?.headers?.get?.('Origin') ?? null;
+  const cors = origin && env ? corsHeaders(origin, env) : {};
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      ...cors,
+      ...(init.headers || {}),
     },
   });
 }

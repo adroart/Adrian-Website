@@ -100,12 +100,9 @@ describe('central Better Auth identity', () => {
     }
   });
 
-  it('keeps the clerk compatibility module pointed at the central helpers', async () => {
+  it('serves private JSON directly from the central auth helpers', async () => {
     const central = await loadAuth();
-    const compatibility = await import('../functions/api/_lib/clerk.js');
-    assert.equal(compatibility.verifyRequest, central.verifyRequest);
-    assert.equal(compatibility.requireUser, central.requireUser);
-    assert.equal(compatibility.jsonResponse({ private: true }).headers.get('Cache-Control'), 'no-store');
+    assert.equal(central.jsonResponse({ private: true }).headers.get('Cache-Control'), 'no-store');
   });
 
   it('accepts only internal return paths', async () => {

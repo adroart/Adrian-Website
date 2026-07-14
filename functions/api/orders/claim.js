@@ -8,7 +8,7 @@
  * the /order-confirmed "Save this order to your account" flow.
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { ensureUser } from '../_lib/db.js';
 
 export async function onRequest(context) {
@@ -17,6 +17,10 @@ export async function onRequest(context) {
 
   const auth = await requireUser(request, env);
   if (auth instanceof Response) return auth;
+
+  if (auth.user?.emailVerified !== true) {
+    return jsonResponse({ error: 'verified_email_required' }, { status: 403 }, request, env);
+  }
 
   if (!env.DB) return jsonResponse({ error: 'db_not_configured' }, { status: 503 }, request, env);
   if (!env.STRIPE_SECRET_KEY) return jsonResponse({ error: 'stripe_not_configured' }, { status: 503 }, request, env);

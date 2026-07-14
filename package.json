@@ -35,7 +35,6 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.0",
     "stripe": "^20.3.1",
-    "svix": "^1.94.0",
     "wavesurfer.js": "^7.12.6"
   },
   "devDependencies": {

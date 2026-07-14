@@ -8,7 +8,7 @@
  * Profile JSON (so other devices read it without re-running astronomy).
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { ensureUser } from '../_lib/db.js';
 
 function validInputs(x) {

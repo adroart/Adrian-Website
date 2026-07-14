@@ -3,7 +3,7 @@
  * Body: { collectionId: number, kind: 'card' | 'artwork' | 'product', ref: string }
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { ensureUser } from '../_lib/db.js';
 
 const KINDS = new Set(['card', 'artwork', 'product']);
