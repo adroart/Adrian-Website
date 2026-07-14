@@ -272,6 +272,24 @@ const AdminPieces: React.FC = () => {
     }
   };
 
+  const lockRegistry = async () => {
+    setUnlockBusy(true);
+    setUnlockError('');
+    setRegistryUnlocked(false);
+    dismissSensitiveState();
+    setActivationPieceId(null);
+    setActivationChecks(emptyChecklist);
+    try {
+      const response = await fetch('/api/admin/registry-unlock', { method: 'DELETE' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Lock failed');
+    } catch (error) {
+      setUnlockError(errorMessage(error, 'Could not lock the registry.'));
+    } finally {
+      setUnlockBusy(false);
+    }
+  };
+
   const issuePlate = async () => {
     if (!registryUnlocked) {
       setIssueError('Unlock the private registry first.');
@@ -566,6 +584,7 @@ const AdminPieces: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <input ref={unlockInputRef} id="registry-secret" type="password" autoComplete="off" className={`${inputClass} flex-1`} placeholder="Required for private registry operations" />
                 <button type="submit" className={buttonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : registryUnlocked ? 'Unlock again' : 'Unlock registry'}</button>
+                {registryUnlocked && <button type="button" className={quietButtonClass} disabled={unlockBusy} onClick={() => void lockRegistry()}>Lock registry</button>}
               </div>
               <p className="font-sans text-xs text-wood-500 mt-2">{registryUnlocked ? 'Private registry unlocked for this signed-in administrator.' : 'The secret is submitted once, cleared immediately, and never attached to later requests.'}</p>
               {unlockError && <p className="font-sans text-sm text-red-700 mt-2" role="alert">{unlockError}</p>}

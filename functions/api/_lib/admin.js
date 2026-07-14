@@ -1,26 +1,7 @@
-/**
- * Admin authentication for the studio-only endpoints.
- *
- * SECURITY MODEL (rewritten 2026-06-16):
- * The session cookie is a SIGNED, EXPIRING token — NOT the raw admin secret.
- * Previously the cookie value was `UPLOAD_SECRET` verbatim, so the master
- * secret travelled in every request and a single cookie leak was a permanent,
- * unrevocable full compromise. Now the cookie is `base64url(payload).sigHex`
- * where payload = { exp } and sig = HMAC-SHA256(UPLOAD_SECRET, payloadB64).
- *
- *  - The raw secret never leaves the server.
- *  - Tokens expire (default 7 days), bounding the blast radius of a leak.
- *  - Verification is constant-time (no signature timing oracle).
- *
- * Legacy cookies (value === raw secret) are intentionally NOT accepted: those
- * cookies ARE the vulnerability. Existing admin sessions are invalidated by
- * this change and the admin simply signs in again.
- */
+/** Shared central-admin, registry-unlock, database, and audit helpers. */
 
 import { requireAdmin as authorizeAdmin } from './auth.js';
 
-const COOKIE_NAME = 'admin_session';
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const REGISTRY_UNLOCK_COOKIE_NAME = 'registry_unlock';
 export const REGISTRY_UNLOCK_TTL_SECONDS = 60 * 10;
 const REGISTRY_UNLOCK_DOMAIN = 'adrian-website:registry-unlock:v1';
@@ -94,52 +75,6 @@ async function hmacBytes(secret, message) {
   return new Uint8Array(sig);
 }
 
-// --- session tokens ----------------------------------------------------------
-
-/** Mint a signed, expiring admin session token. */
-export async function createAdminSessionToken(env, ttlSeconds = SESSION_TTL_SECONDS) {
-  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const payloadB64 = bytesToBase64url(new TextEncoder().encode(JSON.stringify({ exp })));
-  const sig = await hmacBytes(env.UPLOAD_SECRET, payloadB64);
-  return `${payloadB64}.${bytesToBase64url(sig)}`;
-}
-
-/** Constant-time check of a candidate admin password against UPLOAD_SECRET. */
-export async function verifyAdminPassword(env, password) {
-  if (!env.UPLOAD_SECRET || typeof password !== 'string' || !password) return false;
-  // Compare HMACs (fixed 32-byte length) so neither length nor content of the
-  // secret leaks via timing. HMAC is deterministic, so the digests match iff
-  // password === UPLOAD_SECRET.
-  const [a, b] = await Promise.all([
-    hmacBytes(env.UPLOAD_SECRET, password),
-    hmacBytes(env.UPLOAD_SECRET, env.UPLOAD_SECRET),
-  ]);
-  return timingSafeEqual(a, b);
-}
-
-export async function isAdminAuthed(request, env) {
-  if (!env.UPLOAD_SECRET) return false;
-  const token = getCookie(request, COOKIE_NAME);
-  if (!token || !token.includes('.')) return false;
-
-  const [payloadB64, sigB64] = token.split('.');
-  if (!payloadB64 || !sigB64) return false;
-
-  const expected = await hmacBytes(env.UPLOAD_SECRET, payloadB64);
-  const got = base64urlToBytes(sigB64);
-  if (!timingSafeEqual(expected, got)) return false;
-
-  const payloadBytes = base64urlToBytes(payloadB64);
-  if (!payloadBytes) return false;
-  try {
-    const { exp } = JSON.parse(new TextDecoder().decode(payloadBytes));
-    if (typeof exp !== 'number' || exp < Math.floor(Date.now() / 1000)) return false;
-  } catch {
-    return false;
-  }
-  return true;
-}
-
 export async function requireAdmin(request, env) {
   const authorization = await authorizeAdmin(request, env);
   return authorization instanceof Response ? authorization : null;
@@ -153,16 +88,6 @@ export async function requireAdminIdentity(request, env) {
 export function requireDb(env) {
   if (env.DB) return null;
   return jsonResponse({ ok: false, error: 'db_not_configured' }, 503);
-}
-
-export function isSameOrigin(request) {
-  const origin = request.headers.get('Origin');
-  if (!origin) return false;
-  try {
-    return origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
 }
 
 export function constantTimeEqual(left, right) {
@@ -277,28 +202,6 @@ export async function requireRegistryUnlock(request, env) {
   const unlock = await readRegistryUnlockToken(request, env, admin);
   if (!unlock) return jsonResponse({ ok: false, error: 'registry_locked' }, 403);
   return { ...admin, registryUnlockExpiresAt: unlock.exp };
-}
-
-export async function requireAdminPostStepUp(request, env) {
-  if (request.method !== 'POST') {
-    return { response: jsonResponse({ ok: false, error: 'method_not_allowed' }, 405) };
-  }
-  const unauthorized = await requireAdmin(request, env);
-  if (unauthorized) return { response: unauthorized };
-  if (!isSameOrigin(request)) {
-    return { response: jsonResponse({ ok: false, error: 'origin_forbidden' }, 403) };
-  }
-
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return { response: jsonResponse({ ok: false, error: 'invalid_json' }, 400) };
-  }
-  if (!constantTimeEqual(body?.adminSecret, env.UPLOAD_SECRET)) {
-    return { response: jsonResponse({ ok: false, error: 'step_up_failed' }, 401) };
-  }
-  return { body };
 }
 
 export function ownershipAuditStatement(env, {
