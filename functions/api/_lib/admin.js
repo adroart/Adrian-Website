@@ -21,6 +21,9 @@ import { requireAdmin as authorizeAdmin } from './auth.js';
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+export const REGISTRY_UNLOCK_COOKIE_NAME = 'registry_unlock';
+export const REGISTRY_UNLOCK_TTL_SECONDS = 60 * 10;
+const REGISTRY_UNLOCK_DOMAIN = 'adrian-website:registry-unlock:v1';
 
 export function getCookie(request, name) {
   const header = request.headers.get('Cookie') || '';
@@ -31,12 +34,13 @@ export function getCookie(request, name) {
   return match ? match.slice(name.length + 1) : null;
 }
 
-export function jsonResponse(body, status = 200) {
+export function jsonResponse(body, status = 200, headers = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
+      ...headers,
     },
   });
 }
@@ -134,6 +138,11 @@ export async function requireAdmin(request, env) {
   return authorization instanceof Response ? authorization : null;
 }
 
+/** Central admin authorization that preserves the authenticated identity. */
+export async function requireAdminIdentity(request, env) {
+  return authorizeAdmin(request, env);
+}
+
 export function requireDb(env) {
   if (env.DB) return null;
   return jsonResponse({ ok: false, error: 'db_not_configured' }, 503);
@@ -161,6 +170,108 @@ export function constantTimeEqual(left, right) {
     difference |= (a[index] || 0) ^ (b[index] || 0);
   }
   return difference === 0;
+}
+
+/**
+ * Prefer the dedicated registry secret whenever the binding exists. The
+ * UPLOAD_SECRET fallback is transitional and applies only when the new binding
+ * is absent, never when it is present but empty or invalid.
+ */
+export function registryStepUpSecret(env) {
+  if (env && Object.prototype.hasOwnProperty.call(env, 'REGISTRY_STEP_UP_SECRET')) {
+    return typeof env.REGISTRY_STEP_UP_SECRET === 'string' && env.REGISTRY_STEP_UP_SECRET
+      ? env.REGISTRY_STEP_UP_SECRET
+      : null;
+  }
+  return typeof env?.UPLOAD_SECRET === 'string' && env.UPLOAD_SECRET
+    ? env.UPLOAD_SECRET
+    : null;
+}
+
+export async function verifyRegistryStepUpSecret(env, candidate) {
+  const secret = registryStepUpSecret(env);
+  if (!secret || typeof candidate !== 'string' || !candidate) return false;
+  const [candidateDigest, secretDigest] = await Promise.all([
+    hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:compare:${candidate}`),
+    hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:compare:${secret}`),
+  ]);
+  return timingSafeEqual(candidateDigest, secretDigest);
+}
+
+/** Mint a signed unlock token bound to one normalized administrator identity. */
+export async function createRegistryUnlockToken(
+  env,
+  identity,
+  ttlSeconds = REGISTRY_UNLOCK_TTL_SECONDS,
+) {
+  const secret = registryStepUpSecret(env);
+  if (!secret) throw new Error('registry_unlock_not_configured');
+  const iat = Math.floor(Date.now() / 1000);
+  const payload = {
+    v: 1,
+    userId: identity.userId,
+    email: typeof identity.email === 'string' ? identity.email.trim().toLowerCase() : '',
+    iat,
+    exp: iat + ttlSeconds,
+  };
+  const payloadB64 = bytesToBase64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const signature = await hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:token:${payloadB64}`);
+  return `${payloadB64}.${bytesToBase64url(signature)}`;
+}
+
+export async function readRegistryUnlockToken(request, env, identity) {
+  const secret = registryStepUpSecret(env);
+  const token = getCookie(request, REGISTRY_UNLOCK_COOKIE_NAME);
+  if (!secret || !token) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+  const [payloadB64, signatureB64] = parts;
+  const [expected, received, payloadBytes] = await Promise.all([
+    hmacBytes(secret, `${REGISTRY_UNLOCK_DOMAIN}:token:${payloadB64}`),
+    Promise.resolve(base64urlToBytes(signatureB64)),
+    Promise.resolve(base64urlToBytes(payloadB64)),
+  ]);
+  if (!timingSafeEqual(expected, received) || !payloadBytes) return null;
+
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(payloadBytes));
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      payload?.v !== 1
+      || typeof payload.userId !== 'string'
+      || typeof payload.email !== 'string'
+      || typeof payload.iat !== 'number'
+      || typeof payload.exp !== 'number'
+      || payload.iat > now
+      || payload.exp <= now
+      || payload.exp - payload.iat > REGISTRY_UNLOCK_TTL_SECONDS
+      || payload.userId !== identity.userId
+      || payload.email !== identity.email
+    ) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function registryUnlockCookie(token, request, maxAge = REGISTRY_UNLOCK_TTL_SECONDS) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+  return `${REGISTRY_UNLOCK_COOKIE_NAME}=${token}; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure}`;
+}
+
+export function clearRegistryUnlockCookie(request) {
+  return registryUnlockCookie('', request, 0);
+}
+
+export async function requireRegistryUnlock(request, env) {
+  const admin = await requireAdminIdentity(request, env);
+  if (admin instanceof Response) return admin;
+  if (!registryStepUpSecret(env)) {
+    return jsonResponse({ ok: false, error: 'registry_unlock_not_configured' }, 503);
+  }
+  const unlock = await readRegistryUnlockToken(request, env, admin);
+  if (!unlock) return jsonResponse({ ok: false, error: 'registry_locked' }, 403);
+  return { ...admin, registryUnlockExpiresAt: unlock.exp };
 }
 
 export async function requireAdminPostStepUp(request, env) {
