@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   sendSignInCode,
   verifySignInCode,
   signInWithPassword,
   signUpWithPassword,
   signInWithGoogle,
+  safeAuthDestination,
 } from '../../lib/account/authClient';
 
 /**
@@ -29,11 +31,18 @@ const C = {
 };
 
 type Mode = 'login' | 'signup' | 'code-email' | 'code-verify';
+type SignInModalProps = {
+  onClose: () => void;
+  onSignedIn?: () => void;
+  destination?: string;
+};
 
-const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = ({
+const SignInModal: React.FC<SignInModalProps> = ({
   onClose,
   onSignedIn,
+  destination,
 }) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,15 +50,38 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
+  const returnTo = safeAuthDestination(
+    destination ?? `${window.location.pathname}${window.location.search}${window.location.hash}`,
+  );
 
-  const done = () => { onSignedIn?.(); onClose(); };
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/auth/config', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => response.ok ? response.json() : { google: false })
+      .then((config) => setGoogleConfigured(config.google === true))
+      .catch((fetchError) => {
+        if (fetchError instanceof DOMException && fetchError.name === 'AbortError') return;
+        setGoogleConfigured(false);
+      });
+    return () => controller.abort();
+  }, []);
+
+  const done = () => {
+    onSignedIn?.();
+    onClose();
+    navigate(returnTo, { replace: true });
+  };
 
   const doGoogle = async () => {
     setBusy(true);
     setError(null);
     try {
-      await signInWithGoogle('/');
-      // Redirects away; nothing more to do here.
+      const result = await signInWithGoogle(returnTo);
+      if (result.error) {
+        setBusy(false);
+        setError('Could not start Google sign-in. Try another way below.');
+      }
     } catch {
       setBusy(false);
       setError('Could not start Google sign-in. Try another way below.');
@@ -60,39 +92,54 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
     if (!email.trim() || !password) return;
     setBusy(true);
     setError(null);
-    const { error } = mode === 'signup'
-      ? await signUpWithPassword(email.trim(), password, name.trim())
-      : await signInWithPassword(email.trim(), password);
-    setBusy(false);
-    if (error) {
-      setError(
-        mode === 'signup'
-          ? 'Could not create the account. The email may already be in use, or the password is too short (8+ characters).'
-          : 'Email or password did not match. Try again, or create an account.',
-      );
-      return;
+    try {
+      const result = mode === 'signup'
+        ? await signUpWithPassword(email.trim(), password, name.trim(), returnTo)
+        : await signInWithPassword(email.trim(), password, returnTo);
+      setBusy(false);
+      if (result.error) {
+        setError(
+          mode === 'signup'
+            ? 'Could not create the account. The email may already be in use, or the password must have at least 8 characters.'
+            : 'Email or password did not match. Try again, or create an account.',
+        );
+        return;
+      }
+      done();
+    } catch {
+      setBusy(false);
+      setError('Could not reach the sign-in service. Please try again.');
     }
-    done();
   };
 
   const sendCode = async () => {
     if (!email.trim()) return;
     setBusy(true);
     setError(null);
-    const { error } = await sendSignInCode(email.trim());
-    setBusy(false);
-    if (error) { setError('Could not send the code. Check the email and try again.'); return; }
-    setMode('code-verify');
+    try {
+      const result = await sendSignInCode(email.trim());
+      setBusy(false);
+      if (result.error) { setError('Could not send the code. Check the email and try again.'); return; }
+      setMode('code-verify');
+    } catch {
+      setBusy(false);
+      setError('Could not reach the sign-in service. Please try again.');
+    }
   };
 
   const verify = async () => {
     if (!code.trim()) return;
     setBusy(true);
     setError(null);
-    const { error } = await verifySignInCode(email.trim(), code.trim());
-    setBusy(false);
-    if (error) { setError('That code did not match. Try again, or request a new one.'); return; }
-    done();
+    try {
+      const result = await verifySignInCode(email.trim(), code.trim());
+      setBusy(false);
+      if (result.error) { setError('That code did not match. Try again, or request a new one.'); return; }
+      done();
+    } catch {
+      setBusy(false);
+      setError('Could not reach the sign-in service. Please try again.');
+    }
   };
 
   const labelCls = 'block mb-2';
@@ -123,7 +170,7 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
 
   const subtitle =
     mode === 'signup' ? 'Save pieces to collections and find your orders.'
-    : mode === 'code-email' ? 'We will email you a one-time code. No password.'
+    : mode === 'code-email' ? 'We will email you a one-time code. It works even if you forgot your password.'
     : mode === 'code-verify' ? `We sent a code to ${email}.`
     : 'Welcome back.';
 
@@ -137,6 +184,9 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sign-in-title"
         style={{
           width: '100%', maxWidth: 384, background: C.surface,
           border: `1px solid ${C.border}`, boxShadow: '0 20px 50px -20px rgba(0,0,0,0.4)',
@@ -144,9 +194,17 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          aria-label="Close sign-in dialog"
+          onClick={onClose}
+          style={{ ...linkStyle, display: 'block', marginLeft: 'auto' }}
+        >
+          Close
+        </button>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <p style={{ ...labelStyle, color: C.bronze, marginBottom: 8 }}>Adrian Rasmussen Art</p>
-          <h2 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: 26, color: C.ink, fontWeight: 500, margin: 0 }}>
+          <h2 id="sign-in-title" style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: 26, color: C.ink, fontWeight: 500, margin: 0 }}>
             {title}
           </h2>
           <p style={{ fontFamily: 'Lato, Helvetica, sans-serif', fontSize: 14, color: C.sub, marginTop: 8 }}>
@@ -155,7 +213,7 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
         </div>
 
         {error && (
-          <div style={{
+          <div role="alert" aria-live="polite" style={{
             marginBottom: 16, padding: '8px 12px', border: '1px solid #d99',
             background: '#fbeaea', color: '#8a2a2a', fontFamily: 'Lato, sans-serif', fontSize: 13,
           }}>
@@ -166,33 +224,37 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
         {/* Password modes (login / signup) */}
         {(mode === 'login' || mode === 'signup') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <button type="button" onClick={doGoogle} disabled={busy} style={{
-              ...inputStyle, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: 10, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.05em',
-            }}>
-              <GoogleMark /> Continue with Google
-            </button>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.sub }}>
-              <span style={{ flex: 1, height: 1, background: C.border }} />
-              <span style={{ fontFamily: 'Lato, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em' }}>or</span>
-              <span style={{ flex: 1, height: 1, background: C.border }} />
-            </div>
+            {googleConfigured && (
+              <>
+                <button type="button" onClick={doGoogle} disabled={busy} style={{
+                  ...inputStyle, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.05em',
+                }}>
+                  Continue with Google
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.sub }}>
+                  <span style={{ flex: 1, height: 1, background: C.border }} />
+                  <span style={{ fontFamily: 'Lato, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.15em' }}>or</span>
+                  <span style={{ flex: 1, height: 1, background: C.border }} />
+                </div>
+              </>
+            )}
 
             {mode === 'signup' && (
               <div>
-                <label className={labelCls} style={labelStyle}>Name (optional)</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} placeholder="Your name" />
+                <label htmlFor="sign-in-name" className={labelCls} style={labelStyle}>Name (optional)</label>
+                <input id="sign-in-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} placeholder="Your name" />
               </div>
             )}
             <div>
-              <label className={labelCls} style={labelStyle}>Email</label>
-              <input type="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} placeholder="you@example.com" />
+              <label htmlFor="sign-in-email" className={labelCls} style={labelStyle}>Email</label>
+              <input id="sign-in-email" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} placeholder="you@example.com" />
             </div>
             <div>
-              <label className={labelCls} style={labelStyle}>Password</label>
+              <label htmlFor="sign-in-password" className={labelCls} style={labelStyle}>Password</label>
               <input
+                id="sign-in-password"
                 type="password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && doPassword()}
@@ -203,6 +265,15 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
             <button type="button" onClick={doPassword} disabled={busy || !email.trim() || !password} style={primaryStyle}>
               {busy ? 'Please wait...' : mode === 'signup' ? 'Create account' : 'Sign in'}
             </button>
+            {mode === 'login' && (
+              <button
+                type="button"
+                style={{ ...linkStyle, color: C.sub }}
+                onClick={() => navigate(`/account/reset-password?returnTo=${encodeURIComponent(returnTo)}`)}
+              >
+                Forgot password?
+              </button>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
               <button type="button" style={linkStyle} onClick={() => { setError(null); setMode(mode === 'signup' ? 'login' : 'signup'); }}>
@@ -219,8 +290,8 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
         {mode === 'code-email' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className={labelCls} style={labelStyle}>Email</label>
-              <input type="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendCode()} style={inputStyle} placeholder="you@example.com" />
+              <label htmlFor="code-email" className={labelCls} style={labelStyle}>Email</label>
+              <input id="code-email" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendCode()} style={inputStyle} placeholder="you@example.com" />
             </div>
             <button type="button" onClick={sendCode} disabled={busy || !email.trim()} style={primaryStyle}>
               {busy ? 'Sending...' : 'Send code'}
@@ -235,8 +306,9 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
         {mode === 'code-verify' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className={labelCls} style={labelStyle}>6-digit code</label>
+              <label htmlFor="sign-in-code" className={labelCls} style={labelStyle}>6-digit code</label>
               <input
+                id="sign-in-code"
                 type="text"
                 inputMode="numeric"
                 autoFocus
@@ -260,14 +332,5 @@ const SignInModal: React.FC<{ onClose: () => void; onSignedIn?: () => void }> = 
     document.body,
   );
 };
-
-const GoogleMark: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
-    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.3 17.7 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.8 6.8-17.4z" />
-    <path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.8-6.1C.9 16.1 0 19.9 0 23.7s.9 7.6 2.6 10.7l7.8-6.1z" />
-    <path fill="#34A853" d="M24 47.4c6.2 0 11.4-2 15.2-5.5l-7.3-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.7-3.8-13.6-9.3l-7.8 6.1C6.5 42 14.6 47.4 24 47.4z" />
-  </svg>
-);
 
 export default SignInModal;
