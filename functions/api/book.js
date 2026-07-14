@@ -1,14 +1,14 @@
 /**
  * GET    /api/book            — list all book entries (BookContent[]). Public.
  * GET    /api/book?id=...     — one entry by piece id, or 404. Public.
- * POST   /api/book            — upsert an entry by id. Body: { entry: BookContent }. Auth: admin_session cookie.
- * DELETE /api/book?id=...     — remove an entry. Auth: admin_session cookie.
+ * POST   /api/book            — upsert an entry by id. Body: { entry: BookContent }. Admin only.
+ * DELETE /api/book?id=...     — remove an entry. Admin only.
  *
  * Storage: a single `book/index.json` object in the existing R2 bucket (MUSIC_BUCKET).
  * Mirrors functions/api/poems.js — same auth model, same store.
  */
 
-import { isAdminAuthed } from './_lib/admin.js';
+import { jsonResponse, requireAdmin } from './_lib/admin.js';
 
 const KEY = 'book/index.json';
 
@@ -29,10 +29,7 @@ async function writeEntries(env, entries) {
     });
 }
 
-const json = (body, status = 200) => new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-});
+const json = jsonResponse;
 
 // Normalise an array-of-strings field: accept array or newline string, drop blanks.
 function toParagraphs(value) {
@@ -86,7 +83,8 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
+    const unauthorized = await requireAdmin(request, env);
+    if (unauthorized) return unauthorized;
 
     let body;
     try {
@@ -109,7 +107,8 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
+    const unauthorized = await requireAdmin(request, env);
+    if (unauthorized) return unauthorized;
 
     const id = new URL(request.url).searchParams.get('id');
     if (!id) return json({ ok: false, error: 'Missing id' }, 400);

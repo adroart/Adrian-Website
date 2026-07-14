@@ -18,7 +18,7 @@ export async function onRequest(context) {
   if (request.method === 'GET') return getPaymentPreset(env, id);
   if (request.method === 'PUT') return updatePaymentPreset(request, env, id);
   if (request.method === 'DELETE') return deletePaymentPreset(env, id);
-  return new Response('Method not allowed', { status: 405 });
+  return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
 async function getPaymentPreset(env, id) {

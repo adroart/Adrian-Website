@@ -21,7 +21,7 @@ export async function onRequest(context) {
 
   if (request.method === 'PATCH') return patchQuote(request, env, id);
   if (request.method === 'DELETE') return deleteQuote(env, id);
-  return new Response('Method not allowed', { status: 405 });
+  return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
 async function patchQuote(request, env, id) {

@@ -1,12 +1,12 @@
 /**
  * GET    /api/poems            — list all poems (Track[]). Public.
- * POST   /api/poems            — upsert a poem by slug. Body: { poem: Track }. Auth: admin_session cookie.
- * DELETE /api/poems?slug=...   — remove a poem. Auth: admin_session cookie.
+ * POST   /api/poems            — upsert a poem by slug. Body: { poem: Track }. Admin only.
+ * DELETE /api/poems?slug=...   — remove a poem. Admin only.
  *
  * Storage: a single `poems/index.json` object in the existing R2 audio bucket (MUSIC_BUCKET).
  */
 
-import { isAdminAuthed } from './_lib/admin.js';
+import { jsonResponse, requireAdmin } from './_lib/admin.js';
 
 const KEY = 'poems/index.json';
 
@@ -28,10 +28,7 @@ async function writePoems(env, poems) {
     });
 }
 
-const json = (body, status = 200) => new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-});
+const json = jsonResponse;
 
 function isValidPoem(p) {
     if (!p || typeof p !== 'object') return false;
@@ -48,7 +45,8 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
+    const unauthorized = await requireAdmin(request, env);
+    if (unauthorized) return unauthorized;
 
     let body;
     try {
@@ -76,7 +74,8 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-    if (!(await isAdminAuthed(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
+    const unauthorized = await requireAdmin(request, env);
+    if (unauthorized) return unauthorized;
 
     const slug = new URL(request.url).searchParams.get('slug');
     if (!slug) return json({ ok: false, error: 'Missing slug' }, 400);

@@ -15,7 +15,7 @@ export async function onRequest(context) {
 
   if (request.method === 'GET') return listInvoices(request, env);
   if (request.method === 'POST') return createInvoice(request, env);
-  return new Response('Method not allowed', { status: 405 });
+  return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
 async function listInvoices(request, env) {

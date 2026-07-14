@@ -14,7 +14,7 @@ export async function onRequest(context) {
 
   if (request.method === 'GET') return listPaymentPresets(env);
   if (request.method === 'POST') return createPaymentPreset(request, env);
-  return new Response('Method not allowed', { status: 405 });
+  return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
 async function listPaymentPresets(env) {
