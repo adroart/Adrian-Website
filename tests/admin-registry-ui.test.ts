@@ -25,9 +25,13 @@ describe('central admin registry UI', () => {
     assert.match(layout, /response\.status === 401/);
     assert.match(layout, /response\.status === 403/);
     assert.match(layout, /admin\.email/);
-    assert.match(layout, /registry-unlock/);
     assert.match(layout, /signOut/);
+    assert.doesNotMatch(layout, /registry-unlock/);
     assert.doesNotMatch(layout, /api\/admin\/logout/);
+
+    const client = source('lib/account/authClient.ts');
+    assert.match(client, /\/api\/admin\/registry-unlock/);
+    assert.match(client, /method:\s*['"]DELETE['"]/);
 
     const { adminReturnDestination } = await import('../components/AdminLayout.tsx');
     assert.equal(adminReturnDestination({

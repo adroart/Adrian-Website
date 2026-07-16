@@ -42,7 +42,6 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   const logout = async () => {
-    await fetch('/api/admin/registry-unlock', { method: 'DELETE' }).catch(() => undefined);
     await signOut();
     navigate('/admin/login', { replace: true });
   };

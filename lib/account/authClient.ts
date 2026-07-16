@@ -79,7 +79,8 @@ function isSafePath(value: string) {
     && !/[\u0000-\u001f\u007f]/.test(value);
 }
 
-/** Sign out and clear the session cookie. */
-export function signOut() {
+/** Clear any privileged unlock before ending the shared account session. */
+export async function signOut() {
+  await fetch('/api/admin/registry-unlock', { method: 'DELETE' }).catch(() => undefined);
   return authClient.signOut();
 }

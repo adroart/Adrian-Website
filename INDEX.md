@@ -6,7 +6,7 @@
 ## File tree
 
 ```
-components/  (75 files, 19,311 lines)
+components/  (75 files, 19,310 lines)
 │   ├── account/  (9 files, 1,389 lines)
 │   │   ├── AccountLayout.tsx  (82 lines)
 │   │   ├── AuthButton.tsx  (129 lines)
@@ -140,8 +140,8 @@ hooks/  (5 files, 141 lines)
 │   ├── useParallax.ts  → useParallax
 │   ├── useReveal.ts  → useReveal
 │   └── useScrollProgress.ts  → useScrollProgress
-lib/  (7 files, 573 lines)
-│   ├── account/  (4 files, 307 lines)
+lib/  (7 files, 574 lines)
+│   ├── account/  (4 files, 308 lines)
 │   │   ├── AccountProvider.tsx  → AccountProvider
 │   │   ├── auth.server.js  → createAuth
 │   │   ├── authClient.ts  → authClient, sendSignInCode, verifySignInCode, signUpWithPassword, signInWithPassword +5 more
