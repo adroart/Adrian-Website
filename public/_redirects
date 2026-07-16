@@ -42,7 +42,6 @@
 
 # ── Wix system paths (prevent 404s) ────────────────────────
 /members/*                      /                               301
-/account/*                      /                               301
 /cart                           /shop                           301
 /checkout                       /shop                           301
 /thank-you                      /shop                           301

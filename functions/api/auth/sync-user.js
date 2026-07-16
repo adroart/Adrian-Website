@@ -8,7 +8,7 @@
  * lazily upsert this row via ensureUser, so a missed call here is non-fatal.
  */
 
-import { requireUser, jsonResponse } from '../_lib/clerk.js';
+import { requireUser, jsonResponse } from '../_lib/auth.js';
 import { getUserByClerkId, upsertUser, setUserStripeCustomer, relinkOrdersByEmail } from '../_lib/db.js';
 import { ensureStripeCustomer } from '../_lib/stripe.js';
 
@@ -38,7 +38,7 @@ export async function onRequest(context) {
   });
 
   // Re-link any guest orders that match this email but had no user_id.
-  if (user?.id) {
+  if (user?.id && auth.user?.emailVerified === true) {
     await relinkOrdersByEmail(env.DB, user.id, email);
   }
 

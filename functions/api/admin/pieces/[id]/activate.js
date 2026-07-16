@@ -1,6 +1,6 @@
 import {
   jsonResponse,
-  requireAdminPostStepUp,
+  requireRegistryUnlock,
   requireDb,
   writeOwnershipAudit,
 } from '../../../_lib/admin.js';
@@ -23,11 +23,17 @@ function hashesMatch(row, body) {
 }
 
 export async function onRequest({ request, env, params }) {
-  const authorization = await requireAdminPostStepUp(request, env);
-  if (authorization.response) return authorization.response;
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+  const authorization = await requireRegistryUnlock(request, env);
+  if (authorization instanceof Response) return authorization;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
-  const { body } = authorization;
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+  }
   if (!validateChecks(body)) {
     return jsonResponse({ ok: false, error: 'physical_checks_incomplete' }, 400);
   }

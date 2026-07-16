@@ -37,6 +37,7 @@ const Viewing = lazy(() => import('./components/viewing/Viewing'));
 const AccountDashboard = lazy(() => import('./components/AccountDashboard'));
 const OrdersList = lazy(() => import('./components/account/OrdersList'));
 const CollectionsManager = lazy(() => import('./components/account/CollectionsManager'));
+const ResetPassword = lazy(() => import('./components/account/ResetPassword'));
 const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
@@ -165,6 +166,7 @@ const AppInner: React.FC = () => {
             <Route path="/account" element={<AccountDashboard />} />
             <Route path="/account/orders" element={<OrdersList />} />
             <Route path="/account/collections" element={<CollectionsManager />} />
+            <Route path="/account/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

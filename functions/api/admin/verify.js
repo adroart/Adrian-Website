@@ -1,14 +1,18 @@
 /**
  * GET /api/admin/verify
- * Returns { ok: true } if the admin session cookie is a valid, unexpired token.
+ * Returns the safe identity fields for an authorized Better Auth administrator.
  */
 
-import { isAdminAuthed } from '../_lib/admin.js';
+import { privateJsonResponse, requireAdmin } from '../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
-  const ok = await isAdminAuthed(request, env);
-  return new Response(JSON.stringify({ ok }), {
-    status: ok ? 200 : 401,
-    headers: { 'Content-Type': 'application/json' },
+  const authorization = await requireAdmin(request, env);
+  if (authorization instanceof Response) return authorization;
+  return privateJsonResponse({
+    ok: true,
+    admin: {
+      id: authorization.userId,
+      email: authorization.email,
+    },
   });
 }

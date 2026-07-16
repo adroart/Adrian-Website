@@ -6,7 +6,7 @@ import {
   isCanonicalOwnershipCodeKeyVersion,
 } from '../../../utils/ownershipCodeCrypto.ts';
 import { generateRecoveryCode } from '../../../utils/recoveryCode.ts';
-import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
+import { jsonResponse, requireAdmin, requireDb, requireRegistryUnlock } from '../_lib/admin.js';
 import {
   registryAdminEnabled,
   notFound,
@@ -28,8 +28,13 @@ const PUBLIC_CODE_ATTEMPTS = 8;
 
 export async function onRequest(context) {
   const { request, env } = context;
-  const unauthorized = await requireAdmin(request, env);
-  if (unauthorized) return unauthorized;
+  if (request.method === 'POST') {
+    const authorization = await requireRegistryUnlock(request, env);
+    if (authorization instanceof Response) return authorization;
+  } else {
+    const unauthorized = await requireAdmin(request, env);
+    if (unauthorized) return unauthorized;
+  }
   if (!registryAdminEnabled(env)) return notFound();
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;

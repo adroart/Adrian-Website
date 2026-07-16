@@ -58,9 +58,14 @@ Set the non-secret active version in the Cloudflare Pages production variables:
 OWNERSHIP_CODE_ACTIVE_KEY_VERSION=1
 ```
 
-Confirm the existing admin step-up secret is also provisioned as `UPLOAD_SECRET`.
-The reveal, recovery verification, backup retry, and activation routes require
-it in addition to the admin session.
+Provision a separate, high-entropy `REGISTRY_STEP_UP_SECRET`. The reveal,
+recovery verification, backup retry, activation, packaging, and issuance routes
+require it in addition to a verified allowlisted administrator account.
+
+`UPLOAD_SECRET` is accepted for registry unlock only while
+`REGISTRY_STEP_UP_SECRET` is absent. Provision the new variable before retiring
+the old upload credential. As soon as the new variable exists, even if it is
+empty, the registry fails closed and never falls back to `UPLOAD_SECRET`.
 
 Keep the public `LAUNCH_FLAGS.livingLegacy` flag off during staging. Set this
 non-secret Cloudflare Pages production variable instead:

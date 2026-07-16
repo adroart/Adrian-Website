@@ -131,6 +131,13 @@ function mockApiPlugin(): Plugin {
     },
   ];
   const invoices: any[] = [];
+  let registryUnlocked = false;
+
+  function devAdminStatus(req: any): 'authorized' | 'guest' | 'forbidden' {
+    const header = req.headers['x-dev-admin-status'];
+    if (header === 'guest' || header === 'forbidden') return header;
+    return 'authorized';
+  }
 
   function send(res: any, status: number, body: unknown) {
     res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -204,22 +211,42 @@ function mockApiPlugin(): Plugin {
   return {
     name: 'mock-api',
     configureServer(server) {
-      server.middlewares.use('/api/admin/login', async (req, res, next) => {
-        if (req.method !== 'POST') return next();
-        await readBody(req);
-        res.setHeader('Set-Cookie', 'admin_session=local-dev; Path=/; SameSite=Strict');
-        send(res, 200, { ok: true });
-      });
-
-      server.middlewares.use('/api/admin/logout', (req, res, next) => {
-        if (req.method !== 'POST') return next();
-        res.setHeader('Set-Cookie', 'admin_session=; Path=/; Max-Age=0; SameSite=Strict');
-        send(res, 200, { ok: true });
-      });
-
       server.middlewares.use('/api/admin/verify', (req, res, next) => {
         if (req.method !== 'GET') return next();
-        send(res, 200, { ok: true, dev: true });
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+        return send(res, 200, {
+          ok: true,
+          admin: { id: 'local-dev-admin', email: 'local-admin@example.test' },
+        });
+      });
+
+      server.middlewares.use('/api/admin/registry-unlock', async (req, res, next) => {
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+
+        if (req.method === 'GET') {
+          return send(res, 200, {
+            ok: true,
+            unlocked: registryUnlocked,
+            expiresAt: registryUnlocked ? new Date(Date.now() + 10 * 60 * 1000).toISOString() : null,
+          });
+        }
+        if (req.method === 'POST') {
+          const body = await readBody(req);
+          if (typeof body.secret !== 'string' || !body.secret) {
+            return send(res, 401, { ok: false, error: 'unlock_failed' });
+          }
+          registryUnlocked = true;
+          return send(res, 200, { ok: true, expiresIn: 600 });
+        }
+        if (req.method === 'DELETE') {
+          registryUnlocked = false;
+          return send(res, 200, { ok: true, unlocked: false });
+        }
+        return next();
       });
 
       server.middlewares.use('/api/admin/payment-presets', async (req, res, next) => {

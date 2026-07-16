@@ -23,7 +23,7 @@ export async function onRequest(context) {
     return putConfig(request, env);
   }
 
-  return new Response('Method not allowed', { status: 405 });
+  return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
 }
 
 async function getConfig(env) {

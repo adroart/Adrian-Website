@@ -2,38 +2,31 @@
  * POST /api/upload-music  — upload a file to R2
  * GET  /api/upload-music  — list files in R2
  *
- * Auth: admin_session cookie (set by /api/admin/login)
+ * Auth: allowlisted account administrator
  *
  * R2 binding: MUSIC_BUCKET → adrian-music bucket
  */
 
-import { isAdminAuthed } from './_lib/admin.js';
+import { jsonResponse, requireAdmin } from './_lib/admin.js';
 
 const PUBLIC_BASE = 'https://audio.adrianrasmussen.com';
 
 export async function onRequestPost({ request, env }) {
-  if (!(await isAdminAuthed(request, env))) {
-    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-      status: 401, headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const unauthorized = await requireAdmin(request, env);
+  if (unauthorized) return unauthorized;
 
   let formData;
   try {
     formData = await request.formData();
   } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'Invalid form data' }), {
-      status: 400, headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ ok: false, error: 'Invalid form data' }, 400);
   }
 
   const file = formData.get('file');
   const filename = formData.get('filename');
 
   if (!file || !filename) {
-    return new Response(JSON.stringify({ ok: false, error: 'Missing file or filename' }), {
-      status: 400, headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ ok: false, error: 'Missing file or filename' }, 400);
   }
 
   const safeFilename = filename.toString().replace(/[^a-z0-9._-]/gi, '-').toLowerCase();
@@ -44,17 +37,12 @@ export async function onRequestPost({ request, env }) {
   });
 
   const url = `${PUBLIC_BASE}/${safeFilename}`;
-  return new Response(JSON.stringify({ ok: true, url }), {
-    status: 200, headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse({ ok: true, url });
 }
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isAdminAuthed(request, env))) {
-    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
-      status: 401, headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const unauthorized = await requireAdmin(request, env);
+  if (unauthorized) return unauthorized;
 
   const listed = await env.MUSIC_BUCKET.list();
   const files = listed.objects.map(obj => ({
@@ -64,7 +52,5 @@ export async function onRequestGet({ request, env }) {
     uploaded: obj.uploaded,
   }));
 
-  return new Response(JSON.stringify({ ok: true, files }), {
-    status: 200, headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse({ ok: true, files });
 }
