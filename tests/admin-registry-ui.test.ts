@@ -19,7 +19,7 @@ describe('central admin registry UI', () => {
     }
   });
 
-  it('verifies the allowlisted identity and signs out through Better Auth', () => {
+  it('verifies the allowlisted identity and signs out through Better Auth', async () => {
     const layout = source('components/AdminLayout.tsx');
     assert.match(layout, /\/api\/admin\/verify/);
     assert.match(layout, /response\.status === 401/);
@@ -28,6 +28,13 @@ describe('central admin registry UI', () => {
     assert.match(layout, /registry-unlock/);
     assert.match(layout, /signOut/);
     assert.doesNotMatch(layout, /api\/admin\/logout/);
+
+    const { adminReturnDestination } = await import('../components/AdminLayout.tsx');
+    assert.equal(adminReturnDestination({
+      pathname: '/admin/pieces',
+      search: '?tab=active',
+      hash: '#latest',
+    }), '/admin/pieces?tab=active#latest');
   });
 
   it('submits the registry secret only to unlock and never forwards it to registry operations', () => {

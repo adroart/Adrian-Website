@@ -118,8 +118,10 @@ If Cloudflare Pages asks about environment bindings, confirm:
 - D1 database name: `adrian-website`
 - D1 database id: `d0e93f04-203c-4dbd-945a-e14a9a364dd5`
 
-Admin login uses the existing `UPLOAD_SECRET` Pages environment variable.
-If admin login fails on production, check that `UPLOAD_SECRET` exists in Cloudflare Pages settings.
+Admin login uses a verified Better Auth account whose email is included in the
+`ADMIN_EMAILS` Pages environment variable. If admin login fails on production,
+check the account session, email verification, and allowlist configuration.
+`UPLOAD_SECRET` does not grant ordinary administrator access.
 
 ## Verification Commands
 

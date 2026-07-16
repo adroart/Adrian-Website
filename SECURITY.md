@@ -4,13 +4,27 @@ This file records the 2026-06-16 security pass on the Cloudflare Pages Functions
 backend (`functions/api/**`) + D1 store, what was fixed in code, and what still
 needs an owner action (secret / config / deploy / DB change) that code can't do.
 
-## Fixed in code (this branch)
+## Current account and admin boundary
 
-- **Admin auth no longer stores the raw secret in the cookie.** `_lib/admin.js`
-  now issues a signed, expiring session token (`base64url(payload).hmac`,
-  7-day TTL). Verification and the login password check are constant-time.
-  `/api/admin/login` is rate-limited per IP. Old cookies (value == secret) are
-  rejected, so any existing admin session must sign in again.
+- Better Auth is the single customer and administrator identity.
+- Administrator access requires a verified email in the fail-closed
+  `ADMIN_EMAILS` allowlist. Unsafe requests also require an exact same-origin
+  `Origin` header.
+- Sensitive artwork registry actions require a ten-minute signed unlock bound
+  to the current administrator. Its secret is `REGISTRY_STEP_UP_SECRET`, with
+  transitional `UPLOAD_SECRET` fallback only when the new binding is absent.
+- Password recovery revokes existing sessions. Sign-in and recovery codes are
+  stored as hashes and are never logged.
+- Google sign-in is exposed only when both Google OAuth variables are present.
+- Keystatic keeps its separate GitHub authentication boundary.
+
+See `docs/account-admin-runbook.md` for production configuration and transition
+steps.
+
+## Earlier hardening history
+
+- **The shared-password admin flow is retired.** `/api/admin/login` now returns
+  `410 Gone`, and runtime authorization uses the account boundary above.
 - **Stripe webhook signature compare is constant-time** (`_lib/stripe.js`),
   parsing the hex signature to bytes — no `===` timing oracle.
 - **`/api/viewings/:token/request` is idempotent + throttled.** A viewing that's
@@ -43,13 +57,13 @@ namespace or Durable Object** in `wrangler.toml` and back the limiter with it.
 1. **Rotate the `sk_live_` secret** flagged compromised in
    `todo/plans/clerk-production-launch.md` (pasted in plaintext 2026-06-09).
    Confirm it's revoked + replaced in Stripe and in Cloudflare Pages env.
-2. **Confirm `UPLOAD_SECRET` is high-entropy** (random 32+ chars), not a
-   human-memorable password. Rotate if weak. It is the single admin credential.
+2. **Provision the account and admin variables** listed in
+   `docs/account-admin-runbook.md`, including a separate high-entropy
+   `REGISTRY_STEP_UP_SECRET`.
 3. **Unset stale env vars** in Cloudflare Pages: `CLERK_SECRET_KEY`,
    `CLERK_WEBHOOK_SECRET` (the webhook is gone).
-4. **(Optional) remove unused deps** `svix`, `stripe` (server SDK) from
-   `package.json` — left in place here to avoid `package-lock.json` drift; do it
-   with a local `npm install` so the lockfile regenerates.
+4. **Review the remaining `stripe` server SDK dependency** before removing it.
+   The unused `svix` dependency has been removed.
 5. **Durable rate limiting** — add a KV/DO binding if abuse becomes real.
 6. **DB CHECK constraints** on `orders.status`/`invoices.status`/currency would
    need a table rebuild migration (SQLite can't `ALTER ... ADD CHECK`); deferred

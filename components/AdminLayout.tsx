@@ -4,6 +4,14 @@ import { signOut } from '../lib/account/authClient';
 
 type AdminIdentity = { id: string; email: string };
 
+export function adminReturnDestination(location: {
+  pathname: string;
+  search: string;
+  hash: string;
+}): string {
+  return `${location.pathname}${location.search}${location.hash}`;
+}
+
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [checking, setChecking] = useState(true);
   const [admin, setAdmin] = useState<AdminIdentity | null>(null);
@@ -15,7 +23,10 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     fetch('/api/admin/verify', { cache: 'no-store' })
       .then(async (response) => {
         if (response.status === 401) {
-          navigate('/admin/login', { state: { from: location.pathname }, replace: true });
+          navigate('/admin/login', {
+            state: { from: adminReturnDestination(location) },
+            replace: true,
+          });
           return;
         }
         if (response.status === 403) {
