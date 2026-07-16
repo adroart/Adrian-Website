@@ -66,4 +66,22 @@ describe('central account sign-out', () => {
 
     assert.deepEqual(calls, ['better-auth']);
   });
+
+  it('bounds registry cleanup so a stalled request cannot block account sign-out', async (context) => {
+    calls.length = 0;
+    context.mock.method(globalThis, 'fetch', (_input: string | URL | Request, init?: RequestInit) => new Promise<Response>((resolve, reject) => {
+      const timer = setTimeout(() => resolve(new Response(null, { status: 204 })), 300);
+      init?.signal?.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(new DOMException('aborted', 'AbortError'));
+      });
+    }));
+
+    const { signOut } = await import('../lib/account/authClient.ts');
+    const startedAt = Date.now();
+    await signOut();
+
+    assert.ok(Date.now() - startedAt < 250, 'sign-out waited for the stalled cleanup request');
+    assert.deepEqual(calls, ['better-auth']);
+  });
 });

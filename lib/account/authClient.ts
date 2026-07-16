@@ -79,8 +79,31 @@ function isSafePath(value: string) {
     && !/[\u0000-\u001f\u007f]/.test(value);
 }
 
+const REGISTRY_UNLOCK_CLEANUP_TIMEOUT_MS = 150;
+
+async function clearRegistryUnlockBeforeSignOut() {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      fetch('/api/admin/registry-unlock', {
+        method: 'DELETE',
+        signal: controller.signal,
+      }).catch(() => undefined),
+      new Promise<void>((resolve) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          resolve();
+        }, REGISTRY_UNLOCK_CLEANUP_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+}
+
 /** Clear any privileged unlock before ending the shared account session. */
 export async function signOut() {
-  await fetch('/api/admin/registry-unlock', { method: 'DELETE' }).catch(() => undefined);
+  await clearRegistryUnlockBeforeSignOut();
   return authClient.signOut();
 }

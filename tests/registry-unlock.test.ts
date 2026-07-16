@@ -172,9 +172,33 @@ describe('registry unlock authorization', () => {
     assert.equal(wrongUser.status, 403);
   });
 
+  it('rejects an unlock issued to an earlier session of the same administrator', async () => {
+    const { onRequestPost } = await endpoint();
+    const exchange = await onRequestPost({
+      request: request('POST', { origin: 'https://adrianrasmussen.com', secret: 'registry-secret' }),
+      env: environment(),
+    });
+    const cookie = cookiePair(exchange.headers.get('Set-Cookie') || '');
+
+    sessionData = {
+      session: { id: 'session-2' },
+      user: { id: 'admin-1', email: ' Artist@Example.COM ', emailVerified: true },
+    };
+    const { requireRegistryUnlock } = await helpers();
+    const replayed = await requireRegistryUnlock(request('GET', { cookie }), environment());
+
+    assert.ok(replayed instanceof Response);
+    assert.equal(replayed.status, 403);
+    assert.deepEqual(await replayed.json(), { ok: false, error: 'registry_locked' });
+  });
+
   it('rejects tampered and expired cookies', async () => {
     const { createRegistryUnlockToken, requireRegistryUnlock } = await helpers();
-    const identity = { userId: 'admin-1', email: 'artist@example.com' };
+    const identity = {
+      userId: 'admin-1',
+      email: 'artist@example.com',
+      session: { id: 'session-1' },
+    };
     const token = await createRegistryUnlockToken(environment(), identity);
     const [payload, signature] = token.split('.');
     const tampered = `${payload}.${signature.slice(0, -1)}${signature.endsWith('A') ? 'B' : 'A'}`;
@@ -193,7 +217,11 @@ describe('registry unlock authorization', () => {
 
   it('rejects a non-canonical signature encoding even when it decodes to the same bytes', async () => {
     const { createRegistryUnlockToken, requireRegistryUnlock } = await helpers();
-    const identity = { userId: 'admin-1', email: 'artist@example.com' };
+    const identity = {
+      userId: 'admin-1',
+      email: 'artist@example.com',
+      session: { id: 'session-1' },
+    };
     const token = await createRegistryUnlockToken(environment(), identity);
     const [payload, signature] = token.split('.');
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -237,6 +265,23 @@ describe('registry unlock authorization', () => {
     assert.equal(cleared.headers.get('Cache-Control'), 'no-store');
     assert.match(cleared.headers.get('Set-Cookie') || '', /^registry_unlock=;/);
     assert.match(cleared.headers.get('Set-Cookie') || '', /Path=\/api\/admin/);
+    assert.match(cleared.headers.get('Set-Cookie') || '', /Max-Age=0/);
+  });
+
+  it('clears the unlock cookie after the account session has already expired', async () => {
+    sessionData = null;
+    const { onRequestDelete } = await endpoint();
+    const cleared = await onRequestDelete({
+      request: request('DELETE', {
+        origin: 'https://adrianrasmussen.com',
+        cookie: 'registry_unlock=stale-token',
+      }),
+      env: environment(),
+    });
+
+    assert.equal(cleared.status, 200);
+    assert.deepEqual(await cleared.json(), { ok: true, unlocked: false });
+    assert.match(cleared.headers.get('Set-Cookie') || '', /^registry_unlock=;/);
     assert.match(cleared.headers.get('Set-Cookie') || '', /Max-Age=0/);
   });
 });

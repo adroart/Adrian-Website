@@ -50,12 +50,21 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-  const admin = await requireAdminIdentity(request, env);
-  if (admin instanceof Response) return admin;
+  const clearCookie = { 'Set-Cookie': clearRegistryUnlockCookie(request) };
+  const origin = request.headers.get('Origin');
+  let sameOrigin = false;
+  try {
+    sameOrigin = Boolean(origin) && origin === new URL(request.url).origin;
+  } catch {
+    sameOrigin = false;
+  }
+  if (!sameOrigin) {
+    return jsonResponse({ ok: false, error: 'origin_forbidden' }, 403, clearCookie);
+  }
   return jsonResponse(
     { ok: true, unlocked: false },
     200,
-    { 'Set-Cookie': clearRegistryUnlockCookie(request) },
+    clearCookie,
   );
 }
 

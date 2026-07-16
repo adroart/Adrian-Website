@@ -130,7 +130,7 @@ export async function verifyRegistryStepUpSecret(env, candidate) {
   return timingSafeEqual(candidateDigest, secretDigest);
 }
 
-/** Mint a signed unlock token bound to one normalized administrator identity. */
+/** Mint a signed unlock token bound to one administrator login session. */
 export async function createRegistryUnlockToken(
   env,
   identity,
@@ -138,11 +138,16 @@ export async function createRegistryUnlockToken(
 ) {
   const secret = registryStepUpSecret(env);
   if (!secret) throw new Error('registry_unlock_not_configured');
+  const sessionId = identity?.session?.id;
+  if (typeof sessionId !== 'string' || !sessionId) {
+    throw new Error('registry_unlock_session_required');
+  }
   const iat = Math.floor(Date.now() / 1000);
   const payload = {
-    v: 1,
+    v: 2,
     userId: identity.userId,
     email: typeof identity.email === 'string' ? identity.email.trim().toLowerCase() : '',
+    sessionId,
     iat,
     exp: iat + ttlSeconds,
   };
@@ -168,9 +173,10 @@ export async function readRegistryUnlockToken(request, env, identity) {
     const payload = JSON.parse(new TextDecoder().decode(payloadBytes));
     const now = Math.floor(Date.now() / 1000);
     if (
-      payload?.v !== 1
+      payload?.v !== 2
       || typeof payload.userId !== 'string'
       || typeof payload.email !== 'string'
+      || typeof payload.sessionId !== 'string'
       || typeof payload.iat !== 'number'
       || typeof payload.exp !== 'number'
       || payload.iat > now
@@ -178,6 +184,7 @@ export async function readRegistryUnlockToken(request, env, identity) {
       || payload.exp - payload.iat > REGISTRY_UNLOCK_TTL_SECONDS
       || payload.userId !== identity.userId
       || payload.email !== identity.email
+      || payload.sessionId !== identity?.session?.id
     ) return null;
     return payload;
   } catch {
