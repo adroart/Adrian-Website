@@ -1011,6 +1011,7 @@ import {
   evaluateClaimWindow,
   CLAIM_WINDOW_DAYS,
   CLAIM_WARNING_DAYS,
+  FINAL_WARNING_GRACE_DAYS,
 } from '../../mandalacodes/utils/claimWindow.ts';
 
 // ── Recovery code ──────────────────────────────────────────────────────────
@@ -1445,6 +1446,14 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
     status: 'pending' as const,
     routedTo: 'holder' as const,
   };
+  const dayMs = 24 * 60 * 60 * 1000;
+  const isoDaysAfterRequest = (days: number) =>
+    new Date(Date.parse(baseRequest.createdAt) + days * dayMs).toISOString();
+  const deliveredWarnings = () =>
+    CLAIM_WARNING_DAYS.map((day, index) => ({
+      ordinal: index + 1,
+      sentAt: isoDaysAfterRequest(day),
+    }));
 
   it("a holder's NO stops the claim cold, regardless of elapsed time", () => {
     const declined = { ...baseRequest, status: 'declined' as const };
@@ -1458,40 +1467,34 @@ describe('escalation outcomes (run on the mandalacodes side)', () => {
   });
 
   it('only unanswered silence across the FULL window, every warning delivered, frees the piece', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS + FINAL_WARNING_GRACE_DAYS);
     const freed = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: false,
       nowIso: past,
-      warningsSent: CLAIM_WARNING_DAYS.length, // all four delivered
+      warnings: deliveredWarnings(), // all four delivered
     });
     assert.equal(freed.status, 'frees-to-requester');
   });
 
   it('mere inactivity never frees: full window but warnings undelivered stays blocked', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
     const notFreed = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: false,
       nowIso: past,
-      warningsSent: 0, // nothing actually delivered to the keeper yet
+      warnings: [], // nothing actually delivered to the keeper yet
     });
     assert.notEqual(notFreed.status, 'frees-to-requester');
   });
 
   it('any keeper response keeps the piece blocked (engagement never frees)', () => {
-    const past = new Date(
-      Date.parse(baseRequest.createdAt) + CLAIM_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-    ).toISOString();
+    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
     const held = evaluateClaimWindow({
       request: baseRequest,
       holderResponded: true,
       nowIso: past,
-      warningsSent: CLAIM_WARNING_DAYS.length,
+      warnings: deliveredWarnings(),
     });
     assert.equal(held.status, 'blocked-active');
   });

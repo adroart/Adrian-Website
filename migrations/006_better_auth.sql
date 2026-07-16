@@ -1,6 +1,7 @@
 -- Better Auth core tables (self-owned customer login replacing Clerk).
 -- Email one-time-code sign-in stores codes in the shared `verification` table;
--- no separate OTP table is needed. Google OAuth (later) uses `account`.
+-- no separate OTP table is needed. Email/password and Google OAuth use
+-- `account`.
 --
 -- Better Auth default SQLite schema, field names per
 -- https://better-auth.com/docs/concepts/database. Applied to D1 binding `DB`.

@@ -1,6 +1,7 @@
 /**
  * Catch-all handler for Better Auth. Every /api/auth/* request (send code,
- * verify code, session, sign-out, and later OAuth callbacks) is handled here.
+ * verify code, email/password, session, sign-out, and OAuth callbacks) is
+ * handled here.
  *
  * The auth instance is built per-request because Pages Functions have no
  * module-global env. `context.request` is a standard Request and
