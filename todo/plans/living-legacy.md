@@ -132,6 +132,229 @@ data live in mutable D1 rows that can be erased. Any Adrian-Website work must re
 
 ---
 
+## THE DREAM — what people actually enter (the heart of the project)
+
+> Added 2026-06-24 from a long design conversation with Adrian. The plan above is the *mechanism*.
+> This section is the *soul of the content*: what a keeper places in their piece, how it stays alive
+> over the years without becoming a chore, and how dreams connect without becoming social media.
+> This is content/experience design, not code yet. It refines the Vision doc's three-phase cycle.
+
+### It is a DREAM, not an intention
+
+A keeper places a **dream** in their piece — what they wish for. Not an "intention" (the will trying
+to *make* something). A dream invites the imagination back in. Most people have a full to-do list and
+a starved imagination; they have traded their dreams for goals. The quiet gift of this project is
+permission to dream again at all. So the word is **dream** everywhere, and the whole experience
+protects wishing, wonder, and co-creation over productivity.
+
+A dream is held at one of **four scopes** — for the **self**, for **family / loved ones**, for the
+**community**, or for the **planet**. These are not four boxes to fill. They are four doorways, and
+most people have never once been asked "what do you dream for the earth?" Being *asked* is the gift.
+
+### What a person enters — three things, only the first is required
+
+1. **The dream itself.** A sentence or a paragraph, at one scope. For most keepers this is the whole
+   thing, and it is complete and dignified on its own. A busy collector can set one dream and leave,
+   and it feels finished, never a lesser version. This is the existing inscription write on
+   mandalacodes (`utils/inscriptions.ts` → `atlas_inscriptions` + the `inscribed` ledger event with a
+   salted commitment), now carrying a **scope** and read as a *dream*.
+
+2. **The living thread — mile-markers, never a diary.** Over the year, when something *real* happens,
+   the keeper may add to the dream: a sign of progress, a thought, an inspiration, a photo, a small
+   amendment. Adrian's own example: someone dreaming of growing a community adds a marker each time
+   the community actually grows. The dream visibly grows because life moved it forward. **The
+   iron rule: nothing is ever owed.** No empty slots, no streaks, no "you haven't added anything,"
+   no nudge to engage. A quiet dream is not behind — it is simply resting. Adding is always a joy you
+   *choose*, never a task you are failing. This is the line between devotion and gamification: a
+   system that *nudges you to engage* is the gimmick the Vision bans; *you choosing to return because
+   the dream is alive in your life* is the practice it's built for. The thread is the everyday pulse.
+
+3. **The yearly moment — the ritual, around your birthday.** Once a year, never a blank form: one of
+   three choices — **reinforce** the dream you hold, **plant a new** dream, or **mark one fulfilled**.
+   Plus the option to do something special that one time a year. This is the scarcity that makes it a
+   ritual not a feed (Vision §yearly ritual), the cedar into the fire, confirm-before-it-sets. Old
+   dreams never vanish; they accumulate as a record of who you have been becoming.
+
+**Two cadences, no longer fighting.** The thread is the *everyday* (joy, never owed). The yearly
+moment is the *ceremony* (rare, sacred, deliberate). The earlier worry — "is it a daily journal or a
+yearly lock?" — dissolves once the thread is understood as mile-markers you place when life gives you
+one, not a diary you owe entries to.
+
+### Inscription roles and birthday-linked chart consent — deferred design
+
+> Added 2026-07-13. Record the product decisions now; Adrian will design the actual inscription
+> language, prompts, and ceremony in a later pass.
+
+- **Creator's Inscription:** Adrian's permanent message placed into the work as its maker.
+- **Origin Inscription:** the first keeper's permanent inscription. They are the person who first
+  brought the finished work into its life with a keeper. This is distinct from the Creator's
+  Inscription and from later yearly inscriptions.
+- **Annual Inscription:** after ownership transfer is confirmed, the new keeper's verified account
+  receives the piece and its birthday-based annual inscription cycle. One account may hold multiple
+  pieces and manages each piece's inscriptions from the same collection view.
+- The keeper's birth date remains private and is never displayed publicly. It powers the private
+  chart and birthday ritual. It may later support consent-based chart coherence between keepers and
+  pieces without exposing the underlying birth date.
+- Chart-coherence participation is a clearly disclosed, preselected choice during signup. The signup
+  flow explains what the birth-chart connection allows; the person can uncheck it before registering
+  and can disable it later from their account. It is never hidden. Describe this accurately as
+  **default-on participation with a clear consent control**, not as opt-in. Review the final wording,
+  data use, and default against applicable privacy requirements before launch.
+- Every sealed inscription remains part of the piece's permanent lineage across all later transfers.
+  The exact drafting window, sealing moment, visibility choices, and yearly ritual remain intentionally
+  unresolved until Adrian's dedicated inscription-design pass.
+
+### The third phase is fulfillment / transformation, NOT destruction
+
+The Vision's cycle is creation / maintenance / destruction. For *dreams*, the third phase is gentler
+and stronger: a dream that **comes true blooms** — it stays in the field forever as proof the practice
+works (Vision §"the intention that came true"). A dream you **outgrow is honored** as who you once
+were, frozen and immortalized, never deleted. Nothing is destroyed; dreams are fulfilled or
+transformed. This also removes the contradiction in promising both "release your dream" and "your
+dreams live forever" — you don't abandon a dream, you complete it or let it become a chapter.
+
+### Helping people find their dream (not coaching, never prescribing)
+
+Sharing the totality of a dream is hard, and many people have lost touch with what they truly wish.
+So the experience **helps a person find and anchor their own dream** — it draws the dream *out*, it
+never puts one *in*. It asks, reflects, and helps them find their own words. The moment it suggests
+*what* to dream, it becomes a guru and the spell breaks (Vision: "personal and mystical but
+non-prescriptive"). A midwife, not an author. The four scopes are the doorways it can gently walk a
+person through, one at a time, only as deep as they want, over time. A single question is too thin;
+this wants room and warmth, and some people only meet their dreams at night. **This is the deepest
+part of the project and the one to develop slowly over years** — built shallow it feels like a
+personality quiz laid over someone's most intimate hopes, which is worse than nothing. Launch simple
+and honest; deepen the guidance as real keepers show how they actually answer.
+
+### The guided flow — how a dream is drawn out (sketch)
+
+The flow exists for the person who says "I don't know, I haven't really thought about it." Its only
+job is to help them arrive at words that feel *true to them* — never to supply the words. Build it
+slowly over years; this sketch is the shape to grow into, not a launch spec. The launch can be far
+simpler (one warm open invitation), and the guidance deepens as real keepers show how they answer.
+
+**The shape, five gentle beats — each skippable, none required:**
+
+1. **Arrival, not a form.** A breath first (Vision §every transition is a ceremony). No fields yet.
+   "This piece will hold a dream for you. There's no rush, and no wrong answer." The tone sets that
+   this is a sacred space, not an app onboarding.
+
+2. **Choose a doorway, or be offered one.** The four scopes as an invitation, not a checklist:
+   "What would you like to dream for — yourself, the people you love, your community, or the earth?"
+   A person picks the one that's alive for them. Most pick *self* or *family* first; *planet* is the
+   one almost no one has been asked, and being asked is itself the gift. Only one at a time.
+
+3. **Draw it out with questions, never suggestions.** This is the heart, and the line that must never
+   be crossed: **the prompts ask, reflect, and open — they never propose content.** Examples of the
+   *kind* of prompt (open, personal, non-leading): "When you picture this going beautifully, what do
+   you see?" · "What's already true that you'd want more of?" · "Who is this dream really for?" ·
+   "If nothing were in the way, what would you wish?" The person answers in their own words, free
+   text, any length. The system may *reflect back* what it heard ("so it sounds like it's about…")
+   to help them feel it — reflection is allowed; suggestion is not. A guru hands you a dream; a
+   midwife asks until your own dream is in your hands.
+
+4. **Find the words together (optional depth).** For those who want it, a gentle back-and-forth that
+   helps hone the phrasing — tighten, clarify, make it ring true — still only with *their* material,
+   never new content. This is the part to develop most carefully and last; shallow here feels like a
+   chatbot, and a chatbot over someone's deepest hope is a desecration. Until it's genuinely good,
+   leave it out entirely — better no honing than clumsy honing.
+
+5. **See it, then set it (confirm before it sets).** The person sees their dream the way the field
+   will see it, and consciously confirms: *this is what I am setting into motion this year.* The
+   cedar into the fire (Vision §confirm before it sets). A short grace window to fix a mistake, then
+   it sets. Then the first sunrise — their light appearing in the field (Vision §first sunrise).
+
+**The non-negotiable rule for the whole flow:** it draws *out*, it never puts *in*. The day it
+suggests what to dream, it becomes prescriptive and the spell breaks. Test every prompt against this:
+does it ask the person to look inward, or does it hand them a ready-made wish? Only the first ships.
+
+**Where the MLK energy touches this, lightly:** the invitation to dream something beautiful — for
+yourself and, especially, for the world — is the same energy of the day Adrian was born into. It can
+breathe through the framing of the flow without ever being stated as a reference.
+
+### Connecting dreams — witnessing, never applause
+
+The most powerful layer and the most dangerous. People joining each other's dreams, sharing the
+vision and passion, supporting one growing, is the Starry Night field made real (Vision §the
+constellation). But the instant it has likes, comment threads, or visible supporter counts, it is
+social media for prayers and the magic dies — the quiet keeper with a private dream for a dying
+parent would feel like a failure beside a popular one.
+
+**The rule: support is witnessing, not applause.** Three ways to connect, in order of preference:
+
+- **Stand beside a dream (default).** You add your light to someone's shared dream; they feel they
+  are not alone in it. No public count, no comments, no leaderboard. A dream with three witnesses is
+  not lesser than one with three hundred. Quiet, sacred, impossible to turn into a contest. This is
+  the Vision's wordless *I see you*, now landing on a *dream* rather than a person.
+- **Co-hold a dream (families, couples).** Two people share one dream across their two pieces —
+  linked lights in the constellation (Vision §"a shared dream between two people"). Powerful for a
+  parent and child or a couple; only works between people who already know each other.
+- **Open support with visible counts — explicitly rejected.** Most viral, fastest path to becoming
+  social media, betrays the field. Do not build.
+
+So: linking, yes; measuring, never. Shared dreams (community/planet) are browsable in the immersive
+field so a stranger can wander, feel it, and want one — that immersive beauty is the recruitment, and
+the storefront (Vision §the browse).
+
+### Data-model sketch (reconcile with mandalacodes before building)
+
+Honoring the load-bearing invariant — **the chain never holds personal data, only opaque IDs, types,
+dates, cityIds, and salted commitments**; free text lives in mutable, erasable D1 rows:
+
+```
+dream            (D1, mutable/erasable — the soft body)
+  id, keeperId, pieceId
+  scope           self | family | community | planet
+  body            the dream text
+  state           living | bloomed (came true) | transformed (outgrown, honored)
+  visibility      shared | anonymous | private   (planet/community shared by default; self/family private)
+  bornYear, lastYearlyMoment
+mile_marker      (D1, mutable — the living thread; added only when there's something true to add)
+  id, dreamId, body, optional media, addedAt
+witness          (D1 — "stand beside"; a keeper adds their light to a shared dream; NO public count surfaced)
+  dreamId, witnessKeeperId, addedAt
+co_hold          (links two pieces to one shared dream — the family/couple case)
+ledger inscribed (chain, append-only — only a SALTED COMMITMENT of the yearly-set dream + scope + date)
+```
+
+Open reconciliations before writing code: whether the existing `inscribed` event already carries a
+scope/ring field or needs one added; confirm mile-markers and witnesses **never** touch the chain
+(recommendation: they stay fully mutable in D1 — only the yearly dream gets a salted commitment); and
+how `bloomed` / `transformed` are represented (recommendation: a state on the D1 row, not a new chain
+event, to keep the chain minimal).
+
+### How this lands in Phase 1 (small, additive — no new mechanism)
+
+Phase 1.5 below becomes: **set one dream — choose a scope, write it, confirm.** Still complete in 60
+seconds. The living thread, the yearly three-choice moment, and connecting are depth that reveals
+over Phase 2+, exactly as the two-front-doors principle demands. Same inscription write-through, now
+carrying scope and read as a dream.
+
+---
+
+## ARTIST STORY — born into a day of collective dreaming
+
+Adrian was born on **January 15**, the day the world (in the US) pauses to celebrate dreaming of
+something beautiful together. Growing up, his birthday was every single year a public holiday about
+exactly that: a shared dream, celebrated, that moves us somewhere. This is **not** about borrowing
+Martin Luther King's fame — it is about the *energy of the day he was born into*. King is the
+figurehead the holiday honors; the thing Adrian carries is the holiday's meaning: the power of
+imagination to dream something greater that we can all celebrate and be moved toward.
+
+Use it as **DNA, not a constant refrain**:
+
+- It lives in the **artist story** as the origin truth — why this project is *his* to make. Present,
+  honest, woven in, not leaned on as a hook line and not "born on MLK's birthday" as a tagline.
+- A **light touch** can appear in the experience that helps people find their dream — the same energy
+  of being invited to dream something beautiful together.
+- King's name may appear once, softly, as the reason the day exists, with full respect. The weight
+  sits on the *meaning of the day*, never on the man — that is what keeps it origin, not appropriation.
+
+Voice constraints: no em dashes; personal and mystical but non-prescriptive. The story is
+autobiographical, so it is exempt from the no-business-location rule.
+
+---
+
 ## PHASE 1 — Minimum to sell pieces NOW (mostly Adrian-Website)
 
 Goal: a piece is sellable today with an honest, complete, elegant scan experience. No constellation
@@ -152,13 +375,14 @@ and `createdLocation` already exist. Render the substantive certificate (resale/
 where made, wood, crystals, year, display history. Add keeper-editable current-display-location.
 
 **1.4 — Two front doors from the scan.** (a) Register/certify — the universal door; (b) Begin your
-intention — the deep door. Nobody pushed. A 60-second path must feel complete.
+dream — the deep door. Nobody pushed. A 60-second path must feel complete.
 
-**1.5 — Set ONE intention + confirm-before-it-sets.** Inscription write already exists on mandalacodes
-(`utils/inscriptions.ts`, `atlas_inscriptions` D1 table, `inscribed` ledger event with salted
-commitment). Wire Adrian-Website's intention UI to write through the existing inscription path. Add
-the **confirm step + short grace window + yearly-birthday lock** (the motivation lock is the new
-state; journaling stays anytime).
+**1.5 — Set ONE dream + confirm-before-it-sets.** (See "THE DREAM" section above for the full content
+model.) Inscription write already exists on mandalacodes (`utils/inscriptions.ts`, `atlas_inscriptions`
+D1 table, `inscribed` ledger event with salted commitment). Wire Adrian-Website's dream UI to write
+through the existing inscription path, now carrying a **scope** (self / family / community / planet).
+Add the **confirm step + short grace window + yearly-birthday lock**. The living thread (mile-markers,
+never owed) and the yearly three-choice moment are Phase 2+ depth.
 
 **1.6 — Keeper account + sealed recovery code.** Better Auth identity already spans both sites and
 steward binding already requires a verified email (`findStewardsForUser`). Wire claim-on-scan to

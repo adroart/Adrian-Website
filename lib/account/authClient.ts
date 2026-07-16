@@ -1,7 +1,7 @@
 /**
- * Browser-side Better Auth client for customer accounts. Email one-time-code
- * sign-in (no passwords). The session is a cookie, so authenticated requests
- * to our own API just need credentials included — no bearer token.
+ * Browser-side Better Auth client for customer accounts. Supports email
+ * one-time-code, email/password, and Google sign-in. The session is a cookie,
+ * so authenticated requests to our own API just need credentials included.
  *
  * Talks to the catch-all handler at /api/auth/* (same origin).
  */
