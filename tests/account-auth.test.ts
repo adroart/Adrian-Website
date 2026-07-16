@@ -12,6 +12,8 @@ describe('secure Better Auth configuration', () => {
     const endpointPath = new URL('../functions/api/auth/config.js', import.meta.url);
     assert.equal(existsSync(endpointPath), true, 'public auth config endpoint is missing');
     const { onRequest } = await import(endpointPath.href);
+    const catchAllPath = new URL('../functions/api/auth/[[path]].js', import.meta.url);
+    const { onRequest: onCatchAllRequest } = await import(catchAllPath.href);
 
     for (const [env, google] of [
       [{}, false],
@@ -23,6 +25,14 @@ describe('secure Better Auth configuration', () => {
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('Cache-Control'), 'no-store');
       assert.deepEqual(await response.json(), { google });
+
+      const catchAllResponse = await onCatchAllRequest({
+        request: new Request('https://example.com/api/auth/config'),
+        env,
+      });
+      assert.equal(catchAllResponse.status, 200);
+      assert.equal(catchAllResponse.headers.get('Cache-Control'), 'no-store');
+      assert.deepEqual(await catchAllResponse.json(), { google });
     }
   });
 
