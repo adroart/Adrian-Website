@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import AdminLayout from './AdminLayout';
 import { BookContent, Artwork } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 
@@ -149,8 +148,7 @@ const AdminBookEditor: React.FC = () => {
     const editingArt = editing ? artById.get(editing) : undefined;
 
     return (
-        <AdminLayout>
-            <section className="pt-12 pb-32 px-6">
+        <section className="pt-12 pb-32 px-6">
                 <div className="max-w-2xl mx-auto">
                     <h1 className="font-serif text-4xl text-wood-900 font-medium mb-2">Book Pages</h1>
                     <p className="font-sans text-sm text-wood-500 mb-12">
@@ -338,8 +336,7 @@ const AdminBookEditor: React.FC = () => {
                         </p>
                     )}
                 </div>
-            </section>
-        </AdminLayout>
+        </section>
     );
 };
 

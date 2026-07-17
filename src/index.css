@@ -863,3 +863,244 @@ html, body {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── Private Studio Workspace ───────────────────────────────────────── */
+.admin-shell {
+  min-height: 100vh;
+  background: var(--color-paper-50);
+}
+
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  display: flex;
+  width: 15rem;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
+  background: var(--color-wood-900);
+  color: var(--color-paper-50);
+}
+
+.admin-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  min-height: 4.75rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
+  color: inherit;
+  font-family: 'Karla', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.admin-mark-monogram {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.55rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+
+.admin-sidebar nav {
+  flex: 1;
+  padding: 1.5rem 0.75rem;
+}
+
+.admin-nav-group + .admin-nav-group { margin-top: 1.5rem; }
+
+.admin-nav-group p {
+  margin: 0 0 0.4rem;
+  padding: 0 0.75rem;
+  color: color-mix(in srgb, var(--color-paper-50) 50%, transparent);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.admin-nav-group a {
+  display: block;
+  min-height: 2.5rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 2px solid transparent;
+  color: color-mix(in srgb, var(--color-paper-50) 72%, transparent);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.25rem;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.admin-nav-group a:hover {
+  color: var(--color-paper-50);
+  background: color-mix(in srgb, var(--color-paper-50) 6%, transparent);
+}
+
+.admin-nav-group a.active {
+  border-left-color: var(--color-bronze-400);
+  color: var(--color-paper-50);
+  background: color-mix(in srgb, var(--color-paper-50) 9%, transparent);
+}
+
+.admin-account {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-paper-50) 12%, transparent);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.72rem;
+}
+
+.admin-account span {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--color-paper-50) 54%, transparent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-account a,
+.admin-account button {
+  width: fit-content;
+  color: color-mix(in srgb, var(--color-paper-50) 78%, transparent);
+  transition: color 160ms ease;
+}
+
+.admin-account button { cursor: pointer; }
+.admin-account a:hover,
+.admin-account button:hover { color: var(--color-paper-50); }
+
+.admin-main {
+  min-height: 100vh;
+  margin-left: 15rem;
+}
+
+.admin-menu-button {
+  display: none;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.admin-menu-scrim { display: none; }
+
+.admin-sidebar a:focus-visible,
+.admin-sidebar button:focus-visible,
+.admin-menu-button:focus-visible {
+  outline: 2px solid var(--color-bronze-400);
+  outline-offset: 3px;
+}
+
+.admin-shell-loading,
+.admin-access-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--color-paper-50);
+}
+
+.admin-shell-loading::after {
+  content: '';
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--color-wood-200);
+  border-top-color: var(--color-bronze-600);
+  border-radius: 999px;
+  animation: spin 700ms linear infinite;
+}
+
+.admin-access-card {
+  width: min(32rem, calc(100% - 2rem));
+  padding: 2.5rem;
+  border: 1px solid var(--color-wood-200);
+  background: white;
+  text-align: center;
+}
+
+.admin-access-card h1 {
+  margin-top: 0.75rem;
+  color: var(--color-wood-900);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.admin-access-card p:not(.admin-eyebrow) {
+  margin-top: 1rem;
+  color: var(--color-wood-600);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.admin-access-card button {
+  min-height: 44px;
+  margin-top: 1.5rem;
+  color: var(--color-bronze-700);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.admin-eyebrow {
+  color: var(--color-bronze-600);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .admin-menu-button {
+    position: fixed;
+    z-index: 70;
+    top: 0.5rem;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-wood-300);
+    background: var(--color-paper-50);
+    color: var(--color-wood-900);
+    font-family: 'Karla', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .admin-menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: color-mix(in srgb, var(--color-wood-900) 48%, transparent);
+    cursor: default;
+  }
+
+  .admin-sidebar {
+    width: min(18rem, calc(100vw - 3rem));
+    transform: translate3d(-100%, 0, 0);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-sidebar.is-open { transform: translate3d(0, 0, 0); }
+
+  .admin-main {
+    margin-left: 0;
+    padding-top: 3.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-sidebar { transition: none; }
+  .admin-shell-loading::after { animation: none; }
+}

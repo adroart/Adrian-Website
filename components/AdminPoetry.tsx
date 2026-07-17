@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import AdminLayout from './AdminLayout';
 import { Track, Stanza } from '../types';
 
 interface UploadedFile {
@@ -192,8 +191,7 @@ const AdminPoetry: React.FC = () => {
     const fieldInput = 'w-full border border-wood-300 bg-white px-4 py-3 font-sans text-sm text-wood-900 placeholder:text-wood-400 focus:outline-none focus:border-bronze-400';
 
     return (
-        <AdminLayout>
-            <section className="pt-12 pb-32 px-6">
+        <section className="pt-12 pb-32 px-6">
                 <div className="max-w-2xl mx-auto">
                     <h1 className="font-serif text-4xl text-wood-900 font-medium mb-2">Poetry</h1>
                     <p className="font-sans text-sm text-wood-500 mb-12">
@@ -418,8 +416,7 @@ const AdminPoetry: React.FC = () => {
                         </p>
                     )}
                 </div>
-            </section>
-        </AdminLayout>
+        </section>
     );
 };
 

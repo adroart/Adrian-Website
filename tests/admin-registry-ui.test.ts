@@ -20,20 +20,20 @@ describe('central admin registry UI', () => {
   });
 
   it('verifies the allowlisted identity and signs out through Better Auth', async () => {
-    const layout = source('components/AdminLayout.tsx');
-    assert.match(layout, /\/api\/admin\/verify/);
-    assert.match(layout, /response\.status === 401/);
-    assert.match(layout, /response\.status === 403/);
-    assert.match(layout, /admin\.email/);
-    assert.match(layout, /signOut/);
-    assert.doesNotMatch(layout, /registry-unlock/);
-    assert.doesNotMatch(layout, /api\/admin\/logout/);
+    const shell = source('components/admin/AdminShell.tsx');
+    assert.match(shell, /\/api\/admin\/verify/);
+    assert.match(shell, /response\.status === 401/);
+    assert.match(shell, /response\.status === 403/);
+    assert.match(shell, /admin\.email/);
+    assert.match(shell, /signOut/);
+    assert.doesNotMatch(shell, /registry-unlock/);
+    assert.doesNotMatch(shell, /api\/admin\/logout/);
 
     const client = source('lib/account/authClient.ts');
     assert.match(client, /\/api\/admin\/registry-unlock/);
     assert.match(client, /method:\s*['"]DELETE['"]/);
 
-    const { adminReturnDestination } = await import('../components/AdminLayout.tsx');
+    const { adminReturnDestination } = await import('../components/admin/AdminShell.tsx');
     assert.equal(adminReturnDestination({
       pathname: '/admin/pieces',
       search: '?tab=active',

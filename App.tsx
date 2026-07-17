@@ -25,6 +25,7 @@ const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const Terms = lazy(() => import('./components/Terms'));
 const AdminFileUpload = lazy(() => import('./components/AdminFileUpload'));
 const AdminLogin = lazy(() => import('./components/AdminLogin'));
+const AdminShell = lazy(() => import('./components/admin/AdminShell'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 const AdminInvoices = lazy(() => import('./components/AdminInvoices'));
 const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
@@ -153,16 +154,18 @@ const SiteShell: React.FC = () => {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/invoices" element={<AdminInvoices />} />
-            <Route path="/admin/files" element={<AdminFileUpload />} />
-            <Route path="/admin/poetry" element={<AdminPoetry />} />
-            <Route path="/admin/book" element={<AdminBookEditor />} />
-            <Route path="/admin/viewings" element={<AdminViewings />} />
-            {/* Private registry staging remains reachable to authenticated
-                admins while the public Living Legacy surface is disabled. */}
-            <Route path="/admin/pieces" element={<AdminPieces />} />
-            <Route path="/admin/pricing" element={<PricingCalculator />} />
+            <Route path="/admin" element={<AdminShell />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="files" element={<AdminFileUpload />} />
+              <Route path="poetry" element={<AdminPoetry />} />
+              <Route path="book" element={<AdminBookEditor />} />
+              <Route path="invoices" element={<AdminInvoices />} />
+              <Route path="viewings" element={<AdminViewings />} />
+              {/* Private registry staging remains reachable to authenticated
+                  admins while the public Living Legacy surface is disabled. */}
+              <Route path="pieces" element={<AdminPieces />} />
+              <Route path="pricing" element={<PricingCalculator />} />
+            </Route>
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
             <Route path="/qr" element={<QRIndex />} />

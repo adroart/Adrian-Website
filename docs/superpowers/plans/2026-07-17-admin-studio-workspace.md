@@ -400,7 +400,7 @@ Use the actual CSS custom properties already defined in `src/index.css`; do not 
 Run:
 
 ```bash
-npx tsx --test tests/admin-studio-shell.test.ts tests/admin-auth.test.ts tests/account-signout.test.ts
+npx tsx --test --experimental-test-module-mocks tests/admin-studio-shell.test.ts tests/admin-auth.test.ts tests/account-signout.test.ts
 npm run typecheck
 ```
 

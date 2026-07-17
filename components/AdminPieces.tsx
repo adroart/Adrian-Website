@@ -5,10 +5,9 @@
  *
  * Sensitive values exist only in this component's immediate React state. They
  * are never written to browser storage and are cleared on dismissal or plate
- * activation. AdminLayout supplies the authenticated admin boundary.
+ * activation. The persistent admin shell supplies the authenticated boundary.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AdminLayout from './AdminLayout';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
   activationChecklistComplete,
@@ -499,8 +498,7 @@ const AdminPieces: React.FC = () => {
   const issued = sensitive.package;
 
   return (
-    <AdminLayout>
-      <div className="min-h-screen bg-paper-50 px-4 sm:px-6 py-12">
+    <div className="min-h-screen bg-paper-50 px-4 sm:px-6 py-12">
         <div className="max-w-5xl mx-auto">
           <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
             Artwork Registry
@@ -768,8 +766,7 @@ const AdminPieces: React.FC = () => {
             )}
           </section>
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

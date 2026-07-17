@@ -10,7 +10,6 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminLayout from './AdminLayout';
 import { InternalInputs, SavedQuote, PricingConfig } from '../utils/pricing/types';
 import {
   calculatePricing,
@@ -175,8 +174,7 @@ const PricingCalculator: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="min-h-screen bg-paper-50 px-5 py-12 md:px-6 md:py-16">
+    <div className="min-h-screen bg-paper-50 px-5 py-12 md:px-6 md:py-16">
         <div className="max-w-2xl mx-auto">
           <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
             Admin
@@ -428,8 +426,7 @@ const PricingCalculator: React.FC = () => {
             />
           )}
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

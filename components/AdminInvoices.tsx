@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import AdminLayout from './AdminLayout';
 import type {
   Invoice,
   InvoiceDraft,
@@ -465,8 +464,7 @@ const AdminInvoices: React.FC = () => {
   };
 
   return (
-    <AdminLayout>
-      <section className="px-5 py-10 md:px-8 md:py-14">
+    <section className="px-5 py-10 md:px-8 md:py-14">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex flex-col gap-5 border-b border-wood-200 pb-8 md:flex-row md:items-end md:justify-between">
             <div>
@@ -934,8 +932,7 @@ const AdminInvoices: React.FC = () => {
             </aside>
           </div>
         </div>
-      </section>
-    </AdminLayout>
+    </section>
   );
 };
 
