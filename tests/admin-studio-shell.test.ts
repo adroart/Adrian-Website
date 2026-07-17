@@ -56,4 +56,23 @@ describe('admin studio shell', () => {
     assert.ok(dashboard.indexOf('Needs attention') < dashboard.indexOf('All tools'));
     assert.doesNotMatch(dashboard, /title:\s*['"]Keystatic['"]/);
   });
+
+  it('connects stable creation links and visible workflow stages', async () => {
+    const { adminMode } = await import('../components/admin/adminMode.ts');
+    const { poetryCreatePath } = await import('../components/AdminFileUpload.tsx');
+    assert.equal(adminMode(new URLSearchParams('mode=create')), 'create');
+    assert.equal(adminMode(new URLSearchParams('mode=issue')), 'issue');
+    assert.equal(adminMode(new URLSearchParams('mode=unknown')), null);
+    assert.equal(
+      poetryCreatePath('https://files.example/audio.mp3'),
+      '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',
+    );
+
+    for (const label of ['Issue identity', 'Verify recovery copy', 'Activate plate', 'Assign fulfillment', 'Mark shipped']) {
+      assert.match(source('components/AdminPieces.tsx'), new RegExp(label));
+    }
+    for (const label of ['Intake', 'Curate', 'Preview', 'Send']) {
+      assert.match(source('components/AdminViewings.tsx'), new RegExp(label));
+    }
+  });
 });

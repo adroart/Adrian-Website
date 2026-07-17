@@ -17,7 +17,9 @@
  * invoice handoff are the following pass (they reuse the invoice plumbing).
  */
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
+import { adminMode } from './admin/adminMode';
 import Viewing from './viewing/Viewing';
 import type { ViewingData, ViewingPiece } from './viewing/viewingTypes';
 import {
@@ -134,6 +136,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const AdminViewings: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [rows, setRows] = useState<ViewingRow[]>([]);
   const [listLoading, setListLoading] = useState(false);
@@ -199,6 +202,10 @@ const AdminViewings: React.FC = () => {
     setView('editor');
   };
 
+  useEffect(() => {
+    if (adminMode(searchParams) === 'create') openNew();
+  }, [searchParams]);
+
   const openExisting = (row: ViewingRow) => {
     resetEditor();
     setRecipientName(row.recipientName || '');
@@ -214,6 +221,9 @@ const AdminViewings: React.FC = () => {
     if (data.recommendation?.closing) setClosing(data.recommendation.closing);
     setView('editor');
   };
+
+  const viewingStage = shareUrl ? 3 : showPreview ? 2 : pieces.length > 0 ? 1 : 0;
+  const viewingStages = ['Intake', 'Curate', 'Preview', 'Send'];
 
   const compute = async () => {
     setLoading(true);
@@ -352,6 +362,14 @@ const AdminViewings: React.FC = () => {
               ← All viewings
             </button>
           </div>
+
+          <ol className="admin-stage-list" aria-label="Viewing stages">
+            {viewingStages.map((stage, index) => (
+              <li key={stage} className={index < viewingStage ? 'is-complete' : index === viewingStage ? 'is-current' : ''} aria-current={index === viewingStage ? 'step' : undefined}>
+                <span>{index + 1}</span>{stage}
+              </li>
+            ))}
+          </ol>
 
           {/* Intake */}
           <div className="border border-wood-200 bg-white p-5 mb-8">

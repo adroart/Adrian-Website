@@ -171,7 +171,7 @@ const PricingCalculator: React.FC = () => {
     } catch {
       /* ignore */
     }
-    navigate('/admin/invoices');
+    navigate('/admin/invoices?mode=create');
   };
 
   return (
@@ -403,7 +403,7 @@ const PricingCalculator: React.FC = () => {
                     onClick={draftInvoice}
                     className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold"
                   >
-                    Draft an invoice from this quote
+                    Create invoice
                   </button>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
+import { adminMode } from './admin/adminMode';
 import { Track, Stanza } from '../types';
 
 interface UploadedFile {
@@ -83,6 +85,7 @@ const formToTrack = (f: FormState): Track => {
 };
 
 const AdminPoetry: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const [poems, setPoems] = useState<Track[]>([]);
     const [audioFiles, setAudioFiles] = useState<UploadedFile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -116,6 +119,18 @@ const AdminPoetry: React.FC = () => {
     };
 
     useEffect(() => { refresh(); }, []);
+
+    useEffect(() => {
+        if (loading || adminMode(searchParams) !== 'create') return;
+        const requestedAudio = searchParams.get('audio');
+        const verifiedAudio = requestedAudio && audioFiles.some(file => file.url === requestedAudio)
+            ? requestedAudio
+            : '';
+        setForm({ ...EMPTY_FORM, audioUrl: verifiedAudio });
+        setSlugTouched(false);
+        setEditing('new');
+        setMessage(null);
+    }, [audioFiles, loading, searchParams]);
 
     const startNew = () => {
         setForm(EMPTY_FORM);

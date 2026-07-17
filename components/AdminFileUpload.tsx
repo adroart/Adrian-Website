@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 
 interface UploadedFile {
@@ -9,6 +10,10 @@ interface UploadedFile {
 }
 
 const PUBLIC_BASE = 'https://audio.adrianrasmussen.com';
+
+export function poetryCreatePath(url: string): string {
+  return `/admin/poetry?${new URLSearchParams({ mode: 'create', audio: url }).toString()}`;
+}
 
 function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -76,6 +81,14 @@ const FileRow: React.FC<{ file: UploadedFile; onDelete: (key: string) => void }>
           </p>
         </div>
         <div className="flex items-center gap-4 flex-shrink-0">
+          {isAudio && (
+            <Link
+              to={poetryCreatePath(file.url)}
+              className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 hover:text-bronze-900 font-semibold transition-colors"
+            >
+              Use in poem
+            </Link>
+          )}
           <button
             onClick={copy}
             className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-500 hover:text-bronze-600 font-semibold transition-colors"

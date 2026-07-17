@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
+import { adminMode } from './admin/adminMode';
 import type {
   Invoice,
   InvoiceDraft,
@@ -112,6 +114,8 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
 }
 
 const AdminInvoices: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const creatingFromShortcut = adminMode(searchParams) === 'create';
   const [presets, setPresets] = useState<PaymentPreset[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [draft, setDraft] = useState<InvoiceDraft>(EMPTY_DRAFT);
@@ -472,7 +476,9 @@ const AdminInvoices: React.FC = () => {
               <p className="font-label text-[11px] uppercase tracking-[0.12em] text-bronze-700 font-semibold mb-3">
                 Admin
               </p>
-              <h1 className="font-title text-4xl md:text-5xl text-wood-900">Invoices</h1>
+              <h1 className="font-title text-4xl md:text-5xl text-wood-900">
+                {creatingFromShortcut ? 'Create invoice' : 'Invoices'}
+              </h1>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button

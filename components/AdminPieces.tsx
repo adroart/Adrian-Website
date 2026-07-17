@@ -8,7 +8,9 @@
  * activation. The persistent admin shell supplies the authenticated boundary.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
+import { adminMode } from './admin/adminMode';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
   activationChecklistComplete,
@@ -156,6 +158,8 @@ function downloadText(filename: string, mimeType: string, content: string) {
 }
 
 const AdminPieces: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const issueMode = adminMode(searchParams) === 'issue';
   const [rows, setRows] = useState<PieceRow[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState('');
@@ -497,6 +501,24 @@ const AdminPieces: React.FC = () => {
   };
 
   const issued = sensitive.package;
+  const registryStage = issueMode
+    ? 0
+    : desk.fulfillments.some(fulfillment => !fulfillment.shippedAt)
+      ? 4
+      : desk.availablePlates.length > 0
+        ? 3
+        : rows.some(row => row.plateStatus === 'generated' && row.backupStatus === 'verified')
+          ? 2
+          : rows.some(row => row.plateStatus === 'generated')
+            ? 1
+            : 0;
+  const registryStages = [
+    'Issue identity',
+    'Verify recovery copy',
+    'Activate plate',
+    'Assign fulfillment',
+    'Mark shipped',
+  ];
 
   return (
     <AdminPage width="medium">
@@ -509,6 +531,14 @@ const AdminPieces: React.FC = () => {
             Issue one permanent plate identity, download its private fabrication package, verify the
             physical metal, then assign that exact plate during packing.
           </p>
+
+          <ol className="admin-stage-list" aria-label="Plate and fulfillment stages">
+            {registryStages.map((stage, index) => (
+              <li key={stage} className={index < registryStage ? 'is-complete' : index === registryStage ? 'is-current' : ''} aria-current={index === registryStage ? 'step' : undefined}>
+                <span>{index + 1}</span>{stage}
+              </li>
+            ))}
+          </ol>
 
           {issued && (
             <section className="border border-bronze-500 bg-bronze-200/20 p-6 mb-10" aria-labelledby="issued-package-title">
