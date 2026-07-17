@@ -56,31 +56,38 @@ import MiniPlayer from './components/MiniPlayer';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
+
+  return location.pathname.startsWith('/keystatic')
+    ? <KeystaticShell />
+    : <SiteShell />;
+};
+
+const KeystaticShell: React.FC = () => (
+  <div className="flex min-h-screen flex-col bg-paper-50">
+    <div className="z-50 flex flex-shrink-0 items-center border-b border-wood-200 bg-paper-50 px-6 py-3">
+      <Link
+        to="/admin"
+        className="font-label text-[11px] font-semibold uppercase tracking-[0.2em] text-bronze-600 transition-colors hover:text-bronze-800"
+      >
+        Return to Admin
+      </Link>
+    </div>
+    <div className="flex-1">
+      <Suspense fallback={<div className="min-h-[calc(100vh-3.25rem)] bg-paper-50" />}>
+        <KeystaticRoute />
+      </Suspense>
+    </div>
+  </div>
+);
+
+const SiteShell: React.FC = () => {
+  const location = useLocation();
   const { isDarkMode } = useDarkMode();
 
   useEffect(() => {
-    if (!location.pathname.startsWith('/keystatic')) {
-      document.querySelectorAll('style[data-emotion]').forEach(el => el.remove());
-      document.body.style.overflow = '';
-    }
+    document.querySelectorAll('style[data-emotion]').forEach(el => el.remove());
+    document.body.style.overflow = '';
   }, [location.pathname]);
-
-  if (location.pathname.startsWith('/keystatic')) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="flex-shrink-0 border-b border-wood-200 bg-white px-6 py-3 flex items-center justify-between z-50">
-          <Link to="/admin" className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold flex items-center gap-1.5">
-            ← Admin
-          </Link>
-        </div>
-        <div className="flex-1">
-          <Suspense fallback={null}>
-            <KeystaticRoute />
-          </Suspense>
-        </div>
-      </div>
-    );
-  }
 
   useSeoMeta(location.pathname);
 
