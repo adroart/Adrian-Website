@@ -84,6 +84,10 @@ type EndpointCase = {
 
 const privilegedEndpoints: EndpointCase[] = [
   {
+    name: 'studio overview', path: '/api/admin/overview', method: 'GET', allowedStatus: 200,
+    load: async () => (await import('../functions/api/admin/overview.js')).onRequest,
+  },
+  {
     name: 'invoice collection', path: '/api/admin/invoices', method: 'GET', unsafeMethod: 'POST', allowedStatus: 200,
     load: async () => (await import('../functions/api/admin/invoices.js')).onRequest,
   },
@@ -193,6 +197,52 @@ describe('ordinary privileged endpoint security matrix', () => {
       });
     }
   }
+});
+
+describe('private studio overview', () => {
+  it('returns only actionable counts from count-only queries', async () => {
+    const counts = [2, 1, 1, 3];
+    const seen: string[] = [];
+    const overviewDb = {
+      prepare(sql: string) {
+        seen.push(sql);
+        assert.match(sql, /^SELECT COUNT\(\*\) AS count/i);
+        assert.doesNotMatch(sql, /email|ownership_code|public_token|amount|total_cents/i);
+        const count = counts[seen.length - 1];
+        return { async first() { return { count }; } };
+      },
+    };
+
+    signIn();
+    const { onRequest } = await import('../functions/api/admin/overview.js');
+    const response = await onRequest({
+      request: request('/api/admin/overview', 'GET', ORIGIN),
+      env: { ...env(), DB: overviewDb },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      attention: { plates: 2, fulfillments: 1, draftViewings: 1, openInvoices: 3 },
+    });
+    assert.equal(seen.length, 4);
+  });
+
+  it('omits attention data when the installed schema is older', async () => {
+    const olderDb = {
+      prepare() {
+        return { async first() { throw new Error('no such table: piece_fulfillments'); } };
+      },
+    };
+    signIn();
+    const { onRequest } = await import('../functions/api/admin/overview.js');
+    const response = await onRequest({
+      request: request('/api/admin/overview', 'GET', ORIGIN),
+      env: { ...env(), DB: olderDb },
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, attention: null });
+  });
 });
 
 describe('mixed public and private endpoints', () => {
