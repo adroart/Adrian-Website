@@ -1,129 +1,143 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AdminPage } from './admin/AdminPage';
+import {
+  AdminAlert,
+  AdminEmptyState,
+  AdminPage,
+  AdminPageHeader,
+  AdminSection,
+} from './admin/AdminPage';
 
-interface AdminTool {
-  title: string;
-  description: string;
+type AdminAttention = {
+  plates: number;
+  fulfillments: number;
+  draftViewings: number;
+  openInvoices: number;
+};
+
+type AttentionItem = {
+  key: keyof AdminAttention;
+  label: string;
+  singular: string;
   href: string;
-  external?: boolean;
-  badge?: string;
-}
+};
 
-const TOOLS: AdminTool[] = [
-  {
-    title: 'Keystatic',
-    description: 'Write, edit, and publish articles. Changes commit directly to GitHub and deploy automatically.',
-    href: '/keystatic',
-  },
-  {
-    title: 'File Manager',
-    description: 'Upload audio, documents, or other files to R2 storage and copy the public URL.',
-    href: '/admin/files',
-  },
-  {
-    title: 'Poetry',
-    description: 'Publish and edit poems for /poetry. Pick an uploaded audio file, paste the poem, click save.',
-    href: '/admin/poetry',
-  },
-  {
-    title: 'Book Pages',
-    description: 'Write the long-form page for each piece, shown on its works record at /works/:id. Pick a piece, write its story, save. Changes go live immediately.',
-    href: '/admin/book',
-  },
-  {
-    title: 'Invoices',
-    description: 'Create commission invoices, manage reusable payment options, and copy printable client links.',
-    href: '/admin/invoices',
-  },
-  {
-    title: 'Viewings',
-    description: 'Build a private art viewing for a collector. Compute their chart, curate the pieces, write the reasons, and preview the artifact they receive.',
-    href: '/admin/viewings',
-  },
-  {
-    title: 'Pricing',
-    description: 'Your private quoting engine. Set the size, layers, finish, and add-ons, add the design value, and arrive at a suggested retail and a quote. Every multiplier is tunable.',
-    href: '/admin/pricing',
-  },
-  {
-    title: 'Plate and fulfillment desk',
-    description:
-      'Issue a permanent artwork QR and encrypted recoverable Ownership Code, verify and activate its metal plate, then assign that exact plate for fulfillment.',
-    href: '/admin/pieces',
-  },
+const ATTENTION_ITEMS: AttentionItem[] = [
+  { key: 'plates', label: 'Plates need preparation', singular: 'plate needs preparation', href: '/admin/pieces' },
+  { key: 'fulfillments', label: 'Pieces await shipment', singular: 'piece awaits shipment', href: '/admin/pieces' },
+  { key: 'draftViewings', label: 'Viewings remain in draft', singular: 'viewing remains in draft', href: '/admin/viewings' },
+  { key: 'openInvoices', label: 'Invoices remain open', singular: 'invoice remains open', href: '/admin/invoices' },
 ];
 
-const COMING_SOON: AdminTool[] = [
-  {
-    title: 'Shop',
-    description: 'Manage products, pricing, and availability.',
-    href: '#',
-    badge: 'Soon',
-  },
+const QUICK_ACTIONS = [
+  { label: 'Issue a plate', description: 'Create its permanent identity', href: '/admin/pieces?mode=issue' },
+  { label: 'Create invoice', description: 'Price and send new work', href: '/admin/invoices?mode=create' },
+  { label: 'Build a viewing', description: 'Prepare a collector presentation', href: '/admin/viewings?mode=create' },
+  { label: 'Write a story', description: 'Open the Stories editor', href: '/keystatic/collections/stories/create' },
+  { label: 'Publish a poem', description: 'Create text with optional audio', href: '/admin/poetry?mode=create' },
+  { label: 'Upload media', description: 'Add audio or a document', href: '/admin/files' },
+];
+
+const ALL_TOOLS = [
+  { label: 'Registry and plates', href: '/admin/pieces' },
+  { label: 'Private viewings', href: '/admin/viewings' },
+  { label: 'Artwork stories', href: '/admin/book' },
+  { label: 'Stories', href: '/keystatic' },
+  { label: 'Poetry', href: '/admin/poetry' },
+  { label: 'Media', href: '/admin/files' },
+  { label: 'Pricing', href: '/admin/pricing' },
+  { label: 'Invoices', href: '/admin/invoices' },
 ];
 
 const AdminDashboard: React.FC = () => {
+  const [attention, setAttention] = useState<AdminAttention | null>(null);
+  const [overviewAvailable, setOverviewAvailable] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  const loadOverview = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setFailed(false);
+    try {
+      const response = await fetch('/api/admin/overview', { cache: 'no-store', signal });
+      if (!response.ok) throw new Error('overview unavailable');
+      const data = await response.json();
+      setAttention(data.attention ?? null);
+      setOverviewAvailable(data.attention !== null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setFailed(true);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadOverview(controller.signal);
+    return () => controller.abort();
+  }, [loadOverview]);
+
+  const visibleAttention = attention
+    ? ATTENTION_ITEMS.filter(item => attention[item.key] > 0)
+    : [];
+
   return (
     <AdminPage width="medium">
-      <div className="max-w-2xl mx-auto">
-        <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
-          Admin
-        </p>
-        <h1 className="font-title text-4xl md:text-5xl text-wood-900 mb-12">
-          Control Panel
-        </h1>
+      <AdminPageHeader
+        eyebrow="Private studio"
+        title="Studio overview"
+        description="The work that needs you, followed by the actions you use most."
+      />
 
-        <div className="space-y-3 mb-12">
-          {TOOLS.map(tool => (
-            <Link
-              key={tool.title}
-              to={tool.href}
-              className="group flex items-start justify-between gap-6 bg-white border border-wood-200 hover:border-bronze-400 px-6 py-5 transition-all hover:shadow-sm"
-            >
-              <div>
-                <h2 className="font-serif text-xl text-wood-900 group-hover:text-bronze-700 transition-colors font-medium mb-1">
-                  {tool.title}
-                </h2>
-                <p className="font-sans text-sm text-wood-500 leading-relaxed">
-                  {tool.description}
-                </p>
-              </div>
-              <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 group-hover:text-bronze-600 transition-colors font-semibold flex-shrink-0 pt-1">
-                Open
-              </span>
+      {overviewAvailable && (
+        <AdminSection title="Needs attention" description="Live counts from the private studio ledger.">
+          {loading && <p className="admin-dashboard-loading" role="status">Checking the studio…</p>}
+          {failed && (
+            <AdminAlert tone="warning" live>
+              <p>The overview could not be refreshed.</p>
+              <button type="button" onClick={() => void loadOverview()}>Try again</button>
+            </AdminAlert>
+          )}
+          {!loading && !failed && visibleAttention.length === 0 && (
+            <AdminEmptyState
+              title="Nothing is waiting"
+              description="The current plate, fulfillment, viewing, and invoice queues are clear."
+            />
+          )}
+          {!loading && !failed && visibleAttention.length > 0 && (
+            <div className="admin-attention-list">
+              {visibleAttention.map(item => {
+                const count = attention?.[item.key] || 0;
+                return (
+                  <Link to={item.href} key={item.key} className="admin-attention-row">
+                    <span className="admin-attention-count">{count}</span>
+                    <span>{count === 1 ? item.singular : item.label}</span>
+                    <span aria-hidden="true">Open</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </AdminSection>
+      )}
+
+      <AdminSection title="Quick actions" description="Begin the work without searching through tools.">
+        <div className="admin-quick-actions">
+          {QUICK_ACTIONS.map(action => (
+            <Link to={action.href} key={action.label} className="admin-action-card">
+              <strong>{action.label}</strong>
+              <span>{action.description}</span>
             </Link>
           ))}
         </div>
+      </AdminSection>
 
-        {COMING_SOON.length > 0 && (
-          <>
-            <p className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
-              Coming Soon
-            </p>
-            <div className="space-y-3">
-              {COMING_SOON.map(tool => (
-                <div
-                  key={tool.title}
-                  className="flex items-start justify-between gap-6 bg-paper-100 border border-wood-100 px-6 py-5 opacity-50"
-                >
-                  <div>
-                    <h2 className="font-serif text-xl text-wood-700 font-medium mb-1">
-                      {tool.title}
-                    </h2>
-                    <p className="font-sans text-sm text-wood-400 leading-relaxed">
-                      {tool.description}
-                    </p>
-                  </div>
-                  <span className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-300 font-semibold flex-shrink-0 pt-1">
-                    {tool.badge}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <AdminSection title="All tools">
+        <div className="admin-tool-links">
+          {ALL_TOOLS.map(tool => <Link to={tool.href} key={tool.label}>{tool.label}</Link>)}
+        </div>
+      </AdminSection>
     </AdminPage>
   );
 };

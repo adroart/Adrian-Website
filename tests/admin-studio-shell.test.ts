@@ -44,4 +44,16 @@ describe('admin studio shell', () => {
       assert.match(source(`components/${file}`), /<AdminPage/);
     }
   });
+
+  it('makes attention and quick actions the admin home hierarchy', () => {
+    const dashboard = source('components/AdminDashboard.tsx');
+    assert.match(dashboard, /\/api\/admin\/overview/);
+    assert.match(dashboard, /Needs attention/);
+    assert.match(dashboard, /Issue a plate/);
+    assert.match(dashboard, /Create invoice/);
+    assert.match(dashboard, /Build a viewing/);
+    assert.match(dashboard, /Write a story/);
+    assert.ok(dashboard.indexOf('Needs attention') < dashboard.indexOf('All tools'));
+    assert.doesNotMatch(dashboard, /title:\s*['"]Keystatic['"]/);
+  });
 });

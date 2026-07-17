@@ -1121,6 +1121,104 @@ html, body {
   line-height: 1.55;
 }
 
+.admin-dashboard-loading {
+  color: var(--color-wood-500);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.82rem;
+}
+
+.admin-attention-list {
+  border-top: 1px solid var(--color-wood-200);
+}
+
+.admin-attention-row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 4rem;
+  border-bottom: 1px solid var(--color-wood-200);
+  color: var(--color-wood-800);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.86rem;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.admin-attention-row:hover {
+  color: var(--color-wood-900);
+  background: var(--color-paper-100);
+}
+
+.admin-attention-count {
+  color: var(--color-bronze-700);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.75rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.admin-attention-row > span:last-child {
+  color: var(--color-wood-500);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--color-wood-200);
+  border-left: 1px solid var(--color-wood-200);
+}
+
+.admin-action-card {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 7rem;
+  padding: 1.25rem;
+  border-right: 1px solid var(--color-wood-200);
+  border-bottom: 1px solid var(--color-wood-200);
+  background: var(--color-paper-50);
+  transition: background-color 160ms ease;
+}
+
+.admin-action-card:hover { background: var(--color-paper-100); }
+
+.admin-action-card strong {
+  color: var(--color-wood-900);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.admin-action-card span {
+  color: var(--color-wood-600);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.admin-tool-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.admin-tool-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-wood-600);
+  font-family: 'Karla', sans-serif;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-decoration-color: var(--color-wood-300);
+  text-underline-offset: 0.3rem;
+}
+
+.admin-tool-links a:hover { color: var(--color-bronze-700); }
+
 .admin-menu-button {
   display: none;
   min-width: 44px;
@@ -1244,6 +1342,9 @@ html, body {
   .admin-page { padding-top: 1.5rem; }
   .admin-page-header { align-items: flex-start; flex-direction: column; gap: 1rem; }
   .admin-page-actions { justify-content: flex-start; }
+  .admin-quick-actions { grid-template-columns: 1fr; }
+  .admin-attention-row { grid-template-columns: 2.25rem 1fr; }
+  .admin-attention-row > span:last-child { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
