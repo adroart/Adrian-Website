@@ -916,7 +916,7 @@ html, body {
 .admin-nav-group p {
   margin: 0 0 0.4rem;
   padding: 0 0.75rem;
-  color: color-mix(in srgb, var(--color-paper-50) 50%, transparent);
+  color: var(--color-paper-300);
   font-family: 'Karla', sans-serif;
   font-size: 0.625rem;
   font-weight: 600;
@@ -958,7 +958,7 @@ html, body {
 
 .admin-account span {
   overflow: hidden;
-  color: color-mix(in srgb, var(--color-paper-50) 54%, transparent);
+  color: var(--color-paper-300);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

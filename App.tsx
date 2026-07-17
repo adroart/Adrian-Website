@@ -111,7 +111,7 @@ const SiteShell: React.FC = () => {
   return (
     <Suspense fallback={<div className="min-h-screen bg-wood-900" />}>
     <div className="min-h-screen bg-paper-50 text-wood-900 selection:bg-bronze-200 transition-colors duration-500">
-      {!isChromeless && <GenerativeBackground pathname={location.pathname} theme={theme} />}
+      {!isAdmin && !isChromeless && <GenerativeBackground pathname={location.pathname} theme={theme} />}
       {!isWelcome && !isAdmin && !isChromeless && <Navigation theme={theme} />}
 
       <main id="main-content">
@@ -183,8 +183,8 @@ const SiteShell: React.FC = () => {
       </main>
 
       {!isWelcome && !isAdmin && !isChromeless && <Footer />}
-      <CartDrawer />
-      <MiniPlayer />
+      {!isAdmin && <CartDrawer />}
+      {!isAdmin && <MiniPlayer />}
     </div>
     </Suspense>
   );

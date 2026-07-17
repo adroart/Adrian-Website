@@ -26,7 +26,9 @@ const AdminShell: React.FC = () => {
   const [admin, setAdmin] = useState<AdminIdentity | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileNavigation, setMobileNavigation] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -62,6 +64,30 @@ const AdminShell: React.FC = () => {
   }, [navigate]);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const update = () => setMobileNavigation(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (sidebarRef.current) sidebarRef.current.inert = mobileNavigation && !menuOpen;
+  }, [menuOpen, mobileNavigation]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.requestAnimationFrame(() => {
+      sidebarRef.current?.querySelector<HTMLElement>('nav a')?.focus();
+    });
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -101,11 +127,11 @@ const AdminShell: React.FC = () => {
         <button
           type="button"
           className="admin-menu-scrim"
-          aria-label="Close navigation"
+          aria-label="Close menu"
           onClick={() => setMenuOpen(false)}
         />
       )}
-      <aside id="admin-navigation" className={menuOpen ? 'admin-sidebar is-open' : 'admin-sidebar'}>
+      <aside ref={sidebarRef} id="admin-navigation" className={menuOpen ? 'admin-sidebar dark-preserve is-open' : 'admin-sidebar dark-preserve'}>
         <Link to="/admin" className="admin-mark" aria-label="Adrian Rasmussen Studio home">
           <span className="admin-mark-monogram">AR</span>
           <span>Studio</span>
