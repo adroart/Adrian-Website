@@ -929,7 +929,7 @@ html, body {
   min-height: 2.5rem;
   padding: 0.65rem 0.75rem;
   border-left: 2px solid transparent;
-  color: color-mix(in srgb, var(--color-paper-50) 72%, transparent);
+  color: var(--color-paper-200);
   font-family: 'Karla', sans-serif;
   font-size: 0.86rem;
   line-height: 1.25rem;
@@ -966,7 +966,7 @@ html, body {
 .admin-account a,
 .admin-account button {
   width: fit-content;
-  color: color-mix(in srgb, var(--color-paper-50) 78%, transparent);
+  color: var(--color-paper-200);
   transition: color 160ms ease;
 }
 

@@ -222,6 +222,38 @@ function mockApiPlugin(): Plugin {
         });
       });
 
+      server.middlewares.use('/api/admin/overview', (req, res, next) => {
+        if (req.method !== 'GET') return next();
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+        return send(res, 200, {
+          ok: true,
+          attention: { plates: 0, fulfillments: 0, draftViewings: 0, openInvoices: 0 },
+        });
+      });
+
+      server.middlewares.use('/api/admin/pieces', (req, res, next) => {
+        if (req.url !== '/' || req.method !== 'GET') return next();
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+        return send(res, 200, { ok: true, pieces: [] });
+      });
+
+      server.middlewares.use('/api/admin/piece-fulfillments', (req, res, next) => {
+        if (req.url !== '/' || req.method !== 'GET') return next();
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+        return send(res, 200, {
+          ok: true,
+          availablePlates: [],
+          availableOrderItems: [],
+          fulfillments: [],
+        });
+      });
+
       server.middlewares.use('/api/admin/registry-unlock', async (req, res, next) => {
         const status = devAdminStatus(req);
         if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
