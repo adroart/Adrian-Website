@@ -30,4 +30,18 @@ describe('admin studio shell', () => {
       assert.doesNotMatch(source(`components/${file}`), /<AdminLayout>/);
     }
   });
+
+  it('uses one page and control vocabulary across every admin tool', () => {
+    const primitives = source('components/admin/AdminPage.tsx');
+    for (const name of ['AdminPage', 'AdminPageHeader', 'AdminSection', 'AdminAlert', 'AdminEmptyState']) {
+      assert.match(primitives, new RegExp(`export (?:const|function) ${name}`));
+    }
+    for (const file of [
+      'AdminDashboard.tsx', 'AdminFileUpload.tsx', 'AdminPoetry.tsx',
+      'AdminBookEditor.tsx', 'AdminInvoices.tsx', 'AdminViewings.tsx',
+      'AdminPieces.tsx', 'PricingCalculator.tsx',
+    ]) {
+      assert.match(source(`components/${file}`), /<AdminPage/);
+    }
+  });
 });

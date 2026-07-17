@@ -17,6 +17,7 @@
  * invoice handoff are the following pass (they reuse the invoice plumbing).
  */
 import React, { useEffect, useMemo, useState } from 'react';
+import { AdminPage } from './admin/AdminPage';
 import Viewing from './viewing/Viewing';
 import type { ViewingData, ViewingPiece } from './viewing/viewingTypes';
 import {
@@ -298,7 +299,7 @@ const AdminViewings: React.FC = () => {
 
   if (view === 'list') {
     return (
-      <div className="min-h-screen bg-paper-50 px-6 py-12">
+      <AdminPage width="medium">
           <div className="max-w-4xl mx-auto">
             <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
               The Curation Desk
@@ -333,12 +334,12 @@ const AdminViewings: React.FC = () => {
               </div>
             )}
           </div>
-      </div>
+      </AdminPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-paper-50 px-6 py-12">
+    <AdminPage width="medium">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -458,7 +459,7 @@ const AdminViewings: React.FC = () => {
             </>
           )}
         </div>
-    </div>
+    </AdminPage>
   );
 };
 

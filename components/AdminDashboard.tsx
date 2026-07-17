@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { AdminPage } from './admin/AdminPage';
 
 interface AdminTool {
   title: string;
@@ -64,7 +65,7 @@ const COMING_SOON: AdminTool[] = [
 
 const AdminDashboard: React.FC = () => {
   return (
-    <div className="min-h-screen bg-paper-50 px-6 py-16 md:py-24">
+    <AdminPage width="medium">
       <div className="max-w-2xl mx-auto">
         <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-3">
           Admin
@@ -123,7 +124,7 @@ const AdminDashboard: React.FC = () => {
           </>
         )}
       </div>
-    </div>
+    </AdminPage>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AdminPage } from './admin/AdminPage';
 
 interface UploadedFile {
   key: string;
@@ -172,7 +173,7 @@ const AdminFileUpload: React.FC = () => {
   };
 
   return (
-    <section className="pt-12 pb-32 px-6">
+    <AdminPage width="narrow">
         <div className="max-w-2xl mx-auto">
           <h1 className="font-serif text-4xl text-wood-900 font-medium mb-2">Files</h1>
           <p className="font-sans text-sm text-wood-500 mb-12">
@@ -248,7 +249,7 @@ const AdminFileUpload: React.FC = () => {
             <p className="font-sans text-sm text-wood-400 text-center py-8">No files uploaded yet.</p>
           )}
         </div>
-    </section>
+    </AdminPage>
   );
 };
 
