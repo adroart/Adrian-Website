@@ -1,5 +1,26 @@
 # Artwork Registry — activation checklist
 
+> **Status 2026-07-21.** Steps 1–4 are DONE and step 5 is done on the local test
+> copy only. Both keys were generated without ever being displayed, installed
+> into Cloudflare Pages production, and escrowed at
+> `~/.infisical-backups/adrian-website/` (mode 0600).
+>
+> | Step | State |
+> |---|---|
+> | 1. Master encryption key + active version | done — escrow copy still needs moving to your password manager |
+> | 2. Registry step-up secret | done — escrowed; this is the unlock you type in the admin |
+> | 3. Admin allowlist + private desk flag | done (`sccsclothing@gmail.com`, desk on, public steward surface still off) |
+> | 4. Encrypted backup bucket | already existed |
+> | 5. Database migrations | done on both — live database already has every registry table and column; nothing pending; 260 tests pass |
+> | 6. Google Drive sync | not started — needs interactive Google sign-in |
+> | 7. Stripe reversal webhooks | not started — not reachable except from the Stripe dashboard |
+> | 8. Proof-before-engraving gate | not started |
+>
+> Settings 1–3 do not reach the live site until the next deployment.
+> Steps 3's values were stored as encrypted secrets rather than plaintext
+> dashboard variables, because there is no command-line path for Pages plaintext
+> variables; they read identically at runtime.
+
 The code for the whole system (QR mint, Ownership Code, laser-etch files,
 encrypted recovery, R2 backup, activation, fulfillment, the guided wizard, the
 offline master ledger, and Google Drive sync) is built, tested, and on the
