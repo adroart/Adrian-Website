@@ -30,7 +30,7 @@ const ATTENTION_ITEMS: AttentionItem[] = [
 ];
 
 const QUICK_ACTIONS = [
-  { label: 'Issue a plate', description: 'Create its permanent identity', href: '/admin/pieces?mode=issue' },
+  { label: 'Issue a plate', description: 'Guided, start to finish', href: '/admin/pieces/wizard' },
   { label: 'Create invoice', description: 'Price and send new work', href: '/admin/invoices?mode=create' },
   { label: 'Build a viewing', description: 'Prepare a collector presentation', href: '/admin/viewings?mode=create' },
   { label: 'Write a story', description: 'Open the Stories editor', href: '/keystatic/collections/stories/create' },

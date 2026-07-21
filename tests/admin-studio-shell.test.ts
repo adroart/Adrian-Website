@@ -11,7 +11,7 @@ describe('admin studio shell', () => {
       ADMIN_NAVIGATION.map(group => [group.label, group.items.map(item => item.label)]),
       [
         ['Home', ['Studio overview']],
-        ['Artwork', ['Registry and plates', 'Private viewings', 'Artwork stories']],
+        ['Artwork', ['Guided plate wizard', 'Registry and plates', 'Private viewings', 'Artwork stories']],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
         ['Sales', ['Pricing', 'Invoices']],
       ],

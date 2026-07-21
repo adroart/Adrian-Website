@@ -14,6 +14,7 @@ export const ADMIN_NAVIGATION: AdminNavigationGroup[] = [
   {
     label: 'Artwork',
     items: [
+      { label: 'Guided plate wizard', href: '/admin/pieces/wizard' },
       { label: 'Registry and plates', href: '/admin/pieces' },
       { label: 'Private viewings', href: '/admin/viewings' },
       { label: 'Artwork stories', href: '/admin/book' },

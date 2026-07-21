@@ -32,6 +32,7 @@ const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const AdminPieces = lazy(() => import('./components/AdminPieces'));
+const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
 const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const Viewing = lazy(() => import('./components/viewing/Viewing'));
@@ -164,6 +165,7 @@ const SiteShell: React.FC = () => {
               {/* Private registry staging remains reachable to authenticated
                   admins while the public Living Legacy surface is disabled. */}
               <Route path="pieces" element={<AdminPieces />} />
+              <Route path="pieces/wizard" element={<AdminPlateWizard />} />
               <Route path="pricing" element={<PricingCalculator />} />
             </Route>
             <Route path="/invoice/:token" element={<PublicInvoice />} />

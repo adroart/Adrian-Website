@@ -8,7 +8,7 @@
  * activation. The persistent admin shell supplies the authenticated boundary.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { adminMode } from './admin/adminMode';
 import { FULL_ARCHIVE } from '../data/mockData';
@@ -527,9 +527,14 @@ const AdminPieces: React.FC = () => {
             Artwork Registry
           </p>
           <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate and fulfillment desk</h1>
-          <p className="font-serif text-wood-600 leading-relaxed mb-10 max-w-2xl">
+          <p className="font-serif text-wood-600 leading-relaxed mb-4 max-w-2xl">
             Issue one permanent plate identity, download its private fabrication package, verify the
             physical metal, then assign that exact plate during packing.
+          </p>
+          <p className="font-serif text-wood-600 leading-relaxed mb-10 max-w-2xl">
+            New to this, or want a step-by-step path for one piece? Use the{' '}
+            <Link to="/admin/pieces/wizard" className="text-bronze-700 underline underline-offset-4">guided plate wizard</Link>.
+            This desk is the flat view of the same registry.
           </p>
 
           <ol className="admin-stage-list" aria-label="Plate and fulfillment stages">
