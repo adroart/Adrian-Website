@@ -411,6 +411,42 @@ which is why the online copy is disposable: losing it costs nothing as long as
 you hold an intact ledger and the escrowed key. The plaintext Ownership Code
 still lives only on the physical art and in your private per-piece manifests.
 
+### Automatic capture to Google Drive (optional)
+
+So the master copy is captured without remembering to download it, the admin can
+sync the ledger to Adrian's own Google Drive. This runs server-side in the
+Cloudflare account; nothing is routed through any AI assistant. When configured,
+the plate desk and the wizard sync automatically after every issue, activation,
+and shipment, and expose a manual **Sync to Google Drive** button. Until it is
+configured the feature is dormant and the automatic calls do nothing.
+
+One-time setup:
+
+1. In the existing Google Cloud OAuth client (the one already used for sign-in),
+   enable the Google Drive API and mint a refresh token with the least-privilege
+   `https://www.googleapis.com/auth/drive.file` scope. That scope lets the app
+   see and manage only the single file it creates, never the rest of the Drive.
+2. Set the Cloudflare Pages secret:
+
+   ```bash
+   npx wrangler pages secret put GOOGLE_DRIVE_REFRESH_TOKEN --project-name adrian-website
+   ```
+
+3. Optionally set a target folder as a non-secret variable:
+
+   ```text
+   GOOGLE_DRIVE_FOLDER_ID=<folder id>
+   ```
+
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are reused from sign-in. The sync
+writes one canonical `registry-ledger.jsonl` and updates it in place; Google
+Drive keeps its own revision history, so every export is retained. The file
+carries no plaintext code and no steward identity, exactly like the download.
+
+Drive is a convenience capture, not the only copy. Continue to keep the ledger
+with your escrowed key and R2 envelopes, and run `npm run ledger verify` on the
+copy you rely on.
+
 ## Routine custody checks
 
 Before every new batch, and at least quarterly while pieces are circulating:

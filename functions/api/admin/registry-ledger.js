@@ -1,78 +1,28 @@
 /**
- * GET /api/admin/registry-ledger
+ * /api/admin/registry-ledger
  *
- * Exports the offline MASTER ledger: a deterministic, hash-chained JSONL file
- * that is the canonical record of every issued plate identity and its
- * append-only lineage. Adrian keeps this file offline; the online D1 database is
- * a mirror that can be rebuilt from it (utils/registryLedger.buildRebuildSql).
+ *   GET  — download the offline MASTER ledger: a deterministic, hash-chained
+ *          JSONL file that is the canonical record of every issued plate
+ *          identity and its append-only lineage. The online D1 database is a
+ *          mirror that can be rebuilt from this file
+ *          (utils/registryLedger.buildRebuildSql).
+ *
+ *   POST — sync that same ledger to Adrian's Google Drive, so the master copy is
+ *          captured automatically with no manual download. Fails closed (503)
+ *          until the Drive credentials are provisioned.
  *
  * The export carries NO plaintext Ownership Code and NO steward identity, email,
  * IP, or display location — only the recovery-code hash, the encrypted envelope,
- * the fabrication-file hashes, and the public lineage events. It is safe to hold
- * as an artist's issuance record; it is not a personal-data export.
- *
- * Gated by the registry step-up unlock, exactly like every other sensitive plate
- * operation.
+ * the fabrication-file hashes, and the public lineage events. Both methods are
+ * gated by the registry step-up unlock, like every sensitive plate operation.
  */
 import { jsonResponse, requireRegistryUnlock, requireDb } from '../_lib/admin.js';
 import { isMissingTableError, migrationNotApplied } from '../_lib/keeper.js';
-import {
-  REGISTRY_LEDGER_SCHEMA_VERSION,
-  computeLedgerLines,
-  serializeLedgerJsonl,
-} from '../../../utils/registryLedger.ts';
-
-function plateRecordFromRow(row) {
-  const hasEnvelope = row.ownership_code_ciphertext && row.ownership_code_nonce
-    && (row.ownership_code_key_version !== null && row.ownership_code_key_version !== undefined);
-  return {
-    kind: 'plate',
-    id: row.id,
-    publicCode: row.public_code || null,
-    pieceId: row.piece_id,
-    editionNumber: Number(row.edition_number ?? 0),
-    plateStatus: row.plate_status || 'legacy',
-    recoveryCodeHash: row.recovery_code_hash,
-    frontSha256: row.front_svg_sha256 || null,
-    undersideSha256: row.back_svg_sha256 || null,
-    envelope: hasEnvelope
-      ? {
-          ciphertext: row.ownership_code_ciphertext,
-          nonce: row.ownership_code_nonce,
-          keyVersion: String(row.ownership_code_key_version),
-        }
-      : null,
-    backupStatus: row.backup_status || null,
-    backupReference: row.backup_reference || null,
-    plateGeneratedAt: row.plate_generated_at || null,
-    plateActivatedAt: row.plate_activated_at || null,
-    registeredAt: row.registered_at || null,
-    lineageHeadHash: row.lineage_head_hash || null,
-    lineageEventCount: Number(row.lineage_event_count ?? 0),
-  };
-}
-
-function eventRecordFromRow(row) {
-  let publicPayload = {};
-  try {
-    publicPayload = row.public_payload_json ? JSON.parse(row.public_payload_json) : {};
-  } catch {
-    publicPayload = {};
-  }
-  return {
-    kind: 'event',
-    keeperPieceId: row.keeper_piece_id,
-    sequence: Number(row.sequence),
-    eventType: row.event_type,
-    eventAt: row.event_at,
-    previousHash: row.previous_hash || null,
-    eventHash: row.event_hash,
-    publicPayload,
-  };
-}
+import { buildLedgerFile } from '../_lib/registryLedgerExport.js';
+import { isDriveSyncConfigured, syncLedgerToDrive } from '../_lib/driveSync.js';
 
 export async function onRequest({ request, env }) {
-  if (request.method !== 'GET') {
+  if (request.method !== 'GET' && request.method !== 'POST') {
     return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
   }
   const authorization = await requireRegistryUnlock(request, env);
@@ -81,44 +31,34 @@ export async function onRequest({ request, env }) {
   if (missingDb) return missingDb;
 
   try {
-    const [platesResult, eventsResult] = await Promise.all([
-      env.DB.prepare(
-        `SELECT id, piece_id, edition_number, public_code, plate_status,
-                recovery_code_hash, front_svg_sha256, back_svg_sha256,
-                ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
-                backup_status, backup_reference, plate_generated_at, plate_activated_at,
-                registered_at, lineage_head_hash, lineage_event_count
-           FROM keeper_pieces`,
-      ).all(),
-      env.DB.prepare(
-        `SELECT keeper_piece_id, sequence, event_type, event_at, previous_hash,
-                event_hash, public_payload_json
-           FROM artwork_lineage_events`,
-      ).all(),
-    ]);
+    if (request.method === 'GET') {
+      const { body } = await buildLedgerFile(env);
+      return new Response(body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/x-ndjson; charset=utf-8',
+          'Content-Disposition': 'attachment; filename="registry-ledger.jsonl"',
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
 
-    const records = [
-      ...(platesResult.results || []).map(plateRecordFromRow),
-      ...(eventsResult.results || []).map(eventRecordFromRow),
-    ];
-    const lines = await computeLedgerLines(records);
-    const header = {
-      kind: 'header',
-      schemaVersion: REGISTRY_LEDGER_SCHEMA_VERSION,
-      exportedAt: new Date().toISOString(),
-      recordCount: lines.length,
-      headHash: lines.length ? lines[lines.length - 1].hash : null,
-      note: 'Offline master ledger for adrianrasmussen.com artwork registry. No plaintext codes or steward identity.',
-    };
-    const body = serializeLedgerJsonl(header, lines);
-
-    return new Response(body, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/x-ndjson; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="registry-ledger.jsonl"',
-        'Cache-Control': 'no-store',
-      },
+    // POST → Google Drive sync
+    if (!isDriveSyncConfigured(env)) {
+      return jsonResponse({ ok: false, error: 'drive_not_configured' }, 503);
+    }
+    const { body, lineCount, headHash } = await buildLedgerFile(env);
+    const result = await syncLedgerToDrive(env, body);
+    if (!result.ok) {
+      return jsonResponse({ ok: false, error: `drive_sync_${result.reason || 'failed'}` }, 502);
+    }
+    return jsonResponse({
+      ok: true,
+      fileId: result.fileId,
+      webViewLink: result.webViewLink,
+      updated: result.updated,
+      lineCount,
+      headHash,
     });
   } catch (error) {
     if (isMissingTableError(error) || /no such column/i.test(String(error?.message || ''))) {

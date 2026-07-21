@@ -201,6 +201,9 @@ const AdminPlateWizard: React.FC = () => {
   const [shipConfirmed, setShipConfirmed] = useState(false);
   const [finished, setFinished] = useState(false);
 
+  // Google Drive sync
+  const [driveStatus, setDriveStatus] = useState('');
+
   const stage = PLATE_WIZARD_STAGES[stageIndex];
   const piece = useMemo(
     () => (pieceId ? rows.find((row) => row.id === pieceId) || null : null),
@@ -330,6 +333,24 @@ const AdminPlateWizard: React.FC = () => {
     }
   };
 
+  // Sync the offline master ledger to Google Drive. Silent mode is used for the
+  // automatic capture after each registry change: if Drive is not configured it
+  // simply does nothing rather than nagging.
+  const syncDrive = async (options?: { silent?: boolean }) => {
+    try {
+      const response = await fetch('/api/admin/registry-ledger', { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 503 && data?.error === 'drive_not_configured') {
+        if (!options?.silent) setDriveStatus('Google Drive sync is not configured yet. See the runbook to enable it.');
+        return;
+      }
+      if (!response.ok || !data?.ok) throw new Error(data?.error || `Sync failed (${response.status})`);
+      setDriveStatus(data.updated ? 'Offline ledger synced to Google Drive.' : 'Offline ledger created in Google Drive.');
+    } catch (error) {
+      if (!options?.silent) setDriveStatus(registryErrorMessage(error, 'Could not sync to Google Drive.'));
+    }
+  };
+
   const goToChoose = () => {
     resetSensitive();
     setStarted(false);
@@ -371,6 +392,7 @@ const AdminPlateWizard: React.FC = () => {
       setStepNote(data.backupStatus === 'verified'
         ? 'Plate issued and its encrypted backup verified.'
         : 'Plate issued. The online backup still needs to verify — you will repair it at the backup step.');
+      void syncDrive({ silent: true });
     } catch (error) {
       setStepError(`${registryErrorMessage(error, 'Could not issue the plate.')} A retry reuses this same attempt and will not mint a second identity.`);
     } finally {
@@ -427,6 +449,7 @@ const AdminPlateWizard: React.FC = () => {
       await jsonRequest(`/api/admin/pieces/${encodeURIComponent(piece.id)}/activate`, { ...checks });
       await refreshPiece();
       setStepNote('Plate identity activated and permanently locked.');
+      void syncDrive({ silent: true });
     } catch (error) {
       setStepError(registryErrorMessage(error, 'Could not activate this plate.'));
     } finally {
@@ -479,6 +502,7 @@ const AdminPlateWizard: React.FC = () => {
       await refreshPiece();
       setFinished(true);
       setStepNote(`${piece?.publicCode || 'Plate'} marked shipped. The record is now permanent.`);
+      void syncDrive({ silent: true });
     } catch (error) {
       setStepError(registryErrorMessage(error, 'Could not mark this piece shipped.'));
     } finally {
@@ -595,9 +619,11 @@ const AdminPlateWizard: React.FC = () => {
             <div className="flex flex-wrap gap-3 justify-center">
               <button type="button" className={buttonClass} onClick={beginNewPiece}>Start another piece</button>
               <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()}>Download offline ledger</button>
+              <button type="button" className={quietButtonClass} onClick={() => void syncDrive()}>Sync to Google Drive</button>
               <button type="button" className={quietButtonClass} onClick={goToChoose}>Back to start</button>
               <Link to="/admin/pieces" className={quietButtonClass}>Open the full desk</Link>
             </div>
+            {driveStatus && <p className="font-sans text-sm text-wood-600 mt-4" role="status">{driveStatus}</p>}
             {stepError && <p className="font-sans text-sm text-red-700 mt-4" role="alert">{stepError}</p>}
           </section>
         ) : (
@@ -799,6 +825,7 @@ const AdminPlateWizard: React.FC = () => {
                 <button type="button" className={buttonClass} onClick={goNext} disabled={!canAdvance}>Next step</button>
               )}
             </div>
+            {driveStatus && <p className="font-sans text-xs text-wood-500 mt-3" role="status">{driveStatus}</p>}
           </section>
         )}
       </div>

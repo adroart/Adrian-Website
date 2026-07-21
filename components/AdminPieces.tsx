@@ -325,10 +325,32 @@ const AdminPieces: React.FC = () => {
         ? 'Plate package issued and encrypted backup verified.'
         : 'Plate package issued. Repair the online backup before activation.');
       await loadPieces();
+      void syncDrive({ silent: true });
     } catch (error) {
       setIssueError(`${registryErrorMessage(error, 'Could not issue the plate.')} Retry keeps this issuance attempt and will not mint a second identity.`);
     } finally {
       setIssuing(false);
+    }
+  };
+
+  const [driveStatus, setDriveStatus] = useState('');
+
+  const syncDrive = async (options?: { silent?: boolean }) => {
+    if (!registryUnlocked) {
+      if (!options?.silent) setListError('Unlock the private registry first.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/registry-ledger', { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 503 && data?.error === 'drive_not_configured') {
+        if (!options?.silent) setDriveStatus('Google Drive sync is not configured yet. See the runbook to enable it.');
+        return;
+      }
+      if (!response.ok || !data?.ok) throw new Error(data?.error || `Sync failed (${response.status})`);
+      setDriveStatus(data.updated ? 'Offline ledger synced to Google Drive.' : 'Offline ledger created in Google Drive.');
+    } catch (error) {
+      if (!options?.silent) setDriveStatus(registryErrorMessage(error, 'Could not sync to Google Drive.'));
     }
   };
 
@@ -432,6 +454,7 @@ const AdminPieces: React.FC = () => {
       setActivationChecks(emptyChecklist);
       setRowSuccess((current) => ({ ...current, [row.id]: 'Plate identity activated and locked.' }));
       await Promise.all([loadPieces(), loadDesk()]);
+      void syncDrive({ silent: true });
     } catch (error) {
       const message = registryErrorMessage(error, 'Could not activate this plate.');
       setRowError((current) => ({ ...current, [row.id]: message }));
@@ -511,6 +534,7 @@ const AdminPieces: React.FC = () => {
       setDeskSuccess(`${fulfillment.publicCode} marked shipped.`);
       setShippingConfirmed((current) => ({ ...current, [fulfillment.id]: false }));
       await loadDesk();
+      void syncDrive({ silent: true });
     } catch (error) {
       setDeskError(errorMessage(error, 'Could not mark this assignment shipped.'));
     } finally {
@@ -631,9 +655,11 @@ const AdminPieces: React.FC = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()} disabled={!registryUnlocked} title="The offline master record. Online is a mirror you can rebuild from this file.">Download offline ledger</button>
+                <button type="button" className={quietButtonClass} onClick={() => void syncDrive()} disabled={!registryUnlocked} title="Send the offline master ledger to your Google Drive.">Sync to Google Drive</button>
                 <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
               </div>
             </div>
+            {driveStatus && <p className="font-sans text-sm text-wood-600 mb-4" role="status">{driveStatus}</p>}
             <form className="border border-wood-200 bg-white p-4 mb-4" onSubmit={unlockRegistry}>
               <label className={labelClass} htmlFor="registry-secret">Private registry unlock</label>
               <div className="flex flex-wrap gap-3">
