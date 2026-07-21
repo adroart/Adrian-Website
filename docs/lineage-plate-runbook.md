@@ -368,6 +368,49 @@ into certificates, public lineage payloads, support tickets, or ordinary logs.
 - **Suspected code exposure:** record which public identity was affected and
   monitor claims. Do not rotate the permanent physical code behind the plate.
 
+## Offline ledger (the master copy)
+
+The registry is governed as **offline-master, online-mirror**: the canonical
+record is a file you hold, and the online D1 database is a convenience mirror
+that serves live QR lookups and can be rebuilt from the file at any time. Nothing
+in this record is stored with any AI assistant or third party; it is produced by
+your own Cloudflare account and saved to storage you control.
+
+The ledger is `registry-ledger.jsonl` — a deterministic, hash-chained export of
+every issued plate identity and its append-only lineage. It carries the
+recovery-code **hash** and the **encrypted** Ownership Code envelope, never a
+plaintext code, and no steward identity, email, IP, or display location. It is an
+artist's issuance record, not a personal-data export; the private encrypted D1
+export above remains the complementary full-state backup.
+
+### Download it
+
+Unlock the private registry, then use **Download offline ledger** on the plate
+desk (`/admin/pieces`) or at the end of the guided wizard
+(`/admin/pieces/wizard`). Store each export with your recovery set (the escrowed
+key and the R2 envelopes). Keep every export; a newer one only ever adds lines.
+
+### Work with it offline (no server, no network)
+
+```bash
+# Confirm the file is intact and unaltered (recomputes the whole hash chain).
+npm run ledger verify ./registry-ledger.jsonl
+
+# Prove the online mirror still matches your held master. Silence = identical.
+# "Removed" or "changed" lines mean the online copy was altered out of band.
+npm run ledger diff ./held-master.jsonl ./fresh-export.jsonl
+
+# Rebuild the online registry rows from the master file. Idempotent; no plaintext.
+npm run ledger to-sql ./registry-ledger.jsonl ./rebuild.sql
+npx wrangler d1 execute adrian-website --remote --file ./rebuild.sql
+```
+
+`to-sql` restores `keeper_pieces` and `artwork_lineage_events` from the
+recovery-code hash and encrypted envelope exactly as the live mint stored them,
+which is why the online copy is disposable: losing it costs nothing as long as
+you hold an intact ledger and the escrowed key. The plaintext Ownership Code
+still lives only on the physical art and in your private per-piece manifests.
+
 ## Routine custody checks
 
 Before every new batch, and at least quarterly while pieces are circulating:

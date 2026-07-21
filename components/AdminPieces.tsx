@@ -332,6 +332,24 @@ const AdminPieces: React.FC = () => {
     }
   };
 
+  const downloadLedger = async () => {
+    if (!registryUnlocked) {
+      setListError('Unlock the private registry first.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/admin/registry-ledger');
+      const contentType = response.headers.get('Content-Type') || '';
+      if (!response.ok || !contentType.includes('ndjson')) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `Ledger export failed (${response.status})`);
+      }
+      downloadText('registry-ledger.jsonl', 'application/x-ndjson', await response.text());
+    } catch (error) {
+      setListError(registryErrorMessage(error, 'Could not export the offline ledger.'));
+    }
+  };
+
   const runRowAction = async (
     row: PieceRow,
     action: 'backup' | 'reveal' | 'package' | 'verify-recovery',
@@ -611,7 +629,10 @@ const AdminPieces: React.FC = () => {
                 <h2 id="registry-title" className="font-title text-xl text-wood-900">Plate registry</h2>
                 <p className="font-serif text-sm text-wood-600 mt-1">Lifecycle and backup metadata only. Ownership Codes are private.</p>
               </div>
-              <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()} disabled={!registryUnlocked} title="The offline master record. Online is a mirror you can rebuild from this file.">Download offline ledger</button>
+                <button type="button" className={quietButtonClass} onClick={() => void loadPieces()} disabled={listLoading}>Refresh registry</button>
+              </div>
             </div>
             <form className="border border-wood-200 bg-white p-4 mb-4" onSubmit={unlockRegistry}>
               <label className={labelClass} htmlFor="registry-secret">Private registry unlock</label>

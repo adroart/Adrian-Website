@@ -314,6 +314,22 @@ const AdminPlateWizard: React.FC = () => {
     setStarted(true);
   };
 
+  const downloadLedger = async () => {
+    setStepError('');
+    try {
+      const response = await fetch('/api/admin/registry-ledger');
+      const contentType = response.headers.get('Content-Type') || '';
+      if (!response.ok || !contentType.includes('ndjson')) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `Ledger export failed (${response.status})`);
+      }
+      downloadText('registry-ledger.jsonl', 'application/x-ndjson', await response.text());
+      setStepNote('Offline master ledger downloaded. Store it with your recovery set; online is a mirror you can rebuild from it.');
+    } catch (error) {
+      setStepError(registryErrorMessage(error, 'Could not export the offline ledger.'));
+    }
+  };
+
   const goToChoose = () => {
     resetSensitive();
     setStarted(false);
@@ -578,9 +594,11 @@ const AdminPlateWizard: React.FC = () => {
             <p className="font-serif text-wood-700 mb-6">{stepNote || 'This piece is active, assigned, and shipped. Its public code and Ownership Code are permanent records.'}</p>
             <div className="flex flex-wrap gap-3 justify-center">
               <button type="button" className={buttonClass} onClick={beginNewPiece}>Start another piece</button>
+              <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()}>Download offline ledger</button>
               <button type="button" className={quietButtonClass} onClick={goToChoose}>Back to start</button>
               <Link to="/admin/pieces" className={quietButtonClass}>Open the full desk</Link>
             </div>
+            {stepError && <p className="font-sans text-sm text-red-700 mt-4" role="alert">{stepError}</p>}
           </section>
         ) : (
           /* RUN */
