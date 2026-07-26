@@ -1,25 +1,31 @@
 # Artwork Registry — activation checklist
 
-> **Status 2026-07-21.** Steps 1–4 are DONE and step 5 is done on the local test
-> copy only. Both keys were generated without ever being displayed, installed
-> into Cloudflare Pages production, and escrowed at
+> **Status 2026-07-26.** Steps 1–5 are DONE and verified directly against
+> Cloudflare (not just recorded). Both keys were generated without ever being
+> displayed, installed into Cloudflare Pages production, and escrowed at
 > `~/.infisical-backups/adrian-website/` (mode 0600).
 >
 > | Step | State |
 > |---|---|
-> | 1. Master encryption key + active version | done — escrow copy still needs moving to your password manager |
-> | 2. Registry step-up secret | done — escrowed; this is the unlock you type in the admin |
-> | 3. Admin allowlist + private desk flag | done (`sccsclothing@gmail.com`, desk on, public steward surface still off) |
-> | 4. Encrypted backup bucket | already existed |
-> | 5. Database migrations | done on both — live database already has every registry table and column; nothing pending; 260 tests pass |
-> | 6. Google Drive sync | not started — needs interactive Google sign-in |
-> | 7. Stripe reversal webhooks | not started — not reachable except from the Stripe dashboard |
-> | 8. Proof-before-engraving gate | not started |
+> | 1. Master encryption key + active version | done — verified present in Pages production; escrow copy still needs moving to your password manager |
+> | 2. Registry step-up secret | done — verified present; this is the unlock you type in the admin |
+> | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
+> | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
+> | 5. Database migrations | done — live database reports "No migrations to apply"; 260/260 tests pass |
+> | 6. Redeploy | the deploy at `ee05ac6` FAILED on Cloudflare's builder; the same commit builds clean locally, so it is a transient runner fault, not a code defect. Cleared by pushing a fresh commit. |
+> | 7. Google Drive sync | not started — needs interactive Google sign-in (you only) |
+> | 8. Stripe reversal webhooks | blocked — `STRIPE_WEBHOOK_SECRET` is absent from Pages production, and the event list is dashboard-only (you only) |
+> | 9. Proof-before-engraving gate | not started — run after the deploy is green |
 >
 > Settings 1–3 do not reach the live site until the next deployment.
-> Steps 3's values were stored as encrypted secrets rather than plaintext
+> Step 3's values were stored as encrypted secrets rather than plaintext
 > dashboard variables, because there is no command-line path for Pages plaintext
 > variables; they read identically at runtime.
+>
+> **Housekeeping.** Pages production contains a malformed secret whose *name* is
+> a base64 string (`sntt…7jQ=`) — a value pasted into the name field by an
+> earlier session. It is inert but should be removed:
+> `npx wrangler pages secret delete 'snttEiUHmtsP21x8sU/GpQXDyQbGoREbVC8jZ/UM7jQ=' --project-name adrian-website`
 
 The code for the whole system (QR mint, Ownership Code, laser-etch files,
 encrypted recovery, R2 backup, activation, fulfillment, the guided wizard, the
