@@ -7,7 +7,7 @@
 >
 > | Step | State |
 > |---|---|
-> | 1. Master encryption key + active version | live in Pages production, but **the escrow is missing** — see the warning below. Fix before issuing any real code. |
+> | 1. Master encryption key + active version | done — rotated to `V2` on 2026-07-26, escrowed at generation. One manual step left: copy the escrow file into your password manager. |
 > | 2. Registry step-up secret | done — verified present; this is the unlock you type in the admin |
 > | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
 > | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
@@ -27,38 +27,35 @@
 > dashboard variables, because there is no command-line path for Pages plaintext
 > variables; they read identically at runtime.
 >
-> ## ⚠ Escrow gap — resolve before issuing any real Ownership Code
+> ## Master key — rotated to V2 on 2026-07-26 (escrow gap closed)
 >
-> `OWNERSHIP_CODE_KEY_V1` is live in Cloudflare, but the only copy on this
-> machine is `~/.infisical-backups/adrian-website/SUPERSEDED-do-not-use-OWNERSHIP_CODE_KEY_V1.txt`
-> — an old, retired key. **The key that is actually encrypting codes has no
-> escrow copy anywhere.** Cloudflare will not show it back to you: a Pages secret
-> is write-only once set.
+> **What was wrong.** `OWNERSHIP_CODE_KEY_V1` was live in Cloudflare with no
+> escrow copy anywhere. The only key file on disk was
+> `SUPERSEDED-do-not-use-OWNERSHIP_CODE_KEY_V1.txt`, a retired key. A Pages
+> secret is write-only once set, so the value actually encrypting codes could
+> never be read back. Had it been lost or overwritten, every Ownership Code
+> would have become permanently undecryptable — the escrow *is* the recovery
+> path.
 >
-> The consequence: if that Pages value is lost or overwritten, every Ownership
-> Code ever issued becomes permanently undecryptable. There is no recovery path,
-> because the escrow *is* the recovery path.
+> **Why rotating was safe.** The live database held `0` pieces and `0` encrypted
+> codes, so there was nothing to re-encrypt and nothing to lose. Rotating after
+> the first plate is engraved would not be free.
 >
-> Because the current value cannot be read back, the fix is to rotate to a key
-> you hold from the moment it exists. While no real codes have been issued this
-> is free to do:
+> **What was done.** A new 32-byte key was generated directly into
+> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt` (mode 0600) and
+> piped into Cloudflare from that file, so the value was never displayed, never
+> entered a chat, and never reached shell history. Verified 44 base64 chars →
+> 32 bytes with a clean roundtrip, matching the app's own `cryptoConfigured`
+> check. `OWNERSHIP_CODE_ACTIVE_KEY_VERSION` was set to `2`.
 >
-> ```bash
-> # 1. generate v2 and save it to escrow WITHOUT displaying it
-> openssl rand -base64 32 > ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
-> chmod 600 ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
+> `OWNERSHIP_CODE_KEY_V1` is deliberately retained: a retired key must outlive
+> every code it ever wrote. Never delete a versioned key.
 >
-> # 2. install the same value into Cloudflare
-> npx wrangler pages secret put OWNERSHIP_CODE_KEY_V2 --project-name adrian-website \
->   < ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
->
-> # 3. point the app at v2, then redeploy
-> #    set OWNERSHIP_CODE_ACTIVE_KEY_VERSION = 2
-> ```
->
-> Then copy that file's contents into your password manager and delete neither
-> the file nor the `V1` secret (a retired key must outlive every code it wrote).
-> Verify with the restore/decrypt drill in `docs/lineage-plate-runbook.md`.
+> **Remaining manual step.** Copy the contents of
+> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt` into your
+> password manager. Until that exists, the laptop is a single point of failure
+> for the whole registry. Then confirm with the restore/decrypt drill in
+> `docs/lineage-plate-runbook.md`.
 >
 > **Housekeeping.** Pages production contains a malformed secret whose *name* is
 > a base64 string (`sntt…7jQ=`) — a value pasted into the name field by an
