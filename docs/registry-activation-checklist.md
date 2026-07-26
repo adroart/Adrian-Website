@@ -7,7 +7,7 @@
 >
 > | Step | State |
 > |---|---|
-> | 1. Master encryption key + active version | done — rotated to `V2` on 2026-07-26, escrowed at generation. One manual step left: copy the escrow file into your password manager. |
+> | 1. Master encryption key + active version | done — active key is **V3** (2026-07-26), escrowed at generation and mirrored to Infisical `prod`. V2 is burned, see below. |
 > | 2. Registry step-up secret | done — verified present; this is the unlock you type in the admin |
 > | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
 > | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
@@ -70,11 +70,36 @@
 > `OWNERSHIP_CODE_KEY_V1` is deliberately retained: a retired key must outlive
 > every code it ever wrote. Never delete a versioned key.
 >
+> ### V2 is burned — do not activate it
+>
+> While mirroring V2 into Infisical, the Infisical CLI echoed the key value in
+> plaintext in its success table, putting it into an assistant transcript. The
+> key guarded nothing at the time (0 pieces, 0 codes) and is unusable without the
+> Cloudflare account, so the practical risk was low — but a master key that has
+> appeared in plaintext must never become the long-lived one.
+>
+> **Never set `OWNERSHIP_CODE_ACTIVE_KEY_VERSION` to 2.** `OWNERSHIP_CODE_KEY_V2`
+> is retained only so no version number is ever reused. It encrypted nothing.
+>
+> **Lesson for any future rotation:** the Infisical CLI prints the value it just
+> wrote. Always redirect its output to `/dev/null` and verify by listing secret
+> *names* instead. Wrangler's `secret put` does not echo values.
+>
+> ### Active key: V3
+>
+> Generated 2026-07-26 straight into
+> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V3.txt` (mode 0600),
+> validated as 32 bytes with a clean roundtrip, and pushed to both Cloudflare
+> Pages and Infisical `prod` with all command output suppressed. The value was
+> never displayed. Confirmed live at runtime: `POST /api/admin/pieces` returns
+> `401 unauthorized` rather than `503 ownership_code_crypto_not_configured`,
+> which proves the Function resolved version 3 and accepted the key.
+>
 > **Remaining manual step.** Copy the contents of
-> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt` into your
-> password manager. Until that exists, the laptop is a single point of failure
-> for the whole registry. Then confirm with the restore/decrypt drill in
-> `docs/lineage-plate-runbook.md`.
+> `OWNERSHIP_CODE_KEY_V3.txt` into your password manager. It now exists in three
+> places (laptop escrow, Cloudflare, Infisical), so this is defence in depth
+> rather than the single-point-of-failure it was before. Then confirm with the
+> restore/decrypt drill in `docs/lineage-plate-runbook.md`.
 >
 > **Housekeeping.** Pages production contains a malformed secret whose *name* is
 > a base64 string (`sntt…7jQ=`) — a value pasted into the name field by an
