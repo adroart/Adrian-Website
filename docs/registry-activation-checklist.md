@@ -12,12 +12,7 @@
 > | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
 > | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
 > | 5. Database migrations | done — live database reports "No migrations to apply"; 260/260 tests pass |
-> | 6. Redeploy | done — production serves the current build (verified: the live
->   site returns the same `AdminPlateWizard` chunk hash the local build emits).
->   NOTE the deployment list shows a `Failure` row beside each success: every
->   commit triggers **two** production builds, one of which always fails. That is
->   a duplicated build integration on the Pages project, not a broken site. Worth
->   removing the redundant trigger so the list stops reading as broken. |
+> | 6. Redeploy | done via direct upload — but **CI is broken, see below**. |
 > | 7. Google Drive sync | not started — needs interactive Google sign-in (you only) |
 > | 8. Stripe reversal webhooks | blocked — `STRIPE_WEBHOOK_SECRET` is absent from Pages production, and the event list is dashboard-only (you only) |
 > | 9. Proof-before-engraving gate | not started — run after the deploy is green |
@@ -26,6 +21,30 @@
 > Step 3's values were stored as encrypted secrets rather than plaintext
 > dashboard variables, because there is no command-line path for Pages plaintext
 > variables; they read identically at runtime.
+>
+> ## ⚠ Cloudflare CI cannot build `main`
+>
+> **Every** Git-triggered production build of `main` fails, and has since at
+> least `6a7461c` (4 days ago). Preview builds on branches succeed from the same
+> commits, and `npm run build` is clean locally at the exact failing commit, so
+> this is a Pages build-environment fault, not a code defect.
+>
+> An earlier note in this file called it a "duplicate build trigger." That was
+> wrong — the successful rows were branch previews, not a second production
+> build. Corrected here so the mistake isn't inherited.
+>
+> **Consequence:** pushing to `main` no longer updates the live site. Until this
+> is fixed, deploy with a direct upload, which does build the Functions bundle:
+>
+> ```bash
+> npm run build
+> npx wrangler pages deploy dist --project-name adrian-website --branch main
+> ```
+>
+> To diagnose the CI itself, open the failing build's log in the dashboard
+> (Workers & Pages → adrian-website → the `Failure` row). Likely candidates are a
+> Node version mismatch or a missing build-time environment variable — neither is
+> visible from the CLI.
 >
 > ## Master key — rotated to V2 on 2026-07-26 (escrow gap closed)
 >
