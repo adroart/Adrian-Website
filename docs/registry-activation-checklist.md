@@ -7,12 +7,17 @@
 >
 > | Step | State |
 > |---|---|
-> | 1. Master encryption key + active version | done — verified present in Pages production; escrow copy still needs moving to your password manager |
+> | 1. Master encryption key + active version | live in Pages production, but **the escrow is missing** — see the warning below. Fix before issuing any real code. |
 > | 2. Registry step-up secret | done — verified present; this is the unlock you type in the admin |
 > | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
 > | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
 > | 5. Database migrations | done — live database reports "No migrations to apply"; 260/260 tests pass |
-> | 6. Redeploy | the deploy at `ee05ac6` FAILED on Cloudflare's builder; the same commit builds clean locally, so it is a transient runner fault, not a code defect. Cleared by pushing a fresh commit. |
+> | 6. Redeploy | done — production serves the current build (verified: the live
+>   site returns the same `AdminPlateWizard` chunk hash the local build emits).
+>   NOTE the deployment list shows a `Failure` row beside each success: every
+>   commit triggers **two** production builds, one of which always fails. That is
+>   a duplicated build integration on the Pages project, not a broken site. Worth
+>   removing the redundant trigger so the list stops reading as broken. |
 > | 7. Google Drive sync | not started — needs interactive Google sign-in (you only) |
 > | 8. Stripe reversal webhooks | blocked — `STRIPE_WEBHOOK_SECRET` is absent from Pages production, and the event list is dashboard-only (you only) |
 > | 9. Proof-before-engraving gate | not started — run after the deploy is green |
@@ -21,6 +26,39 @@
 > Step 3's values were stored as encrypted secrets rather than plaintext
 > dashboard variables, because there is no command-line path for Pages plaintext
 > variables; they read identically at runtime.
+>
+> ## ⚠ Escrow gap — resolve before issuing any real Ownership Code
+>
+> `OWNERSHIP_CODE_KEY_V1` is live in Cloudflare, but the only copy on this
+> machine is `~/.infisical-backups/adrian-website/SUPERSEDED-do-not-use-OWNERSHIP_CODE_KEY_V1.txt`
+> — an old, retired key. **The key that is actually encrypting codes has no
+> escrow copy anywhere.** Cloudflare will not show it back to you: a Pages secret
+> is write-only once set.
+>
+> The consequence: if that Pages value is lost or overwritten, every Ownership
+> Code ever issued becomes permanently undecryptable. There is no recovery path,
+> because the escrow *is* the recovery path.
+>
+> Because the current value cannot be read back, the fix is to rotate to a key
+> you hold from the moment it exists. While no real codes have been issued this
+> is free to do:
+>
+> ```bash
+> # 1. generate v2 and save it to escrow WITHOUT displaying it
+> openssl rand -base64 32 > ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
+> chmod 600 ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
+>
+> # 2. install the same value into Cloudflare
+> npx wrangler pages secret put OWNERSHIP_CODE_KEY_V2 --project-name adrian-website \
+>   < ~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt
+>
+> # 3. point the app at v2, then redeploy
+> #    set OWNERSHIP_CODE_ACTIVE_KEY_VERSION = 2
+> ```
+>
+> Then copy that file's contents into your password manager and delete neither
+> the file nor the `V1` secret (a retired key must outlive every code it wrote).
+> Verify with the restore/decrypt drill in `docs/lineage-plate-runbook.md`.
 >
 > **Housekeeping.** Pages production contains a malformed secret whose *name* is
 > a base64 string (`sntt…7jQ=`) — a value pasted into the name field by an
