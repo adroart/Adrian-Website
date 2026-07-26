@@ -204,10 +204,14 @@ const AdminPieces: React.FC = () => {
     return message;
   };
 
-  const sortedPieces = useMemo(
-    () => [...FULL_ARCHIVE].sort((a, b) => a.title.localeCompare(b.title)),
-    [],
-  );
+  const [drafts, setDrafts] = useState<{ id: string; title: string; series: string | null; editionSize: number | null }[]>([]);
+  const sortedPieces = useMemo(() => {
+    const staticList = FULL_ARCHIVE.map((a) => ({ id: a.id, title: a.title, draft: false }));
+    const draftList = drafts
+      .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
+      .map((d) => ({ id: d.id, title: d.title, draft: true }));
+    return [...staticList, ...draftList].sort((a, b) => a.title.localeCompare(b.title));
+  }, [drafts]);
 
   const loadPieces = useCallback(async () => {
     setListLoading(true);
@@ -244,6 +248,9 @@ const AdminPieces: React.FC = () => {
     void jsonRequest('/api/admin/registry-unlock')
       .then((data) => setRegistryUnlocked(data.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
+    void jsonRequest('/api/admin/artworks')
+      .then((data) => setDrafts(data.artworks || []))
+      .catch(() => setDrafts([]));
   }, [loadDesk, loadPieces]);
 
   const dismissSensitiveState = () => {
@@ -631,7 +638,7 @@ const AdminPieces: React.FC = () => {
                 <label className={labelClass} htmlFor="piece-select">Artwork</label>
                 <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setPieceId(event.target.value)} className={inputClass}>
                   <option value="">Choose an artwork</option>
-                  {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}</option>)}
+                  {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
                 </select>
               </div>
               <div>

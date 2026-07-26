@@ -93,6 +93,22 @@ interface FulfillmentDesk {
   fulfillments: Fulfillment[];
 }
 
+interface DraftArtwork {
+  id: string;
+  title: string;
+  series: string | null;
+  editionSize: number | null;
+}
+
+const ADD_PIECE_ERRORS: Record<string, string> = {
+  invalid_id: 'ID must look like UL-105 — 2 to 3 letters, a dash, then 3 digits.',
+  reserved_prefix: 'IDs starting with AR- are reserved for plate codes. Use another prefix.',
+  invalid_title: 'Enter a title (up to 120 characters).',
+  invalid_edition_size: 'Edition size must be a whole number from 1 to 9999, or leave it blank.',
+  already_in_catalog: 'A piece with that ID already exists in the catalog.',
+  already_exists: 'You already added a draft piece with that ID.',
+};
+
 const emptyChecklist: ActivationChecklist = {
   realMetalQrScanned: false,
   artworkEditionPublicCodeMatch: false,
@@ -181,6 +197,15 @@ const AdminPlateWizard: React.FC = () => {
   const [issueEdition, setIssueEdition] = useState('');
   const [issuanceKey, setIssuanceKey] = useState<string | null>(null);
   const [pkg, setPkg] = useState<IssuedPlatePackage | null>(null);
+  // Draft catalog — admin-added pieces not yet in the static catalog
+  const [drafts, setDrafts] = useState<DraftArtwork[]>([]);
+  const [showAddPiece, setShowAddPiece] = useState(false);
+  const [newPieceId, setNewPieceId] = useState('');
+  const [newPieceTitle, setNewPieceTitle] = useState('');
+  const [newPieceSeries, setNewPieceSeries] = useState('');
+  const [newPieceEdition, setNewPieceEdition] = useState('');
+  const [addPieceBusy, setAddPieceBusy] = useState(false);
+  const [addPieceError, setAddPieceError] = useState('');
 
   // Fabrication stage
   const [filesArchived, setFilesArchived] = useState(false);
@@ -214,10 +239,13 @@ const AdminPlateWizard: React.FC = () => {
     [pieceId, desk.fulfillments],
   );
 
-  const sortedArtworks = useMemo(
-    () => [...FULL_ARCHIVE].sort((a, b) => a.title.localeCompare(b.title)),
-    [],
-  );
+  const mintableArtworks = useMemo(() => {
+    const staticList = FULL_ARCHIVE.map((a) => ({ id: a.id, title: a.title, draft: false }));
+    const draftList = drafts
+      .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
+      .map((d) => ({ id: d.id, title: d.title, draft: true }));
+    return [...staticList, ...draftList].sort((a, b) => a.title.localeCompare(b.title));
+  }, [drafts]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -240,12 +268,22 @@ const AdminPlateWizard: React.FC = () => {
     }
   }, []);
 
+  const loadDrafts = useCallback(async () => {
+    try {
+      const data = await jsonRequest('/api/admin/artworks');
+      setDrafts((data.artworks as DraftArtwork[]) || []);
+    } catch {
+      // Drafts are optional; the static catalog still populates the dropdown.
+    }
+  }, []);
+
   useEffect(() => {
     void jsonRequest('/api/admin/registry-unlock')
       .then((data) => setRegistryUnlocked(data.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
     void loadAll();
-  }, [loadAll]);
+    void loadDrafts();
+  }, [loadAll, loadDrafts]);
 
   const resetSensitive = useCallback(() => {
     setPkg(null);
@@ -397,6 +435,44 @@ const AdminPlateWizard: React.FC = () => {
       setStepError(`${registryErrorMessage(error, 'Could not issue the plate.')} A retry reuses this same attempt and will not mint a second identity.`);
     } finally {
       setBusy('');
+    }
+  };
+
+  const createPiece = async () => {
+    if (!registryUnlocked) {
+      setAddPieceError('Unlock the private registry first.');
+      return;
+    }
+    const id = newPieceId.trim().toUpperCase();
+    if (!/^[A-Z]{2,3}-[0-9]{3}$/.test(id)) {
+      setAddPieceError(ADD_PIECE_ERRORS.invalid_id);
+      return;
+    }
+    if (!newPieceTitle.trim()) {
+      setAddPieceError(ADD_PIECE_ERRORS.invalid_title);
+      return;
+    }
+    setAddPieceBusy(true);
+    setAddPieceError('');
+    try {
+      const data = await jsonRequest('/api/admin/artworks', {
+        id,
+        title: newPieceTitle.trim(),
+        series: newPieceSeries.trim() || undefined,
+        editionSize: newPieceEdition.trim() ? Number(newPieceEdition) : undefined,
+      });
+      await loadDrafts();
+      setIssueArtwork(data.artwork.id);
+      setShowAddPiece(false);
+      setNewPieceId('');
+      setNewPieceTitle('');
+      setNewPieceSeries('');
+      setNewPieceEdition('');
+    } catch (error) {
+      const message = registryErrorMessage(error, 'Could not add the piece.');
+      setAddPieceError(ADD_PIECE_ERRORS[message] || message);
+    } finally {
+      setAddPieceBusy(false);
     }
   };
 
@@ -669,7 +745,7 @@ const AdminPlateWizard: React.FC = () => {
                         <label className={labelClass} htmlFor="wizard-artwork">Artwork</label>
                         <select id="wizard-artwork" value={issueArtwork} disabled={Boolean(busy)} onChange={(event) => setIssueArtwork(event.target.value)} className={inputClass}>
                           <option value="">Choose an artwork</option>
-                          {sortedArtworks.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}</option>)}
+                          {mintableArtworks.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
                         </select>
                       </div>
                       <div>
@@ -678,6 +754,44 @@ const AdminPlateWizard: React.FC = () => {
                       </div>
                     </div>
                     <p className="font-sans text-xs text-wood-500 mt-3">Edition 0 means a unique, non-numbered piece. Issuing is idempotent: a retry returns the same identity, never a duplicate.</p>
+
+                    <div className="mt-4">
+                      {!showAddPiece ? (
+                        <button type="button" className="font-label text-[11px] uppercase tracking-[0.14em] text-bronze-700 underline underline-offset-4" onClick={() => { setShowAddPiece(true); setAddPieceError(''); }}>
+                          Piece not in the list? Add it
+                        </button>
+                      ) : (
+                        <div className="border border-wood-200 bg-paper-50 p-4">
+                          <p className="font-label text-[11px] uppercase tracking-[0.14em] text-wood-600 font-semibold mb-3">Add a new piece</p>
+                          <p className="font-serif text-sm text-wood-600 mb-4">Registers a piece so you can mint it now, before it exists physically or in the public catalog. You can flesh it out into the full catalog later.</p>
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className={labelClass} htmlFor="new-piece-title">Title</label>
+                              <input id="new-piece-title" value={newPieceTitle} onChange={(e) => setNewPieceTitle(e.target.value)} className={inputClass} placeholder="Untitled Study" />
+                            </div>
+                            <div>
+                              <label className={labelClass} htmlFor="new-piece-id">ID</label>
+                              <input id="new-piece-id" value={newPieceId} onChange={(e) => setNewPieceId(e.target.value.toUpperCase())} className={inputClass} placeholder="UL-105" />
+                            </div>
+                            <div>
+                              <label className={labelClass} htmlFor="new-piece-series">Series (optional)</label>
+                              <input id="new-piece-series" value={newPieceSeries} onChange={(e) => setNewPieceSeries(e.target.value)} className={inputClass} placeholder="Universal Language" />
+                            </div>
+                            <div>
+                              <label className={labelClass} htmlFor="new-piece-edition">Edition size (optional)</label>
+                              <input id="new-piece-edition" type="number" min={1} step={1} value={newPieceEdition} onChange={(e) => setNewPieceEdition(e.target.value)} className={inputClass} placeholder="unique if blank" />
+                            </div>
+                          </div>
+                          <p className="font-sans text-xs text-wood-500 mt-2">ID format: 2 to 3 letters, a dash, then 3 digits (e.g. UL-105). Not starting with AR-.</p>
+                          <div className="flex flex-wrap gap-3 mt-4">
+                            <button type="button" className={buttonClass} disabled={addPieceBusy} onClick={() => void createPiece()}>{addPieceBusy ? 'Adding…' : 'Add piece'}</button>
+                            <button type="button" className={quietButtonClass} onClick={() => { setShowAddPiece(false); setAddPieceError(''); }}>Cancel</button>
+                          </div>
+                          {addPieceError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{addPieceError}</p>}
+                        </div>
+                      )}
+                    </div>
+
                     <button type="button" onClick={runIssue} disabled={Boolean(busy)} className={`${buttonClass} mt-4`}>{busy === 'issue' ? 'Issuing…' : 'Issue permanent identity'}</button>
                   </div>
                 )

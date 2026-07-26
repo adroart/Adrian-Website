@@ -1,4 +1,4 @@
-import { FULL_ARCHIVE } from '../../../data/mockData.ts';
+import { resolveArtwork } from '../_lib/artworkCatalog.js';
 import { buildArtworkPlatePackage, generatePublicPlateCode } from '../../../utils/artworkPlate.ts';
 import {
   decryptOwnershipCode,
@@ -87,9 +87,9 @@ function isSchemaMissing(error) {
   return isMissingTableError(error) || /no such column/i.test(String(error?.message || ''));
 }
 
-function validateInput(body) {
+async function validateInput(env, body) {
   const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim().toUpperCase() : '';
-  const artwork = FULL_ARCHIVE.find((piece) => piece.id === pieceId);
+  const artwork = await resolveArtwork(env, pieceId);
   if (!artwork) return { error: 'unknown_artwork' };
 
   const editionNumber = body?.editionNumber;
@@ -226,7 +226,7 @@ async function issuePiece(request, env) {
   } catch {
     return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
   }
-  const input = validateInput(body);
+  const input = await validateInput(env, body);
   if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
 
   try {

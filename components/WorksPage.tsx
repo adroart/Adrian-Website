@@ -33,6 +33,26 @@ const WorksPage: React.FC = () => {
     const artwork = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
     const book = useBookContent(id);
 
+    // Draft pieces (registered from the admin, not yet in the static catalog)
+    // resolve via a minimal record endpoint so a plate's QR never dead-ends.
+    const [draft, setDraft] = useState<
+        { status: 'idle' | 'loading' | 'found' | 'none'; artwork?: { id: string; title: string; series: string | null; editionSize: number | null } }
+    >({ status: 'idle' });
+    useEffect(() => {
+        if (artwork || !id) { setDraft({ status: 'idle' }); return; }
+        let active = true;
+        setDraft({ status: 'loading' });
+        fetch(`/api/works/${encodeURIComponent(id)}`)
+            .then(response => (response.ok ? response.json() : null))
+            .then(data => {
+                if (!active) return;
+                if (data?.ok && data.artwork) setDraft({ status: 'found', artwork: data.artwork });
+                else setDraft({ status: 'none' });
+            })
+            .catch(() => { if (active) setDraft({ status: 'none' }); });
+        return () => { active = false; };
+    }, [artwork, id]);
+
     // Living Legacy: gated behind the flag. The temple-paced arrival only runs
     // when the visitor reached the page from a physical scan (?ref=qr); a direct
     // visit goes straight to the certificate so nothing feels withheld.
@@ -45,10 +65,66 @@ const WorksPage: React.FC = () => {
     useMetaTags(
         artwork
             ? { title: `${artwork.title} — Adrian Rasmussen`, description: artwork.description }
-            : { title: 'Work Not Found — Adrian Rasmussen' }
+            : draft.status === 'found' && draft.artwork
+                ? { title: `${draft.artwork.title} — Adrian Rasmussen` }
+                : { title: 'Work Not Found — Adrian Rasmussen' }
     );
 
     if (!artwork) {
+        if (draft.status === 'idle' || draft.status === 'loading') {
+            return (
+                <section className="min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
+                    <p className="font-sans text-sm text-wood-500">Loading record…</p>
+                </section>
+            );
+        }
+        if (draft.status === 'found' && draft.artwork) {
+            const editionParam = searchParams.get('edition');
+            const draftEdition = draft.artwork.editionSize
+                ? (editionParam && /^\d+$/.test(editionParam) && Number(editionParam) > 0
+                    ? `${editionParam} of ${draft.artwork.editionSize}, signed and numbered`
+                    : `Edition of ${draft.artwork.editionSize}`)
+                : null;
+            return (
+                <section className="min-h-screen pt-28 pb-32 px-6">
+                    <div className="max-w-2xl mx-auto">
+                        <div className="border border-wood-200 p-8 md:p-12">
+                            <div className="border border-wood-100 p-6 md:p-10">
+                                <div className="text-center mb-10">
+                                    <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
+                                        Adrian Rasmussen
+                                    </p>
+                                    <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                        {draft.artwork.title}
+                                    </h1>
+                                    {draft.artwork.series && (
+                                        <p className="font-sans text-[13px] text-wood-400 tracking-wide">
+                                            {draft.artwork.series} Series
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-center gap-4 mb-10">
+                                    <div className="h-px w-12 bg-bronze-300" />
+                                    <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
+                                    <div className="h-px w-12 bg-bronze-300" />
+                                </div>
+                                {draftEdition && (
+                                    <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>
+                                )}
+                                <p className="font-sans text-[13px] text-wood-400 text-center">
+                                    Registered artwork record
+                                </p>
+                            </div>
+                        </div>
+                        {showPublicLineage && instanceCode && (
+                            <div className="mt-10">
+                                <PublicLineageHistory publicCode={instanceCode} state={lineage} />
+                            </div>
+                        )}
+                    </div>
+                </section>
+            );
+        }
         return (
             <section className="min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
                 <div className="max-w-xl text-center">
