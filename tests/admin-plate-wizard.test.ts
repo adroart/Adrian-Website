@@ -111,6 +111,10 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
     assert.doesNotMatch(wizard, /issueEdition\.trim\(\) \? Number\(issueEdition\) : 0/);
     assert.doesNotMatch(wizard, /unique if blank|Edition 0 means/);
+    assert.match(wizard, /const saveEditionStructure/);
+    assert.match(wizard, /editionSize:/);
+    assert.match(wizard, /Save edition structure/);
+    assert.doesNotMatch(wizard, /selectedArtwork\?\.editionSize \|\| 9999/);
   });
 
   it('clears issuance details when draft creation selects the new artwork', () => {
@@ -126,5 +130,11 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /disabled=\{Boolean\(busy \|\| issuanceKey\)\}/);
     assert.match(wizard, /Start over with a different identity/);
     assert.match(wizard, /const startIssuanceOver[\s\S]*?setIssuanceKey\(null\)/);
+  });
+
+  it('does not race draft or overlay completion against issuance identity', () => {
+    assert.match(wizard, /disabled=\{Boolean\(busy \|\| addPieceBusy/);
+    assert.match(wizard, /issuanceKeyRef\.current/);
+    assert.match(wizard, /if \(issuanceKeyRef\.current\)[\s\S]*?return;/);
   });
 });

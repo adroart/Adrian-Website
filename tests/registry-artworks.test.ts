@@ -193,8 +193,24 @@ describe('mint + admin wiring', () => {
     const artworks = readFileSync(new URL('../functions/api/admin/artworks.js', import.meta.url), 'utf8');
     assert.match(artworks, /requireRegistryUnlock/);
     assert.match(artworks, /findStaticArtwork/);
-    assert.match(artworks, /already_in_catalog/);
+    assert.match(artworks, /staticArtwork\.title/);
+    assert.match(artworks, /staticArtwork\.series/);
     assert.match(artworks, /editionKind/);
+  });
+
+  it('reserves migration 016 for the durable edition guard and advances later plans', () => {
+    const guard = readFileSync(new URL('../migrations/016_keeper_piece_edition_kind_guard.sql', import.meta.url), 'utf8');
+    assert.match(guard, /keeper_piece_edition_kind_conflict/);
+
+    const maintenance = readFileSync(new URL('../docs/superpowers/plans/2026-07-30-registry-maintenance-and-acquisitions.md', import.meta.url), 'utf8');
+    assert.match(maintenance, /017_creator_registry_maintenance\.sql/);
+    assert.match(maintenance, /018_registry_plate_lifecycle\.sql/);
+    assert.match(maintenance, /019_registry_creator_history\.sql/);
+    assert.doesNotMatch(maintenance, /016_creator_registry_maintenance\.sql|017_registry_plate_lifecycle\.sql|018_registry_creator_history\.sql/);
+
+    const recovery = readFileSync(new URL('../docs/superpowers/plans/2026-07-30-registry-recovery-hardening.md', import.meta.url), 'utf8');
+    assert.match(recovery, /020_registry_recovery_qualification\.sql/);
+    assert.doesNotMatch(recovery, /019_registry_recovery_qualification\.sql/);
   });
 
   it('the public draft record only appears once a plate exists', () => {

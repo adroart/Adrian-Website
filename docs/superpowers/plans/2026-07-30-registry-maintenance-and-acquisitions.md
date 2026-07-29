@@ -19,7 +19,7 @@ change vector artwork.
 
 ## File structure
 
-- Create `migrations/016_creator_registry_maintenance.sql`: acquisitions, creator entries, maintenance events and version columns.
+- Create `migrations/017_creator_registry_maintenance.sql`: acquisitions, creator entries, maintenance events and version columns.
 - Create `functions/api/_lib/registryMaintenance.js`: validation, stable JSON, idempotency and guarded batches.
 - Create `functions/api/admin/maintenance.js`: private search.
 - Create `functions/api/admin/maintenance/[id].js`: private detail.
@@ -29,7 +29,7 @@ change vector artwork.
 - Create `utils/adminRegistryMaintenance.ts`: client types and validation.
 - Create `components/AdminMaintenance.tsx`: searchable maintenance workspace.
 - Modify `App.tsx` and `components/admin/AdminNavigation.ts`: route and navigation.
-- Create `migrations/017_registry_plate_lifecycle.sql`: void, supersede and replacement-safe physical lifecycle.
+- Create `migrations/018_registry_plate_lifecycle.sql`: void, supersede and replacement-safe physical lifecycle.
 - Extract `functions/api/_lib/registryPlateIssuance.js`: reusable plate issuance.
 - Update QR, public lineage and ledger projections for superseded plates.
 - Add focused unit and browser tests.
@@ -37,7 +37,7 @@ change vector artwork.
 ### Task 1: Add private acquisitions and append-only maintenance history
 
 **Files:**
-- Create: `migrations/016_creator_registry_maintenance.sql`
+- Create: `migrations/017_creator_registry_maintenance.sql`
 - Create: `tests/registry-maintenance.test.ts`
 
 - [ ] **Step 1: Write failing migration tests**
@@ -49,7 +49,7 @@ append-only triggers.
 
 Run: `npx tsx --test --experimental-test-module-mocks tests/registry-maintenance.test.ts`
 
-Expected: FAIL because migration 016 is absent.
+Expected: FAIL because migration 017 is absent.
 
 - [ ] **Step 3: Add the schema**
 
@@ -105,7 +105,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add migrations/016_creator_registry_maintenance.sql tests/registry-maintenance.test.ts
+git add migrations/017_creator_registry_maintenance.sql tests/registry-maintenance.test.ts
 git commit -m "feat: add private registry maintenance history"
 ```
 
@@ -327,7 +327,7 @@ git commit -m "feat: add steward maintenance actions"
 ### Task 6: Add correction, void and replacement lifecycle
 
 **Files:**
-- Create: `migrations/017_registry_plate_lifecycle.sql`
+- Create: `migrations/018_registry_plate_lifecycle.sql`
 - Create: `functions/api/_lib/registryPlateIssuance.js`
 - Modify: `functions/api/admin/pieces.js`
 - Modify: `functions/api/admin/maintenance/[id]/actions.js`
@@ -386,14 +386,14 @@ Run: `npm run test:unit && npm run typecheck && npm run build && npm run test:e2
 Expected: PASS.
 
 ```bash
-git add migrations/017_registry_plate_lifecycle.sql functions components tests
+git add migrations/018_registry_plate_lifecycle.sql functions components tests
 git commit -m "feat: add repairable plate lifecycle"
 ```
 
 ### Task 7: Add creator, place, role and intention records
 
 **Files:**
-- Create: `migrations/018_registry_creator_history.sql`
+- Create: `migrations/019_registry_creator_history.sql`
 - Create: `functions/api/admin/maintenance/[id]/provenance.js`
 - Modify: `components/AdminMaintenance.tsx`
 - Modify: `tests/registry-maintenance.test.ts`
@@ -438,7 +438,7 @@ Run: `npm run test:unit && npm run typecheck && npm run build`
 Expected: PASS.
 
 ```bash
-git add migrations/018_registry_creator_history.sql functions/api/admin/maintenance components/AdminMaintenance.tsx tests
+git add migrations/019_registry_creator_history.sql functions/api/admin/maintenance components/AdminMaintenance.tsx tests
 git commit -m "feat: record artwork creation provenance"
 ```
 

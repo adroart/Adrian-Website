@@ -130,8 +130,7 @@ async function validateNewIssuance(env, basic) {
 
   let editionKind = artwork.editionKind;
   if (editionKind === 'unspecified') {
-    if (!basic.requestedEditionKind) return { error: 'edition_required' };
-    editionKind = basic.requestedEditionKind;
+    return { error: 'edition_metadata_required' };
   } else if (basic.requestedEditionKind && basic.requestedEditionKind !== editionKind) {
     return { error: 'invalid_edition_kind' };
   }
@@ -184,7 +183,12 @@ async function packageFromStoredRow(row, env) {
 }
 
 async function replayIssuedPackage(row, input, env) {
-  if (row.piece_id !== input.pieceId || row.edition_number !== input.editionNumber) {
+  const storedEditionKind = row.edition_number === 0 ? 'unique' : 'numbered';
+  if (
+    row.piece_id !== input.pieceId
+    || row.edition_number !== input.editionNumber
+    || (input.requestedEditionKind && input.requestedEditionKind !== storedEditionKind)
+  ) {
     return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
   }
   if (row.plate_status !== 'generated') {

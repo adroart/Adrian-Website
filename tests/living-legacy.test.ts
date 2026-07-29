@@ -95,6 +95,7 @@ const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
 );
 const ADMIN_COOKIES = `better-auth.session_token=admin-session; registry_unlock=${REGISTRY_UNLOCK_TOKEN}`;
 const { onRequest: adminPieces } = await import('../functions/api/admin/pieces.js');
+const { onRequest: adminArtworks } = await import('../functions/api/admin/artworks.js');
 const { onRequest: readClaimEvidence } = await import('../functions/api/admin/pieces/[id]/claim-evidence.js');
 const { onRequest: revealArtworkPlate } = await import('../functions/api/admin/pieces/[id]/reveal.js');
 const { onRequest: retryArtworkPlateBackup } = await import('../functions/api/admin/pieces/[id]/backup.js');
@@ -939,6 +940,49 @@ describe('artwork registry migrations', () => {
     assert.equal(row.lineage_event_count, 0);
     assert.match(readMigration('014_artwork_lineage_anchor.sql'), /zero pre-existing registry events/i);
   });
+
+  it('atomically rejects mixing unique and numbered identities on insert and update', () => {
+    const guard = readMigration('016_keeper_piece_edition_kind_guard.sql');
+    assert.match(guard, /BEFORE INSERT ON keeper_pieces/i);
+    assert.match(guard, /BEFORE UPDATE OF piece_id, edition_number ON keeper_pieces/i);
+    assert.doesNotMatch(guard, /DROP TABLE|ALTER TABLE keeper_pieces/i);
+
+    const preexistingNumbered = sqliteResult(`
+      ${registrySchema()}
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-numbered', 'UL-162', 1, 'hash-numbered');
+      ${guard}
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-unique', 'UL-162', 0, 'hash-unique');
+    `);
+    assert.notEqual(preexistingNumbered.status, 0);
+    assert.match(preexistingNumbered.stderr, /keeper_piece_edition_kind_conflict/);
+
+    const competingInsert = sqliteResult(`
+      ${registrySchema()}
+      ${guard}
+      BEGIN IMMEDIATE;
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-unique', 'MD-900', 0, 'hash-unique');
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES ('kp-numbered', 'MD-900', 1, 'hash-numbered');
+      COMMIT;
+    `);
+    assert.notEqual(competingInsert.status, 0);
+    assert.match(competingInsert.stderr, /keeper_piece_edition_kind_conflict/);
+
+    const conflictingUpdate = sqliteResult(`
+      ${registrySchema()}
+      ${guard}
+      INSERT INTO keeper_pieces (id, piece_id, edition_number, recovery_code_hash)
+      VALUES
+        ('kp-unique', 'MD-901', 0, 'hash-unique'),
+        ('kp-numbered', 'MD-902', 1, 'hash-numbered');
+      UPDATE keeper_pieces SET piece_id = 'MD-901' WHERE id = 'kp-numbered';
+    `);
+    assert.notEqual(conflictingUpdate.status, 0);
+    assert.match(conflictingUpdate.stderr, /keeper_piece_edition_kind_conflict/);
+  });
 });
 
 describe('artwork lineage commitments', () => {
@@ -1547,6 +1591,10 @@ function makeIssuanceDb(options: {
 } = {}) {
   const rows: any[] = []; // keeper_pieces
   const lineage: any[] = [];
+  const draftArtworks = options.draftArtworks ?? [
+    { id: 'UL-100', title: 'Art of Living - 32', edition_size: null },
+    { id: 'UL-101', title: 'Art of Living - 55', edition_size: null },
+  ];
   let collisionPending = Boolean(options.collideOnce);
   let backupStatusFailurePending = Boolean(options.failBackupStatusOnce);
 
@@ -1561,7 +1609,7 @@ function makeIssuanceDb(options: {
     if (/^SELECT id, title, edition_size FROM registry_artworks WHERE id = \?1/i.test(s)) {
       return {
         kind: 'first',
-        row: options.draftArtworks?.find((artwork) => artwork.id === params[0]) || null,
+        row: draftArtworks.find((artwork) => artwork.id === params[0]) || null,
       };
     }
     if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
@@ -1710,6 +1758,52 @@ function adminReq(method: string, body?: unknown) {
   });
 }
 
+describe('admin artwork edition overlays', () => {
+  it('stores an explicit static-catalog edition structure with canonical metadata', async () => {
+    const stored: any[] = [];
+    const DB = {
+      prepare(sql: string) {
+        const statement = {
+          values: [] as any[],
+          bind(...values: any[]) { statement.values = values; return statement; },
+          async run() {
+            if (!/^INSERT INTO registry_artworks/i.test(sql.trim())) throw new Error(`unexpected SQL: ${sql}`);
+            const [id, title, series, edition_size, created_at] = statement.values;
+            stored.push({ id, title, series, edition_size, created_at });
+            return { success: true };
+          },
+        };
+        return statement;
+      },
+    };
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const response = await adminArtworks({
+        request: adminReq('POST', {
+          id: 'UL-100',
+          title: 'Forged title',
+          series: 'Forged series',
+          editionKind: 'numbered',
+          editionSize: 12,
+        }),
+        env: { REGISTRY_STEP_UP_SECRET: ADMIN_SECRET, DB },
+      });
+      assert.equal(response.status, 201);
+      const body = await response.json();
+      assert.equal(body.artwork.title, 'Art of Living - 32');
+      assert.equal(body.artwork.series, 'Universal Language');
+      assert.equal(body.artwork.editionKind, 'numbered');
+      assert.equal(body.artwork.editionSize, 12);
+      assert.equal(stored[0].title, 'Art of Living - 32');
+      assert.equal(stored[0].series, 'Universal Language');
+      assert.equal(stored[0].edition_size, 12);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+});
+
 describe('admin piece registration', () => {
   it('404s while the livingLegacy flag is off (surface stays invisible)', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
@@ -1799,7 +1893,7 @@ describe('admin piece registration', () => {
         error: 'edition_number_required',
       });
 
-      const missingKind = await adminPieces({
+      const missingMetadata = await adminPieces({
         request: adminReq('POST', {
           pieceId: 'UL-100',
           editionNumber: 0,
@@ -1808,15 +1902,14 @@ describe('admin piece registration', () => {
         }),
         env: uniqueEnv,
       });
-      assert.deepEqual(await missingKind.json(), {
+      assert.deepEqual(await missingMetadata.json(), {
         ok: false,
-        error: 'edition_required',
+        error: 'edition_metadata_required',
       });
 
       const unconfirmedUnique = await adminPieces({
         request: adminReq('POST', {
-          pieceId: 'UL-100',
-          editionKind: 'unique',
+          pieceId: 'MD-906',
           editionNumber: 0,
           issuanceKey: 'unconfirmed-unique',
         }),
@@ -1875,22 +1968,20 @@ describe('admin piece registration', () => {
     }
   });
 
-  it('preserves a numbered canary identity and rejects mixing in edition zero', async () => {
+  it('preserves a preexisting numbered canary identity and rejects mixing in edition zero', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const registry = makeIssuanceDb();
-      const env = issuanceEnv(registry.DB);
-      const numbered = await adminPieces({
-        request: adminReq('POST', {
-          pieceId: 'UL-162',
-          editionKind: 'numbered',
-          editionNumber: 1,
-          issuanceKey: 'ul-162-canary',
-        }),
-        env,
+      const registry = makeIssuanceDb({
+        draftArtworks: [{ id: 'UL-162', title: 'Canary', edition_size: null }],
       });
-      assert.equal(numbered.status, 201);
+      const env = issuanceEnv(registry.DB);
+      registry.rows.push({
+        id: 'kp-canary',
+        piece_id: 'UL-162',
+        edition_number: 1,
+        issuance_key: 'ul-162-canary',
+      });
 
       const mixed = await adminPieces({
         request: adminReq('POST', {
@@ -1907,6 +1998,8 @@ describe('admin piece registration', () => {
         ok: false,
         error: 'artwork_edition_kind_conflict',
       });
+      assert.equal(registry.rows.length, 1);
+      assert.equal(registry.rows[0].edition_number, 1);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
@@ -2002,6 +2095,13 @@ describe('admin piece registration', () => {
       assert.equal(secondRes.status, 200);
       assert.deepEqual(second, first);
       assert.equal(rows.length, 1);
+
+      const wrongKind = await adminPieces({
+        request: adminReq('POST', { ...body, editionKind: 'numbered' }),
+        env,
+      });
+      assert.equal(wrongKind.status, 409);
+      assert.deepEqual(await wrongKind.json(), { ok: false, error: 'idempotency_conflict' });
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
     }
@@ -2633,7 +2733,11 @@ function makeKeeperDb() {
     const s = sql.replace(/\s+/g, ' ').trim();
 
     if (/^SELECT id, title, edition_size FROM registry_artworks WHERE id = \?1/i.test(s)) {
-      return { kind: 'first', row: null };
+      const overlays = [
+        { id: 'UL-100', title: 'Art of Living - 32', edition_size: null },
+        { id: 'UL-101', title: 'Art of Living - 55', edition_size: null },
+      ];
+      return { kind: 'first', row: overlays.find((row) => row.id === params[0]) || null };
     }
 
     // users lookup (getUserByClerkId)

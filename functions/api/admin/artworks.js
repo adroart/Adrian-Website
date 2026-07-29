@@ -3,9 +3,10 @@
  *
  *   GET  — list draft pieces (authenticated admin). Merged with the static
  *          catalog in the UI to populate the mint dropdown.
- *   POST — create a draft piece (registry step-up unlock required, because it
- *          adds something mintable). Validates the id, rejects ids already in the
- *          static catalog or already a draft.
+ *   POST — create a draft piece or save an edition-metadata overlay for an
+ *          existing static piece (registry step-up unlock required, because it
+ *          adds something mintable). Static overlays always retain canonical
+ *          catalog title and series metadata.
  *
  * Drafts carry no codes and no personal data. A draft becomes a real, richly
  * presented piece when it is later added to data/mockData.ts; until then its
@@ -75,11 +76,19 @@ async function createDraft(request, env) {
     return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
   }
 
-  const input = validateDraftInput(body);
+  const requestedId = typeof body?.id === 'string' ? body.id.trim().toUpperCase() : '';
+  const staticArtwork = findStaticArtwork(requestedId);
+  const input = validateDraftInput(staticArtwork ? {
+    ...body,
+    id: requestedId,
+    title: staticArtwork.title,
+    series: staticArtwork.series,
+  } : body);
   if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
 
-  if (findStaticArtwork(input.id)) {
-    return jsonResponse({ ok: false, error: 'already_in_catalog' }, 409);
+  if (staticArtwork) {
+    input.title = staticArtwork.title;
+    input.series = staticArtwork.series || null;
   }
 
   const createdAt = new Date().toISOString();

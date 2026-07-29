@@ -14,11 +14,11 @@
 
 This plan closes false-success recovery paths. It does not convert engraving
 vectors or add external institutional custody. The creator-history migration in
-the Maintenance plan uses 018, so this plan begins at migration 019.
+the Maintenance plan uses 019, so this plan begins at migration 020.
 
 ## File structure
 
-- Create `migrations/019_registry_recovery_qualification.sql`: persisted append-only qualification.
+- Create `migrations/020_registry_recovery_qualification.sql`: persisted append-only qualification.
 - Modify `functions/api/_lib/plateBackup.js`: content-addressed conditional writes.
 - Modify issuance, retry and recovery endpoints to retain immutable reference and digest.
 - Create `utils/registryRecovery.ts`: version and currentness rules.
@@ -30,7 +30,7 @@ the Maintenance plan uses 018, so this plan begins at migration 019.
 ### Task 1: Add persisted recovery qualification
 
 **Files:**
-- Create: `migrations/019_registry_recovery_qualification.sql`
+- Create: `migrations/020_registry_recovery_qualification.sql`
 - Modify: `tests/artwork-package-recovery.test.ts`
 - Modify: `tests/living-legacy.test.ts`
 
@@ -70,7 +70,7 @@ Run: `npx tsx --test --experimental-test-module-mocks tests/artwork-package-reco
 Expected: PASS.
 
 ```bash
-git add migrations/019_registry_recovery_qualification.sql tests
+git add migrations/020_registry_recovery_qualification.sql tests
 git commit -m "feat: persist registry recovery qualification"
 ```
 

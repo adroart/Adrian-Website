@@ -65,6 +65,11 @@ describe('central admin registry UI', () => {
     assert.match(pieces, /editionKind:\s*selectedEditionKind/);
     assert.match(pieces, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
     assert.doesNotMatch(pieces, /editionNumber\.trim\(\) \? Number\(editionNumber\) : 0/);
+    assert.match(pieces, /const saveEditionStructure/);
+    assert.match(pieces, /\/api\/admin\/artworks/);
+    assert.match(pieces, /editionSize:/);
+    assert.match(pieces, /Save edition structure/);
+    assert.doesNotMatch(pieces, /selectedArtwork\.editionSize \|\| 9999/);
   });
 
   it('keeps local Vite admin mocks aligned with central auth and registry unlock', () => {
