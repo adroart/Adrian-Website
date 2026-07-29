@@ -107,8 +107,24 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /This is a unique, non-numbered work/);
     assert.match(wizard, /editionKind:\s*newPieceEditionKind/);
     assert.match(wizard, /uniqueConfirmed:\s*newPieceUniqueConfirmed/);
-    assert.match(wizard, /editionNumber:\s*selectedArtwork\.editionKind === 'unique' \? 0 : parsedEdition/);
+    assert.match(wizard, /editionKind:\s*selectedEditionKind/);
+    assert.match(wizard, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
     assert.doesNotMatch(wizard, /issueEdition\.trim\(\) \? Number\(issueEdition\) : 0/);
     assert.doesNotMatch(wizard, /unique if blank|Edition 0 means/);
+  });
+
+  it('clears issuance details when draft creation selects the new artwork', () => {
+    const selection = wizard.slice(
+      wizard.indexOf('setIssueArtwork(data.artwork.id)'),
+      wizard.indexOf("setNewPieceId('')", wizard.indexOf('setIssueArtwork(data.artwork.id)')),
+    );
+    assert.match(selection, /setIssueEdition\(''\)/);
+    assert.match(selection, /setIssueUniqueConfirmed\(false\)/);
+  });
+
+  it('locks identity controls after an issuance attempt until explicit restart', () => {
+    assert.match(wizard, /disabled=\{Boolean\(busy \|\| issuanceKey\)\}/);
+    assert.match(wizard, /Start over with a different identity/);
+    assert.match(wizard, /const startIssuanceOver[\s\S]*?setIssuanceKey\(null\)/);
   });
 });

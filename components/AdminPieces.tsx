@@ -56,7 +56,7 @@ interface MintableArtwork {
   id: string;
   title: string;
   draft: boolean;
-  editionKind: 'unique' | 'numbered';
+  editionKind: 'unique' | 'numbered' | 'unspecified' | 'conflict';
   editionSize: number | null;
 }
 
@@ -128,6 +128,7 @@ const AdminPieces: React.FC = () => {
   const [listError, setListError] = useState('');
   const [pieceId, setPieceId] = useState('');
   const [editionNumber, setEditionNumber] = useState('');
+  const [issueEditionKind, setIssueEditionKind] = useState<'' | 'unique' | 'numbered'>('');
   const [uniqueConfirmed, setUniqueConfirmed] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [issueError, setIssueError] = useState('');
@@ -160,13 +161,24 @@ const AdminPieces: React.FC = () => {
     editionSize: number | null;
   }[]>([]);
   const sortedPieces = useMemo(() => {
-    const staticList: MintableArtwork[] = FULL_ARCHIVE.map((a) => ({
-      id: a.id,
-      title: a.title,
-      draft: false,
-      editionKind: Number.isInteger(a.editionSize) ? 'numbered' : 'unique',
-      editionSize: Number.isInteger(a.editionSize) ? a.editionSize! : null,
-    }));
+    const draftsById = new Map(drafts.map((draft) => [draft.id, draft]));
+    const staticList: MintableArtwork[] = FULL_ARCHIVE.map((a) => {
+      const draft = draftsById.get(a.id);
+      const staticHasEdition = Number.isInteger(a.editionSize);
+      const conflict = staticHasEdition && draft
+        && (draft.editionKind !== 'numbered' || draft.editionSize !== a.editionSize);
+      return {
+        id: a.id,
+        title: a.title,
+        draft: false,
+        editionKind: conflict
+          ? 'conflict'
+          : staticHasEdition
+            ? 'numbered'
+            : draft?.editionKind || 'unspecified',
+        editionSize: staticHasEdition ? a.editionSize! : draft?.editionSize ?? null,
+      };
+    });
     const draftList = drafts
       .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
       .map((d): MintableArtwork => ({
@@ -182,6 +194,11 @@ const AdminPieces: React.FC = () => {
     () => sortedPieces.find((artwork) => artwork.id === pieceId) || null,
     [pieceId, sortedPieces],
   );
+  const selectedEditionKind = selectedArtwork?.editionKind === 'unspecified'
+    ? issueEditionKind
+    : selectedArtwork?.editionKind === 'conflict'
+      ? ''
+      : selectedArtwork?.editionKind || '';
 
   const loadPieces = useCallback(async () => {
     setListLoading(true);
@@ -267,8 +284,16 @@ const AdminPieces: React.FC = () => {
       setIssueError('Choose an artwork first.');
       return;
     }
+    if (selectedArtwork.editionKind === 'conflict') {
+      setIssueError('This artwork has conflicting edition metadata. Resolve it before issuing.');
+      return;
+    }
+    if (!selectedEditionKind) {
+      setIssueError('Choose whether this work is unique or numbered.');
+      return;
+    }
     const parsedEdition = Number(editionNumber);
-    if (selectedArtwork.editionKind === 'unique') {
+    if (selectedEditionKind === 'unique') {
       if (!uniqueConfirmed) {
         setIssueError('Confirm that this is a unique, non-numbered work.');
         return;
@@ -277,9 +302,9 @@ const AdminPieces: React.FC = () => {
       !editionNumber.trim() ||
       !Number.isSafeInteger(parsedEdition) ||
       parsedEdition < 1 ||
-      parsedEdition > (selectedArtwork.editionSize || 0)
+      parsedEdition > (selectedArtwork.editionSize || 9999)
     ) {
-      setIssueError(`Enter the exact edition number from 1 to ${selectedArtwork.editionSize}.`);
+      setIssueError(`Enter the exact edition number from 1 to ${selectedArtwork.editionSize || 9999}.`);
       return;
     }
     const issuanceKey = beginIssuanceAttempt(sensitive.issuanceKey);
@@ -290,8 +315,9 @@ const AdminPieces: React.FC = () => {
     try {
       const data = await jsonRequest('/api/admin/pieces', {
         pieceId,
-        editionNumber: selectedArtwork.editionKind === 'unique' ? 0 : parsedEdition,
-        uniqueConfirmed: selectedArtwork.editionKind === 'unique' ? uniqueConfirmed : undefined,
+        editionKind: selectedEditionKind,
+        editionNumber: selectedEditionKind === 'unique' ? 0 : parsedEdition,
+        uniqueConfirmed: selectedEditionKind === 'unique' ? uniqueConfirmed : undefined,
         issuanceKey,
       });
       const issuedPackage: IssuedPlatePackage = projectIssuedPlateResponse(data);
@@ -519,24 +545,41 @@ const AdminPieces: React.FC = () => {
             <div className="grid sm:grid-cols-[1fr_16rem] gap-4 items-end">
               <div>
                 <label className={labelClass} htmlFor="piece-select">Artwork</label>
-                <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => { setPieceId(event.target.value); setEditionNumber(''); setUniqueConfirmed(false); setIssueError(''); }} className={inputClass}>
+                <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => { setPieceId(event.target.value); setEditionNumber(''); setIssueEditionKind(''); setUniqueConfirmed(false); setIssueError(''); }} className={inputClass}>
                   <option value="">Choose an artwork</option>
                   {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
                 </select>
               </div>
-              {selectedArtwork?.editionKind === 'unique' ? (
-                <label className="flex items-start gap-3 font-sans text-sm text-wood-700 pb-2">
-                  <input type="checkbox" checked={uniqueConfirmed} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setUniqueConfirmed(event.target.checked)} className="mt-1" />
-                  <span>This is a unique, non-numbered work</span>
-                </label>
-              ) : selectedArtwork?.editionKind === 'numbered' ? (
-                <div>
-                  <label className={labelClass} htmlFor="edition-input">Exact edition (1 to {selectedArtwork.editionSize})</label>
-                  <input id="edition-input" type="number" min={1} max={selectedArtwork.editionSize || undefined} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} className={inputClass} />
-                </div>
-              ) : (
-                <p className="font-sans text-sm text-wood-500 pb-2">Choose an artwork to confirm its edition identity.</p>
-              )}
+              <div>
+                {selectedArtwork?.editionKind === 'unspecified' && (
+                  <fieldset className="mb-3">
+                    <legend className={labelClass}>Edition identity</legend>
+                    <div className="flex gap-4 font-sans text-sm text-wood-700">
+                      {(['unique', 'numbered'] as const).map((kind) => (
+                        <label key={kind} className="flex items-center gap-2">
+                          <input type="radio" name="issue-edition-kind" value={kind} checked={issueEditionKind === kind} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={() => { setIssueEditionKind(kind); setEditionNumber(''); setUniqueConfirmed(false); }} />
+                          <span>{kind === 'unique' ? 'Unique' : 'Numbered'}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+                {selectedEditionKind === 'unique' ? (
+                  <label className="flex items-start gap-3 font-sans text-sm text-wood-700 pb-2">
+                    <input type="checkbox" checked={uniqueConfirmed} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setUniqueConfirmed(event.target.checked)} className="mt-1" />
+                    <span>This is a unique, non-numbered work</span>
+                  </label>
+                ) : selectedEditionKind === 'numbered' ? (
+                  <div>
+                    <label className={labelClass} htmlFor="edition-input">Exact edition (1 to {selectedArtwork?.editionSize || 9999})</label>
+                    <input id="edition-input" type="number" min={1} max={selectedArtwork?.editionSize || 9999} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} className={inputClass} />
+                  </div>
+                ) : selectedArtwork?.editionKind === 'conflict' ? (
+                  <p className="font-sans text-sm text-red-700 pb-2">Conflicting edition metadata must be resolved before issuing.</p>
+                ) : (
+                  <p className="font-sans text-sm text-wood-500 pb-2">Choose an artwork to confirm its edition identity.</p>
+                )}
+              </div>
             </div>
             <div className="mt-5 flex items-center gap-4 flex-wrap">
               <button type="button" onClick={issuePlate} disabled={issuing || Boolean(issued)} className={buttonClass}>{issuing ? 'Issuing plate…' : 'Issue fabrication package'}</button>

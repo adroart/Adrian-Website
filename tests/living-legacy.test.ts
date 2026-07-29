@@ -1570,6 +1570,16 @@ function makeIssuanceDb(options: {
     if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
       return { kind: 'first', row: find(params[0], params[1]) || null };
     }
+    if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number (?:= 0|> 0)/i.test(s)) {
+      const wantsUnique = /edition_number = 0/i.test(s);
+      return {
+        kind: 'first',
+        row: rows.find((row) => (
+          row.piece_id === params[0]
+          && (wantsUnique ? row.edition_number === 0 : row.edition_number > 0)
+        )) || null,
+      };
+    }
     if (/^INSERT INTO keeper_pieces/i.test(s)) {
       const [id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
         plate_status, plate_generated_at, front_svg_sha256, back_svg_sha256,
@@ -1770,12 +1780,15 @@ describe('admin piece registration', () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
     try {
-      const unique = makeIssuanceDb();
+      const unique = makeIssuanceDb({
+        draftArtworks: [{ id: 'MD-906', title: 'Unique Study', edition_size: null }],
+      });
       const uniqueEnv = issuanceEnv(unique.DB);
 
       const missingEdition = await adminPieces({
         request: adminReq('POST', {
           pieceId: 'UL-100',
+          editionKind: 'unique',
           uniqueConfirmed: true,
           issuanceKey: 'missing-edition',
         }),
@@ -1786,9 +1799,24 @@ describe('admin piece registration', () => {
         error: 'edition_number_required',
       });
 
+      const missingKind = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-100',
+          editionNumber: 0,
+          uniqueConfirmed: true,
+          issuanceKey: 'missing-kind',
+        }),
+        env: uniqueEnv,
+      });
+      assert.deepEqual(await missingKind.json(), {
+        ok: false,
+        error: 'edition_required',
+      });
+
       const unconfirmedUnique = await adminPieces({
         request: adminReq('POST', {
           pieceId: 'UL-100',
+          editionKind: 'unique',
           editionNumber: 0,
           issuanceKey: 'unconfirmed-unique',
         }),
@@ -1801,7 +1829,7 @@ describe('admin piece registration', () => {
 
       const numberedUnique = await adminPieces({
         request: adminReq('POST', {
-          pieceId: 'UL-100',
+          pieceId: 'MD-906',
           editionNumber: 1,
           uniqueConfirmed: true,
           issuanceKey: 'numbered-unique',
@@ -1847,6 +1875,68 @@ describe('admin piece registration', () => {
     }
   });
 
+  it('preserves a numbered canary identity and rejects mixing in edition zero', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const registry = makeIssuanceDb();
+      const env = issuanceEnv(registry.DB);
+      const numbered = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-162',
+          editionKind: 'numbered',
+          editionNumber: 1,
+          issuanceKey: 'ul-162-canary',
+        }),
+        env,
+      });
+      assert.equal(numbered.status, 201);
+
+      const mixed = await adminPieces({
+        request: adminReq('POST', {
+          pieceId: 'UL-162',
+          editionKind: 'unique',
+          editionNumber: 0,
+          uniqueConfirmed: true,
+          issuanceKey: 'ul-162-unique',
+        }),
+        env,
+      });
+      assert.equal(mixed.status, 409);
+      assert.deepEqual(await mixed.json(), {
+        ok: false,
+        error: 'artwork_edition_kind_conflict',
+      });
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('replays an exact issuance before mutable artwork metadata is consulted', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    try {
+      const draftArtworks = [{ id: 'MD-905', title: 'Edition Study', edition_size: 3 as number | null }];
+      const registry = makeIssuanceDb({ draftArtworks });
+      const env = issuanceEnv(registry.DB);
+      const requestBody = {
+        pieceId: 'MD-905',
+        editionNumber: 3,
+        issuanceKey: 'stable-across-drift',
+      };
+      const first = await adminPieces({ request: adminReq('POST', requestBody), env });
+      assert.equal(first.status, 201);
+      const firstBody = await first.json();
+
+      draftArtworks[0].edition_size = null;
+      const replay = await adminPieces({ request: adminReq('POST', requestBody), env });
+      assert.equal(replay.status, 200);
+      assert.deepEqual(await replay.json(), firstBody);
+    } finally {
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
   it('persists an issuance atomically and GET exposes only safe plate metadata', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
@@ -1854,7 +1944,7 @@ describe('admin piece registration', () => {
       const { DB, rows, lineage } = makeIssuanceDb();
       const bucket = makeBackupBucket();
       const env = { ...issuanceEnv(DB), ARTWORK_REGISTRY_BACKUP: bucket };
-      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'issue-atomic' }), env });
+      const post = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'issue-atomic' }), env });
       const created = await post.json();
       assert.equal(post.status, 201);
       assert.ok(isWellFormedRecoveryCode(created.ownershipCode));
@@ -1905,7 +1995,7 @@ describe('admin piece registration', () => {
     try {
       const { DB, rows } = makeIssuanceDb();
       const env = issuanceEnv(DB);
-      const body = { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'same-request' };
+      const body = { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'same-request' };
       const first = await (await adminPieces({ request: adminReq('POST', body), env })).json();
       const secondRes = await adminPieces({ request: adminReq('POST', body), env });
       const second = await secondRes.json();
@@ -1924,11 +2014,11 @@ describe('admin piece registration', () => {
       const { DB } = makeIssuanceDb();
       const env = issuanceEnv(DB);
       await adminPieces({
-        request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
+        request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
         env,
       });
       const conflict = await adminPieces({
-        request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
+        request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'identity-bound' }),
         env,
       });
       assert.equal(conflict.status, 409);
@@ -1947,7 +2037,7 @@ describe('admin piece registration', () => {
       const { DB, rows } = makeIssuanceDb();
       const env = issuanceEnv(DB);
       const request = adminReq('POST', {
-        pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
+        pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
       });
       await adminPieces({ request, env });
       rows[0].plate_status = 'active';
@@ -1955,7 +2045,7 @@ describe('admin piece registration', () => {
 
       const locked = await adminPieces({
         request: adminReq('POST', {
-          pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
+          pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'locked-after-activation',
         }),
         env,
       });
@@ -1972,8 +2062,8 @@ describe('admin piece registration', () => {
     try {
       const { DB } = makeIssuanceDb();
       const env = issuanceEnv(DB);
-      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'one' }), env });
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'two' }), env });
+      await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'one' }), env });
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'two' }), env });
       assert.equal(res.status, 409);
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
@@ -1986,7 +2076,7 @@ describe('admin piece registration', () => {
     try {
       const { DB, rows } = makeIssuanceDb({ collideOnce: true });
       const env = issuanceEnv(DB, true);
-      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'collision' }), env });
+      const res = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'collision' }), env });
       assert.equal(res.status, 201);
       assert.equal(rows.length, 1);
       assert.equal(rows[0].backup_status, 'failed');
@@ -2002,7 +2092,7 @@ describe('admin piece registration', () => {
     try {
       const { DB, rows } = makeIssuanceDb({ failBackupStatusOnce: true });
       const env = issuanceEnv(DB);
-      const body = { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'repair-status' };
+      const body = { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'repair-status' };
 
       const issued = await adminPieces({ request: adminReq('POST', body), env });
       assert.equal(issued.status, 201);
@@ -2032,7 +2122,7 @@ describe('admin piece registration', () => {
       const env = issuanceEnv(DB, true);
       const issued = await adminPieces({
         request: adminReq('POST', {
-          pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'failed-backup-state',
+          pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'failed-backup-state',
         }),
         env,
       });
@@ -2542,6 +2632,10 @@ function makeKeeperDb() {
   function exec(sql: string, params: any[]) {
     const s = sql.replace(/\s+/g, ' ').trim();
 
+    if (/^SELECT id, title, edition_size FROM registry_artworks WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: null };
+    }
+
     // users lookup (getUserByClerkId)
     if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(s)) {
       const u = users.find((r) => r.clerk_user_id === params[0]) || null;
@@ -2562,6 +2656,16 @@ function makeKeeperDb() {
     }
     if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
       return { kind: 'first', row: findAny(params[0], params[1]) || null };
+    }
+    if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number (?:= 0|> 0)/i.test(s)) {
+      const looksForUnique = /edition_number = 0/i.test(s);
+      return {
+        kind: 'first',
+        row: pieces.find(
+          (row) => row.piece_id === params[0]
+            && (looksForUnique ? row.edition_number === 0 : row.edition_number > 0),
+        ) || null,
+      };
     }
 
     // admin INSERT: fresh registration (no steward yet)
@@ -2735,7 +2839,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
-      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-lifecycle' }), env: adminEnv });
+      const reg = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-100', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-lifecycle' }), env: adminEnv });
       assert.equal(reg.status, 201);
       const regJson = await reg.json();
       const recoveryCode: string = regJson.ownershipCode;
@@ -2847,7 +2951,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(bridgeCalled, 3);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
-      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
+      const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
       await reg2.json();
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
       const wrongRes = await bind({

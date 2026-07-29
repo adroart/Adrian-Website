@@ -107,14 +107,43 @@ describe('draft artwork validation', () => {
 });
 
 describe('artwork resolution for minting', () => {
-  it('finds a static catalog piece without touching the database', async () => {
+  it('represents a static catalog piece without edition metadata as unspecified', async () => {
     const staticPiece = findStaticArtwork('UL-100');
     assert.ok(staticPiece, 'UL-100 should exist in the static catalog');
-    const resolved = await resolveArtwork(fakeEnv({ id: 'SHOULD-NOT', title: 'x' }), 'UL-100');
+    const resolved = await resolveArtwork(fakeEnv(null), 'UL-100');
     assert.equal(resolved?.source, 'catalog');
     assert.equal(resolved?.id, 'UL-100');
     assert.equal(resolved?.title, staticPiece!.title);
-    assert.equal(resolved?.editionKind, 'unique');
+    assert.equal(resolved?.editionKind, 'unspecified');
+  });
+
+  it('uses registry edition metadata when an overlapping static entry has none', async () => {
+    const resolved = await resolveArtwork(
+      fakeEnv({ id: 'UL-100', title: 'Older Draft Title', edition_size: 7 }),
+      'UL-100',
+    );
+    assert.equal(resolved?.source, 'catalog');
+    assert.equal(resolved?.title, findStaticArtwork('UL-100')?.title);
+    assert.equal(resolved?.editionKind, 'numbered');
+    assert.equal(resolved?.editionSize, 7);
+  });
+
+  it('fails closed when overlapping static and registry edition sizes conflict', async () => {
+    const staticPiece = findStaticArtwork('UL-100');
+    assert.ok(staticPiece);
+    const originalEditionSize = staticPiece!.editionSize;
+    staticPiece!.editionSize = 5;
+    try {
+      await assert.rejects(
+        () => resolveArtwork(
+          fakeEnv({ id: 'UL-100', title: 'Older Draft Title', edition_size: 4 }),
+          'UL-100',
+        ),
+        /artwork_edition_metadata_conflict/,
+      );
+    } finally {
+      staticPiece!.editionSize = originalEditionSize;
+    }
   });
 
   it('falls back to a draft piece in the database', async () => {
@@ -154,7 +183,9 @@ describe('mint + admin wiring', () => {
   it('the mint endpoint resolves an artwork from either source', () => {
     const pieces = readFileSync(new URL('../functions/api/admin/pieces.js', import.meta.url), 'utf8');
     assert.match(pieces, /resolveArtwork/);
-    assert.match(pieces, /await validateInput\(env, body\)/);
+    assert.match(pieces, /await validateNewIssuance\(env, basic\)/);
+    const issuePiece = pieces.slice(pieces.indexOf('async function issuePiece'));
+    assert.ok(issuePiece.indexOf('findByIssuanceKey') < issuePiece.indexOf('validateNewIssuance(env, basic)'));
     assert.doesNotMatch(pieces, /FULL_ARCHIVE/);
   });
 

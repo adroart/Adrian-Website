@@ -19,6 +19,34 @@ export function editionKindForSize(editionSize) {
   return Number.isInteger(editionSize) ? 'numbered' : 'unique';
 }
 
+function catalogError(code) {
+  const error = new Error(code);
+  error.code = code;
+  return error;
+}
+
+function registryEditionSize(row) {
+  if (!row || row.edition_size == null) return null;
+  const editionSize = Number(row.edition_size);
+  if (!Number.isInteger(editionSize) || editionSize < 1 || editionSize > DRAFT_EDITION_MAX) {
+    throw catalogError('invalid_stored_edition_metadata');
+  }
+  return editionSize;
+}
+
+async function findRegistryArtwork(env, pieceId) {
+  if (!env?.DB) return null;
+  try {
+    return await env.DB
+      .prepare('SELECT id, title, edition_size FROM registry_artworks WHERE id = ?1')
+      .bind(pieceId)
+      .first();
+  } catch (error) {
+    if (isMissingTableError(error)) return null;
+    throw error;
+  }
+}
+
 /** The static catalog entry for a piece id, or null. */
 export function findStaticArtwork(pieceId) {
   return FULL_ARCHIVE.find((artwork) => artwork.id === pieceId) || null;
@@ -30,35 +58,35 @@ export function findStaticArtwork(pieceId) {
  */
 export async function resolveArtwork(env, pieceId) {
   const staticArtwork = findStaticArtwork(pieceId);
+  const row = await findRegistryArtwork(env, pieceId);
   if (staticArtwork) {
-    const editionSize = Number.isInteger(staticArtwork.editionSize) ? staticArtwork.editionSize : null;
+    const staticHasEdition = Number.isInteger(staticArtwork.editionSize);
+    const storedEditionSize = registryEditionSize(row);
+    if (staticHasEdition && row && storedEditionSize !== staticArtwork.editionSize) {
+      throw catalogError('artwork_edition_metadata_conflict');
+    }
+    const editionSize = staticHasEdition
+      ? staticArtwork.editionSize
+      : row
+        ? storedEditionSize
+        : null;
     return {
       id: staticArtwork.id,
       title: staticArtwork.title,
-      editionKind: editionKindForSize(editionSize),
+      editionKind: staticHasEdition || row ? editionKindForSize(editionSize) : 'unspecified',
       editionSize,
       source: 'catalog',
     };
   }
-  if (!env?.DB) return null;
-  try {
-    const row = await env.DB
-      .prepare('SELECT id, title, edition_size FROM registry_artworks WHERE id = ?1')
-      .bind(pieceId)
-      .first();
-    if (!row) return null;
-    const editionSize = row.edition_size == null ? null : Number(row.edition_size);
-    return {
-      id: row.id,
-      title: row.title,
-      editionKind: editionKindForSize(editionSize),
-      editionSize,
-      source: 'registry',
-    };
-  } catch (error) {
-    if (isMissingTableError(error)) return null;
-    throw error;
-  }
+  if (!row) return null;
+  const editionSize = registryEditionSize(row);
+  return {
+    id: row.id,
+    title: row.title,
+    editionKind: editionKindForSize(editionSize),
+    editionSize,
+    source: 'registry',
+  };
 }
 
 /**

@@ -59,9 +59,11 @@ describe('central admin registry UI', () => {
   it('requires an explicit edition identity when issuing from the registry desk', () => {
     const pieces = source('components/AdminPieces.tsx');
     assert.match(pieces, /editionKind/);
+    assert.match(pieces, /issueEditionKind/);
     assert.match(pieces, /This is a unique, non-numbered work/);
     assert.match(pieces, /uniqueConfirmed/);
-    assert.match(pieces, /editionNumber:\s*selectedArtwork\.editionKind === 'unique' \? 0 : parsedEdition/);
+    assert.match(pieces, /editionKind:\s*selectedEditionKind/);
+    assert.match(pieces, /editionNumber:\s*selectedEditionKind === 'unique' \? 0 : parsedEdition/);
     assert.doesNotMatch(pieces, /editionNumber\.trim\(\) \? Number\(editionNumber\) : 0/);
   });
 

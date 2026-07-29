@@ -23,6 +23,7 @@ import {
 } from '../_lib/lineage.js';
 
 const MAX_ISSUANCE_KEY_LENGTH = 128;
+const MAX_EDITION_NUMBER = 9999;
 const PUBLIC_CODE_ATTEMPTS = 8;
 
 export async function onRequest(context) {
@@ -86,22 +87,16 @@ function isSchemaMissing(error) {
   return isMissingTableError(error) || /no such column/i.test(String(error?.message || ''));
 }
 
-async function validateInput(env, body) {
+function validateBasicInput(body) {
   const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim().toUpperCase() : '';
-  const artwork = await resolveArtwork(env, pieceId);
-  if (!artwork) return { error: 'unknown_artwork' };
+  if (!pieceId) return { error: 'unknown_artwork' };
 
   const editionNumber = body?.editionNumber;
   if (editionNumber === undefined) return { error: 'edition_number_required' };
-  if (!Number.isSafeInteger(editionNumber)) return { error: 'invalid_edition_number' };
-
-  if (artwork.editionKind === 'unique') {
-    if (editionNumber !== 0) return { error: 'invalid_edition_number' };
-    if (body?.uniqueConfirmed !== true) return { error: 'unique_confirmation_required' };
-  } else if (
-    editionNumber < 1 ||
-    !Number.isInteger(artwork.editionSize) ||
-    editionNumber > artwork.editionSize
+  if (
+    !Number.isSafeInteger(editionNumber)
+    || editionNumber < 0
+    || editionNumber > MAX_EDITION_NUMBER
   ) {
     return { error: 'invalid_edition_number' };
   }
@@ -110,7 +105,50 @@ async function validateInput(env, body) {
   if (!issuanceKey || issuanceKey.length > MAX_ISSUANCE_KEY_LENGTH) {
     return { error: 'issuance_key_required' };
   }
-  return { pieceId, editionNumber, issuanceKey };
+
+  let requestedEditionKind = null;
+  if (body?.editionKind !== undefined && body?.editionKind !== null) {
+    requestedEditionKind = typeof body.editionKind === 'string' ? body.editionKind.trim() : '';
+    if (!requestedEditionKind) return { error: 'edition_required' };
+    if (requestedEditionKind !== 'unique' && requestedEditionKind !== 'numbered') {
+      return { error: 'invalid_edition_kind' };
+    }
+  }
+
+  return {
+    pieceId,
+    editionNumber,
+    issuanceKey,
+    requestedEditionKind,
+    uniqueConfirmed: body?.uniqueConfirmed === true,
+  };
+}
+
+async function validateNewIssuance(env, basic) {
+  const artwork = await resolveArtwork(env, basic.pieceId);
+  if (!artwork) return { error: 'unknown_artwork' };
+
+  let editionKind = artwork.editionKind;
+  if (editionKind === 'unspecified') {
+    if (!basic.requestedEditionKind) return { error: 'edition_required' };
+    editionKind = basic.requestedEditionKind;
+  } else if (basic.requestedEditionKind && basic.requestedEditionKind !== editionKind) {
+    return { error: 'invalid_edition_kind' };
+  }
+
+  if (editionKind === 'unique') {
+    if (basic.editionNumber !== 0) return { error: 'invalid_edition_number' };
+    if (!basic.uniqueConfirmed) return { error: 'unique_confirmation_required' };
+  } else if (
+    basic.editionNumber < 1
+    || basic.editionNumber > (
+      artwork.editionKind === 'numbered' ? artwork.editionSize : MAX_EDITION_NUMBER
+    )
+  ) {
+    return { error: 'invalid_edition_number' };
+  }
+
+  return { ...basic, editionKind };
 }
 
 function envelopeFromRow(row) {
@@ -183,6 +221,15 @@ async function findByIssuanceKey(env, issuanceKey) {
   ).bind(issuanceKey).first();
 }
 
+async function findEditionKindConflict(env, input) {
+  const comparison = input.editionKind === 'unique' ? '> 0' : '= 0';
+  return env.DB.prepare(
+    `SELECT id FROM keeper_pieces
+      WHERE piece_id = ?1 AND edition_number ${comparison}
+      LIMIT 1`,
+  ).bind(input.pieceId).first();
+}
+
 async function recordBackupResult(env, row, result) {
   const at = result.status === 'verified' ? new Date().toISOString() : null;
   await env.DB.prepare(
@@ -228,12 +275,20 @@ async function issuePiece(request, env) {
   } catch {
     return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
   }
-  const input = await validateInput(env, body);
-  if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
+  const basic = validateBasicInput(body);
+  if (basic.error) return jsonResponse({ ok: false, error: basic.error }, 400);
 
   try {
-    const replay = await findByIssuanceKey(env, input.issuanceKey);
-    if (replay) return replayIssuedPackage(replay, input, env);
+    const replay = await findByIssuanceKey(env, basic.issuanceKey);
+    if (replay) return replayIssuedPackage(replay, basic, env);
+
+    const input = await validateNewIssuance(env, basic);
+    if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
+
+    const kindConflict = await findEditionKindConflict(env, input);
+    if (kindConflict) {
+      return jsonResponse({ ok: false, error: 'artwork_edition_kind_conflict' }, 409);
+    }
 
     const duplicate = await env.DB.prepare(
       `SELECT id FROM keeper_pieces WHERE piece_id = ?1 AND edition_number = ?2`,
@@ -318,6 +373,12 @@ async function issuePiece(request, env) {
     return jsonResponse({ ok: false, error: 'public_code_collision' }, 503);
   } catch (error) {
     if (isSchemaMissing(error)) return migrationNotApplied();
+    if (
+      error?.code === 'artwork_edition_metadata_conflict'
+      || error?.code === 'invalid_stored_edition_metadata'
+    ) {
+      return jsonResponse({ ok: false, error: error.code }, 500);
+    }
     return jsonResponse({ ok: false, error: 'issuance_failed' }, 500);
   }
 }
