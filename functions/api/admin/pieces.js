@@ -22,7 +22,6 @@ import {
   lineageStatement,
 } from '../_lib/lineage.js';
 
-const MAX_EDITION_WITHOUT_BOUND = 9999;
 const MAX_ISSUANCE_KEY_LENGTH = 128;
 const PUBLIC_CODE_ATTEMPTS = 8;
 
@@ -93,13 +92,16 @@ async function validateInput(env, body) {
   if (!artwork) return { error: 'unknown_artwork' };
 
   const editionNumber = body?.editionNumber;
-  const upperBound = Number.isInteger(artwork.editionSize)
-    ? artwork.editionSize
-    : MAX_EDITION_WITHOUT_BOUND;
-  if (
-    !Number.isSafeInteger(editionNumber) ||
-    editionNumber < 0 ||
-    editionNumber > upperBound
+  if (editionNumber === undefined) return { error: 'edition_number_required' };
+  if (!Number.isSafeInteger(editionNumber)) return { error: 'invalid_edition_number' };
+
+  if (artwork.editionKind === 'unique') {
+    if (editionNumber !== 0) return { error: 'invalid_edition_number' };
+    if (body?.uniqueConfirmed !== true) return { error: 'unique_confirmation_required' };
+  } else if (
+    editionNumber < 1 ||
+    !Number.isInteger(artwork.editionSize) ||
+    editionNumber > artwork.editionSize
   ) {
     return { error: 'invalid_edition_number' };
   }

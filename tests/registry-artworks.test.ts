@@ -25,14 +25,66 @@ function fakeEnv(row: unknown, opts: { throwMissing?: boolean } = {}) {
 }
 
 describe('draft artwork validation', () => {
-  it('accepts a well-formed draft and normalizes it', () => {
-    const result = validateDraftInput({ id: 'ul-105', title: '  A Study  ', series: ' Universal Language ', editionSize: '10' });
-    assert.deepEqual(result, { id: 'UL-105', title: 'A Study', series: 'Universal Language', editionSize: 10 });
+  it('accepts a numbered draft and normalizes its explicit edition identity', () => {
+    const result = validateDraftInput({
+      id: 'ul-105',
+      title: '  A Study  ',
+      series: ' Universal Language ',
+      editionKind: 'numbered',
+      editionSize: '10',
+    });
+    assert.deepEqual(result, {
+      id: 'UL-105',
+      title: 'A Study',
+      series: 'Universal Language',
+      editionKind: 'numbered',
+      editionSize: 10,
+    });
   });
 
-  it('treats a blank edition as a unique piece (null)', () => {
-    assert.equal(validateDraftInput({ id: 'MD-007', title: 'One' }).editionSize, null);
-    assert.equal(validateDraftInput({ id: 'MD-007', title: 'One', editionSize: '' }).editionSize, null);
+  it('accepts a confirmed unique draft and normalizes its edition size to null', () => {
+    assert.deepEqual(
+      validateDraftInput({
+        id: 'MD-007',
+        title: 'One',
+        editionKind: 'unique',
+        uniqueConfirmed: true,
+        editionSize: 12,
+      }),
+      {
+        id: 'MD-007',
+        title: 'One',
+        series: null,
+        editionKind: 'unique',
+        editionSize: null,
+      },
+    );
+  });
+
+  it('requires an explicit edition kind and unique confirmation', () => {
+    assert.equal(
+      validateDraftInput({ id: 'MD-007', title: 'One' }).error,
+      'edition_required',
+    );
+    assert.equal(
+      validateDraftInput({ id: 'MD-007', title: 'One', editionKind: '' }).error,
+      'edition_required',
+    );
+    assert.equal(
+      validateDraftInput({ id: 'MD-007', title: 'One', editionKind: 'unique' }).error,
+      'unique_confirmation_required',
+    );
+  });
+
+  it('requires a size for numbered editions', () => {
+    assert.equal(
+      validateDraftInput({ id: 'MD-007', title: 'One', editionKind: 'numbered' }).error,
+      'edition_size_required',
+    );
+    assert.equal(
+      validateDraftInput({ id: 'MD-007', title: 'One', editionKind: 'numbered', editionSize: '' }).error,
+      'edition_size_required',
+    );
   });
 
   it('rejects bad ids, the reserved AR- prefix, empty titles, and bad editions', () => {
@@ -40,9 +92,10 @@ describe('draft artwork validation', () => {
     assert.equal(validateDraftInput({ id: 'UL-1005', title: 'x' }).error, 'invalid_id');
     assert.equal(validateDraftInput({ id: 'AR-123', title: 'x' }).error, 'reserved_prefix');
     assert.equal(validateDraftInput({ id: 'UL-105', title: '   ' }).error, 'invalid_title');
-    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionSize: '0' }).error, 'invalid_edition_size');
-    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionSize: '2.5' }).error, 'invalid_edition_size');
-    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionSize: '10000' }).error, 'invalid_edition_size');
+    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionKind: 'other' }).error, 'invalid_edition_kind');
+    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionKind: 'numbered', editionSize: '0' }).error, 'invalid_edition_size');
+    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionKind: 'numbered', editionSize: '2.5' }).error, 'invalid_edition_size');
+    assert.equal(validateDraftInput({ id: 'UL-105', title: 'x', editionKind: 'numbered', editionSize: '10000' }).error, 'invalid_edition_size');
   });
 
   it('the id pattern matches 2 to 3 letters, a dash, and 3 digits', () => {
@@ -61,6 +114,7 @@ describe('artwork resolution for minting', () => {
     assert.equal(resolved?.source, 'catalog');
     assert.equal(resolved?.id, 'UL-100');
     assert.equal(resolved?.title, staticPiece!.title);
+    assert.equal(resolved?.editionKind, 'unique');
   });
 
   it('falls back to a draft piece in the database', async () => {
@@ -68,7 +122,22 @@ describe('artwork resolution for minting', () => {
       fakeEnv({ id: 'UL-905', title: 'Draft Study', edition_size: 5 }),
       'UL-905',
     );
-    assert.deepEqual(resolved, { id: 'UL-905', title: 'Draft Study', editionSize: 5, source: 'registry' });
+    assert.deepEqual(resolved, {
+      id: 'UL-905',
+      title: 'Draft Study',
+      editionKind: 'numbered',
+      editionSize: 5,
+      source: 'registry',
+    });
+  });
+
+  it('infers a unique edition identity from a legacy null edition size', async () => {
+    const resolved = await resolveArtwork(
+      fakeEnv({ id: 'MD-905', title: 'Unique Study', edition_size: null }),
+      'MD-905',
+    );
+    assert.equal(resolved?.editionKind, 'unique');
+    assert.equal(resolved?.editionSize, null);
   });
 
   it('returns null for an unknown id and when the table is missing', async () => {
@@ -94,6 +163,7 @@ describe('mint + admin wiring', () => {
     assert.match(artworks, /requireRegistryUnlock/);
     assert.match(artworks, /findStaticArtwork/);
     assert.match(artworks, /already_in_catalog/);
+    assert.match(artworks, /editionKind/);
   });
 
   it('the public draft record only appears once a plate exists', () => {

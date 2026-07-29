@@ -100,4 +100,15 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /message === 'registry_locked'/);
     assert.match(wizard, /setRegistryUnlocked\(false\)/);
   });
+
+  it('uses explicit edition identity for draft creation and issuance', () => {
+    assert.match(wizard, />Unique</);
+    assert.match(wizard, />Numbered</);
+    assert.match(wizard, /This is a unique, non-numbered work/);
+    assert.match(wizard, /editionKind:\s*newPieceEditionKind/);
+    assert.match(wizard, /uniqueConfirmed:\s*newPieceUniqueConfirmed/);
+    assert.match(wizard, /editionNumber:\s*selectedArtwork\.editionKind === 'unique' \? 0 : parsedEdition/);
+    assert.doesNotMatch(wizard, /issueEdition\.trim\(\) \? Number\(issueEdition\) : 0/);
+    assert.doesNotMatch(wizard, /unique if blank|Edition 0 means/);
+  });
 });

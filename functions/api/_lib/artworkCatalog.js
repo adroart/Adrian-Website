@@ -15,6 +15,10 @@ export const DRAFT_TITLE_MAX = 120;
 export const DRAFT_SERIES_MAX = 80;
 export const DRAFT_EDITION_MAX = 9999;
 
+export function editionKindForSize(editionSize) {
+  return Number.isInteger(editionSize) ? 'numbered' : 'unique';
+}
+
 /** The static catalog entry for a piece id, or null. */
 export function findStaticArtwork(pieceId) {
   return FULL_ARCHIVE.find((artwork) => artwork.id === pieceId) || null;
@@ -27,10 +31,12 @@ export function findStaticArtwork(pieceId) {
 export async function resolveArtwork(env, pieceId) {
   const staticArtwork = findStaticArtwork(pieceId);
   if (staticArtwork) {
+    const editionSize = Number.isInteger(staticArtwork.editionSize) ? staticArtwork.editionSize : null;
     return {
       id: staticArtwork.id,
       title: staticArtwork.title,
-      editionSize: Number.isInteger(staticArtwork.editionSize) ? staticArtwork.editionSize : null,
+      editionKind: editionKindForSize(editionSize),
+      editionSize,
       source: 'catalog',
     };
   }
@@ -41,10 +47,12 @@ export async function resolveArtwork(env, pieceId) {
       .bind(pieceId)
       .first();
     if (!row) return null;
+    const editionSize = row.edition_size == null ? null : Number(row.edition_size);
     return {
       id: row.id,
       title: row.title,
-      editionSize: row.edition_size == null ? null : Number(row.edition_size),
+      editionKind: editionKindForSize(editionSize),
+      editionSize,
       source: 'registry',
     };
   } catch (error) {
@@ -70,14 +78,24 @@ export function validateDraftInput(body) {
     ? body.series.trim().slice(0, DRAFT_SERIES_MAX)
     : null;
 
-  let editionSize = null;
-  if (body?.editionSize !== undefined && body?.editionSize !== null && body?.editionSize !== '') {
-    const parsed = Number(body.editionSize);
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > DRAFT_EDITION_MAX) {
-      return { error: 'invalid_edition_size' };
-    }
-    editionSize = parsed;
+  const editionKind = typeof body?.editionKind === 'string' ? body.editionKind.trim() : '';
+  if (!editionKind) return { error: 'edition_required' };
+  if (editionKind !== 'unique' && editionKind !== 'numbered') {
+    return { error: 'invalid_edition_kind' };
   }
 
-  return { id, title, series, editionSize };
+  if (editionKind === 'unique') {
+    if (body?.uniqueConfirmed !== true) return { error: 'unique_confirmation_required' };
+    return { id, title, series, editionKind, editionSize: null };
+  }
+
+  if (body?.editionSize === undefined || body?.editionSize === null || body?.editionSize === '') {
+    return { error: 'edition_size_required' };
+  }
+  const editionSize = Number(body.editionSize);
+  if (!Number.isInteger(editionSize) || editionSize < 1 || editionSize > DRAFT_EDITION_MAX) {
+    return { error: 'invalid_edition_size' };
+  }
+
+  return { id, title, series, editionKind, editionSize };
 }

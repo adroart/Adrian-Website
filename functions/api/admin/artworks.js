@@ -18,7 +18,11 @@ import {
   migrationNotApplied,
   isMissingTableError,
 } from '../_lib/keeper.js';
-import { findStaticArtwork, validateDraftInput } from '../_lib/artworkCatalog.js';
+import {
+  editionKindForSize,
+  findStaticArtwork,
+  validateDraftInput,
+} from '../_lib/artworkCatalog.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -39,11 +43,13 @@ export async function onRequest(context) {
 }
 
 function serialize(row) {
+  const editionSize = row.edition_size == null ? null : Number(row.edition_size);
   return {
     id: row.id,
     title: row.title,
     series: row.series || null,
-    editionSize: row.edition_size == null ? null : Number(row.edition_size),
+    editionKind: editionKindForSize(editionSize),
+    editionSize,
     createdAt: row.created_at,
   };
 }
@@ -99,6 +105,7 @@ async function createDraft(request, env) {
       id: input.id,
       title: input.title,
       series: input.series,
+      editionKind: input.editionKind,
       editionSize: input.editionSize,
       createdAt,
     },

@@ -69,6 +69,15 @@ interface DraftArtwork {
   id: string;
   title: string;
   series: string | null;
+  editionKind: 'unique' | 'numbered';
+  editionSize: number | null;
+}
+
+interface MintableArtwork {
+  id: string;
+  title: string;
+  draft: boolean;
+  editionKind: 'unique' | 'numbered';
   editionSize: number | null;
 }
 
@@ -76,7 +85,11 @@ const ADD_PIECE_ERRORS: Record<string, string> = {
   invalid_id: 'ID must look like UL-105 — 2 to 3 letters, a dash, then 3 digits.',
   reserved_prefix: 'IDs starting with AR- are reserved for plate codes. Use another prefix.',
   invalid_title: 'Enter a title (up to 120 characters).',
-  invalid_edition_size: 'Edition size must be a whole number from 1 to 9999, or leave it blank.',
+  edition_required: 'Choose whether this work is unique or numbered.',
+  invalid_edition_kind: 'Choose Unique or Numbered.',
+  unique_confirmation_required: 'Confirm that this is a unique, non-numbered work.',
+  edition_size_required: 'Enter the edition size for this numbered work.',
+  invalid_edition_size: 'Edition size must be a whole number from 1 to 9999.',
   already_in_catalog: 'A piece with that ID already exists in the catalog.',
   already_exists: 'You already added a draft piece with that ID.',
 };
@@ -161,6 +174,7 @@ const AdminPlateWizard: React.FC = () => {
   // Issue stage
   const [issueArtwork, setIssueArtwork] = useState('');
   const [issueEdition, setIssueEdition] = useState('');
+  const [issueUniqueConfirmed, setIssueUniqueConfirmed] = useState(false);
   const [issuanceKey, setIssuanceKey] = useState<string | null>(null);
   const [pkg, setPkg] = useState<IssuedPlatePackage | null>(null);
   // Draft catalog — admin-added pieces not yet in the static catalog
@@ -169,6 +183,8 @@ const AdminPlateWizard: React.FC = () => {
   const [newPieceId, setNewPieceId] = useState('');
   const [newPieceTitle, setNewPieceTitle] = useState('');
   const [newPieceSeries, setNewPieceSeries] = useState('');
+  const [newPieceEditionKind, setNewPieceEditionKind] = useState<'' | 'unique' | 'numbered'>('');
+  const [newPieceUniqueConfirmed, setNewPieceUniqueConfirmed] = useState(false);
   const [newPieceEdition, setNewPieceEdition] = useState('');
   const [addPieceBusy, setAddPieceBusy] = useState(false);
   const [addPieceError, setAddPieceError] = useState('');
@@ -194,12 +210,28 @@ const AdminPlateWizard: React.FC = () => {
     [pieceId, rows],
   );
   const mintableArtworks = useMemo(() => {
-    const staticList = FULL_ARCHIVE.map((a) => ({ id: a.id, title: a.title, draft: false }));
+    const staticList: MintableArtwork[] = FULL_ARCHIVE.map((a) => ({
+      id: a.id,
+      title: a.title,
+      draft: false,
+      editionKind: Number.isInteger(a.editionSize) ? 'numbered' : 'unique',
+      editionSize: Number.isInteger(a.editionSize) ? a.editionSize! : null,
+    }));
     const draftList = drafts
       .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
-      .map((d) => ({ id: d.id, title: d.title, draft: true }));
+      .map((d): MintableArtwork => ({
+        id: d.id,
+        title: d.title,
+        draft: true,
+        editionKind: d.editionKind,
+        editionSize: d.editionSize,
+      }));
     return [...staticList, ...draftList].sort((a, b) => a.title.localeCompare(b.title));
   }, [drafts]);
+  const selectedArtwork = useMemo(
+    () => mintableArtworks.find((artwork) => artwork.id === issueArtwork) || null,
+    [issueArtwork, mintableArtworks],
+  );
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -355,9 +387,23 @@ const AdminPlateWizard: React.FC = () => {
       setStepError('Choose an artwork first.');
       return;
     }
-    const parsedEdition = issueEdition.trim() ? Number(issueEdition) : 0;
-    if (!Number.isSafeInteger(parsedEdition) || parsedEdition < 0) {
-      setStepError('Edition must be a whole number of zero or greater.');
+    if (!selectedArtwork) {
+      setStepError('Choose an artwork first.');
+      return;
+    }
+    const parsedEdition = Number(issueEdition);
+    if (selectedArtwork.editionKind === 'unique') {
+      if (!issueUniqueConfirmed) {
+        setStepError('Confirm that this is a unique, non-numbered work.');
+        return;
+      }
+    } else if (
+      !issueEdition.trim() ||
+      !Number.isSafeInteger(parsedEdition) ||
+      parsedEdition < 1 ||
+      parsedEdition > (selectedArtwork.editionSize || 0)
+    ) {
+      setStepError(`Enter the exact edition number from 1 to ${selectedArtwork.editionSize}.`);
       return;
     }
     const key = beginIssuanceAttempt(issuanceKey);
@@ -367,7 +413,8 @@ const AdminPlateWizard: React.FC = () => {
     try {
       const data = await jsonRequest('/api/admin/pieces', {
         pieceId: issueArtwork,
-        editionNumber: parsedEdition,
+        editionNumber: selectedArtwork.editionKind === 'unique' ? 0 : parsedEdition,
+        uniqueConfirmed: selectedArtwork.editionKind === 'unique' ? issueUniqueConfirmed : undefined,
         issuanceKey: key,
       });
       const issued = projectIssuedPlateResponse(data);
@@ -402,6 +449,26 @@ const AdminPlateWizard: React.FC = () => {
       setAddPieceError(ADD_PIECE_ERRORS.invalid_title);
       return;
     }
+    if (!newPieceEditionKind) {
+      setAddPieceError(ADD_PIECE_ERRORS.edition_required);
+      return;
+    }
+    if (newPieceEditionKind === 'unique' && !newPieceUniqueConfirmed) {
+      setAddPieceError(ADD_PIECE_ERRORS.unique_confirmation_required);
+      return;
+    }
+    const parsedEditionSize = Number(newPieceEdition);
+    if (newPieceEditionKind === 'numbered' && !newPieceEdition.trim()) {
+      setAddPieceError(ADD_PIECE_ERRORS.edition_size_required);
+      return;
+    }
+    if (
+      newPieceEditionKind === 'numbered' &&
+      (!Number.isInteger(parsedEditionSize) || parsedEditionSize < 1 || parsedEditionSize > 9999)
+    ) {
+      setAddPieceError(ADD_PIECE_ERRORS.invalid_edition_size);
+      return;
+    }
     setAddPieceBusy(true);
     setAddPieceError('');
     try {
@@ -409,7 +476,9 @@ const AdminPlateWizard: React.FC = () => {
         id,
         title: newPieceTitle.trim(),
         series: newPieceSeries.trim() || undefined,
-        editionSize: newPieceEdition.trim() ? Number(newPieceEdition) : undefined,
+        editionKind: newPieceEditionKind,
+        uniqueConfirmed: newPieceUniqueConfirmed,
+        editionSize: newPieceEditionKind === 'numbered' ? parsedEditionSize : undefined,
       });
       await loadDrafts();
       setIssueArtwork(data.artwork.id);
@@ -417,6 +486,8 @@ const AdminPlateWizard: React.FC = () => {
       setNewPieceId('');
       setNewPieceTitle('');
       setNewPieceSeries('');
+      setNewPieceEditionKind('');
+      setNewPieceUniqueConfirmed(false);
       setNewPieceEdition('');
     } catch (error) {
       const message = registryErrorMessage(error, 'Could not add the piece.');
@@ -627,20 +698,29 @@ const AdminPlateWizard: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    <div className="grid sm:grid-cols-[1fr_9rem] gap-4 items-end">
+                    <div className="grid sm:grid-cols-[1fr_16rem] gap-4 items-end">
                       <div>
                         <label className={labelClass} htmlFor="wizard-artwork">Artwork</label>
-                        <select id="wizard-artwork" value={issueArtwork} disabled={Boolean(busy)} onChange={(event) => setIssueArtwork(event.target.value)} className={inputClass}>
+                        <select id="wizard-artwork" value={issueArtwork} disabled={Boolean(busy)} onChange={(event) => { setIssueArtwork(event.target.value); setIssueEdition(''); setIssueUniqueConfirmed(false); setStepError(''); }} className={inputClass}>
                           <option value="">Choose an artwork</option>
                           {mintableArtworks.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
                         </select>
                       </div>
-                      <div>
-                        <label className={labelClass} htmlFor="wizard-edition">Edition</label>
-                        <input id="wizard-edition" type="number" min={0} step={1} value={issueEdition} disabled={Boolean(busy)} onChange={(event) => setIssueEdition(event.target.value)} placeholder="0" className={inputClass} />
-                      </div>
+                      {selectedArtwork?.editionKind === 'unique' ? (
+                        <label className="flex items-start gap-3 font-sans text-sm text-wood-700 pb-2">
+                          <input type="checkbox" checked={issueUniqueConfirmed} disabled={Boolean(busy)} onChange={(event) => setIssueUniqueConfirmed(event.target.checked)} className="mt-1" />
+                          <span>This is a unique, non-numbered work</span>
+                        </label>
+                      ) : selectedArtwork?.editionKind === 'numbered' ? (
+                        <div>
+                          <label className={labelClass} htmlFor="wizard-edition">Exact edition (1 to {selectedArtwork.editionSize})</label>
+                          <input id="wizard-edition" type="number" min={1} max={selectedArtwork.editionSize || undefined} step={1} value={issueEdition} disabled={Boolean(busy)} onChange={(event) => setIssueEdition(event.target.value)} className={inputClass} />
+                        </div>
+                      ) : (
+                        <p className="font-sans text-sm text-wood-500 pb-2">Choose an artwork to confirm its edition identity.</p>
+                      )}
                     </div>
-                    <p className="font-sans text-xs text-wood-500 mt-3">Edition 0 means a unique, non-numbered piece. Issuing is idempotent: a retry returns the same identity, never a duplicate.</p>
+                    <p className="font-sans text-xs text-wood-500 mt-3">Issuing is idempotent: a retry returns the same identity, never a duplicate.</p>
 
                     <div className="mt-4">
                       {!showAddPiece ? (
@@ -664,10 +744,31 @@ const AdminPlateWizard: React.FC = () => {
                               <label className={labelClass} htmlFor="new-piece-series">Series (optional)</label>
                               <input id="new-piece-series" value={newPieceSeries} onChange={(e) => setNewPieceSeries(e.target.value)} className={inputClass} placeholder="Universal Language" />
                             </div>
-                            <div>
-                              <label className={labelClass} htmlFor="new-piece-edition">Edition size (optional)</label>
-                              <input id="new-piece-edition" type="number" min={1} step={1} value={newPieceEdition} onChange={(e) => setNewPieceEdition(e.target.value)} className={inputClass} placeholder="unique if blank" />
-                            </div>
+                            <fieldset className="sm:col-span-2">
+                              <legend className={labelClass}>Edition identity</legend>
+                              <div className="flex flex-wrap gap-5 font-sans text-sm text-wood-700">
+                                <label className="flex items-center gap-2">
+                                  <input type="radio" name="new-piece-edition-kind" value="unique" checked={newPieceEditionKind === 'unique'} onChange={() => { setNewPieceEditionKind('unique'); setNewPieceEdition(''); setNewPieceUniqueConfirmed(false); }} />
+                                  <span>Unique</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input type="radio" name="new-piece-edition-kind" value="numbered" checked={newPieceEditionKind === 'numbered'} onChange={() => { setNewPieceEditionKind('numbered'); setNewPieceUniqueConfirmed(false); }} />
+                                  <span>Numbered</span>
+                                </label>
+                              </div>
+                            </fieldset>
+                            {newPieceEditionKind === 'unique' && (
+                              <label className="sm:col-span-2 flex items-start gap-3 font-sans text-sm text-wood-700">
+                                <input type="checkbox" checked={newPieceUniqueConfirmed} onChange={(event) => setNewPieceUniqueConfirmed(event.target.checked)} className="mt-1" />
+                                <span>This is a unique, non-numbered work</span>
+                              </label>
+                            )}
+                            {newPieceEditionKind === 'numbered' && (
+                              <div>
+                                <label className={labelClass} htmlFor="new-piece-edition">Edition size</label>
+                                <input id="new-piece-edition" type="number" min={1} max={9999} step={1} value={newPieceEdition} onChange={(e) => setNewPieceEdition(e.target.value)} className={inputClass} />
+                              </div>
+                            )}
                           </div>
                           <p className="font-sans text-xs text-wood-500 mt-2">ID format: 2 to 3 letters, a dash, then 3 digits (e.g. UL-105). Not starting with AR-.</p>
                           <div className="flex flex-wrap gap-3 mt-4">

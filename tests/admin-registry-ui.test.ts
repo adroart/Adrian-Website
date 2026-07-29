@@ -56,6 +56,15 @@ describe('central admin registry UI', () => {
     assert.ok(lockAction.indexOf('setRegistryUnlocked(false)') < lockAction.indexOf("await fetch('/api/admin/registry-unlock'"));
   });
 
+  it('requires an explicit edition identity when issuing from the registry desk', () => {
+    const pieces = source('components/AdminPieces.tsx');
+    assert.match(pieces, /editionKind/);
+    assert.match(pieces, /This is a unique, non-numbered work/);
+    assert.match(pieces, /uniqueConfirmed/);
+    assert.match(pieces, /editionNumber:\s*selectedArtwork\.editionKind === 'unique' \? 0 : parsedEdition/);
+    assert.doesNotMatch(pieces, /editionNumber\.trim\(\) \? Number\(editionNumber\) : 0/);
+  });
+
   it('keeps local Vite admin mocks aligned with central auth and registry unlock', () => {
     const vite = source('vite.config.ts');
     assert.doesNotMatch(vite, /\/api\/admin\/login|\/api\/admin\/logout|admin_session/);

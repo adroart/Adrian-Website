@@ -52,6 +52,14 @@ interface PieceRow {
   releasedAt: string | null;
 }
 
+interface MintableArtwork {
+  id: string;
+  title: string;
+  draft: boolean;
+  editionKind: 'unique' | 'numbered';
+  editionSize: number | null;
+}
+
 const emptySensitiveState: RegistrySensitiveState = {
   issuanceKey: null,
   package: null,
@@ -120,6 +128,7 @@ const AdminPieces: React.FC = () => {
   const [listError, setListError] = useState('');
   const [pieceId, setPieceId] = useState('');
   const [editionNumber, setEditionNumber] = useState('');
+  const [uniqueConfirmed, setUniqueConfirmed] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [issueError, setIssueError] = useState('');
   const [issueSuccess, setIssueSuccess] = useState('');
@@ -143,14 +152,36 @@ const AdminPieces: React.FC = () => {
     return message;
   };
 
-  const [drafts, setDrafts] = useState<{ id: string; title: string; series: string | null; editionSize: number | null }[]>([]);
+  const [drafts, setDrafts] = useState<{
+    id: string;
+    title: string;
+    series: string | null;
+    editionKind: 'unique' | 'numbered';
+    editionSize: number | null;
+  }[]>([]);
   const sortedPieces = useMemo(() => {
-    const staticList = FULL_ARCHIVE.map((a) => ({ id: a.id, title: a.title, draft: false }));
+    const staticList: MintableArtwork[] = FULL_ARCHIVE.map((a) => ({
+      id: a.id,
+      title: a.title,
+      draft: false,
+      editionKind: Number.isInteger(a.editionSize) ? 'numbered' : 'unique',
+      editionSize: Number.isInteger(a.editionSize) ? a.editionSize! : null,
+    }));
     const draftList = drafts
       .filter((d) => !FULL_ARCHIVE.some((a) => a.id === d.id))
-      .map((d) => ({ id: d.id, title: d.title, draft: true }));
+      .map((d): MintableArtwork => ({
+        id: d.id,
+        title: d.title,
+        draft: true,
+        editionKind: d.editionKind,
+        editionSize: d.editionSize,
+      }));
     return [...staticList, ...draftList].sort((a, b) => a.title.localeCompare(b.title));
   }, [drafts]);
+  const selectedArtwork = useMemo(
+    () => sortedPieces.find((artwork) => artwork.id === pieceId) || null,
+    [pieceId, sortedPieces],
+  );
 
   const loadPieces = useCallback(async () => {
     setListLoading(true);
@@ -232,9 +263,23 @@ const AdminPieces: React.FC = () => {
       setIssueError('Choose an artwork first.');
       return;
     }
-    const parsedEdition = editionNumber.trim() ? Number(editionNumber) : 0;
-    if (!Number.isSafeInteger(parsedEdition) || parsedEdition < 0) {
-      setIssueError('Edition must be a whole number of zero or greater.');
+    if (!selectedArtwork) {
+      setIssueError('Choose an artwork first.');
+      return;
+    }
+    const parsedEdition = Number(editionNumber);
+    if (selectedArtwork.editionKind === 'unique') {
+      if (!uniqueConfirmed) {
+        setIssueError('Confirm that this is a unique, non-numbered work.');
+        return;
+      }
+    } else if (
+      !editionNumber.trim() ||
+      !Number.isSafeInteger(parsedEdition) ||
+      parsedEdition < 1 ||
+      parsedEdition > (selectedArtwork.editionSize || 0)
+    ) {
+      setIssueError(`Enter the exact edition number from 1 to ${selectedArtwork.editionSize}.`);
       return;
     }
     const issuanceKey = beginIssuanceAttempt(sensitive.issuanceKey);
@@ -245,7 +290,8 @@ const AdminPieces: React.FC = () => {
     try {
       const data = await jsonRequest('/api/admin/pieces', {
         pieceId,
-        editionNumber: parsedEdition,
+        editionNumber: selectedArtwork.editionKind === 'unique' ? 0 : parsedEdition,
+        uniqueConfirmed: selectedArtwork.editionKind === 'unique' ? uniqueConfirmed : undefined,
         issuanceKey,
       });
       const issuedPackage: IssuedPlatePackage = projectIssuedPlateResponse(data);
@@ -470,18 +516,27 @@ const AdminPieces: React.FC = () => {
 
           <section className="border border-wood-200 bg-white p-5 mb-12" aria-labelledby="issue-title">
             <h2 id="issue-title" className="font-title text-xl text-wood-900 mb-5">Issue a plate identity</h2>
-            <div className="grid sm:grid-cols-[1fr_9rem] gap-4 items-end">
+            <div className="grid sm:grid-cols-[1fr_16rem] gap-4 items-end">
               <div>
                 <label className={labelClass} htmlFor="piece-select">Artwork</label>
-                <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setPieceId(event.target.value)} className={inputClass}>
+                <select id="piece-select" value={pieceId} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => { setPieceId(event.target.value); setEditionNumber(''); setUniqueConfirmed(false); setIssueError(''); }} className={inputClass}>
                   <option value="">Choose an artwork</option>
                   {sortedPieces.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}{artwork.draft ? ' · draft' : ''}</option>)}
                 </select>
               </div>
-              <div>
-                <label className={labelClass} htmlFor="edition-input">Exact edition</label>
-                <input id="edition-input" type="number" min={0} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} placeholder="0" className={inputClass} />
-              </div>
+              {selectedArtwork?.editionKind === 'unique' ? (
+                <label className="flex items-start gap-3 font-sans text-sm text-wood-700 pb-2">
+                  <input type="checkbox" checked={uniqueConfirmed} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setUniqueConfirmed(event.target.checked)} className="mt-1" />
+                  <span>This is a unique, non-numbered work</span>
+                </label>
+              ) : selectedArtwork?.editionKind === 'numbered' ? (
+                <div>
+                  <label className={labelClass} htmlFor="edition-input">Exact edition (1 to {selectedArtwork.editionSize})</label>
+                  <input id="edition-input" type="number" min={1} max={selectedArtwork.editionSize || undefined} step={1} value={editionNumber} disabled={issuing || Boolean(sensitive.issuanceKey)} onChange={(event) => setEditionNumber(event.target.value)} className={inputClass} />
+                </div>
+              ) : (
+                <p className="font-sans text-sm text-wood-500 pb-2">Choose an artwork to confirm its edition identity.</p>
+              )}
             </div>
             <div className="mt-5 flex items-center gap-4 flex-wrap">
               <button type="button" onClick={issuePlate} disabled={issuing || Boolean(issued)} className={buttonClass}>{issuing ? 'Issuing plate…' : 'Issue fabrication package'}</button>
