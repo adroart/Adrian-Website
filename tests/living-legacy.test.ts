@@ -1555,6 +1555,9 @@ function makeIssuanceDb(options: { collideOnce?: boolean; failBackupStatusOnce?:
 
   function exec(sql: string, params: any[]) {
     const s = sql.replace(/\s+/g, ' ').trim();
+    if (/^SELECT id, title, edition_size FROM registry_artworks WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: null };
+    }
     if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
       return { kind: 'first', row: rows.find((row) => row.issuance_key === params[0]) || null };
     }
