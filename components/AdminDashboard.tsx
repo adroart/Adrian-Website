@@ -10,7 +10,6 @@ import {
 
 type AdminAttention = {
   plates: number;
-  fulfillments: number;
   draftViewings: number;
   openInvoices: number;
 };
@@ -24,7 +23,6 @@ type AttentionItem = {
 
 const ATTENTION_ITEMS: AttentionItem[] = [
   { key: 'plates', label: 'Plates need preparation', singular: 'plate needs preparation', href: '/admin/pieces' },
-  { key: 'fulfillments', label: 'Pieces await shipment', singular: 'piece awaits shipment', href: '/admin/pieces' },
   { key: 'draftViewings', label: 'Viewings remain in draft', singular: 'viewing remains in draft', href: '/admin/viewings' },
   { key: 'openInvoices', label: 'Invoices remain open', singular: 'invoice remains open', href: '/admin/invoices' },
 ];
@@ -102,7 +100,7 @@ const AdminDashboard: React.FC = () => {
           {!loading && !failed && visibleAttention.length === 0 && (
             <AdminEmptyState
               title="Nothing is waiting"
-              description="The current plate, fulfillment, viewing, and invoice queues are clear."
+              description="The current plate, viewing, and invoice queues are clear."
             />
           )}
           {!loading && !failed && visibleAttention.length > 0 && (

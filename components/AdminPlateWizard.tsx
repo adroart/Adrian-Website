@@ -243,6 +243,13 @@ const AdminPlateWizard: React.FC = () => {
   // Clear sensitive material if the wizard unmounts.
   useEffect(() => () => resetSensitive(), [resetSensitive]);
 
+  useEffect(() => {
+    if (!started || finished || stage.key !== 'activate' || piece?.plateStatus !== 'active') return;
+    resetSensitive();
+    setStepNote('Plate identity is active and permanently locked. The registry lifecycle is complete.');
+    setFinished(true);
+  }, [finished, piece?.plateStatus, resetSensitive, stage.key, started]);
+
   const registryErrorMessage = (error: unknown, fallback: string) => {
     const message = errorMessage(error, fallback);
     if (message === 'registry_locked') {
@@ -280,6 +287,7 @@ const AdminPlateWizard: React.FC = () => {
   const beginNewPiece = () => {
     resetSensitive();
     setPieceId(null);
+    setFinished(false);
     setStepError('');
     setStepNote('');
     setStageIndex(plateWizardStageIndex('issue'));
@@ -736,7 +744,7 @@ const AdminPlateWizard: React.FC = () => {
               {/* ACTIVATE */}
               {stage.key === 'activate' && (
                 piece?.plateStatus === 'active' ? (
-                  <p className="font-sans text-sm text-green-800" role="status">Plate is active and permanently locked. You can continue.</p>
+                  <p className="font-sans text-sm text-green-800" role="status">Plate is active and permanently locked. Completing the registry lifecycle…</p>
                 ) : (
                   <div>
                     <p className="font-serif text-sm text-wood-600 mb-4">Activation permanently locks the two codes. Compare the actual engraved metal, not a screen preview. Paste both SHA-256 values from the private manifest; they start empty so copied screen state cannot confirm this check.</p>

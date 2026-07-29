@@ -84,6 +84,18 @@ describe('plate wizard component wiring', () => {
     );
   });
 
+  it('restarts after completion and automatically completes an already-active plate', () => {
+    assert.match(
+      wizard,
+      /const beginNewPiece[\s\S]*?setFinished\(false\);[\s\S]*?setStarted\(true\);/,
+    );
+    assert.match(
+      wizard,
+      /useEffect\(\(\) => \{\s*if \(!started \|\| finished \|\| stage\.key !== 'activate' \|\| piece\?\.plateStatus !== 'active'\) return;\s*resetSensitive\(\);\s*setStepNote\([\s\S]*?\);\s*setFinished\(true\);\s*\}, \[/,
+    );
+    assert.doesNotMatch(wizard, /Plate is active and permanently locked\. You can continue\./);
+  });
+
   it('re-locks the flow when the registry unlock expires mid-run', () => {
     assert.match(wizard, /message === 'registry_locked'/);
     assert.match(wizard, /setRegistryUnlocked\(false\)/);

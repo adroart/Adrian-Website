@@ -28,7 +28,7 @@ test('admin shell is keyboard reachable and has no serious accessibility violati
     contentType: 'application/json',
     body: JSON.stringify({
       ok: true,
-      attention: { plates: 2, fulfillments: 1, draftViewings: 1, openInvoices: 1 },
+      attention: { plates: 2, draftViewings: 1, openInvoices: 1 },
     }),
   }));
   await page.goto('/admin');

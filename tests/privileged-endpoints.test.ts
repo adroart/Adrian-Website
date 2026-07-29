@@ -190,7 +190,7 @@ describe('ordinary privileged endpoint security matrix', () => {
 
 describe('private studio overview', () => {
   it('returns only actionable counts from count-only queries', async () => {
-    const counts = [2, 1, 1, 3];
+    const counts = [2, 1, 3];
     const seen: string[] = [];
     const overviewDb = {
       prepare(sql: string) {
@@ -212,15 +212,15 @@ describe('private studio overview', () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       ok: true,
-      attention: { plates: 2, fulfillments: 1, draftViewings: 1, openInvoices: 3 },
+      attention: { plates: 2, draftViewings: 1, openInvoices: 3 },
     });
-    assert.equal(seen.length, 4);
+    assert.equal(seen.length, 3);
   });
 
   it('omits attention data when the installed schema is older', async () => {
     const olderDb = {
       prepare() {
-        return { async first() { throw new Error('no such table: piece_fulfillments'); } };
+        return { async first() { throw new Error('no such table: keeper_pieces'); } };
       },
     };
     signIn();

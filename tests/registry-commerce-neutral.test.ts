@@ -7,6 +7,8 @@ const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.
 const REGISTRY_RUNTIME_SOURCES = [
   'components/AdminPieces.tsx',
   'components/AdminPlateWizard.tsx',
+  'components/AdminDashboard.tsx',
+  'functions/api/admin/overview.js',
   'functions/api/keeper/bind.js',
   'utils/plateWizard.ts',
   'vite.config.ts',
@@ -16,7 +18,12 @@ describe('commerce-neutral artwork registry', () => {
   it('keeps Stripe orders and the retired fulfillment endpoint out of registry runtime sources', () => {
     for (const path of REGISTRY_RUNTIME_SOURCES) {
       const runtimeSource = source(path);
-      for (const forbidden of ['stripe_order', 'order_items', '/api/admin/piece-fulfillments']) {
+      for (const forbidden of [
+        'stripe_order',
+        'order_items',
+        'piece_fulfillments',
+        '/api/admin/piece-fulfillments',
+      ]) {
         assert.equal(
           runtimeSource.includes(forbidden),
           false,

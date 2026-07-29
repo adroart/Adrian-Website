@@ -55,6 +55,7 @@ describe('admin studio shell', () => {
     assert.match(dashboard, /Write a story/);
     assert.ok(dashboard.indexOf('Needs attention') < dashboard.indexOf('All tools'));
     assert.doesNotMatch(dashboard, /title:\s*['"]Keystatic['"]/);
+    assert.doesNotMatch(dashboard, /fulfillment|shipment/i);
   });
 
   it('connects stable creation links and visible workflow stages', async () => {

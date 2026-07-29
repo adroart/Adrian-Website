@@ -229,7 +229,7 @@ function mockApiPlugin(): Plugin {
         if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
         return send(res, 200, {
           ok: true,
-          attention: { plates: 0, fulfillments: 0, draftViewings: 0, openInvoices: 0 },
+          attention: { plates: 0, draftViewings: 0, openInvoices: 0 },
         });
       });
 
