@@ -8,9 +8,8 @@
  * and free of React or fetch — lets it be unit tested and keeps the component
  * focused on rendering.
  *
- * The seven doing-stages mirror docs/lineage-plate-runbook.md exactly:
- *   Issue → Fabrication files → Encrypted backup → Prove recovery →
- *   Activate → Assign → Ship
+ * The five doing-stages cover the registry identity lifecycle:
+ *   Issue → Fabrication files → Encrypted backup → Prove recovery → Activate
  */
 
 export type PlateWizardStageKey =
@@ -18,9 +17,7 @@ export type PlateWizardStageKey =
   | 'fabricate'
   | 'backup'
   | 'recovery'
-  | 'activate'
-  | 'assign'
-  | 'ship';
+  | 'activate';
 
 export interface PlateWizardStage {
   key: PlateWizardStageKey;
@@ -55,30 +52,18 @@ export const PLATE_WIZARD_STAGES: readonly PlateWizardStage[] = [
     title: 'Activate',
     summary: 'Check the real engraved metal, then lock the identity permanently.',
   },
-  {
-    key: 'assign',
-    title: 'Assign',
-    summary: 'Tie the exact active plate to a paid order or an opaque manual handoff.',
-  },
-  {
-    key: 'ship',
-    title: 'Ship',
-    summary: 'Do the final physical comparison, then mark the piece shipped.',
-  },
 ] as const;
 
 /** State needed to place an already-registered piece back into the flow. */
 export interface PlateLifecycleSnapshot {
   plateStatus: string; // 'legacy' | 'generated' | 'active'
   backupStatus: string | null; // 'pending' | 'failed' | 'verified' | null
-  hasFulfillment: boolean;
-  shipped: boolean;
 }
 
 /**
  * The earliest incomplete stage for RESUMING a piece already in the registry.
  * Returns null when the piece is either not wizard-eligible (a legacy row with
- * no minted plate identity) or already fully shipped (nothing left to do).
+ * no minted plate identity) or already active (nothing left to do).
  *
  * A freshly generated plate whose backup is not yet verified must repair the
  * backup first, so it resumes at 'backup'. Once verified, it resumes at
@@ -92,9 +77,7 @@ export function plateWizardStageForPiece(
     return piece.backupStatus === 'verified' ? 'fabricate' : 'backup';
   }
   if (piece.plateStatus === 'active') {
-    if (!piece.hasFulfillment) return 'assign';
-    if (!piece.shipped) return 'ship';
-    return null; // active, assigned, and shipped — complete
+    return null; // activation is the terminal registry state
   }
   return null; // legacy or unknown — not wizard-eligible
 }

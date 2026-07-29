@@ -11,50 +11,41 @@ import {
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 describe('plate wizard stage logic', () => {
-  it('exposes the seven runbook stages in order', () => {
+  it('exposes the five registry stages in order', () => {
     assert.deepEqual(
       PLATE_WIZARD_STAGES.map((stage) => stage.key),
-      ['issue', 'fabricate', 'backup', 'recovery', 'activate', 'assign', 'ship'],
+      ['issue', 'fabricate', 'backup', 'recovery', 'activate'],
     );
     // Indices are stable and match the array position.
     assert.equal(plateWizardStageIndex('issue'), 0);
-    assert.equal(plateWizardStageIndex('ship'), 6);
     assert.equal(plateWizardStageIndex('activate'), 4);
   });
 
   it('resumes a generated plate at backup until the backup verifies', () => {
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'pending', hasFulfillment: false, shipped: false }),
+      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'pending' }),
       'backup',
     );
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'failed', hasFulfillment: false, shipped: false }),
+      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'failed' }),
       'backup',
     );
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'verified', hasFulfillment: false, shipped: false }),
+      plateWizardStageForPiece({ plateStatus: 'generated', backupStatus: 'verified' }),
       'fabricate',
     );
   });
 
-  it('routes an active plate through assign then ship, and retires a shipped piece', () => {
+  it('treats an active plate as terminal', () => {
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'active', backupStatus: 'verified', hasFulfillment: false, shipped: false }),
-      'assign',
-    );
-    assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'active', backupStatus: 'verified', hasFulfillment: true, shipped: false }),
-      'ship',
-    );
-    assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'active', backupStatus: 'verified', hasFulfillment: true, shipped: true }),
+      plateWizardStageForPiece({ plateStatus: 'active', backupStatus: 'verified' }),
       null,
     );
   });
 
   it('does not offer a legacy row to the wizard', () => {
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'legacy', backupStatus: null, hasFulfillment: false, shipped: false }),
+      plateWizardStageForPiece({ plateStatus: 'legacy', backupStatus: null }),
       null,
     );
   });
@@ -64,13 +55,10 @@ describe('plate wizard component wiring', () => {
   const wizard = source('components/AdminPlateWizard.tsx');
 
   it('drives only the existing admin endpoints and adds no new server surface', () => {
-    for (const endpoint of [
-      '/api/admin/registry-unlock',
-      '/api/admin/pieces',
-      '/api/admin/piece-fulfillments',
-    ]) {
+    for (const endpoint of ['/api/admin/registry-unlock', '/api/admin/pieces']) {
       assert.ok(wizard.includes(endpoint), `expected wizard to call ${endpoint}`);
     }
+    assert.doesNotMatch(wizard, /piece-fulfillments/);
     // Per-piece lifecycle actions are reached by interpolating the piece id.
     assert.match(wizard, /\/api\/admin\/pieces\/\$\{encodeURIComponent\(piece\.id\)\}\/\$\{action\}/);
     assert.match(wizard, /\/api\/admin\/pieces\/\$\{encodeURIComponent\(piece\.id\)\}\/activate/);
@@ -88,10 +76,12 @@ describe('plate wizard component wiring', () => {
   it('gates each stage on its safeguard before advancing', () => {
     // Cannot leave backup until it is verified.
     assert.match(wizard, /case 'backup':\s*\n\s*return piece\?\.backupStatus === 'verified';/);
-    // Cannot leave activate until the plate is actually locked active.
-    assert.match(wizard, /case 'activate':\s*\n\s*return piece\?\.plateStatus === 'active';/);
-    // Ship is terminal; advancing past it is not possible — the ship action finishes.
-    assert.match(wizard, /case 'ship':\s*\n\s*return false;/);
+    // Activate is terminal; the activation action finishes the wizard.
+    assert.match(wizard, /case 'activate':\s*\n\s*return false;/);
+    assert.match(
+      wizard,
+      /const runActivate[\s\S]*?await refreshPiece\(\);[\s\S]*?resetSensitive\(\);[\s\S]*?setFinished\(true\)/,
+    );
   });
 
   it('re-locks the flow when the registry unlock expires mid-run', () => {

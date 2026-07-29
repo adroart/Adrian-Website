@@ -95,7 +95,6 @@ const REGISTRY_UNLOCK_TOKEN = await createRegistryUnlockToken(
 );
 const ADMIN_COOKIES = `better-auth.session_token=admin-session; registry_unlock=${REGISTRY_UNLOCK_TOKEN}`;
 const { onRequest: adminPieces } = await import('../functions/api/admin/pieces.js');
-const { onRequest: adminPieceFulfillments } = await import('../functions/api/admin/piece-fulfillments.js');
 const { onRequest: readClaimEvidence } = await import('../functions/api/admin/pieces/[id]/claim-evidence.js');
 const { onRequest: revealArtworkPlate } = await import('../functions/api/admin/pieces/[id]/reveal.js');
 const { onRequest: retryArtworkPlateBackup } = await import('../functions/api/admin/pieces/[id]/backup.js');
@@ -2437,7 +2436,6 @@ describe('admin artwork plate lifecycle', () => {
 // edition_number); UNIQUE(piece_id, edition_number) is honoured.
 function makeKeeperDb() {
   const pieces: any[] = [];
-  const fulfillments: any[] = [];
   const lineage: any[] = [];
   const evidence: any[] = [];
   let loseNextFirstBind = false;
@@ -2547,14 +2545,6 @@ function makeKeeperDb() {
       return { kind: 'run', meta: { changes: 0 } };
     }
 
-    if (/^UPDATE piece_fulfillments SET claimed_at = \?1 WHERE keeper_piece_id = \?2 AND claimed_at IS NULL/i.test(s)) {
-      const [claimedAt, keeperPieceId] = params;
-      const row = fulfillments.find((f) => f.keeper_piece_id === keeperPieceId && !f.claimed_at);
-      const steward = pieces.find((piece) => piece.id === keeperPieceId);
-      const allowed = params[2] == null || (steward?.keeper_user_id === params[2] && steward?.claimed_at === claimedAt);
-      if (row && allowed) row.claimed_at = claimedAt;
-      return { kind: 'run', meta: { changes: row && allowed ? 1 : 0 } };
-    }
     if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(s)) {
       const rows = lineage.filter((row) => row[1] === params[0]);
       const last = rows.at(-1);
@@ -2627,7 +2617,7 @@ function makeKeeperDb() {
   };
 
   return {
-    DB, pieces, users, fulfillments, lineage, evidence,
+    DB, pieces, users, lineage, evidence,
     loseNextFirstBind() { loseNextFirstBind = true; },
   };
 }
@@ -2644,273 +2634,6 @@ function bindReq(body: unknown) {
   });
 }
 
-function fulfillmentReq(method: string, body?: unknown) {
-  return new Request('https://adrianrasmussen.com/api/admin/piece-fulfillments', {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Cookie: ADMIN_COOKIES,
-      Origin: 'https://adrianrasmussen.com',
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-}
-
-function makeFulfillmentDb() {
-  const pieces: any[] = [
-    { id: 'kp-ready', piece_id: 'UL-100', edition_number: 0, public_code: 'AR-ABCDEFGH', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
-    { id: 'kp-second', piece_id: 'UL-101', edition_number: 0, public_code: 'AR-BCDEFGHJ', plate_status: 'active', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
-    { id: 'kp-generated', piece_id: 'UL-102', edition_number: 0, public_code: 'AR-CDEFGHJK', plate_status: 'generated', backup_status: 'verified', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
-    { id: 'kp-unbacked', piece_id: 'UL-103', edition_number: 0, public_code: 'AR-DEFGHJKL', plate_status: 'active', backup_status: 'pending', keeper_user_id: null, claimed_at: null, released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
-    { id: 'kp-claimed', piece_id: 'UL-104', edition_number: 0, public_code: 'AR-EFGHJKLM', plate_status: 'active', backup_status: 'verified', keeper_user_id: 'keeper-one', claimed_at: '2026-07-12T00:00:00Z', released_at: null, lineage_head_hash: null, lineage_event_count: 0 },
-  ];
-  const orders: any[] = [
-    { id: 10, stripe_session_id: 'cs_paid', email: 'buyer@example.com', status: 'paid' },
-    { id: 11, stripe_session_id: 'cs_pending', email: 'wait@example.com', status: 'pending' },
-  ];
-  const orderItems: any[] = [
-    { id: 100, order_id: 10, product_id: 'UL-100', description: 'Original', quantity: 1, amount_subtotal: 10000 },
-    { id: 101, order_id: 11, product_id: 'UL-101', description: 'Pending original', quantity: 1, amount_subtotal: 10000 },
-    { id: 102, order_id: 10, product_id: 'UL-101', description: 'Two prints', quantity: 2, amount_subtotal: 20000 },
-  ];
-  const fulfillments: any[] = [];
-  const audits: any[] = [];
-  const lineage: any[] = [];
-  let claimBeforeNextWrite: string | null = null;
-  let claimFulfillmentBeforeNextCorrection: string | null = null;
-  let refundBeforeNextShip = false;
-
-  const normalize = (sql: string) => sql.replace(/\s+/g, ' ').trim();
-  function execute(sql: string, values: any[]) {
-    const s = normalize(sql);
-    if (/^SELECT .* FROM keeper_pieces kp LEFT JOIN piece_fulfillments/i.test(s)) {
-      return { results: pieces.filter((p) => p.plate_status === 'active' && p.backup_status === 'verified' && !p.keeper_user_id && !p.claimed_at && !fulfillments.some((f) => f.keeper_piece_id === p.id)) };
-    }
-    if (/^SELECT .* FROM piece_fulfillments pf JOIN keeper_pieces/i.test(s)) {
-      return { results: fulfillments.map((f) => ({ ...f, ...pieces.find((p) => p.id === f.keeper_piece_id), keeper_piece_id: f.keeper_piece_id })) };
-    }
-    if (/^SELECT .* FROM keeper_pieces WHERE id = \?1/i.test(s)) return { row: pieces.find((p) => p.id === values[0]) || null };
-    if (/^SELECT .* FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.id = \?1/i.test(s)) {
-      const oi = orderItems.find((item) => item.id === values[0]);
-      const order = oi && orders.find((candidate) => candidate.id === oi.order_id);
-      return { row: oi && order ? { ...oi, order_status: order.status, order_reference: `order:${order.id}` } : null };
-    }
-    if (/^SELECT .* FROM order_items oi JOIN orders o/i.test(s)) {
-      return { results: orderItems.filter((oi) => orders.find((o) => o.id === oi.order_id)?.status === 'paid' && oi.quantity === 1 && !fulfillments.some((f) => f.order_item_id === oi.id)).map((oi) => ({ ...oi, order_status: 'paid', order_reference: `order:${oi.order_id}`, buyer_email: orders.find((o) => o.id === oi.order_id)?.email })) };
-    }
-    if (/^SELECT .* FROM piece_fulfillments WHERE id = \?1/i.test(s)) return { row: fulfillments.find((f) => f.id === values[0]) || null };
-    if (/^INSERT INTO piece_fulfillments/i.test(s)) {
-      const [id, keeper_piece_id, order_item_id, assignment_type, reference, at] = values;
-      if (claimBeforeNextWrite === keeper_piece_id) {
-        pieces.find((piece) => piece.id === keeper_piece_id).claimed_at = '2026-07-13T13:00:00Z';
-        claimBeforeNextWrite = null;
-      }
-      const piece = pieces.find((candidate) => candidate.id === keeper_piece_id);
-      if (/INSERT INTO piece_fulfillments .* SELECT/i.test(s) && (!piece || piece.plate_status !== 'active' || piece.backup_status !== 'verified' || piece.keeper_user_id || piece.claimed_at || piece.released_at)) return { changes: 0 };
-      if (fulfillments.some((f) => f.keeper_piece_id === keeper_piece_id || (order_item_id != null && f.order_item_id === order_item_id) || (assignment_type === 'manual' && f.assignment_type === 'manual' && f.intended_recipient_reference === reference))) throw new Error('UNIQUE constraint failed');
-      fulfillments.push({ id, keeper_piece_id, order_item_id, assignment_type, intended_recipient_reference: reference, assigned_at: at, shipped_at: null, claimed_at: null, corrected_at: null, correction_reason: null });
-      return { changes: 1 };
-    }
-    if (/^UPDATE piece_fulfillments SET keeper_piece_id = \?1/i.test(s)) {
-      const [keeperPieceId, orderItemId, assignmentType, reference, correctedAt, reason, id] = values;
-      const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
-      if (row && claimFulfillmentBeforeNextCorrection === id) {
-        row.claimed_at = '2026-07-13T13:00:00Z';
-        claimFulfillmentBeforeNextCorrection = null;
-      }
-      if (claimBeforeNextWrite === keeperPieceId) {
-        pieces.find((piece) => piece.id === keeperPieceId).claimed_at = '2026-07-13T13:00:00Z';
-        claimBeforeNextWrite = null;
-      }
-      const piece = pieces.find((candidate) => candidate.id === keeperPieceId);
-      if (/EXISTS \(\s*SELECT 1 FROM keeper_pieces/i.test(s) && (!piece || piece.plate_status !== 'active' || piece.backup_status !== 'verified' || piece.keeper_user_id || piece.claimed_at || piece.released_at)) return { changes: 0 };
-      if (/WHERE id = \?7 AND shipped_at IS NULL AND claimed_at IS NULL/i.test(s) && row?.claimed_at) return { changes: 0 };
-      if (!row) return { changes: 0 };
-      Object.assign(row, { keeper_piece_id: keeperPieceId, order_item_id: orderItemId, assignment_type: assignmentType, intended_recipient_reference: reference, corrected_at: correctedAt, correction_reason: reason });
-      return { changes: 1 };
-    }
-    if (/^UPDATE piece_fulfillments SET shipped_at = \?1/i.test(s)) {
-      const [shippedAt, id] = values;
-      const row = fulfillments.find((f) => f.id === id && !f.shipped_at);
-      if (refundBeforeNextShip) {
-        orders.find((order) => order.id === 10).status = 'refunded';
-        refundBeforeNextShip = false;
-      }
-      if (!row) return { changes: 0 };
-      const orderItem = orderItems.find((item) => item.id === row.order_item_id);
-      const order = orderItem && orders.find((candidate) => candidate.id === orderItem.order_id);
-      if (/assignment_type = 'manual'/i.test(s) && row.assignment_type !== 'manual' && order?.status !== 'paid') return { changes: 0 };
-      row.shipped_at = shippedAt;
-      return { changes: 1 };
-    }
-    if (/^INSERT INTO ownership_code_audit/i.test(s)) {
-      audits.push({ keeper_piece_id: values[1], action: values[2], request_id: values[3], outcome: values[4], created_at: values[5] });
-      return { changes: 1 };
-    }
-    if (/^SELECT sequence, event_hash FROM artwork_lineage_events/i.test(s)) {
-      const rows = lineage.filter((row) => row[1] === values[0]);
-      const last = rows.at(-1);
-      return { row: last ? { sequence: last[2], event_hash: last[6] } : null };
-    }
-    if (/^INSERT INTO artwork_lineage_events/i.test(s)) {
-      lineage.push(values);
-      return { changes: 1 };
-    }
-    if (/^UPDATE keeper_pieces SET lineage_head_hash = \?1/i.test(s)) {
-      const row = pieces.find((piece) => piece.id === values[2]);
-      if (row) {
-        row.lineage_head_hash = values[0];
-        row.lineage_event_count = values[1];
-      }
-      return { changes: row ? 1 : 0 };
-    }
-    throw new Error(`fulfillment fake D1: unhandled statement: ${s}`);
-  }
-
-  const DB = {
-    async batch(statements: any[]) { return Promise.all(statements.map((statement) => statement.run())); },
-    prepare(sql: string) {
-      let values: any[] = [];
-      const statement: any = {
-        bind(...bound: any[]) { values = bound; return statement; },
-        async first() { return execute(sql, values).row ?? null; },
-        async all() { return { results: execute(sql, values).results || [] }; },
-        async run() { const result = execute(sql, values); return { success: true, meta: { changes: result.changes ?? 0 } }; },
-      };
-      return statement;
-    },
-  };
-  return {
-    DB, pieces, orders, orderItems, fulfillments, audits, lineage,
-    claimPieceBeforeNextWrite(id: string) { claimBeforeNextWrite = id; },
-    claimFulfillmentBeforeNextCorrection(id: string) { claimFulfillmentBeforeNextCorrection = id; },
-    refundBeforeNextShipment() { refundBeforeNextShip = true; },
-  };
-}
-
-describe('admin piece fulfillment desk', () => {
-  it('safely lists only ready unassigned plates, paid single order items, and assignments', async () => {
-    const fixture = makeFulfillmentDb();
-    const response = await adminPieceFulfillments({ request: fulfillmentReq('GET'), env: { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET } });
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.deepEqual(body.availablePlates.map((row: any) => row.id), ['kp-ready', 'kp-second']);
-    assert.deepEqual(body.availableOrderItems.map((row: any) => row.id), [100]);
-    assert.equal(body.availableOrderItems[0].buyerEmail, 'buyer@example.com');
-    assert.doesNotMatch(JSON.stringify(body), /ownership|recovery|ciphertext|nonce|postal|shipping_address/i);
-  });
-
-  it('assigns exactly one paid order item or opaque manual reference and rejects unsafe pieces', async () => {
-    const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    const sale = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
-    assert.equal(sale.status, 201, JSON.stringify(await sale.clone().json()));
-    assert.equal(fixture.fulfillments[0].intended_recipient_reference, 'order:10');
-    assert.equal(JSON.stringify(fixture.fulfillments).includes('buyer@example.com'), false);
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 100 }), env })).status, 409);
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 101 }), env })).status, 409);
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 102 }), env })).status, 400);
-    for (const keeperPieceId of ['kp-generated', 'kp-unbacked', 'kp-claimed']) {
-      assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId, manualReference: `studio:${keeperPieceId}` }), env })).status, 409);
-    }
-    const manual = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', manualReference: 'studio-handoff:gift-7' }), env });
-    assert.equal(manual.status, 201);
-    assert.equal(fixture.fulfillments[1].assignment_type, 'manual');
-    assert.equal(fixture.audits.filter((row) => row.action === 'fulfillment_assign').length, 2);
-  });
-
-  it('requires the canonical Stripe product artwork to match the selected physical piece', async () => {
-    const fixture = makeFulfillmentDb();
-    const response = await adminPieceFulfillments({
-      request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', orderItemId: 100 }),
-      env: { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET },
-    });
-    assert.equal(response.status, 409);
-    assert.deepEqual(await response.json(), { ok: false, error: 'order_item_piece_mismatch' });
-    assert.equal(fixture.fulfillments.length, 0);
-  });
-
-  it('rejects reuse of an opaque manual handoff reference', async () => {
-    const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:gift-8' }), env })).status, 201);
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-second', manualReference: 'studio:gift-8' }), env })).status, 409);
-    assert.equal(fixture.fulfillments.length, 1);
-  });
-
-  it('rechecks plate eligibility inside assign and correction mutations', async () => {
-    const assignRace = makeFulfillmentDb();
-    assignRace.claimPieceBeforeNextWrite('kp-ready');
-    const racedAssign = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:race-assign' }), env: { DB: assignRace.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET } });
-    assert.equal(racedAssign.status, 409);
-    assert.equal(assignRace.fulfillments.length, 0);
-
-    const correctRace = makeFulfillmentDb();
-    const env = { DB: correctRace.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:before-race' }), env });
-    correctRace.claimPieceBeforeNextWrite('kp-second');
-    const racedCorrection = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: correctRace.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:after-race', reason: 'Race test' }), env });
-    assert.equal(racedCorrection.status, 409);
-    assert.equal(correctRace.fulfillments[0].keeper_piece_id, 'kp-ready');
-  });
-
-  it('never corrects a fulfillment that is claimed or becomes claimed at write time', async () => {
-    const claimed = makeFulfillmentDb();
-    const claimedEnv = { DB: claimed.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claimed' }), env: claimedEnv });
-    claimed.fulfillments[0].claimed_at = '2026-07-13T12:00:00Z';
-    const existingClaim = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: claimed.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claimed-corrected', reason: 'Must not move' }), env: claimedEnv });
-    assert.equal(existingClaim.status, 409);
-    assert.equal(claimed.fulfillments[0].keeper_piece_id, 'kp-ready');
-
-    const raced = makeFulfillmentDb();
-    const racedEnv = { DB: raced.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:claim-race' }), env: racedEnv });
-    raced.claimFulfillmentBeforeNextCorrection(raced.fulfillments[0].id);
-    const raceResponse = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: raced.fulfillments[0].id, keeperPieceId: 'kp-second', manualReference: 'studio:claim-race-corrected', reason: 'Race' }), env: racedEnv });
-    assert.equal(raceResponse.status, 409);
-    assert.equal(raced.fulfillments[0].keeper_piece_id, 'kp-ready');
-  });
-
-  it('corrects only before shipment, ships only ready plates, and makes shipment idempotent', async () => {
-    const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', manualReference: 'studio:wrong' }), env });
-    const id = fixture.fulfillments[0].id;
-    const correction = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-second', manualReference: 'studio:right', reason: 'Packing selection corrected' }), env });
-    assert.equal(correction.status, 200);
-    assert.equal(fixture.fulfillments[0].keeper_piece_id, 'kp-second');
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:x' }), env })).status, 400);
-    const shipped = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: id }), env });
-    assert.equal(shipped.status, 200);
-    const shippedAt = fixture.fulfillments[0].shipped_at;
-    const reshipped = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: id }), env });
-    assert.equal(reshipped.status, 200);
-    assert.equal(fixture.fulfillments[0].shipped_at, shippedAt);
-    assert.equal((await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'correct', fulfillmentId: id, keeperPieceId: 'kp-ready', manualReference: 'studio:late', reason: 'too late' }), env })).status, 409);
-    assert.deepEqual(fixture.audits.map((row) => row.action), ['fulfillment_assign', 'fulfillment_correct', 'fulfillment_ship']);
-    assert.deepEqual(fixture.lineage.map((row) => row[3]), [
-      'fulfillment_assign',
-      'fulfillment_correction_in',
-      'fulfillment_correction_out',
-      'fulfillment_ship',
-    ]);
-    assert.doesNotMatch(JSON.stringify(fixture.audits), /studio:|buyer@/i);
-  });
-
-  it('does not ship a Stripe assignment that is refunded at write time', async () => {
-    const fixture = makeFulfillmentDb();
-    const env = { DB: fixture.DB, REGISTRY_STEP_UP_SECRET: ADMIN_SECRET };
-    await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'assign', keeperPieceId: 'kp-ready', orderItemId: 100 }), env });
-    fixture.refundBeforeNextShipment();
-    const response = await adminPieceFulfillments({ request: fulfillmentReq('POST', { action: 'ship', fulfillmentId: fixture.fulfillments[0].id }), env });
-    assert.equal(response.status, 409);
-    assert.equal(fixture.fulfillments[0].shipped_at, null);
-    assert.equal(fixture.audits.at(-1).outcome, 'shipment_attempt');
-    assert.equal(fixture.audits.some((row) => row.outcome === 'shipped'), false);
-  });
-});
-
 describe('steward bind lifecycle (register → first-bind → contested)', () => {
   it('walks the full happy path and the contested handoff', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
@@ -2920,7 +2643,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users, fulfillments, lineage, evidence, loseNextFirstBind } = makeKeeperDb();
+      const { DB, pieces, users, lineage, evidence, loseNextFirstBind } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -2933,7 +2656,6 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(pieces.length, 1);
       assert.equal(pieces[0].keeper_user_id, null);
       assert.equal(pieces[0].claimed_at, null);
-      fulfillments.push({ id: 'pf-bind', keeper_piece_id: pieces[0].id, claimed_at: null });
 
       // Bind env: the bridge secret is set so the contested path actually fires.
       const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
@@ -2958,12 +2680,11 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       pieces[0].backup_status = 'verified';
       const fixtureState = { lineage: lineage.length, evidence: evidence.length };
       // Simulate a competing steward winning after the read but before UPDATE.
-      // The losing batch must not stamp fulfillment, lineage, or evidence.
+      // The losing batch must not stamp lineage or evidence.
       loseNextFirstBind();
       const lostRace = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
       assert.equal(lostRace.status, 409);
       assert.equal(pieces[0].keeper_user_id, null);
-      assert.equal(fulfillments[0].claimed_at, null);
       assert.equal(lineage.length, fixtureState.lineage);
       assert.equal(evidence.length, fixtureState.evidence);
       const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
@@ -2976,7 +2697,6 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(pieces.length, 1);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
       assert.ok(pieces[0].claimed_at);
-      assert.equal(fulfillments[0].claimed_at, pieces[0].claimed_at);
       assert.equal(lineage.at(-1)[3], 'first_bound');
       assert.equal(evidence.at(-1)[6], 'first_bound');
       assert.equal(evidence.at(-1)[3], 'first@example.com');

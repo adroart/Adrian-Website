@@ -181,11 +181,8 @@ export async function onRequest(context) {
       );
     }
 
-    // A current steward's re-scan is idempotent. It also repairs fulfillment
-    // claimed_at if an earlier non-batch D1 fallback bound the steward before
-    // that secondary stamp completed.
+    // A current steward's re-scan is idempotent.
     if (existing.keeper_user_id === auth.userId && !existing.released_at) {
-      await repairFulfillmentClaim(env, existing.id, existing.claimed_at || nowIso);
       return json({
         ok: true,
         keeper: { pieceId, editionNumber, claimedAt: existing.claimed_at },
@@ -293,9 +290,8 @@ export async function onRequest(context) {
     }
 
     // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
-    // Only a never-claimed row reaches here. Stamp this user as the steward and
-    // record claimed_at and close its fulfillment. D1 batch keeps these stamps
-    // atomic; runtimes without batch use a guarded bind plus repairable stamp.
+    // Only a never-claimed row reaches here. Stamp this user as the steward,
+    // record first-bound lineage, and retain private claim evidence atomically.
     const keeperMutation = env.DB.prepare(
       `UPDATE keeper_pieces
           SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
@@ -306,9 +302,6 @@ export async function onRequest(context) {
             OR (plate_status = 'active' AND backup_status = 'verified')
           )`,
     ).bind(auth.userId, nowIso, existing.id);
-    const fulfillmentMutation = fulfillmentClaimStatement(
-      env, existing.id, nowIso, auth.userId,
-    );
     if (typeof env.DB.batch !== 'function') {
       return json({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }
@@ -334,7 +327,6 @@ export async function onRequest(context) {
       keeperMutation,
       lineage.statement,
       lineage.anchorStatement,
-      fulfillmentMutation,
       evidence,
     ]);
 
@@ -361,26 +353,5 @@ export async function onRequest(context) {
     // the hash anyway).
     console.error('[keeper/bind] error:', err?.message);
     return json({ ok: false, error: 'bind_failed' }, 500);
-  }
-}
-
-function fulfillmentClaimStatement(env, keeperPieceId, claimedAt, keeperUserId = null) {
-  return env.DB.prepare(
-    `UPDATE piece_fulfillments SET claimed_at = ?1
-      WHERE keeper_piece_id = ?2 AND claimed_at IS NULL
-        AND (?3 IS NULL OR EXISTS (
-          SELECT 1 FROM keeper_pieces
-           WHERE id = ?2 AND keeper_user_id = ?3 AND claimed_at = ?1
-        ))`,
-  ).bind(claimedAt, keeperPieceId, keeperUserId);
-}
-
-async function repairFulfillmentClaim(env, keeperPieceId, claimedAt) {
-  try {
-    await fulfillmentClaimStatement(env, keeperPieceId, claimedAt).run();
-  } catch (error) {
-    // The steward bind remains valid in runtimes lacking D1 batch. A later
-    // idempotent re-scan repairs this secondary lifecycle stamp.
-    console.error('[keeper/bind] fulfillment claim stamp failed:', error?.message);
   }
 }

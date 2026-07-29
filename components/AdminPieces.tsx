@@ -1,7 +1,6 @@
 /**
  * Artwork Registry desk for issuing permanent plate identities, verifying the
- * physical plate, recovering an Ownership Code, and assigning an exact plate
- * to a paid sale or opaque manual handoff.
+ * physical plate, and recovering an Ownership Code.
  *
  * Sensitive values exist only in this component's immediate React state. They
  * are never written to browser storage and are cleared on dismissal or plate
@@ -51,50 +50,6 @@ interface PieceRow {
   registeredAt: string | null;
   claimedAt: string | null;
   releasedAt: string | null;
-}
-
-interface AvailablePlate {
-  id: string;
-  pieceId: string;
-  editionNumber: number;
-  publicCode: string;
-  plateStatus: string;
-  backupStatus: string;
-  plateActivatedAt: string | null;
-}
-
-interface OrderItem {
-  id: number;
-  orderId: string;
-  orderReference: string;
-  buyerEmail: string;
-  productId: string;
-  description: string | null;
-  quantity: number;
-  amountSubtotal: number;
-}
-
-interface Fulfillment {
-  id: string;
-  keeperPieceId: string;
-  pieceId: string;
-  editionNumber: number;
-  publicCode: string;
-  orderItemId: number | null;
-  assignmentType: 'stripe_order' | 'manual';
-  intendedRecipientReference: string;
-  buyerEmail: string | null;
-  assignedAt: string;
-  shippedAt: string | null;
-  claimedAt: string | null;
-  correctedAt: string | null;
-  correctionReason: string | null;
-}
-
-interface FulfillmentDesk {
-  availablePlates: AvailablePlate[];
-  availableOrderItems: OrderItem[];
-  fulfillments: Fulfillment[];
 }
 
 const emptySensitiveState: RegistrySensitiveState = {
@@ -179,22 +134,6 @@ const AdminPieces: React.FC = () => {
   const [activationPieceId, setActivationPieceId] = useState<string | null>(null);
   const [activationChecks, setActivationChecks] = useState<ActivationChecklist>(emptyChecklist);
 
-  const [desk, setDesk] = useState<FulfillmentDesk>({
-    availablePlates: [], availableOrderItems: [], fulfillments: [],
-  });
-  const [deskLoading, setDeskLoading] = useState(true);
-  const [deskLoadError, setDeskLoadError] = useState('');
-  const [deskError, setDeskError] = useState('');
-  const [deskSuccess, setDeskSuccess] = useState('');
-  const [deskBusy, setDeskBusy] = useState(false);
-  const [selectedPlateId, setSelectedPlateId] = useState('');
-  const [assignmentSource, setAssignmentSource] = useState<'order' | 'manual'>('order');
-  const [selectedOrderItemId, setSelectedOrderItemId] = useState('');
-  const [manualReference, setManualReference] = useState('');
-  const [correctingId, setCorrectingId] = useState<string | null>(null);
-  const [correctionReason, setCorrectionReason] = useState('');
-  const [shippingConfirmed, setShippingConfirmed] = useState<Record<string, boolean>>({});
-
   const registryErrorMessage = (error: unknown, fallback: string) => {
     const message = errorMessage(error, fallback);
     if (message === 'registry_locked') {
@@ -226,32 +165,15 @@ const AdminPieces: React.FC = () => {
     }
   }, []);
 
-  const loadDesk = useCallback(async () => {
-    setDeskLoading(true);
-    setDeskLoadError('');
-    try {
-      const data = await jsonRequest('/api/admin/piece-fulfillments');
-      setDesk({
-        availablePlates: data.availablePlates || [],
-        availableOrderItems: data.availableOrderItems || [],
-        fulfillments: data.fulfillments || [],
-      });
-    } catch (error) {
-      setDeskLoadError(errorMessage(error, 'Could not load fulfillment records.'));
-    } finally {
-      setDeskLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void Promise.all([loadPieces(), loadDesk()]);
+    void loadPieces();
     void jsonRequest('/api/admin/registry-unlock')
       .then((data) => setRegistryUnlocked(data.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
     void jsonRequest('/api/admin/artworks')
       .then((data) => setDrafts(data.artworks || []))
       .catch(() => setDrafts([]));
-  }, [loadDesk, loadPieces]);
+  }, [loadPieces]);
 
   const dismissSensitiveState = () => {
     setSensitive(emptySensitiveState);
@@ -422,7 +344,7 @@ const AdminPieces: React.FC = () => {
         setRowSuccess((current) => ({ ...current, [row.id]: 'Ownership Code revealed after audit.' }));
       } else {
         setRowSuccess((current) => ({ ...current, [row.id]: 'Encrypted online backup verified.' }));
-        await Promise.all([loadPieces(), loadDesk()]);
+        await loadPieces();
       }
     } catch (error) {
       const message = registryErrorMessage(error, `Could not ${action} this plate.`);
@@ -460,7 +382,7 @@ const AdminPieces: React.FC = () => {
       setActivationPieceId(null);
       setActivationChecks(emptyChecklist);
       setRowSuccess((current) => ({ ...current, [row.id]: 'Plate identity activated and locked.' }));
-      await Promise.all([loadPieces(), loadDesk()]);
+      await loadPieces();
       void syncDrive({ silent: true });
     } catch (error) {
       const message = registryErrorMessage(error, 'Could not activate this plate.');
@@ -470,103 +392,18 @@ const AdminPieces: React.FC = () => {
     }
   };
 
-  const submitAssignment = async () => {
-    if (!selectedPlateId) {
-      setDeskError('Choose the exact physical plate.');
-      return;
-    }
-    if (assignmentSource === 'order' && !selectedOrderItemId) {
-      setDeskError('Choose one paid order item.');
-      return;
-    }
-    if (assignmentSource === 'manual' && !manualReference.trim()) {
-      setDeskError('Enter an opaque manual reference. Do not use a name, email, or address.');
-      return;
-    }
-    if (correctingId && !correctionReason.trim()) {
-      setDeskError('A correction reason is required.');
-      return;
-    }
-    setDeskBusy(true);
-    setDeskError('');
-    setDeskSuccess('');
-    try {
-      const payload: Record<string, unknown> = {
-        action: correctingId ? 'correct' : 'assign',
-        keeperPieceId: selectedPlateId,
-        ...(assignmentSource === 'order'
-          ? { orderItemId: Number(selectedOrderItemId) }
-          : { manualReference: manualReference.trim() }),
-        ...(correctingId ? { fulfillmentId: correctingId, reason: correctionReason.trim() } : {}),
-      };
-      await jsonRequest('/api/admin/piece-fulfillments', payload);
-      setDeskSuccess(correctingId ? 'Assignment corrected before shipment.' : 'Exact physical plate assigned.');
-      setSelectedPlateId('');
-      setSelectedOrderItemId('');
-      setManualReference('');
-      setCorrectionReason('');
-      setCorrectingId(null);
-      await loadDesk();
-    } catch (error) {
-      setDeskError(errorMessage(error, 'Could not save the assignment.'));
-    } finally {
-      setDeskBusy(false);
-    }
-  };
-
-  const beginCorrection = (fulfillment: Fulfillment) => {
-    setCorrectingId(fulfillment.id);
-    setSelectedPlateId(fulfillment.keeperPieceId);
-    setAssignmentSource(fulfillment.assignmentType === 'stripe_order' ? 'order' : 'manual');
-    setSelectedOrderItemId(fulfillment.orderItemId ? String(fulfillment.orderItemId) : '');
-    setManualReference(fulfillment.assignmentType === 'manual' ? fulfillment.intendedRecipientReference : '');
-    setCorrectionReason('');
-    setDeskError('');
-    document.getElementById('fulfillment-editor')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const markShipped = async (fulfillment: Fulfillment) => {
-    if (!shippingConfirmed[fulfillment.id]) {
-      setDeskError('Confirm the exact artwork, plate, assignment, and shipping label before marking shipped.');
-      return;
-    }
-    setDeskBusy(true);
-    setDeskError('');
-    setDeskSuccess('');
-    try {
-      await jsonRequest('/api/admin/piece-fulfillments', {
-        action: 'ship',
-        fulfillmentId: fulfillment.id,
-      });
-      setDeskSuccess(`${fulfillment.publicCode} marked shipped.`);
-      setShippingConfirmed((current) => ({ ...current, [fulfillment.id]: false }));
-      await loadDesk();
-      void syncDrive({ silent: true });
-    } catch (error) {
-      setDeskError(errorMessage(error, 'Could not mark this assignment shipped.'));
-    } finally {
-      setDeskBusy(false);
-    }
-  };
-
   const issued = sensitive.package;
   const registryStage = issueMode
     ? 0
-    : desk.fulfillments.some(fulfillment => !fulfillment.shippedAt)
-      ? 4
-      : desk.availablePlates.length > 0
-        ? 3
-        : rows.some(row => row.plateStatus === 'generated' && row.backupStatus === 'verified')
-          ? 2
-          : rows.some(row => row.plateStatus === 'generated')
-            ? 1
-            : 0;
+    : rows.some(row => row.plateStatus === 'generated' && row.backupStatus === 'verified')
+      ? 2
+      : rows.some(row => row.plateStatus === 'generated')
+        ? 1
+        : 0;
   const registryStages = [
     'Issue identity',
     'Verify recovery copy',
     'Activate plate',
-    'Assign fulfillment',
-    'Mark shipped',
   ];
 
   return (
@@ -575,10 +412,10 @@ const AdminPieces: React.FC = () => {
           <p className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 font-semibold mb-2">
             Artwork Registry
           </p>
-          <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate and fulfillment desk</h1>
+          <h1 className="font-title text-3xl md:text-4xl text-wood-900 mb-3">Plate registry</h1>
           <p className="font-serif text-wood-600 leading-relaxed mb-4 max-w-2xl">
             Issue one permanent plate identity, download its private fabrication package, verify the
-            physical metal, then assign that exact plate during packing.
+            physical metal, then activate and permanently lock its identity.
           </p>
           <p className="font-serif text-wood-600 leading-relaxed mb-10 max-w-2xl">
             New to this, or want a step-by-step path for one piece? Use the{' '}
@@ -586,7 +423,7 @@ const AdminPieces: React.FC = () => {
             This desk is the flat view of the same registry.
           </p>
 
-          <ol className="admin-stage-list" aria-label="Plate and fulfillment stages">
+          <ol className="admin-stage-list" aria-label="Plate registry stages">
             {registryStages.map((stage, index) => (
               <li key={stage} className={index < registryStage ? 'is-complete' : index === registryStage ? 'is-current' : ''} aria-current={index === registryStage ? 'step' : undefined}>
                 <span>{index + 1}</span>{stage}
@@ -746,107 +583,6 @@ const AdminPieces: React.FC = () => {
                         <div className="flex flex-wrap gap-3 mt-4">
                           <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => void activatePlate(row)}>{rowBusy === `${row.id}:activate` ? 'Activating…' : 'Activate and lock identity'}</button>
                           <button type="button" className={quietButtonClass} onClick={() => { setActivationPieceId(null); setActivationChecks(emptyChecklist); }}>Cancel checks</button>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section aria-labelledby="fulfillment-title">
-            <div className="flex flex-wrap justify-between gap-4 items-end mb-4">
-              <div>
-                <h2 id="fulfillment-title" className="font-title text-xl text-wood-900">Fulfillment desk</h2>
-                <p className="font-serif text-sm text-wood-600 mt-1">Assign the exact active, backed-up plate during packing. Checkout does not select ownership.</p>
-              </div>
-              <button type="button" className={quietButtonClass} onClick={() => void loadDesk()} disabled={deskLoading}>Refresh fulfillment</button>
-            </div>
-            <div id="fulfillment-editor" className="border border-wood-200 bg-white p-5 mb-6">
-              <h3 className="font-title text-lg text-wood-900 mb-4">{correctingId ? 'Correct assignment before shipment' : 'Assign a physical plate'}</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass} htmlFor="fulfillment-plate">Active backed-up plate</label>
-                  <select id="fulfillment-plate" className={inputClass} value={selectedPlateId} onChange={(event) => setSelectedPlateId(event.target.value)}>
-                    <option value="">Choose the exact plate</option>
-                    {correctingId && (() => {
-                      const current = desk.fulfillments.find((item) => item.id === correctingId);
-                      return current && !desk.availablePlates.some((plate) => plate.id === current.keeperPieceId)
-                        ? <option value={current.keeperPieceId}>{current.publicCode} · {titleFor(current.pieceId)} · edition {current.editionNumber} · current</option>
-                        : null;
-                    })()}
-                    {desk.availablePlates.map((plate) => <option key={plate.id} value={plate.id}>{plate.publicCode} · {titleFor(plate.pieceId)} · edition {plate.editionNumber}</option>)}
-                  </select>
-                  {desk.availablePlates.length === 0 && <p className="font-sans text-xs text-wood-500 mt-2">No unassigned active plates with verified backups.</p>}
-                </div>
-                <fieldset>
-                  <legend className={labelClass}>Assignment source</legend>
-                  <div className="flex flex-wrap gap-5 font-sans text-sm text-wood-700 mb-3">
-                    <label className="flex items-center gap-2"><input type="radio" name="assignment-source" checked={assignmentSource === 'order'} onChange={() => setAssignmentSource('order')} /> Paid order</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="assignment-source" checked={assignmentSource === 'manual'} onChange={() => setAssignmentSource('manual')} /> Manual handoff</label>
-                  </div>
-                  {assignmentSource === 'order' ? (
-                    <select aria-label="Paid order item" className={inputClass} value={selectedOrderItemId} onChange={(event) => setSelectedOrderItemId(event.target.value)}>
-                      <option value="">Choose one paid order item</option>
-                      {correctingId && (() => {
-                        const current = desk.fulfillments.find((item) => item.id === correctingId);
-                        return current?.orderItemId && !desk.availableOrderItems.some((item) => item.id === current.orderItemId)
-                          ? <option value={current.orderItemId}>{current.intendedRecipientReference} · {current.buyerEmail || 'current paid order'} · current</option>
-                          : null;
-                      })()}
-                      {desk.availableOrderItems.map((item) => <option key={item.id} value={item.id}>{item.orderReference} · {item.description || item.productId} · {item.buyerEmail}</option>)}
-                    </select>
-                  ) : (
-                    <div>
-                      <input aria-label="Opaque manual reference" className={inputClass} value={manualReference} onChange={(event) => setManualReference(event.target.value)} placeholder="studio-handoff:2026-07" />
-                      <p className="font-sans text-xs text-wood-500 mt-2">Use an opaque internal reference, never a name, email, phone, or address.</p>
-                    </div>
-                  )}
-                </fieldset>
-              </div>
-              {correctingId && <div className="mt-4"><label className={labelClass} htmlFor="correction-reason">Correction reason</label><input id="correction-reason" className={inputClass} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} placeholder="Why this pre-shipment assignment must change" /></div>}
-              <div className="flex flex-wrap gap-3 mt-5">
-                <button type="button" className={buttonClass} disabled={deskBusy || (!correctingId && desk.availablePlates.length === 0)} onClick={() => void submitAssignment()}>{deskBusy ? 'Saving…' : correctingId ? 'Save correction' : 'Assign exact plate'}</button>
-                {correctingId && <button type="button" className={quietButtonClass} onClick={() => {
-                  setCorrectingId(null);
-                  setSelectedPlateId('');
-                  setSelectedOrderItemId('');
-                  setManualReference('');
-                  setAssignmentSource('order');
-                  setCorrectionReason('');
-                }}>Cancel correction</button>}
-              </div>
-              {deskError && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{deskError}</p>}
-              {deskSuccess && <p className="font-sans text-sm text-green-800 mt-3" role="status">{deskSuccess}</p>}
-            </div>
-
-            <h3 className="font-title text-lg text-wood-900 mb-3">Assignments</h3>
-            {deskLoadError ? (
-              <div className="border border-red-300 bg-white p-6"><p className="font-sans text-sm text-red-700" role="alert">{deskLoadError}</p></div>
-            ) : deskLoading && desk.fulfillments.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-6"><p className="font-sans text-sm text-wood-500">Loading assignments…</p></div>
-            ) : desk.fulfillments.length === 0 ? (
-              <div className="border border-wood-200 bg-white p-8 text-center"><p className="font-serif text-wood-600">No physical plates have been assigned.</p></div>
-            ) : (
-              <div className="border border-wood-200 bg-white divide-y divide-wood-200">
-                {desk.fulfillments.map((fulfillment) => (
-                  <article key={fulfillment.id} className="p-5 grid md:grid-cols-[1fr_auto] gap-5">
-                    <div>
-                      <h4 className="font-serif text-lg text-wood-900">{fulfillment.publicCode} · {titleFor(fulfillment.pieceId)} · edition {fulfillment.editionNumber}</h4>
-                      <p className="font-sans text-sm text-wood-600 mt-1">{fulfillment.assignmentType === 'stripe_order' ? `${fulfillment.intendedRecipientReference}${fulfillment.buyerEmail ? ` · ${fulfillment.buyerEmail}` : ''}` : `Manual reference: ${fulfillment.intendedRecipientReference}`}</p>
-                      <p className="font-sans text-xs text-wood-500 mt-2">Assigned {formatDate(fulfillment.assignedAt)} · {fulfillment.shippedAt ? `Shipped ${formatDate(fulfillment.shippedAt)}` : 'Not shipped'} · {fulfillment.claimedAt ? `Claimed ${formatDate(fulfillment.claimedAt)}` : 'Not claimed'}</p>
-                      {fulfillment.correctionReason && <p className="font-sans text-xs text-wood-500 mt-1">Corrected: {fulfillment.correctionReason}</p>}
-                    </div>
-                    {!fulfillment.shippedAt && (
-                      <div className="md:max-w-xs">
-                        <label className="flex items-start gap-2 font-sans text-xs text-wood-700 mb-3">
-                          <input type="checkbox" className="mt-0.5" checked={Boolean(shippingConfirmed[fulfillment.id])} onChange={(event) => setShippingConfirmed((current) => ({ ...current, [fulfillment.id]: event.target.checked }))} />
-                          <span>I compared the artwork, plate, assignment, and shipping label.</span>
-                        </label>
-                        <div className="flex md:justify-end flex-wrap gap-2">
-                          {!fulfillment.claimedAt && <button type="button" className={quietButtonClass} disabled={deskBusy} onClick={() => beginCorrection(fulfillment)}>Correct</button>}
-                          <button type="button" className={buttonClass} disabled={deskBusy || !shippingConfirmed[fulfillment.id]} onClick={() => void markShipped(fulfillment)}>Mark shipped</button>
                         </div>
                       </div>
                     )}

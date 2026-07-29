@@ -68,9 +68,10 @@ describe('admin studio shell', () => {
       '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',
     );
 
-    for (const label of ['Issue identity', 'Verify recovery copy', 'Activate plate', 'Assign fulfillment', 'Mark shipped']) {
+    for (const label of ['Issue identity', 'Verify recovery copy', 'Activate plate']) {
       assert.match(source('components/AdminPieces.tsx'), new RegExp(label));
     }
+    assert.doesNotMatch(source('components/AdminPieces.tsx'), /fulfillment|shipping/i);
     for (const label of ['Intake', 'Curate', 'Preview', 'Send']) {
       assert.match(source('components/AdminViewings.tsx'), new RegExp(label));
     }

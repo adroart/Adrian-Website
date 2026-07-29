@@ -8,7 +8,7 @@
  * step be skipped before its gate is met:
  *
  *   Unlock → Choose → Issue → Fabrication files → Encrypted backup →
- *   Prove recovery → Activate → Assign → Ship
+ *   Prove recovery → Activate
  *
  * Sensitive values (the Ownership Code and the SVGs) exist only in this
  * component's immediate React state. They are never written to browser storage
@@ -63,34 +63,6 @@ interface PieceRow {
   registeredAt: string | null;
   claimedAt: string | null;
   releasedAt: string | null;
-}
-
-interface AvailablePlate {
-  id: string;
-  pieceId: string;
-  editionNumber: number;
-  publicCode: string;
-}
-
-interface OrderItem {
-  id: number;
-  orderReference: string;
-  buyerEmail: string;
-  productId: string;
-  description: string | null;
-}
-
-interface Fulfillment {
-  id: string;
-  keeperPieceId: string;
-  publicCode: string;
-  shippedAt: string | null;
-}
-
-interface FulfillmentDesk {
-  availablePlates: AvailablePlate[];
-  availableOrderItems: OrderItem[];
-  fulfillments: Fulfillment[];
 }
 
 interface DraftArtwork {
@@ -161,13 +133,10 @@ function downloadText(filename: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-function snapshotOf(row: PieceRow, desk: FulfillmentDesk): PlateLifecycleSnapshot {
-  const fulfillment = desk.fulfillments.find((item) => item.keeperPieceId === row.id);
+function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
   return {
     plateStatus: row.plateStatus,
     backupStatus: row.backupStatus,
-    hasFulfillment: Boolean(fulfillment),
-    shipped: Boolean(fulfillment?.shippedAt),
   };
 }
 
@@ -178,9 +147,6 @@ const AdminPlateWizard: React.FC = () => {
   const [unlockError, setUnlockError] = useState('');
   const unlockInputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<PieceRow[]>([]);
-  const [desk, setDesk] = useState<FulfillmentDesk>({
-    availablePlates: [], availableOrderItems: [], fulfillments: [],
-  });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -217,13 +183,6 @@ const AdminPlateWizard: React.FC = () => {
   // Activate stage
   const [checks, setChecks] = useState<ActivationChecklist>(emptyChecklist);
 
-  // Assign stage
-  const [assignSource, setAssignSource] = useState<'order' | 'manual'>('order');
-  const [assignOrderItemId, setAssignOrderItemId] = useState('');
-  const [assignManualRef, setAssignManualRef] = useState('');
-
-  // Ship stage
-  const [shipConfirmed, setShipConfirmed] = useState(false);
   const [finished, setFinished] = useState(false);
 
   // Google Drive sync
@@ -234,11 +193,6 @@ const AdminPlateWizard: React.FC = () => {
     () => (pieceId ? rows.find((row) => row.id === pieceId) || null : null),
     [pieceId, rows],
   );
-  const fulfillment = useMemo(
-    () => (pieceId ? desk.fulfillments.find((item) => item.keeperPieceId === pieceId) || null : null),
-    [pieceId, desk.fulfillments],
-  );
-
   const mintableArtworks = useMemo(() => {
     const staticList = FULL_ARCHIVE.map((a) => ({ id: a.id, title: a.title, draft: false }));
     const draftList = drafts
@@ -251,16 +205,8 @@ const AdminPlateWizard: React.FC = () => {
     setLoading(true);
     setLoadError('');
     try {
-      const [piecesData, deskData] = await Promise.all([
-        jsonRequest('/api/admin/pieces'),
-        jsonRequest('/api/admin/piece-fulfillments'),
-      ]);
+      const piecesData = await jsonRequest('/api/admin/pieces');
       setRows(piecesData.pieces as PieceRow[]);
-      setDesk({
-        availablePlates: deskData.availablePlates || [],
-        availableOrderItems: deskData.availableOrderItems || [],
-        fulfillments: deskData.fulfillments || [],
-      });
     } catch (error) {
       setLoadError(errorMessage(error, 'Could not load the registry.'));
     } finally {
@@ -292,10 +238,6 @@ const AdminPlateWizard: React.FC = () => {
     setFilesArchived(false);
     setRecoveryProven(false);
     setRecoveryStagingAck(false);
-    setAssignSource('order');
-    setAssignOrderItemId('');
-    setAssignManualRef('');
-    setShipConfirmed(false);
   }, []);
 
   // Clear sensitive material if the wizard unmounts.
@@ -345,7 +287,7 @@ const AdminPlateWizard: React.FC = () => {
   };
 
   const resumePiece = (row: PieceRow) => {
-    const target = plateWizardStageForPiece(snapshotOf(row, desk));
+    const target = plateWizardStageForPiece(snapshotOf(row));
     if (!target) return;
     resetSensitive();
     setPieceId(row.id);
@@ -477,16 +419,8 @@ const AdminPlateWizard: React.FC = () => {
   };
 
   const refreshPiece = async () => {
-    const [piecesData, deskData] = await Promise.all([
-      jsonRequest('/api/admin/pieces'),
-      jsonRequest('/api/admin/piece-fulfillments'),
-    ]);
+    const piecesData = await jsonRequest('/api/admin/pieces');
     setRows(piecesData.pieces as PieceRow[]);
-    setDesk({
-      availablePlates: deskData.availablePlates || [],
-      availableOrderItems: deskData.availableOrderItems || [],
-      fulfillments: deskData.fulfillments || [],
-    });
   };
 
   const runRowAction = async (action: 'backup' | 'package' | 'verify-recovery') => {
@@ -524,63 +458,12 @@ const AdminPlateWizard: React.FC = () => {
     try {
       await jsonRequest(`/api/admin/pieces/${encodeURIComponent(piece.id)}/activate`, { ...checks });
       await refreshPiece();
-      setStepNote('Plate identity activated and permanently locked.');
+      resetSensitive();
+      setStepNote('Plate identity activated and permanently locked. The registry lifecycle is complete.');
+      setFinished(true);
       void syncDrive({ silent: true });
     } catch (error) {
       setStepError(registryErrorMessage(error, 'Could not activate this plate.'));
-    } finally {
-      setBusy('');
-    }
-  };
-
-  const runAssign = async () => {
-    if (!piece) return;
-    if (assignSource === 'order' && !assignOrderItemId) {
-      setStepError('Choose one paid order item.');
-      return;
-    }
-    if (assignSource === 'manual' && !assignManualRef.trim()) {
-      setStepError('Enter an opaque manual reference. Never a name, email, or address.');
-      return;
-    }
-    setBusy('assign');
-    setStepError('');
-    try {
-      await jsonRequest('/api/admin/piece-fulfillments', {
-        action: 'assign',
-        keeperPieceId: piece.id,
-        ...(assignSource === 'order'
-          ? { orderItemId: Number(assignOrderItemId) }
-          : { manualReference: assignManualRef.trim() }),
-      });
-      await refreshPiece();
-      setStepNote('Exact physical plate assigned.');
-    } catch (error) {
-      setStepError(registryErrorMessage(error, 'Could not save the assignment.'));
-    } finally {
-      setBusy('');
-    }
-  };
-
-  const runShip = async () => {
-    if (!fulfillment) return;
-    if (!shipConfirmed) {
-      setStepError('Confirm the final physical comparison before marking shipped.');
-      return;
-    }
-    setBusy('ship');
-    setStepError('');
-    try {
-      await jsonRequest('/api/admin/piece-fulfillments', {
-        action: 'ship',
-        fulfillmentId: fulfillment.id,
-      });
-      await refreshPiece();
-      setFinished(true);
-      setStepNote(`${piece?.publicCode || 'Plate'} marked shipped. The record is now permanent.`);
-      void syncDrive({ silent: true });
-    } catch (error) {
-      setStepError(registryErrorMessage(error, 'Could not mark this piece shipped.'));
     } finally {
       setBusy('');
     }
@@ -598,11 +481,7 @@ const AdminPlateWizard: React.FC = () => {
       case 'recovery':
         return recoveryProven || recoveryStagingAck;
       case 'activate':
-        return piece?.plateStatus === 'active';
-      case 'assign':
-        return Boolean(fulfillment);
-      case 'ship':
-        return false; // ship is terminal; the "Mark shipped" action finishes
+        return false; // activation is terminal; the activation action finishes
       default:
         return false;
     }
@@ -623,7 +502,7 @@ const AdminPlateWizard: React.FC = () => {
 
   // ── Screens ────────────────────────────────────────────────────────────────
   const downloads = pkg ? projectPlateDownloads(pkg) : [];
-  const resumable = rows.filter((row) => plateWizardStageForPiece(snapshotOf(row, desk)) !== null);
+  const resumable = rows.filter((row) => plateWizardStageForPiece(snapshotOf(row)) !== null);
 
   return (
     <AdminPage width="medium">
@@ -662,7 +541,7 @@ const AdminPlateWizard: React.FC = () => {
             </div>
             <button type="button" onClick={beginNewPiece} className="w-full text-left border border-bronze-500 bg-bronze-200/20 p-5 mb-6 hover:bg-bronze-200/40 transition-colors">
               <p className="font-title text-lg text-wood-900">Start a new piece</p>
-              <p className="font-serif text-sm text-wood-600 mt-1">Mint a fresh permanent identity and walk it through to shipment.</p>
+              <p className="font-serif text-sm text-wood-600 mt-1">Mint a fresh permanent identity and walk it through activation.</p>
             </button>
 
             <h3 className="font-title text-lg text-wood-900 mb-3">Or resume a piece in progress</h3>
@@ -675,7 +554,7 @@ const AdminPlateWizard: React.FC = () => {
             ) : (
               <div className="border border-wood-200 bg-white divide-y divide-wood-200">
                 {resumable.map((row) => {
-                  const target = plateWizardStageForPiece(snapshotOf(row, desk));
+                  const target = plateWizardStageForPiece(snapshotOf(row));
                   const targetStage = target ? PLATE_WIZARD_STAGES[plateWizardStageIndex(target)] : null;
                   return (
                     <button type="button" key={row.id} onClick={() => resumePiece(row)} className="w-full text-left p-5 hover:bg-paper-100/40 transition-colors">
@@ -691,7 +570,7 @@ const AdminPlateWizard: React.FC = () => {
           /* DONE */
           <section className="border border-bronze-500 bg-bronze-200/20 p-8 text-center" aria-labelledby="done-title">
             <h2 id="done-title" className="font-title text-2xl text-wood-900 mb-2">Piece complete</h2>
-            <p className="font-serif text-wood-700 mb-6">{stepNote || 'This piece is active, assigned, and shipped. Its public code and Ownership Code are permanent records.'}</p>
+            <p className="font-serif text-wood-700 mb-6">{stepNote || 'This piece is active. Its public code and Ownership Code are permanent records.'}</p>
             <div className="flex flex-wrap gap-3 justify-center">
               <button type="button" className={buttonClass} onClick={beginNewPiece}>Start another piece</button>
               <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()}>Download offline ledger</button>
@@ -883,51 +762,6 @@ const AdminPlateWizard: React.FC = () => {
                 )
               )}
 
-              {/* ASSIGN */}
-              {stage.key === 'assign' && (
-                fulfillment ? (
-                  <p className="font-sans text-sm text-green-800" role="status">This plate is assigned. You can continue to shipment.</p>
-                ) : (
-                  <div>
-                    <p className="font-serif text-sm text-wood-600 mb-4">Tie this exact active, backed-up plate to a paid order or an opaque manual handoff. Checkout never selects ownership; assignment happens here, at packing.</p>
-                    <fieldset className="mb-3">
-                      <legend className={labelClass}>Assignment source</legend>
-                      <div className="flex flex-wrap gap-5 font-sans text-sm text-wood-700">
-                        <label className="flex items-center gap-2"><input type="radio" name="wizard-source" checked={assignSource === 'order'} onChange={() => setAssignSource('order')} /> Paid order</label>
-                        <label className="flex items-center gap-2"><input type="radio" name="wizard-source" checked={assignSource === 'manual'} onChange={() => setAssignSource('manual')} /> Manual handoff</label>
-                      </div>
-                    </fieldset>
-                    {assignSource === 'order' ? (
-                      <>
-                        <select aria-label="Paid order item" className={inputClass} value={assignOrderItemId} onChange={(event) => setAssignOrderItemId(event.target.value)}>
-                          <option value="">Choose one paid order item</option>
-                          {desk.availableOrderItems.map((item) => <option key={item.id} value={item.id}>{item.orderReference} · {item.description || item.productId} · {item.buyerEmail}</option>)}
-                        </select>
-                        {desk.availableOrderItems.length === 0 && <p className="font-sans text-xs text-wood-500 mt-2">No unassigned paid order items. Use a manual handoff, or check the order is paid.</p>}
-                      </>
-                    ) : (
-                      <>
-                        <input aria-label="Opaque manual reference" className={inputClass} value={assignManualRef} onChange={(event) => setAssignManualRef(event.target.value)} placeholder="studio-handoff:2026-07" />
-                        <p className="font-sans text-xs text-wood-500 mt-2">Use an opaque internal reference, never a name, email, phone, or address.</p>
-                      </>
-                    )}
-                    <button type="button" className={`${buttonClass} mt-4`} disabled={Boolean(busy)} onClick={() => void runAssign()}>{busy === 'assign' ? 'Assigning…' : 'Assign exact plate'}</button>
-                  </div>
-                )
-              )}
-
-              {/* SHIP */}
-              {stage.key === 'ship' && (
-                <div>
-                  <p className="font-serif text-sm text-wood-600 mb-4">Do the final physical comparison: artwork, edition, public code, a live QR scan from the packed position, a legible underside code, plate active, backup verified, and the right shipping label. Once shipped, the record cannot be corrected through the normal UI.</p>
-                  <label className="flex items-start gap-3 font-sans text-sm text-wood-700 mb-4">
-                    <input type="checkbox" checked={shipConfirmed} onChange={(event) => setShipConfirmed(event.target.checked)} className="mt-1" />
-                    <span>I compared the artwork, plate, assignment, and shipping label, and the package is sealed.</span>
-                  </label>
-                  <button type="button" className={buttonClass} disabled={Boolean(busy) || !shipConfirmed} onClick={() => void runShip()}>{busy === 'ship' ? 'Marking…' : 'Mark shipped'}</button>
-                </div>
-              )}
-
               {stepNote && <p className="font-sans text-sm text-green-800 mt-4" role="status">{stepNote}</p>}
               {stepError && <p className="font-sans text-sm text-red-700 mt-4" role="alert">{stepError}</p>}
             </div>
@@ -935,7 +769,7 @@ const AdminPlateWizard: React.FC = () => {
             {/* NAV */}
             <div className="flex items-center justify-between gap-3 mt-6">
               <button type="button" className={quietButtonClass} onClick={goBack} disabled={stageIndex === 0}>Back</button>
-              {stage.key !== 'ship' && (
+              {stage.key !== 'activate' && (
                 <button type="button" className={buttonClass} onClick={goNext} disabled={!canAdvance}>Next step</button>
               )}
             </div>
