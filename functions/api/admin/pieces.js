@@ -87,6 +87,17 @@ function isSchemaMissing(error) {
   return isMissingTableError(error) || /no such column/i.test(String(error?.message || ''));
 }
 
+function editionConstraintResponse(error) {
+  const message = String(error?.message || '');
+  if (/keeper_piece_edition_kind_conflict/i.test(message)) {
+    return jsonResponse({ ok: false, error: 'artwork_edition_kind_conflict' }, 409);
+  }
+  if (/keeper_piece_edition_range_violation/i.test(message)) {
+    return jsonResponse({ ok: false, error: 'invalid_edition_number' }, 400);
+  }
+  return null;
+}
+
 function validateBasicInput(body) {
   const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim().toUpperCase() : '';
   if (!pieceId) return { error: 'unknown_artwork' };
@@ -357,6 +368,8 @@ async function issuePiece(request, env) {
           lineageAnchorStatement(env, issuedEvent, { onlyIfPreviousChanged: true }),
         ]);
       } catch (error) {
+        const editionConstraint = editionConstraintResponse(error);
+        if (editionConstraint) return editionConstraint;
         if (/public_code/i.test(String(error?.message || '')) && /unique/i.test(String(error?.message || ''))) {
           continue;
         }
@@ -377,6 +390,8 @@ async function issuePiece(request, env) {
     return jsonResponse({ ok: false, error: 'public_code_collision' }, 503);
   } catch (error) {
     if (isSchemaMissing(error)) return migrationNotApplied();
+    const editionConstraint = editionConstraintResponse(error);
+    if (editionConstraint) return editionConstraint;
     if (
       error?.code === 'artwork_edition_metadata_conflict'
       || error?.code === 'invalid_stored_edition_metadata'

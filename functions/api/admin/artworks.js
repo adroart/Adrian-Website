@@ -87,12 +87,45 @@ async function createDraft(request, env) {
   if (input.error) return jsonResponse({ ok: false, error: input.error }, 400);
 
   if (staticArtwork) {
+    if (
+      Number.isInteger(staticArtwork.editionSize)
+      && (input.editionKind !== 'numbered' || input.editionSize !== staticArtwork.editionSize)
+    ) {
+      return jsonResponse({ ok: false, error: 'artwork_edition_metadata_conflict' }, 409);
+    }
     input.title = staticArtwork.title;
     input.series = staticArtwork.series || null;
   }
 
   const createdAt = new Date().toISOString();
   try {
+    const issued = await env.DB
+      .prepare(
+        `SELECT
+           MAX(CASE WHEN edition_number = 0 THEN 1 ELSE 0 END) AS has_unique,
+           MAX(CASE WHEN edition_number > 0 THEN edition_number ELSE NULL END) AS highest_numbered_edition
+         FROM keeper_pieces WHERE piece_id = ?1`,
+      )
+      .bind(input.id)
+      .first();
+    const hasUnique = Number(issued?.has_unique) === 1;
+    const highestNumbered = issued?.highest_numbered_edition == null
+      ? null
+      : Number(issued.highest_numbered_edition);
+    if (input.editionKind === 'unique' && highestNumbered !== null) {
+      return jsonResponse({ ok: false, error: 'existing_numbered_editions' }, 409);
+    }
+    if (input.editionKind === 'numbered' && hasUnique) {
+      return jsonResponse({ ok: false, error: 'existing_unique_edition' }, 409);
+    }
+    if (
+      input.editionKind === 'numbered'
+      && highestNumbered !== null
+      && input.editionSize < highestNumbered
+    ) {
+      return jsonResponse({ ok: false, error: 'edition_size_below_issued' }, 409);
+    }
+
     await env.DB
       .prepare(
         `INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
