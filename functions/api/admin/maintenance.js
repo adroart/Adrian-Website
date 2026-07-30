@@ -18,9 +18,22 @@ function textParam(params, name, max) {
 
 function dateBoundary(value, endOfDay = false) {
   if (value === null || value === '') return null;
-  const input = value.trim();
-  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(input);
-  const parsed = new Date(dateOnly
+  if (value !== value.trim()) return false;
+  const input = value;
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z)?$/.exec(input);
+  if (!match) return false;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return false;
+  if (hourText !== undefined
+    && (Number(hourText) > 23 || Number(minuteText) > 59 || Number(secondText) > 59)) {
+    return false;
+  }
+  const parsed = new Date(hourText === undefined
     ? `${input}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`
     : input);
   return Number.isNaN(parsed.getTime()) ? false : parsed.toISOString();

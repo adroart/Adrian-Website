@@ -34,8 +34,14 @@ function signIn(email = 'artist@example.com') {
   };
 }
 
-function request(path: string, method: string, origin?: string, body?: unknown) {
-  const headers = new Headers({ Cookie: 'better-auth.session_token=test-session' });
+function request(
+  path: string,
+  method: string,
+  origin?: string,
+  body?: unknown,
+  cookie = 'better-auth.session_token=test-session',
+) {
+  const headers = new Headers({ Cookie: cookie });
   if (origin !== undefined) headers.set('Origin', origin);
   if (body !== undefined) headers.set('Content-Type', 'application/json');
   return new Request(`${ORIGIN}${path}`, {
@@ -193,6 +199,79 @@ describe('ordinary privileged endpoint security matrix', () => {
         }
       });
     }
+  }
+});
+
+describe('registry maintenance mutation security matrix', () => {
+  const mutationEndpoints = [
+    {
+      name: 'acquisition create',
+      path: '/api/admin/maintenance/kp-missing/acquisitions',
+      method: 'POST',
+      params: { id: 'kp-missing' },
+      body: {
+        idempotencyKey: 'security-create-acquisition',
+        reason: 'Verify mutation authorization.',
+        acquisition: { acquisitionType: 'sale' },
+      },
+      allowedStatus: 503,
+      load: async () => (await import('../functions/api/admin/maintenance/[id]/acquisitions.js')).onRequest,
+    },
+    {
+      name: 'acquisition correction',
+      path: '/api/admin/maintenance/kp-missing/acquisitions/acq-missing',
+      method: 'PUT',
+      params: { id: 'kp-missing', acquisitionId: 'acq-missing' },
+      body: {
+        idempotencyKey: 'security-correct-acquisition',
+        reason: 'Verify mutation authorization.',
+        expectedVersion: 1,
+        acquisition: { acquisitionType: 'sale' },
+      },
+      allowedStatus: 404,
+      load: async () => (await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js')).onRequest,
+    },
+  ] as const;
+
+  for (const endpoint of mutationEndpoints) {
+    it(`${endpoint.name}: requires admin, exact origin, and registry unlock`, async () => {
+      const environment = { ...env(), REGISTRY_STEP_UP_SECRET: 'registry-step-up-secret' };
+      const handler = await endpoint.load();
+      const invokeMutation = (origin: string | undefined, cookie?: string) => handler({
+        request: request(endpoint.path, endpoint.method, origin, endpoint.body, cookie),
+        env: environment,
+        params: endpoint.params,
+      });
+
+      const guest = await invokeMutation(ORIGIN);
+      assert.equal(guest.status, 401);
+
+      signIn('collector@example.com');
+      const nonAdmin = await invokeMutation(ORIGIN);
+      assert.equal(nonAdmin.status, 403);
+
+      signIn();
+      const wrongOrigin = await invokeMutation('https://example.com');
+      assert.equal(wrongOrigin.status, 403);
+      assert.deepEqual(await wrongOrigin.json(), { ok: false, error: 'origin_forbidden' });
+
+      const locked = await invokeMutation(ORIGIN);
+      assert.equal(locked.status, 403);
+      assert.deepEqual(await locked.json(), { ok: false, error: 'registry_locked' });
+
+      const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+      const token = await createRegistryUnlockToken(environment, {
+        userId: 'user-1',
+        email: 'artist@example.com',
+        session: { id: 'session-1' },
+      });
+      const unlocked = await invokeMutation(
+        ORIGIN,
+        `better-auth.session_token=test-session; registry_unlock=${token}`,
+      );
+      assert.equal(unlocked.status, endpoint.allowedStatus);
+      assert.notEqual((await unlocked.clone().json()).error, 'registry_locked');
+    });
   }
 });
 

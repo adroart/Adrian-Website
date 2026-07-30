@@ -1,5 +1,6 @@
 import { findStaticArtwork } from '../../_lib/artworkCatalog.js';
 import { jsonResponse, requireAdmin, requireDb } from '../../_lib/admin.js';
+import { projectMaintenanceHistorySnapshots } from '../../_lib/registryMaintenance.js';
 
 function acquisition(row) {
   return {
@@ -20,6 +21,11 @@ function acquisition(row) {
 }
 
 function history(row) {
+  const snapshots = projectMaintenanceHistorySnapshots(
+    row.event_type,
+    row.before_json,
+    row.after_json,
+  );
   return {
     id: row.id,
     idempotencyKey: row.idempotency_key,
@@ -29,8 +35,7 @@ function history(row) {
       email: row.administrator_email,
     },
     reason: row.reason,
-    before: JSON.parse(row.before_json),
-    after: JSON.parse(row.after_json),
+    ...snapshots,
     outcome: row.outcome,
     relatedRecordId: row.related_record_id ?? null,
     createdAt: row.created_at,

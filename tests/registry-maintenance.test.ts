@@ -14,6 +14,8 @@ import {
   normalizeReason,
   replayMaintenanceEvent,
 } from '../functions/api/_lib/registryMaintenance.js';
+import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import { LAUNCH_FLAGS } from '../launchFlags.ts';
 
 let maintenanceSession: {
   session: { id: string };
@@ -1275,6 +1277,15 @@ describe('private maintenance APIs', () => {
           'artist@example.com', 'Record acquisition.', 'null',
           '{"acquisitionId":"acq-private"}', 'succeeded', 'acq-private',
           '${'d'.repeat(64)}', '2026-07-30T06:00:00.000Z');
+        INSERT INTO registry_maintenance_events
+          (id, idempotency_key, event_type, keeper_piece_id, administrator_user_id,
+           administrator_email, reason, before_json, after_json, outcome,
+           related_record_id, mutation_fingerprint, created_at)
+        VALUES ('rme-malicious', 'malicious-event', 'acquisition_created', 'kp-maint', 'admin-1',
+          'artist@example.com', 'Legacy direct row.',
+          '{"recoveryCode":"LEAK-RECOVERY","nested":{"ciphertext":"LEAK-CIPHERTEXT"}}',
+          '{"acquisitionId":"acq-private","nonce":"LEAK-NONCE","verifier":"LEAK-VERIFIER"}',
+          'succeeded', 'acq-private', '${'e'.repeat(64)}', '2026-07-30T07:00:00.000Z');
       `);
       const env = {
         ...sqliteEnv,
@@ -1296,6 +1307,19 @@ describe('private maintenance APIs', () => {
       assert.equal((await list({
         request: adminRequest('/api/admin/maintenance?acquiredFrom=2026-08-01&acquiredTo=2026-07-01'), env,
       })).status, 400);
+      for (const filter of [
+        'publicCode=AR-7KQ9M2WX',
+        'artworkId=UL-100',
+        'acquiredFrom=2026-07-29T00%3A00%3A00Z&acquiredTo=2026-07-29T23%3A59%3A59.999Z',
+      ]) {
+        const filteredResponse = await list({
+          request: adminRequest(`/api/admin/maintenance?${filter}`), env,
+        });
+        assert.equal(filteredResponse.status, 200, filter);
+        const filtered = await filteredResponse.json();
+        assert.equal(filtered.pieces.length, 1, filter);
+        assert.equal(filtered.pieces[0].id, 'kp-maint', filter);
+      }
       const listResponse = await list({
         request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&stewardEmail=keeper%40example.com&editionNumber=0&hasAcquisition=true&acquiredFrom=2026-07-01&acquiredTo=2026-07-31'),
         env,
@@ -1320,9 +1344,36 @@ describe('private maintenance APIs', () => {
       });
       assert.equal(detailed.piece.acquisitions[0].amountMinor, 125000);
       assert.equal(detailed.piece.maintenanceHistory[0].reason, 'Record acquisition.');
+      const redactedHistory = detailed.piece.maintenanceHistory.find(
+        (event: { id: string }) => event.id === 'rme-malicious',
+      );
+      assert.deepEqual({
+        before: redactedHistory.before,
+        after: redactedHistory.after,
+        warning: redactedHistory.warning,
+      }, {
+        before: null,
+        after: null,
+        warning: 'unsafe_snapshots_redacted',
+      });
       const serialized = JSON.stringify({ listed, detailed });
+      const serializedHistory = JSON.stringify(detailed.piece.maintenanceHistory);
       assert.doesNotMatch(serialized, /PRIVATE-(?:CIPHERTEXT|NONCE|VERIFIER)/);
-      assert.doesNotMatch(serialized, /ownershipCode|recoveryCode|keyVersion/i);
+      assert.doesNotMatch(
+        serializedHistory,
+        /ownershipCode|recoveryCode|ciphertext|nonce|verifier|keyVersion/i,
+      );
+      assert.doesNotMatch(serializedHistory, /LEAK-(?:RECOVERY|CIPHERTEXT|NONCE|VERIFIER)/);
+      for (const filter of [
+        'acquiredFrom=2026-02-30',
+        'acquiredTo=July%2030%2C%202026',
+        'acquiredFrom=2026-07-01T00%3A00%3A00',
+        'acquiredTo=2026-07-31T23%3A59%3A59%2B08%3A00',
+      ]) {
+        assert.equal((await list({
+          request: adminRequest(`/api/admin/maintenance?${filter}`), env,
+        })).status, 400, filter);
+      }
     } finally {
       maintenanceSession = null;
       database.close();
@@ -1410,22 +1461,83 @@ describe('private maintenance APIs', () => {
     }
   });
 
-  it('keeps private acquisition amounts out of the public registry response', async () => {
+  it('keeps all acquisition fields out of public registry, lineage, and QR identity responses', async () => {
     const { database, env } = createSqliteD1();
     try {
       database.exec(`${registryMigrations}\n${keeperInsert}\n
         INSERT INTO artwork_acquisitions
-          (id, keeper_piece_id, acquisition_type, amount_minor, currency, created_at, updated_at)
-        VALUES ('acq-public-check', 'kp-maint', 'sale', 987654, 'USD', 'x', 'x');
+          (id, keeper_piece_id, acquisition_type, amount_minor, currency, private_notes,
+           created_at, updated_at)
+        VALUES ('acq-public-check', 'kp-maint', 'sale', 987654321, 'XTS',
+          'NEVER-PUBLIC-ACQUISITION', '2026-07-30T00:00:00.000Z',
+          '2026-07-30T00:00:00.000Z');
       `);
-      const { onRequest } = await import('../functions/api/registry/[publicCode].js');
-      const response = await onRequest({
+      const lineageEvent = await buildLineageEvent({
+        keeperPieceId: 'kp-maint',
+        sequence: 1,
+        eventType: 'issued',
+        eventAt: '2026-07-30T00:00:00.000Z',
+        publicPayload: {
+          pieceId: 'UL-100', editionNumber: 0, publicCode: 'AR-7KQ9M2WX',
+        },
+      });
+      database.prepare(
+        `INSERT INTO artwork_lineage_events
+           (id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
+            event_hash, public_payload_json)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+      ).run(
+        lineageEvent.id, lineageEvent.keeperPieceId, lineageEvent.sequence,
+        lineageEvent.eventType, lineageEvent.eventAt, lineageEvent.previousHash,
+        lineageEvent.eventHash, lineageEvent.publicPayloadJson,
+      );
+      database.prepare(
+        'UPDATE keeper_pieces SET lineage_head_hash = ?1, lineage_event_count = 1 WHERE id = ?2',
+      ).run(lineageEvent.eventHash, 'kp-maint');
+
+      const { onRequest: registry } = await import('../functions/api/registry/[publicCode].js');
+      const registryResponse = await registry({
         request: new Request('https://adrianrasmussen.com/api/registry/AR-7KQ9M2WX'),
         env,
         params: { publicCode: 'AR-7KQ9M2WX' },
       });
-      assert.equal(response.status, 200);
-      assert.doesNotMatch(await response.text(), /987654|amountMinor|private/i);
+      const { onRequest: lineage } = await import('../functions/api/lineage/[publicCode].js');
+      const { onRequest: qr } = await import('../functions/qr/[number].js');
+      const previousFlag = LAUNCH_FLAGS.livingLegacy;
+      LAUNCH_FLAGS.livingLegacy = true;
+      try {
+        const lineageResponse = await lineage({
+          request: new Request('https://adrianrasmussen.com/api/lineage/AR-7KQ9M2WX'),
+          env,
+          params: { publicCode: 'AR-7KQ9M2WX' },
+        });
+        const qrResponse = await qr({
+          request: new Request('https://adrianrasmussen.com/qr/AR-7KQ9M2WX'),
+          env,
+          params: { number: 'AR-7KQ9M2WX' },
+        });
+        assert.deepEqual(
+          [registryResponse.status, lineageResponse.status, qrResponse.status],
+          [200, 200, 302],
+        );
+        for (const [name, response] of [
+          ['registry', registryResponse],
+          ['lineage', lineageResponse],
+          ['qr', qrResponse],
+        ] as const) {
+          const serialized = JSON.stringify({
+            headers: Object.fromEntries(response.headers),
+            body: await response.text(),
+          });
+          assert.doesNotMatch(
+            serialized,
+            /987654321|amountMinor|amount_minor|currency|XTS|NEVER-PUBLIC-ACQUISITION/i,
+            name,
+          );
+        }
+      } finally {
+        LAUNCH_FLAGS.livingLegacy = previousFlag;
+      }
     } finally {
       database.close();
     }

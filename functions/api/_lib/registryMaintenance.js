@@ -214,6 +214,30 @@ function normalizeEventSnapshot(eventType, value) {
   return value;
 }
 
+/**
+ * Safely project stored history snapshots through the same write-time policy.
+ * Legacy or directly inserted rows fail closed without hiding safe event metadata.
+ */
+export function projectMaintenanceHistorySnapshots(eventType, beforeJson, afterJson) {
+  try {
+    if (!Object.hasOwn(EVENT_SNAPSHOT_FIELDS, eventType)
+      || typeof beforeJson !== 'string'
+      || typeof afterJson !== 'string') {
+      throw new Error('invalid_snapshot');
+    }
+    return {
+      before: normalizeEventSnapshot(eventType, JSON.parse(beforeJson)),
+      after: normalizeEventSnapshot(eventType, JSON.parse(afterJson)),
+    };
+  } catch {
+    return {
+      before: null,
+      after: null,
+      warning: 'unsafe_snapshots_redacted',
+    };
+  }
+}
+
 function normalizeMaintenanceTarget(target, changes) {
   if (!isPlainRecord(target)
     || typeof target.id !== 'string'
