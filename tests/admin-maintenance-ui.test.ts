@@ -168,6 +168,104 @@ describe('registry Maintenance client contract', () => {
     assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(422, 'invalid_acquisition')), false);
   });
 
+  it('freezes one exact steward action and sends private values only in the POST body', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
+      requests.push({ url: String(input), init });
+      return new Response(JSON.stringify({
+        ok: true,
+        replayed: false,
+        eventId: 'rme-steward-1',
+        steward: {
+          keeperPieceId: 'kp-1', artworkId: 'UL-100', keeperUserId: 'verified-user',
+          claimedAt: '2026-07-31T00:00:00.000Z', releasedAt: null,
+          currentDisplayLocation: null, stewardVersion: 4,
+        },
+      }), { status: 200 });
+    });
+
+    const {
+      beginMaintenanceStewardActionAttempt,
+      saveMaintenanceStewardAction,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+    const draft = {
+      keeperPieceId: 'kp-1',
+      action: 'transfer_steward' as const,
+      targetEmail: ' verified@example.test ',
+      reason: ' Transfer to the verified account. ',
+      expectedStewardVersion: 3,
+    };
+    const attempt = beginMaintenanceStewardActionAttempt(null, draft, () => 'steward-attempt-1');
+    draft.targetEmail = 'changed@example.test';
+    draft.reason = 'Changed later.';
+
+    const result = await saveMaintenanceStewardAction(attempt.request);
+    assert.equal(result.stewardVersion, 4);
+    assert.equal(Object.isFrozen(attempt), true);
+    assert.equal(Object.isFrozen(attempt.request), true);
+    assert.equal(attempt.request.targetEmail, 'verified@example.test');
+    assert.equal(attempt.request.reason, 'Transfer to the verified account.');
+    assert.equal(requests[0].url, '/api/admin/maintenance/kp-1/actions');
+    assert.doesNotMatch(requests[0].url, /verified|reason|target/i);
+    assert.deepEqual(JSON.parse(String(requests[0].init?.body)), {
+      action: 'transfer_steward',
+      targetEmail: 'verified@example.test',
+      reason: 'Transfer to the verified account.',
+      idempotencyKey: 'steward-attempt-1',
+      expectedStewardVersion: 3,
+    });
+  });
+
+  it('omits targetEmail from reset requests and preserves a retry key after ambiguity', async () => {
+    const createKey = mock.fn(() => 'steward-reset-attempt');
+    const bodies: Array<Record<string, unknown>> = [];
+    let loseFirstResponse = true;
+    mock.method(globalThis, 'fetch', async (_input: string | URL | Request, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      if (loseFirstResponse) {
+        loseFirstResponse = false;
+        throw new TypeError('Response lost after commit.');
+      }
+      return new Response(JSON.stringify({
+        ok: true, replayed: true, eventId: 'rme-reset-1',
+        steward: {
+          keeperPieceId: 'kp-1', artworkId: 'UL-100', keeperUserId: null,
+          claimedAt: null, releasedAt: null, currentDisplayLocation: null,
+          stewardVersion: 2,
+        },
+      }), { status: 200 });
+    });
+
+    const {
+      beginMaintenanceStewardActionAttempt,
+      saveMaintenanceStewardAction,
+      shouldRetainMaintenanceSaveAttempt,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+    const attempt = beginMaintenanceStewardActionAttempt(null, {
+      keeperPieceId: 'kp-1', action: 'reset_steward',
+      reason: 'Return the artwork to unclaimed.', expectedStewardVersion: 1,
+    }, createKey);
+    let ambiguous: unknown;
+    await assert.rejects(saveMaintenanceStewardAction(attempt.request), error => {
+      ambiguous = error;
+      return error instanceof TypeError;
+    });
+    assert.equal(shouldRetainMaintenanceSaveAttempt(ambiguous), true);
+    await saveMaintenanceStewardAction(attempt.request);
+
+    assert.equal(createKey.mock.callCount(), 1);
+    assert.deepEqual(bodies, [
+      {
+        action: 'reset_steward', reason: 'Return the artwork to unclaimed.',
+        idempotencyKey: 'steward-reset-attempt', expectedStewardVersion: 1,
+      },
+      {
+        action: 'reset_steward', reason: 'Return the artwork to unclaimed.',
+        idempotencyKey: 'steward-reset-attempt', expectedStewardVersion: 1,
+      },
+    ]);
+  });
+
   it('converts familiar currency amounts to exact integer minor amounts', async () => {
     const {
       currencyAmountToInput,
@@ -251,6 +349,13 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /id=["']maintenance-reason["']/);
     assert.match(component, /reason\.trim\(\)/);
     assert.match(component, /Confirm (?:creation|correction)|Confirm save/);
+    assert.match(component, /Reset steward/);
+    assert.match(component, /Transfer steward/);
+    assert.match(component, /Assign steward/);
+    assert.match(component, /selected\.stewardVersion/);
+    assert.match(component, /verified account email/i);
+    assert.match(component, /Unclaimed/);
+    assert.match(component, /display location.*clear/i);
   });
 
   it('keeps private state in memory, gates writes on unlock, and reloads stale detail', () => {
@@ -296,6 +401,8 @@ describe('registry Maintenance workspace wiring', () => {
       'maintenance-amount',
       'maintenance-currency',
       'maintenance-reason',
+      'maintenance-steward-target-email',
+      'maintenance-steward-reason',
     ]) {
       assert.match(component, new RegExp(`htmlFor=["']${id}["']`));
       assert.match(component, new RegExp(`id=["']${id}["']`));

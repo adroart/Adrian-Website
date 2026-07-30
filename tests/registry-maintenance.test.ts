@@ -1552,6 +1552,7 @@ describe('private maintenance APIs', () => {
       assert.equal(detailResponse.status, 200);
       const detailed = await detailResponse.json();
       assert.equal(detailed.piece.public.title, 'Art of Living - 32');
+      assert.equal(detailed.piece.stewardVersion, 1);
       assert.deepEqual(detailed.piece.physical.recovery, {
         verifierPresent: true, envelopePresent: true, backupStatus: 'verified',
         backupAt: '2026-07-21T00:00:00.000Z',

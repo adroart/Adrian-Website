@@ -107,6 +107,7 @@ export type MaintenancePieceDetail = {
       backupAt: string | null;
     };
   };
+  stewardVersion: number;
   steward: {
     userId: string;
     email: string | null;
@@ -316,10 +317,10 @@ export function beginMaintenanceSaveRequestAttempt(
 }
 
 /** An in-flight request cannot be abandoned by a competing UI transition. */
-export function discardMaintenanceSaveAttempt(
-  current: MaintenanceSaveAttempt | null,
+export function discardMaintenanceSaveAttempt<T>(
+  current: T | null,
   inFlight: boolean,
-): MaintenanceSaveAttempt | null {
+): T | null {
   return inFlight ? current : null;
 }
 
@@ -346,4 +347,77 @@ export async function saveMaintenanceAcquisition(
   });
   const data = await readMaintenanceJson<{ ok: true; acquisition: MaintenanceAcquisition }>(response);
   return data.acquisition;
+}
+
+export type MaintenanceStewardAction = 'reset_steward' | 'transfer_steward';
+
+export type MaintenanceStewardActionInput = {
+  keeperPieceId: string;
+  action: MaintenanceStewardAction;
+  targetEmail?: string;
+  reason: string;
+  expectedStewardVersion: number;
+};
+
+export type MaintenanceStewardActionRequest = MaintenanceStewardActionInput & {
+  idempotencyKey: string;
+};
+
+export type MaintenanceStewardActionAttempt = Readonly<{
+  request: Readonly<MaintenanceStewardActionRequest>;
+}>;
+
+export type MaintenanceStewardActionResult = {
+  keeperPieceId: string;
+  artworkId: string;
+  keeperUserId: string | null;
+  claimedAt: string | null;
+  releasedAt: string | null;
+  currentDisplayLocation: string | null;
+  stewardVersion: number;
+};
+
+/** Freeze the exact consequential steward request and retry only that request until resolved. */
+export function beginMaintenanceStewardActionAttempt(
+  current: MaintenanceStewardActionAttempt | null,
+  input: MaintenanceStewardActionInput,
+  createKey: () => string = () => crypto.randomUUID(),
+): MaintenanceStewardActionAttempt {
+  if (current) return current;
+  const immutableRequest = Object.freeze({
+    keeperPieceId: input.keeperPieceId,
+    action: input.action,
+    ...(input.action === 'transfer_steward' ? { targetEmail: input.targetEmail?.trim().toLowerCase() } : {}),
+    reason: input.reason.trim(),
+    idempotencyKey: createKey(),
+    expectedStewardVersion: input.expectedStewardVersion,
+  });
+  return Object.freeze({ request: immutableRequest });
+}
+
+export async function saveMaintenanceStewardAction(
+  request: MaintenanceStewardActionRequest,
+): Promise<MaintenanceStewardActionResult> {
+  const body = {
+    action: request.action,
+    ...(request.action === 'transfer_steward' ? { targetEmail: request.targetEmail?.trim().toLowerCase() } : {}),
+    reason: request.reason.trim(),
+    idempotencyKey: request.idempotencyKey.trim(),
+    expectedStewardVersion: request.expectedStewardVersion,
+  };
+  const response = await fetch(
+    `/api/admin/maintenance/${encodeURIComponent(request.keeperPieceId)}/actions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
+  const data = await readMaintenanceJson<{
+    ok: true;
+    replayed: boolean;
+    eventId: string;
+    steward: MaintenanceStewardActionResult;
+  }>(response);
+  return data.steward;
 }

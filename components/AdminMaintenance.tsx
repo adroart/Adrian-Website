@@ -7,6 +7,7 @@ import {
   AdminSection,
 } from './admin/AdminPage';
 import {
+  beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
   createMaintenanceRequestGate,
   discardMaintenanceSaveAttempt,
@@ -17,6 +18,7 @@ import {
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
   saveMaintenanceAcquisition,
+  saveMaintenanceStewardAction,
   searchMaintenance,
   shouldRetainMaintenanceSaveAttempt,
   type MaintenanceAcquisition,
@@ -26,6 +28,8 @@ import {
   type MaintenancePieceDetail,
   type MaintenanceSearchFilters,
   type MaintenanceSaveAttempt,
+  type MaintenanceStewardAction,
+  type MaintenanceStewardActionAttempt,
 } from '../utils/adminRegistryMaintenance';
 
 type SearchDraft = {
@@ -52,6 +56,13 @@ type ReviewState = {
   expectedVersion?: number;
   before: MaintenanceAcquisition | null;
   after: MaintenanceAcquisitionInput;
+};
+
+type StewardReviewState = {
+  action: MaintenanceStewardAction;
+  targetEmail?: string;
+  expectedStewardVersion: number;
+  before: MaintenancePieceDetail['steward'];
 };
 
 const EMPTY_SEARCH: SearchDraft = {
@@ -188,6 +199,41 @@ const AcquisitionSnapshot: React.FC<{ acquisition: MaintenanceAcquisitionInput |
   );
 };
 
+const StewardSnapshot: React.FC<{
+  steward: MaintenancePieceDetail['steward'];
+  after?: StewardReviewState;
+}> = ({ steward, after }) => {
+  if (after?.action === 'reset_steward') {
+    return <DefinitionList items={[
+      ['Status', 'Unclaimed'],
+      ['Steward account', 'Cleared'],
+      ['Display location', 'Cleared'],
+      ['Claimed', 'Cleared'],
+      ['Released', 'Cleared'],
+      ['Steward version', after.expectedStewardVersion + 1],
+    ]} />;
+  }
+  if (after?.action === 'transfer_steward') {
+    return <DefinitionList items={[
+      ['Status', 'Active steward'],
+      ['Verified account email', after.targetEmail],
+      ['Display location', 'Cleared'],
+      ['Claimed', 'Set when saved'],
+      ['Released', 'Cleared'],
+      ['Steward version', after.expectedStewardVersion + 1],
+    ]} />;
+  }
+  if (!steward) return <p className="maintenance-muted">Unclaimed</p>;
+  return <DefinitionList items={[
+    ['Email', steward.email],
+    ['Status', steward.active ? 'Active steward' : 'Released'],
+    ['Display location', steward.currentDisplayLocation],
+    ['Claimed', displayDate(steward.claimedAt)],
+    ['Released', displayDate(steward.releasedAt)],
+    ['Steward version', steward.stewardVersion],
+  ]} />;
+};
+
 const AdminMaintenance: React.FC = () => {
   const [searchDraft, setSearchDraft] = useState<SearchDraft>(EMPTY_SEARCH);
   const [results, setResults] = useState<MaintenanceListItem[]>([]);
@@ -202,14 +248,23 @@ const AdminMaintenance: React.FC = () => {
   const [reason, setReason] = useState('');
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [stewardEditor, setStewardEditor] = useState<MaintenanceStewardAction | null>(null);
+  const [stewardTargetEmail, setStewardTargetEmail] = useState('');
+  const [stewardReview, setStewardReview] = useState<StewardReviewState | null>(null);
+  const [stewardReason, setStewardReason] = useState('');
+  const [stewardError, setStewardError] = useState('');
+  const [stewardSaving, setStewardSaving] = useState(false);
   const [notice, setNotice] = useState('');
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
   const [unlockError, setUnlockError] = useState('');
   const unlockInputRef = useRef<HTMLInputElement>(null);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const stewardReasonRef = useRef<HTMLTextAreaElement>(null);
   const saveAttemptRef = useRef<MaintenanceSaveAttempt | null>(null);
   const saveInFlightRef = useRef(false);
+  const stewardAttemptRef = useRef<MaintenanceStewardActionAttempt | null>(null);
+  const stewardInFlightRef = useRef(false);
   const searchGateRef = useRef(createMaintenanceRequestGate());
   const detailGateRef = useRef(createMaintenanceRequestGate());
 
@@ -220,6 +275,17 @@ const AdminMaintenance: React.FC = () => {
     );
     return saveAttemptRef.current === null;
   };
+
+  const clearStewardAttempt = () => {
+    stewardAttemptRef.current = discardMaintenanceSaveAttempt(
+      stewardAttemptRef.current,
+      stewardInFlightRef.current,
+    );
+    return stewardAttemptRef.current === null;
+  };
+
+  const clearMaintenanceAttempts = () => clearSaveAttempt() && clearStewardAttempt();
+  const transitionBusy = saving || stewardSaving;
 
   const loadSearch = useCallback(async (filters: MaintenanceSearchFilters = {}, signal?: AbortSignal) => {
     const generation = searchGateRef.current.next();
@@ -277,6 +343,10 @@ const AdminMaintenance: React.FC = () => {
     if (review) reasonRef.current?.focus();
   }, [review]);
 
+  useEffect(() => {
+    if (stewardReview) stewardReasonRef.current?.focus();
+  }, [stewardReview]);
+
   const searchFilters = (): MaintenanceSearchFilters => {
     const edition = searchDraft.editionNumber.trim();
     if (edition && (!/^\d+$/.test(edition) || Number(edition) > 9999)) {
@@ -292,12 +362,14 @@ const AdminMaintenance: React.FC = () => {
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!clearSaveAttempt()) return;
+    if (!clearMaintenanceAttempts()) return;
     try {
       detailGateRef.current.invalidate();
       setSelected(null);
       setEditor(undefined);
       setReview(null);
+      setStewardEditor(null);
+      setStewardReview(null);
       setNotice('');
       setDetailError('');
       void loadSearch(searchFilters());
@@ -307,28 +379,34 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const clearSearch = () => {
-    if (!clearSaveAttempt()) return;
+    if (!clearMaintenanceAttempts()) return;
     detailGateRef.current.invalidate();
     setSearchDraft(EMPTY_SEARCH);
     setSelected(null);
     setEditor(undefined);
     setReview(null);
+    setStewardEditor(null);
+    setStewardReview(null);
     setNotice('');
     setDetailError('');
     void loadSearch({});
   };
 
   const openDetail = (item: MaintenanceListItem) => {
-    if (!clearSaveAttempt()) return;
+    if (!clearMaintenanceAttempts()) return;
     setSelected(null);
     setEditor(undefined);
     setReview(null);
+    setStewardEditor(null);
+    setStewardReview(null);
     setNotice('');
     void loadDetail(item.id).catch(() => undefined);
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
-    if (!clearSaveAttempt()) return;
+    if (!clearMaintenanceAttempts()) return;
+    setStewardEditor(null);
+    setStewardReview(null);
     setEditor(acquisition);
     setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
     setReview(null);
@@ -343,6 +421,55 @@ const AdminMaintenance: React.FC = () => {
     setReview(null);
     setReason('');
     setFormError('');
+  };
+
+  const openStewardEditor = (action: MaintenanceStewardAction) => {
+    if (!selected || !clearMaintenanceAttempts()) return;
+    setEditor(undefined);
+    setReview(null);
+    setReason('');
+    setFormError('');
+    setStewardEditor(action);
+    setStewardTargetEmail('');
+    setStewardReason('');
+    setStewardError('');
+    setNotice('');
+    if (action === 'reset_steward' && selected.steward) {
+      setStewardReview({
+        action,
+        expectedStewardVersion: selected.steward.stewardVersion,
+        before: selected.steward,
+      });
+    } else {
+      setStewardReview(null);
+    }
+  };
+
+  const closeStewardEditor = () => {
+    if (!clearStewardAttempt()) return;
+    setStewardEditor(null);
+    setStewardReview(null);
+    setStewardTargetEmail('');
+    setStewardReason('');
+    setStewardError('');
+  };
+
+  const prepareStewardTransferReview = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selected || !clearStewardAttempt()) return;
+    const targetEmail = stewardTargetEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail) || targetEmail.length > 254) {
+      setStewardError('Enter the exact email for an existing verified account.');
+      return;
+    }
+    setStewardReview({
+      action: 'transfer_steward',
+      targetEmail,
+      expectedStewardVersion: selected.stewardVersion,
+      before: selected.steward,
+    });
+    setStewardReason('');
+    setStewardError('');
   };
 
   const prepareReview = (event: React.FormEvent) => {
@@ -459,6 +586,88 @@ const AdminMaintenance: React.FC = () => {
     }
   };
 
+  const confirmStewardSave = async () => {
+    if (!selected || !stewardReview) return;
+    if (!stewardReason.trim()) {
+      setStewardError('A reason is required before this steward change can be saved.');
+      stewardReasonRef.current?.focus();
+      return;
+    }
+    if (!registryUnlocked) {
+      setStewardError('Unlock the private registry before confirming this change.');
+      return;
+    }
+    const attempt = beginMaintenanceStewardActionAttempt(stewardAttemptRef.current, {
+      keeperPieceId: selected.id,
+      action: stewardReview.action,
+      ...(stewardReview.action === 'transfer_steward'
+        ? { targetEmail: stewardReview.targetEmail }
+        : {}),
+      reason: stewardReason,
+      expectedStewardVersion: stewardReview.expectedStewardVersion,
+    });
+    stewardAttemptRef.current = attempt;
+    stewardInFlightRef.current = true;
+    setStewardSaving(true);
+    setStewardError('');
+    try {
+      const saved = await saveMaintenanceStewardAction(attempt.request);
+      stewardInFlightRef.current = false;
+      stewardAttemptRef.current = null;
+      const savedMessage = stewardReview.action === 'reset_steward'
+        ? 'Steward reset saved. This artwork is now Unclaimed.'
+        : `Steward transfer saved for ${stewardReview.targetEmail}. The display location was cleared.`;
+      setSelected(current => {
+        if (!current || current.id !== attempt.request.keeperPieceId) return current;
+        return {
+          ...current,
+          stewardVersion: saved.stewardVersion,
+          steward: saved.keeperUserId === null ? null : {
+            userId: saved.keeperUserId,
+            email: stewardReview.targetEmail ?? null,
+            active: saved.releasedAt === null,
+            currentDisplayLocation: saved.currentDisplayLocation,
+            claimedAt: saved.claimedAt,
+            releasedAt: saved.releasedAt,
+            stewardVersion: saved.stewardVersion,
+          },
+        };
+      });
+      setStewardEditor(null);
+      setStewardReview(null);
+      setStewardTargetEmail('');
+      setStewardReason('');
+      setNotice(savedMessage);
+      try {
+        await loadDetail(attempt.request.keeperPieceId);
+      } catch {
+        setNotice(`${savedMessage} It was saved, but the private detail could not be refreshed. Reload the record before making another change.`);
+      }
+    } catch (error) {
+      stewardInFlightRef.current = false;
+      if (!shouldRetainMaintenanceSaveAttempt(error)) stewardAttemptRef.current = null;
+      if (error instanceof MaintenanceRequestError
+        && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
+        setRegistryUnlocked(false);
+      }
+      if (error instanceof MaintenanceRequestError && error.code === 'version_conflict') {
+        try {
+          await loadDetail(attempt.request.keeperPieceId);
+          setStewardReview(null);
+          setStewardEditor(null);
+          setNotice('The steward changed after you opened it. The latest detail has been reloaded; review it before trying again.');
+        } catch {
+          setStewardError('The steward changed, but the latest detail could not be reloaded. Your review is preserved; retry the reload before editing further.');
+        }
+      } else {
+        setStewardError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same steward action.'));
+      }
+    } finally {
+      stewardInFlightRef.current = false;
+      setStewardSaving(false);
+    }
+  };
+
   return (
     <AdminPage width="wide">
       <AdminPageHeader
@@ -477,8 +686,8 @@ const AdminMaintenance: React.FC = () => {
             <p>Search fields are public identity only. Private values never enter the URL.</p>
           </div>
           <div className="maintenance-actions">
-            <button type="button" className={quietButtonClass} onClick={clearSearch} disabled={saving}>Clear</button>
-            <button type="submit" className={primaryButtonClass} disabled={searching || saving}>Search Maintenance</button>
+            <button type="button" className={quietButtonClass} onClick={clearSearch} disabled={transitionBusy}>Clear</button>
+            <button type="submit" className={primaryButtonClass} disabled={searching || transitionBusy}>Search Maintenance</button>
           </div>
         </div>
         <div className="maintenance-search-grid">
@@ -514,7 +723,7 @@ const AdminMaintenance: React.FC = () => {
               key={item.id}
               className={selected?.id === item.id ? 'maintenance-result is-selected' : 'maintenance-result'}
               onClick={() => openDetail(item)}
-              disabled={saving}
+              disabled={transitionBusy}
               aria-pressed={selected?.id === item.id}
               aria-label={`${item.title}, ${item.publicCode || item.artworkId}`}
             >
@@ -568,7 +777,7 @@ const AdminMaintenance: React.FC = () => {
 
           <AdminSection title="Private acquisition" description="Exact amounts and collector references stay inside this authenticated detail.">
             <div className="maintenance-section-actions">
-              <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)} disabled={saving}>Record acquisition</button>
+              <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)} disabled={transitionBusy}>Record acquisition</button>
             </div>
             {selected.acquisitions.length === 0 ? (
               <AdminEmptyState title="No acquisition recorded" description="Record a sale, gift, retained work, loan, or other acquisition event." />
@@ -581,7 +790,7 @@ const AdminMaintenance: React.FC = () => {
                       <span>{displayDate(acquisition.acquiredAt)} · {displayPrivateAmount(acquisition)}</span>
                       {acquisition.acquirerReference && <span>Reference: {acquisition.acquirerReference}</span>}
                     </div>
-                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={saving} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
+                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={transitionBusy} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
                   </article>
                 ))}
               </div>
@@ -688,15 +897,111 @@ const AdminMaintenance: React.FC = () => {
 
           <AdminSection title="Current steward">
             {selected.steward ? (
-              <DefinitionList items={[
-                ['Email', selected.steward.email],
-                ['Status', selected.steward.active ? 'Active steward' : 'Released'],
-                ['Display location', selected.steward.currentDisplayLocation],
-                ['Claimed', displayDate(selected.steward.claimedAt)],
-                ['Released', displayDate(selected.steward.releasedAt)],
-                ['Steward version', selected.steward.stewardVersion],
-              ]} />
-            ) : <AdminEmptyState title="No current steward" description="This physical artwork is not associated with a steward account." />}
+              <>
+                <div className="maintenance-section-actions">
+                  <button type="button" className={quietButtonClass} onClick={() => openStewardEditor('reset_steward')} disabled={transitionBusy}>Reset steward</button>
+                  <button type="button" className={primaryButtonClass} onClick={() => openStewardEditor('transfer_steward')} disabled={transitionBusy}>Transfer steward</button>
+                </div>
+                <StewardSnapshot steward={selected.steward} />
+              </>
+            ) : (
+              <>
+                <div className="maintenance-section-actions">
+                  <button type="button" className={primaryButtonClass} onClick={() => openStewardEditor('transfer_steward')} disabled={transitionBusy}>Assign steward</button>
+                </div>
+                <AdminEmptyState title="No current steward" description="This physical artwork is not associated with a steward account." />
+              </>
+            )}
+
+            {stewardEditor === 'transfer_steward' && !stewardReview && (
+              <form className="maintenance-acquisition-form" onSubmit={prepareStewardTransferReview}>
+                <h3>Transfer steward</h3>
+                <p>Enter the exact email for an existing verified account. The server will reject unknown or unverified accounts.</p>
+                <div className="maintenance-form-grid">
+                  <label className="maintenance-field-wide" htmlFor="maintenance-steward-target-email">
+                    <span className={labelClass}>Verified account email</span>
+                    <input
+                      id="maintenance-steward-target-email"
+                      className={inputClass}
+                      type="email"
+                      autoComplete="off"
+                      value={stewardTargetEmail}
+                      onChange={event => {
+                        clearStewardAttempt();
+                        setStewardTargetEmail(event.target.value);
+                      }}
+                      required
+                    />
+                    <small className="maintenance-helper">This must match one verified account. The current display location clears when the transfer succeeds.</small>
+                  </label>
+                </div>
+                {stewardError && <p className="maintenance-inline-error" role="alert">{stewardError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closeStewardEditor} disabled={stewardSaving}>Cancel</button>
+                  <button type="submit" className={primaryButtonClass} disabled={stewardSaving}>Review transfer</button>
+                </div>
+              </form>
+            )}
+
+            {stewardReview && (
+              <div className="maintenance-review" aria-labelledby="maintenance-steward-review-title">
+                <div className="maintenance-review-heading">
+                  <p className="admin-eyebrow">Confirmation required</p>
+                  <h3 id="maintenance-steward-review-title">Review steward {stewardReview.action === 'reset_steward' ? 'reset' : 'transfer'}</h3>
+                  <p>
+                    {stewardReview.action === 'reset_steward'
+                      ? 'Reset returns this artwork to Unclaimed. The steward account, claim and release timestamps, and display location all clear.'
+                      : 'Transfer assigns the verified account, starts a new claim time, and clears the current display location.'}
+                  </p>
+                </div>
+                <div className="maintenance-review-grid">
+                  <div><h4>Before</h4><StewardSnapshot steward={stewardReview.before} /></div>
+                  <div><h4>After</h4><StewardSnapshot steward={null} after={stewardReview} /></div>
+                </div>
+                <label htmlFor="maintenance-steward-reason">
+                  <span className={labelClass}>Reason for this steward change</span>
+                  <textarea
+                    ref={stewardReasonRef}
+                    id="maintenance-steward-reason"
+                    className={inputClass}
+                    rows={3}
+                    required
+                    value={stewardReason}
+                    disabled={stewardSaving}
+                    onChange={event => {
+                      clearStewardAttempt();
+                      setStewardReason(event.target.value);
+                    }}
+                  />
+                </label>
+                {!registryUnlocked && (
+                  <AdminAlert tone="warning">
+                    <p>Unlock the private registry before confirming this consequential change.</p>
+                    <form className="maintenance-unlock-form" onSubmit={unlockRegistry}>
+                      <label htmlFor="maintenance-registry-secret">
+                        <span className={labelClass}>Registry secret</span>
+                        <input ref={unlockInputRef} id="maintenance-registry-secret" className={inputClass} type="password" autoComplete="current-password" />
+                      </label>
+                      <button type="submit" className={quietButtonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : 'Unlock registry'}</button>
+                    </form>
+                    {unlockError && <p className="maintenance-inline-error" role="alert">{unlockError}</p>}
+                  </AdminAlert>
+                )}
+                {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
+                {stewardError && <p className="maintenance-inline-error" role="alert">{stewardError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closeStewardEditor} disabled={stewardSaving}>Cancel</button>
+                  <button
+                    type="button"
+                    className={primaryButtonClass}
+                    onClick={() => void confirmStewardSave()}
+                    disabled={stewardSaving || !registryUnlocked || !stewardReason.trim()}
+                  >
+                    {stewardSaving ? 'Saving…' : `Confirm steward ${stewardReview.action === 'reset_steward' ? 'reset' : 'transfer'}`}
+                  </button>
+                </div>
+              </div>
+            )}
           </AdminSection>
 
           <AdminSection title="Maintenance history">

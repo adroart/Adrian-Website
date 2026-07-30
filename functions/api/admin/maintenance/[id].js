@@ -140,6 +140,7 @@ export async function onRequest({ request, env, params }) {
             backupAt: row.backup_at ?? null,
           },
         },
+        stewardVersion: row.steward_version,
         steward: row.keeper_user_id ? {
           userId: row.keeper_user_id,
           email: row.steward_email ?? null,
