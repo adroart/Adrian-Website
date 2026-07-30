@@ -1461,6 +1461,26 @@ describe('requestContestedClaim (Adrian side, transport)', () => {
     }
   });
 
+  it('rejects an unknown receiver outcome instead of inventing a request', async () => {
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response(JSON.stringify({
+      ok: true,
+      status: 'unexpected',
+      request: { id: 'req-unknown' },
+    }), { status: 200 })) as typeof fetch;
+    try {
+      const response = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
+        pieceId: 'UL-100',
+        editionNumber: 0,
+        requesterRef: 'user-asker',
+        requesterEmail: 'asker@example.com',
+      });
+      assert.deepEqual(response, { ok: false, reason: 'invalid_outcome' });
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
   it('does NOT retry a 400 (our payload is wrong)', async () => {
     let n = 0;
     const origFetch = globalThis.fetch;
@@ -3177,6 +3197,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // 3) A DIFFERENT user now tries to bind → CONTESTED. Goes to a claim
       //    request (202), never a silent takeover. Stub the bridge fetch.
       let bridgeCalled = 0;
+      let bridgeOutcome: 'opened' | 'duplicate' | 'rate_limited' | 'self' = 'opened';
       globalThis.fetch = (async (_input, init) => {
         bridgeCalled++;
         const bridged = JSON.parse(String(init?.body));
@@ -3186,8 +3207,10 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
         assert.equal(bridged.editionNumber, 0);
         return new Response(JSON.stringify({
           ok: true,
-          status: 'opened',
-          request: { id: 'req-1', window: '30 days' },
+          status: bridgeOutcome,
+          ...(bridgeOutcome === 'opened' || bridgeOutcome === 'duplicate'
+            ? { request: { id: 'req-1' } }
+            : {}),
         }), {
           status: 200,
         });
@@ -3209,8 +3232,9 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(contestJson.ok, true);
       assert.equal(contestJson.status, 'claim_requested');
       assert.equal(contestJson.claim.outcome, 'opened');
-      assert.equal(contestJson.claim.window, '30 days');
-      assert.match(contestJson.message, /current steward/i);
+      assert.match(contestJson.message, /recorded for manual review/i);
+      assert.match(contestJson.message, /remain unchanged/i);
+      assert.doesNotMatch(contestJson.message, /notif|silence|window|free|release/i);
       assert.doesNotMatch(contestJson.message, /\bkeeper\b/i);
       assert.equal(bridgeCalled, 1);
       assert.equal(evidence.at(-1)[6], 'contested_attempt');
@@ -3220,23 +3244,47 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // Retries still reach the governed bridge, but private evidence is
       // atomically throttled for this piece/requester/outcome tuple.
       const evidenceCount = evidence.length;
+      bridgeOutcome = 'duplicate';
       const repeatedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(repeatedContest.status, 202);
+      const repeatedJson = await repeatedContest.json();
+      assert.equal(repeatedJson.claim.outcome, 'duplicate');
+      assert.match(repeatedJson.message, /already recorded/i);
+      assert.doesNotMatch(repeatedJson.message, /notif|silence|window|free|release/i);
       assert.equal(bridgeCalled, 2);
       assert.equal(evidence.length, evidenceCount);
+
+      bridgeOutcome = 'rate_limited';
+      const rateLimited = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
+      assert.equal(rateLimited.status, 429);
+      const rateLimitedJson = await rateLimited.json();
+      assert.equal(rateLimitedJson.error, 'claim_rate_limited');
+      assert.match(rateLimitedJson.message, /no new request was recorded/i);
+      assert.equal(pieces[0].keeper_user_id, 'user-first');
+
+      bridgeOutcome = 'self';
+      const self = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
+      assert.equal(self.status, 409);
+      assert.deepEqual(await self.json(), {
+        ok: false,
+        error: 'already_current_steward',
+        message: 'You are already the current steward for this piece. No request was recorded.',
+      });
+      assert.equal(pieces[0].keeper_user_id, 'user-first');
 
       // A copied permanent code is not enough to open a governed claim.
       const wrongContest = await bind({ request: bindReq({ publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }), env: bindEnv });
       assert.equal(wrongContest.status, 403);
-      assert.equal(bridgeCalled, 2);
+      assert.equal(bridgeCalled, 4);
 
       // Once claimed, release never turns the permanent Ownership Code back
       // into a bearer instrument. A later holder enters the governed path.
+      bridgeOutcome = 'opened';
       pieces[0].released_at = '2026-07-13T12:00:00Z';
       const releasedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(releasedContest.status, 202);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
-      assert.equal(bridgeCalled, 3);
+      assert.equal(bridgeCalled, 5);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
@@ -3348,6 +3396,15 @@ describe('steward status and display location by public identity', () => {
       assert.deepEqual(await response.json(), { ok: true, kept: false, byYou: false });
       assert.ok(seen.some((entry) => entry.params[0] === row.public_code));
       assert.equal(seen.some((entry) => entry.params.includes(row.piece_id)), false);
+
+      row.keeper_user_id = 'user-first';
+      row.released_at = '2026-07-13T12:00:00Z';
+      const released = await piece({
+        request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
+        env: { DB },
+      });
+      assert.equal(released.status, 200);
+      assert.deepEqual(await released.json(), { ok: true, kept: true, byYou: false });
     } finally {
       CURRENT_AUTH = null;
       LAUNCH_FLAGS.livingLegacy = wasOn;

@@ -3,13 +3,11 @@
  *
  * Fires a CONTESTED-claim handoff to mandalacodes when a steward bind hits a
  * piece that already has a current steward. Adrian-Website is the front door a
- * collector scans, but the patient multi-warning escalation window and the
- * one claim-request store (R2 atlas/claimRequests.json) both live on the
- * mandalacodes side. Rather than fork that store or duplicate the escalation
- * logic here, this bridge POSTs the requester's already-verified identity to
- * mandalacodes' machine-auth claim-bridge endpoint, which appends the request
- * to the SINGLE source of truth and lets the existing routing, dedupe, rate
- * limit, and resolve flow Just Work.
+ * collector scans, but the one claim-request store (R2
+ * atlas/claimRequests.json) lives on the mandalacodes side. Rather than fork
+ * that store, this bridge POSTs the requester's already-verified identity to
+ * mandalacodes' machine-auth claim-bridge endpoint. The receiver records or
+ * rejects the request and reports the exact outcome.
  *
  * INTEGRATION SHAPE (decision, recorded here and in bind.js): shape (1) of the
  * two the brief offered; one shared store, server-to-server. Adrian-Website
@@ -41,6 +39,7 @@
  */
 
 const ENDPOINT = 'https://mandalacodes.com/api/atlas/claim-bridge';
+const RECEIVER_OUTCOMES = new Set(['opened', 'duplicate', 'rate_limited', 'self']);
 
 /** Same evidence-note ceiling mandalacodes enforces (CLAIM_REQUEST_NOTE_MAX). */
 export const CLAIM_REQUEST_NOTE_MAX = 500;
@@ -102,9 +101,9 @@ async function sendOnce(secret, rawBody) {
  * @param {object} env  Cloudflare env (needs CLAIM_BRIDGE_SECRET)
  * @param {object} claim { pieceId, editionNumber?, requesterRef, requesterEmail, note? }
  * @returns {Promise<{ ok: boolean, status?: string, request?: object, reason?: string }>}
- *   status is the receiver's word: 'opened' on a fresh request, or a friendly
- *   reason on a guardrail stop ('duplicate' for an existing open request,
- *   'rate_limited', 'self' when the asker already holds the piece).
+ *   status is the receiver's exact outcome: 'opened' for a fresh request,
+ *   'duplicate' for an existing request, or a guardrail stop
+ *   ('rate_limited', 'self' when the asker already holds the piece).
  */
 export async function requestContestedClaim(env, claim) {
   if (!env?.CLAIM_BRIDGE_SECRET) {
@@ -128,6 +127,9 @@ export async function requestContestedClaim(env, claim) {
         // The receiver answers 200 for both a fresh open and a guardrail stop
         // (duplicate / rate limit / self), so an honest no-op never looks like
         // a transport failure to the caller.
+        if (!RECEIVER_OUTCOMES.has(data.status)) {
+          return { ok: false, reason: 'invalid_outcome' };
+        }
         return { ok: true, status: data.status, request: data.request };
       }
       if (res.status === 400) {

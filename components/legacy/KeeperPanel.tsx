@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LAUNCH_FLAGS } from '../../launchFlags';
 import { useAccount } from '../../lib/account/useAccount';
@@ -17,12 +17,12 @@ type BindPayload = {
   ok?: boolean;
   status?: string;
   message?: string;
-  claim?: { window?: string; windowDays?: number };
+  claim?: { outcome?: string };
 };
 
 export type StewardBindResult =
   | { kind: 'bound' }
-  | { kind: 'pending'; message: string; window?: string }
+  | { kind: 'pending'; message: string }
   | { kind: 'error'; message: string };
 
 export function stewardClaimDestination(
@@ -38,15 +38,9 @@ export function stewardClaimDestination(
 
 export function classifyStewardBindResult(status: number, payload: BindPayload): StewardBindResult {
   if (status === 202 && payload.status === 'claim_requested') {
-    const window = typeof payload.claim?.window === 'string'
-      ? payload.claim.window
-      : Number.isSafeInteger(payload.claim?.windowDays)
-        ? `${payload.claim?.windowDays} days`
-        : undefined;
     return {
       kind: 'pending',
-      message: payload.message || 'Your stewardship request is pending with the current steward.',
-      ...(window ? { window } : {}),
+      message: payload.message || 'Your stewardship request is recorded for manual review.',
     };
   }
   if (status >= 200 && status < 300 && payload.ok === true) return { kind: 'bound' };
@@ -59,29 +53,45 @@ export function classifyStewardBindResult(status: number, payload: BindPayload):
 export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({ publicIdentity }) => {
   const { isSignedIn, isLoaded, available, fetchAuthed } = useAccount();
   const [searchParams] = useSearchParams();
+  const publicCode = publicIdentity.publicCode;
   const [status, setStatus] = useState<StewardStatus | null>(null);
+  const [statusPublicCode, setStatusPublicCode] = useState(publicCode);
   const [statusLoaded, setStatusLoaded] = useState(false);
   const [statusError, setStatusError] = useState(false);
   const [door, setDoor] = useState<'closed' | 'register' | 'intention'>('closed');
-  const publicCode = publicIdentity.publicCode;
+  const statusRequest = useRef<{ id: number; controller: AbortController } | null>(null);
+  const statusRequestId = useRef(0);
   const claimReturn = searchParams.get('claim') === '1';
 
   const loadStatus = React.useCallback(async () => {
+    statusRequest.current?.controller.abort();
+    const controller = new AbortController();
+    const id = ++statusRequestId.current;
+    statusRequest.current = { id, controller };
+    setStatusPublicCode(publicCode);
+    setStatus(null);
+    setStatusLoaded(false);
+    setStatusError(false);
+
     if (!isSignedIn) {
-      setStatus(null);
-      setStatusLoaded(false);
-      setStatusError(false);
       return;
     }
-    setStatusError(false);
     const params = new URLSearchParams({ publicCode });
-    const response = await fetchAuthed(`/api/keeper/piece?${params.toString()}`).catch(() => null);
+    const response = await fetchAuthed(`/api/keeper/piece?${params.toString()}`, {
+      signal: controller.signal,
+    }).catch(() => null);
+    if (controller.signal.aborted || statusRequest.current?.id !== id) return;
     if (!response?.ok) {
       setStatusError(true);
       setStatusLoaded(false);
       return;
     }
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (controller.signal.aborted || statusRequest.current?.id !== id) return;
+    if (!data) {
+      setStatusError(true);
+      return;
+    }
     setStatus({
       kept: data.kept === true,
       byYou: data.byYou === true,
@@ -91,18 +101,25 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
   }, [fetchAuthed, isSignedIn, publicCode]);
 
   useEffect(() => {
+    statusRequest.current?.controller.abort();
+    setStatusPublicCode(publicCode);
+    setStatus(null);
+    setStatusLoaded(false);
+    setStatusError(false);
+    setDoor(isSignedIn && claimReturn ? 'register' : 'closed');
     if (isLoaded && isSignedIn) void loadStatus();
-  }, [isLoaded, isSignedIn, loadStatus]);
-
-  useEffect(() => {
-    if (isSignedIn && claimReturn) setDoor('register');
-  }, [claimReturn, isSignedIn]);
+    return () => statusRequest.current?.controller.abort();
+  }, [claimReturn, isLoaded, isSignedIn, loadStatus, publicCode]);
 
   if (!LAUNCH_FLAGS.livingLegacy || !available) return null;
 
-  const youKeep = statusLoaded && status?.byYou === true;
-  const keptByOther = statusLoaded && status?.kept === true && !youKeep;
-  const unclaimed = statusLoaded && status?.kept === false;
+  const statusMatches = statusPublicCode === publicCode;
+  const currentStatus = statusMatches ? status : null;
+  const currentStatusLoaded = statusMatches && statusLoaded;
+  const currentStatusError = statusMatches && statusError;
+  const youKeep = currentStatusLoaded && currentStatus?.byYou === true;
+  const keptByOther = currentStatusLoaded && currentStatus?.kept === true && !youKeep;
+  const unclaimed = currentStatusLoaded && currentStatus?.kept === false;
 
   return (
     <section className="mt-20 print:hidden" aria-labelledby="stewardship-heading">
@@ -130,13 +147,13 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
         </div>
       )}
 
-      {isSignedIn && !statusLoaded && !statusError && (
+      {isSignedIn && !currentStatusLoaded && !currentStatusError && (
         <p className="max-w-md mx-auto text-center font-sans text-sm text-wood-500" role="status" aria-live="polite">
           Checking stewardship
         </p>
       )}
 
-      {isSignedIn && statusError && (
+      {isSignedIn && currentStatusError && (
         <div className="max-w-md mx-auto text-center" role="status" aria-live="polite">
           <p className="font-sans text-sm text-wood-600 mb-5">Stewardship could not be checked right now.</p>
           <button type="button" onClick={() => void loadStatus()} className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 border-b border-bronze-300 pb-1">
@@ -165,6 +182,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
             </div>
           ) : (
             <OwnershipCodeForm
+              key={`register-${publicCode}`}
               publicCode={publicCode}
               title={publicIdentity.title}
               variant="register"
@@ -181,9 +199,10 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
       {keptByOther && (
         <div className="max-w-md mx-auto">
           <p className="text-center font-serif text-[16px] text-wood-600 leading-[1.9] mb-8">
-            This piece already has a steward. A transfer of stewardship moves through a separate, patient process.
+            This piece already has a steward. You can submit a stewardship request for manual review.
           </p>
           <OwnershipCodeForm
+            key={`request-${publicCode}`}
             publicCode={publicCode}
             title={publicIdentity.title}
             variant="request"
@@ -198,8 +217,9 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
             You are the current steward
           </p>
           <DisplayLocation
+            key={`location-${publicCode}`}
             publicCode={publicCode}
-            current={status?.currentDisplayLocation ?? null}
+            current={currentStatus?.currentDisplayLocation ?? null}
             onSaved={loadStatus}
           />
           <div className="mt-16">
@@ -260,11 +280,12 @@ function OwnershipCodeForm({
   onCancel?: () => void;
 }) {
   const { fetchAuthed } = useAccount();
+  const bindRequest = useRef<AbortController | null>(null);
   const [code, setCode] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ message: string; window?: string } | null>(null);
+  const [pending, setPending] = useState<{ message: string } | null>(null);
   const wellFormed = isWellFormedRecoveryCode(code);
   const requesting = variant === 'request';
   const titleId = `ownership-code-title-${requesting ? 'request' : 'register'}`;
@@ -272,6 +293,11 @@ function OwnershipCodeForm({
   const outcomeId = `ownership-code-outcome-${requesting ? 'request' : 'register'}`;
   const inputId = `ownership-code-${requesting ? 'request' : 'register'}`;
   const noteId = 'stewardship-evidence-note';
+
+  useEffect(() => () => {
+    bindRequest.current?.abort();
+    bindRequest.current = null;
+  }, []);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -282,16 +308,21 @@ function OwnershipCodeForm({
       return;
     }
     setBusy(true);
+    bindRequest.current?.abort();
+    const controller = new AbortController();
+    bindRequest.current = controller;
     try {
       const response = await fetchAuthed('/api/keeper/bind', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({ publicCode, ownershipCode: code, ...(note.trim() ? { note: note.trim() } : {}) }),
       });
       const data = await response.json().catch(() => ({}));
+      if (controller.signal.aborted || bindRequest.current !== controller) return;
       const result = classifyStewardBindResult(response.status, data);
       if (result.kind === 'pending') {
-        setPending({ message: result.message, ...(result.window ? { window: result.window } : {}) });
+        setPending({ message: result.message });
         return;
       }
       if (result.kind === 'error') {
@@ -300,9 +331,13 @@ function OwnershipCodeForm({
       }
       await onBound();
     } catch {
+      if (controller.signal.aborted || bindRequest.current !== controller) return;
       setError('Stewardship could not be updated right now. Please try again.');
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted && bindRequest.current === controller) {
+        setBusy(false);
+        bindRequest.current = null;
+      }
     }
   };
 
@@ -354,11 +389,6 @@ function OwnershipCodeForm({
         {pending && (
           <div role="status" className="border border-bronze-300 bg-paper-100 p-4 text-left">
             <p className="font-sans text-[13px] text-wood-700 leading-[1.7]">{pending.message}</p>
-            {pending.window && (
-              <p className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-700 mt-2">
-                Response window · {pending.window}
-              </p>
-            )}
           </div>
         )}
       </div>
@@ -390,25 +420,35 @@ function DisplayLocation({
   onSaved: () => void;
 }) {
   const { fetchAuthed } = useAccount();
+  const locationRequest = useRef<AbortController | null>(null);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(current ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setValue(current ?? ''), [current]);
+  useEffect(() => () => {
+    locationRequest.current?.abort();
+    locationRequest.current = null;
+  }, []);
 
   const save = async () => {
     setBusy(true);
     setError(null);
+    locationRequest.current?.abort();
+    const controller = new AbortController();
+    locationRequest.current = controller;
     try {
       const response = await fetchAuthed('/api/keeper/piece', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           publicCode,
           currentDisplayLocation: value.trim(),
         }),
       });
+      if (controller.signal.aborted || locationRequest.current !== controller) return;
       if (response.ok) {
         setEditing(false);
         onSaved();
@@ -416,9 +456,13 @@ function DisplayLocation({
         setError('This location could not be saved. Please try again.');
       }
     } catch {
+      if (controller.signal.aborted || locationRequest.current !== controller) return;
       setError('This location could not be saved. Please try again.');
     } finally {
-      setBusy(false);
+      if (!controller.signal.aborted && locationRequest.current === controller) {
+        setBusy(false);
+        locationRequest.current = null;
+      }
     }
   };
 

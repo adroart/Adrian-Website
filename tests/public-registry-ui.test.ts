@@ -129,13 +129,12 @@ describe('public scanned-identity UI wiring', () => {
       panel.classifyStewardBindResult(202, {
         ok: true,
         status: 'claim_requested',
-        message: 'The current steward has 30 days to respond.',
-        claim: { window: '30 days' },
+        message: 'The request is recorded for manual review.',
+        claim: { outcome: 'opened' },
       }),
       {
         kind: 'pending',
-        message: 'The current steward has 30 days to respond.',
-        window: '30 days',
+        message: 'The request is recorded for manual review.',
       },
     );
     assert.match(source, /Request stewardship/);
@@ -144,6 +143,11 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /aria-describedby=/);
     assert.match(source, /aria-live=['"]polite['"]/);
     assert.match(source, /role=['"]status['"]/);
+    assert.match(source, /AbortController/);
+    assert.match(source, /key=\{`register-\$\{publicCode\}`\}/);
+    assert.match(source, /key=\{`request-\$\{publicCode\}`\}/);
+    assert.match(source, /key=\{`location-\$\{publicCode\}`\}/);
+    assert.doesNotMatch(source, /notified|silence|patient window|response window/i);
   });
 
   it('makes the unrevealed arrival content inert as well as aria-hidden', () => {

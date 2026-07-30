@@ -4,8 +4,8 @@
  * GET  ?publicCode=AR-...
  *   Tells the signed-in user their relationship to this piece:
  *     { ok: true, kept: boolean, byYou: boolean, currentDisplayLocation?: string }
- *   - kept:  does an active steward binding exist at all (any user)?
- *   - byYou: is the signed-in user that steward?
+ *   - kept:  does a governed steward record exist at all (any user)?
+ *   - byYou: is the signed-in user the active steward?
  *   currentDisplayLocation is returned only to the piece's own steward.
  *
  * PUT  { publicCode, currentDisplayLocation }
@@ -75,8 +75,8 @@ async function handleGet(context, auth) {
     return json({ ok: false, error: 'identity_integrity_error' }, 409);
   }
 
-  const kept = Boolean(row.keeper_user_id && !row.released_at);
-  const byYou = kept && row.keeper_user_id === auth.userId;
+  const kept = Boolean(row.keeper_user_id);
+  const byYou = kept && !row.released_at && row.keeper_user_id === auth.userId;
   return json({
     ok: true,
     kept,

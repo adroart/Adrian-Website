@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const PUBLIC_CODE = 'AR-7KQ9M2WX';
+const SECOND_PUBLIC_CODE = 'AR-ABCDEFGH';
 const WORK_PATH = `/works/MD-905?instance=${PUBLIC_CODE}&ref=qr`;
 const CLAIM_PATH = `${WORK_PATH}&claim=1`;
+const SECOND_CLAIM_PATH = `/works/MD-905?instance=${SECOND_PUBLIC_CODE}&ref=qr&claim=1`;
 const OWNERSHIP_CODE = 'K7QM-9XTR-2PHV-N4WB';
 
 const identity = {
@@ -11,6 +13,17 @@ const identity = {
   series: 'Studio Works',
   edition: { kind: 'numbered', number: 1, size: 3, label: 'Edition 1 of 3' },
   publicCode: PUBLIC_CODE,
+  artistName: 'Adrian Rasmussen',
+  plateStatus: 'active',
+  publicProvenance: [],
+};
+
+const secondIdentity = {
+  artworkId: 'MD-905',
+  title: 'Second Registry Study',
+  series: 'Studio Works',
+  edition: { kind: 'numbered', number: 2, size: 3, label: 'Edition 2 of 3' },
+  publicCode: SECOND_PUBLIC_CODE,
   artistName: 'Adrian Rasmussen',
   plateStatus: 'active',
   publicProvenance: [],
@@ -35,6 +48,16 @@ async function mockWork(page: Page) {
     contentType: 'application/json',
     body: JSON.stringify({ ok: true, artwork: { pieceId: 'MD-905', editionNumber: 1, publicCode: PUBLIC_CODE }, events: [] }),
   }));
+  await page.route(`**/api/registry/${SECOND_PUBLIC_CODE}`, route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, identity: secondIdentity }),
+  }));
+  await page.route(`**/api/lineage/${SECOND_PUBLIC_CODE}`, route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, artwork: { pieceId: 'MD-905', editionNumber: 2, publicCode: SECOND_PUBLIC_CODE }, events: [] }),
+  }));
 }
 
 async function openWithLivingLegacy(page: Page, path: string) {
@@ -43,6 +66,13 @@ async function openWithLivingLegacy(page: Page, path: string) {
     const loadModule = Function('return import("/launchFlags.ts")');
     const module = await loadModule();
     module.LAUNCH_FLAGS.livingLegacy = true;
+    window.history.pushState({}, '', nextPath);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, path);
+}
+
+async function navigateInApp(page: Page, path: string) {
+  await page.evaluate((nextPath) => {
     window.history.pushState({}, '', nextPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
   }, path);
@@ -150,8 +180,8 @@ test('a contested request stays pending and keeps the current steward visible', 
       body: JSON.stringify({
         ok: true,
         status: 'claim_requested',
-        message: 'The current steward has been notified.',
-        claim: { outcome: 'opened', window: '30 days' },
+        message: 'Your request is recorded for manual review. The current steward and registration remain unchanged.',
+        claim: { outcome: 'opened' },
       }),
     });
   });
@@ -170,8 +200,9 @@ test('a contested request stays pending and keeps the current steward visible', 
   await form.getByLabel('Evidence note (optional)').fill('Auction receipt available');
   await form.getByRole('button', { name: 'Request stewardship' }).click();
 
-  await expect(form.getByRole('status')).toContainText('The current steward has been notified.');
-  await expect(form.getByRole('status')).toContainText('30 days');
+  await expect(form.getByRole('status')).toContainText('recorded for manual review');
+  await expect(form.getByRole('status')).toContainText('remain unchanged');
+  await expect(form.getByRole('status')).not.toContainText(/notified|silence|window/i);
   await expect(page.getByText('This piece already has a steward.')).toBeVisible();
   expect(bindBodies).toEqual([
     { publicCode: PUBLIC_CODE, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' },
@@ -179,4 +210,72 @@ test('a contested request stays pending and keeps the current steward visible', 
   ]);
   expect(page.url()).toBe(`http://localhost:5555${CLAIM_PATH}`);
   expect(page.url()).not.toContain(OWNERSHIP_CODE);
+});
+
+test('navigation clears the prior piece Ownership Code, note, and outcome', async ({ page }) => {
+  await mockWork(page);
+  await page.route('**/api/auth/get-session', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user: { id: 'requester', email: 'requester@example.com', emailVerified: true },
+      session: { id: 'session-one' },
+    }),
+  }));
+  await page.route('**/api/auth/sync-user', route => route.fulfill({ status: 200, body: '{}' }));
+  await page.route('**/api/keeper/piece?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, kept: true, byYou: false }),
+  }));
+
+  await openWithLivingLegacy(page, CLAIM_PATH);
+  const firstForm = page.getByRole('form', { name: 'Request stewardship' });
+  await firstForm.getByLabel('Ownership Code').fill(OWNERSHIP_CODE);
+  await firstForm.getByLabel('Evidence note (optional)').fill('Private receipt for the first piece');
+
+  await navigateInApp(page, SECOND_CLAIM_PATH);
+  const secondForm = page.getByRole('form', { name: 'Request stewardship' });
+  await expect(page.getByTestId('public-registry-identity')).toContainText('Second Registry Study');
+  await expect(secondForm.getByLabel('Ownership Code')).toHaveValue('');
+  await expect(secondForm.getByLabel('Evidence note (optional)')).toHaveValue('');
+  await expect(secondForm.getByRole('status')).toHaveCount(0);
+});
+
+test('a late status response from the prior publicCode cannot overwrite the current piece', async ({ page }) => {
+  await mockWork(page);
+  await page.route('**/api/auth/get-session', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user: { id: 'requester', email: 'requester@example.com', emailVerified: true },
+      session: { id: 'session-one' },
+    }),
+  }));
+  await page.route('**/api/auth/sync-user', route => route.fulfill({ status: 200, body: '{}' }));
+  await page.route('**/api/keeper/piece?**', async route => {
+    const code = new URL(route.request().url()).searchParams.get('publicCode');
+    if (code === PUBLIC_CODE) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, kept: true, byYou: true, currentDisplayLocation: 'First piece' }),
+      }).catch(() => undefined);
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, kept: true, byYou: false }),
+    });
+  });
+
+  await openWithLivingLegacy(page, CLAIM_PATH);
+  await expect(page.getByText('Checking stewardship')).toBeVisible();
+  await navigateInApp(page, SECOND_CLAIM_PATH);
+  await expect(page.getByRole('form', { name: 'Request stewardship' })).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.getByRole('form', { name: 'Request stewardship' })).toBeVisible();
+  await expect(page.getByText('You are the current steward')).toHaveCount(0);
 });
