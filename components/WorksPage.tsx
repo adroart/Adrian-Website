@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img as cldImg } from '../utils/cloudinary';
@@ -35,6 +35,7 @@ const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
 const WorksPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const artwork = useMemo(() => FULL_ARCHIVE.find(a => a.id === id), [id]);
     const book = useBookContent(id);
 
@@ -63,8 +64,11 @@ const WorksPage: React.FC = () => {
     // visit goes straight to the certificate so nothing feels withheld.
     const legacyOn = LAUNCH_FLAGS.livingLegacy;
     const arrivedByScan = searchParams.get('ref') === 'qr';
-    const instanceCode = searchParams.get('instance');
+    const hasInstanceParam = searchParams.has('instance');
+    const instanceValues = searchParams.getAll('instance');
+    const instanceCode = instanceValues.length === 1 ? instanceValues[0] : null;
     const publicCode = isPublicRegistryCode(instanceCode) ? instanceCode : null;
+    const invalidInstance = hasInstanceParam && !publicCode;
     const [identityState, retryIdentity] = usePublicRegistryIdentity(publicCode);
     const verifiedIdentity = identityState.status === 'ready' && identityState.publicCode === publicCode
         ? identityState.identity
@@ -74,6 +78,19 @@ const WorksPage: React.FC = () => {
         && verifiedIdentity?.artworkId === id;
     const showVerifiedPublicLineage = showPublicLineage && instanceCode && (verifiedIdentity !== null);
     const lineage = usePublicLineage(showPublicLineage, instanceCode, id);
+    const canonicalMismatch = Boolean(
+        verifiedIdentity && id && verifiedIdentity.artworkId !== id,
+    );
+
+    useEffect(() => {
+        if (!verifiedIdentity || !id || verifiedIdentity.artworkId === id) return;
+        const canonicalQuery = new URLSearchParams({
+            instance: verifiedIdentity.publicCode,
+            ref: 'qr',
+        });
+        const canonicalPath = `/works/${encodeURIComponent(verifiedIdentity.artworkId)}?${canonicalQuery.toString()}`;
+        navigate(canonicalPath, { replace: true });
+    }, [id, navigate, verifiedIdentity]);
 
     useMetaTags(
         artwork
@@ -90,6 +107,10 @@ const WorksPage: React.FC = () => {
             onRetry={retryIdentity}
         />
     ) : null;
+
+    if (invalidInstance) return <InvalidPublicIdentityState />;
+    if (canonicalMismatch) return <PublicIdentityRedirectState />;
+    if (publicCode && !verifiedIdentity) return publicIdentityRecord;
 
     let record: React.ReactNode;
     if (!artwork) {
@@ -122,7 +143,7 @@ const WorksPage: React.FC = () => {
                 showPublicLineage={Boolean(showVerifiedPublicLineage)}
                 lineage={lineage}
                 legacyOn={legacyOn}
-                followsIdentity={Boolean(publicCode)}
+                followsIdentity={Boolean(publicCode) || (legacyOn && arrivedByScan)}
             />
         );
     }
@@ -130,10 +151,50 @@ const WorksPage: React.FC = () => {
     // The optional arrival remains gated. Exact identity loading does not depend
     // on this flag, so the public identity stays outside the legacy arrival.
     if (artwork && legacyOn && arrivedByScan) {
-        return <>{publicIdentityRecord}<ArrivalGate artwork={artwork}>{record}</ArrivalGate></>;
+        return (
+            <>
+                {publicIdentityRecord}
+                <ArrivalGate artwork={artwork} headingLevel={publicCode ? 2 : 1}>{record}</ArrivalGate>
+            </>
+        );
     }
     return <>{publicIdentityRecord}{record}</>;
 };
+
+function InvalidPublicIdentityState() {
+    return (
+        <section
+            data-testid="public-registry-invalid"
+            className="min-h-screen pt-28 pb-32 px-6 flex items-center justify-center"
+            role="status"
+        >
+            <div className="max-w-2xl w-full border border-wood-200 p-8 md:p-12 text-center">
+                <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-5">
+                    Plate identity is invalid
+                </h1>
+                <p className="font-sans text-sm leading-relaxed text-wood-600">
+                    This link does not contain a valid public artwork code. Check the plate and scan it again.
+                </p>
+            </div>
+        </section>
+    );
+}
+
+function PublicIdentityRedirectState() {
+    return (
+        <section
+            data-testid="public-registry-redirect"
+            className="min-h-screen pt-28 pb-32 px-6 flex items-center justify-center"
+            aria-live="polite"
+        >
+            <div className="max-w-2xl w-full border border-wood-200 p-8 md:p-12 text-center">
+                <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                    Opening the verified artwork record
+                </h1>
+            </div>
+        </section>
+    );
+}
 
 type DraftArtwork = {
     id: string;

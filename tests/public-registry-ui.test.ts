@@ -38,7 +38,32 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /<PublicIdentityRecord[\s\S]*?identityState/);
     assert.match(source, /draft\.status === ['"]found['"][\s\S]*?<DraftArtworkRecord/);
     assert.match(source, /<PublicIdentityRecord[\s\S]*?<CatalogArtworkRecord/);
-    assert.match(source, /return <>\{publicIdentityRecord\}<ArrivalGate/);
+    assert.match(source, /\{publicIdentityRecord\}[\s\S]*?<ArrivalGate/);
+  });
+
+  it('replaces a mismatched route with the canonical verified artwork route', () => {
+    const source = readSource('components/WorksPage.tsx');
+
+    assert.match(source, /verifiedIdentity\.artworkId !== id/);
+    assert.match(source, /navigate\(canonicalPath, \{ replace: true \}\)/);
+    assert.match(source, /\/works\/\$\{encodeURIComponent\(verifiedIdentity\.artworkId\)\}/);
+    assert.match(source, /<PublicIdentityRedirectState/);
+  });
+
+  it('distinguishes a malformed instance parameter from no instance parameter', () => {
+    const source = readSource('components/WorksPage.tsx');
+
+    assert.match(source, /searchParams\.has\(['"]instance['"]\)/);
+    assert.match(source, /hasInstanceParam && !publicCode/);
+    assert.match(source, /data-testid="public-registry-invalid"/);
+  });
+
+  it('gives scanned identity the only h1 when the legacy arrival is enabled', () => {
+    const worksPage = readSource('components/WorksPage.tsx');
+    const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
+
+    assert.match(arrivalGate, /headingLevel\?:\s*1\s*\|\s*2/);
+    assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} headingLevel=\{publicCode \? 2 : 1\}>/);
   });
 
   it('gives not-found and temporary failures different states with retry only for temporary failures', () => {

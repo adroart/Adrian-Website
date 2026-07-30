@@ -33,10 +33,19 @@ async function mockIdentity(page: import('@playwright/test').Page) {
   });
 }
 
-test('server identity survives tampered and removed catalog query values', async ({ page }) => {
+test('a mismatched route is replaced with the canonical server identity route', async ({ page }) => {
   await mockIdentity(page);
+  await page.route('**/api/works/MD-905', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      artwork: { id: 'MD-905', title: 'Editable Draft Title', series: 'Draft Series', editionSize: 99 },
+    }),
+  }));
 
   await page.goto(`/works/UL-100?instance=${PUBLIC_CODE}&edition=999&title=Tampered`);
+  await expect(page).toHaveURL(`/works/MD-905?instance=${PUBLIC_CODE}&ref=qr`);
   const identity = page.getByTestId('public-registry-identity');
   await expect(identity).toBeVisible();
   await expect(identity.getByRole('heading', { level: 1 })).toHaveText('Server Verified Study');
@@ -47,10 +56,26 @@ test('server identity survives tampered and removed catalog query values', async
   await expect(identity).toContainText('Active');
   await expect(identity).toContainText('Bali studio');
   await expect(identity).not.toContainText('999');
-  await expect(page.getByTestId('catalog-artwork-record')).toContainText('Art of Living - 32');
+  await expect(page.getByTestId('catalog-artwork-record')).toHaveCount(0);
+  await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');
+  await expect(page.getByText('Art of Living - 32')).toHaveCount(0);
+  await assertNoHorizontalOverflow(page);
+});
 
-  await page.goto(`/works/UL-100?instance=${PUBLIC_CODE}`);
-  await expect(page.getByTestId('public-registry-identity')).toContainText('Edition 2 of 7');
+test('a malformed instance shows an explicit invalid identity without registry or catalog fallback', async ({ page }) => {
+  let registryRequests = 0;
+  await page.route('**/api/registry/**', route => {
+    registryRequests += 1;
+    return route.abort();
+  });
+
+  await page.goto('/works/UL-100?instance=AR-I0O1BAD!&edition=999');
+  const invalid = page.getByTestId('public-registry-invalid');
+  await expect(invalid).toBeVisible();
+  await expect(invalid).toContainText('invalid');
+  await expect(page.getByTestId('catalog-artwork-record')).toHaveCount(0);
+  await expect(page.locator('h1')).toHaveCount(1);
+  expect(registryRequests).toBe(0);
   await assertNoHorizontalOverflow(page);
 });
 
@@ -102,7 +127,10 @@ test('temporary registry failure can be retried without query fallback', async (
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ok: true, identity: verifiedIdentity }),
+      body: JSON.stringify({
+        ok: true,
+        identity: { ...verifiedIdentity, artworkId: 'UL-100' },
+      }),
     });
   });
 

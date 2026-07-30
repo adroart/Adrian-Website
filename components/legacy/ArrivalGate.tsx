@@ -35,7 +35,8 @@ function arrivalLines(artwork: Artwork): Line[] {
 export const ArrivalGate: React.FC<{
   artwork: Artwork;
   children: React.ReactNode;
-}> = ({ artwork, children }) => {
+  headingLevel?: 1 | 2;
+}> = ({ artwork, children, headingLevel = 1 }) => {
   const lines = arrivalLines(artwork);
   // Stages: 0 image, then one per line, then the page opens.
   const [stage, setStage] = useState(0);
@@ -85,9 +86,15 @@ export const ArrivalGate: React.FC<{
             </div>
           )}
 
-          <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-8 leading-tight animate-fade-in">
-            {artwork.title}
-          </h1>
+          {headingLevel === 2 ? (
+            <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-8 leading-tight animate-fade-in">
+              {artwork.title}
+            </h2>
+          ) : (
+            <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-8 leading-tight animate-fade-in">
+              {artwork.title}
+            </h1>
+          )}
 
           {/* The waking lines, one at a time. */}
           <div className="space-y-3 mb-4 min-h-[1px]">
