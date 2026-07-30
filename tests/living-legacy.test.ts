@@ -444,18 +444,19 @@ const qrRequest = (number: string, env: Record<string, unknown> = {}) =>
   });
 
 describe('permanent artwork QR resolver', () => {
-  it('resolves an issued AR code through D1 with encoded instance and edition values', async () => {
+  it('resolves an issued AR code through D1 with only the public instance and QR ref', async () => {
     const lookup = plateLookupDb({ piece_id: 'UL 100/α', edition_number: 2 });
     const response = await qrRequest('AR-7KQ9M2WX', { DB: lookup.DB });
 
     assert.equal(response.status, 302);
     assert.equal(
       response.headers.get('location'),
-      'https://adrianrasmussen.com/works/UL%20100%2F%CE%B1?instance=AR-7KQ9M2WX&edition=2&ref=qr',
+      'https://adrianrasmussen.com/works/UL%20100%2F%CE%B1?instance=AR-7KQ9M2WX&ref=qr',
     );
     assert.equal(lookup.calls.length, 1);
     assert.deepEqual(lookup.calls[0].values, ['AR-7KQ9M2WX']);
-    assert.match(lookup.calls[0].sql, /SELECT\s+piece_id,\s*edition_number\s+FROM/i);
+    assert.match(lookup.calls[0].sql, /SELECT\s+piece_id\s+FROM/i);
+    assert.doesNotMatch(lookup.calls[0].sql, /edition_number/i);
     assert.doesNotMatch(
       lookup.calls[0].sql,
       /ownership|recovery|ciphertext|nonce|verifier|hash/i,

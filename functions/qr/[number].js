@@ -49,7 +49,7 @@ export async function onRequest({ params, request, env }) {
 
     const row = await env.DB
       .prepare(
-        `SELECT piece_id, edition_number
+        `SELECT piece_id
            FROM keeper_pieces
           WHERE public_code = ?1
             AND plate_status IN ('generated', 'active')`,
@@ -62,7 +62,6 @@ export async function onRequest({ params, request, env }) {
     const origin = new URL(request.url).origin;
     const query = new URLSearchParams({
       instance: code,
-      edition: String(row.edition_number ?? 0),
       ref: 'qr',
     });
     return Response.redirect(
