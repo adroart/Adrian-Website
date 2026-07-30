@@ -2,23 +2,40 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { describe, it } from 'node:test';
+import { after, before, describe, it, mock } from 'node:test';
 
 import {
   buildMaintenanceEventStatement,
   canonicalMaintenanceJson,
   classifyMaintenanceIdempotency,
+  commitAcquisitionCreate,
   commitMaintenanceMutation,
   normalizeAcquisitionInput,
   normalizeReason,
   replayMaintenanceEvent,
 } from '../functions/api/_lib/registryMaintenance.js';
 
+let maintenanceSession: {
+  session: { id: string };
+  user: { id: string; email: string; emailVerified: boolean };
+} | null = null;
+
+before(() => {
+  mock.module('../lib/account/auth.server.js', {
+    namedExports: {
+      createAuth: () => ({ api: { getSession: async () => maintenanceSession } }),
+    },
+  });
+});
+
+after(() => mock.reset());
+
 const readMigration = (name: string) =>
   readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8');
 
 const registryMigrations = [
   '001_init.sql',
+  '006_better_auth.sql',
   '008_living_legacy.sql',
   '009_keeper_register.sql',
   '010_artwork_plate_identity.sql',
@@ -451,6 +468,11 @@ function createSqliteD1() {
       const statement = {
         bind(...bound: SQLInputValue[]) { values = bound; return statement; },
         first() { return database.prepare(sql).get(...values) ?? null; },
+        all() { return { results: database.prepare(sql).all(...values) }; },
+        run() {
+          const result = database.prepare(sql).run(...values);
+          return { success: true, meta: { changes: Number(result.changes) } };
+        },
         get sql() { return sql; },
         get values() { return values; },
       };
@@ -1104,6 +1126,306 @@ describe('maintenance idempotency and atomic writes', () => {
         event: { ...event, idempotencyKey: 'stale-without-event' },
         expectedVersion: 1,
       }), { ok: false, error: 'version_conflict' });
+    } finally {
+      database.close();
+    }
+  });
+});
+
+const adminIdentity = {
+  userId: 'admin-1',
+  email: 'artist@example.com',
+  session: { id: 'admin-session' },
+};
+
+function acquisitionInput(overrides: Record<string, unknown> = {}) {
+  return {
+    acquisitionType: 'sale',
+    acquiredAt: '2026-07-29T12:30:00Z',
+    amountMinor: 125000,
+    currency: 'IDR',
+    acquirerReference: 'collector-ref',
+    privateNotes: 'Private acquisition note',
+    documentReference: 'r2://private-receipt',
+    publicProvenance: 'Acquired directly from the artist.',
+    ...overrides,
+  };
+}
+
+function adminRequest(path: string, method = 'GET', body?: unknown, cookie?: string) {
+  const headers = new Headers({ Origin: 'https://adrianrasmussen.com' });
+  if (body !== undefined) headers.set('Content-Type', 'application/json');
+  if (cookie) headers.set('Cookie', cookie);
+  return new Request(`https://adrianrasmussen.com${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+async function unlockedCookie(env: Record<string, unknown>) {
+  const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+  const token = await createRegistryUnlockToken(env, adminIdentity);
+  return `registry_unlock=${token}`;
+}
+
+describe('dedicated acquisition creation', () => {
+  it('creates one private integer-minor record and event, replays exactly, and conflicts on reuse', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+      const request = {
+        keeperPieceId: 'kp-maint',
+        acquisition: acquisitionInput(),
+        authorization: adminIdentity,
+        reason: 'Record the original acquisition.',
+        idempotencyKey: 'create-acquisition-1',
+        acquisitionId: 'acq-created',
+        eventId: 'rme-created',
+        createdAt: '2026-07-30T06:00:00.000Z',
+      };
+
+      const created = await commitAcquisitionCreate(env, request);
+      assert.equal(created.ok, true);
+      assert.equal(created.replayed, false);
+      assert.deepEqual(created.acquisition, {
+        acquisitionId: 'acq-created',
+        keeperPieceId: 'kp-maint',
+        ...normalizeAcquisitionInput(acquisitionInput()).acquisition,
+        recordVersion: 1,
+        createdAt: '2026-07-30T06:00:00.000Z',
+        updatedAt: '2026-07-30T06:00:00.000Z',
+      });
+      assert.deepEqual({ ...database.prepare(
+        "SELECT amount_minor, typeof(amount_minor) AS amount_type, currency FROM artwork_acquisitions WHERE id = 'acq-created'",
+      ).get() }, { amount_minor: 125000, amount_type: 'integer', currency: 'IDR' });
+      assert.equal(database.prepare('SELECT count(*) AS count FROM registry_maintenance_events').get().count, 1);
+
+      const replay = await commitAcquisitionCreate(env, request);
+      assert.equal(replay.ok, true);
+      assert.equal(replay.replayed, true);
+      assert.deepEqual(replay.acquisition, created.acquisition);
+      assert.equal(database.prepare('SELECT count(*) AS count FROM artwork_acquisitions').get().count, 1);
+
+      assert.deepEqual(await commitAcquisitionCreate(env, {
+        ...request,
+        acquisition: acquisitionInput({ amountMinor: 125001 }),
+      }), { ok: false, error: 'idempotency_conflict' });
+      assert.deepEqual(await commitAcquisitionCreate(env, {
+        ...request,
+        keeperPieceId: 'kp-missing',
+        idempotencyKey: 'missing-piece-create',
+        acquisitionId: 'acq-missing',
+        eventId: 'rme-missing',
+      }), { ok: false, error: 'keeper_piece_not_found' });
+    } finally {
+      database.close();
+    }
+  });
+
+  it('never reports success when either atomic write result fails', async () => {
+    const request = {
+      keeperPieceId: 'kp-maint', acquisition: acquisitionInput(), authorization: adminIdentity,
+      reason: 'Record acquisition.', idempotencyKey: 'atomic-create',
+    };
+    for (const results of [
+      [{ success: false, meta: { changes: 1 } }, { success: true, meta: { changes: 1 } }],
+      [{ success: true, meta: { changes: 1 } }, { success: false, meta: { changes: 1 } }],
+    ]) {
+      const env = {
+        DB: {
+          prepare(sql: string) {
+            return {
+              bind(...values: unknown[]) { return { sql, values }; },
+              first() { return null; },
+            };
+          },
+          async batch() { return results; },
+        },
+      };
+      assert.deepEqual(await commitAcquisitionCreate(env, request), {
+        ok: false, error: 'maintenance_write_failed',
+      });
+    }
+  });
+});
+
+describe('private maintenance APIs', () => {
+  it('requires admin access and returns searchable summaries plus safe private detail', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        UPDATE keeper_pieces SET keeper_user_id = 'keeper-1', claimed_at = '2026-07-20T00:00:00.000Z',
+          backup_status = 'verified', backup_at = '2026-07-21T00:00:00.000Z',
+          ownership_code_ciphertext = 'PRIVATE-CIPHERTEXT', ownership_code_nonce = 'PRIVATE-NONCE',
+          ownership_code_key_version = 7, recovery_code_hash = 'PRIVATE-VERIFIER'
+        WHERE id = 'kp-maint';
+        INSERT INTO users (clerk_user_id, email) VALUES ('keeper-1', 'keeper@example.com');
+        INSERT INTO artwork_acquisitions
+          (id, keeper_piece_id, acquisition_type, acquired_at, amount_minor, currency,
+           private_notes, created_at, updated_at)
+        VALUES ('acq-private', 'kp-maint', 'sale', '2026-07-29T12:30:00.000Z',
+          125000, 'IDR', 'Private acquisition note', '2026-07-30T06:00:00.000Z',
+          '2026-07-30T06:00:00.000Z');
+        INSERT INTO registry_maintenance_events
+          (id, idempotency_key, event_type, keeper_piece_id, administrator_user_id,
+           administrator_email, reason, before_json, after_json, outcome,
+           related_record_id, mutation_fingerprint, created_at)
+        VALUES ('rme-private', 'private-event', 'acquisition_created', 'kp-maint', 'admin-1',
+          'artist@example.com', 'Record acquisition.', 'null',
+          '{"acquisitionId":"acq-private"}', 'succeeded', 'acq-private',
+          '${'d'.repeat(64)}', '2026-07-30T06:00:00.000Z');
+      `);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      const { onRequest: list } = await import('../functions/api/admin/maintenance.js');
+      const { onRequest: detail } = await import('../functions/api/admin/maintenance/[id].js');
+
+      maintenanceSession = null;
+      assert.equal((await list({ request: adminRequest('/api/admin/maintenance'), env })).status, 401);
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      assert.equal((await list({
+        request: adminRequest('/api/admin/maintenance?unknown=value'), env,
+      })).status, 400);
+      assert.equal((await list({
+        request: adminRequest('/api/admin/maintenance?acquiredFrom=2026-08-01&acquiredTo=2026-07-01'), env,
+      })).status, 400);
+      const listResponse = await list({
+        request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&stewardEmail=keeper%40example.com&editionNumber=0&hasAcquisition=true&acquiredFrom=2026-07-01&acquiredTo=2026-07-31'),
+        env,
+      });
+      assert.equal(listResponse.status, 200);
+      const listed = await listResponse.json();
+      assert.equal(listed.pieces.length, 1);
+      assert.equal(listed.pieces[0].title, 'Art of Living - 32');
+      assert.equal(listed.pieces[0].acquisitionType, 'sale');
+      assert.equal(listed.pieces[0].stewardEmail, 'keeper@example.com');
+      assert.equal(Object.hasOwn(listed.pieces[0], 'amountMinor'), false);
+
+      const detailResponse = await detail({
+        request: adminRequest('/api/admin/maintenance/kp-maint'), env, params: { id: 'kp-maint' },
+      });
+      assert.equal(detailResponse.status, 200);
+      const detailed = await detailResponse.json();
+      assert.equal(detailed.piece.public.title, 'Art of Living - 32');
+      assert.deepEqual(detailed.piece.physical.recovery, {
+        verifierPresent: true, envelopePresent: true, backupStatus: 'verified',
+        backupAt: '2026-07-21T00:00:00.000Z',
+      });
+      assert.equal(detailed.piece.acquisitions[0].amountMinor, 125000);
+      assert.equal(detailed.piece.maintenanceHistory[0].reason, 'Record acquisition.');
+      const serialized = JSON.stringify({ listed, detailed });
+      assert.doesNotMatch(serialized, /PRIVATE-(?:CIPHERTEXT|NONCE|VERIFIER)/);
+      assert.doesNotMatch(serialized, /ownershipCode|recoveryCode|keyVersion/i);
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('requires registry unlock for create and correction, with exact replay and stale protection', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: create } = await import('../functions/api/admin/maintenance/[id]/acquisitions.js');
+      const { onRequest: correct } = await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js');
+      const createBody = {
+        idempotencyKey: 'api-create-acq', reason: 'Record the acquisition.',
+        acquisition: acquisitionInput(),
+      };
+      assert.equal((await create({
+        request: adminRequest('/api/admin/maintenance/kp-maint/acquisitions', 'POST', createBody),
+        env, params: { id: 'kp-maint' },
+      })).status, 403);
+
+      const createdResponse = await create({
+        request: adminRequest('/api/admin/maintenance/kp-maint/acquisitions', 'POST', createBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(createdResponse.status, 201);
+      const created = await createdResponse.json();
+      assert.equal(created.acquisition.amountMinor, 125000);
+      const acquisitionId = created.acquisition.acquisitionId;
+
+      const replay = await create({
+        request: adminRequest('/api/admin/maintenance/kp-maint/acquisitions', 'POST', createBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(replay.status, 200);
+      assert.equal((await replay.json()).replayed, true);
+      const conflictingCreate = await create({
+        request: adminRequest('/api/admin/maintenance/kp-maint/acquisitions', 'POST', {
+          ...createBody, acquisition: acquisitionInput({ amountMinor: 125001 }),
+        }, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(conflictingCreate.status, 409);
+
+      const correctionBody = {
+        idempotencyKey: 'api-correct-acq', reason: 'Correct the private amount.', expectedVersion: 1,
+        acquisition: acquisitionInput({ amountMinor: 130000 }),
+      };
+      const correctedResponse = await correct({
+        request: adminRequest(`/api/admin/maintenance/kp-maint/acquisitions/${acquisitionId}`, 'PUT', correctionBody, cookie),
+        env, params: { id: 'kp-maint', acquisitionId },
+      });
+      assert.equal(correctedResponse.status, 200);
+      const corrected = await correctedResponse.json();
+      assert.equal(corrected.acquisition.amountMinor, 130000);
+      assert.equal(corrected.acquisition.recordVersion, 2);
+
+      const correctionReplay = await correct({
+        request: adminRequest(`/api/admin/maintenance/kp-maint/acquisitions/${acquisitionId}`, 'PUT', correctionBody, cookie),
+        env, params: { id: 'kp-maint', acquisitionId },
+      });
+      assert.equal(correctionReplay.status, 200);
+      assert.equal((await correctionReplay.json()).replayed, true);
+      const stale = await correct({
+        request: adminRequest(`/api/admin/maintenance/kp-maint/acquisitions/${acquisitionId}`, 'PUT', {
+          ...correctionBody, idempotencyKey: 'api-stale-acq',
+        }, cookie),
+        env, params: { id: 'kp-maint', acquisitionId },
+      });
+      assert.equal(stale.status, 409);
+      assert.deepEqual(await stale.json(), { ok: false, error: 'version_conflict' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('keeps private acquisition amounts out of the public registry response', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        INSERT INTO artwork_acquisitions
+          (id, keeper_piece_id, acquisition_type, amount_minor, currency, created_at, updated_at)
+        VALUES ('acq-public-check', 'kp-maint', 'sale', 987654, 'USD', 'x', 'x');
+      `);
+      const { onRequest } = await import('../functions/api/registry/[publicCode].js');
+      const response = await onRequest({
+        request: new Request('https://adrianrasmussen.com/api/registry/AR-7KQ9M2WX'),
+        env,
+        params: { publicCode: 'AR-7KQ9M2WX' },
+      });
+      assert.equal(response.status, 200);
+      assert.doesNotMatch(await response.text(), /987654|amountMinor|private/i);
     } finally {
       database.close();
     }

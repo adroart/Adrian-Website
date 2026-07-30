@@ -773,3 +773,209 @@ export async function commitMaintenanceMutation(env, {
     );
   }
 }
+
+function normalizeAcquisitionCreateRequest({
+  keeperPieceId,
+  acquisition,
+  authorization,
+  reason,
+  idempotencyKey,
+  acquisitionId,
+  eventId,
+  createdAt,
+}) {
+  const normalizedKeeperPieceId = normalizeOptionalIdentifier(keeperPieceId);
+  const normalizedInput = normalizeAcquisitionInput(acquisition);
+  if (!normalizedInput.ok) return { error: normalizedInput.error };
+  const normalizedReason = normalizeMaintenanceReason(reason);
+  if (!normalizedReason.ok) return { error: normalizedReason.error };
+
+  let administrator;
+  let normalizedIdempotencyKey;
+  try {
+    administrator = normalizedAdministrator(authorization);
+    normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
+  } catch (error) {
+    return { error: error?.message || 'invalid_acquisition_create' };
+  }
+  if (!normalizedKeeperPieceId) return { error: 'invalid_maintenance_identifier' };
+
+  const normalizedAcquisitionId = acquisitionId ?? `acq-${crypto.randomUUID()}`;
+  const normalizedEventId = eventId ?? `rme-${crypto.randomUUID()}`;
+  if (normalizeOptionalIdentifier(normalizedAcquisitionId) !== normalizedAcquisitionId
+    || normalizeOptionalIdentifier(normalizedEventId) !== normalizedEventId) {
+    return { error: 'invalid_maintenance_identifier' };
+  }
+  if (createdAt !== undefined && typeof createdAt !== 'string') {
+    return { error: 'invalid_created_at' };
+  }
+  const timestamp = createdAt === undefined ? new Date() : new Date(createdAt);
+  if (Number.isNaN(timestamp.getTime())) return { error: 'invalid_created_at' };
+
+  return {
+    keeperPieceId: normalizedKeeperPieceId,
+    acquisition: normalizedInput.acquisition,
+    administrator,
+    reason: normalizedReason.reason,
+    idempotencyKey: normalizedIdempotencyKey,
+    acquisitionId: normalizedAcquisitionId,
+    eventId: normalizedEventId,
+    createdAt: timestamp.toISOString(),
+  };
+}
+
+function acquisitionCreateReplay(existing, request, mutationFingerprint) {
+  if (!existing) return null;
+  const exact = existing.idempotency_key === request.idempotencyKey
+    && existing.event_type === 'acquisition_created'
+    && existing.keeper_piece_id === request.keeperPieceId
+    && existing.artwork_id == null
+    && existing.administrator_user_id === request.administrator.userId
+    && existing.administrator_email === request.administrator.email
+    && existing.reason === request.reason
+    && existing.outcome === 'succeeded'
+    && existing.mutation_fingerprint === mutationFingerprint;
+  if (!exact) return { ok: false, error: 'idempotency_conflict' };
+  try {
+    const acquisition = JSON.parse(existing.after_json);
+    normalizeEventSnapshot('acquisition_created', acquisition);
+    if (acquisition?.keeperPieceId !== request.keeperPieceId
+      || acquisition?.acquisitionId !== existing.related_record_id) {
+      return { ok: false, error: 'maintenance_write_failed' };
+    }
+    return {
+      ok: true,
+      replayed: true,
+      eventId: existing.id,
+      acquisition,
+    };
+  } catch {
+    return { ok: false, error: 'maintenance_write_failed' };
+  }
+}
+
+async function resolveAcquisitionCreateReplay(env, request, mutationFingerprint, fallback) {
+  try {
+    const existing = await findMaintenanceEventByIdempotencyKey(env, request.idempotencyKey);
+    return acquisitionCreateReplay(existing, request, mutationFingerprint) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Atomically create one acquisition and its append-only maintenance event. */
+export async function commitAcquisitionCreate(env, input) {
+  const allowedFields = new Set([
+    'keeperPieceId', 'acquisition', 'authorization', 'reason', 'idempotencyKey',
+    'acquisitionId', 'eventId', 'createdAt',
+  ]);
+  if (!isPlainRecord(input) || Object.keys(input).some((key) => !allowedFields.has(key))) {
+    return { ok: false, error: 'invalid_acquisition_create' };
+  }
+  let request;
+  try {
+    request = normalizeAcquisitionCreateRequest(input || {});
+  } catch {
+    return { ok: false, error: 'invalid_acquisition_create' };
+  }
+  if (request.error) return { ok: false, error: request.error };
+  if (typeof env?.DB?.batch !== 'function') {
+    return { ok: false, error: 'atomic_write_unavailable' };
+  }
+
+  const mutationFingerprint = await maintenanceMutationFingerprint({
+    operation: 'acquisition_create',
+    keeperPieceId: request.keeperPieceId,
+    acquisition: request.acquisition,
+  });
+  const existingReplay = await resolveAcquisitionCreateReplay(
+    env,
+    request,
+    mutationFingerprint,
+    null,
+  );
+  if (existingReplay) return existingReplay;
+
+  const acquisition = {
+    acquisitionId: request.acquisitionId,
+    keeperPieceId: request.keeperPieceId,
+    ...request.acquisition,
+    recordVersion: 1,
+    createdAt: request.createdAt,
+    updatedAt: request.createdAt,
+  };
+  const event = {
+    id: request.eventId,
+    idempotencyKey: request.idempotencyKey,
+    eventType: 'acquisition_created',
+    keeperPieceId: request.keeperPieceId,
+    artworkId: null,
+    authorization: request.administrator,
+    reason: request.reason,
+    before: null,
+    after: acquisition,
+    outcome: 'succeeded',
+    relatedRecordId: request.acquisitionId,
+    mutationFingerprint,
+    createdAt: request.createdAt,
+  };
+
+  let acquisitionStatement;
+  let eventStatement;
+  try {
+    acquisitionStatement = env.DB.prepare(
+      `INSERT INTO artwork_acquisitions
+         (id, keeper_piece_id, acquisition_type, acquired_at, amount_minor,
+          currency, acquirer_reference, private_notes, document_reference,
+          public_provenance, record_version, created_at, updated_at)
+       SELECT ?1, id, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11, ?11
+         FROM keeper_pieces
+        WHERE id = ?2`,
+    ).bind(
+      request.acquisitionId,
+      request.keeperPieceId,
+      request.acquisition.acquisitionType,
+      request.acquisition.acquiredAt,
+      request.acquisition.amountMinor,
+      request.acquisition.currency,
+      request.acquisition.acquirerReference,
+      request.acquisition.privateNotes,
+      request.acquisition.documentReference,
+      request.acquisition.publicProvenance,
+      request.createdAt,
+    );
+    eventStatement = prepareMaintenanceEventStatement(
+      env,
+      normalizeEventDetails(event, request.eventId),
+    );
+  } catch {
+    return { ok: false, error: 'invalid_maintenance_event' };
+  }
+
+  try {
+    const [acquisitionResult, eventResult] = await env.DB.batch([
+      acquisitionStatement,
+      eventStatement,
+    ]);
+    if (acquisitionResult?.success !== true || eventResult?.success !== true) {
+      return resolveAcquisitionCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+      );
+    }
+    if (acquisitionResult?.meta?.changes !== 1) {
+      return resolveAcquisitionCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'keeper_piece_not_found' },
+      );
+    }
+    if (eventResult?.meta?.changes !== 1) {
+      return resolveAcquisitionCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+      );
+    }
+    return { ok: true, replayed: false, eventId: request.eventId, acquisition };
+  } catch {
+    return resolveAcquisitionCreateReplay(
+      env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+    );
+  }
+}

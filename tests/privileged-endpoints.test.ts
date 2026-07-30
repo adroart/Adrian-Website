@@ -116,6 +116,14 @@ const privilegedEndpoints: EndpointCase[] = [
     load: async () => (await import('../functions/api/admin/viewings.js')).onRequest,
   },
   {
+    name: 'registry maintenance collection', path: '/api/admin/maintenance', method: 'GET', allowedStatus: 200,
+    load: async () => (await import('../functions/api/admin/maintenance.js')).onRequest,
+  },
+  {
+    name: 'registry maintenance detail', path: '/api/admin/maintenance/kp-missing', method: 'GET', params: { id: 'kp-missing' }, allowedStatus: 404,
+    load: async () => (await import('../functions/api/admin/maintenance/[id].js')).onRequest,
+  },
+  {
     name: 'book writes', path: '/api/book', method: 'POST', body: { entry: { id: 'UL-1' } }, allowedStatus: 200,
     load: async () => (await import('../functions/api/book.js')).onRequestPost,
   },
@@ -293,6 +301,10 @@ describe('legacy password administration retirement', () => {
       'functions/api/admin/payment-presets.js',
       'functions/api/admin/payment-presets/[id].js',
       'functions/api/admin/viewings.js',
+      'functions/api/admin/maintenance.js',
+      'functions/api/admin/maintenance/[id].js',
+      'functions/api/admin/maintenance/[id]/acquisitions.js',
+      'functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js',
       'functions/api/book.js',
       'functions/api/poems.js',
       'functions/api/upload-music.js',
@@ -304,7 +316,7 @@ describe('legacy password administration retirement', () => {
 
     for (const file of files) {
       const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
-      assert.match(source, /requireAdmin/);
+      assert.match(source, /requireAdmin|requireRegistryUnlock/);
       assert.doesNotMatch(source, /isAdminAuthed|admin_session/);
     }
   });
