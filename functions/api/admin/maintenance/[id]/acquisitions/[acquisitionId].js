@@ -5,6 +5,7 @@ import {
   findMaintenanceEventByIdempotencyKey,
   normalizeAcquisitionInput,
   normalizeReason,
+  projectMaintenanceHistorySnapshots,
 } from '../../../../_lib/registryMaintenance.js';
 
 const ACQUISITION_FIELDS = [
@@ -49,11 +50,20 @@ function exactReplay(existing, {
     return { ok: false, error: 'idempotency_conflict' };
   }
   try {
-    const before = JSON.parse(existing.before_json);
-    const after = JSON.parse(existing.after_json);
+    const snapshots = projectMaintenanceHistorySnapshots(
+      'acquisition_corrected',
+      existing.before_json,
+      existing.after_json,
+    );
+    if (snapshots.warning || !snapshots.before || !snapshots.after) {
+      return { ok: false, error: 'maintenance_write_failed' };
+    }
+    const { before, after } = snapshots;
     const expectedAfter = Object.fromEntries(ACQUISITION_FIELDS.map((field) => [field, acquisition[field]]));
     const storedAfter = Object.fromEntries(ACQUISITION_FIELDS.map((field) => [field, after[field]]));
     if (before.recordVersion !== expectedVersion
+      || before.acquisitionId !== acquisitionId
+      || before.keeperPieceId !== keeperPieceId
       || after.recordVersion !== expectedVersion + 1
       || after.acquisitionId !== acquisitionId
       || after.keeperPieceId !== keeperPieceId
@@ -190,16 +200,18 @@ export async function onRequest({ request, env, params }) {
     return jsonResponse(result, statusFor(result.error));
   }
   if (result.replayed && result.event?.after_json) {
-    try {
-      return jsonResponse({
-        ok: true,
-        replayed: true,
-        eventId: result.eventId,
-        acquisition: JSON.parse(result.event.after_json),
-      });
-    } catch {
+    const storedReplay = exactReplay(result.event, {
+      keeperPieceId,
+      acquisitionId,
+      authorization,
+      reason: normalizedReason.reason,
+      expectedVersion: body.expectedVersion,
+      acquisition: normalized.acquisition,
+    });
+    if (!storedReplay?.ok) {
       return jsonResponse({ ok: false, error: 'maintenance_write_failed' }, 503);
     }
+    return jsonResponse(storedReplay);
   }
   return jsonResponse({ ok: true, replayed: false, eventId: result.eventId, acquisition: after });
 }

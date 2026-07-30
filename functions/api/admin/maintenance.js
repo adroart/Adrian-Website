@@ -5,8 +5,7 @@ import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 
 const MAX_RESULTS = 200;
 const FILTERS = new Set([
-  'publicCode', 'artworkId', 'editionNumber', 'title', 'stewardEmail',
-  'acquiredFrom', 'acquiredTo', 'hasAcquisition',
+  'publicCode', 'artworkId', 'editionNumber', 'title', 'hasAcquisition',
 ]);
 
 function textParam(params, name, max) {
@@ -14,29 +13,6 @@ function textParam(params, name, max) {
   if (value === null || value === '') return null;
   const normalized = value.trim();
   return normalized && normalized.length <= max ? normalized : false;
-}
-
-function dateBoundary(value, endOfDay = false) {
-  if (value === null || value === '') return null;
-  if (value !== value.trim()) return false;
-  const input = value;
-  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z)?$/.exec(input);
-  if (!match) return false;
-  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
-  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  if (month < 1 || month > 12 || day < 1 || day > daysInMonth[month - 1]) return false;
-  if (hourText !== undefined
-    && (Number(hourText) > 23 || Number(minuteText) > 59 || Number(secondText) > 59)) {
-    return false;
-  }
-  const parsed = new Date(hourText === undefined
-    ? `${input}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`
-    : input);
-  return Number.isNaN(parsed.getTime()) ? false : parsed.toISOString();
 }
 
 function staticArtwork(pieceId) {
@@ -80,10 +56,7 @@ export async function onRequest({ request, env }) {
   const publicCode = textParam(params, 'publicCode', 32);
   const artworkId = textParam(params, 'artworkId', 80);
   const title = textParam(params, 'title', 120);
-  const stewardEmail = textParam(params, 'stewardEmail', 254);
-  const acquiredFrom = dateBoundary(params.get('acquiredFrom'));
-  const acquiredTo = dateBoundary(params.get('acquiredTo'), true);
-  if ([publicCode, artworkId, title, stewardEmail, acquiredFrom, acquiredTo].includes(false)) {
+  if ([publicCode, artworkId, title].includes(false)) {
     return jsonResponse({ ok: false, error: 'invalid_filter' }, 400);
   }
   if (publicCode && !isPublicRegistryCode(publicCode.toUpperCase())) {
@@ -92,10 +65,6 @@ export async function onRequest({ request, env }) {
   if (artworkId && !ARTWORK_ID_PATTERN.test(artworkId.toUpperCase())) {
     return jsonResponse({ ok: false, error: 'invalid_artwork_id' }, 400);
   }
-  if (acquiredFrom && acquiredTo && acquiredFrom > acquiredTo) {
-    return jsonResponse({ ok: false, error: 'invalid_acquisition_range' }, 400);
-  }
-
   let editionNumber = null;
   if (params.has('editionNumber')) {
     const rawEdition = params.get('editionNumber');
@@ -125,9 +94,6 @@ export async function onRequest({ request, env }) {
   if (publicCode) where.push(`upper(kp.public_code) = upper(${bind(publicCode)})`);
   if (artworkId) where.push(`upper(kp.piece_id) = upper(${bind(artworkId)})`);
   if (editionNumber !== null) where.push(`kp.edition_number = ${bind(editionNumber)}`);
-  if (stewardEmail) {
-    where.push(`instr(lower(COALESCE(ba.email, u.email, '')), lower(${bind(stewardEmail)})) > 0`);
-  }
   if (title) {
     const needle = title.toLowerCase();
     const staticIds = FULL_ARCHIVE
@@ -140,15 +106,6 @@ export async function onRequest({ request, env }) {
     } else {
       where.push(registryClause);
     }
-  }
-  const acquisitionPredicates = [];
-  if (acquiredFrom) acquisitionPredicates.push(`af.acquired_at >= ${bind(acquiredFrom)}`);
-  if (acquiredTo) acquisitionPredicates.push(`af.acquired_at <= ${bind(acquiredTo)}`);
-  if (acquisitionPredicates.length) {
-    where.push(`EXISTS (
-      SELECT 1 FROM artwork_acquisitions af
-       WHERE af.keeper_piece_id = kp.id AND ${acquisitionPredicates.join(' AND ')}
-    )`);
   }
   if (hasAcquisition === true) {
     where.push('EXISTS (SELECT 1 FROM artwork_acquisitions ah WHERE ah.keeper_piece_id = kp.id)');

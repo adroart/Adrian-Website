@@ -1304,13 +1304,24 @@ describe('private maintenance APIs', () => {
       assert.equal((await list({
         request: adminRequest('/api/admin/maintenance?unknown=value'), env,
       })).status, 400);
-      assert.equal((await list({
-        request: adminRequest('/api/admin/maintenance?acquiredFrom=2026-08-01&acquiredTo=2026-07-01'), env,
-      })).status, 400);
+      for (const removedFilter of [
+        'stewardEmail=keeper%40example.com',
+        'acquiredFrom=2026-07-01',
+        'acquiredTo=2026-07-31',
+      ]) {
+        const removedResponse = await list({
+          request: adminRequest(`/api/admin/maintenance?${removedFilter}`), env,
+        });
+        assert.equal(removedResponse.status, 400, removedFilter);
+        assert.deepEqual(
+          await removedResponse.json(),
+          { ok: false, error: 'unknown_filter' },
+          removedFilter,
+        );
+      }
       for (const filter of [
         'publicCode=AR-7KQ9M2WX',
         'artworkId=UL-100',
-        'acquiredFrom=2026-07-29T00%3A00%3A00Z&acquiredTo=2026-07-29T23%3A59%3A59.999Z',
       ]) {
         const filteredResponse = await list({
           request: adminRequest(`/api/admin/maintenance?${filter}`), env,
@@ -1321,7 +1332,7 @@ describe('private maintenance APIs', () => {
         assert.equal(filtered.pieces[0].id, 'kp-maint', filter);
       }
       const listResponse = await list({
-        request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&stewardEmail=keeper%40example.com&editionNumber=0&hasAcquisition=true&acquiredFrom=2026-07-01&acquiredTo=2026-07-31'),
+        request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&editionNumber=0&hasAcquisition=true'),
         env,
       });
       assert.equal(listResponse.status, 200);
@@ -1364,16 +1375,6 @@ describe('private maintenance APIs', () => {
         /ownershipCode|recoveryCode|ciphertext|nonce|verifier|keyVersion/i,
       );
       assert.doesNotMatch(serializedHistory, /LEAK-(?:RECOVERY|CIPHERTEXT|NONCE|VERIFIER)/);
-      for (const filter of [
-        'acquiredFrom=2026-02-30',
-        'acquiredTo=July%2030%2C%202026',
-        'acquiredFrom=2026-07-01T00%3A00%3A00',
-        'acquiredTo=2026-07-31T23%3A59%3A59%2B08%3A00',
-      ]) {
-        assert.equal((await list({
-          request: adminRequest(`/api/admin/maintenance?${filter}`), env,
-        })).status, 400, filter);
-      }
     } finally {
       maintenanceSession = null;
       database.close();
@@ -1455,6 +1456,107 @@ describe('private maintenance APIs', () => {
       });
       assert.equal(stale.status, 409);
       assert.deepEqual(await stale.json(), { ok: false, error: 'version_conflict' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('fails closed when a stored correction replay snapshot contains private envelope fields', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+      const acquisitionId = 'acq-unsafe-replay';
+      const beforeAcquisition = normalizeAcquisitionInput(acquisitionInput()).acquisition;
+      const afterAcquisition = normalizeAcquisitionInput(
+        acquisitionInput({ amountMinor: 130000 }),
+      ).acquisition;
+      const beforeSnapshot = {
+        acquisitionId,
+        keeperPieceId: 'kp-maint',
+        ...beforeAcquisition,
+        recordVersion: 1,
+        updatedAt: '2026-07-30T06:00:00.000Z',
+      };
+      const unsafeAfterSnapshot = {
+        acquisitionId,
+        keeperPieceId: 'kp-maint',
+        ...afterAcquisition,
+        recordVersion: 2,
+        updatedAt: '2026-07-30T07:00:00.000Z',
+        nonce: 'LEAK-REPLAY-NONCE',
+        verifier: 'LEAK-REPLAY-VERIFIER',
+      };
+      database.prepare(
+        `INSERT INTO artwork_acquisitions
+           (id, keeper_piece_id, acquisition_type, acquired_at, amount_minor, currency,
+            acquirer_reference, private_notes, document_reference, public_provenance,
+            record_version, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11, ?11)`,
+      ).run(
+        acquisitionId,
+        'kp-maint',
+        beforeAcquisition.acquisitionType,
+        beforeAcquisition.acquiredAt,
+        beforeAcquisition.amountMinor,
+        beforeAcquisition.currency,
+        'collector-ref',
+        'Private acquisition note',
+        'r2://private-receipt',
+        'Acquired directly from the artist.',
+        beforeSnapshot.updatedAt,
+      );
+      database.prepare(
+        `INSERT INTO registry_maintenance_events
+           (id, idempotency_key, event_type, keeper_piece_id, administrator_user_id,
+            administrator_email, reason, before_json, after_json, outcome,
+            related_record_id, mutation_fingerprint, created_at)
+         VALUES (?1, ?2, 'acquisition_corrected', ?3, ?4, ?5, ?6, ?7, ?8,
+                 'succeeded', ?9, ?10, ?11)`,
+      ).run(
+        'rme-unsafe-replay',
+        'api-unsafe-replay',
+        'kp-maint',
+        adminIdentity.userId,
+        adminIdentity.email,
+        'Correct the private amount.',
+        JSON.stringify(beforeSnapshot),
+        JSON.stringify(unsafeAfterSnapshot),
+        acquisitionId,
+        'f'.repeat(64),
+        '2026-07-30T07:00:00.000Z',
+      );
+
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: correct } = await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js');
+      const response = await correct({
+        request: adminRequest(
+          `/api/admin/maintenance/kp-maint/acquisitions/${acquisitionId}`,
+          'PUT',
+          {
+            idempotencyKey: 'api-unsafe-replay',
+            reason: 'Correct the private amount.',
+            expectedVersion: 1,
+            acquisition: acquisitionInput({ amountMinor: 130000 }),
+          },
+          cookie,
+        ),
+        env,
+        params: { id: 'kp-maint', acquisitionId },
+      });
+      const responseText = await response.text();
+      assert.equal(response.status, 503);
+      assert.deepEqual(JSON.parse(responseText), { ok: false, error: 'maintenance_write_failed' });
+      assert.doesNotMatch(responseText, /nonce|verifier|LEAK-REPLAY/i);
     } finally {
       maintenanceSession = null;
       database.close();
