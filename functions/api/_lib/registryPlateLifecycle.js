@@ -18,7 +18,7 @@ import {
   registryPlateCryptoConfigured,
   registryPlateInsertStatement,
 } from './registryPlateIssuance.js';
-import { decryptOwnershipCode, encryptOwnershipCode } from '../../../utils/ownershipCodeCrypto.ts';
+import { decryptOwnershipCode } from '../../../utils/ownershipCodeCrypto.ts';
 
 const ACTION_FIELDS = {
   correct_link: new Set([
@@ -287,7 +287,7 @@ async function correctLink(env, input, row, keeperPieceId, authorization, finger
   ).bind(input.artworkId, input.editionNumber, keeperPieceId).first();
   if (collision) return response({ ok: false, error: 'link_collision' }, 409);
 
-  let envelope;
+  let correctedPackage;
   try {
     const ownershipCode = await decryptOwnershipCode({
       ciphertext: row.ownership_code_ciphertext,
@@ -298,11 +298,15 @@ async function correctLink(env, input, row, keeperPieceId, authorization, finger
       pieceId: row.piece_id,
       editionNumber: row.edition_number,
     }, env);
-    envelope = await encryptOwnershipCode(ownershipCode, {
-      publicCode: row.public_code,
+    correctedPackage = await createRegistryPlateCandidate(env, {
+      keeperPieceId: row.id,
       pieceId: input.artworkId,
       editionNumber: input.editionNumber,
-    }, env);
+      issuanceKey: row.issuance_key,
+      publicCode: row.public_code,
+      ownershipCode,
+      generatedAt: row.plate_generated_at,
+    });
   } catch {
     return response({ ok: false, error: 'maintenance_write_failed' }, 503);
   }
@@ -331,12 +335,17 @@ async function correctLink(env, input, row, keeperPieceId, authorization, finger
     `UPDATE keeper_pieces
         SET piece_id = ?1, edition_number = ?2, ownership_code_ciphertext = ?3,
             ownership_code_nonce = ?4, ownership_code_key_version = ?5,
+            front_svg_sha256 = ?6, back_svg_sha256 = ?7,
+            backup_status = 'pending', backup_reference = NULL, backup_at = NULL,
             record_version = record_version + 1
-      WHERE id = ?6 AND record_version = ?7 AND piece_id IS ?8
-        AND edition_number IS ?9 AND plate_status IN ('generated', 'active')`,
+      WHERE id = ?8 AND record_version = ?9 AND piece_id IS ?10
+        AND edition_number IS ?11 AND plate_status IN ('generated', 'active')`,
   ).bind(
-    input.artworkId, input.editionNumber, envelope.ciphertext, envelope.nonce,
-    envelope.keyVersion, keeperPieceId, input.expectedRecordVersion,
+    input.artworkId, input.editionNumber,
+    correctedPackage.envelope.ciphertext, correctedPackage.envelope.nonce,
+    correctedPackage.envelope.keyVersion,
+    correctedPackage.plate.frontSha256, correctedPackage.plate.undersideSha256,
+    keeperPieceId, input.expectedRecordVersion,
     row.piece_id, row.edition_number,
   );
   const event = buildMaintenanceEventStatement(env, eventDetails({

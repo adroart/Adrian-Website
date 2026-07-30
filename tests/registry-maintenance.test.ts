@@ -1900,7 +1900,16 @@ describe('private maintenance APIs', () => {
     const { database, env: sqliteEnv } = createSqliteD1();
     try {
       database.exec(registryMigrations);
-      await seedGeneratedPlate(sqliteEnv);
+      const originalCandidate = await seedGeneratedPlate(sqliteEnv);
+      database.prepare(
+        `UPDATE keeper_pieces
+            SET backup_status = 'verified', backup_reference = 'plates/AR-7KQ9M2WX.json',
+                backup_at = '2026-07-30T01:00:00.000Z'
+          WHERE id = 'kp-lifecycle'`,
+      ).run();
+      database.prepare(
+        `UPDATE keeper_pieces SET record_version = 0 WHERE id = 'kp-lifecycle'`,
+      ).run();
       database.prepare(
         `INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
          VALUES ('UL-101', 'Crystal Creation - 36', 'Universal Language', NULL,
@@ -1961,6 +1970,46 @@ describe('private maintenance APIs', () => {
         ok: false, error: 'physical_engraving_confirmation_required',
       });
 
+      const beforeFailedCorrection = {
+        ...database.prepare(
+          `SELECT piece_id, edition_number, ownership_code_ciphertext,
+                  ownership_code_nonce, ownership_code_key_version,
+                  front_svg_sha256, back_svg_sha256, backup_status,
+                  backup_reference, backup_at, record_version
+             FROM keeper_pieces WHERE id = 'kp-lifecycle'`,
+        ).get(),
+      };
+      database.exec(`
+        CREATE TRIGGER fail_correct_link_before_update
+        BEFORE UPDATE OF piece_id ON keeper_pieces
+        BEGIN
+          SELECT RAISE(ABORT, 'forced_correct_link_failure');
+        END;
+      `);
+      const failedCorrection = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', {
+          ...body, idempotencyKey: 'api-correct-link-forced-failure',
+        }, cookie), env, params: { id: 'kp-lifecycle' },
+      });
+      database.exec('DROP TRIGGER fail_correct_link_before_update;');
+      assert.equal(failedCorrection.status, 503);
+      assert.deepEqual(await failedCorrection.json(), {
+        ok: false, error: 'maintenance_write_failed',
+      });
+      assert.deepEqual({
+        ...database.prepare(
+          `SELECT piece_id, edition_number, ownership_code_ciphertext,
+                  ownership_code_nonce, ownership_code_key_version,
+                  front_svg_sha256, back_svg_sha256, backup_status,
+                  backup_reference, backup_at, record_version
+             FROM keeper_pieces WHERE id = 'kp-lifecycle'`,
+        ).get(),
+      }, beforeFailedCorrection);
+      assert.equal(database.prepare(
+        `SELECT COUNT(*) AS count FROM registry_maintenance_events
+          WHERE idempotency_key = 'api-correct-link-forced-failure'`,
+      ).get().count, 0);
+
       const response = await action({
         request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
         env, params: { id: 'kp-lifecycle' },
@@ -1971,9 +2020,45 @@ describe('private maintenance APIs', () => {
         keeperPieceId: 'kp-lifecycle', pieceId: 'UL-101', editionNumber: 0, recordVersion: 1,
       });
       assert.equal(payload.replayed, false);
-      assert.deepEqual({ ...database.prepare(
-        "SELECT piece_id, edition_number, record_version FROM keeper_pieces WHERE id = 'kp-lifecycle'",
-      ).get() }, { piece_id: 'UL-101', edition_number: 0, record_version: 1 });
+      const correctedRow = database.prepare(
+        `SELECT * FROM keeper_pieces WHERE id = 'kp-lifecycle'`,
+      ).get() as Record<string, unknown>;
+      assert.equal(correctedRow.piece_id, 'UL-101');
+      assert.equal(correctedRow.edition_number, 0);
+      assert.equal(correctedRow.record_version, 1);
+      assert.equal(correctedRow.backup_status, 'pending');
+      assert.equal(correctedRow.backup_reference, null);
+      assert.equal(correctedRow.backup_at, null);
+      assert.notEqual(correctedRow.front_svg_sha256, originalCandidate.plate.frontSha256);
+      assert.notEqual(correctedRow.back_svg_sha256, originalCandidate.plate.undersideSha256);
+      const { packageFromStoredRegistryPlate } = await import(
+        '../functions/api/_lib/registryPlateIssuance.js'
+      );
+      const recovered = await packageFromStoredRegistryPlate(correctedRow, env);
+      assert.equal(recovered.frontSha256, correctedRow.front_svg_sha256);
+      assert.equal(recovered.undersideSha256, correctedRow.back_svg_sha256);
+      const { onRequest: recoverPackage } = await import(
+        '../functions/api/admin/pieces/[id]/package.js'
+      );
+      const recoveredResponse = await recoverPackage({
+        request: adminRequest('/api/admin/pieces/kp-lifecycle/package', 'POST', {}, cookie),
+        env,
+        params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(recoveredResponse.status, 200);
+      const recoveredBody = await recoveredResponse.json();
+      assert.equal(recoveredBody.frontSha256, correctedRow.front_svg_sha256);
+      assert.equal(recoveredBody.undersideSha256, correctedRow.back_svg_sha256);
+      const { onRequest: verifyRecovery } = await import(
+        '../functions/api/admin/pieces/[id]/verify-recovery.js'
+      );
+      const staleBackup = await verifyRecovery({
+        request: adminRequest('/api/admin/pieces/kp-lifecycle/verify-recovery', 'POST', {}, cookie),
+        env: { ...env, ARTWORK_REGISTRY_BACKUP: { get: async () => null } },
+        params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(staleBackup.status, 409);
+      assert.deepEqual(await staleBackup.json(), { ok: false, error: 'backup_not_verified' });
       const event = database.prepare(
         "SELECT event_type, before_json, after_json FROM registry_maintenance_events WHERE idempotency_key = 'api-correct-link'",
       ).get();
