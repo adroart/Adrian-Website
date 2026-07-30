@@ -95,7 +95,7 @@ test('reviews, unlocks, creates, and corrects a private acquisition', async ({ p
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
   await page.getByRole('button', { name: 'Record acquisition', exact: true }).click();
   await page.getByLabel('Amount paid').fill('1250.00');
-  await page.getByLabel('Currency', { exact: true }).selectOption('USD');
+  await page.getByRole('combobox', { name: 'Currency' }).fill('USD');
   await page.getByLabel('Private notes').fill('Private browser-flow check.');
   await page.getByRole('button', { name: 'Review acquisition' }).click();
   await expect(page.getByRole('heading', { name: 'Before' })).toBeVisible();

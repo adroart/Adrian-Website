@@ -61,18 +61,23 @@ describe('registry Maintenance client contract', () => {
     }]);
   });
 
-  it('reuses one in-memory key after a lost response and creates one record', async () => {
+  it('reuses one key after a lost response, expired unlock, and successful replay', async () => {
     const createKey = mock.fn(() => 'attempt-lost-response');
     const requests: Array<{ url: string; init?: RequestInit }> = [];
     const records = new Map<string, { acquisitionId: string; recordVersion: number }>();
     let loseFirstResponse = true;
+    let registryUnlocked = true;
     mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
       requests.push({ url: String(input), init });
       const body = JSON.parse(String(init?.body));
+      if (!registryUnlocked) {
+        return new Response(JSON.stringify({ ok: false, error: 'registry_locked' }), { status: 403 });
+      }
       const existing = records.get(body.idempotencyKey);
       if (!existing) records.set(body.idempotencyKey, { acquisitionId: 'acq-1', recordVersion: 1 });
       if (loseFirstResponse) {
         loseFirstResponse = false;
+        registryUnlocked = false;
         throw new TypeError('The response was lost after the server committed.');
       }
       return new Response(JSON.stringify({
@@ -111,7 +116,22 @@ describe('registry Maintenance client contract', () => {
     );
     assert.equal(shouldRetainMaintenanceSaveAttempt(lostResponse), true);
 
-    const retryKey = beginMaintenanceSaveAttempt(attemptKey, createKey);
+    const lockedRetryKey = beginMaintenanceSaveAttempt(attemptKey, createKey);
+    let lockedResponse: unknown;
+    await assert.rejects(
+      saveMaintenanceAcquisition({
+        keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
+        idempotencyKey: lockedRetryKey,
+      }),
+      error => {
+        lockedResponse = error;
+        return error instanceof Error && error.message === 'registry_locked';
+      },
+    );
+    assert.equal(shouldRetainMaintenanceSaveAttempt(lockedResponse), true);
+
+    registryUnlocked = true;
+    const retryKey = beginMaintenanceSaveAttempt(lockedRetryKey, createKey);
     const replay = await saveMaintenanceAcquisition({
       keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
       idempotencyKey: retryKey,
@@ -121,7 +141,7 @@ describe('registry Maintenance client contract', () => {
     assert.equal(records.size, 1);
     assert.equal(replay.acquisitionId, 'acq-1');
     assert.deepEqual(requests.map(request => JSON.parse(String(request.init?.body)).idempotencyKey), [
-      'attempt-lost-response', 'attempt-lost-response',
+      'attempt-lost-response', 'attempt-lost-response', 'attempt-lost-response',
     ]);
     assert.doesNotMatch(requests.map(request => request.url).join(' '), /125000|IDR|collector|receipt/i);
   });
@@ -131,8 +151,11 @@ describe('registry Maintenance client contract', () => {
     assert.equal(shouldRetainMaintenanceSaveAttempt(new TypeError('network lost')), true);
     assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(500, 'maintenance_write_failed')), true);
     assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(503, 'maintenance_write_failed')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(401, 'unauthorized')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(403, 'registry_locked')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(403, 'forbidden')), true);
     assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(409, 'version_conflict')), false);
-    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(403, 'registry_locked')), false);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(422, 'invalid_acquisition')), false);
   });
 
   it('converts familiar currency amounts to exact integer minor amounts', async () => {
@@ -152,6 +175,19 @@ describe('registry Maintenance client contract', () => {
     assert.equal(currencyAmountToInput(125000, 'IDR'), '125000');
     assert.equal(formatMaintenanceCurrencyAmount(125000, 'IDR'), 'IDR 125,000');
     assert.throws(() => parseMaintenanceCurrencyAmount('125000.5', 'IDR'), /whole amount/i);
+
+    assert.equal(parseMaintenanceCurrencyAmount('1.234', 'KWD'), 1234);
+    assert.equal(currencyAmountToInput(1234, 'KWD'), '1.234');
+    assert.equal(formatMaintenanceCurrencyAmount(1234, 'KWD'), 'KWD 1.234');
+
+    for (const code of ['CHF', 'NZD', 'CNY']) {
+      assert.equal(parseMaintenanceCurrencyAmount('1250.50', code), 125050);
+      assert.equal(currencyAmountToInput(125050, code), '1250.50');
+      assert.equal(formatMaintenanceCurrencyAmount(125050, code), `${code} 1,250.50`);
+    }
+
+    const existingServerRecord = { amountMinor: 98765, currency: 'CHF' };
+    assert.equal(currencyAmountToInput(existingServerRecord.amountMinor, existingServerRecord.currency), '987.65');
     assert.throws(() => parseMaintenanceCurrencyAmount('10', 'XTS'), /unsupported currency/i);
   });
 });
@@ -226,5 +262,7 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /Loading|Searching/);
     assert.match(component, /familiar amount|normally write/i);
     assert.doesNotMatch(component, /minor units|smallest units/i);
+    assert.match(component, /list=["']maintenance-currency-options["']/);
+    assert.match(component, /id=["']maintenance-currency-options["']/);
   });
 });

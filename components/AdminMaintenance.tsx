@@ -11,7 +11,7 @@ import {
   currencyAmountToInput,
   formatMaintenanceCurrencyAmount,
   getMaintenanceDetail,
-  MAINTENANCE_CURRENCIES,
+  MAINTENANCE_CURRENCY_CODES,
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
   saveMaintenanceAcquisition,
@@ -570,10 +570,10 @@ const AdminMaintenance: React.FC = () => {
                   </label>
                   <label htmlFor="maintenance-currency">
                     <span className={labelClass}>Currency</span>
-                    <select id="maintenance-currency" className={inputClass} value={acquisitionDraft.currency} onChange={event => setAcquisitionDraft(draft => ({ ...draft, currency: event.target.value }))}>
-                      <option value="">Select currency</option>
-                      {MAINTENANCE_CURRENCIES.map(currency => <option key={currency.code} value={currency.code}>{currency.code} · {currency.label}</option>)}
-                    </select>
+                    <input id="maintenance-currency" className={inputClass} list="maintenance-currency-options" maxLength={3} value={acquisitionDraft.currency} onChange={event => setAcquisitionDraft(draft => ({ ...draft, currency: event.target.value.toUpperCase() }))} placeholder="USD" autoComplete="off" />
+                    <datalist id="maintenance-currency-options">
+                      {MAINTENANCE_CURRENCY_CODES.map(code => <option key={code} value={code} />)}
+                    </datalist>
                   </label>
                   <label htmlFor="maintenance-acquirer-reference">
                     <span className={labelClass}>Acquirer reference</span>

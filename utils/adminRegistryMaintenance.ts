@@ -7,20 +7,19 @@ export type MaintenanceAcquisitionType =
   | 'inheritance'
   | 'other';
 
-export const MAINTENANCE_CURRENCIES = [
-  { code: 'USD', label: 'US dollar', exponent: 2 },
-  { code: 'EUR', label: 'Euro', exponent: 2 },
-  { code: 'GBP', label: 'British pound', exponent: 2 },
-  { code: 'AUD', label: 'Australian dollar', exponent: 2 },
-  { code: 'CAD', label: 'Canadian dollar', exponent: 2 },
-  { code: 'SGD', label: 'Singapore dollar', exponent: 2 },
-  { code: 'THB', label: 'Thai baht', exponent: 2 },
-  { code: 'IDR', label: 'Indonesian rupiah', exponent: 0 },
-  { code: 'JPY', label: 'Japanese yen', exponent: 0 },
-  { code: 'KRW', label: 'South Korean won', exponent: 0 },
-  { code: 'VND', label: 'Vietnamese dong', exponent: 0 },
-  { code: 'KWD', label: 'Kuwaiti dinar', exponent: 3 },
-] as const;
+const COMMON_MAINTENANCE_CURRENCIES = ['USD', 'IDR', 'KWD', 'CHF', 'NZD', 'CNY'] as const;
+type IntlWithSupportedCurrencies = typeof Intl & {
+  supportedValuesOf?: (key: 'currency') => string[];
+};
+
+function runtimeCurrencyCodes(): string[] {
+  const supportedValuesOf = (Intl as IntlWithSupportedCurrencies).supportedValuesOf;
+  const runtimeCodes = supportedValuesOf ? supportedValuesOf.call(Intl, 'currency') : [];
+  return Array.from(new Set([...COMMON_MAINTENANCE_CURRENCIES, ...runtimeCodes])).sort();
+}
+
+/** Runtime-maintained ISO currency choices; the text field also accepts valid codes not suggested here. */
+export const MAINTENANCE_CURRENCY_CODES = runtimeCurrencyCodes();
 
 /** Only public fields are allowed to become query-string values. */
 export type MaintenanceSearchFilters = {
@@ -122,9 +121,23 @@ export class MaintenanceRequestError extends Error {
 
 function supportedCurrency(value: string) {
   const code = value.trim().toUpperCase();
-  const currency = MAINTENANCE_CURRENCIES.find(candidate => candidate.code === code);
-  if (!currency) throw new Error(`Unsupported currency ${code || 'code'}. Choose a supported currency.`);
-  return currency;
+  if (!/^[A-Z]{3}$/.test(code)) {
+    throw new Error(`Unsupported currency ${code || 'code'}. Enter a valid three-letter ISO currency code.`);
+  }
+  const supportedValuesOf = (Intl as IntlWithSupportedCurrencies).supportedValuesOf;
+  if (supportedValuesOf && !supportedValuesOf.call(Intl, 'currency').includes(code)) {
+    throw new Error(`Unsupported currency ${code}. Enter a valid three-letter ISO currency code.`);
+  }
+  try {
+    const options = new Intl.NumberFormat('en', {
+      style: 'currency', currency: code, currencyDisplay: 'code', useGrouping: false,
+    }).resolvedOptions();
+    const exponent = options.maximumFractionDigits;
+    if (!Number.isSafeInteger(exponent) || exponent < 0 || exponent > 20) throw new RangeError();
+    return { code, exponent };
+  } catch {
+    throw new Error(`Unsupported currency ${code}. Enter a valid three-letter ISO currency code.`);
+  }
 }
 
 function decimalPlacesLabel(exponent: number): string {
@@ -181,8 +194,12 @@ export function beginMaintenanceSaveAttempt(
   return currentKey || createKey();
 }
 
-/** Network failures and server failures may have committed, so they keep the same retry key. */
+/** Ambiguous failures and expired authorization keep the key so an unlock can safely replay it. */
 export function shouldRetainMaintenanceSaveAttempt(error: unknown): boolean {
+  if (error instanceof MaintenanceRequestError
+    && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
+    return true;
+  }
   return !(error instanceof MaintenanceRequestError && error.status >= 400 && error.status < 500);
 }
 
