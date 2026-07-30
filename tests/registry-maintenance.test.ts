@@ -1341,12 +1341,11 @@ describe('private maintenance APIs', () => {
       assert.equal(listed.pieces.length, 1);
       assert.equal(listed.pieces[0].title, 'Art of Living - 32');
       assert.deepEqual(Object.keys(listed.pieces[0]).sort(), [
-        'artworkId', 'backupStatus', 'editionNumber', 'id', 'plateStatus', 'publicCode',
-        'recordVersion', 'registeredAt', 'stewardActive', 'stewardVersion', 'title',
+        'artworkId', 'editionNumber', 'id', 'plateStatus', 'publicCode', 'title',
       ]);
       assert.doesNotMatch(
         JSON.stringify(listed.pieces),
-        /keeper@example\.com|acquisitionCount|acquisitionType|acquiredAt|amountMinor/i,
+        /keeper@example\.com|acquisition|backupStatus|registeredAt|steward|recordVersion/i,
       );
 
       const detailResponse = await detail({

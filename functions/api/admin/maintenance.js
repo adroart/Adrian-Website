@@ -28,11 +28,6 @@ function serialize(row) {
     editionNumber: row.edition_number,
     publicCode: row.public_code ?? null,
     plateStatus: row.plate_status,
-    backupStatus: row.backup_status ?? null,
-    registeredAt: row.registered_at ?? null,
-    stewardActive: Boolean(row.steward_active),
-    recordVersion: row.record_version,
-    stewardVersion: row.steward_version,
   };
 }
 
@@ -94,15 +89,11 @@ export async function onRequest({ request, env }) {
   try {
     const statement = env.DB.prepare(
       `SELECT kp.id, kp.piece_id, kp.edition_number, kp.public_code,
-              kp.plate_status, kp.backup_status, kp.registered_at,
-              CASE WHEN kp.keeper_user_id IS NOT NULL AND kp.released_at IS NULL
-                THEN 1 ELSE 0 END AS steward_active,
-              kp.record_version, kp.steward_version,
-              ra.title AS registry_title
+              kp.plate_status, ra.title AS registry_title
          FROM keeper_pieces kp
          LEFT JOIN registry_artworks ra ON ra.id = kp.piece_id
          ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-         ORDER BY COALESCE(kp.plate_activated_at, kp.registered_at, kp.claimed_at) DESC, kp.id
+         ORDER BY kp.id
          LIMIT ${MAX_RESULTS}`,
     ).bind(...values);
     const { results } = await statement.all();
