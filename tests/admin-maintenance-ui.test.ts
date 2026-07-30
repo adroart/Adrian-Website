@@ -500,6 +500,20 @@ describe('registry Maintenance workspace wiring', () => {
     );
   });
 
+  it('freezes every ambiguous maintenance request until its exact replay resolves', () => {
+    const component = source('components/AdminMaintenance.tsx');
+    assert.match(component, /type AmbiguousMaintenanceAttempt/);
+    assert.match(component, /setAmbiguousAttempt\('plate'\)/);
+    assert.match(component, /setAmbiguousAttempt\('provenance'\)/);
+    assert.match(component, /setAmbiguousAttempt\('acquisition'\)/);
+    assert.match(component, /setAmbiguousAttempt\('steward'\)/);
+    assert.match(component, /beforeunload/);
+    assert.match(component, /Retry the unchanged request before editing, cancelling, searching, or leaving this record/i);
+    assert.match(component, /disabled=\{plateSaving \|\| ambiguousAttempt === 'plate'\}/);
+    assert.match(component, /disabled=\{provenanceSaving \|\| ambiguousAttempt === 'provenance'\}/);
+    assert.match(component, /const transitionBusy =[\s\S]*Boolean\(ambiguousAttempt\)/);
+  });
+
   it('keeps the development unlock mock exact and rejects extra fields', () => {
     const vite = source('vite.config.ts');
     assert.match(vite, /body\.secret !== 'local-development-secret'/);

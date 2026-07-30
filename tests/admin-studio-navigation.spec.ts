@@ -513,16 +513,21 @@ test('reviews plate replacement and keeps its one-time secret package only in me
     generatedAt: '2026-07-31T00:00:00.000Z',
   };
   const bodies: Array<Record<string, unknown>> = [];
+  let loseResponse = true;
   await page.route('**/api/admin/maintenance/kp-local-maintenance/actions', async route => {
     const body = route.request().postDataJSON();
     if (body.action !== 'replace_plate') return route.continue();
     bodies.push(body);
+    if (loseResponse) {
+      loseResponse = false;
+      return route.abort('failed');
+    }
     return route.fulfill({
-      status: 201,
+      status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         ok: true,
-        replayed: false,
+        replayed: true,
         eventId: 'rme-replacement-ui',
         replacement: {
           ok: true,
@@ -552,6 +557,12 @@ test('reviews plate replacement and keeps its one-time secret package only in me
   await page.getByLabel('Reason for this plate repair').fill(reason);
   await page.getByRole('button', { name: 'Confirm replacement and mint new identity' }).click();
 
+  await expect(page.getByText(/Retry the unchanged request before editing, cancelling, searching, or leaving this record/i)).toBeVisible();
+  await expect(page.getByLabel('Reason for this plate repair')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Add creator-history entry' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Confirm replacement and mint new identity' }).click();
+
   await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toBeVisible();
   await expect(page.getByText(ownershipCode, { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Download AR-REPLACE1-front\.svg/ })).toBeVisible();
@@ -560,7 +571,8 @@ test('reviews plate replacement and keeps its one-time secret package only in me
   await page.getByLabel(/downloaded the front SVG/i).check();
   await expect(clear).toBeEnabled();
 
-  expect(bodies).toHaveLength(1);
+  expect(bodies).toHaveLength(2);
+  expect(bodies[0]).toEqual(bodies[1]);
   expect(bodies[0]).toEqual({
     action: 'replace_plate',
     physicalDisposition: disposition,
@@ -585,9 +597,12 @@ test('creates and removes public creator history through a reasoned private revi
   test.skip(testInfo.project.name !== 'chromium', 'Creator-history flow runs once.');
   const createReason = `Record intention ${Date.now()}-${Math.random()}`;
   const removeReason = `Remove intention ${Date.now()}-${Math.random()}`;
+  const correctReason = `Correct intention ${Date.now()}-${Math.random()}`;
   const intention = 'Invite a slower reading of the layers.';
+  const correctedIntention = 'Invite a slower, more attentive reading of the layers.';
   let currentEntries: Array<Record<string, unknown>> = [];
   const bodies: Array<Record<string, unknown>> = [];
+  const loseOnce = new Set(['create', 'correct', 'remove']);
 
   await page.route('**/api/admin/maintenance/kp-local-maintenance', async route => {
     if (route.request().method() !== 'GET') return route.continue();
@@ -605,20 +620,24 @@ test('creates and removes public creator history through a reasoned private revi
         ...body.entry, recordVersion: 1,
         createdAt: '2026-07-31T00:00:00.000Z', updatedAt: '2026-07-31T00:00:00.000Z',
       }];
-      return route.fulfill({
-        status: 201, contentType: 'application/json',
-        body: JSON.stringify({ ok: true, provenance: currentEntries[0] }),
-      });
+    } else if (body.action === 'correct') {
+      currentEntries = [{
+        provenanceId: 'prov-browser', keeperPieceId: 'kp-local-maintenance',
+        ...body.entry, recordVersion: 2,
+        createdAt: '2026-07-31T00:00:00.000Z', updatedAt: '2026-07-31T00:30:00.000Z',
+      }];
+    } else {
+      currentEntries = [];
     }
-    currentEntries = [];
+    if (loseOnce.delete(body.action)) return route.abort('failed');
     return route.fulfill({
-      status: 200, contentType: 'application/json',
+      status: body.action === 'create' ? 201 : 200, contentType: 'application/json',
       body: JSON.stringify({
         ok: true,
-        provenance: {
+        provenance: body.action === 'remove' ? {
           provenanceId: 'prov-browser', keeperPieceId: 'kp-local-maintenance',
-          recordVersion: 2, removedAt: '2026-07-31T01:00:00.000Z',
-        },
+          recordVersion: 3, removedAt: '2026-07-31T01:00:00.000Z',
+        } : currentEntries[0],
       }),
     });
   });
@@ -642,18 +661,37 @@ test('creates and removes public creator history through a reasoned private revi
   await expect(page.locator('.maintenance-review-grid > div').nth(1)).toContainText('public');
   await page.getByLabel('Reason for this creator-history change').fill(createReason);
   await page.getByRole('button', { name: 'Confirm creator-history save' }).click();
+  await expect(page.getByText(/Retry the unchanged request before editing, cancelling, searching, or leaving this record/i)).toBeVisible();
+  await expect(page.getByLabel('Reason for this creator-history change')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Confirm creator-history save' }).click();
   await expect(page.getByText('Creator-history entry recorded.')).toBeVisible();
   await expect(page.getByText('Layered attention', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Correct creator history Layered attention' }).click();
+  await page.getByLabel('Detail').fill(correctedIntention);
+  await page.getByRole('button', { name: 'Review creator history' }).click();
+  await page.getByLabel('Reason for this creator-history change').fill(correctReason);
+  await page.getByRole('button', { name: 'Confirm creator-history save' }).click();
+  await expect(page.getByText(/Retry the unchanged request before editing, cancelling, searching, or leaving this record/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm creator-history save' }).click();
+  await expect(page.getByText('Creator-history correction saved.')).toBeVisible();
+  await expect(page.getByText(correctedIntention, { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Remove creator history Layered attention' }).click();
   await expect(page.getByRole('heading', { name: 'Review creator-history removal' })).toBeVisible();
   await expect(page.getByText(/prior values.*remain in append-only maintenance history/i)).toBeVisible();
   await page.getByLabel('Reason for this creator-history change').fill(removeReason);
   await page.getByRole('button', { name: 'Confirm removal from current view' }).click();
+  await expect(page.getByText(/Retry the unchanged request before editing, cancelling, searching, or leaving this record/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm removal from current view' }).click();
   await expect(page.getByText(/entry removed from the current view/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'No creator history recorded' })).toBeVisible();
 
-  expect(bodies).toHaveLength(2);
+  expect(bodies).toHaveLength(6);
+  expect(bodies[0]).toEqual(bodies[1]);
+  expect(bodies[2]).toEqual(bodies[3]);
+  expect(bodies[4]).toEqual(bodies[5]);
   expect(bodies[0]).toEqual({
     action: 'create',
     entry: {
@@ -663,8 +701,16 @@ test('creates and removes public creator history through a reasoned private revi
     reason: createReason,
     idempotencyKey: expect.any(String),
   });
-  expect(bodies[1]).toEqual({
-    action: 'remove', provenanceId: 'prov-browser', expectedVersion: 1,
+  expect(bodies[2]).toEqual({
+    action: 'correct', provenanceId: 'prov-browser', expectedVersion: 1,
+    entry: {
+      entryType: 'intention', title: 'Layered attention', detail: correctedIntention,
+      role: null, occurredAt: '2026-07', visibility: 'public',
+    },
+    reason: correctReason, idempotencyKey: expect.any(String),
+  });
+  expect(bodies[4]).toEqual({
+    action: 'remove', provenanceId: 'prov-browser', expectedVersion: 2,
     reason: removeReason, idempotencyKey: expect.any(String),
   });
   const privacy = await page.evaluate(() => ({

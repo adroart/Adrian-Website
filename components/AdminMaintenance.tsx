@@ -100,6 +100,11 @@ type ProvenanceReviewState = {
   after: MaintenanceProvenanceInput | null;
 };
 
+type AmbiguousMaintenanceAttempt = 'acquisition' | 'steward' | 'plate' | 'provenance';
+
+const AMBIGUOUS_ATTEMPT_MESSAGE =
+  'The outcome could not be confirmed. Retry the unchanged request before editing, cancelling, searching, or leaving this record.';
+
 const EMPTY_SEARCH: SearchDraft = {
   publicCode: '', artworkId: '', title: '', editionNumber: '',
 };
@@ -382,6 +387,7 @@ const AdminMaintenance: React.FC = () => {
   const [provenanceReason, setProvenanceReason] = useState('');
   const [provenanceError, setProvenanceError] = useState('');
   const [provenanceSaving, setProvenanceSaving] = useState(false);
+  const [ambiguousAttempt, setAmbiguousAttempt] = useState<AmbiguousMaintenanceAttempt | null>(null);
   const [notice, setNotice] = useState('');
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -403,6 +409,7 @@ const AdminMaintenance: React.FC = () => {
   const detailGateRef = useRef(createMaintenanceRequestGate());
 
   const clearSaveAttempt = () => {
+    if (ambiguousAttempt === 'acquisition') return false;
     saveAttemptRef.current = discardMaintenanceSaveAttempt(
       saveAttemptRef.current,
       saveInFlightRef.current,
@@ -411,6 +418,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const clearStewardAttempt = () => {
+    if (ambiguousAttempt === 'steward') return false;
     stewardAttemptRef.current = discardMaintenanceSaveAttempt(
       stewardAttemptRef.current,
       stewardInFlightRef.current,
@@ -419,6 +427,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const clearPlateAttempt = () => {
+    if (ambiguousAttempt === 'plate') return false;
     plateAttemptRef.current = discardMaintenanceSaveAttempt(
       plateAttemptRef.current,
       plateInFlightRef.current,
@@ -427,6 +436,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const clearProvenanceAttempt = () => {
+    if (ambiguousAttempt === 'provenance') return false;
     provenanceAttemptRef.current = discardMaintenanceSaveAttempt(
       provenanceAttemptRef.current,
       provenanceInFlightRef.current,
@@ -439,7 +449,17 @@ const AdminMaintenance: React.FC = () => {
     && clearPlateAttempt()
     && clearProvenanceAttempt();
   const transitionBusy = saving || stewardSaving || plateSaving || provenanceSaving
-    || Boolean(replacementPackage);
+    || Boolean(replacementPackage) || Boolean(ambiguousAttempt);
+
+  useEffect(() => {
+    if (!ambiguousAttempt) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [ambiguousAttempt]);
 
   const loadSearch = useCallback(async (filters: MaintenanceSearchFilters = {}, signal?: AbortSignal) => {
     const generation = searchGateRef.current.next();
@@ -759,6 +779,7 @@ const AdminMaintenance: React.FC = () => {
       const saved = await saveMaintenancePlateAction(attempt.request);
       plateInFlightRef.current = false;
       plateAttemptRef.current = null;
+      setAmbiguousAttempt(null);
       if (saved.action === 'replace_plate' && saved.replacement) {
         setSelected(current => current && current.id === attempt.request.keeperPieceId
           ? {
@@ -821,7 +842,12 @@ const AdminMaintenance: React.FC = () => {
       }
     } catch (error) {
       plateInFlightRef.current = false;
-      if (!shouldRetainMaintenanceSaveAttempt(error)) plateAttemptRef.current = null;
+      const retainAttempt = shouldRetainMaintenanceSaveAttempt(error);
+      if (retainAttempt) setAmbiguousAttempt('plate');
+      else {
+        plateAttemptRef.current = null;
+        setAmbiguousAttempt(null);
+      }
       if (error instanceof MaintenanceRequestError
         && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
         setRegistryUnlocked(false);
@@ -836,7 +862,9 @@ const AdminMaintenance: React.FC = () => {
           setPlateError('The plate record changed, but the latest detail could not be reloaded. Your exact review is preserved.');
         }
       } else {
-        setPlateError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same plate repair.'));
+        setPlateError(retainAttempt
+          ? AMBIGUOUS_ATTEMPT_MESSAGE
+          : messageFor(error, 'The plate repair could not be saved.'));
       }
     } finally {
       plateInFlightRef.current = false;
@@ -949,6 +977,7 @@ const AdminMaintenance: React.FC = () => {
       await saveMaintenanceProvenanceAction(attempt.request);
       provenanceInFlightRef.current = false;
       provenanceAttemptRef.current = null;
+      setAmbiguousAttempt(null);
       const savedMessage = provenanceReview.action === 'create'
         ? 'Creator-history entry recorded.'
         : provenanceReview.action === 'correct'
@@ -965,7 +994,12 @@ const AdminMaintenance: React.FC = () => {
       }
     } catch (error) {
       provenanceInFlightRef.current = false;
-      if (!shouldRetainMaintenanceSaveAttempt(error)) provenanceAttemptRef.current = null;
+      const retainAttempt = shouldRetainMaintenanceSaveAttempt(error);
+      if (retainAttempt) setAmbiguousAttempt('provenance');
+      else {
+        provenanceAttemptRef.current = null;
+        setAmbiguousAttempt(null);
+      }
       if (error instanceof MaintenanceRequestError
         && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
         setRegistryUnlocked(false);
@@ -980,7 +1014,9 @@ const AdminMaintenance: React.FC = () => {
           setProvenanceError('Creator history changed, but the latest detail could not be reloaded. Your exact review is preserved.');
         }
       } else {
-        setProvenanceError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same creator-history change.'));
+        setProvenanceError(retainAttempt
+          ? AMBIGUOUS_ATTEMPT_MESSAGE
+          : messageFor(error, 'The creator-history change could not be saved.'));
       }
     } finally {
       provenanceInFlightRef.current = false;
@@ -1068,6 +1104,7 @@ const AdminMaintenance: React.FC = () => {
       await saveMaintenanceAcquisition(attempt.request);
       saveInFlightRef.current = false;
       saveAttemptRef.current = null;
+      setAmbiguousAttempt(null);
       const savedMessage = review.acquisitionId
         ? 'Acquisition correction saved.'
         : 'Acquisition recorded.';
@@ -1080,7 +1117,12 @@ const AdminMaintenance: React.FC = () => {
       }
     } catch (error) {
       saveInFlightRef.current = false;
-      if (!shouldRetainMaintenanceSaveAttempt(error)) saveAttemptRef.current = null;
+      const retainAttempt = shouldRetainMaintenanceSaveAttempt(error);
+      if (retainAttempt) setAmbiguousAttempt('acquisition');
+      else {
+        saveAttemptRef.current = null;
+        setAmbiguousAttempt(null);
+      }
       if (error instanceof MaintenanceRequestError && error.code === 'registry_locked') {
         setRegistryUnlocked(false);
       }
@@ -1094,7 +1136,9 @@ const AdminMaintenance: React.FC = () => {
           setFormError('The acquisition changed, but the latest detail could not be reloaded. Your draft is preserved; retry the reload before editing further.');
         }
       } else {
-        setFormError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same save attempt.'));
+        setFormError(retainAttempt
+          ? AMBIGUOUS_ATTEMPT_MESSAGE
+          : messageFor(error, 'The acquisition change could not be saved.'));
       }
     } finally {
       saveInFlightRef.current = false;
@@ -1130,6 +1174,7 @@ const AdminMaintenance: React.FC = () => {
       const saved = await saveMaintenanceStewardAction(attempt.request);
       stewardInFlightRef.current = false;
       stewardAttemptRef.current = null;
+      setAmbiguousAttempt(null);
       const savedMessage = stewardReview.action === 'reset_steward'
         ? 'Steward reset saved. This artwork is now Unclaimed.'
         : `Steward transfer saved for ${stewardReview.targetEmail}. The display location was cleared.`;
@@ -1161,7 +1206,12 @@ const AdminMaintenance: React.FC = () => {
       }
     } catch (error) {
       stewardInFlightRef.current = false;
-      if (!shouldRetainMaintenanceSaveAttempt(error)) stewardAttemptRef.current = null;
+      const retainAttempt = shouldRetainMaintenanceSaveAttempt(error);
+      if (retainAttempt) setAmbiguousAttempt('steward');
+      else {
+        stewardAttemptRef.current = null;
+        setAmbiguousAttempt(null);
+      }
       if (error instanceof MaintenanceRequestError
         && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
         setRegistryUnlocked(false);
@@ -1176,7 +1226,9 @@ const AdminMaintenance: React.FC = () => {
           setStewardError('The steward changed, but the latest detail could not be reloaded. Your review is preserved; retry the reload before editing further.');
         }
       } else {
-        setStewardError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same steward action.'));
+        setStewardError(retainAttempt
+          ? AMBIGUOUS_ATTEMPT_MESSAGE
+          : messageFor(error, 'The steward change could not be saved.'));
       }
     } finally {
       stewardInFlightRef.current = false;
@@ -1395,7 +1447,7 @@ const AdminMaintenance: React.FC = () => {
                 </div>
                 <label htmlFor="maintenance-plate-reason">
                   <span className={labelClass}>Reason for this plate repair</span>
-                  <textarea ref={plateReasonRef} id="maintenance-plate-reason" className={inputClass} rows={3} required value={plateReason} disabled={plateSaving} onChange={event => { clearPlateAttempt(); setPlateReason(event.target.value); }} />
+                  <textarea ref={plateReasonRef} id="maintenance-plate-reason" className={inputClass} rows={3} required value={plateReason} disabled={plateSaving || ambiguousAttempt === 'plate'} onChange={event => { if (clearPlateAttempt()) setPlateReason(event.target.value); }} />
                 </label>
                 {!registryUnlocked && (
                   <AdminAlert tone="warning">
@@ -1413,7 +1465,7 @@ const AdminMaintenance: React.FC = () => {
                 {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
                 {plateError && <p className="maintenance-inline-error" role="alert">{plateError}</p>}
                 <div className="maintenance-actions">
-                  <button type="button" className={quietButtonClass} onClick={closePlateEditor} disabled={plateSaving}>Cancel</button>
+                  <button type="button" className={quietButtonClass} onClick={closePlateEditor} disabled={plateSaving || ambiguousAttempt === 'plate'}>Cancel</button>
                   <button type="button" className={primaryButtonClass} onClick={() => void confirmPlateSave()} disabled={plateSaving || !registryUnlocked || !plateReason.trim()}>{plateSaving ? 'Saving…' : plateReview.action === 'correct_link' ? 'Confirm digital relink' : plateReview.action === 'void_plate' ? 'Confirm permanent void' : 'Confirm replacement and mint new identity'}</button>
                 </div>
               </div>
@@ -1547,7 +1599,7 @@ const AdminMaintenance: React.FC = () => {
                 </div>
                 <label htmlFor="maintenance-reason">
                   <span className={labelClass}>Reason for this change</span>
-                  <textarea ref={reasonRef} id="maintenance-reason" className={inputClass} rows={3} required value={reason} disabled={saving} onChange={event => { clearSaveAttempt(); setReason(event.target.value); }} />
+                  <textarea ref={reasonRef} id="maintenance-reason" className={inputClass} rows={3} required value={reason} disabled={saving || ambiguousAttempt === 'acquisition'} onChange={event => { if (clearSaveAttempt()) setReason(event.target.value); }} />
                 </label>
                 {!registryUnlocked && (
                   <AdminAlert tone="warning">
@@ -1565,7 +1617,7 @@ const AdminMaintenance: React.FC = () => {
                 {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
                 {formError && <p className="maintenance-inline-error" role="alert">{formError}</p>}
                 <div className="maintenance-actions">
-                  <button type="button" className={quietButtonClass} onClick={backToEditor} disabled={saving}>Back to edit</button>
+                  <button type="button" className={quietButtonClass} onClick={backToEditor} disabled={saving || ambiguousAttempt === 'acquisition'}>Back to edit</button>
                   <button type="button" className={primaryButtonClass} onClick={() => void confirmSave()} disabled={saving || !registryUnlocked || !reason.trim()}>{saving ? 'Saving…' : 'Confirm save'}</button>
                 </div>
               </div>
@@ -1657,7 +1709,7 @@ const AdminMaintenance: React.FC = () => {
                 </div>
                 <label htmlFor="maintenance-provenance-reason">
                   <span className={labelClass}>Reason for this creator-history change</span>
-                  <textarea ref={provenanceReasonRef} id="maintenance-provenance-reason" className={inputClass} rows={3} required value={provenanceReason} disabled={provenanceSaving} onChange={event => { clearProvenanceAttempt(); setProvenanceReason(event.target.value); }} />
+                  <textarea ref={provenanceReasonRef} id="maintenance-provenance-reason" className={inputClass} rows={3} required value={provenanceReason} disabled={provenanceSaving || ambiguousAttempt === 'provenance'} onChange={event => { if (clearProvenanceAttempt()) setProvenanceReason(event.target.value); }} />
                 </label>
                 {!registryUnlocked && (
                   <AdminAlert tone="warning">
@@ -1675,7 +1727,7 @@ const AdminMaintenance: React.FC = () => {
                 {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
                 {provenanceError && <p className="maintenance-inline-error" role="alert">{provenanceError}</p>}
                 <div className="maintenance-actions">
-                  <button type="button" className={quietButtonClass} onClick={closeProvenanceEditor} disabled={provenanceSaving}>Cancel</button>
+                  <button type="button" className={quietButtonClass} onClick={closeProvenanceEditor} disabled={provenanceSaving || ambiguousAttempt === 'provenance'}>Cancel</button>
                   <button type="button" className={primaryButtonClass} onClick={() => void confirmProvenanceSave()} disabled={provenanceSaving || !registryUnlocked || !provenanceReason.trim()}>{provenanceSaving ? 'Saving…' : provenanceReview.action === 'remove' ? 'Confirm removal from current view' : 'Confirm creator-history save'}</button>
                 </div>
               </div>
@@ -1754,10 +1806,9 @@ const AdminMaintenance: React.FC = () => {
                     rows={3}
                     required
                     value={stewardReason}
-                    disabled={stewardSaving}
+                    disabled={stewardSaving || ambiguousAttempt === 'steward'}
                     onChange={event => {
-                      clearStewardAttempt();
-                      setStewardReason(event.target.value);
+                      if (clearStewardAttempt()) setStewardReason(event.target.value);
                     }}
                   />
                 </label>
@@ -1777,7 +1828,7 @@ const AdminMaintenance: React.FC = () => {
                 {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
                 {stewardError && <p className="maintenance-inline-error" role="alert">{stewardError}</p>}
                 <div className="maintenance-actions">
-                  <button type="button" className={quietButtonClass} onClick={closeStewardEditor} disabled={stewardSaving}>Cancel</button>
+                  <button type="button" className={quietButtonClass} onClick={closeStewardEditor} disabled={stewardSaving || ambiguousAttempt === 'steward'}>Cancel</button>
                   <button
                     type="button"
                     className={primaryButtonClass}
