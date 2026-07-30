@@ -13,6 +13,7 @@ import {
 } from './lineage.js';
 import {
   backupPlateEnvelope,
+  plateBackupIsVerified,
   recordPlateBackupResult,
 } from './plateBackup.js';
 import { buildArtworkPlatePackage, generatePublicPlateCode } from '../../../utils/artworkPlate.ts';
@@ -222,7 +223,7 @@ export async function packageFromStoredRegistryPlate(row, env) {
 export async function backupRegistryPlate(env, row) {
   const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
   try {
-    await recordPlateBackupResult(env.DB, row.id, result);
+    await recordPlateBackupResult(env.DB, row, result);
     row.backup_status = result.status;
     if (result.status === 'verified') {
       row.backup_reference = result.reference;
@@ -263,7 +264,7 @@ async function replayIssuedPackage(row, input, env) {
   if (row.plate_status !== 'generated') {
     return jsonResponse({ ok: false, error: 'plate_identity_locked' }, 409);
   }
-  const backup = row.backup_status === 'verified'
+  const backup = plateBackupIsVerified(row)
     ? { status: 'verified' }
     : await backupRegistryPlate(env, row);
   return jsonResponse(withBackupOutcome(await packageFromStoredRegistryPlate(row, env), backup));

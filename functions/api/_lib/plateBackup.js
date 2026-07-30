@@ -1,4 +1,4 @@
-const BACKUP_SCHEMA_VERSION = 1;
+export const BACKUP_SCHEMA_VERSION = 1;
 
 function hasExactKeys(value, keys) {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -82,6 +82,13 @@ export async function backupDocumentSha256(bytes) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+export function plateBackupIsVerified(row) {
+  return row?.backup_status === 'verified'
+    && typeof row.backup_sha256 === 'string'
+    && /^[0-9a-f]{64}$/.test(row.backup_sha256)
+    && row.backup_reference === `plates/${row.public_code}/${row.backup_sha256}.json`;
+}
+
 /** Mirrors an already-encrypted row. This module never receives encryption keys. */
 export async function backupPlateEnvelope(bucket, row) {
   const expected = new TextEncoder().encode(JSON.stringify(buildBackupDocument(row)));
@@ -104,16 +111,34 @@ export async function backupPlateEnvelope(bucket, row) {
   }
 }
 
-export async function recordPlateBackupResult(db, keeperPieceId, result) {
+export async function recordPlateBackupResult(db, row, result) {
   const at = result.status === 'verified' ? new Date().toISOString() : null;
-  await db.prepare(
+  const saved = await db.prepare(
     `UPDATE keeper_pieces
         SET backup_status = ?1,
             backup_reference = CASE WHEN ?1 = 'verified' THEN ?2 ELSE backup_reference END,
             backup_sha256 = CASE WHEN ?1 = 'verified' THEN ?3 ELSE backup_sha256 END,
             backup_at = CASE WHEN ?1 = 'verified' THEN ?4 ELSE backup_at END
-      WHERE id = ?5`,
-  ).bind(result.status, result.reference, result.sha256, at, keeperPieceId).run();
+      WHERE id = ?5
+        AND record_version = ?6
+        AND public_code = ?7
+        AND piece_id = ?8
+        AND edition_number = ?9
+        AND plate_generated_at = ?10
+        AND front_svg_sha256 = ?11
+        AND back_svg_sha256 = ?12
+        AND ownership_code_ciphertext = ?13
+        AND ownership_code_nonce = ?14
+        AND ownership_code_key_version = ?15
+        AND recovery_code_hash = ?16`,
+  ).bind(
+    result.status, result.reference, result.sha256, at, row.id,
+    row.record_version, row.public_code, row.piece_id, row.edition_number,
+    row.plate_generated_at, row.front_svg_sha256, row.back_svg_sha256,
+    row.ownership_code_ciphertext, row.ownership_code_nonce,
+    row.ownership_code_key_version, row.recovery_code_hash,
+  ).run();
+  if (saved?.meta?.changes !== 1) throw new Error('stale backup attempt');
   return at;
 }
 

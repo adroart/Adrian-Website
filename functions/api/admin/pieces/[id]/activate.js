@@ -5,6 +5,12 @@ import {
   writeOwnershipAudit,
 } from '../../../_lib/admin.js';
 import { prepareNextLineageEvent } from '../../../_lib/lineage.js';
+import {
+  loadLatestPassedPieceQualification,
+  recoveryDependenciesForRow,
+  recoveryQualificationStatus,
+} from '../../../_lib/recoveryQualification.js';
+import { plateBackupIsVerified } from '../../../_lib/plateBackup.js';
 
 const CONFIRMATIONS = [
   'realMetalQrScanned',
@@ -48,8 +54,18 @@ export async function onRequest({ request, env, params }) {
     if (!hashesMatch(row, body)) {
       return jsonResponse({ ok: false, error: 'fabrication_hash_mismatch' }, 409);
     }
-    if (row.backup_status !== 'verified') {
+    if (!plateBackupIsVerified(row)) {
       return jsonResponse({ ok: false, error: 'verified_backup_required' }, 409);
+    }
+    const dependencies = recoveryDependenciesForRow(row, env);
+    const qualification = await loadLatestPassedPieceQualification(env.DB, row.id);
+    const qualificationStatus = recoveryQualificationStatus(qualification, dependencies);
+    if (qualificationStatus.status !== 'current') {
+      return jsonResponse({
+        ok: false,
+        error: 'recovery_qualification_required',
+        reasons: qualificationStatus.reasons,
+      }, 409);
     }
     if (row.plate_status === 'active') {
       await writeOwnershipAudit(env, {
@@ -74,8 +90,38 @@ export async function onRequest({ request, env, params }) {
     const update = env.DB.prepare(
       `UPDATE keeper_pieces
           SET plate_status = 'active', plate_activated_at = ?1
-        WHERE id = ?2 AND plate_status = 'generated'`,
-    ).bind(activatedAt, row.id);
+        WHERE id = ?2 AND plate_status = 'generated'
+          AND backup_status = 'verified'
+          AND backup_reference = ?3
+          AND backup_sha256 = ?4
+          AND ownership_code_key_version = ?5
+          AND EXISTS (
+            SELECT 1 FROM registry_recovery_qualifications qualification
+             WHERE qualification.id = ?6
+               AND qualification.keeper_piece_id = keeper_pieces.id
+               AND qualification.scope = 'piece'
+               AND qualification.result = 'passed'
+               AND qualification.copied_artifacts = 1
+               AND qualification.schema_version = ?7
+               AND qualification.build_version = ?8
+               AND qualification.key_version = ?5
+               AND qualification.generator_version = ?9
+               AND qualification.verifier_version = ?10
+               AND qualification.backup_reference = ?3
+               AND qualification.backup_sha256 = ?4
+          )`,
+    ).bind(
+      activatedAt,
+      row.id,
+      dependencies.backupReference,
+      dependencies.backupSha256,
+      dependencies.keyVersion,
+      qualification.id,
+      dependencies.schemaVersion,
+      dependencies.buildVersion,
+      dependencies.generatorVersion,
+      dependencies.verifierVersion,
+    );
     if (typeof env.DB.batch !== 'function') {
       return jsonResponse({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }
@@ -96,9 +142,14 @@ export async function onRequest({ request, env, params }) {
       const current = await env.DB.prepare(
         'SELECT * FROM keeper_pieces WHERE id = ?1',
       ).bind(row.id).first();
+      const currentDependencies = current ? recoveryDependenciesForRow(current, env) : null;
+      const currentQualification = current
+        ? await loadLatestPassedPieceQualification(env.DB, current.id)
+        : null;
       if (
         current?.plate_status === 'active' &&
-        current.backup_status === 'verified' &&
+        plateBackupIsVerified(current) &&
+        recoveryQualificationStatus(currentQualification, currentDependencies).status === 'current' &&
         hashesMatch(current, body)
       ) {
         return jsonResponse({ ok: true, plateStatus: 'active', idempotent: true });

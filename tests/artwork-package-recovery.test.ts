@@ -231,6 +231,7 @@ function r2RecoveryEnvironment(options: {
     }
     : options.row;
   const operations: string[] = [];
+  const qualifications: Record<string, unknown>[] = [];
   const DB = {
     prepare(sql: string) {
       operations.push(sql.replace(/\s+/g, ' ').trim());
@@ -249,7 +250,20 @@ function r2RecoveryEnvironment(options: {
           },
         };
       }
+      if (/^INSERT INTO registry_recovery_qualifications/i.test(sql.trim())) {
+        let values: unknown[] = [];
+        return {
+          bind(...bound: unknown[]) { values = bound; return this; },
+          async run() {
+            qualifications.push({ values });
+            return { success: true, meta: { changes: 1 } };
+          },
+        };
+      }
       throw new Error(`Unexpected database operation: ${sql}`);
+    },
+    async batch(statements: Array<{ run(): Promise<unknown> }>) {
+      return Promise.all(statements.map((statement) => statement.run()));
     },
   };
   const bucket = options.bucketMissing ? undefined : {
@@ -265,6 +279,8 @@ function r2RecoveryEnvironment(options: {
   };
   return {
     operations,
+    qualifications,
+    copiedDocument: typeof backup === 'string' ? backup : JSON.stringify(backup),
     env: {
       DB,
       ARTWORK_REGISTRY_BACKUP: bucket,
@@ -277,9 +293,9 @@ function r2RecoveryEnvironment(options: {
 
 describe('R2 recovery canary', () => {
   it('reads the encrypted envelope from R2 and returns pass metadata only', async () => {
-    const { env, operations } = r2RecoveryEnvironment();
+    const { env, operations, qualifications, copiedDocument } = r2RecoveryEnvironment();
     const response = await verifyR2Recovery({
-      request: request(), env, params: { id: 'kp-package-1' },
+      request: request('POST', { backupDocument: copiedDocument }), env, params: { id: 'kp-package-1' },
     });
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
@@ -287,6 +303,8 @@ describe('R2 recovery canary', () => {
     assert.deepEqual(body, {
       ok: true,
       recoveryStatus: 'passed',
+      qualificationStatus: 'current',
+      qualifiedAt: body.qualifiedAt,
       publicCode: 'AR-ABCDEFGH',
       pieceId: 'UL-100',
       editionNumber: 2,
@@ -300,22 +318,21 @@ describe('R2 recovery canary', () => {
     assert.equal(body.backupSha256, body.backupReference.split('/').at(-1).replace('.json', ''));
     assert.doesNotMatch(operations[0], /ownership_code_ciphertext|ownership_code_nonce/i);
     assert.match(operations[1], /^INSERT INTO ownership_code_audit/);
-    assert.match(operations[2], /^R2 GET plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
+    assert.equal(qualifications.length, 1);
     assert.equal(JSON.stringify(body).includes(OWNERSHIP_CODE), false);
   });
 
   it('requires admin step-up, D1, R2, and a successful pre-decryption audit', async () => {
-    const { env } = r2RecoveryEnvironment();
+    const { env, copiedDocument } = r2RecoveryEnvironment();
     assert.equal((await verifyR2Recovery({ request: request('GET'), env, params: { id: 'kp-package-1' } })).status, 405);
     const noCookie = request();
     noCookie.headers.delete('Cookie');
     assert.equal((await verifyR2Recovery({ request: noCookie, env, params: { id: 'kp-package-1' } })).status, 401);
-    assert.equal((await verifyR2Recovery({ request: request(), env: { ...env, DB: undefined }, params: { id: 'kp-package-1' } })).status, 503);
-    assert.equal((await verifyR2Recovery({ request: request(), env: r2RecoveryEnvironment({ bucketMissing: true }).env, params: { id: 'kp-package-1' } })).status, 503);
+    assert.equal((await verifyR2Recovery({ request: request('POST', { backupDocument: copiedDocument }), env: { ...env, DB: undefined }, params: { id: 'kp-package-1' } })).status, 503);
+    assert.equal((await verifyR2Recovery({ request: request('POST', {}), env, params: { id: 'kp-package-1' } })).status, 400);
     const failedAudit = r2RecoveryEnvironment({ failAudit: true });
-    const blocked = await verifyR2Recovery({ request: request(), env: failedAudit.env, params: { id: 'kp-package-1' } });
+    const blocked = await verifyR2Recovery({ request: request('POST', { backupDocument: failedAudit.copiedDocument }), env: failedAudit.env, params: { id: 'kp-package-1' } });
     assert.equal(blocked.status, 503);
-    assert.equal(failedAudit.operations.some((item) => item.startsWith('R2 GET')), false);
   });
 
   it('fails closed when the R2 reference, schema, or identity is not exact', async () => {
@@ -329,7 +346,7 @@ describe('R2 recovery canary', () => {
         backup_sha256: '0'.repeat(64),
       },
     });
-    assert.equal((await verifyR2Recovery({ request: request(), env: wrongReference.env, params: { id: 'kp-package-1' } })).status, 409);
+    assert.equal((await verifyR2Recovery({ request: request('POST', { backupDocument: wrongReference.copiedDocument }), env: wrongReference.env, params: { id: 'kp-package-1' } })).status, 409);
 
     for (const backup of [
       null,
@@ -342,7 +359,7 @@ describe('R2 recovery canary', () => {
       },
     ]) {
       const fixture = r2RecoveryEnvironment({ backup });
-      const response = await verifyR2Recovery({ request: request(), env: fixture.env, params: { id: 'kp-package-1' } });
+      const response = await verifyR2Recovery({ request: request('POST', { backupDocument: fixture.copiedDocument }), env: fixture.env, params: { id: 'kp-package-1' } });
       assert.notEqual(response.status, 200);
     }
   });
@@ -350,7 +367,7 @@ describe('R2 recovery canary', () => {
   it('rejects a stored object whose bytes do not match the persisted digest before decryption', async () => {
     const valid = r2RecoveryEnvironment();
     const validResponse = await verifyR2Recovery({
-      request: request(), env: valid.env, params: { id: 'kp-package-1' },
+      request: request('POST', { backupDocument: valid.copiedDocument }), env: valid.env, params: { id: 'kp-package-1' },
     });
     const validBody = await validResponse.json();
     const fixture = r2RecoveryEnvironment({
@@ -364,7 +381,7 @@ describe('R2 recovery canary', () => {
         backup_sha256: validBody.backupSha256,
       },
     });
-    const response = await verifyR2Recovery({ request: request(), env: fixture.env, params: { id: 'kp-package-1' } });
+    const response = await verifyR2Recovery({ request: request('POST', { backupDocument: fixture.copiedDocument }), env: fixture.env, params: { id: 'kp-package-1' } });
     assert.equal(response.status, 409);
     assert.deepEqual(await response.json(), { ok: false, error: 'backup_digest_mismatch' });
   });
@@ -388,7 +405,7 @@ describe('R2 recovery canary', () => {
         })).digest('hex'),
       },
     });
-    const verifierResponse = await verifyR2Recovery({ request: request(), env: verifierMismatch.env, params: { id: 'kp-package-1' } });
+    const verifierResponse = await verifyR2Recovery({ request: request('POST', { backupDocument: verifierMismatch.copiedDocument }), env: verifierMismatch.env, params: { id: 'kp-package-1' } });
     assert.equal(verifierResponse.status, 409);
     assert.deepEqual(await verifierResponse.json(), { ok: false, error: 'ownership_code_verifier_mismatch' });
 
@@ -410,16 +427,17 @@ describe('R2 recovery canary', () => {
         })).digest('hex'),
       },
     });
-    const hashResponse = await verifyR2Recovery({ request: request(), env: hashMismatch.env, params: { id: 'kp-package-1' } });
+    const hashResponse = await verifyR2Recovery({ request: request('POST', { backupDocument: hashMismatch.copiedDocument }), env: hashMismatch.env, params: { id: 'kp-package-1' } });
     assert.equal(hashResponse.status, 409);
     assert.deepEqual(await hashResponse.json(), { ok: false, error: 'fabrication_hash_mismatch' });
   });
 
   it('is wired into the admin desk and documented as a copied-artifact drill', () => {
     const adminSource = readFileSync(new URL('../components/AdminPieces.tsx', import.meta.url), 'utf8');
-    assert.match(adminSource, /Verify R2 recovery/);
-    assert.match(adminSource, /verify-recovery/);
-    assert.match(adminSource, /R2 recovery passed/);
+    const wizardSource = readFileSync(new URL('../components/AdminPlateWizard.tsx', import.meta.url), 'utf8');
+    assert.match(adminSource, /Prove copied-file recovery in wizard/);
+    assert.match(wizardSource, /Verify copied recovery file/);
+    assert.match(wizardSource, /backupDocument/);
 
     const runbook = readFileSync(new URL('../docs/lineage-plate-runbook.md', import.meta.url), 'utf8');
     assert.match(runbook, /Verify R2 recovery/);

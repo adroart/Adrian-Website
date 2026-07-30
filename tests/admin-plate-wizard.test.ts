@@ -84,6 +84,15 @@ describe('plate wizard component wiring', () => {
     );
   });
 
+  it('uses only persisted copied-file recovery proof and has no staging bypass', () => {
+    assert.doesNotMatch(wizard, /recoveryProven|recoveryStagingAck|Staging only/);
+    assert.match(wizard, /type="file"/);
+    assert.match(wizard, /backupDocument/);
+    assert.match(wizard, /piece\?\.recoveryQualification\?\.status === 'current'/);
+    assert.match(wizard, /case 'recovery':\s*\n\s*return piece\?\.recoveryQualification\?\.status === 'current';/);
+    assert.match(wizard, /Recovery proof is stale/);
+  });
+
   it('restarts after completion and automatically completes an already-active plate', () => {
     assert.match(
       wizard,

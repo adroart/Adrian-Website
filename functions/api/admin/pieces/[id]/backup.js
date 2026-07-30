@@ -2,14 +2,20 @@ import {
   jsonResponse,
   requireRegistryUnlock,
   requireDb,
+  constantTimeEqual,
+  writeOwnershipAudit,
 } from '../../../_lib/admin.js';
 import {
+  backupDocumentSha256,
   backupPlateEnvelope,
+  readBackupObjectBytes,
   recordPlateBackupResult,
 } from '../../../_lib/plateBackup.js';
 
 export async function onRequest({ request, env, params }) {
-  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+  if (!['GET', 'POST'].includes(request.method)) {
+    return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
+  }
   const authorization = await requireRegistryUnlock(request, env);
   if (authorization instanceof Response) return authorization;
   const missingDb = requireDb(env);
@@ -23,9 +29,11 @@ export async function onRequest({ request, env, params }) {
       return jsonResponse({ ok: false, error: 'plate_not_found' }, 404);
     }
 
+    if (request.method === 'GET') return downloadBackupCopy(env, row);
+
     const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
     try {
-      await recordPlateBackupResult(env.DB, row.id, result);
+      await recordPlateBackupResult(env.DB, row, result);
     } catch {
       return jsonResponse({ ok: false, error: 'backup_status_record_failed' }, 500);
     }
@@ -44,5 +52,47 @@ export async function onRequest({ request, env, params }) {
     );
   } catch {
     return jsonResponse({ ok: false, error: 'backup_retry_failed' }, 500);
+  }
+}
+
+async function downloadBackupCopy(env, row) {
+  if (!env.ARTWORK_REGISTRY_BACKUP) {
+    return jsonResponse({ ok: false, error: 'backup_not_configured' }, 503);
+  }
+  if (
+    row.backup_status !== 'verified'
+    || typeof row.backup_sha256 !== 'string'
+    || !/^[0-9a-f]{64}$/.test(row.backup_sha256)
+    || row.backup_reference !== `plates/${row.public_code}/${row.backup_sha256}.json`
+  ) {
+    return jsonResponse({ ok: false, error: 'verified_backup_required' }, 409);
+  }
+  try {
+    await writeOwnershipAudit(env, {
+      keeperPieceId: row.id,
+      action: 'download_recovery_copy',
+      outcome: 'authorized',
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: 'audit_unavailable' }, 503);
+  }
+  try {
+    const stored = await env.ARTWORK_REGISTRY_BACKUP.get(row.backup_reference);
+    if (!stored) return jsonResponse({ ok: false, error: 'backup_unavailable' }, 503);
+    const bytes = await readBackupObjectBytes(stored);
+    const digest = await backupDocumentSha256(bytes);
+    if (!constantTimeEqual(digest, row.backup_sha256)) {
+      return jsonResponse({ ok: false, error: 'backup_digest_mismatch' }, 409);
+    }
+    return new Response(bytes, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${row.public_code}-encrypted-recovery.json"`,
+        'Cache-Control': 'no-store',
+        'X-Backup-Sha256': row.backup_sha256,
+      },
+    });
+  } catch {
+    return jsonResponse({ ok: false, error: 'backup_unavailable' }, 503);
   }
 }

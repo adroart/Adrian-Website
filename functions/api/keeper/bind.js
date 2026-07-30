@@ -62,6 +62,7 @@ import {
   hashRecoveryCode,
 } from '../_lib/keeper.js';
 import { requestContestedClaim } from '../_lib/claimBridge.js';
+import { plateBackupIsVerified } from '../_lib/plateBackup.js';
 import {
   claimEvidenceStatement,
   prepareNextLineageEvent,
@@ -138,7 +139,7 @@ export async function onRequest(context) {
       .prepare(
         `SELECT id, piece_id, edition_number, keeper_user_id,
                 recovery_code_hash, claimed_at, released_at, public_code,
-                plate_status, backup_status
+                plate_status, backup_status, backup_reference, backup_sha256
            FROM keeper_pieces
           WHERE public_code = ?1`,
       )
@@ -308,7 +309,7 @@ export async function onRequest(context) {
     // Permanent identities are not bearer-bindable while fabrication or
     // online backup verification is incomplete.
     if (
-      (existing.plate_status !== 'active' || existing.backup_status !== 'verified')
+      (existing.plate_status !== 'active' || !plateBackupIsVerified(existing))
     ) {
       return json(
         {
@@ -330,9 +331,18 @@ export async function onRequest(context) {
           AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL
           AND (
             public_code IS NULL
-            OR (plate_status = 'active' AND backup_status = 'verified')
+            OR (
+              plate_status = 'active' AND backup_status = 'verified'
+              AND backup_reference = ?4 AND backup_sha256 = ?5
+            )
           )`,
-    ).bind(auth.userId, nowIso, existing.id);
+    ).bind(
+      auth.userId,
+      nowIso,
+      existing.id,
+      existing.backup_reference,
+      existing.backup_sha256,
+    );
     if (typeof env.DB.batch !== 'function') {
       return json({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }

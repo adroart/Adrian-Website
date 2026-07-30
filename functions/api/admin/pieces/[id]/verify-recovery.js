@@ -3,6 +3,7 @@ import { decryptOwnershipCode } from '../../../../../utils/ownershipCodeCrypto.t
 import {
   constantTimeEqual,
   jsonResponse,
+  ownershipAuditStatement,
   requireRegistryUnlock,
   requireDb,
   writeOwnershipAudit,
@@ -11,8 +12,36 @@ import { hashRecoveryCode } from '../../../_lib/keeper.js';
 import {
   backupDocumentSha256,
   parseBackupDocument,
-  readBackupObjectBytes,
 } from '../../../_lib/plateBackup.js';
+import {
+  recoveryDependenciesForRow,
+  recoveryQualificationStatement,
+} from '../../../_lib/recoveryQualification.js';
+
+const MAX_BACKUP_DOCUMENT_BYTES = 64 * 1024;
+
+function exactBackupRequest(body) {
+  return body && typeof body === 'object' && !Array.isArray(body)
+    && Object.keys(body).length === 1
+    && typeof body.backupDocument === 'string'
+    && body.backupDocument.length > 0;
+}
+
+async function recordFailure(env, row, administrator, dependencies, safeFailureCode, status) {
+  try {
+    await recoveryQualificationStatement(env.DB, {
+      keeperPieceId: row.id,
+      result: 'failed',
+      copiedArtifacts: true,
+      dependencies,
+      administrator,
+      safeFailureCode,
+    }).run();
+  } catch {
+    return jsonResponse({ ok: false, error: 'qualification_record_failed' }, 503);
+  }
+  return jsonResponse({ ok: false, error: safeFailureCode }, status);
+}
 
 export async function onRequest({ request, env, params }) {
   if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
@@ -20,9 +49,6 @@ export async function onRequest({ request, env, params }) {
   if (authorization instanceof Response) return authorization;
   const missingDb = requireDb(env);
   if (missingDb) return missingDb;
-  if (!env.ARTWORK_REGISTRY_BACKUP) {
-    return jsonResponse({ ok: false, error: 'backup_not_configured' }, 503);
-  }
 
   let row;
   try {
@@ -49,32 +75,37 @@ export async function onRequest({ request, env, params }) {
   if (row.backup_reference !== expectedReference) {
     return jsonResponse({ ok: false, error: 'backup_reference_mismatch' }, 409);
   }
+  const dependencies = recoveryDependenciesForRow(row, env);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return recordFailure(env, row, authorization, dependencies, 'invalid_copied_artifact', 400);
+  }
+  if (!exactBackupRequest(body)) {
+    return recordFailure(env, row, authorization, dependencies, 'invalid_copied_artifact', 400);
+  }
+  const backupBytes = new TextEncoder().encode(body.backupDocument);
+  if (backupBytes.byteLength > MAX_BACKUP_DOCUMENT_BYTES) {
+    return recordFailure(env, row, authorization, dependencies, 'copied_artifact_too_large', 413);
+  }
 
   try {
     await writeOwnershipAudit(env, {
       keeperPieceId: row.id,
-      action: 'verify_r2_recovery',
+      action: 'verify_copied_recovery',
       outcome: 'authorized',
     });
   } catch {
     return jsonResponse({ ok: false, error: 'audit_unavailable' }, 503);
   }
 
-  let stored;
-  try {
-    stored = await env.ARTWORK_REGISTRY_BACKUP.get(expectedReference);
-  } catch {
-    return jsonResponse({ ok: false, error: 'backup_unavailable' }, 503);
-  }
-  if (!stored) return jsonResponse({ ok: false, error: 'backup_unavailable' }, 503);
-
-  let backupBytes;
   let backup;
   try {
-    backupBytes = await readBackupObjectBytes(stored);
     const actualSha256 = await backupDocumentSha256(backupBytes);
     if (!constantTimeEqual(actualSha256, row.backup_sha256)) {
-      return jsonResponse({ ok: false, error: 'backup_digest_mismatch' }, 409);
+      return recordFailure(env, row, authorization, dependencies, 'backup_digest_mismatch', 409);
     }
     backup = parseBackupDocument(backupBytes);
     if (
@@ -84,10 +115,10 @@ export async function onRequest({ request, env, params }) {
       || backup.plateGeneratedAt !== row.plate_generated_at
       || backup.envelope.keyVersion !== String(row.ownership_code_key_version)
     ) {
-      throw new Error('backup identity mismatch');
+      return recordFailure(env, row, authorization, dependencies, 'backup_identity_mismatch', 409);
     }
   } catch {
-    return jsonResponse({ ok: false, error: 'backup_integrity_error' }, 409);
+    return recordFailure(env, row, authorization, dependencies, 'backup_integrity_error', 409);
   }
 
   const identity = {
@@ -99,12 +130,12 @@ export async function onRequest({ request, env, params }) {
   try {
     ownershipCode = await decryptOwnershipCode(backup.envelope, identity, env);
   } catch {
-    return jsonResponse({ ok: false, error: 'backup_decryption_failed' }, 503);
+    return recordFailure(env, row, authorization, dependencies, 'backup_decryption_failed', 503);
   }
 
   const verifier = await hashRecoveryCode(ownershipCode);
   if (!constantTimeEqual(verifier, row.recovery_code_hash)) {
-    return jsonResponse({ ok: false, error: 'ownership_code_verifier_mismatch' }, 409);
+    return recordFailure(env, row, authorization, dependencies, 'ownership_code_verifier_mismatch', 409);
   }
 
   const plate = await buildArtworkPlatePackage({
@@ -118,12 +149,39 @@ export async function onRequest({ request, env, params }) {
     !constantTimeEqual(plate.frontSha256, row.front_svg_sha256)
     || !constantTimeEqual(plate.undersideSha256, row.back_svg_sha256)
   ) {
-    return jsonResponse({ ok: false, error: 'fabrication_hash_mismatch' }, 409);
+    return recordFailure(env, row, authorization, dependencies, 'fabrication_hash_mismatch', 409);
+  }
+
+  if (typeof env.DB.batch !== 'function') {
+    return jsonResponse({ ok: false, error: 'atomic_write_unavailable' }, 503);
+  }
+  const qualifiedAt = new Date().toISOString();
+  try {
+    await env.DB.batch([
+      recoveryQualificationStatement(env.DB, {
+        keeperPieceId: row.id,
+        result: 'passed',
+        copiedArtifacts: true,
+        dependencies,
+        administrator: authorization,
+        qualifiedAt,
+      }),
+      ownershipAuditStatement(env, {
+        keeperPieceId: row.id,
+        action: 'verify_copied_recovery',
+        outcome: 'qualified',
+        createdAt: qualifiedAt,
+      }),
+    ]);
+  } catch {
+    return jsonResponse({ ok: false, error: 'qualification_record_failed' }, 503);
   }
 
   return jsonResponse({
     ok: true,
     recoveryStatus: 'passed',
+    qualificationStatus: 'current',
+    qualifiedAt,
     publicCode: row.public_code,
     pieceId: row.piece_id,
     editionNumber: row.edition_number,

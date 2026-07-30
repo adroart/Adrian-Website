@@ -53,6 +53,7 @@ interface PieceRow {
   plateStatus: string;
   backupStatus: string | null;
   backupReference: string | null;
+  backupSha256: string | null;
   frontSha256: string | null;
   undersideSha256: string | null;
   plateGeneratedAt: string | null;
@@ -63,6 +64,11 @@ interface PieceRow {
   registeredAt: string | null;
   claimedAt: string | null;
   releasedAt: string | null;
+  recoveryQualification?: {
+    status: 'missing' | 'stale' | 'current';
+    reasons: string[];
+    qualifiedAt: string | null;
+  };
 }
 
 interface DraftArtwork {
@@ -195,9 +201,9 @@ const AdminPlateWizard: React.FC = () => {
   // Fabrication stage
   const [filesArchived, setFilesArchived] = useState(false);
 
-  // Recovery stage
-  const [recoveryProven, setRecoveryProven] = useState(false);
-  const [recoveryStagingAck, setRecoveryStagingAck] = useState(false);
+  // Recovery stage. The encrypted copy stays only in memory until submitted.
+  const [copiedBackupDocument, setCopiedBackupDocument] = useState('');
+  const [copiedBackupFilename, setCopiedBackupFilename] = useState('');
 
   // Activate stage
   const [checks, setChecks] = useState<ActivationChecklist>(emptyChecklist);
@@ -287,8 +293,8 @@ const AdminPlateWizard: React.FC = () => {
     issuanceKeyRef.current = null;
     setChecks(emptyChecklist);
     setFilesArchived(false);
-    setRecoveryProven(false);
-    setRecoveryStagingAck(false);
+    setCopiedBackupDocument('');
+    setCopiedBackupFilename('');
   }, []);
 
   // Clear sensitive material if the wizard unmounts.
@@ -612,13 +618,16 @@ const AdminPlateWizard: React.FC = () => {
     setStepError('');
     setStepNote('');
     try {
-      const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(piece.id)}/${action}`, {});
+      const data = await jsonRequest(
+        `/api/admin/pieces/${encodeURIComponent(piece.id)}/${action}`,
+        action === 'verify-recovery' ? { backupDocument: copiedBackupDocument } : {},
+      );
       if (action === 'package') {
         setPkg({ ...projectIssuedPlateResponse(data), backupStatus: piece.backupStatus || undefined });
         setStepNote('Fabrication package recovered. Re-download the files below.');
       } else if (action === 'verify-recovery') {
-        setRecoveryProven(true);
-        setStepNote(`R2 recovery passed with key version ${data.keyVersion}. Both fabrication hashes match — the encrypted backup alone can rebuild this plate.`);
+        await refreshPiece();
+        setStepNote(`Copied-file recovery passed with key version ${data.keyVersion}. The persisted proof is current and both fabrication hashes match.`);
       } else {
         await refreshPiece();
         setStepNote('Encrypted online backup verified.');
@@ -627,6 +636,50 @@ const AdminPlateWizard: React.FC = () => {
       setStepError(registryErrorMessage(error, `Could not ${action} this plate.`));
     } finally {
       setBusy('');
+    }
+  };
+
+  const downloadEncryptedBackupCopy = async () => {
+    if (!piece) return;
+    setBusy('download-backup');
+    setStepError('');
+    try {
+      const response = await fetch(`/api/admin/pieces/${encodeURIComponent(piece.id)}/backup`);
+      const text = await response.text();
+      if (!response.ok) {
+        let error = `Encrypted copy download failed (${response.status})`;
+        try { error = JSON.parse(text)?.error || error; } catch { /* response was not JSON */ }
+        throw new Error(error);
+      }
+      downloadText(
+        `${piece.publicCode || piece.pieceId}-encrypted-recovery.json`,
+        'application/json',
+        text,
+      );
+      setStepNote('Encrypted recovery copy downloaded. Archive it outside the website, then choose that downloaded file below to prove recovery.');
+    } catch (error) {
+      setStepError(registryErrorMessage(error, 'Could not download the encrypted recovery copy.'));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const chooseCopiedBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    setCopiedBackupDocument('');
+    setCopiedBackupFilename('');
+    setStepError('');
+    if (!file) return;
+    if (file.size < 1 || file.size > 64 * 1024) {
+      setStepError('Choose the encrypted recovery JSON downloaded for this plate. The file must be 64 KB or smaller.');
+      return;
+    }
+    try {
+      setCopiedBackupDocument(await file.text());
+      setCopiedBackupFilename(file.name);
+    } catch {
+      setStepError('The copied recovery file could not be read. Choose the downloaded JSON again.');
     }
   };
 
@@ -662,7 +715,7 @@ const AdminPlateWizard: React.FC = () => {
       case 'backup':
         return piece?.backupStatus === 'verified';
       case 'recovery':
-        return recoveryProven || recoveryStagingAck;
+        return piece?.recoveryQualification?.status === 'current';
       case 'activate':
         return false; // activation is terminal; the activation action finishes
       default:
@@ -968,16 +1021,20 @@ const AdminPlateWizard: React.FC = () => {
               {stage.key === 'recovery' && (
                 <div>
                   <p className="font-serif text-sm text-wood-600 mb-4">
-                    Prove the encrypted backup can rebuild this exact plate from R2 alone, before any metal is cut. This decrypts in memory, re-derives both SVGs, and confirms their hashes still match. It returns no code or file.
+                    Prove an independently saved copy can rebuild this exact plate before any metal is cut. Download the encrypted recovery file, archive it outside this website, then choose that copied file below. The server decrypts it in memory, re-derives both SVGs, checks every hash, and persists proof tied to this exact software build and backup digest. It returns no Ownership Code or fabrication file.
                   </p>
-                  <button type="button" className={buttonClass} disabled={Boolean(busy)} onClick={() => void runRowAction('verify-recovery')}>{busy === 'verify-recovery' ? 'Proving…' : 'Verify R2 recovery'}</button>
-                  {recoveryProven && <p className="font-sans text-sm text-green-800 mt-3" role="status">Recovery proven. You can continue.</p>}
-                  {!recoveryProven && (
-                    <label className="flex items-start gap-3 font-sans text-sm text-wood-700 mt-5">
-                      <input type="checkbox" checked={recoveryStagingAck} onChange={(event) => setRecoveryStagingAck(event.target.checked)} className="mt-1" />
-                      <span>Staging only: I will run the R2 recovery drill before engraving a production plate. (The runbook requires a passing drill before real metal.)</span>
+                  <div className="flex flex-wrap gap-3">
+                    <button type="button" className={quietButtonClass} disabled={Boolean(busy)} onClick={() => void downloadEncryptedBackupCopy()}>{busy === 'download-backup' ? 'Downloading…' : 'Download encrypted recovery copy'}</button>
+                    <label className={`${quietButtonClass} inline-flex items-center cursor-pointer`}>
+                      Choose archived copy
+                      <input type="file" accept="application/json,.json" className="sr-only" onChange={(event) => void chooseCopiedBackup(event)} disabled={Boolean(busy)} />
                     </label>
-                  )}
+                  </div>
+                  {copiedBackupFilename && <p className="font-sans text-sm text-wood-600 mt-3">Chosen copy: {copiedBackupFilename}</p>}
+                  <button type="button" className={`${buttonClass} mt-4`} disabled={Boolean(busy) || !copiedBackupDocument || piece?.recoveryQualification?.status === 'current'} onClick={() => void runRowAction('verify-recovery')}>{busy === 'verify-recovery' ? 'Proving…' : 'Verify copied recovery file'}</button>
+                  {piece?.recoveryQualification?.status === 'current' && <p className="font-sans text-sm text-green-800 mt-3" role="status">Persisted recovery proof is current. You can continue.</p>}
+                  {piece?.recoveryQualification?.status === 'stale' && <p className="font-sans text-sm text-red-700 mt-3" role="alert">Recovery proof is stale because the backup or one of its required versions changed. Download and verify a fresh copied file.</p>}
+                  {(!piece?.recoveryQualification || piece.recoveryQualification.status === 'missing') && <p className="font-sans text-sm text-wood-600 mt-3">No qualifying copied-file recovery proof exists yet. Activation remains blocked.</p>}
                 </div>
               )}
 

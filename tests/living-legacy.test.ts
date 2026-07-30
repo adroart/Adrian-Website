@@ -57,6 +57,7 @@ import {
   backupPlateEnvelope,
   buildBackupDocument,
   parseBackupDocument,
+  recordPlateBackupResult,
 } from '../functions/api/_lib/plateBackup.js';
 import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
 import { LAUNCH_FLAGS } from '../launchFlags';
@@ -1738,6 +1739,7 @@ function makeIssuanceDb(options: {
         plate_generated_at, front_svg_sha256, back_svg_sha256,
         ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
         backup_status,
+        record_version: 0,
         current_display_location: null,
         registered_at,
         claimed_at: null,
@@ -1761,6 +1763,7 @@ function makeIssuanceDb(options: {
           row.backup_sha256 = sha256;
           row.backup_at = backupAt;
         }
+        row.record_version += 1;
       }
       return { kind: 'run' };
     }
@@ -1779,6 +1782,9 @@ function makeIssuanceDb(options: {
     // List
     if (/^SELECT .* FROM keeper_pieces ORDER BY/i.test(s)) {
       return { kind: 'all', results: rows.slice() };
+    }
+    if (/^SELECT .* FROM registry_recovery_qualifications/i.test(s)) {
+      return { kind: 'all', results: [] };
     }
     throw new Error(`fake D1: unhandled statement: ${s}`);
   }
@@ -1800,7 +1806,7 @@ function makeIssuanceDb(options: {
         },
         async run() {
           exec(sql, bound);
-          return { success: true };
+          return { success: true, meta: { changes: 1 } };
         },
         async all() {
           return { results: exec(sql, bound).results || [] };
@@ -2511,6 +2517,11 @@ describe('admin piece registration', () => {
 });
 
 describe('encrypted plate backup adapter', () => {
+  it('demotes every pre-content-addressed verified backup during migration', () => {
+    const migration = readMigration('021_registry_plate_backup_digest.sql');
+    assert.match(migration, /UPDATE keeper_pieces[\s\S]*SET backup_status = 'pending', backup_reference = NULL, backup_at = NULL[\s\S]*WHERE backup_status = 'verified'/);
+  });
+
   it('builds deterministic backup bytes and a content-addressed reference', async () => {
     const encryptedRow = {
       ownership_code_nonce: 'stored-nonce',
@@ -2592,6 +2603,36 @@ describe('encrypted plate backup adapter', () => {
     assert.match(result.reference, /^plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
     assert.match(result.sha256, /^[0-9a-f]{64}$/);
   });
+
+  it('refuses to attach a completed backup after the registry row changed', async () => {
+    let sql = '';
+    const db = {
+      prepare(statement: string) {
+        sql = statement.replace(/\s+/g, ' ').trim();
+        return {
+          bind() { return this; },
+          async run() { return { success: true, meta: { changes: 0 } }; },
+        };
+      },
+    };
+    await assert.rejects(
+      recordPlateBackupResult(db, {
+        id: 'kp-stale', record_version: 4, public_code: 'AR-ABCDEFGH',
+        piece_id: 'UL-100', edition_number: 0,
+        plate_generated_at: '2026-07-31T00:00:00.000Z',
+        front_svg_sha256: 'a'.repeat(64), back_svg_sha256: 'b'.repeat(64),
+        ownership_code_ciphertext: 'cipher', ownership_code_nonce: 'nonce',
+        ownership_code_key_version: 1, recovery_code_hash: 'c'.repeat(64),
+      }, {
+        status: 'verified', reference: `plates/AR-ABCDEFGH/${'d'.repeat(64)}.json`,
+        sha256: 'd'.repeat(64),
+      }),
+      /stale backup attempt/,
+    );
+    assert.match(sql, /record_version = \?6/);
+    assert.match(sql, /ownership_code_ciphertext = \?13/);
+    assert.match(sql, /recovery_code_hash = \?16/);
+  });
 });
 
 type LifecycleFixtureOptions = {
@@ -2631,6 +2672,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     recovery_code_hash: await hashRecoveryCode(ownershipCode),
     backup_status: options.backupStatus || 'verified',
     backup_reference: null, backup_sha256: null, backup_at: null,
+    record_version: 1,
     lineage_head_hash: null, lineage_event_count: 0,
   }, {
     id: 'kp-other', piece_id: 'UL-101', edition_number: 1,
@@ -2645,6 +2687,27 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
   const audits: any[] = [];
   const lineage: any[] = [];
   const operations: string[] = [];
+  const backupDocument = JSON.stringify({
+    schemaVersion: 1,
+    publicCode: rows[0].public_code,
+    pieceId: rows[0].piece_id,
+    editionNumber: rows[0].edition_number,
+    plateGeneratedAt: rows[0].plate_generated_at,
+    envelope: {
+      ciphertext: rows[0].ownership_code_ciphertext,
+      nonce: rows[0].ownership_code_nonce,
+      keyVersion: String(rows[0].ownership_code_key_version),
+    },
+  });
+  rows[0].backup_sha256 = createHash('sha256').update(backupDocument).digest('hex');
+  rows[0].backup_reference = `plates/${rows[0].public_code}/${rows[0].backup_sha256}.json`;
+  const qualifications: any[] = [{
+    id: 'rq-current', keeper_piece_id: rows[0].id, result: 'passed', copied_artifacts: 1,
+    schema_version: '1', build_version: 'development', key_version: 1,
+    generator_version: 'artwork-plate-v1', verifier_version: 'copied-plate-v1',
+    backup_reference: rows[0].backup_reference, backup_sha256: rows[0].backup_sha256,
+    qualified_at: '2026-07-13T10:30:00.000Z',
+  }];
 
   function statement(sql: string) {
     let params: any[] = [];
@@ -2655,6 +2718,9 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
         operations.push(normalized);
         if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(normalized)) {
           return rows.find((row) => row.id === params[0]) || null;
+        }
+        if (/^SELECT id, result, copied_artifacts, schema_version/i.test(normalized)) {
+          return qualifications.find((item) => item.keeper_piece_id === params[0]) || null;
         }
         if (/^SELECT lineage_head_hash, lineage_event_count FROM keeper_pieces/i.test(normalized)) {
           return rows.find((row) => row.id === params[0]) || null;
@@ -2723,7 +2789,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     prepare: statement,
     async batch(statements: any[]) { return Promise.all(statements.map((item) => item.run())); },
   };
-  return { DB, rows, audits, lineage, operations, ownershipCode, plate };
+  return { DB, rows, audits, lineage, operations, ownershipCode, plate, qualifications, backupDocument };
 }
 
 function lifecycleRequest(path: string, method: string, body?: unknown, options: {
@@ -2876,6 +2942,15 @@ describe('admin artwork plate lifecycle', () => {
     assert.match(knownGoodReference, /^plates\/AR-7KQ9M2WX\/[0-9a-f]{64}\.json$/);
     assert.match(knownGoodSha256, /^[0-9a-f]{64}$/);
 
+    const downloaded = await retryArtworkPlateBackup({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/backup', 'GET'),
+      env,
+      params: { id: 'kp-one' },
+    });
+    assert.equal(downloaded.status, 200);
+    assert.match(downloaded.headers.get('Content-Disposition') || '', /encrypted-recovery\.json/);
+    assert.equal(createHash('sha256').update(await downloaded.text()).digest('hex'), knownGoodSha256);
+
     fail = true;
     const failed = await retryArtworkPlateBackup({ request: request(), env, params: { id: 'kp-one' } });
     assert.equal(failed.status, 503);
@@ -2898,6 +2973,14 @@ describe('admin artwork plate lifecycle', () => {
     fixture.rows[0].backup_status = 'verified';
     assert.equal((await call({ ...validActivation(fixture.plate), frontSha256: 'wrong' })).status, 409);
     assert.equal((await call({ ...validActivation(fixture.plate), realMetalQrScanned: false })).status, 400);
+    fixture.qualifications.length = 0;
+    const unqualified = await call(validActivation(fixture.plate));
+    assert.equal(unqualified.status, 409);
+    assert.deepEqual(await unqualified.json(), {
+      ok: false,
+      error: 'recovery_qualification_required',
+      reasons: ['qualification_missing'],
+    });
     assert.equal(fixture.rows[0].plate_status, 'generated');
     assert.equal(fixture.audits.length, 0);
   });
@@ -3021,7 +3104,7 @@ function makeKeeperDb() {
     // Public-code lookup: the row itself is the only source of artwork and
     // edition identity. Bind deliberately sees released rows as well.
     if (
-      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status FROM keeper_pieces WHERE public_code = \?1$/i.test(
+      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256 FROM keeper_pieces WHERE public_code = \?1$/i.test(
         s,
       )
     ) {
@@ -3394,11 +3477,14 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // A registry-only draft numbered identity derives edition 1 from the
       // plate row. No catalog route data is needed and edition never defaults.
       const draftCode = 'ZZZZ-YYYY-XXXX-WWWW';
+      const draftBackupSha256 = 'd'.repeat(64);
       pieces.push({
         id: 'kp-draft-bind', piece_id: 'MD-905', edition_number: 1,
         keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(draftCode),
         claimed_at: null, released_at: null, public_code: 'AR-ABCDEFGH',
         plate_status: 'active', backup_status: 'verified',
+        backup_reference: `plates/AR-ABCDEFGH/${draftBackupSha256}.json`,
+        backup_sha256: draftBackupSha256,
         lineage_head_hash: null, lineage_event_count: 0,
       });
       const draftRes = await bind({

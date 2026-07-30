@@ -11,6 +11,7 @@ export const PLATE_QR_ERROR_CORRECTION = 'Q' as const;
 export const PLATE_QR_QUIET_ZONE = 4;
 export const PLATE_WIDTH_MM = 50;
 export const PLATE_HEIGHT_MM = 62;
+export const ARTWORK_PLATE_GENERATOR_VERSION = 'artwork-plate-v1';
 
 const PLATE_VIEWBOX = '0 0 500 620';
 

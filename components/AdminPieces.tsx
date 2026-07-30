@@ -40,6 +40,7 @@ interface PieceRow {
   plateStatus: string;
   backupStatus: string | null;
   backupReference: string | null;
+  backupSha256: string | null;
   frontSha256: string | null;
   undersideSha256: string | null;
   plateGeneratedAt: string | null;
@@ -50,6 +51,11 @@ interface PieceRow {
   registeredAt: string | null;
   claimedAt: string | null;
   releasedAt: string | null;
+  recoveryQualification?: {
+    status: 'missing' | 'stale' | 'current';
+    reasons: string[];
+    qualifiedAt: string | null;
+  };
 }
 
 interface MintableArtwork {
@@ -432,7 +438,7 @@ const AdminPieces: React.FC = () => {
 
   const runRowAction = async (
     row: PieceRow,
-    action: 'backup' | 'reveal' | 'package' | 'verify-recovery',
+    action: 'backup' | 'reveal' | 'package',
   ) => {
     if (!registryUnlocked) {
       setRowError((current) => ({ ...current, [row.id]: 'Unlock the private registry first.' }));
@@ -443,12 +449,7 @@ const AdminPieces: React.FC = () => {
     setRowSuccess((current) => ({ ...current, [row.id]: '' }));
     try {
       const data = await jsonRequest(`/api/admin/pieces/${encodeURIComponent(row.id)}/${action}`, {});
-      if (action === 'verify-recovery') {
-        setRowSuccess((current) => ({
-          ...current,
-          [row.id]: `R2 recovery passed with key version ${data.keyVersion}. Both fabrication hashes match.`,
-        }));
-      } else if (action === 'package') {
+      if (action === 'package') {
         const recoveredPackage = {
           ...projectIssuedPlateResponse(data),
           backupStatus: row.backupStatus || undefined,
@@ -710,10 +711,10 @@ const AdminPieces: React.FC = () => {
                       {row.publicCode && (
                         <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
                           {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
-                          {row.backupStatus === 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'verify-recovery')}>{rowBusy === `${row.id}:verify-recovery` ? 'Verifying R2…' : 'Verify R2 recovery'}</button>}
+                          {row.backupStatus === 'verified' && row.recoveryQualification?.status !== 'current' && <Link className={quietButtonClass} to="/admin/plate-wizard">Prove copied-file recovery in wizard</Link>}
                           <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
                           <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
-                          {row.plateStatus === 'generated' && row.backupStatus === 'verified' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
+                          {row.plateStatus === 'generated' && row.backupStatus === 'verified' && row.recoveryQualification?.status === 'current' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
                         </div>
                       )}
                     </div>

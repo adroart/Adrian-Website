@@ -8,6 +8,13 @@ ALTER TABLE keeper_pieces ADD COLUMN backup_sha256 TEXT CHECK (
   )
 );
 
+-- Every verified row predates content-addressed backup storage at the moment
+-- this migration first runs. Force an explicit immutable re-backup rather than
+-- carrying a mutable legacy reference forward as trusted recovery proof.
+UPDATE keeper_pieces
+   SET backup_status = 'pending', backup_reference = NULL, backup_at = NULL
+ WHERE backup_status = 'verified';
+
 CREATE TRIGGER keeper_piece_backup_reference_digest_insert_guard
 BEFORE INSERT ON keeper_pieces
 WHEN (NEW.backup_reference IS NULL) <> (NEW.backup_sha256 IS NULL)
