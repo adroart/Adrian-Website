@@ -29,6 +29,14 @@ const TEXT_LIMITS = {
   publicProvenance: 2000,
 };
 
+const PROVENANCE_TYPES = new Set([
+  'contributor', 'creation_place', 'intention', 'material', 'technique', 'note',
+]);
+const PROVENANCE_VISIBILITIES = new Set(['private', 'steward', 'public']);
+const PROVENANCE_FIELDS = new Set([
+  'entryType', 'title', 'detail', 'role', 'occurredAt', 'visibility',
+]);
+
 const stringOrNull = (value) => value === null || typeof value === 'string';
 const stringValue = (value) => typeof value === 'string';
 const nonnegativeInteger = (value) => Number.isSafeInteger(value) && value >= 0;
@@ -71,6 +79,20 @@ const MAINTENANCE_TARGETS = {
       updatedAt: ['updated_at', stringValue],
     },
   },
+  provenance: {
+    table: 'artwork_provenance_entries',
+    versionColumn: 'record_version',
+    fields: {
+      entryType: ['entry_type', stringValue],
+      title: ['title', stringValue],
+      detail: ['detail', stringOrNull],
+      role: ['role', stringOrNull],
+      occurredAt: ['occurred_at', stringOrNull],
+      visibility: ['visibility', stringValue],
+      updatedAt: ['updated_at', stringValue],
+      removedAt: ['removed_at', stringOrNull],
+    },
+  },
 };
 
 const ACQUISITION_UPDATE_SNAPSHOT_FIELDS = [
@@ -108,9 +130,17 @@ const EVENT_SNAPSHOT_FIELDS = {
     'keeperPieceId', 'artworkId', 'pieceId', 'editionNumber', 'title', 'metadata',
     'recordVersion',
   ]),
+  provenance_created: new Set([
+    'provenanceId', 'keeperPieceId', 'entryType', 'title', 'detail', 'role',
+    'occurredAt', 'visibility', 'recordVersion', 'createdAt', 'updatedAt', 'removedAt',
+  ]),
   provenance_corrected: new Set([
-    'id', 'keeperPieceId', 'artworkId', 'entryType', 'value', 'visibility',
-    'recordVersion', 'createdAt', 'updatedAt',
+    'provenanceId', 'keeperPieceId', 'entryType', 'title', 'detail', 'role',
+    'occurredAt', 'visibility', 'recordVersion', 'createdAt', 'updatedAt', 'removedAt',
+  ]),
+  provenance_removed: new Set([
+    'provenanceId', 'keeperPieceId', 'entryType', 'title', 'detail', 'role',
+    'occurredAt', 'visibility', 'recordVersion', 'createdAt', 'updatedAt', 'removedAt',
   ]),
   recovery_qualification_recorded: new Set([
     'id', 'keeperPieceId', 'qualification', 'qualifiedAt', 'schemaVersion',
@@ -166,6 +196,21 @@ const EVENT_MUTATION_POLICIES = {
     identityFields: ['keeperPieceId', 'artworkId', 'recordVersion'],
     versionField: 'recordVersion',
     guardArtwork: true,
+  },
+  provenance_corrected: {
+    targetType: 'provenance',
+    mutableFields: new Set([
+      'entryType', 'title', 'detail', 'role', 'occurredAt', 'visibility',
+      'updatedAt', 'removedAt',
+    ]),
+    identityFields: ['provenanceId', 'keeperPieceId', 'recordVersion'],
+    versionField: 'recordVersion',
+  },
+  provenance_removed: {
+    targetType: 'provenance',
+    mutableFields: new Set(['updatedAt', 'removedAt']),
+    identityFields: ['provenanceId', 'keeperPieceId', 'recordVersion'],
+    versionField: 'recordVersion',
   },
 };
 
@@ -252,24 +297,25 @@ function normalizeMaintenanceTarget(target, changes) {
     : null;
   if (!definition) return null;
 
-  const targetFields = target.type === 'acquisition'
+  const associatedTarget = target.type === 'acquisition' || target.type === 'provenance';
+  const targetFields = associatedTarget
     ? new Set(['type', 'id', 'keeperPieceId'])
     : new Set(['type', 'id', 'artworkId']);
   if (Object.keys(target).some((key) => !targetFields.has(key))) return null;
-  const keeperPieceId = target.type === 'acquisition'
+  const keeperPieceId = associatedTarget
     && typeof target.keeperPieceId === 'string'
     && target.keeperPieceId.trim()
     && target.keeperPieceId.trim().length <= 128
     ? target.keeperPieceId.trim()
     : null;
-  if (target.type === 'acquisition' && !keeperPieceId) return null;
-  const artworkId = target.type !== 'acquisition'
+  if (associatedTarget && !keeperPieceId) return null;
+  const artworkId = !associatedTarget
     && typeof target.artworkId === 'string'
     && target.artworkId.trim()
     && target.artworkId.trim().length <= 80
     ? target.artworkId.trim()
     : null;
-  if (target.type !== 'acquisition' && !artworkId) return null;
+  if (!associatedTarget && !artworkId) return null;
 
   const assignments = [];
   const values = [];
@@ -325,7 +371,9 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
     return null;
   }
 
-  const expectedKeeperPieceId = normalizedTarget.targetType === 'acquisition'
+  const associatedTarget = normalizedTarget.targetType === 'acquisition'
+    || normalizedTarget.targetType === 'provenance';
+  const expectedKeeperPieceId = associatedTarget
     ? normalizedTarget.keeperPieceId
     : normalizedTarget.id;
   if (normalizedComparableIdentifier(event?.keeperPieceId) !== expectedKeeperPieceId
@@ -340,7 +388,12 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
       || after.acquisitionId !== normalizedTarget.id)) {
     return null;
   }
-  if (normalizedTarget.targetType === 'acquisition' && event?.artworkId !== null) {
+  if (normalizedTarget.targetType === 'provenance'
+    && (before.provenanceId !== normalizedTarget.id
+      || after.provenanceId !== normalizedTarget.id)) {
+    return null;
+  }
+  if (associatedTarget && event?.artworkId !== null) {
     return null;
   }
   if (policy.correctedLink
@@ -367,7 +420,7 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
     before,
     after,
     beforeValues: changeKeys.map((key) => before[key]),
-    contextGuard: normalizedTarget.targetType === 'acquisition'
+    contextGuard: associatedTarget
       ? { column: 'keeper_piece_id', operator: '=', value: normalizedTarget.keeperPieceId }
       : policy.guardArtwork
         ? { column: 'piece_id', operator: 'IS', value: normalizedTarget.artworkId }
@@ -590,6 +643,80 @@ export function normalizeAcquisitionInput(input) {
       amountMinor,
       currency,
       ...normalizedText,
+    },
+  };
+}
+
+function normalizeProvenanceOccurredAt(value) {
+  if (value === undefined || value === null || value === '') return { value: null };
+  if (typeof value !== 'string') return { error: 'invalid_occurred_at' };
+  const input = value.trim();
+  if (!input) return { value: null };
+  if (/^\d{4}$/.test(input)) return { value: input };
+  const month = /^(\d{4})-(\d{2})$/.exec(input);
+  if (month) {
+    const monthNumber = Number(month[2]);
+    return monthNumber >= 1 && monthNumber <= 12
+      ? { value: input }
+      : { error: 'invalid_occurred_at' };
+  }
+  const full = normalizeAcquiredAt(input);
+  if (!full) return { error: 'invalid_occurred_at' };
+  return { value: /^\d{4}-\d{2}-\d{2}$/.test(input) ? input : full };
+}
+
+export function normalizeProvenanceInput(input) {
+  if (!isPlainRecord(input)) return { ok: false, error: 'invalid_input' };
+  if (Object.keys(input).some((key) => !PROVENANCE_FIELDS.has(key))) {
+    return { ok: false, error: 'unknown_field' };
+  }
+  const entryType = typeof input.entryType === 'string'
+    ? input.entryType.trim().toLowerCase()
+    : '';
+  if (!PROVENANCE_TYPES.has(entryType)) {
+    return { ok: false, error: 'invalid_entry_type' };
+  }
+  const title = typeof input.title === 'string' ? input.title.trim() : '';
+  if (!title) return { ok: false, error: 'title_required' };
+  if (title.length > 300) return { ok: false, error: 'title_too_long' };
+
+  const detail = input.detail === undefined || input.detail === null || input.detail === ''
+    ? null
+    : typeof input.detail === 'string'
+      ? input.detail.trim() || null
+      : undefined;
+  if (detail === undefined) return { ok: false, error: 'invalid_detail' };
+  if (detail !== null && detail.length > 5000) {
+    return { ok: false, error: 'detail_too_long' };
+  }
+  const role = input.role === undefined || input.role === null || input.role === ''
+    ? null
+    : typeof input.role === 'string'
+      ? input.role.trim() || null
+      : undefined;
+  if (role === undefined) return { ok: false, error: 'invalid_role' };
+  if (role !== null && role.length > 300) return { ok: false, error: 'role_too_long' };
+  if (entryType === 'contributor' && !role) {
+    return { ok: false, error: 'role_required' };
+  }
+
+  const occurredAt = normalizeProvenanceOccurredAt(input.occurredAt);
+  if (occurredAt.error) return { ok: false, error: occurredAt.error };
+  const visibility = typeof input.visibility === 'string'
+    ? input.visibility.trim().toLowerCase()
+    : '';
+  if (!PROVENANCE_VISIBILITIES.has(visibility)) {
+    return { ok: false, error: 'invalid_visibility' };
+  }
+  return {
+    ok: true,
+    provenance: {
+      entryType,
+      title,
+      detail,
+      role,
+      occurredAt: occurredAt.value,
+      visibility,
     },
   };
 }
@@ -1035,6 +1162,202 @@ export async function commitAcquisitionCreate(env, input) {
     return { ok: true, replayed: false, eventId: request.eventId, acquisition };
   } catch {
     return resolveAcquisitionCreateReplay(
+      env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+    );
+  }
+}
+
+function normalizeProvenanceCreateRequest({
+  keeperPieceId,
+  provenance,
+  authorization,
+  reason,
+  idempotencyKey,
+  provenanceId,
+  eventId,
+  createdAt,
+}) {
+  const normalizedKeeperPieceId = normalizeOptionalIdentifier(keeperPieceId);
+  const normalizedInput = normalizeProvenanceInput(provenance);
+  if (!normalizedInput.ok) return { error: normalizedInput.error };
+  const normalizedReason = normalizeMaintenanceReason(reason);
+  if (!normalizedReason.ok) return { error: normalizedReason.error };
+
+  let administrator;
+  let normalizedIdempotencyKey;
+  try {
+    administrator = normalizedAdministrator(authorization);
+    normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
+  } catch (error) {
+    return { error: error?.message || 'invalid_provenance_create' };
+  }
+  if (!normalizedKeeperPieceId) return { error: 'invalid_maintenance_identifier' };
+  const normalizedProvenanceId = provenanceId ?? `prov-${crypto.randomUUID()}`;
+  const normalizedEventId = eventId ?? `rme-${crypto.randomUUID()}`;
+  if (normalizeOptionalIdentifier(normalizedProvenanceId) !== normalizedProvenanceId
+    || normalizeOptionalIdentifier(normalizedEventId) !== normalizedEventId) {
+    return { error: 'invalid_maintenance_identifier' };
+  }
+  if (createdAt !== undefined && typeof createdAt !== 'string') {
+    return { error: 'invalid_created_at' };
+  }
+  const timestamp = createdAt === undefined ? new Date() : new Date(createdAt);
+  if (Number.isNaN(timestamp.getTime())) return { error: 'invalid_created_at' };
+  return {
+    keeperPieceId: normalizedKeeperPieceId,
+    provenance: normalizedInput.provenance,
+    administrator,
+    reason: normalizedReason.reason,
+    idempotencyKey: normalizedIdempotencyKey,
+    provenanceId: normalizedProvenanceId,
+    eventId: normalizedEventId,
+    createdAt: timestamp.toISOString(),
+  };
+}
+
+function provenanceCreateReplay(existing, request, mutationFingerprint) {
+  if (!existing) return null;
+  const exact = existing.idempotency_key === request.idempotencyKey
+    && existing.event_type === 'provenance_created'
+    && existing.keeper_piece_id === request.keeperPieceId
+    && existing.artwork_id == null
+    && existing.administrator_user_id === request.administrator.userId
+    && existing.administrator_email === request.administrator.email
+    && existing.reason === request.reason
+    && existing.outcome === 'succeeded'
+    && existing.mutation_fingerprint === mutationFingerprint;
+  if (!exact) return { ok: false, error: 'idempotency_conflict' };
+  try {
+    const provenance = JSON.parse(existing.after_json);
+    normalizeEventSnapshot('provenance_created', provenance);
+    if (provenance?.keeperPieceId !== request.keeperPieceId
+      || provenance?.provenanceId !== existing.related_record_id
+      || provenance?.recordVersion !== 1
+      || provenance?.removedAt !== null) {
+      return { ok: false, error: 'maintenance_write_failed' };
+    }
+    return { ok: true, replayed: true, eventId: existing.id, provenance };
+  } catch {
+    return { ok: false, error: 'maintenance_write_failed' };
+  }
+}
+
+async function resolveProvenanceCreateReplay(env, request, mutationFingerprint, fallback) {
+  try {
+    const existing = await findMaintenanceEventByIdempotencyKey(env, request.idempotencyKey);
+    return provenanceCreateReplay(existing, request, mutationFingerprint) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Atomically create one typed creator-history entry and its maintenance event. */
+export async function commitProvenanceCreate(env, input) {
+  const allowedFields = new Set([
+    'keeperPieceId', 'provenance', 'authorization', 'reason', 'idempotencyKey',
+    'provenanceId', 'eventId', 'createdAt',
+  ]);
+  if (!isPlainRecord(input) || Object.keys(input).some((key) => !allowedFields.has(key))) {
+    return { ok: false, error: 'invalid_provenance_create' };
+  }
+  let request;
+  try {
+    request = normalizeProvenanceCreateRequest(input);
+  } catch {
+    return { ok: false, error: 'invalid_provenance_create' };
+  }
+  if (request.error) return { ok: false, error: request.error };
+  if (typeof env?.DB?.batch !== 'function') {
+    return { ok: false, error: 'atomic_write_unavailable' };
+  }
+
+  const mutationFingerprint = await maintenanceMutationFingerprint({
+    operation: 'provenance_create',
+    keeperPieceId: request.keeperPieceId,
+    provenance: request.provenance,
+  });
+  const existingReplay = await resolveProvenanceCreateReplay(
+    env, request, mutationFingerprint, null,
+  );
+  if (existingReplay) return existingReplay;
+
+  const provenance = {
+    provenanceId: request.provenanceId,
+    keeperPieceId: request.keeperPieceId,
+    ...request.provenance,
+    recordVersion: 1,
+    createdAt: request.createdAt,
+    updatedAt: request.createdAt,
+    removedAt: null,
+  };
+  const event = {
+    id: request.eventId,
+    idempotencyKey: request.idempotencyKey,
+    eventType: 'provenance_created',
+    keeperPieceId: request.keeperPieceId,
+    artworkId: null,
+    authorization: request.administrator,
+    reason: request.reason,
+    before: null,
+    after: provenance,
+    outcome: 'succeeded',
+    relatedRecordId: request.provenanceId,
+    mutationFingerprint,
+    createdAt: request.createdAt,
+  };
+
+  let provenanceStatement;
+  let eventStatement;
+  try {
+    provenanceStatement = env.DB.prepare(
+      `INSERT INTO artwork_provenance_entries
+         (id, keeper_piece_id, entry_type, title, detail, role, occurred_at,
+          visibility, record_version, created_at, updated_at, removed_at)
+       SELECT ?1, id, ?3, ?4, ?5, ?6, ?7, ?8, 1, ?9, ?9, NULL
+         FROM keeper_pieces
+        WHERE id = ?2`,
+    ).bind(
+      request.provenanceId,
+      request.keeperPieceId,
+      request.provenance.entryType,
+      request.provenance.title,
+      request.provenance.detail,
+      request.provenance.role,
+      request.provenance.occurredAt,
+      request.provenance.visibility,
+      request.createdAt,
+    );
+    eventStatement = prepareMaintenanceEventStatement(
+      env,
+      normalizeEventDetails(event, request.eventId),
+    );
+  } catch {
+    return { ok: false, error: 'invalid_maintenance_event' };
+  }
+
+  try {
+    const [provenanceResult, eventResult] = await env.DB.batch([
+      provenanceStatement,
+      eventStatement,
+    ]);
+    if (provenanceResult?.success !== true || eventResult?.success !== true) {
+      return resolveProvenanceCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+      );
+    }
+    if (provenanceResult?.meta?.changes !== 1) {
+      return resolveProvenanceCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'keeper_piece_not_found' },
+      );
+    }
+    if (eventResult?.meta?.changes !== 1) {
+      return resolveProvenanceCreateReplay(
+        env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
+      );
+    }
+    return { ok: true, replayed: false, eventId: request.eventId, provenance };
+  } catch {
+    return resolveProvenanceCreateReplay(
       env, request, mutationFingerprint, { ok: false, error: 'maintenance_write_failed' },
     );
   }

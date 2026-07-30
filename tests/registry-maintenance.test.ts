@@ -9,8 +9,10 @@ import {
   canonicalMaintenanceJson,
   classifyMaintenanceIdempotency,
   commitAcquisitionCreate,
+  commitProvenanceCreate,
   commitMaintenanceMutation,
   normalizeAcquisitionInput,
+  normalizeProvenanceInput,
   normalizeReason,
   replayMaintenanceEvent,
 } from '../functions/api/_lib/registryMaintenance.js';
@@ -500,6 +502,38 @@ describe('maintenance input normalization', () => {
       [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', privateNotes: 'x'.repeat(5001) }, 'private_notes_too_long'],
     ] as const) {
       const result = normalizeAcquisitionInput(input);
+      assert.equal(result.ok, false);
+      assert.equal(result.error, error);
+    }
+  });
+
+  it('normalizes typed creator history and preserves partial date precision', () => {
+    assert.deepEqual(normalizeProvenanceInput({
+      entryType: ' Contributor ',
+      title: ' Mira S. ',
+      detail: ' Joined the wood assembly. ',
+      role: ' Studio collaborator ',
+      occurredAt: '2026-01',
+      visibility: ' PUBLIC ',
+    }), {
+      ok: true,
+      provenance: {
+        entryType: 'contributor',
+        title: 'Mira S.',
+        detail: 'Joined the wood assembly.',
+        role: 'Studio collaborator',
+        occurredAt: '2026-01',
+        visibility: 'public',
+      },
+    });
+    for (const [input, error] of [
+      [{ entryType: 'contributor', title: 'Mira', visibility: 'public' }, 'role_required'],
+      [{ entryType: 'price', title: 'Value', visibility: 'private' }, 'invalid_entry_type'],
+      [{ entryType: 'note', title: 'Note', visibility: 'world' }, 'invalid_visibility'],
+      [{ entryType: 'note', title: 'Note', visibility: 'private', occurredAt: '2026-13' }, 'invalid_occurred_at'],
+      [{ entryType: 'note', title: 'Note', visibility: 'private', secret: 'no' }, 'unknown_field'],
+    ] as const) {
+      const result = normalizeProvenanceInput(input);
       assert.equal(result.ok, false);
       assert.equal(result.error, error);
     }
@@ -1370,6 +1404,52 @@ describe('dedicated acquisition creation', () => {
   });
 });
 
+describe('typed creator-history creation', () => {
+  it('creates once with exact replay and keeps visibility explicit', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+      const request = {
+        keeperPieceId: 'kp-maint',
+        provenance: {
+          entryType: 'contributor', title: 'Mira S.',
+          detail: 'Joined the wood assembly.', role: 'Studio collaborator',
+          occurredAt: '2026-01', visibility: 'public',
+        },
+        authorization: adminIdentity,
+        reason: 'Record the collaborator.',
+        idempotencyKey: 'create-provenance-1',
+        provenanceId: 'prov-created',
+        eventId: 'rme-provenance-created',
+        createdAt: '2026-07-30T06:00:00.000Z',
+      };
+      const created = await commitProvenanceCreate(env, request);
+      assert.equal(created.ok, true);
+      assert.equal(created.replayed, false);
+      assert.equal(created.provenance.visibility, 'public');
+      assert.equal(created.provenance.recordVersion, 1);
+
+      const replay = await commitProvenanceCreate(env, request);
+      assert.equal(replay.ok, true);
+      assert.equal(replay.replayed, true);
+      assert.deepEqual(replay.provenance, created.provenance);
+      assert.equal(database.prepare(
+        'SELECT count(*) AS count FROM artwork_provenance_entries',
+      ).get().count, 1);
+      assert.equal(database.prepare(
+        'SELECT count(*) AS count FROM registry_maintenance_events',
+      ).get().count, 1);
+
+      assert.deepEqual(await commitProvenanceCreate(env, {
+        ...request,
+        provenance: { ...request.provenance, title: 'Different reuse' },
+      }), { ok: false, error: 'idempotency_conflict' });
+    } finally {
+      database.close();
+    }
+  });
+});
+
 describe('private maintenance APIs', () => {
   it('requires admin access and returns searchable summaries plus safe private detail', async () => {
     const { database, env: sqliteEnv } = createSqliteD1();
@@ -1579,6 +1659,130 @@ describe('private maintenance APIs', () => {
       });
       assert.equal(stale.status, 409);
       assert.deepEqual(await stale.json(), { ok: false, error: 'version_conflict' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('creates, corrects and removes creator history with exact replay and current-view history', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: provenance } = await import('../functions/api/admin/maintenance/[id]/provenance.js');
+      const { onRequest: detail } = await import('../functions/api/admin/maintenance/[id].js');
+      const entry = {
+        entryType: 'contributor', title: 'Mira S.',
+        detail: 'Joined the wood assembly.', role: 'Studio collaborator',
+        occurredAt: '2026-01', visibility: 'public',
+      };
+      const createBody = {
+        action: 'create', entry, reason: 'Record the collaborator.',
+        idempotencyKey: 'api-create-provenance',
+      };
+      assert.equal((await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', createBody),
+        env, params: { id: 'kp-maint' },
+      })).status, 403);
+      const createdResponse = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', createBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(createdResponse.status, 201);
+      const created = await createdResponse.json();
+      const provenanceId = created.provenance.provenanceId;
+      assert.equal(created.provenance.recordVersion, 1);
+      assert.equal(created.provenance.visibility, 'public');
+
+      const createReplay = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', createBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(createReplay.status, 200);
+      assert.equal((await createReplay.json()).replayed, true);
+      const createConflict = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', {
+          ...createBody, entry: { ...entry, title: 'Different reuse' },
+        }, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(createConflict.status, 409);
+
+      const correctedEntry = {
+        entryType: 'contributor', title: 'Mira Santoso',
+        detail: 'Joined the wood assembly.', role: 'Studio collaborator',
+        occurredAt: '2026-01-15', visibility: 'steward',
+      };
+      const correctBody = {
+        action: 'correct', provenanceId, expectedVersion: 1,
+        entry: correctedEntry, reason: 'Correct the collaborator name and visibility.',
+        idempotencyKey: 'api-correct-provenance',
+      };
+      const correctedResponse = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', correctBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(correctedResponse.status, 200);
+      const corrected = await correctedResponse.json();
+      assert.equal(corrected.provenance.title, 'Mira Santoso');
+      assert.equal(corrected.provenance.recordVersion, 2);
+      const correctionReplay = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', correctBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(correctionReplay.status, 200);
+      assert.equal((await correctionReplay.json()).replayed, true);
+
+      const beforeRemovalDetail = await detail({
+        request: adminRequest('/api/admin/maintenance/kp-maint'), env, params: { id: 'kp-maint' },
+      });
+      assert.equal(beforeRemovalDetail.status, 200);
+      const beforeRemoval = await beforeRemovalDetail.json();
+      assert.equal(beforeRemoval.piece.creatorHistory.length, 1);
+      assert.equal(beforeRemoval.piece.creatorHistory[0].title, 'Mira Santoso');
+
+      const removeBody = {
+        action: 'remove', provenanceId, expectedVersion: 2,
+        reason: 'Remove this entry from the current presentation.',
+        idempotencyKey: 'api-remove-provenance',
+      };
+      const removedResponse = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', removeBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(removedResponse.status, 200);
+      const removed = await removedResponse.json();
+      assert.equal(removed.provenance.recordVersion, 3);
+      assert.equal(typeof removed.provenance.removedAt, 'string');
+      const removeReplay = await provenance({
+        request: adminRequest('/api/admin/maintenance/kp-maint/provenance', 'POST', removeBody, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(removeReplay.status, 200);
+      assert.equal((await removeReplay.json()).replayed, true);
+
+      const afterRemovalDetail = await detail({
+        request: adminRequest('/api/admin/maintenance/kp-maint'), env, params: { id: 'kp-maint' },
+      });
+      assert.equal(afterRemovalDetail.status, 200);
+      const afterRemoval = await afterRemovalDetail.json();
+      assert.deepEqual(afterRemoval.piece.creatorHistory, []);
+      assert.equal(afterRemoval.piece.maintenanceHistory.length, 3);
+      assert.deepEqual({ ...database.prepare(
+        'SELECT title, visibility, record_version, removed_at IS NOT NULL AS removed FROM artwork_provenance_entries WHERE id = ?',
+      ).get(provenanceId) }, {
+        title: 'Mira Santoso', visibility: 'steward', record_version: 3, removed: 1,
+      });
     } finally {
       maintenanceSession = null;
       database.close();

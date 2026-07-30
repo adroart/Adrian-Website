@@ -20,6 +20,22 @@ function acquisition(row) {
   };
 }
 
+function provenance(row) {
+  return {
+    provenanceId: row.id,
+    keeperPieceId: row.keeper_piece_id,
+    entryType: row.entry_type,
+    title: row.title,
+    detail: row.detail ?? null,
+    role: row.role ?? null,
+    occurredAt: row.occurred_at ?? null,
+    visibility: row.visibility,
+    recordVersion: row.record_version,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function history(row) {
   const snapshots = projectMaintenanceHistorySnapshots(
     row.event_type,
@@ -75,13 +91,20 @@ export async function onRequest({ request, env, params }) {
     ).bind(id).first();
     if (!row) return jsonResponse({ ok: false, error: 'not_found' }, 404);
 
-    const [acquisitionRows, eventRows] = await Promise.all([
+    const [acquisitionRows, provenanceRows, eventRows] = await Promise.all([
       env.DB.prepare(
         `SELECT id, keeper_piece_id, acquisition_type, acquired_at, amount_minor,
                 currency, acquirer_reference, private_notes, document_reference,
                 public_provenance, record_version, created_at, updated_at
            FROM artwork_acquisitions WHERE keeper_piece_id = ?1
           ORDER BY COALESCE(acquired_at, created_at), id`,
+      ).bind(id).all(),
+      env.DB.prepare(
+        `SELECT id, keeper_piece_id, entry_type, title, detail, role, occurred_at,
+                visibility, record_version, created_at, updated_at
+           FROM artwork_provenance_entries
+          WHERE keeper_piece_id = ?1 AND removed_at IS NULL
+          ORDER BY COALESCE(occurred_at, created_at), created_at, id`,
       ).bind(id).all(),
       env.DB.prepare(
         `SELECT id, idempotency_key, event_type, administrator_user_id,
@@ -127,6 +150,7 @@ export async function onRequest({ request, env, params }) {
           stewardVersion: row.steward_version,
         } : null,
         acquisitions: (acquisitionRows.results || []).map(acquisition),
+        creatorHistory: (provenanceRows.results || []).map(provenance),
         maintenanceHistory: (eventRows.results || []).map(history),
       },
     });
