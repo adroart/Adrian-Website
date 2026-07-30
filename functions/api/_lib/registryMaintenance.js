@@ -468,6 +468,50 @@ async function maintenanceMutationFingerprint(value) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+async function fingerprintValidatedMaintenanceMutation(
+  normalizedTarget,
+  validatedEvent,
+  expectedVersion,
+) {
+  return maintenanceMutationFingerprint({
+    target: {
+      type: normalizedTarget.targetType,
+      keeperPieceId: normalizedTarget.keeperPieceId,
+      artworkId: normalizedTarget.artworkId,
+    },
+    id: normalizedTarget.id,
+    expectedVersion,
+    changes: normalizedTarget.changes,
+    eventType: validatedEvent.eventType,
+    before: validatedEvent.before,
+    after: validatedEvent.after,
+  });
+}
+
+/** Verify that a stored fingerprint represents the exact validated mutation. */
+export async function matchesMaintenanceMutationFingerprint(existing, {
+  target,
+  changes,
+  event,
+  expectedVersion,
+}) {
+  if (!existing || !Number.isSafeInteger(expectedVersion) || expectedVersion < 0) return false;
+  const normalizedTarget = normalizeMaintenanceTarget(target, changes);
+  if (!normalizedTarget) return false;
+  try {
+    const validatedEvent = validateEventMutation(normalizedTarget, event, expectedVersion);
+    if (!validatedEvent || validatedEvent.error) return false;
+    const expected = await fingerprintValidatedMaintenanceMutation(
+      normalizedTarget,
+      validatedEvent,
+      expectedVersion,
+    );
+    return existing.mutation_fingerprint === expected;
+  } catch {
+    return false;
+  }
+}
+
 export const canonicalMaintenanceJson = canonicalJson;
 
 export function normalizeMaintenanceReason(value) {
@@ -733,19 +777,11 @@ export async function commitMaintenanceMutation(env, {
   let mutationStatement;
   let eventStatement;
   try {
-    const mutationFingerprint = await maintenanceMutationFingerprint({
-      target: {
-        type: normalizedTarget.targetType,
-        keeperPieceId: normalizedTarget.keeperPieceId,
-        artworkId: normalizedTarget.artworkId,
-      },
-      id: normalizedTarget.id,
+    const mutationFingerprint = await fingerprintValidatedMaintenanceMutation(
+      normalizedTarget,
+      validatedEvent,
       expectedVersion,
-      changes: normalizedTarget.changes,
-      eventType: validatedEvent.eventType,
-      before: validatedEvent.before,
-      after: validatedEvent.after,
-    });
+    );
     boundEvent = { ...event, id: eventId, mutationFingerprint };
     const normalizedEvent = normalizeEventDetails(boundEvent, eventId);
     mutationStatement = buildVersionedMutationStatement(

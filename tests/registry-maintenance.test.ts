@@ -1340,9 +1340,14 @@ describe('private maintenance APIs', () => {
       const listed = await listResponse.json();
       assert.equal(listed.pieces.length, 1);
       assert.equal(listed.pieces[0].title, 'Art of Living - 32');
-      assert.equal(listed.pieces[0].acquisitionType, 'sale');
-      assert.equal(listed.pieces[0].stewardEmail, 'keeper@example.com');
-      assert.equal(Object.hasOwn(listed.pieces[0], 'amountMinor'), false);
+      assert.deepEqual(Object.keys(listed.pieces[0]).sort(), [
+        'artworkId', 'backupStatus', 'editionNumber', 'id', 'plateStatus', 'publicCode',
+        'recordVersion', 'registeredAt', 'stewardActive', 'stewardVersion', 'title',
+      ]);
+      assert.doesNotMatch(
+        JSON.stringify(listed.pieces),
+        /keeper@example\.com|acquisitionCount|acquisitionType|acquiredAt|amountMinor/i,
+      );
 
       const detailResponse = await detail({
         request: adminRequest('/api/admin/maintenance/kp-maint'), env, params: { id: 'kp-maint' },
@@ -1558,6 +1563,301 @@ describe('private maintenance APIs', () => {
       assert.equal(response.status, 503);
       assert.deepEqual(JSON.parse(responseText), { ok: false, error: 'maintenance_write_failed' });
       assert.doesNotMatch(responseText, /nonce|verifier|LEAK-REPLAY/i);
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('resets steward state atomically with exact replay, conflict, and stale-version protection', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        UPDATE keeper_pieces
+           SET keeper_user_id = 'keeper-current',
+               claimed_at = '2026-07-20T00:00:00.000Z',
+               released_at = '2026-07-25T00:00:00.000Z',
+               current_display_location = 'Ubud studio'
+         WHERE id = 'kp-maint';
+      `);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const requestBody = {
+        action: 'reset_steward',
+        reason: 'Return this piece to the safe unclaimed state.',
+        idempotencyKey: 'api-reset-steward',
+        expectedStewardVersion: 1,
+      };
+
+      for (const invalidBody of [
+        { ...requestBody, targetEmail: 'collector@example.com' },
+        { ...requestBody, unexpected: true },
+      ]) {
+        const invalid = await action({
+          request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', invalidBody, cookie),
+          env,
+          params: { id: 'kp-maint' },
+        });
+        assert.equal(invalid.status, 400);
+      }
+
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', requestBody, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.replayed, false);
+      assert.deepEqual(result.steward, {
+        keeperPieceId: 'kp-maint',
+        artworkId: 'UL-100',
+        keeperUserId: null,
+        claimedAt: null,
+        releasedAt: null,
+        currentDisplayLocation: null,
+        stewardVersion: 2,
+      });
+      assert.deepEqual({ ...database.prepare(
+        `SELECT keeper_user_id, claimed_at, released_at, current_display_location,
+                steward_version FROM keeper_pieces WHERE id = 'kp-maint'`,
+      ).get() }, {
+        keeper_user_id: null,
+        claimed_at: null,
+        released_at: null,
+        current_display_location: null,
+        steward_version: 2,
+      });
+      const event = database.prepare(
+        `SELECT event_type, before_json, after_json, reason
+           FROM registry_maintenance_events WHERE idempotency_key = 'api-reset-steward'`,
+      ).get();
+      assert.equal(event.event_type, 'steward_reset');
+      assert.equal(event.reason, requestBody.reason);
+      assert.equal(JSON.parse(String(event.before_json)).keeperUserId, 'keeper-current');
+      assert.deepEqual(JSON.parse(String(event.after_json)), result.steward);
+      assert.doesNotMatch(JSON.stringify(event), /ownership|recovery|ciphertext|nonce|verifier/i);
+
+      const replay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', requestBody, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(replay.status, 200);
+      assert.equal((await replay.json()).replayed, true);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS count FROM registry_maintenance_events',
+      ).get().count, 1);
+
+      const keyConflict = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+          ...requestBody,
+          reason: 'Reuse the key for a different request.',
+        }, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(keyConflict.status, 409);
+      assert.deepEqual(await keyConflict.json(), { ok: false, error: 'idempotency_conflict' });
+
+      const stale = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+          ...requestBody,
+          idempotencyKey: 'api-reset-stale',
+        }, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(stale.status, 409);
+      assert.deepEqual(await stale.json(), { ok: false, error: 'version_conflict' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('transfers only to one verified Better Auth account without storing its email', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        INSERT INTO user (id, email, emailVerified, createdAt, updatedAt) VALUES
+          ('keeper-current', 'current@example.com', 1, 1, 1),
+          ('keeper-target', 'target@example.com', 1, 1, 1),
+          ('keeper-other', 'other@example.com', 1, 1, 1),
+          ('keeper-unverified', 'unverified@example.com', 0, 1, 1),
+          ('keeper-dupe-one', 'dupe@example.com', 1, 1, 1),
+          ('keeper-dupe-two', 'DUPE@example.com', 1, 1, 1);
+        UPDATE keeper_pieces
+           SET keeper_user_id = 'keeper-current',
+               claimed_at = '2026-07-20T00:00:00.000Z',
+               current_display_location = 'Ubud studio'
+         WHERE id = 'kp-maint';
+      `);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const baseBody = {
+        action: 'transfer_steward',
+        reason: 'Transfer stewardship to the verified recipient.',
+        idempotencyKey: 'api-transfer-steward',
+        expectedStewardVersion: 1,
+      };
+      for (const [targetEmail, status, error] of [
+        [undefined, 400, 'target_email_required'],
+        ['missing@example.com', 404, 'target_not_found'],
+        ['unverified@example.com', 409, 'target_unverified'],
+        ['dupe@example.com', 409, 'target_ambiguous'],
+        ['current@example.com', 409, 'target_is_current_steward'],
+      ] as const) {
+        const validation = await action({
+          request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+            ...baseBody,
+            idempotencyKey: `validation-${error}`,
+            ...(targetEmail === undefined ? {} : { targetEmail }),
+          }, cookie),
+          env,
+          params: { id: 'kp-maint' },
+        });
+        assert.equal(validation.status, status, error);
+        assert.deepEqual(await validation.json(), { ok: false, error }, error);
+      }
+
+      const requestBody = { ...baseBody, targetEmail: ' Target@Example.com ' };
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', requestBody, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.replayed, false);
+      assert.equal(result.steward.keeperUserId, 'keeper-target');
+      assert.equal(result.steward.stewardVersion, 2);
+      assert.equal(result.steward.releasedAt, null);
+      assert.equal(result.steward.currentDisplayLocation, null);
+      assert.equal(new Date(result.steward.claimedAt).toISOString(), result.steward.claimedAt);
+      const stored = database.prepare(
+        `SELECT keeper_user_id, claimed_at, released_at, current_display_location,
+                steward_version FROM keeper_pieces WHERE id = 'kp-maint'`,
+      ).get();
+      assert.equal(stored.keeper_user_id, 'keeper-target');
+      assert.equal(stored.claimed_at, result.steward.claimedAt);
+      assert.equal(stored.released_at, null);
+      assert.equal(stored.current_display_location, null);
+      assert.equal(stored.steward_version, 2);
+      const event = database.prepare(
+        `SELECT event_type, before_json, after_json
+           FROM registry_maintenance_events WHERE idempotency_key = 'api-transfer-steward'`,
+      ).get();
+      assert.equal(event.event_type, 'steward_transferred');
+      assert.deepEqual(JSON.parse(String(event.after_json)), result.steward);
+      const serializedEvent = JSON.stringify(event);
+      assert.doesNotMatch(serializedEvent, /target@example\.com/i);
+      assert.doesNotMatch(serializedEvent, /ownership|recovery|ciphertext|nonce|verifier/i);
+
+      const replay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', requestBody, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(replay.status, 200);
+      assert.equal((await replay.json()).replayed, true);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS count FROM registry_maintenance_events',
+      ).get().count, 1);
+
+      const conflict = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+          ...requestBody,
+          targetEmail: 'other@example.com',
+        }, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(conflict.status, 409);
+      assert.deepEqual(await conflict.json(), { ok: false, error: 'idempotency_conflict' });
+
+      const stale = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+          ...requestBody,
+          idempotencyKey: 'api-transfer-stale',
+          targetEmail: 'other@example.com',
+        }, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(stale.status, 409);
+      assert.deepEqual(await stale.json(), { ok: false, error: 'version_conflict' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('rolls back steward state when its maintenance event cannot be appended', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        UPDATE keeper_pieces
+           SET keeper_user_id = 'keeper-current', claimed_at = '2026-07-20T00:00:00.000Z'
+         WHERE id = 'kp-maint';
+        CREATE TRIGGER fail_steward_history
+        BEFORE INSERT ON registry_maintenance_events
+        BEGIN
+          SELECT RAISE(ABORT, 'forced event failure');
+        END;
+      `);
+      const env = {
+        ...sqliteEnv,
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-maint/actions', 'POST', {
+          action: 'reset_steward',
+          reason: 'Exercise atomic rollback.',
+          idempotencyKey: 'api-reset-rollback',
+          expectedStewardVersion: 1,
+        }, cookie),
+        env,
+        params: { id: 'kp-maint' },
+      });
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { ok: false, error: 'maintenance_write_failed' });
+      assert.deepEqual({ ...database.prepare(
+        `SELECT keeper_user_id, claimed_at, steward_version
+           FROM keeper_pieces WHERE id = 'kp-maint'`,
+      ).get() }, {
+        keeper_user_id: 'keeper-current',
+        claimed_at: '2026-07-20T00:00:00.000Z',
+        steward_version: 1,
+      });
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS count FROM registry_maintenance_events',
+      ).get().count, 0);
     } finally {
       maintenanceSession = null;
       database.close();

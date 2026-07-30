@@ -231,6 +231,20 @@ describe('registry maintenance mutation security matrix', () => {
       allowedStatus: 404,
       load: async () => (await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js')).onRequest,
     },
+    {
+      name: 'steward reset or transfer',
+      path: '/api/admin/maintenance/kp-missing/actions',
+      method: 'POST',
+      params: { id: 'kp-missing' },
+      body: {
+        action: 'reset_steward',
+        reason: 'Verify mutation authorization.',
+        idempotencyKey: 'security-reset-steward',
+        expectedStewardVersion: 1,
+      },
+      allowedStatus: 404,
+      load: async () => (await import('../functions/api/admin/maintenance/[id]/actions.js')).onRequest,
+    },
   ] as const;
 
   for (const endpoint of mutationEndpoints) {
@@ -382,6 +396,7 @@ describe('legacy password administration retirement', () => {
       'functions/api/admin/viewings.js',
       'functions/api/admin/maintenance.js',
       'functions/api/admin/maintenance/[id].js',
+      'functions/api/admin/maintenance/[id]/actions.js',
       'functions/api/admin/maintenance/[id]/acquisitions.js',
       'functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js',
       'functions/api/book.js',

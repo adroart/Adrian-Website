@@ -30,11 +30,7 @@ function serialize(row) {
     plateStatus: row.plate_status,
     backupStatus: row.backup_status ?? null,
     registeredAt: row.registered_at ?? null,
-    stewardEmail: row.steward_email ?? null,
-    stewardActive: Boolean(row.keeper_user_id) && !row.released_at,
-    acquisitionCount: Number(row.acquisition_count || 0),
-    acquisitionType: row.latest_acquisition_type ?? null,
-    acquiredAt: row.latest_acquired_at ?? null,
+    stewardActive: Boolean(row.steward_active),
     recordVersion: row.record_version,
     stewardVersion: row.steward_version,
   };
@@ -99,23 +95,12 @@ export async function onRequest({ request, env }) {
     const statement = env.DB.prepare(
       `SELECT kp.id, kp.piece_id, kp.edition_number, kp.public_code,
               kp.plate_status, kp.backup_status, kp.registered_at,
-              kp.keeper_user_id, kp.released_at, kp.record_version,
-              kp.steward_version, ra.title AS registry_title,
-              COALESCE(ba.email, u.email) AS steward_email,
-              (SELECT COUNT(*) FROM artwork_acquisitions ac
-                WHERE ac.keeper_piece_id = kp.id) AS acquisition_count,
-              (SELECT ac.acquisition_type FROM artwork_acquisitions ac
-                WHERE ac.keeper_piece_id = kp.id
-                ORDER BY COALESCE(ac.acquired_at, ac.created_at) DESC, ac.id DESC LIMIT 1
-              ) AS latest_acquisition_type,
-              (SELECT ac.acquired_at FROM artwork_acquisitions ac
-                WHERE ac.keeper_piece_id = kp.id
-                ORDER BY COALESCE(ac.acquired_at, ac.created_at) DESC, ac.id DESC LIMIT 1
-              ) AS latest_acquired_at
+              CASE WHEN kp.keeper_user_id IS NOT NULL AND kp.released_at IS NULL
+                THEN 1 ELSE 0 END AS steward_active,
+              kp.record_version, kp.steward_version,
+              ra.title AS registry_title
          FROM keeper_pieces kp
          LEFT JOIN registry_artworks ra ON ra.id = kp.piece_id
-         LEFT JOIN user ba ON ba.id = kp.keeper_user_id
-         LEFT JOIN users u ON u.clerk_user_id = kp.keeper_user_id
          ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
          ORDER BY COALESCE(kp.plate_activated_at, kp.registered_at, kp.claimed_at) DESC, kp.id
          LIMIT ${MAX_RESULTS}`,
