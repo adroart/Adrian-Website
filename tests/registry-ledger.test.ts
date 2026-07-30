@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
@@ -11,6 +15,7 @@ import {
   parseLedgerJsonl,
   serializeLedgerJsonl,
   verifyLedgerChain,
+  verifyLedgerFile,
   type LedgerHeader,
   type LedgerRecord,
 } from '../utils/registryLedger.ts';
@@ -46,6 +51,15 @@ const event = (over: Partial<Extract<LedgerRecord, { kind: 'event' }>> = {}): Le
   eventHash: 'e'.repeat(64),
   publicPayload: { pieceId: 'UL-100', editionNumber: 0, publicCode: 'AR-7KQ9M2WX' },
   ...over,
+});
+
+const headerFor = (lines: Awaited<ReturnType<typeof computeLedgerLines>>): LedgerHeader => ({
+  kind: 'header',
+  schemaVersion: REGISTRY_LEDGER_SCHEMA_VERSION,
+  exportedAt: '2026-07-21T12:00:00.000Z',
+  recordCount: lines.length,
+  headHash: lines.at(-1)?.hash ?? null,
+  note: 'test',
 });
 
 describe('registry ledger chain', () => {
@@ -134,6 +148,148 @@ describe('registry ledger diff', () => {
     const fresh: LedgerRecord[] = [plate({ recoveryCodeHash: '9'.repeat(64) })];
     const diff = diffLedgerRecords(held, fresh);
     assert.deepEqual(diff.changed, ['plate:kp-1']);
+  });
+});
+
+describe('complete registry ledger file verification', () => {
+  it('accepts one valid header followed by the complete valid chain', async () => {
+    const lines = await computeLedgerLines([plate(), event()]);
+    const result = await verifyLedgerFile({ header: headerFor(lines), lines });
+    assert.deepEqual(result, {
+      ok: true,
+      count: 2,
+      headHash: lines.at(-1)?.hash ?? null,
+    });
+  });
+
+  it('rejects a missing header', async () => {
+    const lines = await computeLedgerLines([plate()]);
+    const parsed = parseLedgerJsonl(lines.map((line) => JSON.stringify(line)).join('\n'));
+    const result = await verifyLedgerFile(parsed);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'missing_header');
+  });
+
+  it('rejects duplicate headers instead of silently filtering them', async () => {
+    const lines = await computeLedgerLines([plate()]);
+    const header = headerFor(lines);
+    const parsed = parseLedgerJsonl([
+      JSON.stringify(header),
+      JSON.stringify(header),
+      JSON.stringify(lines[0]),
+    ].join('\n'));
+    const result = await verifyLedgerFile(parsed);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'duplicate_header');
+  });
+
+  it('rejects a header that appears after a record', async () => {
+    const lines = await computeLedgerLines([plate()]);
+    const parsed = parseLedgerJsonl([
+      JSON.stringify(lines[0]),
+      JSON.stringify(headerFor(lines)),
+    ].join('\n'));
+    const result = await verifyLedgerFile(parsed);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'late_header');
+  });
+
+  it('rejects an unsupported header schema', async () => {
+    const lines = await computeLedgerLines([plate()]);
+    const header = { ...headerFor(lines), schemaVersion: 999 } as unknown as LedgerHeader;
+    const result = await verifyLedgerFile({ header, lines });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'schema');
+  });
+
+  it('reports malformed JSON without accepting the remaining rows', async () => {
+    const lines = await computeLedgerLines([plate()]);
+    const parsed = parseLedgerJsonl([
+      JSON.stringify(headerFor(lines)),
+      '{"n":0',
+    ].join('\n'));
+    const result = await verifyLedgerFile(parsed);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'json');
+  });
+
+  it('rejects a false header record count', async () => {
+    const lines = await computeLedgerLines([plate(), event()]);
+    const result = await verifyLedgerFile({
+      header: { ...headerFor(lines), recordCount: lines.length + 1 },
+      lines,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'record_count');
+  });
+
+  it('rejects a false header head hash', async () => {
+    const lines = await computeLedgerLines([plate(), event()]);
+    const result = await verifyLedgerFile({
+      header: { ...headerFor(lines), headHash: '0'.repeat(64) },
+      lines,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'head_hash');
+  });
+
+  it('rejects clean last-line truncation even though the surviving chain is valid', async () => {
+    const completeLines = await computeLedgerLines([plate(), event()]);
+    const parsed = parseLedgerJsonl(serializeLedgerJsonl(headerFor(completeLines), completeLines).split('\n').slice(0, -2).join('\n'));
+    assert.equal((await verifyLedgerChain(parsed.lines)).ok, true);
+    const result = await verifyLedgerFile(parsed);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'record_count');
+  });
+
+  it('rejects an extra valid line when the header is stale', async () => {
+    const originalLines = await computeLedgerLines([plate(), event()]);
+    const extendedLines = await computeLedgerLines([
+      plate(),
+      event(),
+      event({ sequence: 2, eventType: 'activated', eventHash: 'f'.repeat(64) }),
+    ]);
+    const result = await verifyLedgerFile({ header: headerFor(originalLines), lines: extendedLines });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'record_count');
+  });
+
+  it('rejects a line containing an unknown record shape before trusting its hash', async () => {
+    const unknownLines = await computeLedgerLines([plate()]);
+    unknownLines[0].record = { kind: 'mystery', id: 'unknown' } as unknown as LedgerRecord;
+    const result = await verifyLedgerFile({ header: headerFor(unknownLines), lines: unknownLines });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'record_shape');
+    assert.equal(result.badIndex, 0);
+  });
+
+  it('makes verify, diff, and SQL restore refuse an incomplete file', async () => {
+    const lines = await computeLedgerLines([plate(), event()]);
+    const valid = serializeLedgerJsonl(headerFor(lines), lines);
+    const truncated = valid.split('\n').slice(0, -2).join('\n');
+    const directory = mkdtempSync(join(tmpdir(), 'registry-ledger-'));
+    const validPath = join(directory, 'valid.jsonl');
+    const truncatedPath = join(directory, 'truncated.jsonl');
+    const sqlPath = join(directory, 'restore.sql');
+    writeFileSync(validPath, valid);
+    writeFileSync(truncatedPath, truncated);
+    try {
+      const commands = [
+        ['verify', truncatedPath],
+        ['diff', validPath, truncatedPath],
+        ['to-sql', truncatedPath, sqlPath],
+      ];
+      for (const args of commands) {
+        const result = spawnSync('npx', ['tsx', 'scripts/registry-ledger.ts', ...args], {
+          cwd: process.cwd(),
+          encoding: 'utf8',
+        });
+        assert.notEqual(result.status, 0, `${args[0]} unexpectedly accepted an incomplete ledger`);
+        assert.match(result.stderr, /record_count/);
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 

@@ -103,6 +103,32 @@ export interface LedgerVerifyResult {
   reason?: 'sequence' | 'prev' | 'hash' | 'shape';
 }
 
+export type LedgerFileVerifyReason =
+  | 'missing_header'
+  | 'duplicate_header'
+  | 'late_header'
+  | 'schema'
+  | 'record_count'
+  | 'head_hash'
+  | 'json'
+  | 'record_shape'
+  | NonNullable<LedgerVerifyResult['reason']>;
+
+export interface LedgerFileVerifyResult extends Omit<LedgerVerifyResult, 'reason'> {
+  reason?: LedgerFileVerifyReason;
+}
+
+export interface LedgerFileParseIssue {
+  reason: 'duplicate_header' | 'late_header' | 'json' | 'record_shape';
+  badIndex: number;
+}
+
+export interface LedgerFileParseResult {
+  header: LedgerHeader | null;
+  lines: LedgerLine[];
+  parseIssue?: LedgerFileParseIssue;
+}
+
 export interface LedgerDiff {
   added: string[]; // present online / in B, absent in the held ledger / A
   removed: string[]; // present in the held ledger / A, absent online / in B
@@ -207,19 +233,199 @@ export async function verifyLedgerChain(lines: LedgerLine[]): Promise<LedgerVeri
   return { ok: true, count: lines.length, headHash: prev };
 }
 
+/** Verify the complete ledger document, including its non-chained header. */
+export async function verifyLedgerFile(file: {
+  header: LedgerHeader | null;
+  lines: LedgerLine[];
+  parseIssue?: LedgerFileParseIssue;
+}): Promise<LedgerFileVerifyResult> {
+  if (file.parseIssue) {
+    return {
+      ok: false,
+      count: file.lines.length,
+      headHash: null,
+      badIndex: file.parseIssue.badIndex,
+      reason: file.parseIssue.reason,
+    };
+  }
+  if (!file.header) {
+    return { ok: false, count: file.lines.length, headHash: null, reason: 'missing_header' };
+  }
+  if (!isLedgerHeader(file.header)) {
+    return { ok: false, count: file.lines.length, headHash: null, reason: 'schema' };
+  }
+  if (file.header.recordCount !== file.lines.length) {
+    return { ok: false, count: file.lines.length, headHash: null, reason: 'record_count' };
+  }
+  for (let index = 0; index < file.lines.length; index += 1) {
+    if (!isLedgerLine(file.lines[index]) || !isLedgerRecord(file.lines[index].record)) {
+      return {
+        ok: false,
+        count: file.lines.length,
+        headHash: null,
+        badIndex: index,
+        reason: 'record_shape',
+      };
+    }
+  }
+  const chain = await verifyLedgerChain(file.lines);
+  if (!chain.ok) return chain;
+  if (file.header.headHash !== chain.headHash) {
+    return {
+      ok: false,
+      count: chain.count,
+      headHash: chain.headHash,
+      reason: 'head_hash',
+    };
+  }
+  return chain;
+}
+
 /** Serialize a full ledger file: a header line, then one JSON object per line. */
 export function serializeLedgerJsonl(header: LedgerHeader, lines: LedgerLine[]): string {
   return [JSON.stringify(header), ...lines.map((line) => JSON.stringify(line))].join('\n') + '\n';
 }
 
-/** Parse a ledger file back into its header and chained lines. */
-export function parseLedgerJsonl(text: string): { header: LedgerHeader | null; lines: LedgerLine[] } {
-  const rows = text
-    .split(/\r?\n/)
-    .filter((row) => row.trim().length > 0)
-    .map((row) => JSON.parse(row) as Record<string, unknown>);
-  const header = rows.length > 0 && rows[0].kind === 'header' ? (rows[0] as unknown as LedgerHeader) : null;
-  const lines = rows.filter((row) => row.kind !== 'header') as unknown as LedgerLine[];
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isStringOrNull(value: unknown): value is string | null {
+  return value === null || isString(value);
+}
+
+function isHashOrNull(value: unknown): value is string | null {
+  return value === null || (typeof value === 'string' && /^[a-f0-9]{64}$/.test(value));
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isJsonValue(value: unknown): boolean {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJsonValue);
+  if (!isPlainObject(value)) return false;
+  return Object.values(value).every(isJsonValue);
+}
+
+function isOwnershipEnvelope(value: unknown): value is OwnershipEnvelope {
+  return isPlainObject(value)
+    && hasExactKeys(value, ['ciphertext', 'nonce', 'keyVersion'])
+    && isString(value.ciphertext)
+    && isString(value.nonce)
+    && isString(value.keyVersion);
+}
+
+function isLedgerPlateRecord(value: unknown): value is LedgerPlateRecord {
+  if (!isPlainObject(value) || !hasExactKeys(value, [
+    'kind', 'id', 'publicCode', 'pieceId', 'editionNumber', 'plateStatus',
+    'recoveryCodeHash', 'frontSha256', 'undersideSha256', 'envelope',
+    'backupStatus', 'backupReference', 'plateGeneratedAt', 'plateActivatedAt',
+    'registeredAt', 'lineageHeadHash', 'lineageEventCount',
+  ])) return false;
+  return value.kind === 'plate'
+    && isString(value.id)
+    && isStringOrNull(value.publicCode)
+    && isString(value.pieceId)
+    && isNonNegativeInteger(value.editionNumber)
+    && isString(value.plateStatus)
+    && isString(value.recoveryCodeHash)
+    && isStringOrNull(value.frontSha256)
+    && isStringOrNull(value.undersideSha256)
+    && (value.envelope === null || isOwnershipEnvelope(value.envelope))
+    && isStringOrNull(value.backupStatus)
+    && isStringOrNull(value.backupReference)
+    && isStringOrNull(value.plateGeneratedAt)
+    && isStringOrNull(value.plateActivatedAt)
+    && isStringOrNull(value.registeredAt)
+    && isStringOrNull(value.lineageHeadHash)
+    && isNonNegativeInteger(value.lineageEventCount);
+}
+
+function isLedgerEventRecord(value: unknown): value is LedgerEventRecord {
+  if (!isPlainObject(value) || !hasExactKeys(value, [
+    'kind', 'keeperPieceId', 'sequence', 'eventType', 'eventAt', 'previousHash',
+    'eventHash', 'publicPayload',
+  ])) return false;
+  return value.kind === 'event'
+    && isString(value.keeperPieceId)
+    && isNonNegativeInteger(value.sequence)
+    && isString(value.eventType)
+    && isString(value.eventAt)
+    && isStringOrNull(value.previousHash)
+    && isString(value.eventHash)
+    && isJsonValue(value.publicPayload);
+}
+
+function isLedgerRecord(value: unknown): value is LedgerRecord {
+  return isLedgerPlateRecord(value) || isLedgerEventRecord(value);
+}
+
+function isLedgerLine(value: unknown): value is LedgerLine {
+  if (!isPlainObject(value) || !hasExactKeys(value, ['n', 'prev', 'hash', 'record'])) return false;
+  return isNonNegativeInteger(value.n)
+    && isHashOrNull(value.prev)
+    && typeof value.hash === 'string'
+    && /^[a-f0-9]{64}$/.test(value.hash)
+    && isPlainObject(value.record);
+}
+
+function isLedgerHeader(value: unknown): value is LedgerHeader {
+  if (!isPlainObject(value) || !hasExactKeys(value, [
+    'kind', 'schemaVersion', 'exportedAt', 'recordCount', 'headHash', 'note',
+  ])) return false;
+  return value.kind === 'header'
+    && value.schemaVersion === REGISTRY_LEDGER_SCHEMA_VERSION
+    && isString(value.exportedAt)
+    && isNonNegativeInteger(value.recordCount)
+    && isHashOrNull(value.headHash)
+    && isString(value.note);
+}
+
+/** Parse every non-empty row without hiding duplicate, late, or invalid rows. */
+export function parseLedgerJsonl(text: string): LedgerFileParseResult {
+  const rows = text.split(/\r?\n/);
+  let header: LedgerHeader | null = null;
+  const lines: LedgerLine[] = [];
+  let sawNonHeader = false;
+
+  for (let physicalIndex = 0; physicalIndex < rows.length; physicalIndex += 1) {
+    const row = rows[physicalIndex];
+    if (row.trim().length === 0) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(row);
+    } catch {
+      return { header, lines, parseIssue: { reason: 'json', badIndex: physicalIndex } };
+    }
+    if (!isPlainObject(parsed)) {
+      return { header, lines, parseIssue: { reason: 'record_shape', badIndex: physicalIndex } };
+    }
+    if (parsed.kind === 'header') {
+      if (header) {
+        return { header, lines, parseIssue: { reason: 'duplicate_header', badIndex: physicalIndex } };
+      }
+      if (sawNonHeader) {
+        return { header, lines, parseIssue: { reason: 'late_header', badIndex: physicalIndex } };
+      }
+      header = parsed as unknown as LedgerHeader;
+      continue;
+    }
+    sawNonHeader = true;
+    lines.push(parsed as unknown as LedgerLine);
+  }
   return { header, lines };
 }
 

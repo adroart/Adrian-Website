@@ -32,8 +32,8 @@ import {
   buildRebuildSql,
   diffLedgerRecords,
   parseLedgerJsonl,
-  verifyLedgerChain,
-  type LedgerLine,
+  verifyLedgerFile,
+  type LedgerFileParseResult,
 } from '../utils/registryLedger';
 
 function fail(message: string): never {
@@ -41,20 +41,18 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function load(path: string): { lines: LedgerLine[]; text: string } {
+function load(path: string): LedgerFileParseResult {
   let text: string;
   try {
     text = readFileSync(path, 'utf8');
   } catch {
     fail(`Cannot read ledger file: ${path}`);
   }
-  const { lines } = parseLedgerJsonl(text);
-  return { lines, text };
+  return parseLedgerJsonl(text);
 }
 
 async function cmdVerify(path: string): Promise<void> {
-  const { lines } = load(path);
-  const result = await verifyLedgerChain(lines);
+  const result = await verifyLedgerFile(load(path));
   if (!result.ok) {
     fail(`LEDGER TAMPERED. First break at line ${result.badIndex} (${result.reason}). ` +
       `Do not trust this file; recover from an intact copy.`);
@@ -68,8 +66,8 @@ async function cmdDiff(heldPath: string, freshPath: string): Promise<void> {
   const held = load(heldPath);
   const fresh = load(freshPath);
   const [heldCheck, freshCheck] = await Promise.all([
-    verifyLedgerChain(held.lines),
-    verifyLedgerChain(fresh.lines),
+    verifyLedgerFile(held),
+    verifyLedgerFile(fresh),
   ]);
   if (!heldCheck.ok) fail(`Held ledger is broken at line ${heldCheck.badIndex} (${heldCheck.reason}).`);
   if (!freshCheck.ok) fail(`Fresh ledger is broken at line ${freshCheck.badIndex} (${freshCheck.reason}).`);
@@ -94,8 +92,9 @@ async function cmdDiff(heldPath: string, freshPath: string): Promise<void> {
 }
 
 async function cmdToSql(path: string, outPath?: string): Promise<void> {
-  const { lines } = load(path);
-  const check = await verifyLedgerChain(lines);
+  const ledger = load(path);
+  const { lines } = ledger;
+  const check = await verifyLedgerFile(ledger);
   if (!check.ok) fail(`Refusing to build SQL from a broken ledger (line ${check.badIndex}, ${check.reason}).`);
   const sql = buildRebuildSql(lines.map((line) => line.record));
   if (outPath) {
