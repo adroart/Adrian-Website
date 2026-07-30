@@ -58,8 +58,8 @@ function resolveMetadata(plate, overlay) {
   }
 
   return {
-    title: staticArtwork?.title ?? overlay.title,
-    series: staticArtwork?.series ?? overlay?.series ?? null,
+    title: staticArtwork ? staticArtwork.title : overlay.title,
+    series: staticArtwork ? staticArtwork.series ?? null : overlay.series ?? null,
     editionKind,
     editionSize,
     publicProvenance: staticArtwork?.provenance ?? [],

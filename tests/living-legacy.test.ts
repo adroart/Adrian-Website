@@ -413,7 +413,10 @@ describe('artwork plate fabrication package', () => {
   });
 });
 
-function plateLookupDb(row: { piece_id: string; edition_number: number } | null) {
+function plateLookupDb(
+  row: { piece_id: string; edition_number: number } | null,
+  error?: Error,
+) {
   const calls: Array<{ sql: string; values: unknown[] }> = [];
   return {
     calls,
@@ -427,6 +430,7 @@ function plateLookupDb(row: { piece_id: string; edition_number: number } | null)
           },
           async first() {
             calls.push({ sql, values });
+            if (error) throw error;
             return row;
           },
         };
@@ -475,6 +479,15 @@ describe('permanent artwork QR resolver', () => {
     const response = await qrRequest('AR-7KQ9M2WX');
 
     assert.equal(response.status, 503);
+    assert.equal(response.headers.get('location'), null);
+  });
+
+  it('returns the safe 503 response when the artwork registry query fails', async () => {
+    const lookup = plateLookupDb(null, new Error('D1_ERROR: database unavailable'));
+    const response = await qrRequest('AR-7KQ9M2WX', { DB: lookup.DB });
+
+    assert.equal(response.status, 503);
+    assert.equal(await response.text(), 'Registry unavailable');
     assert.equal(response.headers.get('location'), null);
   });
 

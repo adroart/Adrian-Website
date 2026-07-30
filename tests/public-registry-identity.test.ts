@@ -172,17 +172,24 @@ describe('GET /api/registry/:publicCode', () => {
     assert.deepEqual(calls.map((call) => call.values), [[PUBLIC_CODE], ['UL-100']]);
   });
 
-  it('resolves an active unique static plate without requiring an overlay', async () => {
+  it('keeps canonical static title and null series when an overlay supplies mutable metadata', async () => {
     const { response } = await lookup({
       plate: {
         piece_id: 'SIG-108', edition_number: 0, public_code: PUBLIC_CODE,
         plate_status: 'active',
       },
-      artwork: null,
+      artwork: {
+        id: 'SIG-108', title: 'Mutable overlay title',
+        series: 'Mutable overlay series', edition_size: null,
+      },
     });
 
     assert.equal(response.status, 200);
-    const payload = await response.json() as { identity: { edition: unknown; plateStatus: string } };
+    const payload = await response.json() as {
+      identity: { title: string; series: string | null; edition: unknown; plateStatus: string };
+    };
+    assert.equal(payload.identity.title, 'Winged Spirit Wood');
+    assert.equal(payload.identity.series, null);
     assert.deepEqual(payload.identity.edition, {
       kind: 'unique', number: null, size: null, label: 'Unique work',
     });

@@ -47,15 +47,20 @@ export async function onRequest({ params, request, env }) {
   if (/^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(code)) {
     if (!env?.DB) return new Response('Registry unavailable', { status: 503 });
 
-    const row = await env.DB
-      .prepare(
-        `SELECT piece_id
-           FROM keeper_pieces
-          WHERE public_code = ?1
-            AND plate_status IN ('generated', 'active')`,
-      )
-      .bind(code)
-      .first();
+    let row;
+    try {
+      row = await env.DB
+        .prepare(
+          `SELECT piece_id
+             FROM keeper_pieces
+            WHERE public_code = ?1
+              AND plate_status IN ('generated', 'active')`,
+        )
+        .bind(code)
+        .first();
+    } catch {
+      return new Response('Registry unavailable', { status: 503 });
+    }
 
     if (!row) return new Response('Not found', { status: 404 });
 
