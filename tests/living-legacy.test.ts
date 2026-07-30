@@ -52,7 +52,12 @@ import {
 
 import { buildLineageEvent, prepareNextLineageEvent } from '../functions/api/_lib/lineage.js';
 import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
-import { backupPlateEnvelope } from '../functions/api/_lib/plateBackup.js';
+import {
+  backupDocumentSha256,
+  backupPlateEnvelope,
+  buildBackupDocument,
+  parseBackupDocument,
+} from '../functions/api/_lib/plateBackup.js';
 import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
 import { LAUNCH_FLAGS } from '../launchFlags';
 
@@ -1747,12 +1752,15 @@ function makeIssuanceDb(options: {
         backupStatusFailurePending = false;
         throw new Error('D1 status update unavailable');
       }
-      const [status, reference, backupAt, id] = params;
+      const [status, reference, sha256, backupAt, id] = params;
       const row = rows.find((r) => r.id === id);
       if (row) {
         row.backup_status = status;
-        row.backup_reference = reference;
-        row.backup_at = backupAt;
+        if (status === 'verified') {
+          row.backup_reference = reference;
+          row.backup_sha256 = sha256;
+          row.backup_at = backupAt;
+        }
       }
       return { kind: 'run' };
     }
@@ -1806,16 +1814,21 @@ function makeIssuanceDb(options: {
 }
 
 function makeBackupBucket({ fail = false } = {}) {
-  const objects = new Map<string, string>();
+  const objects = new Map<string, Uint8Array>();
   return {
     objects,
-    async put(key: string, value: string) {
+    async put(key: string, value: Uint8Array) {
       if (fail) throw new Error('backup unavailable');
-      objects.set(key, value);
+      if (objects.has(key)) return null;
+      objects.set(key, value.slice());
+      return { key };
     },
     async get(key: string) {
       const value = objects.get(key);
-      return value === undefined ? null : { text: async () => value };
+      return value === undefined ? null : {
+        text: async () => new TextDecoder().decode(value),
+        arrayBuffer: async () => value.slice().buffer,
+      };
     },
   };
 }
@@ -2215,7 +2228,11 @@ describe('admin piece registration', () => {
       assert.ok(rows[0].ownership_code_ciphertext);
       assert.ok(rows[0].ownership_code_nonce);
       assert.equal(JSON.stringify(rows[0]).includes(normalizeRecoveryCode(created.ownershipCode)), false);
-      const backup = JSON.parse(bucket.objects.get(`plates/${created.publicCode}.json`)!);
+      const backupEntry = [...bucket.objects.entries()].find(([key]) => (
+        key.startsWith(`plates/${created.publicCode}/`)
+      ));
+      assert.ok(backupEntry);
+      const backup = JSON.parse(new TextDecoder().decode(backupEntry[1]));
       assert.equal(backup.publicCode, created.publicCode);
       assert.equal(backup.envelope.ciphertext, rows[0].ownership_code_ciphertext);
       assert.equal(backup.envelope.nonce, rows[0].ownership_code_nonce);
@@ -2494,15 +2511,42 @@ describe('admin piece registration', () => {
 });
 
 describe('encrypted plate backup adapter', () => {
-  it('retries the identical stored envelope without a decryption path', async () => {
-    const writes: Array<{ key: string; value: string }> = [];
+  it('builds deterministic backup bytes and a content-addressed reference', async () => {
+    const encryptedRow = {
+      ownership_code_nonce: 'stored-nonce',
+      public_code: 'AR-ABCDEFGH',
+      ownership_code_key_version: 7,
+      piece_id: 'UL-100',
+      ownership_code_ciphertext: 'stored-ciphertext',
+      plate_generated_at: '2026-07-13T00:00:00.000Z',
+      edition_number: 0,
+    };
+    const document = buildBackupDocument(encryptedRow);
+    const bytes = new TextEncoder().encode(JSON.stringify(document));
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+
+    assert.equal(await backupDocumentSha256(bytes), sha256);
+    assert.deepEqual(parseBackupDocument(bytes), document);
+    assert.deepEqual(parseBackupDocument(JSON.stringify(document)), document);
+  });
+
+  it('conditionally creates once and accepts only a byte-identical retry race', async () => {
+    const writes: Array<{ key: string; value: string; options: any }> = [];
+    const objects = new Map<string, string>();
     const bucket = {
-      async put(key: string, value: string) {
-        writes.push({ key, value });
+      async put(key: string, value: Uint8Array, options: any) {
+        const serialized = new TextDecoder().decode(value);
+        writes.push({ key, value: serialized, options });
+        if (objects.has(key)) return null;
+        objects.set(key, serialized);
+        return { key };
       },
       async get(key: string) {
-        const stored = [...writes].reverse().find((write) => write.key === key);
-        return stored ? { text: async () => stored.value } : null;
+        const stored = objects.get(key);
+        return stored === undefined ? null : {
+          text: async () => stored,
+          arrayBuffer: async () => new TextEncoder().encode(stored).buffer,
+        };
       },
     };
     const encryptedRow = {
@@ -2515,17 +2559,38 @@ describe('encrypted plate backup adapter', () => {
       ownership_code_key_version: 7,
     };
 
-    assert.deepEqual(await backupPlateEnvelope(bucket, encryptedRow), {
-      status: 'verified', reference: 'plates/AR-ABCDEFGH.json',
-    });
-    assert.deepEqual(await backupPlateEnvelope(bucket, encryptedRow), {
-      status: 'verified', reference: 'plates/AR-ABCDEFGH.json',
-    });
+    const first = await backupPlateEnvelope(bucket, encryptedRow);
+    const second = await backupPlateEnvelope(bucket, encryptedRow);
+    assert.equal(first.status, 'verified');
+    assert.deepEqual(second, first);
+    assert.match(first.reference, /^plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
+    assert.equal(first.sha256, first.reference.split('/').at(-1)?.replace('.json', ''));
     assert.equal(writes.length, 2);
+    assert.deepEqual(writes[0].options.onlyIf, { etagDoesNotMatch: '*' });
     assert.equal(writes[0].value, writes[1].value);
     assert.deepEqual(JSON.parse(writes[1].value).envelope, {
       ciphertext: 'stored-ciphertext', nonce: 'stored-nonce', keyVersion: '7',
     });
+  });
+
+  it('refuses a pre-existing object whose bytes conflict with its digest address', async () => {
+    const bucket = {
+      async put() { return null; },
+      async get() {
+        return {
+          arrayBuffer: async () => new TextEncoder().encode('{"conflict":true}').buffer,
+        };
+      },
+    };
+    const result = await backupPlateEnvelope(bucket, {
+      public_code: 'AR-ABCDEFGH', piece_id: 'UL-100', edition_number: 0,
+      plate_generated_at: '2026-07-13T00:00:00.000Z',
+      ownership_code_ciphertext: 'stored-ciphertext', ownership_code_nonce: 'stored-nonce',
+      ownership_code_key_version: 7,
+    });
+    assert.equal(result.status, 'failed');
+    assert.match(result.reference, /^plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
+    assert.match(result.sha256, /^[0-9a-f]{64}$/);
   });
 });
 
@@ -2565,7 +2630,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     ownership_code_key_version: envelope.keyVersion,
     recovery_code_hash: await hashRecoveryCode(ownershipCode),
     backup_status: options.backupStatus || 'verified',
-    backup_reference: 'plates/AR-7KQ9M2WX.json', backup_at: generatedAt,
+    backup_reference: null, backup_sha256: null, backup_at: null,
     lineage_head_hash: null, lineage_event_count: 0,
   }, {
     id: 'kp-other', piece_id: 'UL-101', edition_number: 1,
@@ -2574,7 +2639,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
     front_svg_sha256: 'other-front', back_svg_sha256: 'other-back',
     ownership_code_ciphertext: 'other-ciphertext', ownership_code_nonce: 'other-nonce',
     ownership_code_key_version: 1, recovery_code_hash: 'other-verifier', backup_status: 'verified',
-    backup_reference: 'plates/AR-ABCDEFGH.json', backup_at: generatedAt,
+    backup_reference: null, backup_sha256: null, backup_at: null,
     lineage_head_hash: null, lineage_event_count: 0,
   }];
   const audits: any[] = [];
@@ -2620,10 +2685,17 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
           return { success: true, meta: { changes: 1 } };
         }
         if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(normalized)) {
-          const [status, reference, at, id] = params;
+          const [status, reference, sha256, at, id] = params;
           const row = rows.find((item) => item.id === id);
           if (!row) return { success: true, meta: { changes: 0 } };
-          Object.assign(row, { backup_status: status, backup_reference: reference, backup_at: at });
+          row.backup_status = status;
+          if (status === 'verified') {
+            Object.assign(row, {
+              backup_reference: reference,
+              backup_sha256: sha256,
+              backup_at: at,
+            });
+          }
           return { success: true, meta: { changes: 1 } };
         }
         if (/^UPDATE keeper_pieces SET plate_status = 'active'/i.test(normalized)) {
@@ -2777,11 +2849,18 @@ describe('admin artwork plate lifecycle', () => {
     const writes: string[] = [];
     let fail = false;
     const bucket = {
-      async put(_key: string, value: string) { if (fail) throw new Error('R2 down'); writes.push(value); },
+      async put(_key: string, value: Uint8Array) {
+        if (fail) throw new Error('R2 down');
+        writes.push(new TextDecoder().decode(value));
+        return { key: _key };
+      },
       async get(key: string) {
         if (fail) throw new Error('R2 down');
         const value = writes.at(-1);
-        return value ? { text: async () => value } : null;
+        return value ? {
+          text: async () => value,
+          arrayBuffer: async () => new TextEncoder().encode(value).buffer,
+        } : null;
       },
     };
     const env = lifecycleEnv(fixture.DB, bucket);
@@ -2792,12 +2871,18 @@ describe('admin artwork plate lifecycle', () => {
     assert.equal((await verified.json()).backupStatus, 'verified');
     assert.equal(fixture.rows[0].backup_status, 'verified');
     assert.match(writes[0], /stored-ciphertext-without-a-valid-key-envelope/);
+    const knownGoodReference = fixture.rows[0].backup_reference;
+    const knownGoodSha256 = fixture.rows[0].backup_sha256;
+    assert.match(knownGoodReference, /^plates\/AR-7KQ9M2WX\/[0-9a-f]{64}\.json$/);
+    assert.match(knownGoodSha256, /^[0-9a-f]{64}$/);
 
     fail = true;
     const failed = await retryArtworkPlateBackup({ request: request(), env, params: { id: 'kp-one' } });
     assert.equal(failed.status, 503);
     assert.equal((await failed.json()).backupStatus, 'failed');
     assert.equal(fixture.rows[0].backup_status, 'failed');
+    assert.equal(fixture.rows[0].backup_reference, knownGoodReference);
+    assert.equal(fixture.rows[0].backup_sha256, knownGoodSha256);
     assert.equal(failed.headers.get('Cache-Control'), 'no-store');
   });
 
@@ -2994,12 +3079,15 @@ function makeKeeperDb() {
     }
 
     if (/^UPDATE keeper_pieces SET backup_status = \?1/i.test(s)) {
-      const [status, reference, backupAt, id] = params;
+      const [status, reference, sha256, backupAt, id] = params;
       const row = pieces.find((r) => r.id === id);
       if (row) {
         row.backup_status = status;
-        row.backup_reference = reference;
-        row.backup_at = backupAt;
+        if (status === 'verified') {
+          row.backup_reference = reference;
+          row.backup_sha256 = sha256;
+          row.backup_at = backupAt;
+        }
       }
       return { kind: 'run', meta: { changes: row ? 1 : 0 } };
     }

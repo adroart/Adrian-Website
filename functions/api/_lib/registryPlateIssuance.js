@@ -11,7 +11,10 @@ import {
   lineageAnchorStatement,
   lineageStatement,
 } from './lineage.js';
-import { backupPlateEnvelope } from './plateBackup.js';
+import {
+  backupPlateEnvelope,
+  recordPlateBackupResult,
+} from './plateBackup.js';
 import { buildArtworkPlatePackage, generatePublicPlateCode } from '../../../utils/artworkPlate.ts';
 import {
   decryptOwnershipCode,
@@ -216,20 +219,15 @@ export async function packageFromStoredRegistryPlate(row, env) {
   return { ok: true, ownershipCode, ...plate };
 }
 
-async function recordBackupResult(env, row, result) {
-  const at = result.status === 'verified' ? new Date().toISOString() : null;
-  await env.DB.prepare(
-    `UPDATE keeper_pieces
-        SET backup_status = ?1, backup_reference = ?2, backup_at = ?3
-      WHERE id = ?4`,
-  ).bind(result.status, result.reference, at, row.id).run();
-}
-
 export async function backupRegistryPlate(env, row) {
   const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
   try {
-    await recordBackupResult(env, row, result);
+    await recordPlateBackupResult(env.DB, row.id, result);
     row.backup_status = result.status;
+    if (result.status === 'verified') {
+      row.backup_reference = result.reference;
+      row.backup_sha256 = result.sha256;
+    }
     return {
       status: result.status,
       warning: result.status === 'failed' ? 'online_backup_failed' : undefined,

@@ -34,6 +34,7 @@ function serialize(row) {
     plateStatus: row.plate_status || 'legacy',
     backupStatus: row.backup_status || null,
     backupReference: row.backup_reference || null,
+    backupSha256: row.backup_sha256 || null,
     frontSha256: row.front_svg_sha256 || null,
     undersideSha256: row.back_svg_sha256 || null,
     plateGeneratedAt: row.plate_generated_at || null,
@@ -51,7 +52,8 @@ async function listPieces(env) {
   try {
     const { results } = await env.DB.prepare(
       `SELECT id, piece_id, edition_number, public_code, plate_status,
-              backup_status, backup_reference, front_svg_sha256, back_svg_sha256,
+              backup_status, backup_reference, backup_sha256,
+              front_svg_sha256, back_svg_sha256,
               plate_generated_at, plate_activated_at, backup_at, keeper_user_id,
               current_display_location, registered_at, claimed_at, released_at
          FROM keeper_pieces

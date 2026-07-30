@@ -56,6 +56,7 @@ const registryMigrations = [
   '017_creator_registry_maintenance.sql',
   '018_registry_plate_lifecycle.sql',
   '019_registry_creator_history.sql',
+  '021_registry_plate_backup_digest.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -339,7 +340,9 @@ describe('creator registry maintenance migration', () => {
          SET plate_status = 'active', plate_activated_at = '2026-07-30T04:00:00.000Z'
        WHERE id = 'kp-maint';
       UPDATE keeper_pieces
-         SET backup_status = 'verified', backup_reference = 'plates/AR-7KQ9M2WX.json',
+         SET backup_status = 'verified',
+             backup_reference = 'plates/AR-7KQ9M2WX/${'a'.repeat(64)}.json',
+             backup_sha256 = '${'a'.repeat(64)}',
              backup_at = '2026-07-30T05:00:00.000Z'
        WHERE id = 'kp-maint';
       UPDATE keeper_pieces
@@ -352,6 +355,30 @@ describe('creator registry maintenance migration', () => {
       SELECT record_version, steward_version FROM keeper_pieces WHERE id = 'kp-maint';
     `);
     assert.deepEqual(rows, [{ record_version: 3, steward_version: 2 }]);
+  });
+
+  it('binds every newly verified backup reference to its exact digest address', () => {
+    const digest = 'a'.repeat(64);
+    const valid = sqliteResult(`${registryMigrations}\n${keeperInsert}
+      UPDATE keeper_pieces
+         SET backup_status = 'verified', backup_sha256 = '${digest}',
+             backup_reference = 'plates/AR-7KQ9M2WX/${digest}.json'
+       WHERE id = 'kp-maint';`);
+    assert.equal(valid.status, 0, valid.stderr);
+
+    for (const update of [
+      `UPDATE keeper_pieces SET backup_status = 'verified' WHERE id = 'kp-maint';`,
+      `UPDATE keeper_pieces
+          SET backup_status = 'verified', backup_sha256 = '${digest}',
+              backup_reference = 'plates/AR-WRONG/${digest}.json'
+        WHERE id = 'kp-maint';`,
+      `UPDATE keeper_pieces
+          SET backup_reference = 'plates/AR-7KQ9M2WX/${digest}.json'
+        WHERE id = 'kp-maint';`,
+    ]) {
+      const result = sqliteResult(`${registryMigrations}\n${keeperInsert}\n${update}`);
+      assert.notEqual(result.status, 0, update);
+    }
   });
 
   it('makes maintenance events append-only', () => {
@@ -1456,7 +1483,10 @@ describe('private maintenance APIs', () => {
     try {
       database.exec(`${registryMigrations}\n${keeperInsert}\n
         UPDATE keeper_pieces SET keeper_user_id = 'keeper-1', claimed_at = '2026-07-20T00:00:00.000Z',
-          backup_status = 'verified', backup_at = '2026-07-21T00:00:00.000Z',
+          backup_status = 'verified',
+          backup_reference = 'plates/AR-7KQ9M2WX/${'b'.repeat(64)}.json',
+          backup_sha256 = '${'b'.repeat(64)}',
+          backup_at = '2026-07-21T00:00:00.000Z',
           ownership_code_ciphertext = 'PRIVATE-CIPHERTEXT', ownership_code_nonce = 'PRIVATE-NONCE',
           ownership_code_key_version = 7, recovery_code_hash = 'PRIVATE-VERIFIER'
         WHERE id = 'kp-maint';
@@ -2193,7 +2223,9 @@ describe('private maintenance APIs', () => {
       const originalCandidate = await seedGeneratedPlate(sqliteEnv);
       database.prepare(
         `UPDATE keeper_pieces
-            SET backup_status = 'verified', backup_reference = 'plates/AR-7KQ9M2WX.json',
+            SET backup_status = 'verified',
+                backup_reference = 'plates/AR-7KQ9M2WX/${'a'.repeat(64)}.json',
+                backup_sha256 = '${'a'.repeat(64)}',
                 backup_at = '2026-07-30T01:00:00.000Z'
           WHERE id = 'kp-lifecycle'`,
       ).run();
@@ -2265,7 +2297,7 @@ describe('private maintenance APIs', () => {
           `SELECT piece_id, edition_number, ownership_code_ciphertext,
                   ownership_code_nonce, ownership_code_key_version,
                   front_svg_sha256, back_svg_sha256, backup_status,
-                  backup_reference, backup_at, record_version
+                  backup_reference, backup_sha256, backup_at, record_version
              FROM keeper_pieces WHERE id = 'kp-lifecycle'`,
         ).get(),
       };
@@ -2291,7 +2323,7 @@ describe('private maintenance APIs', () => {
           `SELECT piece_id, edition_number, ownership_code_ciphertext,
                   ownership_code_nonce, ownership_code_key_version,
                   front_svg_sha256, back_svg_sha256, backup_status,
-                  backup_reference, backup_at, record_version
+                  backup_reference, backup_sha256, backup_at, record_version
              FROM keeper_pieces WHERE id = 'kp-lifecycle'`,
         ).get(),
       }, beforeFailedCorrection);
@@ -2318,6 +2350,7 @@ describe('private maintenance APIs', () => {
       assert.equal(correctedRow.record_version, 1);
       assert.equal(correctedRow.backup_status, 'pending');
       assert.equal(correctedRow.backup_reference, null);
+      assert.equal(correctedRow.backup_sha256, null);
       assert.equal(correctedRow.backup_at, null);
       assert.notEqual(correctedRow.front_svg_sha256, originalCandidate.plate.frontSha256);
       assert.notEqual(correctedRow.back_svg_sha256, originalCandidate.plate.undersideSha256);

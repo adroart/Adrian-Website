@@ -30,7 +30,16 @@ export async function onRequest({ request, env, params }) {
       return jsonResponse({ ok: false, error: 'backup_status_record_failed' }, 500);
     }
     return jsonResponse(
-      { ok: result.status === 'verified', backupStatus: result.status, backupReference: result.reference },
+      {
+        ok: result.status === 'verified',
+        backupStatus: result.status,
+        backupReference: result.status === 'verified'
+          ? result.reference
+          : row.backup_reference || null,
+        backupSha256: result.status === 'verified'
+          ? result.sha256
+          : row.backup_sha256 || null,
+      },
       result.status === 'verified' ? 200 : 503,
     );
   } catch {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { before, describe, it, mock } from 'node:test';
 
@@ -197,22 +198,6 @@ function r2RecoveryEnvironment(options: {
   failAudit?: boolean;
   bucketMissing?: boolean;
 } = {}) {
-  const row = options.row === undefined
-    ? {
-      id: fixtureRow.id,
-      piece_id: fixtureRow.piece_id,
-      edition_number: fixtureRow.edition_number,
-      public_code: fixtureRow.public_code,
-      plate_status: fixtureRow.plate_status,
-      plate_generated_at: fixtureRow.plate_generated_at,
-      front_svg_sha256: fixtureRow.front_svg_sha256,
-      back_svg_sha256: fixtureRow.back_svg_sha256,
-      ownership_code_key_version: fixtureRow.ownership_code_key_version,
-      recovery_code_hash: fixtureRow.recovery_code_hash,
-      backup_status: 'verified',
-      backup_reference: `plates/${fixtureRow.public_code}.json`,
-    }
-    : options.row;
   const defaultBackup = {
     schemaVersion: 1,
     publicCode: fixtureRow.public_code,
@@ -226,6 +211,25 @@ function r2RecoveryEnvironment(options: {
     },
   };
   const backup = options.backup === undefined ? defaultBackup : options.backup;
+  const defaultBackupBytes = JSON.stringify(defaultBackup);
+  const defaultBackupSha256 = createHash('sha256').update(defaultBackupBytes).digest('hex');
+  const row = options.row === undefined
+    ? {
+      id: fixtureRow.id,
+      piece_id: fixtureRow.piece_id,
+      edition_number: fixtureRow.edition_number,
+      public_code: fixtureRow.public_code,
+      plate_status: fixtureRow.plate_status,
+      plate_generated_at: fixtureRow.plate_generated_at,
+      front_svg_sha256: fixtureRow.front_svg_sha256,
+      back_svg_sha256: fixtureRow.back_svg_sha256,
+      ownership_code_key_version: fixtureRow.ownership_code_key_version,
+      recovery_code_hash: fixtureRow.recovery_code_hash,
+      backup_status: 'verified',
+      backup_reference: `plates/${fixtureRow.public_code}/${defaultBackupSha256}.json`,
+      backup_sha256: defaultBackupSha256,
+    }
+    : options.row;
   const operations: string[] = [];
   const DB = {
     prepare(sql: string) {
@@ -253,7 +257,10 @@ function r2RecoveryEnvironment(options: {
       operations.push(`R2 GET ${reference}`);
       if (backup === null) return null;
       const text = typeof backup === 'string' ? backup : JSON.stringify(backup);
-      return { async text() { return text; } };
+      return {
+        async text() { return text; },
+        async arrayBuffer() { return new TextEncoder().encode(text).buffer; },
+      };
     },
   };
   return {
@@ -283,14 +290,17 @@ describe('R2 recovery canary', () => {
       publicCode: 'AR-ABCDEFGH',
       pieceId: 'UL-100',
       editionNumber: 2,
-      backupReference: 'plates/AR-ABCDEFGH.json',
+      backupReference: body.backupReference,
+      backupSha256: body.backupSha256,
       keyVersion: '1',
       frontSha256: fixtureRow.front_svg_sha256,
       undersideSha256: fixtureRow.back_svg_sha256,
     });
+    assert.match(body.backupReference, /^plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
+    assert.equal(body.backupSha256, body.backupReference.split('/').at(-1).replace('.json', ''));
     assert.doesNotMatch(operations[0], /ownership_code_ciphertext|ownership_code_nonce/i);
     assert.match(operations[1], /^INSERT INTO ownership_code_audit/);
-    assert.equal(operations[2], 'R2 GET plates/AR-ABCDEFGH.json');
+    assert.match(operations[2], /^R2 GET plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
     assert.equal(JSON.stringify(body).includes(OWNERSHIP_CODE), false);
   });
 
@@ -316,6 +326,7 @@ describe('R2 recovery canary', () => {
         front_svg_sha256: fixtureRow.front_svg_sha256, back_svg_sha256: fixtureRow.back_svg_sha256,
         ownership_code_key_version: 1, recovery_code_hash: fixtureRow.recovery_code_hash,
         backup_status: 'verified', backup_reference: 'plates/wrong.json',
+        backup_sha256: '0'.repeat(64),
       },
     });
     assert.equal((await verifyR2Recovery({ request: request(), env: wrongReference.env, params: { id: 'kp-package-1' } })).status, 409);
@@ -336,6 +347,28 @@ describe('R2 recovery canary', () => {
     }
   });
 
+  it('rejects a stored object whose bytes do not match the persisted digest before decryption', async () => {
+    const valid = r2RecoveryEnvironment();
+    const validResponse = await verifyR2Recovery({
+      request: request(), env: valid.env, params: { id: 'kp-package-1' },
+    });
+    const validBody = await validResponse.json();
+    const fixture = r2RecoveryEnvironment({
+      backup: '{"schemaVersion":1,"tampered":true}',
+      row: {
+        id: fixtureRow.id, piece_id: fixtureRow.piece_id, edition_number: fixtureRow.edition_number,
+        public_code: fixtureRow.public_code, plate_status: 'generated', plate_generated_at: fixtureRow.plate_generated_at,
+        front_svg_sha256: fixtureRow.front_svg_sha256, back_svg_sha256: fixtureRow.back_svg_sha256,
+        ownership_code_key_version: 1, recovery_code_hash: fixtureRow.recovery_code_hash,
+        backup_status: 'verified', backup_reference: validBody.backupReference,
+        backup_sha256: validBody.backupSha256,
+      },
+    });
+    const response = await verifyR2Recovery({ request: request(), env: fixture.env, params: { id: 'kp-package-1' } });
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { ok: false, error: 'backup_digest_mismatch' });
+  });
+
   it('constant-time verifies the code and exact regenerated SVG hashes', async () => {
     const verifierMismatch = r2RecoveryEnvironment({
       row: {
@@ -343,7 +376,16 @@ describe('R2 recovery canary', () => {
         public_code: fixtureRow.public_code, plate_status: 'generated', plate_generated_at: fixtureRow.plate_generated_at,
         front_svg_sha256: fixtureRow.front_svg_sha256, back_svg_sha256: fixtureRow.back_svg_sha256,
         ownership_code_key_version: 1, recovery_code_hash: '0'.repeat(64),
-        backup_status: 'verified', backup_reference: 'plates/AR-ABCDEFGH.json',
+        backup_status: 'verified', backup_reference: `plates/AR-ABCDEFGH/${createHash('sha256').update(JSON.stringify({
+          schemaVersion: 1, publicCode: fixtureRow.public_code, pieceId: fixtureRow.piece_id,
+          editionNumber: fixtureRow.edition_number, plateGeneratedAt: fixtureRow.plate_generated_at,
+          envelope: { ciphertext: fixtureRow.ownership_code_ciphertext, nonce: fixtureRow.ownership_code_nonce, keyVersion: '1' },
+        })).digest('hex')}.json`,
+        backup_sha256: createHash('sha256').update(JSON.stringify({
+          schemaVersion: 1, publicCode: fixtureRow.public_code, pieceId: fixtureRow.piece_id,
+          editionNumber: fixtureRow.edition_number, plateGeneratedAt: fixtureRow.plate_generated_at,
+          envelope: { ciphertext: fixtureRow.ownership_code_ciphertext, nonce: fixtureRow.ownership_code_nonce, keyVersion: '1' },
+        })).digest('hex'),
       },
     });
     const verifierResponse = await verifyR2Recovery({ request: request(), env: verifierMismatch.env, params: { id: 'kp-package-1' } });
@@ -356,7 +398,16 @@ describe('R2 recovery canary', () => {
         public_code: fixtureRow.public_code, plate_status: 'generated', plate_generated_at: fixtureRow.plate_generated_at,
         front_svg_sha256: '0'.repeat(64), back_svg_sha256: fixtureRow.back_svg_sha256,
         ownership_code_key_version: 1, recovery_code_hash: fixtureRow.recovery_code_hash,
-        backup_status: 'verified', backup_reference: 'plates/AR-ABCDEFGH.json',
+        backup_status: 'verified', backup_reference: `plates/AR-ABCDEFGH/${createHash('sha256').update(JSON.stringify({
+          schemaVersion: 1, publicCode: fixtureRow.public_code, pieceId: fixtureRow.piece_id,
+          editionNumber: fixtureRow.edition_number, plateGeneratedAt: fixtureRow.plate_generated_at,
+          envelope: { ciphertext: fixtureRow.ownership_code_ciphertext, nonce: fixtureRow.ownership_code_nonce, keyVersion: '1' },
+        })).digest('hex')}.json`,
+        backup_sha256: createHash('sha256').update(JSON.stringify({
+          schemaVersion: 1, publicCode: fixtureRow.public_code, pieceId: fixtureRow.piece_id,
+          editionNumber: fixtureRow.edition_number, plateGeneratedAt: fixtureRow.plate_generated_at,
+          envelope: { ciphertext: fixtureRow.ownership_code_ciphertext, nonce: fixtureRow.ownership_code_nonce, keyVersion: '1' },
+        })).digest('hex'),
       },
     });
     const hashResponse = await verifyR2Recovery({ request: request(), env: hashMismatch.env, params: { id: 'kp-package-1' } });

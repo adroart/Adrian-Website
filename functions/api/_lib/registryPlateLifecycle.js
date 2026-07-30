@@ -336,7 +336,8 @@ async function correctLink(env, input, row, keeperPieceId, authorization, finger
         SET piece_id = ?1, edition_number = ?2, ownership_code_ciphertext = ?3,
             ownership_code_nonce = ?4, ownership_code_key_version = ?5,
             front_svg_sha256 = ?6, back_svg_sha256 = ?7,
-            backup_status = 'pending', backup_reference = NULL, backup_at = NULL,
+            backup_status = 'pending', backup_reference = NULL,
+            backup_sha256 = NULL, backup_at = NULL,
             record_version = record_version + 1
       WHERE id = ?8 AND record_version = ?9 AND piece_id IS ?10
         AND edition_number IS ?11 AND plate_status IN ('generated', 'active')`,
