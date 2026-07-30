@@ -404,8 +404,18 @@ const expectedEvent = {
   artworkId: 'UL-100',
   authorization: { userId: 'admin-1', email: 'admin@example.com' },
   reason: 'Correct the acquisition date.',
-  before: { acquiredAt: '2026-01-01T00:00:00.000Z' },
-  after: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+  before: {
+    acquisitionId: 'acq-1',
+    keeperPieceId: 'kp-maint',
+    acquiredAt: '2026-01-01T00:00:00.000Z',
+    recordVersion: 2,
+  },
+  after: {
+    acquisitionId: 'acq-1',
+    keeperPieceId: 'kp-maint',
+    acquiredAt: '2026-02-01T00:00:00.000Z',
+    recordVersion: 3,
+  },
   outcome: 'succeeded',
   relatedRecordId: 'acq-1',
   mutationFingerprint: 'a'.repeat(64),
@@ -594,14 +604,14 @@ describe('maintenance idempotency and atomic writes', () => {
     };
 
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      target: { type: 'acquisition', id: 'acq-1' },
+      target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
       changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
     } as any), { ok: false, error: 'invalid_expected_version' });
     assert.equal(prepared.length, 0);
 
     const success = await commitMaintenanceMutation(env, {
-      target: { type: 'acquisition', id: 'acq-1' },
+      target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
       changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
       expectedVersion: 2,
@@ -609,28 +619,41 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.equal(success.ok, true);
     assert.match(prepared[0].sql, /^UPDATE artwork_acquisitions/i);
     assert.match(prepared[0].sql, /record_version = record_version \+ 1/i);
-    assert.match(prepared[0].sql, /WHERE id = \?2 AND record_version = \?3/i);
+    assert.match(
+      prepared[0].sql,
+      /WHERE id = \?2 AND record_version = \?3 AND keeper_piece_id = \?4\s+AND acquired_at IS \?5/i,
+    );
     assert.deepEqual(prepared[0].values, [
-      '2026-02-01T00:00:00.000Z', 'acq-1', 2,
+      '2026-02-01T00:00:00.000Z', 'acq-1', 2, 'kp-maint',
+      '2026-01-01T00:00:00.000Z',
     ]);
     assert.equal(eventRows.length, 1);
 
     await commitMaintenanceMutation(env, {
       target: { type: 'keeper_record', id: 'kp-maint' },
-      changes: { pieceId: 'UL-101' },
+      changes: { pieceId: 'UL-101', editionNumber: 1 },
       event: {
         ...expectedEvent,
         idempotencyKey: 'keeper-record-update',
         eventType: 'link_corrected',
-        before: { pieceId: 'UL-100', recordVersion: 2 },
-        after: { pieceId: 'UL-101', recordVersion: 3 },
+        relatedRecordId: 'kp-maint',
+        before: {
+          keeperPieceId: 'kp-maint', pieceId: 'UL-100', editionNumber: 0, recordVersion: 2,
+        },
+        after: {
+          keeperPieceId: 'kp-maint', pieceId: 'UL-101', editionNumber: 1, recordVersion: 3,
+        },
       },
       expectedVersion: 2,
     });
     assert.match(prepared[2].sql, /^UPDATE keeper_pieces/i);
     assert.match(prepared[2].sql, /piece_id = \?1/);
+    assert.match(prepared[2].sql, /edition_number = \?2/);
     assert.match(prepared[2].sql, /record_version = record_version \+ 1/);
-    assert.deepEqual(prepared[2].values, ['UL-101', 'kp-maint', 2]);
+    assert.match(prepared[2].sql, /piece_id IS \?5 AND edition_number IS \?6/);
+    assert.deepEqual(prepared[2].values, [
+      'UL-101', 1, 'kp-maint', 2, 'UL-100', 0,
+    ]);
 
     await commitMaintenanceMutation(env, {
       target: { type: 'keeper_steward', id: 'kp-maint' },
@@ -639,15 +662,18 @@ describe('maintenance idempotency and atomic writes', () => {
         ...expectedEvent,
         idempotencyKey: 'keeper-steward-update',
         eventType: 'steward_transferred',
-        before: { currentDisplayLocation: null, stewardVersion: 1 },
-        after: { currentDisplayLocation: 'Ubud studio', stewardVersion: 2 },
+        relatedRecordId: 'kp-maint',
+        before: { keeperPieceId: 'kp-maint', currentDisplayLocation: null, stewardVersion: 1 },
+        after: {
+          keeperPieceId: 'kp-maint', currentDisplayLocation: 'Ubud studio', stewardVersion: 2,
+        },
       },
       expectedVersion: 1,
     });
     assert.match(prepared[4].sql, /^UPDATE keeper_pieces/i);
     assert.match(prepared[4].sql, /current_display_location = \?1/);
     assert.match(prepared[4].sql, /steward_version = steward_version \+ 1/);
-    assert.deepEqual(prepared[4].values, ['Ubud studio', 'kp-maint', 1]);
+    assert.deepEqual(prepared[4].values, ['Ubud studio', 'kp-maint', 1, null]);
 
     const prepareCount = prepared.length;
     for (const request of [
@@ -660,7 +686,7 @@ describe('maintenance idempotency and atomic writes', () => {
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       },
       {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { ownershipCode: 'forbidden' },
       },
       {
@@ -688,12 +714,38 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       },
       {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'keeper_record', id: 'kp-maint' },
+        changes: { pieceId: 'UL-101' },
+        event: {
+          ...expectedEvent,
+          eventType: 'link_corrected',
+          relatedRecordId: 'kp-fabricated',
+          before: { keeperPieceId: 'kp-maint', pieceId: 'UL-100', recordVersion: 2 },
+          after: { keeperPieceId: 'kp-maint', pieceId: 'UL-101', recordVersion: 3 },
+        },
+      },
+      {
+        target: { type: 'keeper_steward', id: 'kp-maint' },
+        changes: { currentDisplayLocation: 'Ubud studio' },
+        event: {
+          ...expectedEvent,
+          eventType: 'steward_transferred',
+          relatedRecordId: 'kp-maint',
+          before: {
+            keeperPieceId: 'kp-maint', currentDisplayLocation: null, stewardVersion: 2,
+          },
+          after: {
+            keeperPieceId: 'kp-maint', currentDisplayLocation: 'Ubud studio', stewardVersion: 4,
+          },
+        },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
         event: { ...expectedEvent, before: {}, after: {} },
       },
       {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
         event: {
           ...expectedEvent,
@@ -702,7 +754,7 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       },
       {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
         event: {
           ...expectedEvent,
@@ -710,7 +762,7 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       },
       {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
         event: { ...expectedEvent, outcome: 'failed' },
       },
@@ -734,9 +786,14 @@ describe('maintenance idempotency and atomic writes', () => {
 
     mutationChanges = 0;
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      target: { type: 'acquisition', id: 'acq-1' },
+      target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
       changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
-      event: { ...expectedEvent, idempotencyKey: 'new-stale-key' },
+      event: {
+        ...expectedEvent,
+        idempotencyKey: 'new-stale-key',
+        before: { ...expectedEvent.before, recordVersion: 1 },
+        after: { ...expectedEvent.after, recordVersion: 2 },
+      },
       expectedVersion: 1,
     }), { ok: false, error: 'version_conflict' });
   });
@@ -761,9 +818,13 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       };
       assert.deepEqual(await commitMaintenanceMutation(env, {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
-        event: expectedEvent,
+        event: {
+          ...expectedEvent,
+          before: { ...expectedEvent.before, recordVersion: 3 },
+          after: { ...expectedEvent.after, recordVersion: 4 },
+        },
         expectedVersion: 3,
       }), { ok: false, error: 'maintenance_write_failed' });
     }
@@ -779,11 +840,111 @@ describe('maintenance idempotency and atomic writes', () => {
       },
     };
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      target: { type: 'acquisition', id: 'acq-1' },
+      target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
       changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
       expectedVersion: 2,
     }), { ok: false, error: 'maintenance_write_failed' });
+  });
+
+  it('rejects fabricated audit identity and versions, and verifies prior values in SQLite', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        INSERT INTO artwork_acquisitions
+          (id, keeper_piece_id, acquisition_type, public_provenance, created_at, updated_at)
+        VALUES
+          ('acq-1', 'kp-maint', 'sale', 'Original', '2026-07-30T00:00:00.000Z',
+           '2026-07-30T00:00:00.000Z');
+      `);
+      const event = {
+        ...expectedEvent,
+        idempotencyKey: 'audit-identity-base',
+        before: {
+          acquisitionId: 'acq-1', keeperPieceId: 'kp-maint',
+          publicProvenance: 'Original', recordVersion: 1,
+        },
+        after: {
+          acquisitionId: 'acq-1', keeperPieceId: 'kp-maint',
+          publicProvenance: 'Corrected', recordVersion: 2,
+        },
+      };
+      const request = {
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
+        changes: { publicProvenance: 'Corrected' },
+        event,
+        expectedVersion: 1,
+      };
+
+      for (const [override, error] of [
+        [{ target: { type: 'acquisition', id: 'acq-1' } }, 'invalid_maintenance_target'],
+        [{ event: { ...event, keeperPieceId: 'kp-fabricated' } }, 'invalid_event_mutation'],
+        [{ event: { ...event, relatedRecordId: 'acq-fabricated' } }, 'invalid_event_mutation'],
+        [{
+          event: {
+            ...event,
+            before: { ...event.before, acquisitionId: 'acq-fabricated' },
+          },
+        }, 'invalid_event_mutation'],
+        [{
+          event: {
+            ...event,
+            after: { ...event.after, keeperPieceId: 'kp-fabricated' },
+          },
+        }, 'invalid_event_mutation'],
+        [{
+          event: {
+            ...event,
+            before: { ...event.before, recordVersion: 0 },
+          },
+        }, 'version_conflict'],
+        [{
+          event: {
+            ...event,
+            after: { ...event.after, recordVersion: 3 },
+          },
+        }, 'invalid_event_mutation'],
+        [{
+          event: {
+            ...event,
+            eventType: 'acquisition_created',
+            before: null,
+          },
+        }, 'invalid_event_mutation'],
+      ] as const) {
+        assert.deepEqual(await commitMaintenanceMutation(env, {
+          ...request,
+          ...override,
+        }), { ok: false, error });
+      }
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-fabricated' },
+        event: {
+          ...event,
+          idempotencyKey: 'fabricated-target-association',
+          keeperPieceId: 'kp-fabricated',
+          before: { ...event.before, keeperPieceId: 'kp-fabricated' },
+          after: { ...event.after, keeperPieceId: 'kp-fabricated' },
+        },
+      }), { ok: false, error: 'version_conflict' });
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        event: {
+          ...event,
+          idempotencyKey: 'fabricated-prior-value',
+          before: { ...event.before, publicProvenance: 'Fabricated' },
+        },
+      }), { ok: false, error: 'version_conflict' });
+      assert.deepEqual({ ...database.prepare(
+        "SELECT public_provenance, record_version FROM artwork_acquisitions WHERE id = 'acq-1'",
+      ).get() }, { public_provenance: 'Original', record_version: 1 });
+      assert.equal(database.prepare('SELECT count(*) AS count FROM registry_maintenance_events').get().count, 0);
+    } finally {
+      database.close();
+    }
   });
 
   it('rolls back failed events and resolves retries as replay or idempotency conflict', async () => {
@@ -798,11 +959,17 @@ describe('maintenance idempotency and atomic writes', () => {
       `);
       const event = {
         ...expectedEvent,
-        before: { publicProvenance: 'Original', recordVersion: 1 },
-        after: { publicProvenance: 'Corrected', recordVersion: 2 },
+        before: {
+          acquisitionId: 'acq-1', keeperPieceId: 'kp-maint',
+          publicProvenance: 'Original', recordVersion: 1,
+        },
+        after: {
+          acquisitionId: 'acq-1', keeperPieceId: 'kp-maint',
+          publicProvenance: 'Corrected', recordVersion: 2,
+        },
       };
       const request = {
-        target: { type: 'acquisition', id: 'acq-1' },
+        target: { type: 'acquisition', id: 'acq-1', keeperPieceId: 'kp-maint' },
         changes: { publicProvenance: 'Corrected' },
         event,
         expectedVersion: 1,
@@ -818,6 +985,11 @@ describe('maintenance idempotency and atomic writes', () => {
 
       assert.deepEqual(await commitMaintenanceMutation(env, {
         ...request,
+        event: {
+          ...event,
+          before: { ...event.before, publicProvenance: 'Corrected', recordVersion: 2 },
+          after: { ...event.after, recordVersion: 3 },
+        },
         expectedVersion: 2,
       }), { ok: false, error: 'idempotency_conflict' });
 
@@ -827,7 +999,8 @@ describe('maintenance idempotency and atomic writes', () => {
         event: {
           ...event,
           reason: 'Different reuse of the same key.',
-          after: { publicProvenance: 'Should roll back', recordVersion: 3 },
+          before: { ...event.before, publicProvenance: 'Corrected', recordVersion: 2 },
+          after: { ...event.after, publicProvenance: 'Should roll back', recordVersion: 3 },
         },
         expectedVersion: 2,
       });

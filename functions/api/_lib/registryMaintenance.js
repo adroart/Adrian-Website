@@ -74,7 +74,7 @@ const MAINTENANCE_TARGETS = {
 };
 
 const ACQUISITION_SNAPSHOT_FIELDS = [
-  'id', 'keeperPieceId', 'acquisitionType', 'acquiredAt', 'amountMinor', 'currency',
+  'acquisitionId', 'keeperPieceId', 'acquisitionType', 'acquiredAt', 'amountMinor', 'currency',
   'acquirerReference', 'privateNotes', 'documentReference', 'publicProvenance',
   'recordVersion', 'createdAt', 'updatedAt',
 ];
@@ -127,36 +127,37 @@ const SENSITIVE_SNAPSHOT_KEY_PARTS = [
 ];
 
 const EVENT_MUTATION_POLICIES = {
-  acquisition_created: {
-    targetType: 'acquisition',
-    mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.acquisition.fields)),
-    beforeMayBeNull: true,
-  },
   acquisition_corrected: {
     targetType: 'acquisition',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.acquisition.fields)),
+    versionField: 'recordVersion',
   },
   steward_reset: {
     targetType: 'keeper_steward',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+    versionField: 'stewardVersion',
   },
   steward_transferred: {
     targetType: 'keeper_steward',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+    versionField: 'stewardVersion',
   },
   link_corrected: {
     targetType: 'keeper_record',
     mutableFields: new Set(['pieceId', 'editionNumber']),
+    versionField: 'recordVersion',
   },
   plate_voided: {
     targetType: 'keeper_record',
     mutableFields: new Set(['plateStatus', 'physicalDisposition']),
+    versionField: 'recordVersion',
   },
   plate_superseded: {
     targetType: 'keeper_record',
     mutableFields: new Set([
       'plateStatus', 'supersededByKeeperPieceId', 'physicalDisposition',
     ]),
+    versionField: 'recordVersion',
   },
 };
 
@@ -219,6 +220,18 @@ function normalizeMaintenanceTarget(target, changes) {
     : null;
   if (!definition) return null;
 
+  const targetFields = target.type === 'acquisition'
+    ? new Set(['type', 'id', 'keeperPieceId'])
+    : new Set(['type', 'id']);
+  if (Object.keys(target).some((key) => !targetFields.has(key))) return null;
+  const keeperPieceId = target.type === 'acquisition'
+    && typeof target.keeperPieceId === 'string'
+    && target.keeperPieceId.trim()
+    && target.keeperPieceId.trim().length <= 128
+    ? target.keeperPieceId.trim()
+    : null;
+  if (target.type === 'acquisition' && !keeperPieceId) return null;
+
   const assignments = [];
   const values = [];
   const normalizedChanges = Object.create(null);
@@ -233,6 +246,7 @@ function normalizeMaintenanceTarget(target, changes) {
     targetType: target.type,
     definition,
     id: target.id.trim(),
+    keeperPieceId,
     assignments,
     values,
     changes: normalizedChanges,
@@ -245,7 +259,11 @@ function sameKeys(left, right) {
   return left.every((key) => rightKeys.has(key));
 }
 
-function validateEventMutation(normalizedTarget, event) {
+function normalizedComparableIdentifier(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function validateEventMutation(normalizedTarget, event, expectedVersion) {
   const eventType = typeof event?.eventType === 'string' ? event.eventType.trim() : '';
   const policy = Object.hasOwn(EVENT_MUTATION_POLICIES, eventType)
     ? EVENT_MUTATION_POLICIES[eventType]
@@ -263,6 +281,22 @@ function validateEventMutation(normalizedTarget, event) {
   if (before === null && !policy.beforeMayBeNull) return null;
   if (before !== null && !isPlainRecord(before)) return null;
 
+  const expectedKeeperPieceId = normalizedTarget.targetType === 'acquisition'
+    ? normalizedTarget.keeperPieceId
+    : normalizedTarget.id;
+  if (normalizedComparableIdentifier(event?.keeperPieceId) !== expectedKeeperPieceId
+    || normalizedComparableIdentifier(event?.relatedRecordId) !== normalizedTarget.id
+    || before.keeperPieceId !== expectedKeeperPieceId
+    || after.keeperPieceId !== expectedKeeperPieceId
+    || after[policy.versionField] !== expectedVersion + 1) {
+    return null;
+  }
+  if (normalizedTarget.targetType === 'acquisition'
+    && (before.acquisitionId !== normalizedTarget.id
+      || after.acquisitionId !== normalizedTarget.id)) {
+    return null;
+  }
+
   const beforeMutationKeys = before === null
     ? []
     : Object.keys(before).filter((key) => policy.mutableFields.has(key));
@@ -275,20 +309,45 @@ function validateEventMutation(normalizedTarget, event) {
   for (const key of changeKeys) {
     if (canonicalJson(after[key]) !== canonicalJson(normalizedTarget.changes[key])) return null;
   }
-  return { eventType, before, after };
+  if (before[policy.versionField] !== expectedVersion) {
+    return { error: 'version_conflict' };
+  }
+  return {
+    eventType,
+    before,
+    after,
+    beforeValues: changeKeys.map((key) => before[key]),
+  };
 }
 
-function buildVersionedMutationStatement(env, normalized, expectedVersion) {
+function buildVersionedMutationStatement(env, normalized, expectedVersion, beforeValues) {
   const { definition, id, assignments, values } = normalized;
   const setClauses = assignments.map((column, index) => `${column} = ?${index + 1}`);
   const idPosition = values.length + 1;
   const versionPosition = values.length + 2;
+  const associationPosition = normalized.targetType === 'acquisition'
+    ? values.length + 3
+    : null;
+  const beforeStartPosition = values.length + (associationPosition === null ? 3 : 4);
+  const priorValueClauses = assignments.map(
+    (column, index) => `${column} IS ?${beforeStartPosition + index}`,
+  );
+  const associationClause = associationPosition === null
+    ? ''
+    : ` AND keeper_piece_id = ?${associationPosition}`;
   setClauses.push(`${definition.versionColumn} = ${definition.versionColumn} + 1`);
   return env.DB.prepare(
     `UPDATE ${definition.table}
         SET ${setClauses.join(', ')}
-      WHERE id = ?${idPosition} AND ${definition.versionColumn} = ?${versionPosition}`,
-  ).bind(...values, id, expectedVersion);
+      WHERE id = ?${idPosition} AND ${definition.versionColumn} = ?${versionPosition}${associationClause}
+        AND ${priorValueClauses.join(' AND ')}`,
+  ).bind(
+    ...values,
+    id,
+    expectedVersion,
+    ...(associationPosition === null ? [] : [normalized.keeperPieceId]),
+    ...beforeValues,
+  );
 }
 
 function canonicalValue(value, seen) {
@@ -598,11 +657,12 @@ export async function commitMaintenanceMutation(env, {
 
   let validatedEvent;
   try {
-    validatedEvent = validateEventMutation(normalizedTarget, event);
+    validatedEvent = validateEventMutation(normalizedTarget, event, expectedVersion);
   } catch {
     return { ok: false, error: 'invalid_event_mutation' };
   }
   if (!validatedEvent) return { ok: false, error: 'invalid_event_mutation' };
+  if (validatedEvent.error) return { ok: false, error: validatedEvent.error };
   if (typeof env?.DB?.batch !== 'function') {
     return { ok: false, error: 'atomic_write_unavailable' };
   }
@@ -613,7 +673,10 @@ export async function commitMaintenanceMutation(env, {
   let eventStatement;
   try {
     const mutationFingerprint = await maintenanceMutationFingerprint({
-      target: normalizedTarget.targetType,
+      target: {
+        type: normalizedTarget.targetType,
+        keeperPieceId: normalizedTarget.keeperPieceId,
+      },
       id: normalizedTarget.id,
       expectedVersion,
       changes: normalizedTarget.changes,
@@ -623,7 +686,12 @@ export async function commitMaintenanceMutation(env, {
     });
     boundEvent = { ...event, id: eventId, mutationFingerprint };
     const normalizedEvent = normalizeEventDetails(boundEvent, eventId);
-    mutationStatement = buildVersionedMutationStatement(env, normalizedTarget, expectedVersion);
+    mutationStatement = buildVersionedMutationStatement(
+      env,
+      normalizedTarget,
+      expectedVersion,
+      validatedEvent.beforeValues,
+    );
     eventStatement = prepareMaintenanceEventStatement(env, normalizedEvent);
   } catch {
     return { ok: false, error: 'invalid_maintenance_event' };
