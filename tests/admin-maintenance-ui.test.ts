@@ -329,6 +329,48 @@ describe('registry Maintenance client contract', () => {
     });
   });
 
+  it('freezes exact creator-history create, correction, and removal bodies', async () => {
+    const bodies: Array<Record<string, unknown>> = [];
+    mock.method(globalThis, 'fetch', async (_input: string | URL | Request, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ ok: true, provenance: { recordVersion: 2 } }), { status: 200 });
+    });
+    const {
+      beginMaintenanceProvenanceActionAttempt,
+      saveMaintenanceProvenanceAction,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+    const entry = {
+      entryType: 'contributor' as const,
+      title: 'Mira S.', detail: 'Joined the assembly.', role: 'Studio collaborator',
+      occurredAt: '2026-01', visibility: 'public' as const,
+    };
+    const created = beginMaintenanceProvenanceActionAttempt(null, {
+      keeperPieceId: 'kp-1', action: 'create', entry,
+      reason: ' Record collaborator. ',
+    }, () => 'prov-create-1');
+    entry.title = 'Changed later';
+    await saveMaintenanceProvenanceAction(created.request);
+    assert.equal(Object.isFrozen(created.request.entry), true);
+    assert.deepEqual(bodies[0], {
+      action: 'create',
+      entry: {
+        entryType: 'contributor', title: 'Mira S.', detail: 'Joined the assembly.',
+        role: 'Studio collaborator', occurredAt: '2026-01', visibility: 'public',
+      },
+      reason: 'Record collaborator.', idempotencyKey: 'prov-create-1',
+    });
+
+    const removed = beginMaintenanceProvenanceActionAttempt(null, {
+      keeperPieceId: 'kp-1', action: 'remove', provenanceId: 'prov-1',
+      expectedVersion: 4, reason: 'Remove from the current view.',
+    }, () => 'prov-remove-1');
+    await saveMaintenanceProvenanceAction(removed.request);
+    assert.deepEqual(bodies[1], {
+      action: 'remove', provenanceId: 'prov-1', expectedVersion: 4,
+      reason: 'Remove from the current view.', idempotencyKey: 'prov-remove-1',
+    });
+  });
+
   it('converts familiar currency amounts to exact integer minor amounts', async () => {
     const {
       currencyAmountToInput,
@@ -422,6 +464,12 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /If the engraving itself is wrong, never relink it/i);
     assert.match(component, /Clear one-time package from this screen/);
     assert.match(component, /projectPlateDownloads/);
+    assert.match(component, /Creator history and intention/);
+    assert.match(component, /Add creator-history entry/);
+    assert.match(component, /Private, administrator only/);
+    assert.match(component, /Steward, not public/);
+    assert.match(component, /Public scanned record/);
+    assert.match(component, /prior values.*remain in append-only maintenance history/i);
     assert.match(component, /verified account email/i);
     assert.match(component, /Unclaimed/);
     assert.match(component, /display location.*clear/i);
@@ -472,6 +520,18 @@ describe('registry Maintenance workspace wiring', () => {
       'maintenance-reason',
       'maintenance-steward-target-email',
       'maintenance-steward-reason',
+      'maintenance-plate-artwork-id',
+      'maintenance-plate-edition-number',
+      'maintenance-plate-engraving-match',
+      'maintenance-plate-disposition',
+      'maintenance-plate-reason',
+      'maintenance-provenance-type',
+      'maintenance-provenance-visibility',
+      'maintenance-provenance-title',
+      'maintenance-provenance-role',
+      'maintenance-provenance-date',
+      'maintenance-provenance-detail',
+      'maintenance-provenance-reason',
     ]) {
       assert.match(component, new RegExp(`htmlFor=["']${id}["']`));
       assert.match(component, new RegExp(`id=["']${id}["']`));

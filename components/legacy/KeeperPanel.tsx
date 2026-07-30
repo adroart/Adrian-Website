@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { LAUNCH_FLAGS } from '../../launchFlags';
 import { useAccount } from '../../lib/account/useAccount';
 import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
-import type { PublicPlateIdentity } from '../../utils/publicRegistry';
+import type { PublicCreatorHistoryEntry, PublicPlateIdentity } from '../../utils/publicRegistry';
 import SignInTrigger from '../account/SignInTrigger';
 import IntentionRitual from './IntentionRitual';
 
@@ -11,6 +11,7 @@ interface StewardStatus {
   kept: boolean;
   byYou: boolean;
   currentDisplayLocation?: string | null;
+  stewardHistory?: PublicCreatorHistoryEntry[];
 }
 
 type BindPayload = {
@@ -96,6 +97,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
       kept: data.kept === true,
       byYou: data.byYou === true,
       currentDisplayLocation: data.currentDisplayLocation,
+      stewardHistory: Array.isArray(data.stewardHistory) ? data.stewardHistory : [],
     });
     setStatusLoaded(true);
   }, [fetchAuthed, isSignedIn, publicCode]);
@@ -222,6 +224,22 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
             current={currentStatus?.currentDisplayLocation ?? null}
             onSaved={loadStatus}
           />
+          {currentStatus?.stewardHistory && currentStatus.stewardHistory.length > 0 && (
+            <div className="mt-14 border-t border-wood-200 pt-10" aria-labelledby="steward-history-heading">
+              <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-3">Private to the steward</p>
+              <h3 id="steward-history-heading" className="font-serif text-2xl text-wood-900 mb-6">From the creator</h3>
+              <div className="space-y-6">
+                {currentStatus.stewardHistory.map((entry, index) => (
+                  <article key={`${entry.entryType}-${entry.title}-${index}`} className="border-l border-bronze-300 pl-5">
+                    <p className="font-label text-[10px] uppercase tracking-[0.18em] text-bronze-600 mb-2">{entry.entryType.replaceAll('_', ' ')}{entry.occurredAt ? ` · ${entry.occurredAt}` : ''}</p>
+                    <h4 className="font-serif text-xl text-wood-900">{entry.title}</h4>
+                    {entry.role && <p className="font-sans text-xs text-wood-500 mt-1">{entry.role}</p>}
+                    {entry.detail && <p className="font-serif text-[16px] leading-[1.8] text-wood-700 mt-3">{entry.detail}</p>}
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-16">
             <IntentionRitual
               pieceId={publicIdentity.artworkId}

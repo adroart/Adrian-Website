@@ -3412,6 +3412,74 @@ describe('steward status and display location by public identity', () => {
     }
   });
 
+  it('shows steward-visible creator history only to the active steward', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    const row = {
+      id: 'kp-steward-history', piece_id: 'MD-905', edition_number: 1,
+      public_code: 'AR-7KQ9M2WX', keeper_user_id: 'user-first',
+      current_display_location: 'Ubud studio', released_at: null,
+    };
+    let historyReads = 0;
+    const DB = {
+      prepare(sql: string) {
+        const normalized = sql.replace(/\s+/g, ' ').trim();
+        const statement = {
+          bind() { return statement; },
+          async first() {
+            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            }
+            if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
+            throw new Error(`unexpected steward-history first: ${normalized}`);
+          },
+          async all() {
+            historyReads += 1;
+            assert.match(normalized, /visibility = 'steward'/);
+            assert.match(normalized, /removed_at IS NULL/);
+            assert.doesNotMatch(normalized, /visibility = 'private'/);
+            return { results: [{
+              entryType: 'intention', title: 'For the steward',
+              detail: 'Keep the work where changing light can reach it.',
+              role: null, occurredAt: '2026-07',
+            }] };
+          },
+        };
+        return statement;
+      },
+    };
+
+    try {
+      const { onRequest: piece } = await import('../functions/api/keeper/piece.js');
+      const response = await piece({
+        request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
+        env: { DB },
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), {
+        ok: true, kept: true, byYou: true, currentDisplayLocation: 'Ubud studio',
+        stewardHistory: [{
+          entryType: 'intention', title: 'For the steward',
+          detail: 'Keep the work where changing light can reach it.',
+          role: null, occurredAt: '2026-07',
+        }],
+      });
+      assert.equal(historyReads, 1);
+
+      row.keeper_user_id = 'someone-else';
+      const outsider = await piece({
+        request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
+        env: { DB },
+      });
+      assert.deepEqual(await outsider.json(), { ok: true, kept: true, byYou: false });
+      assert.equal(historyReads, 1);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
   it('updates only the steward row resolved from publicCode', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;

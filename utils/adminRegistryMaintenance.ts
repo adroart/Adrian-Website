@@ -72,6 +72,33 @@ export type MaintenanceAcquisition = MaintenanceAcquisitionInput & {
   updatedAt: string;
 };
 
+export type MaintenanceProvenanceType =
+  | 'contributor'
+  | 'creation_place'
+  | 'intention'
+  | 'material'
+  | 'technique'
+  | 'note';
+
+export type MaintenanceProvenanceVisibility = 'private' | 'steward' | 'public';
+
+export type MaintenanceProvenanceInput = {
+  entryType: MaintenanceProvenanceType;
+  title: string;
+  detail: string | null;
+  role: string | null;
+  occurredAt: string | null;
+  visibility: MaintenanceProvenanceVisibility;
+};
+
+export type MaintenanceProvenance = MaintenanceProvenanceInput & {
+  provenanceId: string;
+  keeperPieceId: string;
+  recordVersion: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MaintenanceHistoryEvent = {
   id: string;
   idempotencyKey: string;
@@ -120,6 +147,7 @@ export type MaintenancePieceDetail = {
     stewardVersion: number;
   } | null;
   acquisitions: MaintenanceAcquisition[];
+  creatorHistory: MaintenanceProvenance[];
   maintenanceHistory: MaintenanceHistoryEvent[];
 };
 
@@ -522,4 +550,77 @@ export async function saveMaintenancePlateAction(
     throw new Error('Incomplete plate maintenance response');
   }
   return { action: request.action, record: data.record };
+}
+
+export type MaintenanceProvenanceAction = 'create' | 'correct' | 'remove';
+
+export type MaintenanceProvenanceActionInput = {
+  keeperPieceId: string;
+  action: MaintenanceProvenanceAction;
+  provenanceId?: string;
+  expectedVersion?: number;
+  entry?: MaintenanceProvenanceInput;
+  reason: string;
+};
+
+export type MaintenanceProvenanceActionRequest = MaintenanceProvenanceActionInput & {
+  idempotencyKey: string;
+};
+
+export type MaintenanceProvenanceActionAttempt = Readonly<{
+  request: Readonly<MaintenanceProvenanceActionRequest>;
+}>;
+
+export function beginMaintenanceProvenanceActionAttempt(
+  current: MaintenanceProvenanceActionAttempt | null,
+  input: MaintenanceProvenanceActionInput,
+  createKey: () => string = () => crypto.randomUUID(),
+): MaintenanceProvenanceActionAttempt {
+  if (current) return current;
+  const entry = input.entry ? Object.freeze({ ...input.entry }) : undefined;
+  const request = Object.freeze({
+    keeperPieceId: input.keeperPieceId,
+    action: input.action,
+    ...(input.action === 'create' ? { entry } : {}),
+    ...(input.action === 'correct'
+      ? { provenanceId: input.provenanceId, expectedVersion: input.expectedVersion, entry }
+      : {}),
+    ...(input.action === 'remove'
+      ? { provenanceId: input.provenanceId, expectedVersion: input.expectedVersion }
+      : {}),
+    reason: input.reason.trim(),
+    idempotencyKey: createKey(),
+  });
+  return Object.freeze({ request });
+}
+
+export async function saveMaintenanceProvenanceAction(
+  request: MaintenanceProvenanceActionRequest,
+): Promise<Record<string, unknown>> {
+  const body = {
+    action: request.action,
+    ...(request.action === 'create' ? { entry: request.entry } : {}),
+    ...(request.action === 'correct'
+      ? {
+          provenanceId: request.provenanceId,
+          expectedVersion: request.expectedVersion,
+          entry: request.entry,
+        }
+      : {}),
+    ...(request.action === 'remove'
+      ? { provenanceId: request.provenanceId, expectedVersion: request.expectedVersion }
+      : {}),
+    reason: request.reason.trim(),
+    idempotencyKey: request.idempotencyKey.trim(),
+  };
+  const response = await fetch(
+    `/api/admin/maintenance/${encodeURIComponent(request.keeperPieceId)}/provenance`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
+  const data = await readMaintenanceJson<{ ok: true; provenance: Record<string, unknown> }>(response);
+  return data.provenance;
 }

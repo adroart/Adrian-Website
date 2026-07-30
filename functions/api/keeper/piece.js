@@ -19,7 +19,10 @@
 
 import { requireUser } from '../_lib/auth.js';
 import { getUserByClerkId } from '../_lib/db.js';
-import { isPublicRegistryCode } from '../../../utils/publicRegistry.ts';
+import {
+  isPublicRegistryCode,
+  projectPublicCreatorHistory,
+} from '../../../utils/publicRegistry.ts';
 import {
   legacyEnabled,
   notFound,
@@ -77,12 +80,25 @@ async function handleGet(context, auth) {
 
   const kept = Boolean(row.keeper_user_id);
   const byYou = kept && !row.released_at && row.keeper_user_id === auth.userId;
+  let stewardHistory = [];
+  if (byYou) {
+    const historyRows = await env.DB.prepare(
+      `SELECT entry_type AS entryType, title, detail, role, occurred_at AS occurredAt
+         FROM artwork_provenance_entries
+        WHERE keeper_piece_id = ?1 AND visibility = 'steward' AND removed_at IS NULL
+        ORDER BY COALESCE(occurred_at, created_at), created_at, id`,
+    ).bind(row.id).all();
+    stewardHistory = projectPublicCreatorHistory(historyRows?.results || []);
+  }
   return json({
     ok: true,
     kept,
     byYou,
     // Display location is the steward's own data; only surface it to them.
-    ...(byYou ? { currentDisplayLocation: row.current_display_location ?? null } : {}),
+    ...(byYou ? {
+      currentDisplayLocation: row.current_display_location ?? null,
+      stewardHistory,
+    } : {}),
   });
 }
 

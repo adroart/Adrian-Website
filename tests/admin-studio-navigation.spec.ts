@@ -581,6 +581,102 @@ test('reviews plate replacement and keeps its one-time secret package only in me
   await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toHaveCount(0);
 });
 
+test('creates and removes public creator history through a reasoned private review', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Creator-history flow runs once.');
+  const createReason = `Record intention ${Date.now()}-${Math.random()}`;
+  const removeReason = `Remove intention ${Date.now()}-${Math.random()}`;
+  const intention = 'Invite a slower reading of the layers.';
+  let currentEntries: Array<Record<string, unknown>> = [];
+  const bodies: Array<Record<string, unknown>> = [];
+
+  await page.route('**/api/admin/maintenance/kp-local-maintenance', async route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    const response = await route.fetch();
+    const body = await response.json();
+    body.piece.creatorHistory = currentEntries;
+    return route.fulfill({ response, body: JSON.stringify(body), contentType: 'application/json' });
+  });
+  await page.route('**/api/admin/maintenance/kp-local-maintenance/provenance', async route => {
+    const body = route.request().postDataJSON();
+    bodies.push(body);
+    if (body.action === 'create') {
+      currentEntries = [{
+        provenanceId: 'prov-browser', keeperPieceId: 'kp-local-maintenance',
+        ...body.entry, recordVersion: 1,
+        createdAt: '2026-07-31T00:00:00.000Z', updatedAt: '2026-07-31T00:00:00.000Z',
+      }];
+      return route.fulfill({
+        status: 201, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, provenance: currentEntries[0] }),
+      });
+    }
+    currentEntries = [];
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        provenance: {
+          provenanceId: 'prov-browser', keeperPieceId: 'kp-local-maintenance',
+          recordVersion: 2, removedAt: '2026-07-31T01:00:00.000Z',
+        },
+      }),
+    });
+  });
+
+  await page.goto('/admin/maintenance');
+  await page.evaluate(async () => {
+    await fetch('/api/admin/registry-unlock', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: 'local-development-secret' }),
+    });
+  });
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await page.getByRole('button', { name: 'Add creator-history entry' }).click();
+  await page.getByLabel('Entry type').selectOption('intention');
+  await page.getByLabel('Visibility').selectOption('public');
+  await page.getByLabel('Title or value').fill('Layered attention');
+  await page.getByLabel('When').fill('2026-07');
+  await page.getByLabel('Detail').fill(intention);
+  await page.getByRole('button', { name: 'Review creator history' }).click();
+  await expect(page.getByRole('heading', { name: 'Review creator-history entry' })).toBeVisible();
+  await expect(page.locator('.maintenance-review-grid > div').nth(1)).toContainText('public');
+  await page.getByLabel('Reason for this creator-history change').fill(createReason);
+  await page.getByRole('button', { name: 'Confirm creator-history save' }).click();
+  await expect(page.getByText('Creator-history entry recorded.')).toBeVisible();
+  await expect(page.getByText('Layered attention', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Remove creator history Layered attention' }).click();
+  await expect(page.getByRole('heading', { name: 'Review creator-history removal' })).toBeVisible();
+  await expect(page.getByText(/prior values.*remain in append-only maintenance history/i)).toBeVisible();
+  await page.getByLabel('Reason for this creator-history change').fill(removeReason);
+  await page.getByRole('button', { name: 'Confirm removal from current view' }).click();
+  await expect(page.getByText(/entry removed from the current view/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No creator history recorded' })).toBeVisible();
+
+  expect(bodies).toHaveLength(2);
+  expect(bodies[0]).toEqual({
+    action: 'create',
+    entry: {
+      entryType: 'intention', title: 'Layered attention', detail: intention,
+      role: null, occurredAt: '2026-07', visibility: 'public',
+    },
+    reason: createReason,
+    idempotencyKey: expect.any(String),
+  });
+  expect(bodies[1]).toEqual({
+    action: 'remove', provenanceId: 'prov-browser', expectedVersion: 1,
+    reason: removeReason, idempotencyKey: expect.any(String),
+  });
+  const privacy = await page.evaluate(() => ({
+    url: location.href,
+    local: JSON.stringify(localStorage),
+    session: JSON.stringify(sessionStorage),
+  }));
+  expect(JSON.stringify(privacy)).not.toContain(intention);
+  expect(JSON.stringify(privacy)).not.toContain(createReason);
+  expect(JSON.stringify(privacy)).not.toContain(removeReason);
+});
+
 test('development steward mock validates verified targets, versions, and exact idempotent replay', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Mock steward contract runs once against shared development state.');
   await page.goto('/admin/maintenance');

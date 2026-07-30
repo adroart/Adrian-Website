@@ -176,6 +176,7 @@ function mockApiPlugin(): Plugin {
       stewardVersion: 1,
     },
     acquisitions: [],
+    creatorHistory: [],
     maintenanceHistory: [],
   };
 

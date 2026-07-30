@@ -7,6 +7,7 @@ import {
   AdminSection,
 } from './admin/AdminPage';
 import {
+  beginMaintenanceProvenanceActionAttempt,
   beginMaintenancePlateActionAttempt,
   beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
@@ -20,6 +21,7 @@ import {
   parseMaintenanceCurrencyAmount,
   saveMaintenanceAcquisition,
   saveMaintenancePlateAction,
+  saveMaintenanceProvenanceAction,
   saveMaintenanceStewardAction,
   searchMaintenance,
   shouldRetainMaintenanceSaveAttempt,
@@ -30,6 +32,11 @@ import {
   type MaintenancePieceDetail,
   type MaintenancePlateAction,
   type MaintenancePlateActionAttempt,
+  type MaintenanceProvenance,
+  type MaintenanceProvenanceActionAttempt,
+  type MaintenanceProvenanceInput,
+  type MaintenanceProvenanceType,
+  type MaintenanceProvenanceVisibility,
   type MaintenanceSearchFilters,
   type MaintenanceSaveAttempt,
   type MaintenanceStewardAction,
@@ -78,6 +85,21 @@ type PlateReviewState = {
   physicalDisposition?: string;
 };
 
+type ProvenanceDraft = {
+  entryType: MaintenanceProvenanceType;
+  title: string;
+  detail: string;
+  role: string;
+  occurredAt: string;
+  visibility: MaintenanceProvenanceVisibility;
+};
+
+type ProvenanceReviewState = {
+  action: 'create' | 'correct' | 'remove';
+  before: MaintenanceProvenance | null;
+  after: MaintenanceProvenanceInput | null;
+};
+
 const EMPTY_SEARCH: SearchDraft = {
   publicCode: '', artworkId: '', title: '', editionNumber: '',
 };
@@ -93,6 +115,24 @@ const EMPTY_ACQUISITION: AcquisitionDraft = {
   documentReference: '',
   publicProvenance: '',
 };
+
+const EMPTY_PROVENANCE: ProvenanceDraft = {
+  entryType: 'creation_place',
+  title: '',
+  detail: '',
+  role: '',
+  occurredAt: '',
+  visibility: 'private',
+};
+
+const provenanceTypes: Array<{ value: MaintenanceProvenanceType; label: string }> = [
+  { value: 'contributor', label: 'Contributor' },
+  { value: 'creation_place', label: 'Creation place' },
+  { value: 'intention', label: 'Intention' },
+  { value: 'material', label: 'Material' },
+  { value: 'technique', label: 'Technique' },
+  { value: 'note', label: 'Note' },
+];
 
 const acquisitionTypes: Array<{ value: MaintenanceAcquisitionType; label: string }> = [
   { value: 'sale', label: 'Sale' },
@@ -195,6 +235,40 @@ function normalizeAcquisitionDraft(draft: AcquisitionDraft): MaintenanceAcquisit
   };
 }
 
+function provenanceDraftFromEntry(entry?: MaintenanceProvenance): ProvenanceDraft {
+  if (!entry) return { ...EMPTY_PROVENANCE };
+  return {
+    entryType: entry.entryType,
+    title: entry.title,
+    detail: entry.detail || '',
+    role: entry.role || '',
+    occurredAt: entry.occurredAt || '',
+    visibility: entry.visibility,
+  };
+}
+
+function normalizeProvenanceDraft(draft: ProvenanceDraft): MaintenanceProvenanceInput {
+  const title = draft.title.trim();
+  const role = textOrNull(draft.role);
+  if (!title) throw new Error('A title or name is required.');
+  if (title.length > 300) throw new Error('The title is too long.');
+  if (draft.entryType === 'contributor' && !role) {
+    throw new Error('A contributor role is required.');
+  }
+  const occurredAt = textOrNull(draft.occurredAt);
+  if (occurredAt && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?(?:T.+)?$/.test(occurredAt)) {
+    throw new Error('Use a year, year and month, date, or exact ISO timestamp.');
+  }
+  return {
+    entryType: draft.entryType,
+    title,
+    detail: textOrNull(draft.detail),
+    role,
+    occurredAt,
+    visibility: draft.visibility,
+  };
+}
+
 const DefinitionList: React.FC<{ items: Array<[string, React.ReactNode]> }> = ({ items }) => (
   <dl className="maintenance-definition-list">
     {items.map(([label, value]) => (
@@ -256,6 +330,21 @@ const StewardSnapshot: React.FC<{
   ]} />;
 };
 
+const ProvenanceSnapshot: React.FC<{
+  entry: MaintenanceProvenanceInput | null;
+  emptyLabel?: string;
+}> = ({ entry, emptyLabel = 'Removed from the current creator history.' }) => {
+  if (!entry) return <p className="maintenance-muted">{emptyLabel}</p>;
+  return <DefinitionList items={[
+    ['Type', provenanceTypes.find(option => option.value === entry.entryType)?.label || entry.entryType],
+    ['Title or name', entry.title],
+    ['Role', entry.role],
+    ['Date', entry.occurredAt],
+    ['Visibility', entry.visibility],
+    ['Detail', entry.detail],
+  ]} />;
+};
+
 const AdminMaintenance: React.FC = () => {
   const [searchDraft, setSearchDraft] = useState<SearchDraft>(EMPTY_SEARCH);
   const [results, setResults] = useState<MaintenanceListItem[]>([]);
@@ -287,6 +376,12 @@ const AdminMaintenance: React.FC = () => {
   const [plateSaving, setPlateSaving] = useState(false);
   const [replacementPackage, setReplacementPackage] = useState<IssuedPlatePackage | null>(null);
   const [replacementArchived, setReplacementArchived] = useState(false);
+  const [provenanceEditor, setProvenanceEditor] = useState<MaintenanceProvenance | null | undefined>(undefined);
+  const [provenanceDraft, setProvenanceDraft] = useState<ProvenanceDraft>(EMPTY_PROVENANCE);
+  const [provenanceReview, setProvenanceReview] = useState<ProvenanceReviewState | null>(null);
+  const [provenanceReason, setProvenanceReason] = useState('');
+  const [provenanceError, setProvenanceError] = useState('');
+  const [provenanceSaving, setProvenanceSaving] = useState(false);
   const [notice, setNotice] = useState('');
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -295,12 +390,15 @@ const AdminMaintenance: React.FC = () => {
   const reasonRef = useRef<HTMLTextAreaElement>(null);
   const stewardReasonRef = useRef<HTMLTextAreaElement>(null);
   const plateReasonRef = useRef<HTMLTextAreaElement>(null);
+  const provenanceReasonRef = useRef<HTMLTextAreaElement>(null);
   const saveAttemptRef = useRef<MaintenanceSaveAttempt | null>(null);
   const saveInFlightRef = useRef(false);
   const stewardAttemptRef = useRef<MaintenanceStewardActionAttempt | null>(null);
   const stewardInFlightRef = useRef(false);
   const plateAttemptRef = useRef<MaintenancePlateActionAttempt | null>(null);
   const plateInFlightRef = useRef(false);
+  const provenanceAttemptRef = useRef<MaintenanceProvenanceActionAttempt | null>(null);
+  const provenanceInFlightRef = useRef(false);
   const searchGateRef = useRef(createMaintenanceRequestGate());
   const detailGateRef = useRef(createMaintenanceRequestGate());
 
@@ -328,10 +426,20 @@ const AdminMaintenance: React.FC = () => {
     return plateAttemptRef.current === null;
   };
 
+  const clearProvenanceAttempt = () => {
+    provenanceAttemptRef.current = discardMaintenanceSaveAttempt(
+      provenanceAttemptRef.current,
+      provenanceInFlightRef.current,
+    );
+    return provenanceAttemptRef.current === null;
+  };
+
   const clearMaintenanceAttempts = () => clearSaveAttempt()
     && clearStewardAttempt()
-    && clearPlateAttempt();
-  const transitionBusy = saving || stewardSaving || plateSaving || Boolean(replacementPackage);
+    && clearPlateAttempt()
+    && clearProvenanceAttempt();
+  const transitionBusy = saving || stewardSaving || plateSaving || provenanceSaving
+    || Boolean(replacementPackage);
 
   const loadSearch = useCallback(async (filters: MaintenanceSearchFilters = {}, signal?: AbortSignal) => {
     const generation = searchGateRef.current.next();
@@ -397,6 +505,10 @@ const AdminMaintenance: React.FC = () => {
     if (plateReview) plateReasonRef.current?.focus();
   }, [plateReview]);
 
+  useEffect(() => {
+    if (provenanceReview) provenanceReasonRef.current?.focus();
+  }, [provenanceReview]);
+
   const searchFilters = (): MaintenanceSearchFilters => {
     const edition = searchDraft.editionNumber.trim();
     if (edition && (!/^\d+$/.test(edition) || Number(edition) > 9999)) {
@@ -422,6 +534,8 @@ const AdminMaintenance: React.FC = () => {
       setStewardReview(null);
       setPlateEditor(null);
       setPlateReview(null);
+      setProvenanceEditor(undefined);
+      setProvenanceReview(null);
       setNotice('');
       setDetailError('');
       void loadSearch(searchFilters());
@@ -441,6 +555,8 @@ const AdminMaintenance: React.FC = () => {
     setStewardReview(null);
     setPlateEditor(null);
     setPlateReview(null);
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
     setNotice('');
     setDetailError('');
     void loadSearch({});
@@ -455,6 +571,8 @@ const AdminMaintenance: React.FC = () => {
     setStewardReview(null);
     setPlateEditor(null);
     setPlateReview(null);
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
     setNotice('');
     void loadDetail(item.id).catch(() => undefined);
   };
@@ -465,6 +583,8 @@ const AdminMaintenance: React.FC = () => {
     setStewardReview(null);
     setPlateEditor(null);
     setPlateReview(null);
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
     setEditor(acquisition);
     setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
     setReview(null);
@@ -494,6 +614,9 @@ const AdminMaintenance: React.FC = () => {
     setPlateEditor(null);
     setPlateReview(null);
     setPlateError('');
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
+    setProvenanceError('');
     setNotice('');
     if (action === 'reset_steward' && selected.steward) {
       setStewardReview({
@@ -510,6 +633,8 @@ const AdminMaintenance: React.FC = () => {
     if (!clearStewardAttempt()) return;
     setStewardEditor(null);
     setStewardReview(null);
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
     setStewardTargetEmail('');
     setStewardReason('');
     setStewardError('');
@@ -539,6 +664,8 @@ const AdminMaintenance: React.FC = () => {
     setReview(null);
     setStewardEditor(null);
     setStewardReview(null);
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
     setPlateEditor(action);
     setPlateArtworkId(selected.public.artworkId);
     setPlateEditionNumber(String(selected.public.editionNumber));
@@ -726,6 +853,138 @@ const AdminMaintenance: React.FC = () => {
       await loadDetail(selected.id);
     } catch {
       setDetailError('The replacement was saved, but the superseded record could not be refreshed.');
+    }
+  };
+
+  const openProvenanceEditor = (entry: MaintenanceProvenance | null) => {
+    if (!selected || !clearMaintenanceAttempts()) return;
+    setEditor(undefined);
+    setReview(null);
+    setStewardEditor(null);
+    setStewardReview(null);
+    setPlateEditor(null);
+    setPlateReview(null);
+    setProvenanceEditor(entry);
+    setProvenanceDraft(provenanceDraftFromEntry(entry || undefined));
+    setProvenanceReview(null);
+    setProvenanceReason('');
+    setProvenanceError('');
+    setNotice('');
+  };
+
+  const reviewProvenanceRemoval = (entry: MaintenanceProvenance) => {
+    if (!selected || !clearMaintenanceAttempts()) return;
+    setEditor(undefined);
+    setReview(null);
+    setStewardEditor(null);
+    setStewardReview(null);
+    setPlateEditor(null);
+    setPlateReview(null);
+    setProvenanceEditor(entry);
+    setProvenanceReview({ action: 'remove', before: entry, after: null });
+    setProvenanceReason('');
+    setProvenanceError('');
+    setNotice('');
+  };
+
+  const closeProvenanceEditor = () => {
+    if (!clearProvenanceAttempt()) return;
+    setProvenanceEditor(undefined);
+    setProvenanceReview(null);
+    setProvenanceDraft(EMPTY_PROVENANCE);
+    setProvenanceReason('');
+    setProvenanceError('');
+  };
+
+  const prepareProvenanceReview = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!clearProvenanceAttempt()) return;
+    try {
+      const after = normalizeProvenanceDraft(provenanceDraft);
+      setProvenanceReview({
+        action: provenanceEditor ? 'correct' : 'create',
+        before: provenanceEditor || null,
+        after,
+      });
+      setProvenanceReason('');
+      setProvenanceError('');
+    } catch (error) {
+      setProvenanceError(messageFor(error, 'Check the creator-history fields.'));
+    }
+  };
+
+  const confirmProvenanceSave = async () => {
+    if (!selected || !provenanceReview) return;
+    if (!provenanceReason.trim()) {
+      setProvenanceError('A reason is required before this creator-history change can be saved.');
+      provenanceReasonRef.current?.focus();
+      return;
+    }
+    if (!registryUnlocked) {
+      setProvenanceError('Unlock the private registry before confirming this change.');
+      return;
+    }
+    const attempt = beginMaintenanceProvenanceActionAttempt(provenanceAttemptRef.current, {
+      keeperPieceId: selected.id,
+      action: provenanceReview.action,
+      ...(provenanceReview.action === 'create'
+        ? { entry: provenanceReview.after! }
+        : provenanceReview.action === 'correct'
+          ? {
+              provenanceId: provenanceReview.before!.provenanceId,
+              expectedVersion: provenanceReview.before!.recordVersion,
+              entry: provenanceReview.after!,
+            }
+          : {
+              provenanceId: provenanceReview.before!.provenanceId,
+              expectedVersion: provenanceReview.before!.recordVersion,
+            }),
+      reason: provenanceReason,
+    });
+    provenanceAttemptRef.current = attempt;
+    provenanceInFlightRef.current = true;
+    setProvenanceSaving(true);
+    setProvenanceError('');
+    try {
+      await saveMaintenanceProvenanceAction(attempt.request);
+      provenanceInFlightRef.current = false;
+      provenanceAttemptRef.current = null;
+      const savedMessage = provenanceReview.action === 'create'
+        ? 'Creator-history entry recorded.'
+        : provenanceReview.action === 'correct'
+          ? 'Creator-history correction saved.'
+          : 'Creator-history entry removed from the current view. Its prior values remain in history.';
+      setProvenanceEditor(undefined);
+      setProvenanceReview(null);
+      setProvenanceReason('');
+      setNotice(savedMessage);
+      try {
+        await loadDetail(attempt.request.keeperPieceId);
+      } catch {
+        setNotice(`${savedMessage} The save is definitive, but refreshed detail is unavailable. Reload before another change.`);
+      }
+    } catch (error) {
+      provenanceInFlightRef.current = false;
+      if (!shouldRetainMaintenanceSaveAttempt(error)) provenanceAttemptRef.current = null;
+      if (error instanceof MaintenanceRequestError
+        && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
+        setRegistryUnlocked(false);
+      }
+      if (error instanceof MaintenanceRequestError && error.code === 'version_conflict') {
+        try {
+          await loadDetail(attempt.request.keeperPieceId);
+          setProvenanceReview(null);
+          setProvenanceEditor(undefined);
+          setNotice('Creator history changed after you opened it. The latest detail has been reloaded; review it again.');
+        } catch {
+          setProvenanceError('Creator history changed, but the latest detail could not be reloaded. Your exact review is preserved.');
+        }
+      } else {
+        setProvenanceError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same creator-history change.'));
+      }
+    } finally {
+      provenanceInFlightRef.current = false;
+      setProvenanceSaving(false);
     }
   };
 
@@ -1308,6 +1567,116 @@ const AdminMaintenance: React.FC = () => {
                 <div className="maintenance-actions">
                   <button type="button" className={quietButtonClass} onClick={backToEditor} disabled={saving}>Back to edit</button>
                   <button type="button" className={primaryButtonClass} onClick={() => void confirmSave()} disabled={saving || !registryUnlocked || !reason.trim()}>{saving ? 'Saving…' : 'Confirm save'}</button>
+                </div>
+              </div>
+            )}
+          </AdminSection>
+
+          <AdminSection title="Creator history and intention" description="Record who worked on the piece, where and how it was made, and intentions or notes with an explicit audience.">
+            <div className="maintenance-section-actions">
+              <button type="button" className={primaryButtonClass} onClick={() => openProvenanceEditor(null)} disabled={transitionBusy}>Add creator-history entry</button>
+            </div>
+            {selected.creatorHistory.length === 0 ? (
+              <AdminEmptyState title="No creator history recorded" description="Add a contributor, creation place, intention, material, technique, or note." />
+            ) : (
+              <div className="maintenance-acquisitions">
+                {selected.creatorHistory.map(entry => (
+                  <article key={entry.provenanceId} className="maintenance-acquisition-row">
+                    <div>
+                      <strong>{entry.title}</strong>
+                      <span>{provenanceTypes.find(option => option.value === entry.entryType)?.label || entry.entryType} · {entry.visibility} · {entry.occurredAt || 'No date'}</span>
+                      {entry.role && <span>Role: {entry.role}</span>}
+                      {entry.detail && <span>{entry.detail}</span>}
+                    </div>
+                    <div className="maintenance-actions">
+                      <button type="button" className={quietButtonClass} onClick={() => openProvenanceEditor(entry)} disabled={transitionBusy} aria-label={`Correct creator history ${entry.title}`}>Correct</button>
+                      <button type="button" className={quietButtonClass} onClick={() => reviewProvenanceRemoval(entry)} disabled={transitionBusy} aria-label={`Remove creator history ${entry.title}`}>Remove from current view</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {provenanceEditor !== undefined && !provenanceReview && (
+              <form className="maintenance-acquisition-form" onSubmit={prepareProvenanceReview}>
+                <h3>{provenanceEditor ? 'Correct creator history' : 'Add creator history'}</h3>
+                <p>Nothing is saved until the full entry and its audience are reviewed.</p>
+                <div className="maintenance-form-grid">
+                  <label htmlFor="maintenance-provenance-type">
+                    <span className={labelClass}>Entry type</span>
+                    <select id="maintenance-provenance-type" className={inputClass} value={provenanceDraft.entryType} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, entryType: event.target.value as MaintenanceProvenanceType })); }}>
+                      {provenanceTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
+                    </select>
+                  </label>
+                  <label htmlFor="maintenance-provenance-visibility">
+                    <span className={labelClass}>Visibility</span>
+                    <select id="maintenance-provenance-visibility" className={inputClass} value={provenanceDraft.visibility} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, visibility: event.target.value as MaintenanceProvenanceVisibility })); }}>
+                      <option value="private">Private, administrator only</option>
+                      <option value="steward">Steward, not public</option>
+                      <option value="public">Public scanned record</option>
+                    </select>
+                    <small className="maintenance-helper">Public entries appear on the scanned plate record. Steward entries remain non-public and are reserved for the steward-facing record. Private entries stay in Maintenance.</small>
+                  </label>
+                  <label className="maintenance-field-wide" htmlFor="maintenance-provenance-title">
+                    <span className={labelClass}>{provenanceDraft.entryType === 'contributor' ? 'Contributor name' : 'Title or value'}</span>
+                    <input id="maintenance-provenance-title" className={inputClass} maxLength={300} value={provenanceDraft.title} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, title: event.target.value })); }} autoComplete="off" required />
+                  </label>
+                  <label htmlFor="maintenance-provenance-role">
+                    <span className={labelClass}>Role {provenanceDraft.entryType === 'contributor' ? '(required)' : '(optional)'}</span>
+                    <input id="maintenance-provenance-role" className={inputClass} maxLength={300} value={provenanceDraft.role} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, role: event.target.value })); }} autoComplete="off" required={provenanceDraft.entryType === 'contributor'} />
+                  </label>
+                  <label htmlFor="maintenance-provenance-date">
+                    <span className={labelClass}>When</span>
+                    <input id="maintenance-provenance-date" className={inputClass} value={provenanceDraft.occurredAt} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, occurredAt: event.target.value })); }} placeholder="2026, 2026-07, or 2026-07-31" autoComplete="off" />
+                  </label>
+                  <label className="maintenance-field-wide" htmlFor="maintenance-provenance-detail">
+                    <span className={labelClass}>Detail</span>
+                    <textarea id="maintenance-provenance-detail" className={inputClass} rows={4} maxLength={5000} value={provenanceDraft.detail} onChange={event => { clearProvenanceAttempt(); setProvenanceDraft(draft => ({ ...draft, detail: event.target.value })); }} />
+                  </label>
+                </div>
+                {provenanceError && <p className="maintenance-inline-error" role="alert">{provenanceError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closeProvenanceEditor} disabled={provenanceSaving}>Cancel</button>
+                  <button type="submit" className={primaryButtonClass} disabled={provenanceSaving}>Review creator history</button>
+                </div>
+              </form>
+            )}
+
+            {provenanceReview && (
+              <div className="maintenance-review" aria-labelledby="maintenance-provenance-review-title">
+                <div className="maintenance-review-heading">
+                  <p className="admin-eyebrow">Confirmation required</p>
+                  <h3 id="maintenance-provenance-review-title">Review creator-history {provenanceReview.action === 'create' ? 'entry' : provenanceReview.action === 'correct' ? 'correction' : 'removal'}</h3>
+                  <p>{provenanceReview.action === 'remove'
+                    ? 'The entry leaves the current view. Its prior values, administrator, and removal reason remain in append-only maintenance history.'
+                    : 'Confirm both the content and its audience. Changing visibility can make this appear on or disappear from the public scanned record.'}</p>
+                </div>
+                <div className="maintenance-review-grid">
+                  <div><h4>Before</h4><ProvenanceSnapshot entry={provenanceReview.before} emptyLabel="No prior creator-history entry." /></div>
+                  <div><h4>After</h4><ProvenanceSnapshot entry={provenanceReview.after} /></div>
+                </div>
+                <label htmlFor="maintenance-provenance-reason">
+                  <span className={labelClass}>Reason for this creator-history change</span>
+                  <textarea ref={provenanceReasonRef} id="maintenance-provenance-reason" className={inputClass} rows={3} required value={provenanceReason} disabled={provenanceSaving} onChange={event => { clearProvenanceAttempt(); setProvenanceReason(event.target.value); }} />
+                </label>
+                {!registryUnlocked && (
+                  <AdminAlert tone="warning">
+                    <p>Unlock the private registry before confirming this creator-history change.</p>
+                    <form className="maintenance-unlock-form" onSubmit={unlockRegistry}>
+                      <label htmlFor="maintenance-registry-secret">
+                        <span className={labelClass}>Registry secret</span>
+                        <input ref={unlockInputRef} id="maintenance-registry-secret" className={inputClass} type="password" autoComplete="current-password" />
+                      </label>
+                      <button type="submit" className={quietButtonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : 'Unlock registry'}</button>
+                    </form>
+                    {unlockError && <p className="maintenance-inline-error" role="alert">{unlockError}</p>}
+                  </AdminAlert>
+                )}
+                {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
+                {provenanceError && <p className="maintenance-inline-error" role="alert">{provenanceError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closeProvenanceEditor} disabled={provenanceSaving}>Cancel</button>
+                  <button type="button" className={primaryButtonClass} onClick={() => void confirmProvenanceSave()} disabled={provenanceSaving || !registryUnlocked || !provenanceReason.trim()}>{provenanceSaving ? 'Saving…' : provenanceReview.action === 'remove' ? 'Confirm removal from current view' : 'Confirm creator-history save'}</button>
                 </div>
               </div>
             )}

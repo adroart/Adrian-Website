@@ -142,7 +142,7 @@ function isValidOccurredAt(value: string): boolean {
     || (Number(hourText) <= 23 && Number(minuteText) <= 59 && Number(secondText) <= 59);
 }
 
-function projectPublicCreatorHistory(value: unknown): PublicCreatorHistoryEntry[] {
+export function projectPublicCreatorHistory(value: unknown): PublicCreatorHistoryEntry[] {
   if (!Array.isArray(value)) throw new Error('Invalid public creator history');
   return value.map((candidate) => {
     if (!isObject(candidate)) throw new Error('Invalid public creator history');
