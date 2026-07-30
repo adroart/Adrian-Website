@@ -271,6 +271,17 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /disabled=\{saving/);
     assert.match(component, /latest detail could not be reloaded/i);
     assert.match(component, /throw error/);
+    assert.match(component, /saved, but the private detail could not be refreshed/i);
+    assert.ok(
+      component.indexOf('await saveMaintenanceAcquisition')
+        < component.indexOf('saved, but the private detail could not be refreshed'),
+    );
+  });
+
+  it('keeps the development unlock mock exact and rejects extra fields', () => {
+    const vite = source('vite.config.ts');
+    assert.match(vite, /body\.secret !== 'local-development-secret'/);
+    assert.match(vite, /Object\.keys\(body\).*secret/);
   });
 
   it('labels every control and provides live loading, error, and status feedback', () => {

@@ -186,6 +186,69 @@ test('preserves a correction draft when version-conflict detail reload fails', a
   await expect(page.getByText(/has been reloaded/)).toHaveCount(0);
 });
 
+test('treats a saved acquisition as definitive when its detail refresh fails', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
+  const privateNote = `Saved refresh failure ${Date.now()}-${Math.random()}`;
+  let failDetailRefresh = false;
+  let createRequests = 0;
+
+  await page.route('**/api/admin/maintenance/kp-local-maintenance', async route => {
+    if (!failDetailRefresh) return route.continue();
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, error: 'maintenance_detail_failed' }),
+    });
+  });
+  await page.route('**/api/admin/maintenance/kp-local-maintenance/acquisitions', async route => {
+    if (route.request().method() !== 'POST') return route.continue();
+    createRequests += 1;
+    const response = await route.fetch();
+    failDetailRefresh = response.ok();
+    return route.fulfill({ response });
+  });
+
+  await page.goto('/admin/maintenance');
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await page.getByRole('button', { name: 'Record acquisition', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Currency' }).fill('USD');
+  await page.getByLabel('Amount paid').fill('12.34');
+  await page.getByLabel('Private notes').fill(privateNote);
+  await page.getByRole('button', { name: 'Review acquisition' }).click();
+  await page.getByLabel('Reason for this change').fill('Record a save whose detail refresh fails.');
+  const secret = page.getByLabel('Registry secret');
+  if (await secret.isVisible().catch(() => false)) {
+    await secret.fill('local-development-secret');
+    await page.getByRole('button', { name: 'Unlock registry' }).click();
+  }
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+
+  await expect(page.getByText(/Acquisition recorded\. It was saved, but the private detail could not be refreshed/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm save' })).toHaveCount(0);
+  expect(createRequests).toBe(1);
+});
+
+test('development registry unlock requires the exact local secret and exact body', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Mock contract runs once against shared development state.');
+  await page.goto('/admin/maintenance');
+  const outcomes = await page.evaluate(async () => {
+    const unlock = (body: unknown) => fetch('/api/admin/registry-unlock', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const wrong = await unlock({ secret: 'not-the-secret' });
+    const extra = await unlock({ secret: 'local-development-secret', extra: true });
+    const exact = await unlock({ secret: 'local-development-secret' });
+    return {
+      wrong: [wrong.status, await wrong.json()],
+      extra: [extra.status, await extra.json()],
+      exact: [exact.status, await exact.json()],
+    };
+  });
+  expect(outcomes.wrong).toEqual([401, { ok: false, error: 'unlock_failed' }]);
+  expect(outcomes.extra).toEqual([400, { ok: false, error: 'invalid_input' }]);
+  expect(outcomes.exact).toEqual([200, { ok: true, expiresIn: 600 }]);
+});
+
 test('development Maintenance API replays idempotent create and correction requests', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
   await page.goto('/admin/maintenance');

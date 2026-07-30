@@ -425,9 +425,16 @@ const AdminMaintenance: React.FC = () => {
       await saveMaintenanceAcquisition(attempt.request);
       saveInFlightRef.current = false;
       saveAttemptRef.current = null;
-      await loadDetail(attempt.request.keeperPieceId);
-      setNotice(review.acquisitionId ? 'Acquisition correction saved.' : 'Acquisition recorded.');
+      const savedMessage = review.acquisitionId
+        ? 'Acquisition correction saved.'
+        : 'Acquisition recorded.';
+      setNotice(savedMessage);
       closeEditor();
+      try {
+        await loadDetail(attempt.request.keeperPieceId);
+      } catch {
+        setNotice(`${savedMessage} It was saved, but the private detail could not be refreshed. Reload the record before making another change.`);
+      }
     } catch (error) {
       saveInFlightRef.current = false;
       if (!shouldRetainMaintenanceSaveAttempt(error)) saveAttemptRef.current = null;

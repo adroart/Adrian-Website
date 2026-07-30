@@ -549,7 +549,11 @@ function mockApiPlugin(): Plugin {
         }
         if (req.method === 'POST') {
           const body = await readBody(req);
-          if (typeof body.secret !== 'string' || !body.secret) {
+          if (!body || typeof body !== 'object' || Array.isArray(body)
+            || Object.keys(body).length !== 1 || !Object.hasOwn(body, 'secret')) {
+            return send(res, 400, { ok: false, error: 'invalid_input' });
+          }
+          if (body.secret !== 'local-development-secret') {
             return send(res, 401, { ok: false, error: 'unlock_failed' });
           }
           registryUnlocked = true;
