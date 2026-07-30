@@ -60,6 +60,9 @@ export const ArrivalGate: React.FC<{
 
   const opened = stage > lines.length;
   const imageUrl = artwork.coverImage ? cldImg(artwork.coverImage, { w: 900 }) : null;
+  const inertProps = !opened
+    ? ({ inert: '' } as React.HTMLAttributes<HTMLDivElement>)
+    : {};
 
   return (
     <>
@@ -115,6 +118,7 @@ export const ArrivalGate: React.FC<{
 
       {/* The page opens beneath the arrival once it has settled. */}
       <div
+        {...inertProps}
         className="transition-opacity duration-1000 ease-out"
         style={{ opacity: opened ? 1 : 0, pointerEvents: opened ? 'auto' : 'none' }}
         aria-hidden={!opened}

@@ -167,6 +167,13 @@ describe('account client and sign-in UI', () => {
     assert.match(modal, /works even if you forgot your password/i);
   });
 
+  it('passes an explicit same-site destination from the trigger to the modal', () => {
+    const trigger = source('components/account/SignInTrigger.tsx');
+    assert.match(trigger, /destination\?:\s*string/);
+    assert.match(trigger, /\{\s*children,\s*onSignedIn,\s*destination\s*\}/);
+    assert.match(trigger, /<SignInModal[\s\S]*?destination=\{destination\}/);
+  });
+
   it('provides an accessible OTP password reset route', () => {
     const reset = source('components/account/ResetPassword.tsx');
     assert.match(reset, /requestPasswordReset/);

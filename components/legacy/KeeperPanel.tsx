@@ -1,28 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { LAUNCH_FLAGS } from '../../launchFlags';
 import { useAccount } from '../../lib/account/useAccount';
 import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
 import type { PublicPlateIdentity } from '../../utils/publicRegistry';
+import SignInTrigger from '../account/SignInTrigger';
 import IntentionRitual from './IntentionRitual';
-
-/**
- * KeeperPanel is the legacy implementation name for the two steward doors:
- *   (a) "Register / certify this piece" is the universal door. Bind yourself as
- *       the steward with the permanent Ownership Code on the underside.
- *   (b) "Begin your intention" is the deep door, opened once the piece is yours.
- *
- * Nobody is pushed. A steward who only wants the certificate stops at (a). The
- * intention ritual (IntentionRitual) is offered, never forced.
- *
- * Gated behind the `livingLegacy` flag. When the visitor is not signed in, the
- * doors invite sign-in calmly rather than blocking. When the piece is already
- * kept by someone else, we say so plainly and do not contest (the patient
- * transfer process lives in mandalacodes).
- *
- * Design system: paper/wood/stone/bronze, Cormorant/Lato/Cinzel, middle dots,
- * no em dashes, no icons, no badges, nothing over the artwork.
- */
 
 interface StewardStatus {
   kept: boolean;
@@ -30,61 +13,139 @@ interface StewardStatus {
   currentDisplayLocation?: string | null;
 }
 
+type BindPayload = {
+  ok?: boolean;
+  status?: string;
+  message?: string;
+  claim?: { window?: string; windowDays?: number };
+};
+
+export type StewardBindResult =
+  | { kind: 'bound' }
+  | { kind: 'pending'; message: string; window?: string }
+  | { kind: 'error'; message: string };
+
+export function stewardClaimDestination(
+  identity: Readonly<Pick<PublicPlateIdentity, 'artworkId' | 'publicCode'>>,
+): string {
+  const query = new URLSearchParams({
+    instance: identity.publicCode,
+    ref: 'qr',
+    claim: '1',
+  });
+  return `/works/${encodeURIComponent(identity.artworkId)}?${query.toString()}`;
+}
+
+export function classifyStewardBindResult(status: number, payload: BindPayload): StewardBindResult {
+  if (status === 202 && payload.status === 'claim_requested') {
+    const window = typeof payload.claim?.window === 'string'
+      ? payload.claim.window
+      : Number.isSafeInteger(payload.claim?.windowDays)
+        ? `${payload.claim?.windowDays} days`
+        : undefined;
+    return {
+      kind: 'pending',
+      message: payload.message || 'Your stewardship request is pending with the current steward.',
+      ...(window ? { window } : {}),
+    };
+  }
+  if (status >= 200 && status < 300 && payload.ok === true) return { kind: 'bound' };
+  return {
+    kind: 'error',
+    message: payload.message || 'That Ownership Code did not register this piece. Check it and try again.',
+  };
+}
+
 export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({ publicIdentity }) => {
   const { isSignedIn, isLoaded, available, fetchAuthed } = useAccount();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<StewardStatus | null>(null);
+  const [statusLoaded, setStatusLoaded] = useState(false);
+  const [statusError, setStatusError] = useState(false);
   const [door, setDoor] = useState<'closed' | 'register' | 'intention'>('closed');
-  const pieceId = publicIdentity.artworkId;
-  const editionNumber = publicIdentity.edition.number ?? 0;
+  const publicCode = publicIdentity.publicCode;
+  const claimReturn = searchParams.get('claim') === '1';
 
   const loadStatus = React.useCallback(async () => {
     if (!isSignedIn) {
       setStatus(null);
+      setStatusLoaded(false);
+      setStatusError(false);
       return;
     }
-    const params = new URLSearchParams({ pieceId, editionNumber: String(editionNumber) });
-    const res = await fetchAuthed(`/api/keeper/piece?${params.toString()}`).catch(() => null);
-    if (res && res.ok) {
-      const data = await res.json();
-      setStatus({ kept: data.kept, byYou: data.byYou, currentDisplayLocation: data.currentDisplayLocation });
+    setStatusError(false);
+    const params = new URLSearchParams({ publicCode });
+    const response = await fetchAuthed(`/api/keeper/piece?${params.toString()}`).catch(() => null);
+    if (!response?.ok) {
+      setStatusError(true);
+      setStatusLoaded(false);
+      return;
     }
-  }, [isSignedIn, pieceId, editionNumber, fetchAuthed]);
+    const data = await response.json();
+    setStatus({
+      kept: data.kept === true,
+      byYou: data.byYou === true,
+      currentDisplayLocation: data.currentDisplayLocation,
+    });
+    setStatusLoaded(true);
+  }, [fetchAuthed, isSignedIn, publicCode]);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) void loadStatus();
   }, [isLoaded, isSignedIn, loadStatus]);
 
+  useEffect(() => {
+    if (isSignedIn && claimReturn) setDoor('register');
+  }, [claimReturn, isSignedIn]);
+
   if (!LAUNCH_FLAGS.livingLegacy || !available) return null;
 
-  const youKeep = status?.byYou ?? false;
-  const keptByOther = (status?.kept ?? false) && !youKeep;
+  const youKeep = statusLoaded && status?.byYou === true;
+  const keptByOther = statusLoaded && status?.kept === true && !youKeep;
+  const unclaimed = statusLoaded && status?.kept === false;
 
   return (
-    <section className="mt-20 print:hidden">
-      <div className="flex items-center justify-center gap-4 mb-12">
+    <section className="mt-20 print:hidden" aria-labelledby="stewardship-heading">
+      <div className="flex items-center justify-center gap-4 mb-12" aria-hidden="true">
         <div className="h-px w-12 bg-bronze-300" />
         <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
         <div className="h-px w-12 bg-bronze-300" />
       </div>
+      <h2 id="stewardship-heading" className="sr-only">Artwork stewardship</h2>
 
-      {/* Not signed in: a calm invitation, never a wall. */}
       {!isSignedIn && (
         <div className="max-w-md mx-auto text-center">
           <p className="font-serif text-[17px] text-wood-700 leading-[1.9] mb-6">
             If you hold this piece, you can register as its steward and, when you wish, fuse a
             yearly intention into it.
           </p>
-          <Link
-            to="/account"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
-          >
-            Sign in to begin
-          </Link>
+          <SignInTrigger destination={stewardClaimDestination(publicIdentity)}>
+            <button
+              type="button"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+            >
+              Sign in to begin
+            </button>
+          </SignInTrigger>
         </div>
       )}
 
-      {/* Signed in, not yet the steward, free to claim. */}
-      {isSignedIn && !youKeep && !keptByOther && (
+      {isSignedIn && !statusLoaded && !statusError && (
+        <p className="max-w-md mx-auto text-center font-sans text-sm text-wood-500" role="status" aria-live="polite">
+          Checking stewardship
+        </p>
+      )}
+
+      {isSignedIn && statusError && (
+        <div className="max-w-md mx-auto text-center" role="status" aria-live="polite">
+          <p className="font-sans text-sm text-wood-600 mb-5">Stewardship could not be checked right now.</p>
+          <button type="button" onClick={() => void loadStatus()} className="font-label text-[11px] uppercase tracking-[0.15em] text-bronze-700 border-b border-bronze-300 pb-1">
+            Try again
+          </button>
+        </div>
+      )}
+
+      {isSignedIn && unclaimed && (
         <div className="max-w-lg mx-auto">
           {door !== 'register' ? (
             <div className="grid sm:grid-cols-2 gap-5">
@@ -103,10 +164,10 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
               />
             </div>
           ) : (
-            <RegisterForm
-              pieceId={pieceId}
+            <OwnershipCodeForm
+              publicCode={publicCode}
               title={publicIdentity.title}
-              editionNumber={editionNumber}
+              variant="register"
               onBound={async () => {
                 await loadStatus();
                 setDoor('intention');
@@ -117,38 +178,41 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
         </div>
       )}
 
-      {/* Already kept by someone else. */}
       {keptByOther && (
-        <p className="max-w-md mx-auto text-center font-serif text-[16px] text-wood-600 leading-[1.9]">
-          This piece already has a steward. A transfer of stewardship moves through a
-          separate, patient process.
-        </p>
+        <div className="max-w-md mx-auto">
+          <p className="text-center font-serif text-[16px] text-wood-600 leading-[1.9] mb-8">
+            This piece already has a steward. A transfer of stewardship moves through a separate, patient process.
+          </p>
+          <OwnershipCodeForm
+            publicCode={publicCode}
+            title={publicIdentity.title}
+            variant="request"
+            onBound={loadStatus}
+          />
+        </div>
       )}
 
-      {/* You are the steward. */}
       {youKeep && (
         <div className="max-w-xl mx-auto">
           <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold mb-10">
             You are the current steward
           </p>
-
           <DisplayLocation
-            pieceId={pieceId}
-            editionNumber={editionNumber}
+            publicCode={publicCode}
             current={status?.currentDisplayLocation ?? null}
             onSaved={loadStatus}
           />
-
           <div className="mt-16">
-            <IntentionRitual pieceId={pieceId} editionNumber={editionNumber} />
+            <IntentionRitual
+              pieceId={publicIdentity.artworkId}
+              editionNumber={publicIdentity.edition.number ?? 0}
+            />
           </div>
         </div>
       )}
     </section>
   );
 };
-
-// ── A door tile ──
 
 function DoorCard({
   title,
@@ -168,6 +232,7 @@ function DoorCard({
       <h3 className="font-serif text-xl text-wood-900 mb-3">{title}</h3>
       <p className="font-sans text-[13px] text-wood-500 leading-[1.8] mb-6 flex-1">{body}</p>
       <button
+        type="button"
         onClick={onClick}
         className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold pb-1 border-b transition-colors ${
           muted
@@ -181,96 +246,146 @@ function DoorCard({
   );
 }
 
-// ── The Ownership Code bind form ──
-
-function RegisterForm({
-  pieceId,
+function OwnershipCodeForm({
+  publicCode,
   title,
-  editionNumber,
+  variant,
   onBound,
   onCancel,
 }: {
-  pieceId: string;
+  publicCode: string;
   title: string;
-  editionNumber: number;
-  onBound: () => void;
-  onCancel: () => void;
+  variant: 'register' | 'request';
+  onBound: () => void | Promise<void>;
+  onCancel?: () => void;
 }) {
   const { fetchAuthed } = useAccount();
   const [code, setCode] = useState('');
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [pending, setPending] = useState<{ message: string; window?: string } | null>(null);
   const wellFormed = isWellFormedRecoveryCode(code);
+  const requesting = variant === 'request';
+  const titleId = `ownership-code-title-${requesting ? 'request' : 'register'}`;
+  const helpId = `ownership-code-help-${requesting ? 'request' : 'register'}`;
+  const outcomeId = `ownership-code-outcome-${requesting ? 'request' : 'register'}`;
+  const inputId = `ownership-code-${requesting ? 'request' : 'register'}`;
+  const noteId = 'stewardship-evidence-note';
 
-  const submit = async () => {
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
+    setPending(null);
     if (!wellFormed) {
       setError('That Ownership Code does not look complete. Check the underside of the piece.');
       return;
     }
     setBusy(true);
     try {
-      const res = await fetchAuthed('/api/keeper/bind', {
+      const response = await fetchAuthed('/api/keeper/bind', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recoveryCode: code, pieceId, editionNumber }),
+        body: JSON.stringify({ publicCode, ownershipCode: code, ...(note.trim() ? { note: note.trim() } : {}) }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.message || 'That Ownership Code did not bind this piece. Please check it and try again.');
+      const data = await response.json().catch(() => ({}));
+      const result = classifyStewardBindResult(response.status, data);
+      if (result.kind === 'pending') {
+        setPending({ message: result.message, ...(result.window ? { window: result.window } : {}) });
         return;
       }
-      onBound();
+      if (result.kind === 'error') {
+        setError(result.message);
+        return;
+      }
+      await onBound();
+    } catch {
+      setError('Stewardship could not be updated right now. Please try again.');
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto text-center">
-      <h3 className="font-serif text-2xl text-wood-900 mb-3">Register {title}</h3>
-      <p className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
+    <form
+      aria-label={requesting ? 'Request stewardship' : 'Register stewardship'}
+      aria-labelledby={titleId}
+      onSubmit={submit}
+      className="max-w-md mx-auto text-center"
+    >
+      <h3 id={titleId} className="font-serif text-2xl text-wood-900 mb-3">
+        {requesting ? 'Request stewardship' : `Register ${title}`}
+      </h3>
+      <p id={helpId} className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
         Enter the Ownership Code engraved on the underside of the art. It is not the public QR number.
       </p>
+      <label htmlFor={inputId} className="block font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
+        Ownership Code
+      </label>
       <input
+        id={inputId}
         value={code}
-        onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 24))}
+        onChange={(event) => setCode(event.target.value.toUpperCase().slice(0, 24))}
         placeholder="XXXX-XXXX-XXXX-XXXX"
         spellCheck={false}
         autoComplete="off"
+        aria-describedby={`${helpId} ${outcomeId}`}
+        aria-invalid={Boolean(error)}
         className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-label text-[16px] tracking-[0.2em] text-center text-wood-800 uppercase focus:outline-none focus:border-bronze-400 transition-colors"
       />
-      {error && <p className="font-sans text-[13px] text-bronze-700 mt-4 leading-[1.7]">{error}</p>}
+      {requesting && (
+        <div className="mt-6 text-left">
+          <label htmlFor={noteId} className="block font-label text-[10px] uppercase tracking-[0.18em] text-wood-500 font-semibold mb-2">
+            Evidence note (optional)
+          </label>
+          <textarea
+            id={noteId}
+            value={note}
+            onChange={(event) => setNote(event.target.value.slice(0, 500))}
+            maxLength={500}
+            rows={3}
+            aria-describedby={helpId}
+            className="w-full bg-paper-50 border border-wood-200 px-4 py-3 font-sans text-sm text-wood-800 focus:outline-none focus:border-bronze-400 transition-colors"
+          />
+        </div>
+      )}
+      <div id={outcomeId} className="mt-4 min-h-5" aria-live="polite">
+        {error && <p role="alert" className="font-sans text-[13px] text-bronze-700 leading-[1.7]">{error}</p>}
+        {pending && (
+          <div role="status" className="border border-bronze-300 bg-paper-100 p-4 text-left">
+            <p className="font-sans text-[13px] text-wood-700 leading-[1.7]">{pending.message}</p>
+            {pending.window && (
+              <p className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-700 mt-2">
+                Response window · {pending.window}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
       <div className="flex items-center justify-center gap-6 mt-8">
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold hover:text-wood-600 transition-colors">
+            Not now
+          </button>
+        )}
         <button
-          onClick={onCancel}
-          className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold hover:text-wood-600 transition-colors"
-        >
-          Not now
-        </button>
-        <button
-          onClick={submit}
+          type="submit"
           disabled={busy || !code.trim()}
           className="px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors disabled:opacity-40"
         >
-          {busy ? 'Binding' : 'Register'}
+          {busy ? 'Submitting' : requesting ? 'Request stewardship' : 'Register'}
         </button>
       </div>
-    </div>
+    </form>
   );
 }
 
-// Current display location, editable by the steward.
-
 function DisplayLocation({
-  pieceId,
-  editionNumber,
+  publicCode,
   current,
   onSaved,
 }: {
-  pieceId: string;
-  editionNumber: number;
+  publicCode: string;
   current: string | null;
   onSaved: () => void;
 }) {
@@ -278,25 +393,30 @@ function DisplayLocation({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(current ?? '');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setValue(current ?? ''), [current]);
 
   const save = async () => {
     setBusy(true);
+    setError(null);
     try {
-      const res = await fetchAuthed('/api/keeper/piece', {
+      const response = await fetchAuthed('/api/keeper/piece', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pieceId,
-          editionNumber,
+          publicCode,
           currentDisplayLocation: value.trim(),
         }),
       });
-      if (res.ok) {
+      if (response.ok) {
         setEditing(false);
         onSaved();
+      } else {
+        setError('This location could not be saved. Please try again.');
       }
+    } catch {
+      setError('This location could not be saved. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -304,36 +424,32 @@ function DisplayLocation({
 
   return (
     <div className="text-center">
-      <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
+      <p id="display-location-label" className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-3">
         Where it lives now
       </p>
       {!editing ? (
-        <button
-          onClick={() => setEditing(true)}
-          className="font-serif text-[17px] text-wood-700 italic border-b border-transparent hover:border-bronze-300 transition-colors"
-        >
+        <button type="button" onClick={() => setEditing(true)} aria-describedby="display-location-label" className="font-serif text-[17px] text-wood-700 italic border-b border-transparent hover:border-bronze-300 transition-colors">
           {current || 'Add where this piece currently rests'}
         </button>
       ) : (
         <div className="max-w-sm mx-auto">
+          <label htmlFor="display-location" className="sr-only">Current display location</label>
           <input
+            id="display-location"
             value={value}
-            onChange={(e) => setValue(e.target.value.slice(0, 200))}
+            onChange={(event) => setValue(event.target.value.slice(0, 200))}
             placeholder="A room, a city, a sanctuary"
+            aria-describedby="display-location-outcome"
             className="w-full bg-paper-50 border border-wood-200 px-4 py-2.5 font-serif text-[16px] text-wood-700 text-center focus:outline-none focus:border-bronze-400 transition-colors"
           />
+          <p id="display-location-outcome" role={error ? 'alert' : undefined} aria-live="polite" className="font-sans text-xs text-bronze-700 mt-3 min-h-4">
+            {error}
+          </p>
           <div className="flex items-center justify-center gap-5 mt-4">
-            <button
-              onClick={() => setEditing(false)}
-              className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold"
-            >
+            <button type="button" onClick={() => setEditing(false)} className="font-label text-[10px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
               Cancel
             </button>
-            <button
-              onClick={save}
-              disabled={busy}
-              className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-600 font-semibold border-b border-bronze-300 pb-1 disabled:opacity-40"
-            >
+            <button type="button" onClick={save} disabled={busy} className="font-label text-[10px] uppercase tracking-[0.15em] text-bronze-600 font-semibold border-b border-bronze-300 pb-1 disabled:opacity-40">
               {busy ? 'Saving' : 'Save'}
             </button>
           </div>

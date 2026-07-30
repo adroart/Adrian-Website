@@ -1,14 +1,14 @@
 /**
  * /api/keeper/piece
  *
- * GET  ?pieceId=...&editionNumber=0
+ * GET  ?publicCode=AR-...
  *   Tells the signed-in user their relationship to this piece:
  *     { ok: true, kept: boolean, byYou: boolean, currentDisplayLocation?: string }
  *   - kept:  does an active steward binding exist at all (any user)?
  *   - byYou: is the signed-in user that steward?
  *   currentDisplayLocation is returned only to the piece's own steward.
  *
- * PUT  { pieceId, editionNumber?, currentDisplayLocation }
+ * PUT  { publicCode, currentDisplayLocation }
  *   The steward edits where the piece currently lives. Presentation state only:
  *   it is shown on the certificate's provenance and NEVER enters the ledger
  *   chain. Pass an empty string to clear it.
@@ -19,6 +19,7 @@
 
 import { requireUser } from '../_lib/auth.js';
 import { getUserByClerkId } from '../_lib/db.js';
+import { isPublicRegistryCode } from '../../../utils/publicRegistry.ts';
 import {
   legacyEnabled,
   notFound,
@@ -54,25 +55,31 @@ export async function onRequest(context) {
 async function handleGet(context, auth) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const pieceId = (url.searchParams.get('pieceId') || '').trim();
-  const editionNumber = parseInt(url.searchParams.get('editionNumber') || '0', 10) || 0;
-  if (!pieceId) return json({ ok: false, error: 'pieceId is required' }, 400);
+  const publicCode = (url.searchParams.get('publicCode') || '').trim();
+  if (!isPublicRegistryCode(publicCode)) {
+    return json({ ok: false, error: 'valid publicCode is required' }, 400);
+  }
 
   const row = await env.DB
     .prepare(
-      `SELECT keeper_user_id, current_display_location
+      `SELECT id, piece_id, edition_number, public_code, keeper_user_id,
+              current_display_location, released_at
          FROM keeper_pieces
-        WHERE piece_id = ?1 AND edition_number = ?2 AND released_at IS NULL`,
+        WHERE public_code = ?1`,
     )
-    .bind(pieceId, editionNumber)
+    .bind(publicCode)
     .first();
 
   if (!row) return json({ ok: true, kept: false, byYou: false });
+  if (!hasExactStoredIdentity(row, publicCode)) {
+    return json({ ok: false, error: 'identity_integrity_error' }, 409);
+  }
 
-  const byYou = row.keeper_user_id === auth.userId;
+  const kept = Boolean(row.keeper_user_id && !row.released_at);
+  const byYou = kept && row.keeper_user_id === auth.userId;
   return json({
     ok: true,
-    kept: true,
+    kept,
     byYou,
     // Display location is the steward's own data; only surface it to them.
     ...(byYou ? { currentDisplayLocation: row.current_display_location ?? null } : {}),
@@ -87,21 +94,39 @@ async function handlePut(context, auth) {
   } catch {
     return json({ ok: false, error: 'invalid_json' }, 400);
   }
-  const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim() : '';
-  const editionNumber = Number.isInteger(body?.editionNumber) ? body.editionNumber : 0;
-  let location =
+  const publicCode = typeof body?.publicCode === 'string' ? body.publicCode.trim() : '';
+  const location =
     typeof body?.currentDisplayLocation === 'string'
       ? body.currentDisplayLocation.trim().slice(0, LOCATION_MAX)
       : '';
-  if (!pieceId) return json({ ok: false, error: 'pieceId is required' }, 400);
+  if (!isPublicRegistryCode(publicCode)) {
+    return json({ ok: false, error: 'valid publicCode is required' }, 400);
+  }
+
+  const row = await env.DB
+    .prepare(
+      `SELECT id, piece_id, edition_number, public_code, keeper_user_id,
+              current_display_location, released_at
+         FROM keeper_pieces
+        WHERE public_code = ?1`,
+    )
+    .bind(publicCode)
+    .first();
+  if (
+    !row
+    || !hasExactStoredIdentity(row, publicCode)
+    || row.keeper_user_id !== auth.userId
+    || row.released_at
+  ) {
+    return json({ ok: false, error: 'not_your_piece' }, 403);
+  }
 
   const updated = await env.DB
     .prepare(
       `UPDATE keeper_pieces SET current_display_location = ?1
-        WHERE piece_id = ?2 AND edition_number = ?3
-          AND keeper_user_id = ?4 AND released_at IS NULL`,
+        WHERE id = ?2 AND keeper_user_id = ?3 AND released_at IS NULL`,
     )
-    .bind(location || null, pieceId, editionNumber, auth.userId)
+    .bind(location || null, row.id, auth.userId)
     .run();
 
   if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
@@ -109,4 +134,12 @@ async function handlePut(context, auth) {
     return json({ ok: false, error: 'not_your_piece' }, 403);
   }
   return json({ ok: true, currentDisplayLocation: location || null });
+}
+
+function hasExactStoredIdentity(row, publicCode) {
+  return row?.public_code === publicCode
+    && typeof row.piece_id === 'string'
+    && row.piece_id.length > 0
+    && Number.isSafeInteger(row.edition_number)
+    && row.edition_number >= 0;
 }

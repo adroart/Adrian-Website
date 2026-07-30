@@ -2912,13 +2912,14 @@ function makeKeeperDb() {
       return { kind: 'first', row: u };
     }
 
-    // bind SELECT: the row regardless of released_at (no released filter)
+    // Public-code lookup: the row itself is the only source of artwork and
+    // edition identity. Bind deliberately sees released rows as well.
     if (
-      /^SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at(?:, public_code, plate_status, backup_status)? FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2$/i.test(
+      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status FROM keeper_pieces WHERE public_code = \?1$/i.test(
         s,
       )
     ) {
-      return { kind: 'first', row: findAny(params[0], params[1]) || null };
+      return { kind: 'first', row: pieces.find((row) => row.public_code === params[0]) || null };
     }
 
     if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
@@ -3125,16 +3126,17 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // A new registry identity is not bindable until physical activation and
       // verified online backup are both complete.
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: false };
-      const unverifiedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const publicCode: string = regJson.publicCode;
+      const unverifiedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(unverifiedRes.status, 403);
       assert.equal((await unverifiedRes.json()).error, 'verified_email_required');
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
-      const generatedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const generatedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(generatedRes.status, 409);
       assert.equal((await generatedRes.json()).error, 'plate_not_ready');
       pieces[0].plate_status = 'active';
       pieces[0].backup_status = 'pending';
-      const unbackedRes = await bind({ request: bindReq({ ownershipCode: recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const unbackedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(unbackedRes.status, 409);
       assert.equal((await unbackedRes.json()).error, 'plate_not_ready');
 
@@ -3144,12 +3146,12 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // Simulate a competing steward winning after the read but before UPDATE.
       // The losing batch must not stamp lineage or evidence.
       loseNextFirstBind();
-      const lostRace = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const lostRace = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(lostRace.status, 409);
       assert.equal(pieces[0].keeper_user_id, null);
       assert.equal(lineage.length, fixtureState.lineage);
       assert.equal(evidence.length, fixtureState.evidence);
-      const firstRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const firstRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(firstRes.status, 200);
       const firstJson = await firstRes.json();
       assert.equal(firstJson.ok, true);
@@ -3166,7 +3168,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.doesNotMatch(lineage.at(-1)[7], /email|ip|ownership|cipher|nonce/i);
 
       // 2b) Re-scan by the SAME user is idempotent success, not a contested claim.
-      const againRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const againRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(againRes.status, 200);
       const againJson = await againRes.json();
       assert.equal(againJson.ok, true);
@@ -3175,9 +3177,18 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // 3) A DIFFERENT user now tries to bind → CONTESTED. Goes to a claim
       //    request (202), never a silent takeover. Stub the bridge fetch.
       let bridgeCalled = 0;
-      globalThis.fetch = (async () => {
+      globalThis.fetch = (async (_input, init) => {
         bridgeCalled++;
-        return new Response(JSON.stringify({ ok: true, status: 'opened', request: { id: 'req-1' } }), {
+        const bridged = JSON.parse(String(init?.body));
+        assert.equal(bridged.requesterRef, 'user-second');
+        assert.equal(bridged.requesterEmail, 'second@example.com');
+        assert.equal(bridged.pieceId, 'UL-100');
+        assert.equal(bridged.editionNumber, 0);
+        return new Response(JSON.stringify({
+          ok: true,
+          status: 'opened',
+          request: { id: 'req-1', window: '30 days' },
+        }), {
           status: 200,
         });
       }) as typeof fetch;
@@ -3186,12 +3197,19 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
       CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
 
-      const contestRes = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const contestRes = await bind({ request: bindReq({
+        publicCode,
+        ownershipCode: recoveryCode,
+        note: 'Auction receipt available',
+        requesterRef: 'forged-requester',
+        requesterEmail: 'forged@example.com',
+      }), env: bindEnv });
       assert.equal(contestRes.status, 202);
       const contestJson = await contestRes.json();
       assert.equal(contestJson.ok, true);
       assert.equal(contestJson.status, 'claim_requested');
       assert.equal(contestJson.claim.outcome, 'opened');
+      assert.equal(contestJson.claim.window, '30 days');
       assert.match(contestJson.message, /current steward/i);
       assert.doesNotMatch(contestJson.message, /\bkeeper\b/i);
       assert.equal(bridgeCalled, 1);
@@ -3202,30 +3220,30 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // Retries still reach the governed bridge, but private evidence is
       // atomically throttled for this piece/requester/outcome tuple.
       const evidenceCount = evidence.length;
-      const repeatedContest = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const repeatedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(repeatedContest.status, 202);
       assert.equal(bridgeCalled, 2);
       assert.equal(evidence.length, evidenceCount);
 
       // A copied permanent code is not enough to open a governed claim.
-      const wrongContest = await bind({ request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-100' }), env: bindEnv });
+      const wrongContest = await bind({ request: bindReq({ publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }), env: bindEnv });
       assert.equal(wrongContest.status, 403);
       assert.equal(bridgeCalled, 2);
 
       // Once claimed, release never turns the permanent Ownership Code back
       // into a bearer instrument. A later holder enters the governed path.
       pieces[0].released_at = '2026-07-13T12:00:00Z';
-      const releasedContest = await bind({ request: bindReq({ recoveryCode, pieceId: 'UL-100' }), env: bindEnv });
+      const releasedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(releasedContest.status, 202);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
       assert.equal(bridgeCalled, 3);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
-      await reg2.json();
       CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+      const reg2Body = await reg2.json();
       const wrongRes = await bind({
-        request: bindReq({ recoveryCode: 'AAAA-BBBB-CCCC-DDDD', pieceId: 'UL-101' }),
+        request: bindReq({ publicCode: reg2Body.publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }),
         env: bindEnv,
       });
       assert.equal(wrongRes.status, 403);
@@ -3236,23 +3254,43 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       const row201 = pieces.find((r) => r.piece_id === 'UL-101');
       assert.equal(row201.keeper_user_id, null);
 
-      // Legacy rows have no permanent public identity and remain compatible;
-      // their pre-registry verifier is sufficient for a direct first bind.
-      const legacyCode = 'ZZZZ-YYYY-XXXX-WWWW';
+      // A registry-only draft numbered identity derives edition 1 from the
+      // plate row. No catalog route data is needed and edition never defaults.
+      const draftCode = 'ZZZZ-YYYY-XXXX-WWWW';
       pieces.push({
-        id: 'kp-legacy-bind', piece_id: 'UL-103', edition_number: 0,
-        keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(legacyCode),
-        claimed_at: null, released_at: null, public_code: null,
-        plate_status: 'legacy', backup_status: null,
+        id: 'kp-draft-bind', piece_id: 'MD-905', edition_number: 1,
+        keeper_user_id: null, recovery_code_hash: await hashRecoveryCode(draftCode),
+        claimed_at: null, released_at: null, public_code: 'AR-ABCDEFGH',
+        plate_status: 'active', backup_status: 'verified',
         lineage_head_hash: null, lineage_event_count: 0,
       });
-      const legacyRes = await bind({ request: bindReq({ ownershipCode: legacyCode, pieceId: 'UL-103' }), env: bindEnv });
-      assert.equal(legacyRes.status, 200);
-      assert.equal(pieces.find((row) => row.id === 'kp-legacy-bind').keeper_user_id, 'user-first');
+      const draftRes = await bind({
+        request: bindReq({ publicCode: 'AR-ABCDEFGH', ownershipCode: draftCode }),
+        env: bindEnv,
+      });
+      assert.equal(draftRes.status, 200);
+      assert.deepEqual((await draftRes.json()).keeper, {
+        pieceId: 'MD-905', editionNumber: 1, claimedAt: pieces.at(-1).claimed_at,
+      });
+      assert.equal(pieces.find((row) => row.id === 'kp-draft-bind').keeper_user_id, 'user-first');
+
+      // Client-supplied identity fields are rejected instead of being allowed
+      // to select a different artwork or edition.
+      const forged = await bind({
+        request: bindReq({
+          publicCode: reg2Body.publicCode,
+          ownershipCode: reg2Body.ownershipCode,
+          pieceId: 'MD-905',
+          editionNumber: 1,
+        }),
+        env: bindEnv,
+      });
+      assert.equal(forged.status, 400);
+      assert.equal((await forged.json()).error, 'identity_fields_forbidden');
 
       // 5) Binding an UNREGISTERED piece is rejected (no row → not_registered).
       const unregRes = await bind({
-        request: bindReq({ recoveryCode, pieceId: 'UL-999-never-registered' }),
+        request: bindReq({ publicCode: 'AR-HHHHHHHH', ownershipCode: recoveryCode }),
         env: bindEnv,
       });
       assert.equal(unregRes.status, 404);
@@ -3263,6 +3301,121 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       LAUNCH_FLAGS.livingLegacy = wasOn;
       globalThis.fetch = origFetch;
       CURRENT_AUTH = null;
+    }
+  });
+});
+
+describe('steward status and display location by public identity', () => {
+  it('treats a registered but unclaimed public code as not kept', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    const row = {
+      id: 'kp-public-status', piece_id: 'MD-905', edition_number: 1,
+      public_code: 'AR-7KQ9M2WX', keeper_user_id: null,
+      current_display_location: null, released_at: null,
+    };
+    const seen: Array<{ sql: string; params: unknown[] }> = [];
+    const DB = {
+      prepare(sql: string) {
+        let params: unknown[] = [];
+        const normalized = sql.replace(/\s+/g, ' ').trim();
+        const statement = {
+          bind(...values: unknown[]) { params = values; return statement; },
+          async first() {
+            seen.push({ sql: normalized, params });
+            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            }
+            if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) {
+              return params[0] === row.public_code ? row : null;
+            }
+            throw new Error(`unexpected status first: ${normalized}`);
+          },
+          async run() { throw new Error(`unexpected status run: ${normalized}`); },
+        };
+        return statement;
+      },
+    };
+
+    try {
+      const { onRequest: piece } = await import('../functions/api/keeper/piece.js');
+      const response = await piece({
+        request: new Request(`https://adrianrasmussen.com/api/keeper/piece?publicCode=${row.public_code}`),
+        env: { DB },
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { ok: true, kept: false, byYou: false });
+      assert.ok(seen.some((entry) => entry.params[0] === row.public_code));
+      assert.equal(seen.some((entry) => entry.params.includes(row.piece_id)), false);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
+    }
+  });
+
+  it('updates only the steward row resolved from publicCode', async () => {
+    const wasOn = LAUNCH_FLAGS.livingLegacy;
+    LAUNCH_FLAGS.livingLegacy = true;
+    CURRENT_AUTH = { userId: 'user-first', email: 'first@example.com', emailVerified: true };
+    const row = {
+      id: 'kp-public-location', piece_id: 'MD-905', edition_number: 1,
+      public_code: 'AR-7KQ9M2WX', keeper_user_id: 'user-first',
+      current_display_location: null, released_at: null,
+    };
+    const seen: Array<{ sql: string; params: unknown[] }> = [];
+    const DB = {
+      prepare(sql: string) {
+        let params: unknown[] = [];
+        const normalized = sql.replace(/\s+/g, ' ').trim();
+        const statement = {
+          bind(...values: unknown[]) { params = values; return statement; },
+          async first() {
+            seen.push({ sql: normalized, params });
+            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            }
+            if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
+            throw new Error(`unexpected location first: ${normalized}`);
+          },
+          async run() {
+            seen.push({ sql: normalized, params });
+            if (!/^UPDATE keeper_pieces SET current_display_location = \?1 WHERE id = \?2/i.test(normalized)) {
+              throw new Error(`unexpected location run: ${normalized}`);
+            }
+            if (params[1] !== row.id || params[2] !== 'user-first') {
+              return { success: true, meta: { changes: 0 } };
+            }
+            row.current_display_location = params[0] as string | null;
+            return { success: true, meta: { changes: 1 } };
+          },
+        };
+        return statement;
+      },
+    };
+
+    try {
+      const { onRequest: piece } = await import('../functions/api/keeper/piece.js');
+      const response = await piece({
+        request: new Request('https://adrianrasmussen.com/api/keeper/piece', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            publicCode: row.public_code,
+            currentDisplayLocation: '  Ubud studio  ',
+            pieceId: 'UL-999',
+            editionNumber: 0,
+          }),
+        }),
+        env: { DB },
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { ok: true, currentDisplayLocation: 'Ubud studio' });
+      assert.equal(row.current_display_location, 'Ubud studio');
+      assert.equal(seen.some((entry) => entry.params.includes('UL-999')), false);
+    } finally {
+      CURRENT_AUTH = null;
+      LAUNCH_FLAGS.livingLegacy = wasOn;
     }
   });
 });

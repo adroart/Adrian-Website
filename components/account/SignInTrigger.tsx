@@ -8,12 +8,19 @@ import SignInModal from './SignInModal';
 const SignInTrigger: React.FC<{
   children: React.ReactElement;
   onSignedIn?: () => void;
-}> = ({ children, onSignedIn }) => {
+  destination?: string;
+}> = ({ children, onSignedIn, destination }) => {
   const [open, setOpen] = useState(false);
   return (
     <>
       {React.cloneElement(children, { onClick: () => setOpen(true) })}
-      {open && <SignInModal onClose={() => setOpen(false)} onSignedIn={onSignedIn} />}
+      {open && (
+        <SignInModal
+          onClose={() => setOpen(false)}
+          onSignedIn={onSignedIn}
+          destination={destination}
+        />
+      )}
     </>
   );
 };

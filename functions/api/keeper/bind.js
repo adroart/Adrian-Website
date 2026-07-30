@@ -1,7 +1,7 @@
 /**
  * POST /api/keeper/bind
  *
- * Body: { ownershipCode: string, pieceId: string, editionNumber?: number }
+ * Body: { publicCode: string, ownershipCode: string, note?: string }
  *
  * Binds the signed-in user as the steward of a physical piece. The proof of
  * ownership is the permanent Ownership Code printed on the underside
@@ -65,6 +65,7 @@
 
 import { requireUser } from '../_lib/auth.js';
 import { getUserByClerkId } from '../_lib/db.js';
+import { isPublicRegistryCode } from '../../../utils/publicRegistry.ts';
 import {
   legacyEnabled,
   notFound,
@@ -107,21 +108,28 @@ export async function onRequest(context) {
     return json({ ok: false, error: 'invalid_json' }, 400);
   }
 
-  // Whitelist discipline: the server decides what reaches D1.
-  // ownershipCode is canonical; recoveryCode remains an input alias for older
-  // clients during the terminology migration.
+  // Whitelist discipline: publicCode selects one permanent plate identity.
+  // Artwork id and edition are always derived from that row, never from the
+  // browser. Reject old/forged identity fields so callers cannot mistake them
+  // for authoritative inputs.
+  if (
+    Object.prototype.hasOwnProperty.call(body ?? {}, 'pieceId')
+    || Object.prototype.hasOwnProperty.call(body ?? {}, 'editionNumber')
+    || Object.prototype.hasOwnProperty.call(body ?? {}, 'recoveryCode')
+  ) {
+    return json({ ok: false, error: 'identity_fields_forbidden' }, 400);
+  }
+  const publicCode = typeof body?.publicCode === 'string' ? body.publicCode.trim() : '';
   const ownershipCode = typeof body?.ownershipCode === 'string'
     ? body.ownershipCode
-    : (typeof body?.recoveryCode === 'string' ? body.recoveryCode : '');
-  const pieceId = typeof body?.pieceId === 'string' ? body.pieceId.trim() : '';
-  const editionNumber = Number.isInteger(body?.editionNumber) ? body.editionNumber : 0;
+    : '';
   // Optional evidence note, used ONLY on the contested-claim path ("bought at
   // the Vienna auction, lot 12"). Mutable-store only; never hashed, never
   // required, capped to mandalacodes' CLAIM_REQUEST_NOTE_MAX (500).
   const note =
     typeof body?.note === 'string' && body.note.trim() ? body.note.trim().slice(0, 500) : undefined;
-  if (!ownershipCode || !pieceId) {
-    return json({ ok: false, error: 'ownershipCode and pieceId are required' }, 400);
+  if (!isPublicRegistryCode(publicCode) || !ownershipCode) {
+    return json({ ok: false, error: 'publicCode and ownershipCode are required' }, 400);
   }
 
   // Resolve the internal user row (keeper_user_id is the opaque Better Auth id).
@@ -135,18 +143,19 @@ export async function onRequest(context) {
   const nowIso = new Date().toISOString();
 
   try {
-    // Fetch THE row for this piece/edition. UNIQUE(piece_id, edition_number)
-    // guarantees at most one, so we do not filter on released_at here: we want
+    // Fetch THE row for this permanent public identity. public_code is unique,
+    // so we do not filter on released_at here: we want
     // to see released rows too: claimed_at is the permanent signal that the
     // piece remains in the governed claim path.
     const existing = await env.DB
       .prepare(
-        `SELECT id, keeper_user_id, recovery_code_hash, claimed_at, released_at,
-                public_code, plate_status, backup_status
+        `SELECT id, piece_id, edition_number, keeper_user_id,
+                recovery_code_hash, claimed_at, released_at, public_code,
+                plate_status, backup_status
            FROM keeper_pieces
-          WHERE piece_id = ?1 AND edition_number = ?2`,
+          WHERE public_code = ?1`,
       )
-      .bind(pieceId, editionNumber)
+      .bind(publicCode)
       .first();
 
     // ── Case 1: no row at all ────────────────────────────────────────────────
@@ -166,6 +175,18 @@ export async function onRequest(context) {
         404,
       );
     }
+
+    if (
+      existing.public_code !== publicCode
+      || typeof existing.piece_id !== 'string'
+      || !existing.piece_id
+      || !Number.isSafeInteger(existing.edition_number)
+      || existing.edition_number < 0
+    ) {
+      return json({ ok: false, error: 'identity_integrity_error' }, 409);
+    }
+    const pieceId = existing.piece_id;
+    const editionNumber = existing.edition_number;
 
     // Possession of the exact permanent Ownership Code is required before any
     // direct bind or governed claim. A guessed code cannot notify a steward or
@@ -256,6 +277,12 @@ export async function onRequest(context) {
       // word: 'opened' on a fresh request, or a friendly no-op reason
       // ('duplicate' when this requester already has an open request for the
       // piece, 'rate_limited', 'self'). All are honest, non-binding outcomes.
+      const responseWindow = typeof bridge.request?.window === 'string'
+        && bridge.request.window.trim()
+        ? bridge.request.window.trim().slice(0, 80)
+        : Number.isSafeInteger(bridge.request?.windowDays)
+          ? `${bridge.request.windowDays} days`
+          : undefined;
       return json(
         {
           ok: true,
@@ -266,17 +293,16 @@ export async function onRequest(context) {
             pieceId,
             editionNumber,
             outcome: bridge.status ?? 'opened',
+            ...(responseWindow ? { window: responseWindow } : {}),
           },
         },
         202,
       );
     }
 
-    // New permanent identities are not bearer-bindable while fabrication or
-    // online backup verification is incomplete. Pre-registry rows have no
-    // public_code and retain their established direct first-bind behavior.
+    // Permanent identities are not bearer-bindable while fabrication or
+    // online backup verification is incomplete.
     if (
-      existing.public_code &&
       (existing.plate_status !== 'active' || existing.backup_status !== 'verified')
     ) {
       return json(

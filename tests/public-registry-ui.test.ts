@@ -84,4 +84,71 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(keeperPanel, /publicIdentity:\s*PublicPlateIdentity/);
     assert.doesNotMatch(keeperPanel, /React\.FC<\{ artwork: Artwork; editionNumber\?: number \}>/);
   });
+
+  it('uses publicCode for status, bind, and location across exact identity kinds', async () => {
+    const panel = await import('../components/legacy/KeeperPanel.tsx');
+    const source = readSource('components/legacy/KeeperPanel.tsx');
+    const identities = [
+      {
+        artworkId: 'UL-100', title: 'Unique work', series: null,
+        edition: { kind: 'unique', number: null, size: null, label: 'Unique work' },
+        publicCode: 'AR-7KQ9M2WX', artistName: 'Adrian Rasmussen',
+        plateStatus: 'active', publicProvenance: [],
+      },
+      {
+        artworkId: 'MD-905', title: 'Registry draft', series: 'Studio Works',
+        edition: { kind: 'numbered', number: 1, size: 3, label: 'Edition 1 of 3' },
+        publicCode: 'AR-ABCDEFGH', artistName: 'Adrian Rasmussen',
+        plateStatus: 'active', publicProvenance: [],
+      },
+    ] as const;
+
+    assert.equal(typeof panel.stewardClaimDestination, 'function');
+    assert.equal(
+      panel.stewardClaimDestination(identities[0]),
+      '/works/UL-100?instance=AR-7KQ9M2WX&ref=qr&claim=1',
+    );
+    assert.equal(
+      panel.stewardClaimDestination(identities[1]),
+      '/works/MD-905?instance=AR-ABCDEFGH&ref=qr&claim=1',
+    );
+    assert.match(source, /keeper\/piece\?\$\{params\.toString\(\)\}/);
+    assert.match(source, /URLSearchParams\(\{ publicCode \}\)/);
+    assert.match(source, /JSON\.stringify\(\{ publicCode, ownershipCode:/);
+    assert.match(source, /JSON\.stringify\(\{[\s\S]*?publicCode,[\s\S]*?currentDisplayLocation/);
+    assert.doesNotMatch(source, /editionNumber:\s*editionNumber/);
+    assert.doesNotMatch(source, /pieceId:\s*pieceId/);
+  });
+
+  it('keeps contested 202 outcomes pending and exposes an accessible request form', async () => {
+    const panel = await import('../components/legacy/KeeperPanel.tsx');
+    const source = readSource('components/legacy/KeeperPanel.tsx');
+
+    assert.deepEqual(panel.classifyStewardBindResult(200, { ok: true }), { kind: 'bound' });
+    assert.deepEqual(
+      panel.classifyStewardBindResult(202, {
+        ok: true,
+        status: 'claim_requested',
+        message: 'The current steward has 30 days to respond.',
+        claim: { window: '30 days' },
+      }),
+      {
+        kind: 'pending',
+        message: 'The current steward has 30 days to respond.',
+        window: '30 days',
+      },
+    );
+    assert.match(source, /Request stewardship/);
+    assert.match(source, /<label[^>]*htmlFor=/);
+    assert.match(source, /<textarea/);
+    assert.match(source, /aria-describedby=/);
+    assert.match(source, /aria-live=['"]polite['"]/);
+    assert.match(source, /role=['"]status['"]/);
+  });
+
+  it('makes the unrevealed arrival content inert as well as aria-hidden', () => {
+    const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
+    assert.match(arrivalGate, /!opened[\s\S]*?inert:\s*['"]['"]/);
+    assert.match(arrivalGate, /aria-hidden=\{!opened\}/);
+  });
 });
