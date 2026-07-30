@@ -56,3 +56,67 @@ test('mobile admin menu fits the viewport and closes after navigation', async ({
   await expect(page.getByRole('button', { name: 'Menu' })).toHaveAttribute('aria-expanded', 'false');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
+
+test('opens Maintenance from Artwork and renders the private five-section detail accessibly', async ({ page }) => {
+  await page.goto('/admin');
+  if ((page.viewportSize()?.width || 0) < 768) {
+    await page.getByRole('button', { name: 'Menu' }).click();
+  }
+  const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
+  await expect(navigation.getByText('Artwork', { exact: true })).toBeVisible();
+  await navigation.getByRole('link', { name: 'Maintenance' }).click();
+  await expect(page).toHaveURL(/\/admin\/maintenance$/);
+  await expect(page.getByRole('heading', { name: 'Maintenance', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+
+  for (const title of [
+    'Current public truth',
+    'Physical plate',
+    'Private acquisition',
+    'Current steward',
+    'Maintenance history',
+  ]) {
+    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact || ''))).toEqual([]);
+
+  await page.getByLabel('Title').fill('No artwork has this title');
+  await page.getByRole('button', { name: 'Search Maintenance' }).click();
+  await expect(page.getByRole('heading', { name: 'No matching artworks' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current public truth' })).toBeHidden();
+});
+
+test('reviews, unlocks, creates, and corrects a private acquisition', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
+
+  await page.goto('/admin/maintenance');
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await page.getByRole('button', { name: 'Record acquisition', exact: true }).click();
+  await page.getByLabel('Amount paid').fill('125000');
+  await page.getByLabel('Currency', { exact: true }).fill('IDR');
+  await page.getByLabel('Private notes').fill('Private browser-flow check.');
+  await page.getByRole('button', { name: 'Review acquisition' }).click();
+  await expect(page.getByRole('heading', { name: 'Before' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'After' })).toBeVisible();
+  await page.getByLabel('Reason for this change').fill('Record the verified acquisition.');
+
+  const secret = page.getByLabel('Registry secret');
+  if (await secret.isVisible().catch(() => false)) {
+    await secret.fill('local-development-secret');
+    await page.getByRole('button', { name: 'Unlock registry' }).click();
+  }
+  await expect(page.getByText('Private registry unlocked for saving.')).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+  await expect(page.locator('.admin-alert').getByText('Acquisition recorded.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Correct record' }).last().click();
+  await page.getByLabel('Amount paid').fill('130000');
+  await page.getByRole('button', { name: 'Review acquisition' }).click();
+  await expect(page.getByText('125,000 smallest units · IDR', { exact: true })).toBeVisible();
+  await expect(page.getByText('130,000 smallest units · IDR', { exact: true })).toBeVisible();
+  await page.getByLabel('Reason for this change').fill('Correct the verified amount.');
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+  await expect(page.locator('.admin-alert').getByText('Acquisition correction saved.')).toBeVisible();
+});

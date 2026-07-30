@@ -132,6 +132,53 @@ function mockApiPlugin(): Plugin {
   ];
   const invoices: any[] = [];
   let registryUnlocked = false;
+  let maintenanceAcquisitionId = 1;
+  const maintenancePiece: any = {
+    id: 'kp-local-maintenance',
+    public: {
+      artworkId: 'UL-100',
+      title: 'Art of Living - 32',
+      series: 'Universal Language',
+      editionNumber: 0,
+      editionSize: null,
+      publicCode: 'AR-7KQ9M2WX',
+      plateStatus: 'active',
+    },
+    physical: {
+      registeredAt: '2026-07-20T00:00:00.000Z',
+      plateGeneratedAt: '2026-07-20T00:00:00.000Z',
+      plateActivatedAt: '2026-07-21T00:00:00.000Z',
+      recordVersion: 1,
+      recovery: {
+        verifierPresent: true,
+        envelopePresent: true,
+        backupStatus: 'verified',
+        backupAt: '2026-07-21T00:00:00.000Z',
+      },
+    },
+    steward: {
+      userId: 'local-keeper',
+      email: 'keeper@example.test',
+      active: true,
+      currentDisplayLocation: 'Ubud studio',
+      claimedAt: '2026-07-22T00:00:00.000Z',
+      releasedAt: null,
+      stewardVersion: 1,
+    },
+    acquisitions: [],
+    maintenanceHistory: [],
+  };
+
+  function maintenanceSummary() {
+    return {
+      id: maintenancePiece.id,
+      artworkId: maintenancePiece.public.artworkId,
+      title: maintenancePiece.public.title,
+      editionNumber: maintenancePiece.public.editionNumber,
+      publicCode: maintenancePiece.public.publicCode,
+      plateStatus: maintenancePiece.public.plateStatus,
+    };
+  }
 
   function devAdminStatus(req: any): 'authorized' | 'guest' | 'forbidden' {
     const header = req.headers['x-dev-admin-status'];
@@ -231,6 +278,103 @@ function mockApiPlugin(): Plugin {
           ok: true,
           attention: { plates: 0, draftViewings: 0, openInvoices: 0 },
         });
+      });
+
+      server.middlewares.use('/api/admin/maintenance', async (req, res, next) => {
+        const status = devAdminStatus(req);
+        if (status === 'guest') return send(res, 401, { ok: false, error: 'unauthorized' });
+        if (status === 'forbidden') return send(res, 403, { ok: false, error: 'forbidden' });
+        const url = new URL(req.url || '/', 'http://local.dev');
+
+        if (req.method === 'GET' && url.pathname === '/') {
+          const allowedSearch = new Set(['publicCode', 'artworkId', 'title', 'editionNumber']);
+          if ([...url.searchParams.keys()].some(key => !allowedSearch.has(key))) {
+            return send(res, 400, { ok: false, error: 'unknown_filter' });
+          }
+          const summary = maintenanceSummary();
+          const matches = (
+            (!url.searchParams.get('publicCode') || summary.publicCode.toLowerCase() === url.searchParams.get('publicCode')!.toLowerCase())
+            && (!url.searchParams.get('artworkId') || summary.artworkId.toLowerCase() === url.searchParams.get('artworkId')!.toLowerCase())
+            && (!url.searchParams.get('title') || summary.title.toLowerCase().includes(url.searchParams.get('title')!.toLowerCase()))
+            && (!url.searchParams.has('editionNumber') || summary.editionNumber === Number(url.searchParams.get('editionNumber')))
+          );
+          return send(res, 200, { ok: true, pieces: matches ? [summary] : [] });
+        }
+
+        const detailMatch = url.pathname.match(/^\/([^/]+)$/);
+        if (req.method === 'GET' && detailMatch) {
+          return detailMatch[1] === maintenancePiece.id
+            ? send(res, 200, { ok: true, piece: maintenancePiece })
+            : send(res, 404, { ok: false, error: 'not_found' });
+        }
+
+        const createMatch = url.pathname.match(/^\/([^/]+)\/acquisitions$/);
+        if (req.method === 'POST' && createMatch) {
+          if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
+          if (createMatch[1] !== maintenancePiece.id) return send(res, 404, { ok: false, error: 'not_found' });
+          const body = await readBody(req);
+          const createdAt = nowIso();
+          const acquisition = {
+            acquisitionId: `acq-local-${maintenanceAcquisitionId}`,
+            keeperPieceId: maintenancePiece.id,
+            ...(body.acquisition || {}),
+            recordVersion: 1,
+            createdAt,
+            updatedAt: createdAt,
+          };
+          maintenanceAcquisitionId += 1;
+          maintenancePiece.acquisitions.push(acquisition);
+          maintenancePiece.maintenanceHistory.push({
+            id: `rme-local-${maintenancePiece.maintenanceHistory.length + 1}`,
+            idempotencyKey: body.idempotencyKey,
+            eventType: 'acquisition_created',
+            administrator: { userId: 'local-dev-admin', email: 'local-admin@example.test' },
+            reason: body.reason,
+            before: null,
+            after: acquisition,
+            outcome: 'succeeded',
+            relatedRecordId: acquisition.acquisitionId,
+            createdAt,
+          });
+          return send(res, 201, { ok: true, replayed: false, acquisition });
+        }
+
+        const correctionMatch = url.pathname.match(/^\/([^/]+)\/acquisitions\/([^/]+)$/);
+        if (req.method === 'PUT' && correctionMatch) {
+          if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
+          const acquisitionIndex = maintenancePiece.acquisitions.findIndex(
+            (item: any) => item.acquisitionId === correctionMatch[2] && item.keeperPieceId === correctionMatch[1],
+          );
+          if (acquisitionIndex < 0) return send(res, 404, { ok: false, error: 'not_found' });
+          const body = await readBody(req);
+          const before = maintenancePiece.acquisitions[acquisitionIndex];
+          if (before.recordVersion !== body.expectedVersion) {
+            return send(res, 409, { ok: false, error: 'version_conflict' });
+          }
+          const updatedAt = nowIso();
+          const acquisition = {
+            ...before,
+            ...(body.acquisition || {}),
+            recordVersion: before.recordVersion + 1,
+            updatedAt,
+          };
+          maintenancePiece.acquisitions[acquisitionIndex] = acquisition;
+          maintenancePiece.maintenanceHistory.push({
+            id: `rme-local-${maintenancePiece.maintenanceHistory.length + 1}`,
+            idempotencyKey: body.idempotencyKey,
+            eventType: 'acquisition_corrected',
+            administrator: { userId: 'local-dev-admin', email: 'local-admin@example.test' },
+            reason: body.reason,
+            before,
+            after: acquisition,
+            outcome: 'succeeded',
+            relatedRecordId: acquisition.acquisitionId,
+            createdAt: updatedAt,
+          });
+          return send(res, 200, { ok: true, replayed: false, acquisition });
+        }
+
+        return next();
       });
 
       server.middlewares.use('/api/admin/pieces', (req, res, next) => {

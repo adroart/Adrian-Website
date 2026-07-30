@@ -38,6 +38,7 @@ const QUICK_ACTIONS = [
 
 const ALL_TOOLS = [
   { label: 'Registry and plates', href: '/admin/pieces' },
+  { label: 'Maintenance', href: '/admin/maintenance' },
   { label: 'Private viewings', href: '/admin/viewings' },
   { label: 'Artwork stories', href: '/admin/book' },
   { label: 'Stories', href: '/keystatic' },

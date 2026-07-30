@@ -11,7 +11,7 @@ describe('admin studio shell', () => {
       ADMIN_NAVIGATION.map(group => [group.label, group.items.map(item => item.label)]),
       [
         ['Home', ['Studio overview']],
-        ['Artwork', ['Guided plate wizard', 'Registry and plates', 'Private viewings', 'Artwork stories']],
+        ['Artwork', ['Guided plate wizard', 'Registry and plates', 'Maintenance', 'Private viewings', 'Artwork stories']],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
         ['Sales', ['Pricing', 'Invoices']],
       ],
@@ -25,7 +25,7 @@ describe('admin studio shell', () => {
     for (const file of [
       'AdminDashboard.tsx', 'AdminFileUpload.tsx', 'AdminPoetry.tsx',
       'AdminBookEditor.tsx', 'AdminInvoices.tsx', 'AdminViewings.tsx',
-      'AdminPieces.tsx', 'PricingCalculator.tsx',
+      'AdminPieces.tsx', 'AdminMaintenance.tsx', 'PricingCalculator.tsx',
     ]) {
       assert.doesNotMatch(source(`components/${file}`), /<AdminLayout>/);
     }
@@ -39,7 +39,7 @@ describe('admin studio shell', () => {
     for (const file of [
       'AdminDashboard.tsx', 'AdminFileUpload.tsx', 'AdminPoetry.tsx',
       'AdminBookEditor.tsx', 'AdminInvoices.tsx', 'AdminViewings.tsx',
-      'AdminPieces.tsx', 'PricingCalculator.tsx',
+      'AdminPieces.tsx', 'AdminMaintenance.tsx', 'PricingCalculator.tsx',
     ]) {
       assert.match(source(`components/${file}`), /<AdminPage/);
     }
