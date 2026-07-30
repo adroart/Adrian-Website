@@ -58,7 +58,12 @@ function database() {
     async first() { return null; },
     async run() { return { success: true }; },
   };
-  return { prepare: () => statement };
+  return {
+    prepare: () => statement,
+    async batch(statements: Array<typeof statement>) {
+      return Promise.all(statements.map((entry) => entry.all()));
+    },
+  };
 }
 
 function bucket() {
@@ -287,6 +292,71 @@ describe('registry maintenance mutation security matrix', () => {
       assert.notEqual((await unlocked.clone().json()).error, 'registry_locked');
     });
   }
+});
+
+describe('private registry recovery export security', () => {
+  it('requires the administrator step-up and returns only a private encrypted attachment', async () => {
+    const environment = {
+      ...env(),
+      REGISTRY_STEP_UP_SECRET: 'registry-step-up-secret',
+      REGISTRY_RECOVERY_EXPORT_KEY: Buffer.alloc(32, 91).toString('base64'),
+      REGISTRY_RECOVERY_EXPORT_KEY_ID: 'registry-recovery-key-v1',
+    };
+    const { onRequest } = await import('../functions/api/admin/registry-recovery-export.js');
+    const invokeExport = (cookie?: string) => onRequest({
+      request: request('/api/admin/registry-recovery-export', 'GET', ORIGIN, undefined, cookie),
+      env: environment,
+    });
+
+    assert.equal((await invokeExport()).status, 401);
+    signIn();
+    const locked = await invokeExport();
+    assert.equal(locked.status, 403);
+    assert.deepEqual(await locked.json(), { ok: false, error: 'registry_locked' });
+
+    const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+    const token = await createRegistryUnlockToken(environment, {
+      userId: 'user-1', email: 'artist@example.com', session: { id: 'session-1' },
+    });
+    const response = await invokeExport(
+      `better-auth.session_token=test-session; registry_unlock=${token}`,
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.equal(
+      response.headers.get('Content-Type'),
+      'application/vnd.adrian.registry-recovery+json; charset=utf-8',
+    );
+    assert.match(
+      response.headers.get('Content-Disposition') || '',
+      /^attachment; filename="registry-private-recovery-[0-9TZ.-]+\.json"$/,
+    );
+    const archive = await response.json() as any;
+    assert.equal(archive.kind, 'registry-private-recovery-encrypted');
+    assert.equal(typeof archive.ciphertext, 'string');
+  });
+
+  it('fails closed when the separate archive encryption key is not configured', async () => {
+    const environment = { ...env(), REGISTRY_STEP_UP_SECRET: 'registry-step-up-secret' };
+    signIn();
+    const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+    const token = await createRegistryUnlockToken(environment, {
+      userId: 'user-1', email: 'artist@example.com', session: { id: 'session-1' },
+    });
+    const { onRequest } = await import('../functions/api/admin/registry-recovery-export.js');
+    const response = await onRequest({
+      request: request(
+        '/api/admin/registry-recovery-export', 'GET', ORIGIN, undefined,
+        `better-auth.session_token=test-session; registry_unlock=${token}`,
+      ),
+      env: environment,
+    });
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(await response.json(), {
+      ok: false, error: 'registry_recovery_export_not_configured',
+    });
+  });
 });
 
 describe('private studio overview', () => {

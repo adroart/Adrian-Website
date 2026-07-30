@@ -1,11 +1,10 @@
 /**
  * /api/admin/registry-ledger
  *
- *   GET  — download the offline MASTER ledger: a deterministic, hash-chained
- *          JSONL file that is the canonical record of every issued plate
- *          identity and its append-only lineage. The online D1 database is a
- *          mirror that can be rebuilt from this file
- *          (utils/registryLedger.buildRebuildSql).
+ *   GET  — download the secret-free issuance ledger: a deterministic,
+ *          hash-chained JSONL record of every issued plate identity and its
+ *          append-only public lineage. Full recovery uses the separate private
+ *          encrypted recovery export; this file cannot rebuild the registry.
  *
  *   POST — sync that same ledger to Adrian's Google Drive, so the master copy is
  *          captured automatically with no manual download. Fails closed (503)

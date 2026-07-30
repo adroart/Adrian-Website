@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
   REGISTRY_LEDGER_SCHEMA_VERSION,
-  buildRebuildSql,
   computeLedgerLines,
   diffLedgerRecords,
   ledgerRecordKey,
@@ -263,21 +262,19 @@ describe('complete registry ledger file verification', () => {
     assert.equal(result.badIndex, 0);
   });
 
-  it('makes verify, diff, and SQL restore refuse an incomplete file', async () => {
+  it('makes verify and diff refuse an incomplete file, with public-ledger SQL restore retired', async () => {
     const lines = await computeLedgerLines([plate(), event()]);
     const valid = serializeLedgerJsonl(headerFor(lines), lines);
     const truncated = valid.split('\n').slice(0, -2).join('\n');
     const directory = mkdtempSync(join(tmpdir(), 'registry-ledger-'));
     const validPath = join(directory, 'valid.jsonl');
     const truncatedPath = join(directory, 'truncated.jsonl');
-    const sqlPath = join(directory, 'restore.sql');
     writeFileSync(validPath, valid);
     writeFileSync(truncatedPath, truncated);
     try {
       const commands = [
         ['verify', truncatedPath],
         ['diff', validPath, truncatedPath],
-        ['to-sql', truncatedPath, sqlPath],
       ];
       for (const args of commands) {
         const result = spawnSync('npx', ['tsx', 'scripts/registry-ledger.ts', ...args], {
@@ -287,28 +284,22 @@ describe('complete registry ledger file verification', () => {
         assert.notEqual(result.status, 0, `${args[0]} unexpectedly accepted an incomplete ledger`);
         assert.match(result.stderr, /record_count/);
       }
+      const retired = spawnSync('npx', [
+        'tsx', 'scripts/registry-ledger.ts', 'to-sql', validPath,
+      ], { cwd: process.cwd(), encoding: 'utf8' });
+      assert.notEqual(retired.status, 0);
+      assert.match(retired.stderr, /restore-sql <private-recovery>/);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
   });
 });
 
-describe('registry ledger rebuild SQL', () => {
-  it('rebuilds keeper_pieces and lineage rows without any plaintext', () => {
-    const sql = buildRebuildSql([plate(), event()]);
-    assert.match(sql, /INSERT OR IGNORE INTO keeper_pieces/);
-    assert.match(sql, /INSERT OR IGNORE INTO artwork_lineage_events/);
-    // The recovery-code HASH and encrypted envelope are restored, not a code.
-    assert.match(sql, new RegExp("'" + 'a'.repeat(64) + "'"));
-    assert.match(sql, /'Y2lwaGVy'/);
-    // The lineage event id is derived from the event hash, matching live mint.
-    assert.match(sql, new RegExp("'le-" + 'e'.repeat(64) + "'"));
-    // Idempotent so a partial database re-applies safely.
-    assert.doesNotMatch(sql, /INSERT INTO/);
-  });
-
-  it('escapes single quotes so a crafted value cannot break out', () => {
-    const sql = buildRebuildSql([plate({ backupReference: "plates/a'b.json" })]);
-    assert.match(sql, /'plates\/a''b\.json'/);
+describe('registry ledger recovery boundary', () => {
+  it('does not retain a permissive partial-database SQL generator', () => {
+    const source = readFileSync(
+      new URL('../utils/registryLedger.ts', import.meta.url), 'utf8',
+    );
+    assert.doesNotMatch(source, /buildRebuildSql|INSERT\s+OR\s+IGNORE/i);
   });
 });

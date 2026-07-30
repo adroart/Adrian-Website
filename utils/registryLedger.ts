@@ -1,20 +1,18 @@
 /**
- * Registry ledger — the offline master record of every artwork plate identity
- * Adrian has issued, and the append-only lineage of what happened to it.
+ * Registry ledger — the secret-free offline record of every artwork plate
+ * identity Adrian has issued and the append-only public lineage around it.
  *
- * GOVERNANCE (decision: offline ledger is MASTER, online D1 is a MIRROR):
- *   The canonical record of the registry is a file Adrian holds offline. The
- *   online D1 database is a convenience mirror that serves live QR lookups and
- *   can be rebuilt from this ledger at any time. Nothing about this file, or the
- *   registry, is stored with Anthropic or depends on Claude at runtime — the
- *   ledger is produced by code running in Adrian's own Cloudflare account and
- *   saved to storage Adrian controls.
+ * GOVERNANCE:
+ *   This ledger is safe to hold offline or sync to Drive, but is deliberately
+ *   incomplete and is never a full-registry restore source. Complete recovery
+ *   uses the separately encrypted private artifact documented in
+ *   docs/registry-private-recovery.md. Nothing depends on an AI service at
+ *   runtime; both artifacts are produced by code in Adrian's Cloudflare account.
  *
  * WHAT IS IN THE LEDGER:
  *   - `plate` records: one per issued plate identity (public code, artwork,
  *     edition, plate status, the recovery-code HASH, the fabrication-file
- *     hashes, and the AES-GCM encrypted Ownership Code envelope). Enough to
- *     rebuild the online `keeper_pieces` registry rows with NO plaintext.
+ *     hashes, and the AES-GCM encrypted Ownership Code envelope).
  *   - `event` records: the append-only, hash-chained lineage events
  *     (issued / activated / fulfillment / first_bound …), copied verbatim from
  *     the online append-only log.
@@ -23,8 +21,8 @@
  *   - No plaintext Ownership Code. Ever. The plaintext lives only on the
  *     physical art and in the separately escrowed key + your private manifests.
  *   - No steward identity, email, IP, or display location. Those are personal,
- *     governed data; they live in the private encrypted D1 export described in
- *     docs/lineage-plate-runbook.md, not in this issuance ledger.
+ *     governed data; they live only in the encrypted private recovery artifact,
+ *     not in this issuance ledger.
  *
  * TAMPER EVIDENCE:
  *   The file is a hash chain. Each line commits to the SHA-256 of the previous
@@ -446,78 +444,4 @@ export function diffLedgerRecords(held: LedgerRecord[], other: LedgerRecord[]): 
   }
   for (const key of heldMap.keys()) if (!otherMap.has(key)) removed.push(key);
   return { added: added.sort(), removed: removed.sort(), changed: changed.sort() };
-}
-
-function sqlText(value: string | null): string {
-  if (value === null) return 'NULL';
-  return `'${value.replace(/'/g, "''")}'`;
-}
-
-function sqlInt(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return 'NULL';
-  return String(Math.trunc(value));
-}
-
-/**
- * Emit idempotent SQL that rebuilds the online registry rows from the ledger —
- * the concrete "online is a mirror rebuilt from the master file" path. Uses
- * INSERT OR IGNORE so re-running against a partially present database is safe.
- * No plaintext is involved: keeper_pieces is restored from the recovery-code
- * hash and the encrypted envelope, exactly as the live mint route stored them.
- */
-export function buildRebuildSql(records: LedgerRecord[]): string {
-  const ordered = orderLedgerRecords(records);
-  const statements: string[] = [
-    '-- Rebuild online registry from the offline master ledger.',
-    '-- Apply with: npx wrangler d1 execute adrian-website --remote --file <this>.sql',
-  ];
-  for (const record of ordered) {
-    if (record.kind === 'plate') {
-      statements.push(
-        'INSERT OR IGNORE INTO keeper_pieces ' +
-          '(id, piece_id, edition_number, recovery_code_hash, public_code, plate_status, ' +
-          'plate_generated_at, plate_activated_at, front_svg_sha256, back_svg_sha256, ' +
-          'ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version, ' +
-          'backup_status, backup_reference, registered_at, lineage_head_hash, lineage_event_count) VALUES (' +
-          [
-            sqlText(record.id),
-            sqlText(record.pieceId),
-            sqlInt(record.editionNumber),
-            sqlText(record.recoveryCodeHash),
-            sqlText(record.publicCode),
-            sqlText(record.plateStatus),
-            sqlText(record.plateGeneratedAt),
-            sqlText(record.plateActivatedAt),
-            sqlText(record.frontSha256),
-            sqlText(record.undersideSha256),
-            sqlText(record.envelope ? record.envelope.ciphertext : null),
-            sqlText(record.envelope ? record.envelope.nonce : null),
-            sqlText(record.envelope ? record.envelope.keyVersion : null),
-            sqlText(record.backupStatus),
-            sqlText(record.backupReference),
-            sqlText(record.registeredAt),
-            sqlText(record.lineageHeadHash),
-            sqlInt(record.lineageEventCount),
-          ].join(', ') +
-          ');',
-      );
-    } else {
-      statements.push(
-        'INSERT OR IGNORE INTO artwork_lineage_events ' +
-          '(id, keeper_piece_id, sequence, event_type, event_at, previous_hash, event_hash, public_payload_json) VALUES (' +
-          [
-            sqlText(`le-${record.eventHash}`),
-            sqlText(record.keeperPieceId),
-            sqlInt(record.sequence),
-            sqlText(record.eventType),
-            sqlText(record.eventAt),
-            sqlText(record.previousHash),
-            sqlText(record.eventHash),
-            sqlText(canonical(record.publicPayload)),
-          ].join(', ') +
-          ');',
-      );
-    }
-  }
-  return statements.join('\n') + '\n';
 }

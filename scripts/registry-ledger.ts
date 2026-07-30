@@ -15,26 +15,27 @@
  *       means the online mirror drifted from the master (something changed
  *       out of band). Silence means they match exactly.
  *
- *   to-sql <ledger.jsonl> [out.sql]
- *       Emit idempotent SQL that rebuilds the online keeper_pieces and
- *       artwork_lineage_events rows from the master file. This is the concrete
- *       "online is a mirror, rebuilt from the master" path. No plaintext is
- *       involved; rows are restored from the recovery-code hash and encrypted
- *       envelope, exactly as the live mint stored them.
+ *   restore-sql <private-recovery.json> <key-file> <new-out.sql>
+ *       Authenticate and decrypt the complete private recovery artifact, then
+ *       emit conflict-failing SQL for a NEW, fully migrated recovery database.
+ *       The tool never selects or connects to a database.
  *
  * Usage:
  *   npx tsx scripts/registry-ledger.ts verify  ./registry-ledger.jsonl
  *   npx tsx scripts/registry-ledger.ts diff     ./held.jsonl ./fresh.jsonl
- *   npx tsx scripts/registry-ledger.ts to-sql   ./registry-ledger.jsonl ./rebuild.sql
+ *   npx tsx scripts/registry-ledger.ts restore-sql ./registry-private-recovery.json ./registry-recovery.key ./restore.sql
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import {
-  buildRebuildSql,
   diffLedgerRecords,
   parseLedgerJsonl,
   verifyLedgerFile,
   type LedgerFileParseResult,
 } from '../utils/registryLedger';
+import {
+  buildRegistryRestoreSql,
+  decryptPrivateRecoveryExport,
+} from '../utils/registryRecoveryArchive';
 
 function fail(message: string): never {
   process.stderr.write(`${message}\n`);
@@ -91,17 +92,57 @@ async function cmdDiff(heldPath: string, freshPath: string): Promise<void> {
   process.exitCode = 2;
 }
 
-async function cmdToSql(path: string, outPath?: string): Promise<void> {
-  const ledger = load(path);
-  const { lines } = ledger;
-  const check = await verifyLedgerFile(ledger);
-  if (!check.ok) fail(`Refusing to build SQL from a broken ledger (line ${check.badIndex}, ${check.reason}).`);
-  const sql = buildRebuildSql(lines.map((line) => line.record));
-  if (outPath) {
-    writeFileSync(outPath, sql, 'utf8');
-    process.stdout.write(`Wrote rebuild SQL for ${lines.length} records to ${outPath}\n`);
-  } else {
-    process.stdout.write(sql);
+function loadJson(path: string): unknown {
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    fail(`Cannot read private recovery file: ${path}`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    fail('Refusing malformed private recovery JSON.');
+  }
+}
+
+function loadRecoveryKey(path: string): { keyId: string; key: string } {
+  let text: string;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    fail(`Cannot read recovery key file: ${path}`);
+  }
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length !== 2) {
+    fail('Recovery key file must contain exactly two non-empty lines: key id, then base64 key.');
+  }
+  return { keyId: lines[0], key: lines[1] };
+}
+
+async function cmdRestoreSql(
+  archivePath: string,
+  keyPath: string,
+  outPath: string,
+): Promise<void> {
+  let payload;
+  try {
+    payload = await decryptPrivateRecoveryExport(loadJson(archivePath), loadRecoveryKey(keyPath));
+  } catch (error) {
+    fail(`Refusing invalid private recovery archive (${String((error as Error)?.message || error)}).`);
+  }
+  const sql = buildRegistryRestoreSql(payload);
+  try {
+    writeFileSync(outPath, sql, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+    process.stdout.write(
+      `Wrote clean-only restore SQL to ${outPath}.\n` +
+      'Apply it only to a new, fully migrated recovery database. The SQL refuses any non-empty registry target.\n',
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code === 'EEXIST') {
+      fail(`Refusing to overwrite existing restore output: ${outPath}`);
+    }
+    fail(`Cannot create private restore output: ${outPath}`);
   }
 }
 
@@ -116,12 +157,17 @@ async function main(): Promise<void> {
       if (!args[0] || !args[1]) fail('Usage: registry-ledger.ts diff <held.jsonl> <fresh.jsonl>');
       await cmdDiff(args[0], args[1]);
       break;
-    case 'to-sql':
-      if (!args[0]) fail('Usage: registry-ledger.ts to-sql <ledger.jsonl> [out.sql]');
-      await cmdToSql(args[0], args[1]);
+    case 'restore-sql':
+      if (!args[0] || !args[1] || !args[2]) {
+        fail('Usage: registry-ledger.ts restore-sql <private-recovery.json> <key-file> <new-out.sql>');
+      }
+      await cmdRestoreSql(args[0], args[1], args[2]);
       break;
     default:
-      fail('Commands: verify <file> | diff <held> <fresh> | to-sql <file> [out.sql]');
+      fail(
+        'Commands: verify <ledger> | diff <held-ledger> <fresh-ledger> | ' +
+        'restore-sql <private-recovery> <key-file> <new-out.sql>',
+      );
   }
 }
 

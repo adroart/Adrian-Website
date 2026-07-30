@@ -19,7 +19,7 @@ account setup is in `docs/registry-activation-checklist.md`.
 3. End-to-end flow, step by step
 4. Where everything lives (file / route / endpoint map)
 5. The admin tools
-6. The offline master ledger + CLI
+6. The public issuance ledger + private recovery CLI
 7. Permanence and security guarantees
 8. Who can create codes (access control)
 9. What is built vs what only you can do
@@ -36,10 +36,9 @@ carries a secret **Ownership Code**. Whoever physically holds the piece can read
 that code and, signed in with a verified email, bind themselves as its steward.
 
 The registry that ties a public code to an artwork, and holds the recoverable
-(encrypted) Ownership Code, is governed **offline-master, online-mirror**: the
-canonical record is a file you hold; the online database is a mirror you can
-rebuild from it. Nothing depends on any AI assistant or hosted third party at
-runtime.
+(encrypted) Ownership Code, has two offline records: a secret-free issuance
+ledger for integrity checks and a separately encrypted private archive for full
+recovery. Nothing depends on any AI assistant at runtime.
 
 ## 2. The two identifiers
 
@@ -98,7 +97,8 @@ Core libraries:
 - `utils/recoveryCode.ts` — generate / normalize / hash the Ownership Code
 - `utils/artworkPlate.ts` — render the front + underside SVGs, public `AR-…` code
 - `utils/ownershipCodeCrypto.ts` — AES-256-GCM encrypt / decrypt of the code
-- `utils/registryLedger.ts` — offline master ledger (hash chain, verify, diff, rebuild SQL)
+- `utils/registryLedger.ts` — secret-free issuance ledger (hash chain, verify, diff)
+- `utils/registryRecoveryArchive.ts` — encrypted full-registry recovery and clean restore SQL
 - `utils/plateWizard.ts` — wizard stage logic
 - `functions/api/_lib/keeper.js` · `admin.js` · `lineage.js` · `plateBackup.js` ·
   `driveSync.js` · `registryLedgerExport.js`
@@ -117,11 +117,13 @@ Core libraries:
 - Both require the **private registry unlock** (step-up secret) for sensitive
   actions, and both have **Download offline ledger** and **Sync to Google Drive**.
 
-## 6. The offline master ledger + CLI
+## 6. The public issuance ledger + private recovery CLI
 
 `registry-ledger.jsonl` is a deterministic, hash-chained export of every plate
 identity (recovery-code **hash** + **encrypted** envelope, never plaintext) and
-its append-only lineage. No steward identity, email, IP, or location.
+its append-only lineage. No steward identity, email, IP, location, private
+acquisition data, or complete authentication state is included. It is an
+integrity record, not a full-registry backup.
 
 Get it: **Download offline ledger** on the desk or wizard, or, when Drive is
 configured, it syncs automatically after every issue / activation / shipment.
@@ -131,12 +133,19 @@ Work with it offline (`npm run ledger`):
 ```bash
 npm run ledger verify ./registry-ledger.jsonl          # chain intact + unaltered
 npm run ledger diff   ./held.jsonl ./fresh.jsonl        # detect out-of-band drift
-npm run ledger to-sql ./registry-ledger.jsonl out.sql   # rebuild the online mirror
 ```
 
-`to-sql` restores `keeper_pieces` + `artwork_lineage_events` from the hash and
-envelope exactly as the live mint stored them — which is why the online copy is
-disposable as long as you hold an intact ledger and the escrowed key.
+Full recovery uses the separate step-up-gated encrypted private archive. After
+downloading it, generate clean-only SQL offline with `restore-sql`:
+
+```bash
+npm run ledger -- restore-sql ./registry-private-recovery-<timestamp>.json \
+  ./registry-private-recovery.key ./registry-private-restore.sql
+```
+
+Apply that SQL only to a new, fully migrated recovery database, never directly
+to production. The public ledger is not accepted as restore input. See
+`docs/registry-private-recovery.md` for the key-file format and full procedure.
 
 ## 7. Permanence and security guarantees
 
@@ -146,13 +155,14 @@ disposable as long as you hold an intact ledger and the escrowed key.
   013) abort any UPDATE or DELETE on `artwork_lineage_events`.
 - **Migrations are additive-only** — no down-migrations; later work cannot drop
   your columns.
-- **Three independent copies** — the D1 row, the R2 encrypted envelope, the
-  escrowed key. The runbook's canary drill proves all three reconstruct a piece
-  before you engrave one.
+- **Independent recovery materials** — the D1 row, encrypted private archive,
+  R2 encrypted envelope, and separately escrowed keys. The runbook's canary
+  drill proves copied artifacts can reconstruct a piece before engraving.
 - **Activation is one-way**; the public code + URL scheme are permanent
   infrastructure (`functions/qr/[number].js`, `data/qrRegistry.ts`).
-- **Offline master ledger** — the record is a file you hold; online is a
-  rebuildable mirror; Google Drive keeps revision history of every export.
+- **Separate offline records** — Drive may retain the secret-free issuance
+  ledger. The encrypted private recovery archive is separately escrowed and is
+  never sent through that Drive sync.
 
 Honest limit: the URL scheme + code format live in code that *could* be edited.
 A standalone permanence contract test is recommended (see §11) so any such change
