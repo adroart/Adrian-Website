@@ -53,6 +53,7 @@ const registryMigrations = [
   '016_keeper_piece_edition_kind_guard.sql',
   '017_creator_registry_maintenance.sql',
   '018_registry_plate_lifecycle.sql',
+  '019_registry_creator_history.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -92,6 +93,90 @@ const eventInsert = `
 `;
 
 describe('creator registry maintenance migration', () => {
+  it('stores typed creator history with explicit visibility and guarded current-state removal', () => {
+    const rows = sqliteJson(`
+      ${registryMigrations}
+      ${keeperInsert}
+      INSERT INTO artwork_provenance_entries
+        (id, keeper_piece_id, entry_type, title, detail, role, occurred_at,
+         visibility, created_at, updated_at)
+      VALUES
+        ('prov-1', 'kp-maint', 'contributor', 'Mira S.', 'Joined the wood assembly.',
+         'Studio collaborator', '2026-01-15', 'public',
+         '2026-07-30T00:00:00.000Z', '2026-07-30T00:00:00.000Z'),
+        ('prov-2', 'kp-maint', 'creation_place', 'Ubud, Bali', NULL, NULL,
+         NULL, 'private', '2026-07-30T00:00:00.000Z',
+         '2026-07-30T00:00:00.000Z');
+      UPDATE artwork_provenance_entries
+         SET title = 'Ubud studio, Bali', updated_at = '2026-07-30T01:00:00.000Z'
+       WHERE id = 'prov-2';
+      UPDATE artwork_provenance_entries
+         SET removed_at = '2026-07-30T02:00:00.000Z',
+             updated_at = '2026-07-30T02:00:00.000Z',
+             record_version = record_version + 1
+       WHERE id = 'prov-2';
+      SELECT id, entry_type, title, role, visibility, record_version,
+             removed_at IS NOT NULL AS removed
+        FROM artwork_provenance_entries ORDER BY id;
+    `);
+
+    assert.deepEqual(rows, [
+      {
+        id: 'prov-1', entry_type: 'contributor', title: 'Mira S.',
+        role: 'Studio collaborator', visibility: 'public', record_version: 1,
+        removed: 0,
+      },
+      {
+        id: 'prov-2', entry_type: 'creation_place', title: 'Ubud studio, Bali',
+        role: null, visibility: 'private', record_version: 3, removed: 1,
+      },
+    ]);
+
+    const indexNames = sqliteJson(`
+      ${registryMigrations}
+      SELECT name FROM sqlite_master
+       WHERE type = 'index' AND name IN (
+         'idx_artwork_provenance_piece_current',
+         'idx_artwork_provenance_piece_visibility'
+       ) ORDER BY name;
+    `).map((row: { name: string }) => row.name);
+    assert.deepEqual(indexNames, [
+      'idx_artwork_provenance_piece_current',
+      'idx_artwork_provenance_piece_visibility',
+    ]);
+  });
+
+  it('rejects invalid creator-history types, visibility, blank titles and hard deletion', () => {
+    const invalidInserts = [
+      "('bad-type','kp-maint','price','Value',NULL,NULL,NULL,'private','x','x')",
+      "('bad-visibility','kp-maint','note','Note',NULL,NULL,NULL,'world','x','x')",
+      "('blank-title','kp-maint','note','   ',NULL,NULL,NULL,'private','x','x')",
+      "('missing-role','kp-maint','contributor','Mira',NULL,NULL,NULL,'public','x','x')",
+    ];
+    for (const values of invalidInserts) {
+      const result = sqliteResult(`
+        ${registryMigrations}
+        ${keeperInsert}
+        INSERT INTO artwork_provenance_entries
+          (id, keeper_piece_id, entry_type, title, detail, role, occurred_at,
+           visibility, created_at, updated_at)
+        VALUES ${values};
+      `);
+      assert.notEqual(result.status, 0, values);
+    }
+
+    const deletion = sqliteResult(`
+      ${registryMigrations}
+      ${keeperInsert}
+      INSERT INTO artwork_provenance_entries
+        (id, keeper_piece_id, entry_type, title, visibility, created_at, updated_at)
+      VALUES ('prov-delete', 'kp-maint', 'note', 'Keep history', 'private', 'x', 'x');
+      DELETE FROM artwork_provenance_entries WHERE id = 'prov-delete';
+    `);
+    assert.notEqual(deletion.status, 0);
+    assert.match(deletion.stderr, /remove from current view/i);
+  });
+
   it('applies after the complete registry chain with version columns and private history tables', () => {
     const columns = sqliteJson(`
       ${registryMigrations}
