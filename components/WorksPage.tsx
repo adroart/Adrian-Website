@@ -10,6 +10,11 @@ import ArrivalGate from './legacy/ArrivalGate';
 import PieceConstellation from './legacy/PieceConstellation';
 import KeeperPanel from './legacy/KeeperPanel';
 import {
+    isPublicRegistryCode,
+    validatePublicPlateIdentity,
+} from '../utils/publicRegistry';
+import type { PublicPlateIdentity } from '../utils/publicRegistry';
+import {
     formatLineageEventLabel,
     publicLineageDetails,
     PublicLineageEvent,
@@ -59,7 +64,15 @@ const WorksPage: React.FC = () => {
     const legacyOn = LAUNCH_FLAGS.livingLegacy;
     const arrivedByScan = searchParams.get('ref') === 'qr';
     const instanceCode = searchParams.get('instance');
-    const showPublicLineage = shouldLoadPublicLineage(legacyOn, instanceCode, id);
+    const publicCode = isPublicRegistryCode(instanceCode) ? instanceCode : null;
+    const [identityState, retryIdentity] = usePublicRegistryIdentity(publicCode);
+    const verifiedIdentity = identityState.status === 'ready' && identityState.publicCode === publicCode
+        ? identityState.identity
+        : null;
+    const showPublicLineage = shouldLoadPublicLineage(legacyOn, instanceCode, id)
+        && verifiedIdentity?.publicCode === instanceCode
+        && verifiedIdentity?.artworkId === id;
+    const showVerifiedPublicLineage = showPublicLineage && instanceCode && (verifiedIdentity !== null);
     const lineage = usePublicLineage(showPublicLineage, instanceCode, id);
 
     useMetaTags(
@@ -70,93 +83,175 @@ const WorksPage: React.FC = () => {
                 : { title: 'Work Not Found — Adrian Rasmussen' }
     );
 
+    const publicIdentityRecord = publicCode ? (
+        <PublicIdentityRecord
+            identityState={identityState}
+            publicCode={publicCode}
+            onRetry={retryIdentity}
+        />
+    ) : null;
+
+    let record: React.ReactNode;
     if (!artwork) {
         if (draft.status === 'idle' || draft.status === 'loading') {
-            return (
-                <section className="min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
+            record = (
+                <section className={`${publicCode ? 'pt-16' : 'pt-32'} pb-32 px-6 flex items-center justify-center`}>
                     <p className="font-sans text-sm text-wood-500">Loading record…</p>
                 </section>
             );
-        }
-        if (draft.status === 'found' && draft.artwork) {
-            const editionParam = searchParams.get('edition');
-            const draftEdition = draft.artwork.editionSize
-                ? (editionParam && /^\d+$/.test(editionParam) && Number(editionParam) > 0
-                    ? `${editionParam} of ${draft.artwork.editionSize}, signed and numbered`
-                    : `Edition of ${draft.artwork.editionSize}`)
-                : null;
-            return (
-                <section className="min-h-screen pt-28 pb-32 px-6">
-                    <div className="max-w-2xl mx-auto">
-                        <div className="border border-wood-200 p-8 md:p-12">
-                            <div className="border border-wood-100 p-6 md:p-10">
-                                <div className="text-center mb-10">
-                                    <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
-                                        Adrian Rasmussen
-                                    </p>
-                                    <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
-                                        {draft.artwork.title}
-                                    </h1>
-                                    {draft.artwork.series && (
-                                        <p className="font-sans text-[13px] text-wood-400 tracking-wide">
-                                            {draft.artwork.series} Series
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex items-center justify-center gap-4 mb-10">
-                                    <div className="h-px w-12 bg-bronze-300" />
-                                    <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
-                                    <div className="h-px w-12 bg-bronze-300" />
-                                </div>
-                                {draftEdition && (
-                                    <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>
-                                )}
-                                <p className="font-sans text-[13px] text-wood-400 text-center">
-                                    Registered artwork record
-                                </p>
-                            </div>
-                        </div>
-                        {showPublicLineage && instanceCode && (
-                            <div className="mt-10">
-                                <PublicLineageHistory publicCode={instanceCode} state={lineage} />
-                            </div>
-                        )}
-                    </div>
-                </section>
+        } else if (draft.status === 'found' && draft.artwork) {
+            record = (
+                <DraftArtworkRecord
+                    draft={draft.artwork}
+                    identity={verifiedIdentity}
+                    showPublicLineage={Boolean(showVerifiedPublicLineage)}
+                    lineage={lineage}
+                    legacyOn={legacyOn}
+                    followsIdentity={Boolean(publicCode)}
+                />
             );
+        } else {
+            record = <WorkNotFound compact={Boolean(publicCode)} />;
         }
-        return (
-            <section className="min-h-screen pt-32 pb-32 px-6 flex items-center justify-center">
-                <div className="max-w-xl text-center">
-                    <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-6 font-semibold">
-                        Works Registry
-                    </span>
-                    <h1 className="font-serif text-4xl md:text-5xl text-wood-900 mb-6 font-medium">
-                        Work Not Found
-                    </h1>
-                    <p className="font-sans text-base text-wood-600 mb-12 leading-[1.7]">
-                        No record exists for this identifier. If you scanned a QR code and reached
-                        this page, the piece may not yet be registered.
-                    </p>
-                    <Link
-                        to="/creations"
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
-                    >
-                        Browse Creations
-                    </Link>
-                </div>
-            </section>
+    } else {
+        record = (
+            <CatalogArtworkRecord
+                artwork={artwork}
+                book={book}
+                identity={verifiedIdentity}
+                showPublicLineage={Boolean(showVerifiedPublicLineage)}
+                lineage={lineage}
+                legacyOn={legacyOn}
+                followsIdentity={Boolean(publicCode)}
+            />
         );
     }
 
+    // The optional arrival remains gated. Exact identity loading does not depend
+    // on this flag, so the public identity stays outside the legacy arrival.
+    if (artwork && legacyOn && arrivedByScan) {
+        return <>{publicIdentityRecord}<ArrivalGate artwork={artwork}>{record}</ArrivalGate></>;
+    }
+    return <>{publicIdentityRecord}{record}</>;
+};
+
+type DraftArtwork = {
+    id: string;
+    title: string;
+    series: string | null;
+    editionSize: number | null;
+};
+
+function DraftArtworkRecord({
+    draft,
+    identity,
+    showPublicLineage,
+    lineage,
+    legacyOn,
+    followsIdentity,
+}: {
+    draft: DraftArtwork;
+    identity: PublicPlateIdentity | null;
+    showPublicLineage: boolean;
+    lineage: LineageState;
+    legacyOn: boolean;
+    followsIdentity: boolean;
+}) {
+    const draftEdition = draft.editionSize ? `Edition of ${draft.editionSize}` : null;
+    return (
+        <section
+            data-testid="draft-artwork-record"
+            className={`${followsIdentity ? 'pt-16' : 'min-h-screen pt-28'} pb-32 px-6`}
+        >
+            <div className="max-w-2xl mx-auto">
+                <div className="border border-wood-200 p-8 md:p-12">
+                    <div className="border border-wood-100 p-6 md:p-10">
+                        <div className="text-center mb-10">
+                            <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-8 font-semibold">
+                                Adrian Rasmussen
+                            </p>
+                            {followsIdentity ? (
+                                <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                    {draft.title}
+                                </h2>
+                            ) : (
+                                <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                    {draft.title}
+                                </h1>
+                            )}
+                            {draft.series && (
+                                <p className="font-sans text-[13px] text-wood-400 tracking-wide">{draft.series} Series</p>
+                            )}
+                        </div>
+                        <OrnamentalDivider />
+                        {draftEdition && <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>}
+                        <p className="font-sans text-[13px] text-wood-400 text-center">Registered artwork record</p>
+                        {showPublicLineage && identity && (
+                            <div className="mt-10">
+                                <PublicLineageHistory publicCode={identity.publicCode} state={lineage} />
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {legacyOn && identity && <KeeperPanel publicIdentity={identity} />}
+            </div>
+        </section>
+    );
+}
+
+function WorkNotFound({ compact }: { compact: boolean }) {
+    return (
+        <section className={`${compact ? 'pt-16' : 'min-h-screen pt-32'} pb-32 px-6 flex items-center justify-center`}>
+            <div className="max-w-xl text-center">
+                <span className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 block mb-6 font-semibold">
+                    Works Registry
+                </span>
+                {compact ? (
+                    <h2 className="font-serif text-4xl md:text-5xl text-wood-900 mb-6 font-medium">Work Not Found</h2>
+                ) : (
+                    <h1 className="font-serif text-4xl md:text-5xl text-wood-900 mb-6 font-medium">Work Not Found</h1>
+                )}
+                <p className="font-sans text-base text-wood-600 mb-12 leading-[1.7]">
+                    No record exists for this identifier. If you scanned a QR code and reached
+                    this page, the piece may not yet be registered.
+                </p>
+                <Link
+                    to="/creations"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+                >
+                    Browse Creations
+                </Link>
+            </div>
+        </section>
+    );
+}
+
+function CatalogArtworkRecord({
+    artwork,
+    book,
+    identity,
+    showPublicLineage,
+    lineage,
+    legacyOn,
+    followsIdentity,
+}: {
+    artwork: Artwork;
+    book: BookContent | null;
+    identity: PublicPlateIdentity | null;
+    showPublicLineage: boolean;
+    lineage: LineageState;
+    legacyOn: boolean;
+    followsIdentity: boolean;
+}) {
     const editionDisplay = getEditionLine(artwork);
-    const imageUrl = artwork.coverImage
-        ? cldImg(artwork.coverImage, { w: 800 })
-        : null;
+    const imageUrl = artwork.coverImage ? cldImg(artwork.coverImage, { w: 800 }) : null;
     const provenance = artwork.provenance || [];
 
-    const record = (
-        <section className="min-h-screen pt-28 pb-32 px-6 print:pt-8 print:pb-8">
+    return (
+        <section
+            data-testid="catalog-artwork-record"
+            className={`min-h-screen ${followsIdentity ? 'pt-16' : 'pt-28'} pb-32 px-6 print:pt-8 print:pb-8`}
+        >
             <div className="max-w-2xl mx-auto">
 
                 {/* ── Certificate frame ── */}
@@ -171,9 +266,15 @@ const WorksPage: React.FC = () => {
                                 Adrian Rasmussen
                             </p>
 
-                            <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
-                                {artwork.title}
-                            </h1>
+                            {followsIdentity ? (
+                                <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                    {artwork.title}
+                                </h2>
+                            ) : (
+                                <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight">
+                                    {artwork.title}
+                                </h1>
+                            )}
 
                             {artwork.series && (
                                 <p className="font-sans text-[13px] text-wood-400 tracking-wide">
@@ -263,8 +364,8 @@ const WorksPage: React.FC = () => {
                             </div>
                         )}
 
-                        {showPublicLineage && instanceCode && (
-                            <PublicLineageHistory publicCode={instanceCode} state={lineage} />
+                        {showPublicLineage && identity?.publicCode && (
+                            <PublicLineageHistory publicCode={identity.publicCode} state={lineage} />
                         )}
 
                         {/* Signature line */}
@@ -352,25 +453,221 @@ const WorksPage: React.FC = () => {
                 </div>
 
                 {/* Living Legacy (gated): constellation lens and steward doors. */}
-                {legacyOn && (
+                {legacyOn && identity && (
                     <>
                         <div className="mt-20 print:hidden">
                             <PieceConstellation artwork={artwork} />
                         </div>
-                        <KeeperPanel artwork={artwork} />
+                        <KeeperPanel publicIdentity={identity} />
                     </>
                 )}
             </div>
         </section>
     );
+}
 
-    // When scanned (and the flag is on), the piece wakes up first, then opens
-    // into the full record. Otherwise the record renders exactly as before.
-    if (legacyOn && arrivedByScan) {
-        return <ArrivalGate artwork={artwork}>{record}</ArrivalGate>;
+type PublicIdentityState =
+    | { status: 'idle' }
+    | { status: 'loading'; publicCode: string }
+    | { status: 'ready'; publicCode: string; identity: PublicPlateIdentity }
+    | { status: 'not-found' | 'unavailable'; publicCode: string };
+
+function usePublicRegistryIdentity(
+    publicCode: string | null,
+): [PublicIdentityState, () => void] {
+    const [attempt, setAttempt] = useState(0);
+    const [state, setState] = useState<PublicIdentityState>(
+        publicCode ? { status: 'loading', publicCode } : { status: 'idle' },
+    );
+
+    useEffect(() => {
+        if (!publicCode) {
+            setState({ status: 'idle' });
+            return;
+        }
+
+        const controller = new AbortController();
+        setState({ status: 'loading', publicCode });
+        fetch(`/api/registry/${encodeURIComponent(publicCode)}`, {
+            cache: 'no-store',
+            signal: controller.signal,
+        })
+            .then(async response => {
+                if (response.status === 404) {
+                    setState({ status: 'not-found', publicCode });
+                    return null;
+                }
+                if (response.status === 503) {
+                    setState({ status: 'unavailable', publicCode });
+                    return null;
+                }
+                if (!response.ok) throw new Error('registry unavailable');
+
+                const data = await response.json();
+                if (
+                    data?.ok !== true
+                    || !validatePublicPlateIdentity(data?.identity)
+                    || data.identity.publicCode !== publicCode
+                ) {
+                    throw new Error('registry identity mismatch');
+                }
+                return data.identity as PublicPlateIdentity;
+            })
+            .then(identity => {
+                if (identity && !controller.signal.aborted) {
+                    setState({ status: 'ready', publicCode, identity });
+                }
+            })
+            .catch(error => {
+                if (error?.name !== 'AbortError') setState({ status: 'unavailable', publicCode });
+            });
+
+        return () => controller.abort();
+    }, [attempt, publicCode]);
+
+    return [state, () => setAttempt(value => value + 1)];
+}
+
+function PublicIdentityRecord({
+    identityState,
+    publicCode,
+    onRetry,
+}: {
+    identityState: PublicIdentityState;
+    publicCode: string;
+    onRetry: () => void;
+}) {
+    if (
+        identityState.status === 'idle'
+        || identityState.publicCode !== publicCode
+        || identityState.status === 'loading'
+    ) {
+        return (
+            <section className="pt-28 px-6" aria-live="polite">
+                <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
+                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                        Verifying artwork identity
+                    </h1>
+                </div>
+            </section>
+        );
     }
-    return record;
-};
+
+    if (identityState.status === 'not-found') {
+        return (
+            <section data-testid="public-registry-not-found" className="pt-28 px-6" role="status">
+                <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
+                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
+                        Registry identity not found
+                    </h1>
+                    <p className="font-sans text-sm leading-relaxed text-wood-600">
+                        No public registry identity exists for this code.
+                    </p>
+                </div>
+            </section>
+        );
+    }
+
+    if (identityState.status === 'unavailable') {
+        return (
+            <section data-testid="public-registry-unavailable" className="pt-28 px-6" role="status">
+                <div className="max-w-2xl mx-auto border border-wood-200 p-8 md:p-12 text-center">
+                    <h1 className="font-label text-[11px] uppercase tracking-[0.2em] text-bronze-600 mb-4 font-semibold">
+                        Registry temporarily unavailable
+                    </h1>
+                    <p className="font-sans text-sm leading-relaxed text-wood-600 mb-7">
+                        This identity could not be verified right now. No unverified details are shown.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={onRetry}
+                        className="px-7 py-3 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
+                    >
+                        Try again
+                    </button>
+                </div>
+            </section>
+        );
+    }
+
+    if (identityState.status !== 'ready') return null;
+    const { identity } = identityState;
+    return (
+        <section data-testid="public-registry-identity" className="pt-28 px-6 print:pt-8">
+            <div className="max-w-2xl mx-auto border border-bronze-300 p-6 sm:p-8 md:p-12 print:p-6">
+                <div className="border border-wood-100 p-5 sm:p-6 md:p-10 print:p-4 min-w-0">
+                    <div className="text-center mb-9">
+                        <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-7 font-semibold">
+                            Verified artwork identity
+                        </p>
+                        <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-7 font-semibold">
+                            {identity.artistName}
+                        </p>
+                        <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight break-words">
+                            {identity.title}
+                        </h1>
+                        {identity.series && (
+                            <p className="font-sans text-[13px] text-wood-400 tracking-wide break-words">
+                                {identity.series} Series
+                            </p>
+                        )}
+                    </div>
+
+                    <OrnamentalDivider />
+
+                    <div className="max-w-md mx-auto mb-10 space-y-4 min-w-0">
+                        <DetailRow label="Artist" value={identity.artistName} />
+                        <DetailRow label="Artwork ID" value={identity.artworkId} />
+                        <DetailRow label="Edition" value={identity.edition.label} />
+                        <DetailRow label="Public code" value={identity.publicCode} />
+                        <DetailRow label="Plate status" value={formatPlateStatus(identity.plateStatus)} />
+                    </div>
+
+                    <div className="max-w-md mx-auto min-w-0">
+                        <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                            Public provenance
+                        </p>
+                        {identity.publicProvenance.length === 0 ? (
+                            <p className="font-sans text-[13px] text-wood-500 text-center">
+                                No public provenance recorded.
+                            </p>
+                        ) : (
+                            <ol className="space-y-3">
+                                {identity.publicProvenance.map((event, index) => (
+                                    <li key={`${event.year}-${event.event}-${index}`} className="flex items-start gap-3 min-w-0">
+                                        <span className="font-sans text-[13px] text-wood-400 shrink-0 max-w-[40%] break-all tabular-nums">
+                                            {event.year}
+                                        </span>
+                                        <span className="w-px h-3 bg-bronze-200 shrink-0 mt-1" aria-hidden="true" />
+                                        <span className="font-sans text-[13px] text-wood-600 break-words min-w-0">
+                                            <span className="text-wood-700 font-medium">{EVENT_LABELS[event.event]}</span>
+                                            {event.note && <span className="text-wood-500">{' · '}{event.note}</span>}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <span className="sr-only">Verified public code {publicCode}</span>
+        </section>
+    );
+}
+
+function OrnamentalDivider() {
+    return (
+        <div className="flex items-center justify-center gap-4 mb-10" aria-hidden="true">
+            <div className="h-px w-12 bg-bronze-300" />
+            <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
+            <div className="h-px w-12 bg-bronze-300" />
+        </div>
+    );
+}
+
+function formatPlateStatus(status: PublicPlateIdentity['plateStatus']): string {
+    return status === 'active' ? 'Active' : 'Generated';
+}
 
 /** Fetch the authored book page for a piece. Returns null until loaded or
  *  if no entry exists — the works page renders fully without it. */
@@ -550,7 +847,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
             <span className="font-label text-[11px] uppercase tracking-[0.15em] text-wood-400 font-semibold">
                 {label}
             </span>
-            <span className="font-sans text-[14px] text-wood-700 text-right max-w-[60%]">
+            <span className="font-sans text-[14px] text-wood-700 text-right max-w-[60%] min-w-0 ml-4 break-words">
                 {value}
             </span>
         </div>

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Artwork } from '../../types';
 import { LAUNCH_FLAGS } from '../../launchFlags';
 import { useAccount } from '../../lib/account/useAccount';
 import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
+import type { PublicPlateIdentity } from '../../utils/publicRegistry';
 import IntentionRitual from './IntentionRitual';
 
 /**
@@ -30,26 +30,25 @@ interface StewardStatus {
   currentDisplayLocation?: string | null;
 }
 
-export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }> = ({
-  artwork,
-  editionNumber = 0,
-}) => {
+export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({ publicIdentity }) => {
   const { isSignedIn, isLoaded, available, fetchAuthed } = useAccount();
   const [status, setStatus] = useState<StewardStatus | null>(null);
   const [door, setDoor] = useState<'closed' | 'register' | 'intention'>('closed');
+  const pieceId = publicIdentity.artworkId;
+  const editionNumber = publicIdentity.edition.number ?? 0;
 
   const loadStatus = React.useCallback(async () => {
     if (!isSignedIn) {
       setStatus(null);
       return;
     }
-    const params = new URLSearchParams({ pieceId: artwork.id, editionNumber: String(editionNumber) });
+    const params = new URLSearchParams({ pieceId, editionNumber: String(editionNumber) });
     const res = await fetchAuthed(`/api/keeper/piece?${params.toString()}`).catch(() => null);
     if (res && res.ok) {
       const data = await res.json();
       setStatus({ kept: data.kept, byYou: data.byYou, currentDisplayLocation: data.currentDisplayLocation });
     }
-  }, [isSignedIn, artwork.id, editionNumber, fetchAuthed]);
+  }, [isSignedIn, pieceId, editionNumber, fetchAuthed]);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) void loadStatus();
@@ -105,7 +104,8 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
             </div>
           ) : (
             <RegisterForm
-              artwork={artwork}
+              pieceId={pieceId}
+              title={publicIdentity.title}
               editionNumber={editionNumber}
               onBound={async () => {
                 await loadStatus();
@@ -133,14 +133,14 @@ export const KeeperPanel: React.FC<{ artwork: Artwork; editionNumber?: number }>
           </p>
 
           <DisplayLocation
-            artwork={artwork}
+            pieceId={pieceId}
             editionNumber={editionNumber}
             current={status?.currentDisplayLocation ?? null}
             onSaved={loadStatus}
           />
 
           <div className="mt-16">
-            <IntentionRitual pieceId={artwork.id} editionNumber={editionNumber} />
+            <IntentionRitual pieceId={pieceId} editionNumber={editionNumber} />
           </div>
         </div>
       )}
@@ -184,12 +184,14 @@ function DoorCard({
 // ── The Ownership Code bind form ──
 
 function RegisterForm({
-  artwork,
+  pieceId,
+  title,
   editionNumber,
   onBound,
   onCancel,
 }: {
-  artwork: Artwork;
+  pieceId: string;
+  title: string;
   editionNumber: number;
   onBound: () => void;
   onCancel: () => void;
@@ -212,7 +214,7 @@ function RegisterForm({
       const res = await fetchAuthed('/api/keeper/bind', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recoveryCode: code, pieceId: artwork.id, editionNumber }),
+        body: JSON.stringify({ recoveryCode: code, pieceId, editionNumber }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -227,7 +229,7 @@ function RegisterForm({
 
   return (
     <div className="max-w-md mx-auto text-center">
-      <h3 className="font-serif text-2xl text-wood-900 mb-3">Register {artwork.title}</h3>
+      <h3 className="font-serif text-2xl text-wood-900 mb-3">Register {title}</h3>
       <p className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
         Enter the Ownership Code engraved on the underside of the art. It is not the public QR number.
       </p>
@@ -262,12 +264,12 @@ function RegisterForm({
 // Current display location, editable by the steward.
 
 function DisplayLocation({
-  artwork,
+  pieceId,
   editionNumber,
   current,
   onSaved,
 }: {
-  artwork: Artwork;
+  pieceId: string;
   editionNumber: number;
   current: string | null;
   onSaved: () => void;
@@ -286,7 +288,7 @@ function DisplayLocation({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pieceId: artwork.id,
+          pieceId,
           editionNumber,
           currentDisplayLocation: value.trim(),
         }),
