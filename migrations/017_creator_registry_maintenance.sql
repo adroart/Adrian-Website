@@ -126,6 +126,56 @@ CREATE INDEX idx_registry_maintenance_piece_created
 CREATE INDEX idx_registry_maintenance_type_created
   ON registry_maintenance_events(event_type, created_at DESC);
 
+CREATE TRIGGER keeper_pieces_record_version_auto_increment
+AFTER UPDATE OF
+  piece_id, edition_number, recovery_code_hash, registered_at,
+  public_code, issuance_key, plate_status, plate_generated_at,
+  plate_activated_at, front_svg_sha256, back_svg_sha256,
+  ownership_code_ciphertext, ownership_code_nonce, ownership_code_key_version,
+  backup_status, backup_reference, backup_at
+ON keeper_pieces
+WHEN NEW.record_version = OLD.record_version
+  AND (
+    NEW.piece_id IS NOT OLD.piece_id
+    OR NEW.edition_number IS NOT OLD.edition_number
+    OR NEW.recovery_code_hash IS NOT OLD.recovery_code_hash
+    OR NEW.registered_at IS NOT OLD.registered_at
+    OR NEW.public_code IS NOT OLD.public_code
+    OR NEW.issuance_key IS NOT OLD.issuance_key
+    OR NEW.plate_status IS NOT OLD.plate_status
+    OR NEW.plate_generated_at IS NOT OLD.plate_generated_at
+    OR NEW.plate_activated_at IS NOT OLD.plate_activated_at
+    OR NEW.front_svg_sha256 IS NOT OLD.front_svg_sha256
+    OR NEW.back_svg_sha256 IS NOT OLD.back_svg_sha256
+    OR NEW.ownership_code_ciphertext IS NOT OLD.ownership_code_ciphertext
+    OR NEW.ownership_code_nonce IS NOT OLD.ownership_code_nonce
+    OR NEW.ownership_code_key_version IS NOT OLD.ownership_code_key_version
+    OR NEW.backup_status IS NOT OLD.backup_status
+    OR NEW.backup_reference IS NOT OLD.backup_reference
+    OR NEW.backup_at IS NOT OLD.backup_at
+  )
+BEGIN
+  UPDATE keeper_pieces
+     SET record_version = record_version + 1
+   WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER keeper_pieces_steward_version_auto_increment
+AFTER UPDATE OF keeper_user_id, claimed_at, released_at, current_display_location
+ON keeper_pieces
+WHEN NEW.steward_version = OLD.steward_version
+  AND (
+    NEW.keeper_user_id IS NOT OLD.keeper_user_id
+    OR NEW.claimed_at IS NOT OLD.claimed_at
+    OR NEW.released_at IS NOT OLD.released_at
+    OR NEW.current_display_location IS NOT OLD.current_display_location
+  )
+BEGIN
+  UPDATE keeper_pieces
+     SET steward_version = steward_version + 1
+   WHERE id = NEW.id;
+END;
+
 CREATE TRIGGER registry_maintenance_events_no_update
 BEFORE UPDATE ON registry_maintenance_events
 BEGIN

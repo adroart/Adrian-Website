@@ -29,6 +29,112 @@ const TEXT_LIMITS = {
   publicProvenance: 2000,
 };
 
+const stringOrNull = (value) => value === null || typeof value === 'string';
+const stringValue = (value) => typeof value === 'string';
+const nonnegativeInteger = (value) => Number.isSafeInteger(value) && value >= 0;
+const amountOrNull = (value) => value === null || nonnegativeInteger(value);
+
+const MAINTENANCE_TARGETS = {
+  keeper_record: {
+    table: 'keeper_pieces',
+    versionColumn: 'record_version',
+    fields: {
+      pieceId: ['piece_id', stringValue],
+      editionNumber: ['edition_number', nonnegativeInteger],
+      recoveryCodeHash: ['recovery_code_hash', stringValue],
+      registeredAt: ['registered_at', stringOrNull],
+      publicCode: ['public_code', stringOrNull],
+      issuanceKey: ['issuance_key', stringOrNull],
+      plateStatus: ['plate_status', stringValue],
+      plateGeneratedAt: ['plate_generated_at', stringOrNull],
+      plateActivatedAt: ['plate_activated_at', stringOrNull],
+      frontSvgSha256: ['front_svg_sha256', stringOrNull],
+      backSvgSha256: ['back_svg_sha256', stringOrNull],
+      backupStatus: ['backup_status', stringOrNull],
+      backupReference: ['backup_reference', stringOrNull],
+      backupAt: ['backup_at', stringOrNull],
+    },
+  },
+  keeper_steward: {
+    table: 'keeper_pieces',
+    versionColumn: 'steward_version',
+    fields: {
+      keeperUserId: ['keeper_user_id', stringOrNull],
+      claimedAt: ['claimed_at', stringOrNull],
+      releasedAt: ['released_at', stringOrNull],
+      currentDisplayLocation: ['current_display_location', stringOrNull],
+    },
+  },
+  acquisition: {
+    table: 'artwork_acquisitions',
+    versionColumn: 'record_version',
+    fields: {
+      acquisitionType: ['acquisition_type', stringValue],
+      acquiredAt: ['acquired_at', stringOrNull],
+      amountMinor: ['amount_minor', amountOrNull],
+      currency: ['currency', stringOrNull],
+      acquirerReference: ['acquirer_reference', stringOrNull],
+      privateNotes: ['private_notes', stringOrNull],
+      documentReference: ['document_reference', stringOrNull],
+      publicProvenance: ['public_provenance', stringOrNull],
+      updatedAt: ['updated_at', stringValue],
+    },
+  },
+};
+
+const ACQUISITION_SNAPSHOT_FIELDS = [
+  'id', 'keeperPieceId', 'acquisitionType', 'acquiredAt', 'amountMinor', 'currency',
+  'acquirerReference', 'privateNotes', 'documentReference', 'publicProvenance',
+  'recordVersion', 'createdAt', 'updatedAt',
+];
+const EVENT_SNAPSHOT_FIELDS = {
+  acquisition_created: new Set(ACQUISITION_SNAPSHOT_FIELDS),
+  acquisition_corrected: new Set(ACQUISITION_SNAPSHOT_FIELDS),
+  steward_reset: new Set([
+    'keeperPieceId', 'keeperUserId', 'claimedAt', 'releasedAt',
+    'currentDisplayLocation', 'stewardVersion',
+  ]),
+  steward_transferred: new Set([
+    'keeperPieceId', 'keeperUserId', 'claimedAt', 'releasedAt',
+    'currentDisplayLocation', 'stewardVersion',
+  ]),
+  link_corrected: new Set([
+    'keeperPieceId', 'artworkId', 'pieceId', 'editionNumber', 'publicCode',
+    'recordVersion',
+  ]),
+  plate_voided: new Set([
+    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus', 'voidedAt',
+    'recordVersion',
+  ]),
+  plate_superseded: new Set([
+    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
+    'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'supersededAt',
+    'recordVersion',
+  ]),
+  plate_replaced: new Set([
+    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
+    'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'replacedAt',
+    'recordVersion',
+  ]),
+  metadata_corrected: new Set([
+    'keeperPieceId', 'artworkId', 'pieceId', 'editionNumber', 'title', 'metadata',
+    'recordVersion',
+  ]),
+  provenance_corrected: new Set([
+    'id', 'keeperPieceId', 'artworkId', 'entryType', 'value', 'visibility',
+    'recordVersion', 'createdAt', 'updatedAt',
+  ]),
+  recovery_qualification_recorded: new Set([
+    'id', 'keeperPieceId', 'qualification', 'qualifiedAt', 'schemaVersion',
+    'buildVersion', 'keyVersion', 'generatorVersion', 'notes', 'recordVersion',
+  ]),
+};
+
+const SENSITIVE_SNAPSHOT_KEY_PARTS = [
+  'ownershipcode', 'recoverycode', 'ciphertext', 'nonce', 'verifier',
+  'secret', 'token', 'password',
+];
+
 function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -37,6 +143,84 @@ function isPlainRecord(value) {
   if (!isRecord(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
+}
+
+function containsSensitiveSnapshotKey(value, seen = new Set()) {
+  if (!value || typeof value !== 'object') return false;
+  if (seen.has(value)) return false;
+  seen.add(value);
+  try {
+    if (Array.isArray(value)) {
+      return value.some((entry) => containsSensitiveSnapshotKey(entry, seen));
+    }
+    for (const [key, entry] of Object.entries(value)) {
+      const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (SENSITIVE_SNAPSHOT_KEY_PARTS.some((part) => normalizedKey.includes(part))) {
+        return true;
+      }
+      if (containsSensitiveSnapshotKey(entry, seen)) return true;
+    }
+    return false;
+  } finally {
+    seen.delete(value);
+  }
+}
+
+function normalizeEventSnapshot(eventType, value) {
+  if (value === undefined || value === null) return null;
+  if (!isPlainRecord(value) || containsSensitiveSnapshotKey(value)) {
+    throw new Error('invalid_snapshot');
+  }
+  const allowedFields = Object.hasOwn(EVENT_SNAPSHOT_FIELDS, eventType)
+    ? EVENT_SNAPSHOT_FIELDS[eventType]
+    : null;
+  if (!allowedFields || Object.keys(value).some((key) => !allowedFields.has(key))) {
+    throw new Error('invalid_snapshot');
+  }
+  return value;
+}
+
+function normalizeMaintenanceTarget(target, changes) {
+  if (!isPlainRecord(target)
+    || typeof target.id !== 'string'
+    || !target.id.trim()
+    || target.id.trim().length > 128
+    || !isPlainRecord(changes)
+    || Object.keys(changes).length === 0) {
+    return null;
+  }
+  const definition = Object.hasOwn(MAINTENANCE_TARGETS, target.type)
+    ? MAINTENANCE_TARGETS[target.type]
+    : null;
+  if (!definition) return null;
+
+  const assignments = [];
+  const values = [];
+  for (const [field, value] of Object.entries(changes)) {
+    const mapping = Object.hasOwn(definition.fields, field) ? definition.fields[field] : null;
+    if (!mapping || !mapping[1](value)) return null;
+    assignments.push(mapping[0]);
+    values.push(value);
+  }
+  return {
+    definition,
+    id: target.id.trim(),
+    assignments,
+    values,
+  };
+}
+
+function buildVersionedMutationStatement(env, normalized, expectedVersion) {
+  const { definition, id, assignments, values } = normalized;
+  const setClauses = assignments.map((column, index) => `${column} = ?${index + 1}`);
+  const idPosition = values.length + 1;
+  const versionPosition = values.length + 2;
+  setClauses.push(`${definition.versionColumn} = ${definition.versionColumn} + 1`);
+  return env.DB.prepare(
+    `UPDATE ${definition.table}
+        SET ${setClauses.join(', ')}
+      WHERE id = ?${idPosition} AND ${definition.versionColumn} = ?${versionPosition}`,
+  ).bind(...values, id, expectedVersion);
 }
 
 function canonicalValue(value, seen) {
@@ -203,7 +387,7 @@ function normalizeEventDetails(details, eventId) {
   if (!reason.ok) throw new Error(reason.error);
   const idempotencyKey = normalizeIdempotencyKey(details?.idempotencyKey);
   const eventType = typeof details?.eventType === 'string' ? details.eventType.trim() : '';
-  if (!/^[a-z][a-z0-9_]{0,79}$/.test(eventType)) throw new Error('invalid_event_type');
+  if (!Object.hasOwn(EVENT_SNAPSHOT_FIELDS, eventType)) throw new Error('invalid_event_type');
   const outcome = details?.outcome;
   if (outcome !== 'succeeded' && outcome !== 'failed') throw new Error('invalid_event_outcome');
   const createdAt = typeof details?.createdAt === 'string' && details.createdAt.trim()
@@ -218,8 +402,8 @@ function normalizeEventDetails(details, eventId) {
     artworkId: normalizeOptionalIdentifier(details?.artworkId, 80),
     administrator: normalizedAdministrator(details?.authorization),
     reason: reason.reason,
-    beforeJson: canonicalJson(details?.before ?? null),
-    afterJson: canonicalJson(details?.after ?? null),
+    beforeJson: canonicalJson(normalizeEventSnapshot(eventType, details?.before)),
+    afterJson: canonicalJson(normalizeEventSnapshot(eventType, details?.after)),
     outcome,
     relatedRecordId: normalizeOptionalIdentifier(details?.relatedRecordId),
     createdAt: createdAt.toISOString(),
@@ -283,36 +467,53 @@ export function buildMaintenanceEventStatement(env, details, options = {}) {
   );
 }
 
+async function resolveMaintenanceIdempotency(env, event, fallback) {
+  try {
+    const existing = await findMaintenanceEventByIdempotencyKey(env, event.idempotencyKey);
+    const classification = classifyMaintenanceIdempotency(existing, event);
+    if (classification.kind === 'replay') {
+      return {
+        ok: true,
+        replayed: true,
+        eventId: existing.id,
+        event: existing,
+      };
+    }
+    if (classification.kind === 'conflict') {
+      return { ok: false, error: 'idempotency_conflict' };
+    }
+  } catch {
+    // Preserve the safe original failure when replay classification is unavailable.
+  }
+  return fallback;
+}
+
 /**
  * Run one optimistic mutation and its succeeded/failed maintenance event in a
- * single D1 batch. The caller builds the mutation only after this helper
- * validates and supplies its expected record_version. The event SELECT sees
- * SQLite changes() from that mutation, so a zero-row conflict cannot append a
- * success event.
+ * single D1 batch. The helper owns the target allowlist, version increment and
+ * optimistic WHERE guard. The event SELECT sees SQLite changes() from that
+ * mutation, so a zero-row conflict cannot append a success event.
  */
 export async function commitMaintenanceMutation(env, {
-  buildMutation,
+  target,
+  changes,
   event,
   expectedVersion,
 }) {
   if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
     return { ok: false, error: 'invalid_expected_version' };
   }
+  const normalizedTarget = normalizeMaintenanceTarget(target, changes);
+  if (!normalizedTarget) return { ok: false, error: 'invalid_maintenance_target' };
   if (typeof env?.DB?.batch !== 'function') {
     return { ok: false, error: 'atomic_write_unavailable' };
   }
 
-  let mutationStatement;
-  try {
-    mutationStatement = buildMutation(expectedVersion);
-  } catch {
-    return { ok: false, error: 'invalid_versioned_mutation' };
-  }
-  if (!mutationStatement) return { ok: false, error: 'invalid_versioned_mutation' };
-
   const eventId = event?.id ?? `rme-${crypto.randomUUID()}`;
+  let mutationStatement;
   let eventStatement;
   try {
+    mutationStatement = buildVersionedMutationStatement(env, normalizedTarget, expectedVersion);
     eventStatement = buildMaintenanceEventStatement(env, { ...event, id: eventId });
   } catch {
     return { ok: false, error: 'invalid_maintenance_event' };
@@ -326,12 +527,32 @@ export async function commitMaintenanceMutation(env, {
     const mutationChanges = mutationResult?.meta?.changes;
     const eventChanges = eventResult?.meta?.changes;
     if (mutationResult?.success !== true || eventResult?.success !== true) {
-      return { ok: false, error: 'maintenance_write_failed' };
+      return resolveMaintenanceIdempotency(
+        env,
+        event,
+        { ok: false, error: 'maintenance_write_failed' },
+      );
     }
-    if (mutationChanges !== 1) return { ok: false, error: 'version_conflict' };
-    if (eventChanges !== 1) return { ok: false, error: 'maintenance_write_failed' };
+    if (mutationChanges !== 1) {
+      return resolveMaintenanceIdempotency(
+        env,
+        event,
+        { ok: false, error: 'version_conflict' },
+      );
+    }
+    if (eventChanges !== 1) {
+      return resolveMaintenanceIdempotency(
+        env,
+        event,
+        { ok: false, error: 'maintenance_write_failed' },
+      );
+    }
     return { ok: true, eventId };
   } catch {
-    return { ok: false, error: 'maintenance_write_failed' };
+    return resolveMaintenanceIdempotency(
+      env,
+      event,
+      { ok: false, error: 'maintenance_write_failed' },
+    );
   }
 }

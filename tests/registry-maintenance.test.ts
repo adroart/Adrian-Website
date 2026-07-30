@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, it } from 'node:test';
 
 import {
@@ -206,6 +207,37 @@ describe('creator registry maintenance migration', () => {
     }
   });
 
+  it('advances keeper versions for current mutation paths without double counting', () => {
+    const rows = sqliteJson(`
+      ${registryMigrations}
+      ${keeperInsert}
+
+      UPDATE keeper_pieces
+         SET keeper_user_id = 'keeper-1', claimed_at = '2026-07-30T03:00:00.000Z',
+             released_at = NULL
+       WHERE id = 'kp-maint';
+      UPDATE keeper_pieces
+         SET current_display_location = 'Ubud studio'
+       WHERE id = 'kp-maint';
+      UPDATE keeper_pieces
+         SET plate_status = 'active', plate_activated_at = '2026-07-30T04:00:00.000Z'
+       WHERE id = 'kp-maint';
+      UPDATE keeper_pieces
+         SET backup_status = 'verified', backup_reference = 'plates/AR-7KQ9M2WX.json',
+             backup_at = '2026-07-30T05:00:00.000Z'
+       WHERE id = 'kp-maint';
+      UPDATE keeper_pieces
+         SET backup_status = 'pending', record_version = record_version + 1
+       WHERE id = 'kp-maint';
+      UPDATE keeper_pieces
+         SET lineage_head_hash = 'lineage-only', lineage_event_count = 1
+       WHERE id = 'kp-maint';
+
+      SELECT record_version, steward_version FROM keeper_pieces WHERE id = 'kp-maint';
+    `);
+    assert.deepEqual(rows, [{ record_version: 3, steward_version: 2 }]);
+  });
+
   it('makes maintenance events append-only', () => {
     for (const mutation of [
       "UPDATE registry_maintenance_events SET reason = 'Changed' WHERE id = 'rme-1';",
@@ -340,7 +372,7 @@ describe('maintenance input normalization', () => {
 
 const expectedEvent = {
   idempotencyKey: 'maintenance-request-1',
-  eventType: 'acquisition_updated',
+  eventType: 'acquisition_corrected',
   keeperPieceId: 'kp-maint',
   artworkId: 'UL-100',
   authorization: { userId: 'admin-1', email: 'admin@example.com' },
@@ -369,6 +401,38 @@ function storedEvent(overrides: Record<string, unknown> = {}) {
     created_at: expectedEvent.createdAt,
     ...overrides,
   };
+}
+
+function createSqliteD1() {
+  const database = new DatabaseSync(':memory:');
+  database.exec('PRAGMA foreign_keys = ON;');
+  const DB = {
+    prepare(sql: string) {
+      let values: SQLInputValue[] = [];
+      const statement = {
+        bind(...bound: SQLInputValue[]) { values = bound; return statement; },
+        first() { return database.prepare(sql).get(...values) ?? null; },
+        get sql() { return sql; },
+        get values() { return values; },
+      };
+      return statement;
+    },
+    async batch(statements: Array<{ sql: string; values: SQLInputValue[] }>) {
+      database.exec('BEGIN IMMEDIATE;');
+      try {
+        const results = statements.map((statement) => {
+          const result = database.prepare(statement.sql).run(...statement.values);
+          return { success: true, meta: { changes: Number(result.changes) } };
+        });
+        database.exec('COMMIT;');
+        return results;
+      } catch (error) {
+        database.exec('ROLLBACK;');
+        throw error;
+      }
+    },
+  };
+  return { database, env: { DB } };
 }
 
 describe('maintenance idempotency and atomic writes', () => {
@@ -439,62 +503,149 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.match(seen[0].sql, /WHERE changes\(\) = 1/i);
   });
 
-  it('passes the exact version into the mutation and cannot append after a stale write', async () => {
-    const eventRows: unknown[][] = [];
-    const builtVersions: number[] = [];
-    const batchedVersions: number[] = [];
+  it('allowlists event types and snapshots while recursively rejecting sensitive keys', () => {
     const env = {
       DB: {
         prepare(sql: string) {
-          return {
-            bind(...values: unknown[]) { return { kind: 'event', sql, values }; },
-          };
+          return { bind(...values: unknown[]) { return { sql, values }; } };
+        },
+      },
+    };
+
+    assert.doesNotThrow(() => buildMaintenanceEventStatement(env, {
+      ...expectedEvent,
+      before: { amountMinor: 100, currency: 'USD', privateNotes: 'private' },
+      after: { amountMinor: 120, currency: 'USD', privateNotes: 'corrected' },
+    }));
+    for (const event of [
+      { ...expectedEvent, eventType: 'arbitrary_event' },
+      { ...expectedEvent, eventType: '__proto__' },
+      { ...expectedEvent, before: { unknownField: 'value' } },
+      {
+        ...expectedEvent,
+        eventType: 'metadata_corrected',
+        after: { metadata: { evidence: { ownershipCode: 'forbidden' } } },
+      },
+      {
+        ...expectedEvent,
+        eventType: 'metadata_corrected',
+        before: { amountMinor: 100 },
+        after: { amountMinor: 120 },
+      },
+    ]) {
+      assert.throws(() => buildMaintenanceEventStatement(env, event), /invalid_(event_type|snapshot)/);
+    }
+  });
+
+  it('builds only allowlisted versioned target updates and rejects unknown descriptors before DB', async () => {
+    const eventRows: unknown[][] = [];
+    const prepared: Array<{ sql: string; values: unknown[] }> = [];
+    let mutationChanges = 1;
+    const env = {
+      DB: {
+        prepare(sql: string) {
+          return { bind(...values: unknown[]) {
+            const statement = { sql, values };
+            prepared.push(statement);
+            return statement;
+          } };
         },
         async batch(statements: Array<Record<string, unknown>>) {
-          const mutation = statements[0] as { changes: number; boundVersion: number };
-          batchedVersions.push(mutation.boundVersion);
-          if (mutation.changes === 1) eventRows.push((statements[1].values ?? []) as unknown[]);
+          if (mutationChanges === 1) eventRows.push((statements[1].values ?? []) as unknown[]);
           return [
-            { success: true, meta: { changes: mutation.changes } },
-            { success: true, meta: { changes: mutation.changes === 1 ? 1 : 0 } },
+            { success: true, meta: { changes: mutationChanges } },
+            { success: true, meta: { changes: mutationChanges === 1 ? 1 : 0 } },
           ];
         },
       },
     };
 
-    let missingVersionBuilt = false;
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      buildMutation() { missingVersionBuilt = true; return { kind: 'mutation', changes: 1 }; },
+      target: { type: 'acquisition', id: 'acq-1' },
+      changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
     } as any), { ok: false, error: 'invalid_expected_version' });
-    assert.equal(missingVersionBuilt, false);
-
-    const conflict = await commitMaintenanceMutation(env, {
-      buildMutation(expectedVersion: number) {
-        builtVersions.push(expectedVersion);
-        return { kind: 'mutation', changes: 0, boundVersion: expectedVersion };
-      },
-      event: expectedEvent,
-      expectedVersion: 2,
-    });
-    assert.deepEqual(conflict, { ok: false, error: 'version_conflict' });
-    assert.deepEqual(builtVersions, [2]);
-    assert.deepEqual(batchedVersions, [2]);
-    assert.equal(eventRows.length, 0);
+    assert.equal(prepared.length, 0);
 
     const success = await commitMaintenanceMutation(env, {
-      buildMutation(expectedVersion: number) {
-        builtVersions.push(expectedVersion);
-        return { kind: 'mutation', changes: 1, boundVersion: expectedVersion };
-      },
+      target: { type: 'acquisition', id: 'acq-1' },
+      changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
       expectedVersion: 2,
     });
     assert.equal(success.ok, true);
-    assert.equal(success.eventId.startsWith('rme-'), true);
-    assert.deepEqual(builtVersions, [2, 2]);
-    assert.deepEqual(batchedVersions, [2, 2]);
+    assert.match(prepared[0].sql, /^UPDATE artwork_acquisitions/i);
+    assert.match(prepared[0].sql, /record_version = record_version \+ 1/i);
+    assert.match(prepared[0].sql, /WHERE id = \?2 AND record_version = \?3/i);
+    assert.deepEqual(prepared[0].values, [
+      '2026-02-01T00:00:00.000Z', 'acq-1', 2,
+    ]);
     assert.equal(eventRows.length, 1);
+
+    await commitMaintenanceMutation(env, {
+      target: { type: 'keeper_record', id: 'kp-maint' },
+      changes: { backupStatus: 'verified' },
+      event: {
+        ...expectedEvent,
+        idempotencyKey: 'keeper-record-update',
+        eventType: 'metadata_corrected',
+        before: { recordVersion: 2 },
+        after: { recordVersion: 3 },
+      },
+      expectedVersion: 2,
+    });
+    assert.match(prepared[2].sql, /^UPDATE keeper_pieces/i);
+    assert.match(prepared[2].sql, /backup_status = \?1/);
+    assert.match(prepared[2].sql, /record_version = record_version \+ 1/);
+    assert.deepEqual(prepared[2].values, ['verified', 'kp-maint', 2]);
+
+    await commitMaintenanceMutation(env, {
+      target: { type: 'keeper_steward', id: 'kp-maint' },
+      changes: { currentDisplayLocation: 'Ubud studio' },
+      event: {
+        ...expectedEvent,
+        idempotencyKey: 'keeper-steward-update',
+        eventType: 'steward_transferred',
+        before: { currentDisplayLocation: null, stewardVersion: 1 },
+        after: { currentDisplayLocation: 'Ubud studio', stewardVersion: 2 },
+      },
+      expectedVersion: 1,
+    });
+    assert.match(prepared[4].sql, /^UPDATE keeper_pieces/i);
+    assert.match(prepared[4].sql, /current_display_location = \?1/);
+    assert.match(prepared[4].sql, /steward_version = steward_version \+ 1/);
+    assert.deepEqual(prepared[4].values, ['Ubud studio', 'kp-maint', 1]);
+
+    const prepareCount = prepared.length;
+    for (const request of [
+      {
+        target: { type: 'unknown', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+      },
+      {
+        target: { type: '__proto__', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { ownershipCode: 'forbidden' },
+      },
+    ]) {
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        event: expectedEvent,
+        expectedVersion: 2,
+      }), { ok: false, error: 'invalid_maintenance_target' });
+    }
+    assert.equal(prepared.length, prepareCount);
+
+    mutationChanges = 0;
+    assert.deepEqual(await commitMaintenanceMutation(env, {
+      target: { type: 'acquisition', id: 'acq-1' },
+      changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+      event: { ...expectedEvent, idempotencyKey: 'new-stale-key' },
+      expectedVersion: 1,
+    }), { ok: false, error: 'version_conflict' });
   });
 
   it('requires successful D1 results in addition to one changed row', async () => {
@@ -517,9 +668,8 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       };
       assert.deepEqual(await commitMaintenanceMutation(env, {
-        buildMutation(expectedVersion: number) {
-          return { kind: 'mutation', boundVersion: expectedVersion };
-        },
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
         event: expectedEvent,
         expectedVersion: 3,
       }), { ok: false, error: 'maintenance_write_failed' });
@@ -536,11 +686,67 @@ describe('maintenance idempotency and atomic writes', () => {
       },
     };
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      buildMutation(expectedVersion: number) {
-        return { kind: 'mutation', boundVersion: expectedVersion };
-      },
+      target: { type: 'acquisition', id: 'acq-1' },
+      changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
       event: expectedEvent,
       expectedVersion: 2,
     }), { ok: false, error: 'maintenance_write_failed' });
+  });
+
+  it('rolls back failed events and resolves retries as replay or idempotency conflict', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        INSERT INTO artwork_acquisitions
+          (id, keeper_piece_id, acquisition_type, public_provenance, created_at, updated_at)
+        VALUES
+          ('acq-1', 'kp-maint', 'sale', 'Original', '2026-07-30T00:00:00.000Z',
+           '2026-07-30T00:00:00.000Z');
+      `);
+      const event = {
+        ...expectedEvent,
+        before: { publicProvenance: 'Original', recordVersion: 1 },
+        after: { publicProvenance: 'Corrected', recordVersion: 2 },
+      };
+      const request = {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { publicProvenance: 'Corrected' },
+        event,
+        expectedVersion: 1,
+      };
+
+      const first = await commitMaintenanceMutation(env, request);
+      assert.equal(first.ok, true);
+      assert.equal(first.replayed, undefined);
+
+      const replay = await commitMaintenanceMutation(env, request);
+      assert.equal(replay.ok, true);
+      assert.equal(replay.replayed, true);
+
+      const conflict = await commitMaintenanceMutation(env, {
+        ...request,
+        changes: { publicProvenance: 'Should roll back' },
+        event: {
+          ...event,
+          reason: 'Different reuse of the same key.',
+          after: { publicProvenance: 'Should roll back', recordVersion: 3 },
+        },
+        expectedVersion: 2,
+      });
+      assert.deepEqual(conflict, { ok: false, error: 'idempotency_conflict' });
+
+      const row = database.prepare(
+        "SELECT public_provenance, record_version FROM artwork_acquisitions WHERE id = 'acq-1'",
+      ).get();
+      assert.deepEqual({ ...row }, { public_provenance: 'Corrected', record_version: 2 });
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        event: { ...event, idempotencyKey: 'stale-without-event' },
+        expectedVersion: 1,
+      }), { ok: false, error: 'version_conflict' });
+    } finally {
+      database.close();
+    }
   });
 });
