@@ -1,3 +1,5 @@
+import { projectIssuedPlateResponse, type IssuedPlatePackage } from './adminArtworkRegistry';
+
 export type MaintenanceAcquisitionType =
   | 'sale'
   | 'gift'
@@ -420,4 +422,104 @@ export async function saveMaintenanceStewardAction(
     steward: MaintenanceStewardActionResult;
   }>(response);
   return data.steward;
+}
+
+export type MaintenancePlateAction = 'correct_link' | 'void_plate' | 'replace_plate';
+
+export type MaintenancePlateActionInput = {
+  keeperPieceId: string;
+  action: MaintenancePlateAction;
+  reason: string;
+  expectedRecordVersion: number;
+  artworkId?: string;
+  editionNumber?: number;
+  physicalEngravingMatches?: true;
+  physicalDisposition?: string;
+};
+
+export type MaintenancePlateActionRequest = MaintenancePlateActionInput & {
+  idempotencyKey: string;
+};
+
+export type MaintenancePlateActionAttempt = Readonly<{
+  request: Readonly<MaintenancePlateActionRequest>;
+}>;
+
+export type MaintenancePlateActionResult = {
+  action: MaintenancePlateAction;
+  record?: {
+    keeperPieceId: string;
+    pieceId?: string;
+    artworkId?: string;
+    editionNumber?: number;
+    plateStatus?: string;
+    physicalDisposition?: string | null;
+    recordVersion: number;
+  };
+  replacement?: IssuedPlatePackage;
+};
+
+/** Freeze a plate repair at confirmation so ambiguous retries cannot change its target. */
+export function beginMaintenancePlateActionAttempt(
+  current: MaintenancePlateActionAttempt | null,
+  input: MaintenancePlateActionInput,
+  createKey: () => string = () => crypto.randomUUID(),
+): MaintenancePlateActionAttempt {
+  if (current) return current;
+  const request = Object.freeze({
+    keeperPieceId: input.keeperPieceId,
+    action: input.action,
+    ...(input.action === 'correct_link'
+      ? {
+          artworkId: input.artworkId?.trim().toUpperCase(),
+          editionNumber: input.editionNumber,
+          physicalEngravingMatches: true as const,
+        }
+      : { physicalDisposition: input.physicalDisposition?.trim() }),
+    reason: input.reason.trim(),
+    idempotencyKey: createKey(),
+    expectedRecordVersion: input.expectedRecordVersion,
+  });
+  return Object.freeze({ request });
+}
+
+export async function saveMaintenancePlateAction(
+  request: MaintenancePlateActionRequest,
+): Promise<MaintenancePlateActionResult> {
+  const body = {
+    action: request.action,
+    ...(request.action === 'correct_link'
+      ? {
+          artworkId: request.artworkId?.trim().toUpperCase(),
+          editionNumber: request.editionNumber,
+          physicalEngravingMatches: true,
+        }
+      : { physicalDisposition: request.physicalDisposition?.trim() }),
+    reason: request.reason.trim(),
+    idempotencyKey: request.idempotencyKey.trim(),
+    expectedRecordVersion: request.expectedRecordVersion,
+  };
+  const response = await fetch(
+    `/api/admin/maintenance/${encodeURIComponent(request.keeperPieceId)}/actions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
+  const data = await readMaintenanceJson<{
+    ok: true;
+    record?: MaintenancePlateActionResult['record'];
+    replacement?: unknown;
+  }>(response);
+  if (request.action === 'replace_plate') {
+    return {
+      action: request.action,
+      replacement: projectIssuedPlateResponse(data.replacement),
+    };
+  }
+  if (!data.record || !Number.isSafeInteger(data.record.recordVersion)) {
+    throw new Error('Incomplete plate maintenance response');
+  }
+  return { action: request.action, record: data.record };
 }

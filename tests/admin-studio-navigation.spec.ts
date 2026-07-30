@@ -496,6 +496,91 @@ test('replays one frozen steward reset after the committed response is lost', as
   )).toHaveLength(1);
 });
 
+test('reviews plate replacement and keeps its one-time secret package only in memory', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Plate replacement package flow runs once.');
+  const reason = `Replace wrong metal ${Date.now()}-${Math.random()}`;
+  const disposition = 'Incorrect metal plate destroyed and photographed; it will not circulate.';
+  const ownershipCode = 'AAAA-BBBB-CCCC-DDDD';
+  const manifest = {
+    schemaVersion: 1,
+    publicCode: 'AR-REPLACE1',
+    artworkId: 'UL-100',
+    editionNumber: 0,
+    publicUrl: 'https://adrianrasmussen.com/r/AR-REPLACE1',
+    ownershipCode,
+    frontSha256: 'a'.repeat(64),
+    undersideSha256: 'b'.repeat(64),
+    generatedAt: '2026-07-31T00:00:00.000Z',
+  };
+  const bodies: Array<Record<string, unknown>> = [];
+  await page.route('**/api/admin/maintenance/kp-local-maintenance/actions', async route => {
+    const body = route.request().postDataJSON();
+    if (body.action !== 'replace_plate') return route.continue();
+    bodies.push(body);
+    return route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        replayed: false,
+        eventId: 'rme-replacement-ui',
+        replacement: {
+          ok: true,
+          ...manifest,
+          frontSvg: '<svg>front</svg>',
+          undersideSvg: '<svg>underside</svg>',
+          manifest,
+          backupStatus: 'verified',
+        },
+      }),
+    });
+  });
+
+  await page.goto('/admin/maintenance');
+  await page.evaluate(async () => {
+    await fetch('/api/admin/registry-unlock', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: 'local-development-secret' }),
+    });
+  });
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await page.getByRole('button', { name: 'Replace physical plate', exact: true }).click();
+  await page.getByLabel('Physical disposition').fill(disposition);
+  await page.getByRole('button', { name: 'Review plate repair' }).click();
+  await expect(page.getByRole('heading', { name: 'Review plate replacement' })).toBeVisible();
+  await expect(page.getByText(/old public identity becomes superseded forever/i)).toBeVisible();
+  await page.getByLabel('Reason for this plate repair').fill(reason);
+  await page.getByRole('button', { name: 'Confirm replacement and mint new identity' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toBeVisible();
+  await expect(page.getByText(ownershipCode, { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Download AR-REPLACE1-front\.svg/ })).toBeVisible();
+  const clear = page.getByRole('button', { name: 'Clear one-time package from this screen' });
+  await expect(clear).toBeDisabled();
+  await page.getByLabel(/downloaded the front SVG/i).check();
+  await expect(clear).toBeEnabled();
+
+  expect(bodies).toHaveLength(1);
+  expect(bodies[0]).toEqual({
+    action: 'replace_plate',
+    physicalDisposition: disposition,
+    reason,
+    idempotencyKey: expect.any(String),
+    expectedRecordVersion: 1,
+  });
+  const privacy = await page.evaluate(() => ({
+    url: location.href,
+    local: JSON.stringify(localStorage),
+    session: JSON.stringify(sessionStorage),
+  }));
+  expect(JSON.stringify(privacy)).not.toContain(ownershipCode);
+  expect(JSON.stringify(privacy)).not.toContain(reason);
+  expect(JSON.stringify(privacy)).not.toContain(disposition);
+
+  await clear.click();
+  await expect(page.getByRole('heading', { name: 'Replacement identity AR-REPLACE1' })).toHaveCount(0);
+});
+
 test('development steward mock validates verified targets, versions, and exact idempotent replay', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Mock steward contract runs once against shared development state.');
   await page.goto('/admin/maintenance');

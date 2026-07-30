@@ -266,6 +266,69 @@ describe('registry Maintenance client contract', () => {
     ]);
   });
 
+  it('freezes exact plate-repair bodies and projects a one-time replacement package', async () => {
+    const bodies: Array<Record<string, unknown>> = [];
+    mock.method(globalThis, 'fetch', async (_input: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body));
+      bodies.push(body);
+      if (body.action === 'correct_link') {
+        return new Response(JSON.stringify({
+          ok: true,
+          record: {
+            keeperPieceId: 'kp-1', pieceId: 'UL-101', editionNumber: 2,
+            recordVersion: 5,
+          },
+        }), { status: 200 });
+      }
+      const manifest = {
+        schemaVersion: 1,
+        publicCode: 'AR-REPLACE1', artworkId: 'UL-101', editionNumber: 2,
+        publicUrl: 'https://adrianrasmussen.com/r/AR-REPLACE1',
+        ownershipCode: 'AAAA-BBBB-CCCC-DDDD',
+        frontSha256: 'a'.repeat(64), undersideSha256: 'b'.repeat(64),
+        generatedAt: '2026-07-31T00:00:00.000Z',
+      };
+      return new Response(JSON.stringify({
+        ok: true,
+        replacement: {
+          ...manifest, frontSvg: '<svg>front</svg>', undersideSvg: '<svg>back</svg>',
+          manifest, backupStatus: 'verified',
+        },
+      }), { status: 201 });
+    });
+    const {
+      beginMaintenancePlateActionAttempt,
+      saveMaintenancePlateAction,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+    const correction = beginMaintenancePlateActionAttempt(null, {
+      keeperPieceId: 'kp-1', action: 'correct_link', artworkId: ' ul-101 ',
+      editionNumber: 2, physicalEngravingMatches: true,
+      reason: ' Correct the digital link to match the metal. ', expectedRecordVersion: 4,
+    }, () => 'plate-correct-1');
+    assert.equal(Object.isFrozen(correction.request), true);
+    await saveMaintenancePlateAction(correction.request);
+    assert.deepEqual(bodies[0], {
+      action: 'correct_link', artworkId: 'UL-101', editionNumber: 2,
+      physicalEngravingMatches: true,
+      reason: 'Correct the digital link to match the metal.',
+      idempotencyKey: 'plate-correct-1', expectedRecordVersion: 4,
+    });
+
+    const replacement = beginMaintenancePlateActionAttempt(null, {
+      keeperPieceId: 'kp-1', action: 'replace_plate',
+      physicalDisposition: 'Original plate destroyed and photographed.',
+      reason: 'Replace metal engraved with the wrong edition.', expectedRecordVersion: 5,
+    }, () => 'plate-replace-1');
+    const result = await saveMaintenancePlateAction(replacement.request);
+    assert.equal(result.replacement?.ownershipCode, 'AAAA-BBBB-CCCC-DDDD');
+    assert.deepEqual(bodies[1], {
+      action: 'replace_plate',
+      physicalDisposition: 'Original plate destroyed and photographed.',
+      reason: 'Replace metal engraved with the wrong edition.',
+      idempotencyKey: 'plate-replace-1', expectedRecordVersion: 5,
+    });
+  });
+
   it('converts familiar currency amounts to exact integer minor amounts', async () => {
     const {
       currencyAmountToInput,
@@ -353,6 +416,12 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /Transfer steward/);
     assert.match(component, /Assign steward/);
     assert.match(component, /selected\.stewardVersion/);
+    assert.match(component, /Correct digital link/);
+    assert.match(component, /Void generated plate/);
+    assert.match(component, /Replace physical plate/);
+    assert.match(component, /If the engraving itself is wrong, never relink it/i);
+    assert.match(component, /Clear one-time package from this screen/);
+    assert.match(component, /projectPlateDownloads/);
     assert.match(component, /verified account email/i);
     assert.match(component, /Unclaimed/);
     assert.match(component, /display location.*clear/i);

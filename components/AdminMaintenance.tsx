@@ -7,6 +7,7 @@ import {
   AdminSection,
 } from './admin/AdminPage';
 import {
+  beginMaintenancePlateActionAttempt,
   beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
   createMaintenanceRequestGate,
@@ -18,6 +19,7 @@ import {
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
   saveMaintenanceAcquisition,
+  saveMaintenancePlateAction,
   saveMaintenanceStewardAction,
   searchMaintenance,
   shouldRetainMaintenanceSaveAttempt,
@@ -26,11 +28,14 @@ import {
   type MaintenanceAcquisitionType,
   type MaintenanceListItem,
   type MaintenancePieceDetail,
+  type MaintenancePlateAction,
+  type MaintenancePlateActionAttempt,
   type MaintenanceSearchFilters,
   type MaintenanceSaveAttempt,
   type MaintenanceStewardAction,
   type MaintenanceStewardActionAttempt,
 } from '../utils/adminRegistryMaintenance';
+import { projectPlateDownloads, type IssuedPlatePackage } from '../utils/adminArtworkRegistry';
 
 type SearchDraft = {
   publicCode: string;
@@ -63,6 +68,14 @@ type StewardReviewState = {
   targetEmail?: string;
   expectedStewardVersion: number;
   before: MaintenancePieceDetail['steward'];
+};
+
+type PlateReviewState = {
+  action: MaintenancePlateAction;
+  expectedRecordVersion: number;
+  artworkId?: string;
+  editionNumber?: number;
+  physicalDisposition?: string;
 };
 
 const EMPTY_SEARCH: SearchDraft = {
@@ -133,6 +146,15 @@ function displayPrivateAmount(acquisition: MaintenanceAcquisitionInput): string 
 function textOrNull(value: string): string | null {
   const normalized = value.trim();
   return normalized || null;
+}
+
+function downloadText(filename: string, mimeType: string, content: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 function draftFromAcquisition(acquisition?: MaintenanceAcquisition): AcquisitionDraft {
@@ -254,6 +276,17 @@ const AdminMaintenance: React.FC = () => {
   const [stewardReason, setStewardReason] = useState('');
   const [stewardError, setStewardError] = useState('');
   const [stewardSaving, setStewardSaving] = useState(false);
+  const [plateEditor, setPlateEditor] = useState<MaintenancePlateAction | null>(null);
+  const [plateArtworkId, setPlateArtworkId] = useState('');
+  const [plateEditionNumber, setPlateEditionNumber] = useState('');
+  const [plateEngravingMatches, setPlateEngravingMatches] = useState(false);
+  const [plateDisposition, setPlateDisposition] = useState('');
+  const [plateReview, setPlateReview] = useState<PlateReviewState | null>(null);
+  const [plateReason, setPlateReason] = useState('');
+  const [plateError, setPlateError] = useState('');
+  const [plateSaving, setPlateSaving] = useState(false);
+  const [replacementPackage, setReplacementPackage] = useState<IssuedPlatePackage | null>(null);
+  const [replacementArchived, setReplacementArchived] = useState(false);
   const [notice, setNotice] = useState('');
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -261,10 +294,13 @@ const AdminMaintenance: React.FC = () => {
   const unlockInputRef = useRef<HTMLInputElement>(null);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
   const stewardReasonRef = useRef<HTMLTextAreaElement>(null);
+  const plateReasonRef = useRef<HTMLTextAreaElement>(null);
   const saveAttemptRef = useRef<MaintenanceSaveAttempt | null>(null);
   const saveInFlightRef = useRef(false);
   const stewardAttemptRef = useRef<MaintenanceStewardActionAttempt | null>(null);
   const stewardInFlightRef = useRef(false);
+  const plateAttemptRef = useRef<MaintenancePlateActionAttempt | null>(null);
+  const plateInFlightRef = useRef(false);
   const searchGateRef = useRef(createMaintenanceRequestGate());
   const detailGateRef = useRef(createMaintenanceRequestGate());
 
@@ -284,8 +320,18 @@ const AdminMaintenance: React.FC = () => {
     return stewardAttemptRef.current === null;
   };
 
-  const clearMaintenanceAttempts = () => clearSaveAttempt() && clearStewardAttempt();
-  const transitionBusy = saving || stewardSaving;
+  const clearPlateAttempt = () => {
+    plateAttemptRef.current = discardMaintenanceSaveAttempt(
+      plateAttemptRef.current,
+      plateInFlightRef.current,
+    );
+    return plateAttemptRef.current === null;
+  };
+
+  const clearMaintenanceAttempts = () => clearSaveAttempt()
+    && clearStewardAttempt()
+    && clearPlateAttempt();
+  const transitionBusy = saving || stewardSaving || plateSaving || Boolean(replacementPackage);
 
   const loadSearch = useCallback(async (filters: MaintenanceSearchFilters = {}, signal?: AbortSignal) => {
     const generation = searchGateRef.current.next();
@@ -347,6 +393,10 @@ const AdminMaintenance: React.FC = () => {
     if (stewardReview) stewardReasonRef.current?.focus();
   }, [stewardReview]);
 
+  useEffect(() => {
+    if (plateReview) plateReasonRef.current?.focus();
+  }, [plateReview]);
+
   const searchFilters = (): MaintenanceSearchFilters => {
     const edition = searchDraft.editionNumber.trim();
     if (edition && (!/^\d+$/.test(edition) || Number(edition) > 9999)) {
@@ -370,6 +420,8 @@ const AdminMaintenance: React.FC = () => {
       setReview(null);
       setStewardEditor(null);
       setStewardReview(null);
+      setPlateEditor(null);
+      setPlateReview(null);
       setNotice('');
       setDetailError('');
       void loadSearch(searchFilters());
@@ -387,6 +439,8 @@ const AdminMaintenance: React.FC = () => {
     setReview(null);
     setStewardEditor(null);
     setStewardReview(null);
+    setPlateEditor(null);
+    setPlateReview(null);
     setNotice('');
     setDetailError('');
     void loadSearch({});
@@ -399,6 +453,8 @@ const AdminMaintenance: React.FC = () => {
     setReview(null);
     setStewardEditor(null);
     setStewardReview(null);
+    setPlateEditor(null);
+    setPlateReview(null);
     setNotice('');
     void loadDetail(item.id).catch(() => undefined);
   };
@@ -407,6 +463,8 @@ const AdminMaintenance: React.FC = () => {
     if (!clearMaintenanceAttempts()) return;
     setStewardEditor(null);
     setStewardReview(null);
+    setPlateEditor(null);
+    setPlateReview(null);
     setEditor(acquisition);
     setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
     setReview(null);
@@ -433,6 +491,9 @@ const AdminMaintenance: React.FC = () => {
     setStewardTargetEmail('');
     setStewardReason('');
     setStewardError('');
+    setPlateEditor(null);
+    setPlateReview(null);
+    setPlateError('');
     setNotice('');
     if (action === 'reset_steward' && selected.steward) {
       setStewardReview({
@@ -470,6 +531,202 @@ const AdminMaintenance: React.FC = () => {
     });
     setStewardReason('');
     setStewardError('');
+  };
+
+  const openPlateEditor = (action: MaintenancePlateAction) => {
+    if (!selected || !clearMaintenanceAttempts()) return;
+    setEditor(undefined);
+    setReview(null);
+    setStewardEditor(null);
+    setStewardReview(null);
+    setPlateEditor(action);
+    setPlateArtworkId(selected.public.artworkId);
+    setPlateEditionNumber(String(selected.public.editionNumber));
+    setPlateEngravingMatches(false);
+    setPlateDisposition('');
+    setPlateReview(null);
+    setPlateReason('');
+    setPlateError('');
+    setNotice('');
+  };
+
+  const closePlateEditor = () => {
+    if (!clearPlateAttempt()) return;
+    setPlateEditor(null);
+    setPlateReview(null);
+    setPlateArtworkId('');
+    setPlateEditionNumber('');
+    setPlateEngravingMatches(false);
+    setPlateDisposition('');
+    setPlateReason('');
+    setPlateError('');
+  };
+
+  const preparePlateReview = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selected || !plateEditor || !clearPlateAttempt()) return;
+    if (plateEditor === 'correct_link') {
+      const artworkId = plateArtworkId.trim().toUpperCase();
+      const edition = plateEditionNumber.trim();
+      if (!/^[A-Z]{2,3}-\d{3}$/.test(artworkId)
+        || !/^\d+$/.test(edition)
+        || Number(edition) > 9999) {
+        setPlateError('Enter the exact artwork ID and a whole edition number from 0 to 9999.');
+        return;
+      }
+      if (!plateEngravingMatches) {
+        setPlateError('Read the physical engraving and confirm it exactly before correcting the digital link.');
+        return;
+      }
+      setPlateReview({
+        action: plateEditor,
+        expectedRecordVersion: selected.physical.recordVersion,
+        artworkId,
+        editionNumber: Number(edition),
+      });
+    } else {
+      const physicalDisposition = plateDisposition.trim();
+      if (!physicalDisposition || physicalDisposition.length > 1000) {
+        setPlateError('Record exactly what will happen to the incorrect physical plate.');
+        return;
+      }
+      setPlateReview({
+        action: plateEditor,
+        expectedRecordVersion: selected.physical.recordVersion,
+        physicalDisposition,
+      });
+    }
+    setPlateReason('');
+    setPlateError('');
+  };
+
+  const confirmPlateSave = async () => {
+    if (!selected || !plateReview) return;
+    if (!plateReason.trim()) {
+      setPlateError('A reason is required before this plate repair can be saved.');
+      plateReasonRef.current?.focus();
+      return;
+    }
+    if (!registryUnlocked) {
+      setPlateError('Unlock the private registry before confirming this repair.');
+      return;
+    }
+    const attempt = beginMaintenancePlateActionAttempt(plateAttemptRef.current, {
+      keeperPieceId: selected.id,
+      action: plateReview.action,
+      reason: plateReason,
+      expectedRecordVersion: plateReview.expectedRecordVersion,
+      ...(plateReview.action === 'correct_link'
+        ? {
+            artworkId: plateReview.artworkId,
+            editionNumber: plateReview.editionNumber,
+            physicalEngravingMatches: true,
+          }
+        : { physicalDisposition: plateReview.physicalDisposition }),
+    });
+    plateAttemptRef.current = attempt;
+    plateInFlightRef.current = true;
+    setPlateSaving(true);
+    setPlateError('');
+    try {
+      const saved = await saveMaintenancePlateAction(attempt.request);
+      plateInFlightRef.current = false;
+      plateAttemptRef.current = null;
+      if (saved.action === 'replace_plate' && saved.replacement) {
+        setSelected(current => current && current.id === attempt.request.keeperPieceId
+          ? {
+              ...current,
+              public: { ...current.public, plateStatus: 'superseded' },
+              physical: {
+                ...current.physical,
+                recordVersion: current.physical.recordVersion + 1,
+              },
+            }
+          : current);
+        setReplacementPackage(saved.replacement);
+        setReplacementArchived(false);
+        setPlateEditor(null);
+        setPlateReview(null);
+        setPlateReason('');
+        setNotice('Replacement identity created. Download and secure the one-time package before leaving this record.');
+        return;
+      }
+
+      const record = saved.record!;
+      const savedMessage = saved.action === 'correct_link'
+        ? 'Digital link corrected to match the physical engraving. The encrypted backup must be verified again.'
+        : 'Generated plate voided. Its public identity is permanently retired.';
+      setSelected(current => {
+        if (!current || current.id !== attempt.request.keeperPieceId) return current;
+        if (saved.action === 'correct_link') {
+          return {
+            ...current,
+            public: {
+              ...current.public,
+              artworkId: record.pieceId!,
+              editionNumber: record.editionNumber!,
+            },
+            physical: {
+              ...current.physical,
+              recordVersion: record.recordVersion,
+              recovery: {
+                ...current.physical.recovery,
+                backupStatus: 'pending',
+                backupAt: null,
+              },
+            },
+          };
+        }
+        return {
+          ...current,
+          public: { ...current.public, plateStatus: record.plateStatus || 'void' },
+          physical: { ...current.physical, recordVersion: record.recordVersion },
+        };
+      });
+      setPlateEditor(null);
+      setPlateReview(null);
+      setPlateReason('');
+      setNotice(savedMessage);
+      try {
+        await loadDetail(attempt.request.keeperPieceId);
+      } catch {
+        setNotice(`${savedMessage} The save is definitive, but refreshed detail is unavailable. Reload before another change.`);
+      }
+    } catch (error) {
+      plateInFlightRef.current = false;
+      if (!shouldRetainMaintenanceSaveAttempt(error)) plateAttemptRef.current = null;
+      if (error instanceof MaintenanceRequestError
+        && (error.code === 'registry_locked' || error.status === 401 || error.status === 403)) {
+        setRegistryUnlocked(false);
+      }
+      if (error instanceof MaintenanceRequestError && error.code === 'version_conflict') {
+        try {
+          await loadDetail(attempt.request.keeperPieceId);
+          setPlateReview(null);
+          setPlateEditor(null);
+          setNotice('The plate record changed after you opened it. The latest detail has been reloaded; review it again.');
+        } catch {
+          setPlateError('The plate record changed, but the latest detail could not be reloaded. Your exact review is preserved.');
+        }
+      } else {
+        setPlateError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same plate repair.'));
+      }
+    } finally {
+      plateInFlightRef.current = false;
+      setPlateSaving(false);
+    }
+  };
+
+  const dismissReplacementPackage = async () => {
+    if (!selected || !replacementPackage || !replacementArchived) return;
+    setReplacementPackage(null);
+    setReplacementArchived(false);
+    setNotice('One-time replacement package cleared from this screen.');
+    try {
+      await loadDetail(selected.id);
+    } catch {
+      setDetailError('The replacement was saved, but the superseded record could not be refreshed.');
+    }
   };
 
   const prepareReview = (event: React.FormEvent) => {
@@ -773,6 +1030,167 @@ const AdminMaintenance: React.FC = () => {
               ['Backup status', selected.physical.recovery.backupStatus],
               ['Backup checked', displayDate(selected.physical.recovery.backupAt)],
             ]} />
+          </AdminSection>
+
+          <AdminSection title="Plate repair" description="Use the metal as the source of truth. Every repair is reasoned, version-checked, and retained in history.">
+            {!replacementPackage && (
+              <>
+                <AdminAlert tone="warning">
+                  <p><strong>Read the physical plate before choosing.</strong> If the metal is correct and only the database link is wrong, correct the digital link. If the engraving itself is wrong, never relink it. Void an unactivated plate or replace an active plate.</p>
+                </AdminAlert>
+                <div className="maintenance-section-actions">
+                  {['generated', 'active'].includes(selected.public.plateStatus) && (
+                    <button type="button" className={quietButtonClass} onClick={() => openPlateEditor('correct_link')} disabled={transitionBusy}>Correct digital link</button>
+                  )}
+                  {selected.public.plateStatus === 'generated' && (
+                    <button type="button" className={primaryButtonClass} onClick={() => openPlateEditor('void_plate')} disabled={transitionBusy}>Void generated plate</button>
+                  )}
+                  {selected.public.plateStatus === 'active' && (
+                    <button type="button" className={primaryButtonClass} onClick={() => openPlateEditor('replace_plate')} disabled={transitionBusy}>Replace physical plate</button>
+                  )}
+                </div>
+                {!['generated', 'active'].includes(selected.public.plateStatus) && (
+                  <p className="maintenance-muted">This plate identity is {selected.public.plateStatus} and cannot be edited or reused.</p>
+                )}
+              </>
+            )}
+
+            {plateEditor && !plateReview && !replacementPackage && (
+              <form className="maintenance-acquisition-form" onSubmit={preparePlateReview}>
+                <h3>{plateEditor === 'correct_link' ? 'Correct digital link' : plateEditor === 'void_plate' ? 'Void generated plate' : 'Replace physical plate'}</h3>
+                {plateEditor === 'correct_link' ? (
+                  <>
+                    <p>This keeps the permanent public code but rebuilds its encrypted recovery package for the artwork and edition actually engraved on the metal.</p>
+                    <div className="maintenance-form-grid">
+                      <label htmlFor="maintenance-plate-artwork-id">
+                        <span className={labelClass}>Artwork ID engraved on metal</span>
+                        <input id="maintenance-plate-artwork-id" className={inputClass} value={plateArtworkId} onChange={event => { clearPlateAttempt(); setPlateArtworkId(event.target.value); }} autoComplete="off" required />
+                      </label>
+                      <label htmlFor="maintenance-plate-edition-number">
+                        <span className={labelClass}>Edition number engraved on metal</span>
+                        <input id="maintenance-plate-edition-number" className={inputClass} inputMode="numeric" value={plateEditionNumber} onChange={event => { clearPlateAttempt(); setPlateEditionNumber(event.target.value); }} autoComplete="off" required />
+                      </label>
+                    </div>
+                    <label className="maintenance-confirmation" htmlFor="maintenance-plate-engraving-match">
+                      <input id="maintenance-plate-engraving-match" type="checkbox" checked={plateEngravingMatches} onChange={event => { clearPlateAttempt(); setPlateEngravingMatches(event.target.checked); }} />
+                      <span>I read the physical metal. Its artwork ID, edition number, and public code are correct. Only the digital relationship is wrong.</span>
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <p>{plateEditor === 'void_plate'
+                      ? 'The generated identity will be permanently retired and its code can never be reused.'
+                      : 'The active identity will become superseded. A new public code, Ownership Code, and fabrication package will be created once.'}</p>
+                    <label htmlFor="maintenance-plate-disposition">
+                      <span className={labelClass}>Physical disposition</span>
+                      <textarea id="maintenance-plate-disposition" className={inputClass} rows={3} maxLength={1000} value={plateDisposition} onChange={event => { clearPlateAttempt(); setPlateDisposition(event.target.value); }} placeholder="Example: Incorrect plate destroyed and photographed; it will not be attached or circulated." required />
+                      <small className="maintenance-helper">State exactly how the incorrect metal is marked, destroyed, retained, or otherwise prevented from being mistaken for the valid plate.</small>
+                    </label>
+                  </>
+                )}
+                {plateError && <p className="maintenance-inline-error" role="alert">{plateError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closePlateEditor} disabled={plateSaving}>Cancel</button>
+                  <button type="submit" className={primaryButtonClass} disabled={plateSaving}>Review plate repair</button>
+                </div>
+              </form>
+            )}
+
+            {plateReview && !replacementPackage && (
+              <div className="maintenance-review" aria-labelledby="maintenance-plate-review-title">
+                <div className="maintenance-review-heading">
+                  <p className="admin-eyebrow">Permanent consequence</p>
+                  <h3 id="maintenance-plate-review-title">Review {plateReview.action === 'correct_link' ? 'digital relink' : plateReview.action === 'void_plate' ? 'plate void' : 'plate replacement'}</h3>
+                  <p>{plateReview.action === 'correct_link'
+                    ? 'The public code stays the same. The database identity, fabrication hashes, and encrypted recovery envelope change to match the metal, and backup verification returns to pending.'
+                    : plateReview.action === 'void_plate'
+                      ? 'This generated public identity becomes void forever. It cannot be reactivated or reused.'
+                      : 'The old public identity becomes superseded forever. A new generated identity and one-time secret package are created for replacement metal.'}</p>
+                </div>
+                <div className="maintenance-review-grid">
+                  <div>
+                    <h4>Before</h4>
+                    <DefinitionList items={[
+                      ['Artwork ID', selected.public.artworkId],
+                      ['Edition', displayEdition(selected.public.editionNumber, selected.public.editionSize)],
+                      ['Public code', selected.public.publicCode],
+                      ['Plate status', selected.public.plateStatus],
+                      ['Record version', selected.physical.recordVersion],
+                    ]} />
+                  </div>
+                  <div>
+                    <h4>After</h4>
+                    <DefinitionList items={plateReview.action === 'correct_link' ? [
+                      ['Artwork ID', plateReview.artworkId],
+                      ['Edition number', plateReview.editionNumber],
+                      ['Public code', selected.public.publicCode],
+                      ['Backup status', 'Pending re-verification'],
+                      ['Record version', plateReview.expectedRecordVersion + 1],
+                    ] : [
+                      ['Old plate status', plateReview.action === 'void_plate' ? 'Void' : 'Superseded'],
+                      ['Physical disposition', plateReview.physicalDisposition],
+                      ['Old public code', 'Permanently retired'],
+                      ['New identity', plateReview.action === 'replace_plate' ? 'Generated after confirmation' : 'Not created here'],
+                    ]} />
+                  </div>
+                </div>
+                <label htmlFor="maintenance-plate-reason">
+                  <span className={labelClass}>Reason for this plate repair</span>
+                  <textarea ref={plateReasonRef} id="maintenance-plate-reason" className={inputClass} rows={3} required value={plateReason} disabled={plateSaving} onChange={event => { clearPlateAttempt(); setPlateReason(event.target.value); }} />
+                </label>
+                {!registryUnlocked && (
+                  <AdminAlert tone="warning">
+                    <p>Unlock the private registry before confirming this permanent repair.</p>
+                    <form className="maintenance-unlock-form" onSubmit={unlockRegistry}>
+                      <label htmlFor="maintenance-registry-secret">
+                        <span className={labelClass}>Registry secret</span>
+                        <input ref={unlockInputRef} id="maintenance-registry-secret" className={inputClass} type="password" autoComplete="current-password" />
+                      </label>
+                      <button type="submit" className={quietButtonClass} disabled={unlockBusy}>{unlockBusy ? 'Unlocking…' : 'Unlock registry'}</button>
+                    </form>
+                    {unlockError && <p className="maintenance-inline-error" role="alert">{unlockError}</p>}
+                  </AdminAlert>
+                )}
+                {registryUnlocked && <p className="maintenance-unlocked" role="status">Private registry unlocked for saving.</p>}
+                {plateError && <p className="maintenance-inline-error" role="alert">{plateError}</p>}
+                <div className="maintenance-actions">
+                  <button type="button" className={quietButtonClass} onClick={closePlateEditor} disabled={plateSaving}>Cancel</button>
+                  <button type="button" className={primaryButtonClass} onClick={() => void confirmPlateSave()} disabled={plateSaving || !registryUnlocked || !plateReason.trim()}>{plateSaving ? 'Saving…' : plateReview.action === 'correct_link' ? 'Confirm digital relink' : plateReview.action === 'void_plate' ? 'Confirm permanent void' : 'Confirm replacement and mint new identity'}</button>
+                </div>
+              </div>
+            )}
+
+            {replacementPackage && (
+              <div className="maintenance-review" aria-labelledby="maintenance-replacement-package-title">
+                <div className="maintenance-review-heading">
+                  <p className="admin-eyebrow">One-time private package</p>
+                  <h3 id="maintenance-replacement-package-title">Replacement identity {replacementPackage.publicCode}</h3>
+                  <p>The old plate is already superseded. This Ownership Code and fabrication package are held only in this screen memory. Download and secure all three files before clearing it.</p>
+                </div>
+                <AdminAlert tone="warning"><p>Do not engrave until the replacement package passes the same copied-backup recovery check and physical qualification as every new plate.</p></AdminAlert>
+                <DefinitionList items={[
+                  ['Ownership Code', <span className="maintenance-secret-value">{replacementPackage.ownershipCode}</span>],
+                  ['Public code', replacementPackage.publicCode],
+                  ['Artwork ID', replacementPackage.manifest.artworkId],
+                  ['Edition number', replacementPackage.manifest.editionNumber],
+                  ['Front SHA-256', replacementPackage.frontSha256],
+                  ['Underside SHA-256', replacementPackage.undersideSha256],
+                  ['Encrypted backup', replacementPackage.backupStatus || 'Pending'],
+                ]} />
+                <div className="maintenance-actions">
+                  {projectPlateDownloads(replacementPackage).map(download => (
+                    <button key={download.filename} type="button" className={quietButtonClass} onClick={() => downloadText(download.filename, download.mimeType, download.content)}>Download {download.filename}</button>
+                  ))}
+                </div>
+                <label className="maintenance-confirmation" htmlFor="maintenance-replacement-archived">
+                  <input id="maintenance-replacement-archived" type="checkbox" checked={replacementArchived} onChange={event => setReplacementArchived(event.target.checked)} />
+                  <span>I downloaded the front SVG, private underside SVG, and private manifest, and secured the Ownership Code outside this browser.</span>
+                </label>
+                <div className="maintenance-actions">
+                  <button type="button" className={primaryButtonClass} onClick={() => void dismissReplacementPackage()} disabled={!replacementArchived}>Clear one-time package from this screen</button>
+                </div>
+              </div>
+            )}
           </AdminSection>
 
           <AdminSection title="Private acquisition" description="Exact amounts and collector references stay inside this authenticated detail.">
