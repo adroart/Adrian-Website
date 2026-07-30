@@ -61,20 +61,32 @@ describe('registry Maintenance client contract', () => {
     }]);
   });
 
-  it('uses one in-memory idempotency key for each confirmed create or correction', async () => {
-    const keys = ['attempt-create', 'attempt-correct'];
-    const randomUUID = mock.fn(() => keys.shift() || 'unexpected');
-    mock.method(globalThis.crypto, 'randomUUID', randomUUID as typeof crypto.randomUUID);
+  it('reuses one in-memory key after a lost response and creates one record', async () => {
+    const createKey = mock.fn(() => 'attempt-lost-response');
     const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const records = new Map<string, { acquisitionId: string; recordVersion: number }>();
+    let loseFirstResponse = true;
     mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
       requests.push({ url: String(input), init });
+      const body = JSON.parse(String(init?.body));
+      const existing = records.get(body.idempotencyKey);
+      if (!existing) records.set(body.idempotencyKey, { acquisitionId: 'acq-1', recordVersion: 1 });
+      if (loseFirstResponse) {
+        loseFirstResponse = false;
+        throw new TypeError('The response was lost after the server committed.');
+      }
       return new Response(JSON.stringify({
         ok: true,
-        acquisition: { acquisitionId: 'acq-1', recordVersion: requests.length },
-      }), { status: requests.length === 1 ? 201 : 200 });
+        replayed: Boolean(existing),
+        acquisition: records.get(body.idempotencyKey),
+      }), { status: 200 });
     });
 
-    const { saveMaintenanceAcquisition } = await import('../utils/adminRegistryMaintenance.ts');
+    const {
+      beginMaintenanceSaveAttempt,
+      saveMaintenanceAcquisition,
+      shouldRetainMaintenanceSaveAttempt,
+    } = await import('../utils/adminRegistryMaintenance.ts');
     const acquisition = {
       acquisitionType: 'sale' as const,
       acquiredAt: '2026-07-30',
@@ -85,34 +97,62 @@ describe('registry Maintenance client contract', () => {
       documentReference: 'private receipt',
       publicProvenance: 'Acquired from the artist.',
     };
-    await saveMaintenanceAcquisition({ keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition });
-    await saveMaintenanceAcquisition({
-      keeperPieceId: 'kp-1',
-      acquisitionId: 'acq-1',
-      expectedVersion: 1,
-      reason: 'Correct amount.',
-      acquisition,
+    const attemptKey = beginMaintenanceSaveAttempt(null, createKey);
+    let lostResponse: unknown;
+    await assert.rejects(
+      saveMaintenanceAcquisition({
+        keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
+        idempotencyKey: attemptKey,
+      }),
+      error => {
+        lostResponse = error;
+        return error instanceof TypeError;
+      },
+    );
+    assert.equal(shouldRetainMaintenanceSaveAttempt(lostResponse), true);
+
+    const retryKey = beginMaintenanceSaveAttempt(attemptKey, createKey);
+    const replay = await saveMaintenanceAcquisition({
+      keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
+      idempotencyKey: retryKey,
     });
 
-    assert.equal(randomUUID.mock.callCount(), 2);
-    assert.deepEqual(requests.map(request => [request.url, request.init?.method]), [
-      ['/api/admin/maintenance/kp-1/acquisitions', 'POST'],
-      ['/api/admin/maintenance/kp-1/acquisitions/acq-1', 'PUT'],
+    assert.equal(createKey.mock.callCount(), 1);
+    assert.equal(records.size, 1);
+    assert.equal(replay.acquisitionId, 'acq-1');
+    assert.deepEqual(requests.map(request => JSON.parse(String(request.init?.body)).idempotencyKey), [
+      'attempt-lost-response', 'attempt-lost-response',
     ]);
-    const createBody = JSON.parse(String(requests[0].init?.body));
-    const correctionBody = JSON.parse(String(requests[1].init?.body));
-    assert.deepEqual(createBody, {
-      idempotencyKey: 'attempt-create',
-      reason: 'Record acquisition.',
-      acquisition,
-    });
-    assert.deepEqual(correctionBody, {
-      idempotencyKey: 'attempt-correct',
-      reason: 'Correct amount.',
-      expectedVersion: 1,
-      acquisition,
-    });
     assert.doesNotMatch(requests.map(request => request.url).join(' '), /125000|IDR|collector|receipt/i);
+  });
+
+  it('clears attempts only for definitive success or client rejection', async () => {
+    const { MaintenanceRequestError, shouldRetainMaintenanceSaveAttempt } = await import('../utils/adminRegistryMaintenance.ts');
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new TypeError('network lost')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(500, 'maintenance_write_failed')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(503, 'maintenance_write_failed')), true);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(409, 'version_conflict')), false);
+    assert.equal(shouldRetainMaintenanceSaveAttempt(new MaintenanceRequestError(403, 'registry_locked')), false);
+  });
+
+  it('converts familiar currency amounts to exact integer minor amounts', async () => {
+    const {
+      currencyAmountToInput,
+      formatMaintenanceCurrencyAmount,
+      parseMaintenanceCurrencyAmount,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+
+    assert.equal(parseMaintenanceCurrencyAmount('1250.00', 'USD'), 125000);
+    assert.equal(parseMaintenanceCurrencyAmount('0.01', 'USD'), 1);
+    assert.equal(currencyAmountToInput(125000, 'USD'), '1250.00');
+    assert.equal(formatMaintenanceCurrencyAmount(125000, 'USD'), 'USD 1,250.00');
+    assert.throws(() => parseMaintenanceCurrencyAmount('1.005', 'USD'), /two decimal places/i);
+
+    assert.equal(parseMaintenanceCurrencyAmount('125000', 'IDR'), 125000);
+    assert.equal(currencyAmountToInput(125000, 'IDR'), '125000');
+    assert.equal(formatMaintenanceCurrencyAmount(125000, 'IDR'), 'IDR 125,000');
+    assert.throws(() => parseMaintenanceCurrencyAmount('125000.5', 'IDR'), /whole amount/i);
+    assert.throws(() => parseMaintenanceCurrencyAmount('10', 'XTS'), /unsupported currency/i);
   });
 });
 
@@ -159,7 +199,9 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /version_conflict/);
     assert.match(component, /loadDetail/);
     assert.ok(component.indexOf('version_conflict') < component.lastIndexOf('loadDetail'));
-    assert.match(client, /crypto\.randomUUID\(\)/);
+    assert.match(component, /saveAttemptKeyRef/);
+    assert.match(component, /beginMaintenanceSaveAttempt/);
+    assert.match(component, /shouldRetainMaintenanceSaveAttempt/);
   });
 
   it('labels every control and provides live loading, error, and status feedback', () => {
@@ -182,6 +224,7 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /role=["']status["']/);
     assert.match(component, /role=["']alert["']/);
     assert.match(component, /Loading|Searching/);
-    assert.match(component, /smallest unit/);
+    assert.match(component, /familiar amount|normally write/i);
+    assert.doesNotMatch(component, /minor units|smallest units/i);
   });
 });

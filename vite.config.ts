@@ -133,6 +133,10 @@ function mockApiPlugin(): Plugin {
   const invoices: any[] = [];
   let registryUnlocked = false;
   let maintenanceAcquisitionId = 1;
+  const maintenanceMutationAttempts = new Map<string, {
+    signature: string;
+    acquisition: any;
+  }>();
   const maintenancePiece: any = {
     id: 'kp-local-maintenance',
     public: {
@@ -178,6 +182,37 @@ function mockApiPlugin(): Plugin {
       publicCode: maintenancePiece.public.publicCode,
       plateStatus: maintenancePiece.public.plateStatus,
     };
+  }
+
+  function stableMockValue(value: any): any {
+    if (Array.isArray(value)) return value.map(stableMockValue);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(
+      Object.keys(value).sort().map(key => [key, stableMockValue(value[key])]),
+    );
+  }
+
+  function maintenanceMutationSignature(value: any): string {
+    return JSON.stringify(stableMockValue(value));
+  }
+
+  function replayMaintenanceMutation(
+    res: any,
+    idempotencyKey: unknown,
+    signature: string,
+  ): boolean {
+    if (typeof idempotencyKey !== 'string' || !idempotencyKey.trim()) {
+      send(res, 400, { ok: false, error: 'invalid_idempotency_key' });
+      return true;
+    }
+    const existing = maintenanceMutationAttempts.get(idempotencyKey.trim());
+    if (!existing) return false;
+    if (existing.signature !== signature) {
+      send(res, 409, { ok: false, error: 'idempotency_conflict' });
+      return true;
+    }
+    send(res, 200, { ok: true, replayed: true, acquisition: existing.acquisition });
+    return true;
   }
 
   function devAdminStatus(req: any): 'authorized' | 'guest' | 'forbidden' {
@@ -313,6 +348,13 @@ function mockApiPlugin(): Plugin {
           if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
           if (createMatch[1] !== maintenancePiece.id) return send(res, 404, { ok: false, error: 'not_found' });
           const body = await readBody(req);
+          const signature = maintenanceMutationSignature({
+            operation: 'create_acquisition',
+            keeperPieceId: createMatch[1],
+            reason: typeof body.reason === 'string' ? body.reason.trim() : body.reason,
+            acquisition: body.acquisition,
+          });
+          if (replayMaintenanceMutation(res, body.idempotencyKey, signature)) return;
           const createdAt = nowIso();
           const acquisition = {
             acquisitionId: `acq-local-${maintenanceAcquisitionId}`,
@@ -336,17 +378,27 @@ function mockApiPlugin(): Plugin {
             relatedRecordId: acquisition.acquisitionId,
             createdAt,
           });
+          maintenanceMutationAttempts.set(body.idempotencyKey.trim(), { signature, acquisition });
           return send(res, 201, { ok: true, replayed: false, acquisition });
         }
 
         const correctionMatch = url.pathname.match(/^\/([^/]+)\/acquisitions\/([^/]+)$/);
         if (req.method === 'PUT' && correctionMatch) {
           if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
+          const body = await readBody(req);
+          const signature = maintenanceMutationSignature({
+            operation: 'correct_acquisition',
+            keeperPieceId: correctionMatch[1],
+            acquisitionId: correctionMatch[2],
+            expectedVersion: body.expectedVersion,
+            reason: typeof body.reason === 'string' ? body.reason.trim() : body.reason,
+            acquisition: body.acquisition,
+          });
+          if (replayMaintenanceMutation(res, body.idempotencyKey, signature)) return;
           const acquisitionIndex = maintenancePiece.acquisitions.findIndex(
             (item: any) => item.acquisitionId === correctionMatch[2] && item.keeperPieceId === correctionMatch[1],
           );
           if (acquisitionIndex < 0) return send(res, 404, { ok: false, error: 'not_found' });
-          const body = await readBody(req);
           const before = maintenancePiece.acquisitions[acquisitionIndex];
           if (before.recordVersion !== body.expectedVersion) {
             return send(res, 409, { ok: false, error: 'version_conflict' });
@@ -371,6 +423,7 @@ function mockApiPlugin(): Plugin {
             relatedRecordId: acquisition.acquisitionId,
             createdAt: updatedAt,
           });
+          maintenanceMutationAttempts.set(body.idempotencyKey.trim(), { signature, acquisition });
           return send(res, 200, { ok: true, replayed: false, acquisition });
         }
 

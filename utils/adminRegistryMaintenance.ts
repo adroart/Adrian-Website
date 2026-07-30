@@ -7,6 +7,21 @@ export type MaintenanceAcquisitionType =
   | 'inheritance'
   | 'other';
 
+export const MAINTENANCE_CURRENCIES = [
+  { code: 'USD', label: 'US dollar', exponent: 2 },
+  { code: 'EUR', label: 'Euro', exponent: 2 },
+  { code: 'GBP', label: 'British pound', exponent: 2 },
+  { code: 'AUD', label: 'Australian dollar', exponent: 2 },
+  { code: 'CAD', label: 'Canadian dollar', exponent: 2 },
+  { code: 'SGD', label: 'Singapore dollar', exponent: 2 },
+  { code: 'THB', label: 'Thai baht', exponent: 2 },
+  { code: 'IDR', label: 'Indonesian rupiah', exponent: 0 },
+  { code: 'JPY', label: 'Japanese yen', exponent: 0 },
+  { code: 'KRW', label: 'South Korean won', exponent: 0 },
+  { code: 'VND', label: 'Vietnamese dong', exponent: 0 },
+  { code: 'KWD', label: 'Kuwaiti dinar', exponent: 3 },
+] as const;
+
 /** Only public fields are allowed to become query-string values. */
 export type MaintenanceSearchFilters = {
   publicCode?: string;
@@ -105,6 +120,72 @@ export class MaintenanceRequestError extends Error {
   }
 }
 
+function supportedCurrency(value: string) {
+  const code = value.trim().toUpperCase();
+  const currency = MAINTENANCE_CURRENCIES.find(candidate => candidate.code === code);
+  if (!currency) throw new Error(`Unsupported currency ${code || 'code'}. Choose a supported currency.`);
+  return currency;
+}
+
+function decimalPlacesLabel(exponent: number): string {
+  if (exponent === 1) return 'one decimal place';
+  if (exponent === 2) return 'two decimal places';
+  if (exponent === 3) return 'three decimal places';
+  return `${exponent} decimal places`;
+}
+
+/** Convert a familiar decimal amount to the exact integer stored by the registry. */
+export function parseMaintenanceCurrencyAmount(value: string, currencyCode: string): number {
+  const currency = supportedCurrency(currencyCode);
+  const amount = value.trim();
+  const match = /^(0|[1-9]\d*)(?:\.(\d+))?$/.exec(amount);
+  if (!match) throw new Error('Enter a nonnegative familiar amount using digits and an optional decimal point.');
+  const fraction = match[2] || '';
+  if (currency.exponent === 0 && fraction) {
+    throw new Error(`${currency.code} requires a whole amount without decimals.`);
+  }
+  if (fraction.length > currency.exponent) {
+    throw new Error(`${currency.code} supports up to ${decimalPlacesLabel(currency.exponent)}; the amount was not rounded.`);
+  }
+  const minorText = `${match[1]}${fraction.padEnd(currency.exponent, '0')}`.replace(/^0+(?=\d)/, '');
+  const amountMinor = Number(minorText || '0');
+  if (!Number.isSafeInteger(amountMinor)) throw new Error('Amount is too large to store exactly.');
+  return amountMinor;
+}
+
+/** Convert the stored integer to a decimal string suitable for the amount field. */
+export function currencyAmountToInput(amountMinor: number, currencyCode: string): string {
+  const currency = supportedCurrency(currencyCode);
+  if (!Number.isSafeInteger(amountMinor) || amountMinor < 0) {
+    throw new Error('Stored amount is not an exact nonnegative integer.');
+  }
+  if (currency.exponent === 0) return String(amountMinor);
+  const digits = String(amountMinor).padStart(currency.exponent + 1, '0');
+  return `${digits.slice(0, -currency.exponent)}.${digits.slice(-currency.exponent)}`;
+}
+
+/** Display the exact familiar amount without floating-point conversion or rounding. */
+export function formatMaintenanceCurrencyAmount(amountMinor: number, currencyCode: string): string {
+  const currency = supportedCurrency(currencyCode);
+  const input = currencyAmountToInput(amountMinor, currency.code);
+  const [whole, fraction] = input.split('.');
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${currency.code} ${grouped}${fraction === undefined ? '' : `.${fraction}`}`;
+}
+
+/** Start one confirmation attempt, or retain its key while its outcome is ambiguous. */
+export function beginMaintenanceSaveAttempt(
+  currentKey: string | null,
+  createKey: () => string = () => crypto.randomUUID(),
+): string {
+  return currentKey || createKey();
+}
+
+/** Network failures and server failures may have committed, so they keep the same retry key. */
+export function shouldRetainMaintenanceSaveAttempt(error: unknown): boolean {
+  return !(error instanceof MaintenanceRequestError && error.status >= 400 && error.status < 500);
+}
+
 function appendText(params: URLSearchParams, key: string, value: string | undefined) {
   const normalized = value?.trim();
   if (normalized) params.set(key, normalized);
@@ -165,6 +246,7 @@ type SaveAcquisitionRequest = {
   keeperPieceId: string;
   acquisitionId?: string;
   expectedVersion?: number;
+  idempotencyKey: string;
   reason: string;
   acquisition: MaintenanceAcquisitionInput;
 };
@@ -172,13 +254,15 @@ type SaveAcquisitionRequest = {
 export async function saveMaintenanceAcquisition(
   request: SaveAcquisitionRequest,
 ): Promise<MaintenanceAcquisition> {
+  const idempotencyKey = request.idempotencyKey.trim();
+  if (!idempotencyKey) throw new Error('idempotency_key_required');
   const correcting = typeof request.acquisitionId === 'string' && request.acquisitionId.length > 0;
   const base = `/api/admin/maintenance/${encodeURIComponent(request.keeperPieceId)}/acquisitions`;
   const path = correcting
     ? `${base}/${encodeURIComponent(request.acquisitionId!)}`
     : base;
   const body = {
-    idempotencyKey: crypto.randomUUID(),
+    idempotencyKey,
     reason: request.reason.trim(),
     ...(correcting ? { expectedVersion: request.expectedVersion } : {}),
     acquisition: request.acquisition,
