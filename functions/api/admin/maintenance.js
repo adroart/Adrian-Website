@@ -5,7 +5,7 @@ import { jsonResponse, requireAdmin, requireDb } from '../_lib/admin.js';
 
 const MAX_RESULTS = 200;
 const FILTERS = new Set([
-  'publicCode', 'artworkId', 'editionNumber', 'title', 'hasAcquisition',
+  'publicCode', 'artworkId', 'editionNumber', 'title',
 ]);
 
 function textParam(params, name, max) {
@@ -73,18 +73,6 @@ export async function onRequest({ request, env }) {
       return jsonResponse({ ok: false, error: 'invalid_edition_number' }, 400);
     }
   }
-  const hasAcquisitionRaw = params.get('hasAcquisition');
-  const hasAcquisition = hasAcquisitionRaw === null
-    ? null
-    : hasAcquisitionRaw === 'true'
-      ? true
-      : hasAcquisitionRaw === 'false'
-        ? false
-        : 'invalid';
-  if (hasAcquisition === 'invalid') {
-    return jsonResponse({ ok: false, error: 'invalid_has_acquisition' }, 400);
-  }
-
   const where = [];
   const values = [];
   const bind = (value) => {
@@ -107,12 +95,6 @@ export async function onRequest({ request, env }) {
       where.push(registryClause);
     }
   }
-  if (hasAcquisition === true) {
-    where.push('EXISTS (SELECT 1 FROM artwork_acquisitions ah WHERE ah.keeper_piece_id = kp.id)');
-  } else if (hasAcquisition === false) {
-    where.push('NOT EXISTS (SELECT 1 FROM artwork_acquisitions ah WHERE ah.keeper_piece_id = kp.id)');
-  }
-
   try {
     const statement = env.DB.prepare(
       `SELECT kp.id, kp.piece_id, kp.edition_number, kp.public_code,

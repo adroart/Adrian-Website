@@ -1308,6 +1308,7 @@ describe('private maintenance APIs', () => {
         'stewardEmail=keeper%40example.com',
         'acquiredFrom=2026-07-01',
         'acquiredTo=2026-07-31',
+        'hasAcquisition=true',
       ]) {
         const removedResponse = await list({
           request: adminRequest(`/api/admin/maintenance?${removedFilter}`), env,
@@ -1332,7 +1333,7 @@ describe('private maintenance APIs', () => {
         assert.equal(filtered.pieces[0].id, 'kp-maint', filter);
       }
       const listResponse = await list({
-        request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&editionNumber=0&hasAcquisition=true'),
+        request: adminRequest('/api/admin/maintenance?title=Art%20of%20Living&editionNumber=0'),
         env,
       });
       assert.equal(listResponse.status, 200);
