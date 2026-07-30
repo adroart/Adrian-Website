@@ -121,6 +121,17 @@ describe('creator registry maintenance migration', () => {
       'idx_registry_maintenance_piece_created',
       'idx_registry_maintenance_type_created',
     ]);
+
+    const strictTables = sqliteJson(`
+      ${registryMigrations}
+      SELECT name, strict FROM pragma_table_list
+       WHERE name IN ('artwork_acquisitions', 'registry_maintenance_events')
+       ORDER BY name;
+    `);
+    assert.deepEqual(strictTables, [
+      { name: 'artwork_acquisitions', strict: 1 },
+      { name: 'registry_maintenance_events', strict: 1 },
+    ]);
   });
 
   it('requires a nonnegative integer amount and paired uppercase ISO currency', () => {
@@ -154,6 +165,45 @@ describe('creator registry maintenance migration', () => {
       { id: 'a7', amount_minor: null, currency: null },
       { id: 'a8', amount_minor: 0, currency: 'IDR' },
     ]);
+  });
+
+  it('rejects binary or numeric values in text-only persistence fields', () => {
+    const invalidAcquisitions = [
+      `INSERT INTO artwork_acquisitions
+        (id, keeper_piece_id, acquisition_type, created_at, updated_at)
+       VALUES (1.5, 'kp-maint', 'gift', 'x', 'x');`,
+      `INSERT INTO artwork_acquisitions
+        (id, keeper_piece_id, acquisition_type, acquired_at, created_at, updated_at)
+       VALUES ('blob-date', 'kp-maint', 'gift', X'00', 'x', 'x');`,
+      `INSERT INTO artwork_acquisitions
+        (id, keeper_piece_id, acquisition_type, private_notes, created_at, updated_at)
+       VALUES ('blob-note', 'kp-maint', 'gift', X'00', 'x', 'x');`,
+      `INSERT INTO artwork_acquisitions
+        (id, keeper_piece_id, acquisition_type, document_reference, created_at, updated_at)
+       VALUES ('real-reference', 'kp-maint', 'gift', 4.25, 'x', 'x');`,
+    ];
+    const invalidEvents = [
+      `INSERT INTO registry_maintenance_events
+        (id, idempotency_key, event_type, administrator_user_id,
+         administrator_email, reason, before_json, after_json, outcome, created_at)
+       VALUES (2.5, 'real-id', 'test', 'admin', 'admin@example.com', 'Reason',
+               '{}', '{}', 'failed', 'x');`,
+      `INSERT INTO registry_maintenance_events
+        (id, idempotency_key, event_type, administrator_user_id,
+         administrator_email, reason, before_json, after_json, outcome, created_at)
+       VALUES ('blob-event', 'blob-event', X'00', 'admin', 'admin@example.com', 'Reason',
+               '{}', '{}', 'failed', 'x');`,
+      `INSERT INTO registry_maintenance_events
+        (id, idempotency_key, event_type, administrator_user_id,
+         administrator_email, reason, before_json, after_json, outcome, created_at)
+       VALUES ('blob-time', 'blob-time', 'test', 'admin', 'admin@example.com', 'Reason',
+               '{}', '{}', 'failed', X'00');`,
+    ];
+
+    for (const insert of [...invalidAcquisitions, ...invalidEvents]) {
+      const result = sqliteResult(`${registryMigrations}\n${keeperInsert}\n${insert}`);
+      assert.notEqual(result.status, 0, insert);
+    }
   });
 
   it('makes maintenance events append-only', () => {
@@ -389,8 +439,10 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.match(seen[0].sql, /WHERE changes\(\) = 1/i);
   });
 
-  it('reports optimistic conflicts and cannot append false success after a zero-row mutation', async () => {
+  it('passes the exact version into the mutation and cannot append after a stale write', async () => {
     const eventRows: unknown[][] = [];
+    const builtVersions: number[] = [];
+    const batchedVersions: number[] = [];
     const env = {
       DB: {
         prepare(sql: string) {
@@ -399,7 +451,8 @@ describe('maintenance idempotency and atomic writes', () => {
           };
         },
         async batch(statements: Array<Record<string, unknown>>) {
-          const mutation = statements[0] as { changes: number };
+          const mutation = statements[0] as { changes: number; boundVersion: number };
+          batchedVersions.push(mutation.boundVersion);
           if (mutation.changes === 1) eventRows.push((statements[1].values ?? []) as unknown[]);
           return [
             { success: true, meta: { changes: mutation.changes } },
@@ -409,22 +462,68 @@ describe('maintenance idempotency and atomic writes', () => {
       },
     };
 
+    let missingVersionBuilt = false;
+    assert.deepEqual(await commitMaintenanceMutation(env, {
+      buildMutation() { missingVersionBuilt = true; return { kind: 'mutation', changes: 1 }; },
+      event: expectedEvent,
+    } as any), { ok: false, error: 'invalid_expected_version' });
+    assert.equal(missingVersionBuilt, false);
+
     const conflict = await commitMaintenanceMutation(env, {
-      statements: [{ kind: 'mutation', changes: 0 }],
+      buildMutation(expectedVersion: number) {
+        builtVersions.push(expectedVersion);
+        return { kind: 'mutation', changes: 0, boundVersion: expectedVersion };
+      },
       event: expectedEvent,
       expectedVersion: 2,
     });
-    assert.deepEqual(conflict, { ok: false, error: 'optimistic_conflict' });
+    assert.deepEqual(conflict, { ok: false, error: 'version_conflict' });
+    assert.deepEqual(builtVersions, [2]);
+    assert.deepEqual(batchedVersions, [2]);
     assert.equal(eventRows.length, 0);
 
     const success = await commitMaintenanceMutation(env, {
-      statements: [{ kind: 'mutation', changes: 1 }],
+      buildMutation(expectedVersion: number) {
+        builtVersions.push(expectedVersion);
+        return { kind: 'mutation', changes: 1, boundVersion: expectedVersion };
+      },
       event: expectedEvent,
       expectedVersion: 2,
     });
     assert.equal(success.ok, true);
     assert.equal(success.eventId.startsWith('rme-'), true);
+    assert.deepEqual(builtVersions, [2, 2]);
+    assert.deepEqual(batchedVersions, [2, 2]);
     assert.equal(eventRows.length, 1);
+  });
+
+  it('requires successful D1 results in addition to one changed row', async () => {
+    for (const results of [
+      [
+        { success: false, meta: { changes: 1 } },
+        { success: true, meta: { changes: 1 } },
+      ],
+      [
+        { success: true, meta: { changes: 1 } },
+        { success: false, meta: { changes: 1 } },
+      ],
+    ]) {
+      const env = {
+        DB: {
+          prepare(sql: string) {
+            return { bind(...values: unknown[]) { return { sql, values }; } };
+          },
+          async batch() { return results; },
+        },
+      };
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        buildMutation(expectedVersion: number) {
+          return { kind: 'mutation', boundVersion: expectedVersion };
+        },
+        event: expectedEvent,
+        expectedVersion: 3,
+      }), { ok: false, error: 'maintenance_write_failed' });
+    }
   });
 
   it('returns a safe write failure and never claims success when the atomic batch rejects', async () => {
@@ -437,7 +536,9 @@ describe('maintenance idempotency and atomic writes', () => {
       },
     };
     assert.deepEqual(await commitMaintenanceMutation(env, {
-      statements: [{ kind: 'mutation', changes: 1 }],
+      buildMutation(expectedVersion: number) {
+        return { kind: 'mutation', boundVersion: expectedVersion };
+      },
       event: expectedEvent,
       expectedVersion: 2,
     }), { ok: false, error: 'maintenance_write_failed' });

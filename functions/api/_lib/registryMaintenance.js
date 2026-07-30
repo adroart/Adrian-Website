@@ -285,25 +285,31 @@ export function buildMaintenanceEventStatement(env, details, options = {}) {
 
 /**
  * Run one optimistic mutation and its succeeded/failed maintenance event in a
- * single D1 batch. The caller supplies a mutation guarded by its expected
- * record_version. The event SELECT sees SQLite changes() from that mutation,
- * so a zero-row conflict cannot append a success event.
+ * single D1 batch. The caller builds the mutation only after this helper
+ * validates and supplies its expected record_version. The event SELECT sees
+ * SQLite changes() from that mutation, so a zero-row conflict cannot append a
+ * success event.
  */
 export async function commitMaintenanceMutation(env, {
-  statements,
+  buildMutation,
   event,
   expectedVersion,
 }) {
+  if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
+    return { ok: false, error: 'invalid_expected_version' };
+  }
   if (typeof env?.DB?.batch !== 'function') {
     return { ok: false, error: 'atomic_write_unavailable' };
   }
-  if (!Array.isArray(statements) || statements.length !== 1 || !statements[0]) {
-    return { ok: false, error: 'single_guarded_mutation_required' };
+
+  let mutationStatement;
+  try {
+    mutationStatement = buildMutation(expectedVersion);
+  } catch {
+    return { ok: false, error: 'invalid_versioned_mutation' };
   }
-  if (expectedVersion !== undefined
-    && (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0)) {
-    return { ok: false, error: 'invalid_expected_version' };
-  }
+  if (!mutationStatement) return { ok: false, error: 'invalid_versioned_mutation' };
+
   const eventId = event?.id ?? `rme-${crypto.randomUUID()}`;
   let eventStatement;
   try {
@@ -314,19 +320,18 @@ export async function commitMaintenanceMutation(env, {
 
   try {
     const [mutationResult, eventResult] = await env.DB.batch([
-      statements[0],
+      mutationStatement,
       eventStatement,
     ]);
     const mutationChanges = mutationResult?.meta?.changes;
     const eventChanges = eventResult?.meta?.changes;
-    if (mutationChanges !== 1) return { ok: false, error: 'optimistic_conflict' };
+    if (mutationResult?.success !== true || eventResult?.success !== true) {
+      return { ok: false, error: 'maintenance_write_failed' };
+    }
+    if (mutationChanges !== 1) return { ok: false, error: 'version_conflict' };
     if (eventChanges !== 1) return { ok: false, error: 'maintenance_write_failed' };
     return { ok: true, eventId };
   } catch {
     return { ok: false, error: 'maintenance_write_failed' };
   }
-}
-
-export function runGuardedMaintenanceBatch(env, { mutationStatement, event }) {
-  return commitMaintenanceMutation(env, { statements: [mutationStatement], event });
 }
