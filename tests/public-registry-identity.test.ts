@@ -13,6 +13,7 @@ const PUBLIC_CODE = 'AR-7KQ9M2WX';
 type DbOptions = {
   plate?: Record<string, unknown> | null;
   artwork?: Record<string, unknown> | null;
+  creatorHistory?: Record<string, unknown>[];
   error?: Error;
 };
 
@@ -31,6 +32,14 @@ function registryDb(options: DbOptions = {}) {
           if (options.error) throw options.error;
           if (/FROM keeper_pieces/i.test(sql)) return options.plate ?? null;
           if (/FROM registry_artworks/i.test(sql)) return options.artwork ?? null;
+          throw new Error(`Unexpected query: ${sql}`);
+        },
+        async all() {
+          calls.push({ sql, values });
+          if (options.error) throw options.error;
+          if (/FROM artwork_provenance_entries/i.test(sql)) {
+            return { results: options.creatorHistory ?? [] };
+          }
           throw new Error(`Unexpected query: ${sql}`);
         },
       };
@@ -74,6 +83,7 @@ describe('public registry identity projection', () => {
       publicCode: PUBLIC_CODE,
       plateStatus: 'generated',
       publicProvenance: [{ year: '2024', event: 'created', note: 'Bali' }],
+      creatorHistory: [],
       amount: 1111,
       currency: 'USD',
       buyerEmail: 'private@example.com',
@@ -91,10 +101,12 @@ describe('public registry identity projection', () => {
       artistName: 'Adrian Rasmussen',
       plateStatus: 'generated',
       publicProvenance: [{ year: '2024', event: 'created', note: 'Bali' }],
+      creatorHistory: [],
     });
     assert.equal(validatePublicPlateIdentity(identity), true);
     assert.equal(validatePublicPlateIdentity({
       publicProvenance: identity.publicProvenance,
+      creatorHistory: identity.creatorHistory,
       plateStatus: identity.plateStatus,
       artistName: identity.artistName,
       publicCode: identity.publicCode,
@@ -105,11 +117,66 @@ describe('public registry identity projection', () => {
     }), true);
   });
 
+  it('projects creator history through an exact public allowlist', () => {
+    const identity = projectPublicPlateIdentity({
+      artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
+      editionKind: 'numbered', editionNumber: 2, editionSize: 7,
+      publicCode: PUBLIC_CODE, plateStatus: 'active', publicProvenance: [],
+      creatorHistory: [{
+        entryType: 'contributor',
+        title: 'Mira Santoso',
+        detail: 'Joined the final assembly.',
+        role: 'Woodworker',
+        occurredAt: '2025-04',
+        provenanceId: 'private-row-id',
+        visibility: 'public',
+        recordVersion: 3,
+        removedAt: null,
+      }],
+    });
+
+    assert.deepEqual(identity.creatorHistory, [{
+      entryType: 'contributor',
+      title: 'Mira Santoso',
+      detail: 'Joined the final assembly.',
+      role: 'Woodworker',
+      occurredAt: '2025-04',
+    }]);
+    assert.equal(validatePublicPlateIdentity(identity), true);
+    assert.equal(validatePublicPlateIdentity({
+      ...identity,
+      creatorHistory: [{ ...identity.creatorHistory[0], visibility: 'public' }],
+    }), false);
+    assert.doesNotMatch(JSON.stringify(identity), /provenanceId|visibility|recordVersion|removedAt/);
+  });
+
+  it('fails closed on malformed creator history', () => {
+    const base = {
+      artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
+      editionKind: 'numbered', editionNumber: 2, editionSize: 7,
+      publicCode: PUBLIC_CODE, plateStatus: 'active', publicProvenance: [],
+      creatorHistory: [],
+    };
+    assert.throws(() => projectPublicPlateIdentity({
+      ...base,
+      creatorHistory: [{
+        entryType: 'contributor', title: 'Mira', detail: null, role: null, occurredAt: null,
+      }],
+    }), /creator history/i);
+    assert.throws(() => projectPublicPlateIdentity({
+      ...base,
+      creatorHistory: [{
+        entryType: 'private_note', title: 'Hidden', detail: null, role: null, occurredAt: null,
+      }],
+    }), /creator history/i);
+  });
+
   it('formats unique and legacy size-unknown numbered identities', () => {
     const unique = projectPublicPlateIdentity({
       artworkId: 'SIG-108', title: 'Winged Spirit Wood', series: null,
       editionKind: 'unique', editionNumber: 0, editionSize: null,
       publicCode: PUBLIC_CODE, plateStatus: 'active', publicProvenance: [],
+      creatorHistory: [],
     });
     assert.deepEqual(unique.edition, {
       kind: 'unique', number: null, size: null, label: 'Unique work',
@@ -119,6 +186,7 @@ describe('public registry identity projection', () => {
       artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
       editionKind: 'numbered', editionNumber: 2, editionSize: null,
       publicCode: PUBLIC_CODE, plateStatus: 'active', publicProvenance: [],
+      creatorHistory: [],
     });
     assert.deepEqual(historical.edition, {
       kind: 'numbered', number: 2, size: null, label: 'Edition 2',
@@ -130,6 +198,7 @@ describe('public registry identity projection', () => {
       artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
       editionKind: 'numbered', editionNumber: 2, editionSize: 7,
       publicCode: PUBLIC_CODE, plateStatus: 'active', publicProvenance: [],
+      creatorHistory: [],
     };
     assert.throws(() => projectPublicPlateIdentity({ ...base, editionNumber: 8 }), /identity/i);
     assert.throws(() => projectPublicPlateIdentity({ ...base, plateStatus: 'draft' }), /identity/i);
@@ -145,6 +214,7 @@ describe('public registry identity projection', () => {
       artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
       editionKind: 'numbered', editionNumber: 2, editionSize: 7,
       publicCode: PUBLIC_CODE, plateStatus: 'superseded', publicProvenance: [],
+      creatorHistory: [],
     };
     const withheld = projectPublicPlateIdentity({
       ...base, successorDisclosure: 'withheld', currentPublicCode: 'AR-ABCDEFGH',
@@ -171,10 +241,60 @@ describe('public registry identity projection', () => {
 });
 
 describe('GET /api/registry/:publicCode', () => {
+  it('loads only current public creator history and exposes only public fields', async () => {
+    const { response, calls } = await lookup({
+      plate: {
+        id: 'kp-public-history', piece_id: 'UL-100', edition_number: 2,
+        public_code: PUBLIC_CODE, plate_status: 'active',
+      },
+      artwork: { id: 'UL-100', edition_size: 7 },
+      creatorHistory: [{
+        entry_type: 'creation_place', title: 'Bali studio', detail: 'Built near Ubud.',
+        role: null, occurred_at: '2024', id: 'must-not-leak', visibility: 'public',
+        record_version: 7, removed_at: null,
+      }],
+    });
+
+    assert.equal(response.status, 200);
+    const payload = await response.json() as { identity: Record<string, unknown> };
+    assert.deepEqual(payload.identity.creatorHistory, [{
+      entryType: 'creation_place', title: 'Bali studio', detail: 'Built near Ubud.',
+      role: null, occurredAt: '2024',
+    }]);
+    const historyQuery = calls.find(call => /FROM artwork_provenance_entries/i.test(call.sql));
+    assert.ok(historyQuery);
+    assert.match(historyQuery.sql, /keeper_piece_id\s*=\s*\?1/i);
+    assert.match(historyQuery.sql, /visibility\s*=\s*'public'/i);
+    assert.match(historyQuery.sql, /removed_at\s+IS\s+NULL/i);
+    assert.match(
+      historyQuery.sql,
+      /^\s*SELECT entry_type, title, detail, role, occurred_at\s+FROM/i,
+    );
+    assert.doesNotMatch(historyQuery.sql, /record_version|visibility\s*,|removed_at\s*,/i);
+    assert.deepEqual(historyQuery.values, ['kp-public-history']);
+    assert.doesNotMatch(JSON.stringify(payload), /must-not-leak|record_version|visibility|removed_at/);
+  });
+
+  it('fails closed when a stored public creator-history row is malformed', async () => {
+    const { response } = await lookup({
+      plate: {
+        id: 'kp-public-history', piece_id: 'UL-100', edition_number: 2,
+        public_code: PUBLIC_CODE, plate_status: 'active',
+      },
+      artwork: { id: 'UL-100', edition_size: 7 },
+      creatorHistory: [{
+        entry_type: 'contributor', title: 'Mira', detail: null,
+        role: null, occurred_at: null,
+      }],
+    });
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { ok: false, error: 'identity_integrity_error' });
+  });
+
   it('resolves old superseded codes while disclosing the current code only by explicit policy', async () => {
     const db = registryDb({
       plate: {
-        piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+        id: 'kp-generated', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
         plate_status: 'superseded', current_public_code: 'AR-ABCDEFGH',
       },
       artwork: { id: 'UL-100', edition_size: 7 },
@@ -204,7 +324,7 @@ describe('GET /api/registry/:publicCode', () => {
   it('resolves a generated numbered plate with canonical static metadata and overlay size', async () => {
     const { response, calls } = await lookup({
       plate: {
-        piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+        id: 'kp-generated', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
         plate_status: 'generated', amount: 1111, currency: 'USD',
       },
       artwork: {
@@ -225,10 +345,13 @@ describe('GET /api/registry/:publicCode', () => {
         artistName: 'Adrian Rasmussen',
         plateStatus: 'generated',
         publicProvenance: [],
+        creatorHistory: [],
       },
     });
-    assert.equal(calls.length, 2);
-    assert.deepEqual(calls.map((call) => call.values), [[PUBLIC_CODE], ['UL-100']]);
+    assert.equal(calls.length, 3);
+    assert.deepEqual(calls.map((call) => call.values), [
+      [PUBLIC_CODE], ['UL-100'], ['kp-generated'],
+    ]);
   });
 
   it('keeps canonical static title and null series when an overlay supplies mutable metadata', async () => {
@@ -329,7 +452,7 @@ describe('GET /api/registry/:publicCode', () => {
 
     assert.deepEqual(Object.keys(payload).sort(), ['identity', 'ok']);
     assert.deepEqual(Object.keys(payload.identity).sort(), [
-      'artistName', 'artworkId', 'edition', 'plateStatus',
+      'artistName', 'artworkId', 'creatorHistory', 'edition', 'plateStatus',
       'publicCode', 'publicProvenance', 'series', 'title',
     ]);
     assert.deepEqual(Object.keys(payload.identity.edition as object).sort(), ['kind', 'label', 'number', 'size']);

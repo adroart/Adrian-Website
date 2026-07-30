@@ -13,7 +13,10 @@ import {
     isPublicRegistryCode,
     validatePublicPlateIdentity,
 } from '../utils/publicRegistry';
-import type { PublicPlateIdentity } from '../utils/publicRegistry';
+import type {
+    PublicCreatorHistoryEntryType,
+    PublicPlateIdentity,
+} from '../utils/publicRegistry';
 import {
     formatLineageEventLabel,
     publicLineageDetails,
@@ -30,6 +33,15 @@ const EVENT_LABELS: Record<ProvenanceEvent['event'], string> = {
     commissioned: 'Commissioned',
     restored: 'Restored',
     transferred: 'Transferred',
+};
+
+const CREATOR_HISTORY_LABELS: Record<PublicCreatorHistoryEntryType, string> = {
+    contributor: 'Contributor',
+    creation_place: 'Creation place',
+    intention: 'Intention',
+    material: 'Material',
+    technique: 'Technique',
+    note: 'Studio note',
 };
 
 const WorksPage: React.FC = () => {
@@ -709,6 +721,43 @@ function PublicIdentityRecord({
                             </ol>
                         )}
                     </div>
+
+                    {identity.creatorHistory.length > 0 && (
+                        <div className="max-w-md mx-auto mt-10 pt-10 border-t border-wood-100 min-w-0">
+                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
+                                Creator history
+                            </p>
+                            <ol className="space-y-5">
+                                {identity.creatorHistory.map((entry, index) => (
+                                    <li key={`${entry.entryType}-${entry.title}-${index}`} className="border-l border-bronze-200 pl-4 min-w-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-4">
+                                            <p className="font-label text-[10px] uppercase tracking-[0.14em] text-bronze-600 font-semibold">
+                                                {CREATOR_HISTORY_LABELS[entry.entryType]}
+                                            </p>
+                                            {entry.occurredAt && (
+                                                <time className="font-sans text-[11px] text-wood-400 tabular-nums" dateTime={entry.occurredAt}>
+                                                    {entry.occurredAt}
+                                                </time>
+                                            )}
+                                        </div>
+                                        <p className="mt-1 font-serif text-lg leading-snug text-wood-800 break-words">
+                                            {entry.title}
+                                        </p>
+                                        {entry.role && (
+                                            <p className="mt-1 font-sans text-[12px] text-wood-500 break-words">
+                                                {entry.role}
+                                            </p>
+                                        )}
+                                        {entry.detail && (
+                                            <p className="mt-2 font-sans text-[13px] leading-relaxed text-wood-600 whitespace-pre-wrap break-words">
+                                                {entry.detail}
+                                            </p>
+                                        )}
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    )}
                 </div>
             </div>
             <span className="sr-only">Verified public code {publicCode}</span>

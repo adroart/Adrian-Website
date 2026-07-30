@@ -14,6 +14,15 @@ const verifiedIdentity = {
     { year: '2026', event: 'created', note: 'Bali studio' },
     { year: '2027', event: 'exhibited', note: 'Public collection' },
   ],
+  creatorHistory: [
+    {
+      entryType: 'contributor',
+      title: 'Mira Santoso',
+      detail: 'Joined the final assembly.',
+      role: 'Woodworker',
+      occurredAt: '2026-04',
+    },
+  ],
 };
 
 async function assertNoHorizontalOverflow(page: import('@playwright/test').Page) {
@@ -55,6 +64,10 @@ test('a mismatched route is replaced with the canonical server identity route', 
   await expect(identity).toContainText('Adrian Rasmussen');
   await expect(identity).toContainText('Active');
   await expect(identity).toContainText('Bali studio');
+  await expect(identity).toContainText('Creator history');
+  await expect(identity).toContainText('Mira Santoso');
+  await expect(identity).toContainText('Woodworker');
+  await expect(identity).toContainText('Joined the final assembly.');
   await expect(identity).not.toContainText('999');
   await expect(page.getByTestId('catalog-artwork-record')).toHaveCount(0);
   await expect(page.getByTestId('draft-artwork-record')).toContainText('Editable Draft Title');

@@ -66,6 +66,17 @@ function resolveMetadata(plate, overlay) {
   };
 }
 
+function projectStoredCreatorHistory(rows) {
+  if (!Array.isArray(rows)) throw new Error('invalid stored creator history');
+  return rows.map((row) => ({
+    entryType: row?.entry_type,
+    title: row?.title,
+    detail: row?.detail,
+    role: row?.role,
+    occurredAt: row?.occurred_at,
+  }));
+}
+
 export async function onRequest({ request, env, params }) {
   if (request.method !== 'GET') {
     return json({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET' });
@@ -79,6 +90,7 @@ export async function onRequest({ request, env, params }) {
 
   let plate;
   let overlay;
+  let creatorHistoryRows;
   try {
     plate = await env.DB
       .prepare(
@@ -99,7 +111,7 @@ export async function onRequest({ request, env, params }) {
                ON successor.id = chain.superseded_by_keeper_piece_id
             WHERE chain.depth < 64
          )
-         SELECT plate.piece_id, plate.edition_number, plate.public_code,
+         SELECT plate.id, plate.piece_id, plate.edition_number, plate.public_code,
                 plate.plate_status,
                 (SELECT public_code FROM successor_chain
                   WHERE plate_status IN ('generated', 'active')
@@ -121,6 +133,19 @@ export async function onRequest({ request, env, params }) {
       .prepare('SELECT id, title, series, edition_size FROM registry_artworks WHERE id = ?1')
       .bind(plate.piece_id)
       .first();
+    const creatorHistoryResult = await env.DB
+      .prepare(
+        `SELECT entry_type, title, detail, role, occurred_at
+           FROM artwork_provenance_entries
+          WHERE keeper_piece_id = ?1
+            AND visibility = 'public'
+            AND removed_at IS NULL
+          ORDER BY created_at, id`,
+      )
+      .bind(plate.id)
+      .all();
+    creatorHistoryRows = creatorHistoryResult?.results;
+    if (!Array.isArray(creatorHistoryRows)) throw new Error('invalid creator history result');
   } catch {
     return unavailable();
   }
@@ -140,6 +165,7 @@ export async function onRequest({ request, env, params }) {
       publicCode: plate.public_code,
       plateStatus: plate.plate_status,
       publicProvenance: metadata.publicProvenance,
+      creatorHistory: projectStoredCreatorHistory(creatorHistoryRows),
       ...(plate.plate_status === 'superseded' ? {
         successorDisclosure: discloseSuccessor ? 'disclosed' : 'withheld',
         ...(discloseSuccessor ? { currentPublicCode: plate.current_public_code } : {}),

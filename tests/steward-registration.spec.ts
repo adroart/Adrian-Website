@@ -16,6 +16,7 @@ const identity = {
   artistName: 'Adrian Rasmussen',
   plateStatus: 'active',
   publicProvenance: [],
+  creatorHistory: [],
 };
 
 const secondIdentity = {
@@ -27,6 +28,7 @@ const secondIdentity = {
   artistName: 'Adrian Rasmussen',
   plateStatus: 'active',
   publicProvenance: [],
+  creatorHistory: [],
 };
 
 async function mockWork(page: Page) {

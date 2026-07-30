@@ -12,14 +12,31 @@ const PROVENANCE_EVENTS = [
   'restored',
   'transferred',
 ] as const;
+const CREATOR_HISTORY_ENTRY_TYPES = [
+  'contributor',
+  'creation_place',
+  'intention',
+  'material',
+  'technique',
+  'note',
+] as const;
 
 export type PublicPlateStatus = (typeof PLATE_STATUSES)[number];
 export type PublicProvenanceEventType = (typeof PROVENANCE_EVENTS)[number];
+export type PublicCreatorHistoryEntryType = (typeof CREATOR_HISTORY_ENTRY_TYPES)[number];
 
 export interface PublicProvenanceEvent {
   year: string;
   event: PublicProvenanceEventType;
   note?: string;
+}
+
+export interface PublicCreatorHistoryEntry {
+  entryType: PublicCreatorHistoryEntryType;
+  title: string;
+  detail: string | null;
+  role: string | null;
+  occurredAt: string | null;
 }
 
 export type PublicEditionIdentity =
@@ -34,6 +51,7 @@ interface PublicPlateIdentityBase {
   publicCode: string;
   artistName: typeof PUBLIC_REGISTRY_ARTIST_NAME;
   publicProvenance: PublicProvenanceEvent[];
+  creatorHistory: PublicCreatorHistoryEntry[];
 }
 
 export type PublicPlateIdentity = PublicPlateIdentityBase & (
@@ -56,6 +74,7 @@ export interface PublicPlateIdentityProjection {
   publicCode: unknown;
   plateStatus: unknown;
   publicProvenance: unknown;
+  creatorHistory: unknown;
   successorDisclosure?: unknown;
   currentPublicCode?: unknown;
   [key: string]: unknown;
@@ -95,6 +114,59 @@ function projectPublicProvenance(value: unknown): PublicProvenanceEvent[] {
     const note = typeof candidate.note === 'string' ? candidate.note.trim() : '';
     if (!isBoundedText(note, 500)) throw new Error('Invalid public provenance');
     return { year, event: event as PublicProvenanceEventType, note };
+  });
+}
+
+function nullableBoundedText(value: unknown, max: number): string | null {
+  if (value === null) return null;
+  if (!isBoundedText(value, max)) throw new Error('Invalid public creator history');
+  return value;
+}
+
+function isValidOccurredAt(value: string): boolean {
+  if (/^\d{4}$/.test(value)) return true;
+  const month = /^(\d{4})-(\d{2})$/.exec(value);
+  if (month) return Number(month[2]) >= 1 && Number(month[2]) <= 12;
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z)?$/.exec(value);
+  if (!match) return false;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText] = match;
+  const year = Number(yearText);
+  const monthNumber = Number(monthText);
+  const day = Number(dayText);
+  if (monthNumber < 1 || monthNumber > 12
+    || day < 1 || day > new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()) {
+    return false;
+  }
+  return hourText === undefined
+    || (Number(hourText) <= 23 && Number(minuteText) <= 59 && Number(secondText) <= 59);
+}
+
+function projectPublicCreatorHistory(value: unknown): PublicCreatorHistoryEntry[] {
+  if (!Array.isArray(value)) throw new Error('Invalid public creator history');
+  return value.map((candidate) => {
+    if (!isObject(candidate)) throw new Error('Invalid public creator history');
+    const entryType = candidate.entryType;
+    if (!CREATOR_HISTORY_ENTRY_TYPES.includes(entryType as PublicCreatorHistoryEntryType)) {
+      throw new Error('Invalid public creator history');
+    }
+    if (!isBoundedText(candidate.title, 300)) {
+      throw new Error('Invalid public creator history');
+    }
+    const detail = nullableBoundedText(candidate.detail, 5000);
+    const role = nullableBoundedText(candidate.role, 300);
+    const occurredAt = nullableBoundedText(candidate.occurredAt, 40);
+    if ((entryType === 'contributor' && role === null)
+      || (occurredAt !== null && !isValidOccurredAt(occurredAt))) {
+      throw new Error('Invalid public creator history');
+    }
+    return {
+      entryType: entryType as PublicCreatorHistoryEntryType,
+      title: candidate.title,
+      detail,
+      role,
+      occurredAt,
+    };
   });
 }
 
@@ -168,6 +240,7 @@ export function projectPublicPlateIdentity(
     artistName: PUBLIC_REGISTRY_ARTIST_NAME,
     plateStatus: input.plateStatus as PublicPlateStatus,
     publicProvenance: projectPublicProvenance(input.publicProvenance),
+    creatorHistory: projectPublicCreatorHistory(input.creatorHistory),
   };
   if (input.plateStatus !== 'superseded') return identity as PublicPlateIdentity;
   if (input.successorDisclosure === 'withheld') {
@@ -191,15 +264,16 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
     ? value.successorDisclosure === 'disclosed'
       ? [
           'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
-          'plateStatus', 'publicProvenance', 'successorDisclosure', 'currentPublicCode',
+          'plateStatus', 'publicProvenance', 'creatorHistory',
+          'successorDisclosure', 'currentPublicCode',
         ]
       : [
           'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
-          'plateStatus', 'publicProvenance', 'successorDisclosure',
+          'plateStatus', 'publicProvenance', 'creatorHistory', 'successorDisclosure',
         ]
     : [
     'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
-    'plateStatus', 'publicProvenance',
+    'plateStatus', 'publicProvenance', 'creatorHistory',
       ];
   if (!hasExactKeys(value, expectedKeys)) return false;
   if (value.artistName !== PUBLIC_REGISTRY_ARTIST_NAME || !isObject(value.edition)) return false;
@@ -216,6 +290,7 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
       publicCode: value.publicCode,
       plateStatus: value.plateStatus,
       publicProvenance: value.publicProvenance,
+      creatorHistory: value.creatorHistory,
       successorDisclosure: value.successorDisclosure,
       currentPublicCode: value.currentPublicCode,
     });
@@ -236,9 +311,11 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
       || projected.edition.label !== value.edition.label
       || !Array.isArray(value.publicProvenance)
       || projected.publicProvenance.length !== value.publicProvenance.length
+      || !Array.isArray(value.creatorHistory)
+      || projected.creatorHistory.length !== value.creatorHistory.length
     ) return false;
 
-    return projected.publicProvenance.every((event, index) => {
+    const validPublicProvenance = projected.publicProvenance.every((event, index) => {
       const candidate = value.publicProvenance[index];
       if (!isObject(candidate)) return false;
       const expectedKeys = event.note === undefined ? ['year', 'event'] : ['year', 'event', 'note'];
@@ -246,6 +323,17 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
         && candidate.year === event.year
         && candidate.event === event.event
         && candidate.note === event.note;
+    });
+    if (!validPublicProvenance) return false;
+    return projected.creatorHistory.every((entry, index) => {
+      const candidate = value.creatorHistory[index];
+      return isObject(candidate)
+        && hasExactKeys(candidate, ['entryType', 'title', 'detail', 'role', 'occurredAt'])
+        && candidate.entryType === entry.entryType
+        && candidate.title === entry.title
+        && candidate.detail === entry.detail
+        && candidate.role === entry.role
+        && candidate.occurredAt === entry.occurredAt;
     });
   } catch {
     return false;

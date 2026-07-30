@@ -26,10 +26,13 @@ describe('public scanned-identity UI wiring', () => {
       'identity.artistName',
       'identity.plateStatus',
       'identity.publicProvenance',
+      'identity.creatorHistory',
     ]) {
       assert.match(source, new RegExp(field.replace('.', '\\.')));
     }
     assert.doesNotMatch(source, /const editionParam = searchParams\.get\(['"]edition['"]\)/);
+    assert.match(source, /Creator history/);
+    assert.match(source, /CREATOR_HISTORY_LABELS/);
   });
 
   it('keeps exact identity ahead of both catalog and draft record branches', () => {
@@ -93,13 +96,13 @@ describe('public scanned-identity UI wiring', () => {
         artworkId: 'UL-100', title: 'Unique work', series: null,
         edition: { kind: 'unique', number: null, size: null, label: 'Unique work' },
         publicCode: 'AR-7KQ9M2WX', artistName: 'Adrian Rasmussen',
-        plateStatus: 'active', publicProvenance: [],
+        plateStatus: 'active', publicProvenance: [], creatorHistory: [],
       },
       {
         artworkId: 'MD-905', title: 'Registry draft', series: 'Studio Works',
         edition: { kind: 'numbered', number: 1, size: 3, label: 'Edition 1 of 3' },
         publicCode: 'AR-ABCDEFGH', artistName: 'Adrian Rasmussen',
-        plateStatus: 'active', publicProvenance: [],
+        plateStatus: 'active', publicProvenance: [], creatorHistory: [],
       },
     ] as const;
 
