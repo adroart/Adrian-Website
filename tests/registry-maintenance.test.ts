@@ -401,7 +401,7 @@ const expectedEvent = {
   idempotencyKey: 'maintenance-request-1',
   eventType: 'acquisition_corrected',
   keeperPieceId: 'kp-maint',
-  artworkId: 'UL-100',
+  artworkId: null,
   authorization: { userId: 'admin-1', email: 'admin@example.com' },
   reason: 'Correct the acquisition date.',
   before: {
@@ -630,12 +630,13 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.equal(eventRows.length, 1);
 
     await commitMaintenanceMutation(env, {
-      target: { type: 'keeper_record', id: 'kp-maint' },
+      target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-101' },
       changes: { pieceId: 'UL-101', editionNumber: 1 },
       event: {
         ...expectedEvent,
         idempotencyKey: 'keeper-record-update',
         eventType: 'link_corrected',
+        artworkId: 'UL-101',
         relatedRecordId: 'kp-maint',
         before: {
           keeperPieceId: 'kp-maint', pieceId: 'UL-100', editionNumber: 0, recordVersion: 2,
@@ -656,16 +657,21 @@ describe('maintenance idempotency and atomic writes', () => {
     ]);
 
     await commitMaintenanceMutation(env, {
-      target: { type: 'keeper_steward', id: 'kp-maint' },
+      target: { type: 'keeper_steward', id: 'kp-maint', artworkId: 'UL-100' },
       changes: { currentDisplayLocation: 'Ubud studio' },
       event: {
         ...expectedEvent,
         idempotencyKey: 'keeper-steward-update',
         eventType: 'steward_transferred',
+        artworkId: 'UL-100',
         relatedRecordId: 'kp-maint',
-        before: { keeperPieceId: 'kp-maint', currentDisplayLocation: null, stewardVersion: 1 },
+        before: {
+          keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+          currentDisplayLocation: null, stewardVersion: 1,
+        },
         after: {
-          keeperPieceId: 'kp-maint', currentDisplayLocation: 'Ubud studio', stewardVersion: 2,
+          keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+          currentDisplayLocation: 'Ubud studio', stewardVersion: 2,
         },
       },
       expectedVersion: 1,
@@ -673,7 +679,8 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.match(prepared[4].sql, /^UPDATE keeper_pieces/i);
     assert.match(prepared[4].sql, /current_display_location = \?1/);
     assert.match(prepared[4].sql, /steward_version = steward_version \+ 1/);
-    assert.deepEqual(prepared[4].values, ['Ubud studio', 'kp-maint', 1, null]);
+    assert.match(prepared[4].sql, /piece_id IS \?4/);
+    assert.deepEqual(prepared[4].values, ['Ubud studio', 'kp-maint', 1, 'UL-100', null]);
 
     const prepareCount = prepared.length;
     for (const request of [
@@ -690,7 +697,7 @@ describe('maintenance idempotency and atomic writes', () => {
         changes: { ownershipCode: 'forbidden' },
       },
       {
-        target: { type: 'keeper_record', id: 'kp-maint' },
+        target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-100' },
         changes: { recoveryCodeHash: 'forbidden-generic-repair' },
       },
     ]) {
@@ -704,7 +711,7 @@ describe('maintenance idempotency and atomic writes', () => {
 
     for (const request of [
       {
-        target: { type: 'keeper_record', id: 'kp-maint' },
+        target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-101' },
         changes: { pieceId: 'UL-101' },
         event: {
           ...expectedEvent,
@@ -714,7 +721,7 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       },
       {
-        target: { type: 'keeper_record', id: 'kp-maint' },
+        target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-101' },
         changes: { pieceId: 'UL-101' },
         event: {
           ...expectedEvent,
@@ -725,17 +732,20 @@ describe('maintenance idempotency and atomic writes', () => {
         },
       },
       {
-        target: { type: 'keeper_steward', id: 'kp-maint' },
+        target: { type: 'keeper_steward', id: 'kp-maint', artworkId: 'UL-100' },
         changes: { currentDisplayLocation: 'Ubud studio' },
         event: {
           ...expectedEvent,
           eventType: 'steward_transferred',
+          artworkId: 'UL-100',
           relatedRecordId: 'kp-maint',
           before: {
-            keeperPieceId: 'kp-maint', currentDisplayLocation: null, stewardVersion: 2,
+            keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+            currentDisplayLocation: null, stewardVersion: 2,
           },
           after: {
-            keeperPieceId: 'kp-maint', currentDisplayLocation: 'Ubud studio', stewardVersion: 4,
+            keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+            currentDisplayLocation: 'Ubud studio', stewardVersion: 4,
           },
         },
       },
@@ -767,7 +777,7 @@ describe('maintenance idempotency and atomic writes', () => {
         event: { ...expectedEvent, outcome: 'failed' },
       },
       {
-        target: { type: 'keeper_record', id: 'kp-maint' },
+        target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-101' },
         changes: { pieceId: 'UL-101' },
         event: {
           ...expectedEvent,
@@ -878,12 +888,19 @@ describe('maintenance idempotency and atomic writes', () => {
 
       for (const [override, error] of [
         [{ target: { type: 'acquisition', id: 'acq-1' } }, 'invalid_maintenance_target'],
+        [{ event: { ...event, artworkId: 'UL-fabricated' } }, 'invalid_event_mutation'],
         [{ event: { ...event, keeperPieceId: 'kp-fabricated' } }, 'invalid_event_mutation'],
         [{ event: { ...event, relatedRecordId: 'acq-fabricated' } }, 'invalid_event_mutation'],
         [{
           event: {
             ...event,
             before: { ...event.before, acquisitionId: 'acq-fabricated' },
+          },
+        }, 'invalid_event_mutation'],
+        [{
+          event: {
+            ...event,
+            before: { ...event.before, publicCode: 'AR-FABRICATED' },
           },
         }, 'invalid_event_mutation'],
         [{
@@ -942,6 +959,77 @@ describe('maintenance idempotency and atomic writes', () => {
         "SELECT public_provenance, record_version FROM artwork_acquisitions WHERE id = 'acq-1'",
       ).get() }, { public_provenance: 'Original', record_version: 1 });
       assert.equal(database.prepare('SELECT count(*) AS count FROM registry_maintenance_events').get().count, 0);
+    } finally {
+      database.close();
+    }
+  });
+
+  it('guards keeper artwork context and rejects unverified snapshot context in SQLite', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}`);
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        target: { type: 'keeper_record', id: 'kp-maint', artworkId: 'UL-101' },
+        changes: { pieceId: 'UL-101' },
+        event: {
+          ...expectedEvent,
+          idempotencyKey: 'fabricated-public-code-context',
+          eventType: 'link_corrected',
+          artworkId: 'UL-101',
+          relatedRecordId: 'kp-maint',
+          before: {
+            keeperPieceId: 'kp-maint', pieceId: 'UL-100',
+            publicCode: 'AR-FABRICATED', recordVersion: 0,
+          },
+          after: { keeperPieceId: 'kp-maint', pieceId: 'UL-101', recordVersion: 1 },
+        },
+        expectedVersion: 0,
+      }), { ok: false, error: 'invalid_event_mutation' });
+
+      const stewardEvent = {
+        ...expectedEvent,
+        idempotencyKey: 'honest-steward-context',
+        eventType: 'steward_transferred',
+        artworkId: 'UL-100',
+        relatedRecordId: 'kp-maint',
+        before: {
+          keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+          currentDisplayLocation: null, stewardVersion: 0,
+        },
+        after: {
+          keeperPieceId: 'kp-maint', artworkId: 'UL-100',
+          currentDisplayLocation: 'Ubud studio', stewardVersion: 1,
+        },
+      };
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        target: { type: 'keeper_steward', id: 'kp-maint', artworkId: 'UL-fabricated' },
+        changes: { currentDisplayLocation: 'Ubud studio' },
+        event: {
+          ...stewardEvent,
+          idempotencyKey: 'fabricated-artwork-context',
+          artworkId: 'UL-fabricated',
+          before: { ...stewardEvent.before, artworkId: 'UL-fabricated' },
+          after: { ...stewardEvent.after, artworkId: 'UL-fabricated' },
+        },
+        expectedVersion: 0,
+      }), { ok: false, error: 'version_conflict' });
+
+      const honestRequest = {
+        target: { type: 'keeper_steward', id: 'kp-maint', artworkId: 'UL-100' },
+        changes: { currentDisplayLocation: 'Ubud studio' },
+        event: stewardEvent,
+        expectedVersion: 0,
+      };
+      assert.equal((await commitMaintenanceMutation(env, honestRequest)).ok, true);
+      const replay = await commitMaintenanceMutation(env, honestRequest);
+      assert.equal(replay.ok, true);
+      assert.equal(replay.replayed, true);
+      assert.deepEqual({ ...database.prepare(
+        "SELECT piece_id, current_display_location, steward_version FROM keeper_pieces WHERE id = 'kp-maint'",
+      ).get() }, {
+        piece_id: 'UL-100', current_display_location: 'Ubud studio', steward_version: 1,
+      });
     } finally {
       database.close();
     }

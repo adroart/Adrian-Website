@@ -73,34 +73,31 @@ const MAINTENANCE_TARGETS = {
   },
 };
 
-const ACQUISITION_SNAPSHOT_FIELDS = [
+const ACQUISITION_UPDATE_SNAPSHOT_FIELDS = [
   'acquisitionId', 'keeperPieceId', 'acquisitionType', 'acquiredAt', 'amountMinor', 'currency',
   'acquirerReference', 'privateNotes', 'documentReference', 'publicProvenance',
-  'recordVersion', 'createdAt', 'updatedAt',
+  'recordVersion', 'updatedAt',
 ];
 const EVENT_SNAPSHOT_FIELDS = {
-  acquisition_created: new Set(ACQUISITION_SNAPSHOT_FIELDS),
-  acquisition_corrected: new Set(ACQUISITION_SNAPSHOT_FIELDS),
+  acquisition_created: new Set([...ACQUISITION_UPDATE_SNAPSHOT_FIELDS, 'createdAt']),
+  acquisition_corrected: new Set(ACQUISITION_UPDATE_SNAPSHOT_FIELDS),
   steward_reset: new Set([
-    'keeperPieceId', 'keeperUserId', 'claimedAt', 'releasedAt',
+    'keeperPieceId', 'artworkId', 'keeperUserId', 'claimedAt', 'releasedAt',
     'currentDisplayLocation', 'stewardVersion',
   ]),
   steward_transferred: new Set([
-    'keeperPieceId', 'keeperUserId', 'claimedAt', 'releasedAt',
+    'keeperPieceId', 'artworkId', 'keeperUserId', 'claimedAt', 'releasedAt',
     'currentDisplayLocation', 'stewardVersion',
   ]),
   link_corrected: new Set([
-    'keeperPieceId', 'artworkId', 'pieceId', 'editionNumber', 'publicCode',
-    'recordVersion',
+    'keeperPieceId', 'pieceId', 'editionNumber', 'recordVersion',
   ]),
   plate_voided: new Set([
-    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus', 'physicalDisposition', 'voidedAt',
-    'recordVersion',
+    'keeperPieceId', 'artworkId', 'plateStatus', 'physicalDisposition', 'recordVersion',
   ]),
   plate_superseded: new Set([
-    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
-    'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'physicalDisposition', 'supersededAt',
-    'recordVersion',
+    'keeperPieceId', 'artworkId', 'plateStatus', 'supersededByKeeperPieceId',
+    'physicalDisposition', 'recordVersion',
   ]),
   plate_replaced: new Set([
     'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
@@ -130,34 +127,45 @@ const EVENT_MUTATION_POLICIES = {
   acquisition_corrected: {
     targetType: 'acquisition',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.acquisition.fields)),
+    identityFields: ['acquisitionId', 'keeperPieceId', 'recordVersion'],
     versionField: 'recordVersion',
   },
   steward_reset: {
     targetType: 'keeper_steward',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+    identityFields: ['keeperPieceId', 'artworkId', 'stewardVersion'],
     versionField: 'stewardVersion',
+    guardArtwork: true,
   },
   steward_transferred: {
     targetType: 'keeper_steward',
     mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+    identityFields: ['keeperPieceId', 'artworkId', 'stewardVersion'],
     versionField: 'stewardVersion',
+    guardArtwork: true,
   },
   link_corrected: {
     targetType: 'keeper_record',
     mutableFields: new Set(['pieceId', 'editionNumber']),
+    identityFields: ['keeperPieceId', 'recordVersion'],
     versionField: 'recordVersion',
+    correctedLink: true,
   },
   plate_voided: {
     targetType: 'keeper_record',
     mutableFields: new Set(['plateStatus', 'physicalDisposition']),
+    identityFields: ['keeperPieceId', 'artworkId', 'recordVersion'],
     versionField: 'recordVersion',
+    guardArtwork: true,
   },
   plate_superseded: {
     targetType: 'keeper_record',
     mutableFields: new Set([
       'plateStatus', 'supersededByKeeperPieceId', 'physicalDisposition',
     ]),
+    identityFields: ['keeperPieceId', 'artworkId', 'recordVersion'],
     versionField: 'recordVersion',
+    guardArtwork: true,
   },
 };
 
@@ -222,7 +230,7 @@ function normalizeMaintenanceTarget(target, changes) {
 
   const targetFields = target.type === 'acquisition'
     ? new Set(['type', 'id', 'keeperPieceId'])
-    : new Set(['type', 'id']);
+    : new Set(['type', 'id', 'artworkId']);
   if (Object.keys(target).some((key) => !targetFields.has(key))) return null;
   const keeperPieceId = target.type === 'acquisition'
     && typeof target.keeperPieceId === 'string'
@@ -231,6 +239,13 @@ function normalizeMaintenanceTarget(target, changes) {
     ? target.keeperPieceId.trim()
     : null;
   if (target.type === 'acquisition' && !keeperPieceId) return null;
+  const artworkId = target.type !== 'acquisition'
+    && typeof target.artworkId === 'string'
+    && target.artworkId.trim()
+    && target.artworkId.trim().length <= 80
+    ? target.artworkId.trim()
+    : null;
+  if (target.type !== 'acquisition' && !artworkId) return null;
 
   const assignments = [];
   const values = [];
@@ -247,6 +262,7 @@ function normalizeMaintenanceTarget(target, changes) {
     definition,
     id: target.id.trim(),
     keeperPieceId,
+    artworkId,
     assignments,
     values,
     changes: normalizedChanges,
@@ -277,9 +293,13 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
 
   const before = normalizeEventSnapshot(eventType, event?.before);
   const after = normalizeEventSnapshot(eventType, event?.after);
-  if (!isPlainRecord(after)) return null;
-  if (before === null && !policy.beforeMayBeNull) return null;
-  if (before !== null && !isPlainRecord(before)) return null;
+  if (!isPlainRecord(before) || !isPlainRecord(after)) return null;
+
+  const expectedSnapshotKeys = [...policy.identityFields, ...changeKeys];
+  if (!sameKeys(Object.keys(before), expectedSnapshotKeys)
+    || !sameKeys(Object.keys(after), expectedSnapshotKeys)) {
+    return null;
+  }
 
   const expectedKeeperPieceId = normalizedTarget.targetType === 'acquisition'
     ? normalizedTarget.keeperPieceId
@@ -296,15 +316,21 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
       || after.acquisitionId !== normalizedTarget.id)) {
     return null;
   }
-
-  const beforeMutationKeys = before === null
-    ? []
-    : Object.keys(before).filter((key) => policy.mutableFields.has(key));
-  const afterMutationKeys = Object.keys(after).filter((key) => policy.mutableFields.has(key));
-  if ((!policy.beforeMayBeNull || before !== null) && !sameKeys(beforeMutationKeys, changeKeys)) {
+  if (normalizedTarget.targetType === 'acquisition' && event?.artworkId !== null) {
     return null;
   }
-  if (!sameKeys(afterMutationKeys, changeKeys)) return null;
+  if (policy.correctedLink
+    && (!changeKeys.includes('pieceId')
+      || normalizedComparableIdentifier(event?.artworkId) !== after.pieceId
+      || normalizedTarget.artworkId !== after.pieceId)) {
+    return null;
+  }
+  if (policy.guardArtwork
+    && (normalizedComparableIdentifier(event?.artworkId) !== normalizedTarget.artworkId
+      || before.artworkId !== normalizedTarget.artworkId
+      || after.artworkId !== normalizedTarget.artworkId)) {
+    return null;
+  }
 
   for (const key of changeKeys) {
     if (canonicalJson(after[key]) !== canonicalJson(normalizedTarget.changes[key])) return null;
@@ -317,35 +343,46 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
     before,
     after,
     beforeValues: changeKeys.map((key) => before[key]),
+    contextGuard: normalizedTarget.targetType === 'acquisition'
+      ? { column: 'keeper_piece_id', operator: '=', value: normalizedTarget.keeperPieceId }
+      : policy.guardArtwork
+        ? { column: 'piece_id', operator: 'IS', value: normalizedTarget.artworkId }
+        : null,
   };
 }
 
-function buildVersionedMutationStatement(env, normalized, expectedVersion, beforeValues) {
+function buildVersionedMutationStatement(
+  env,
+  normalized,
+  expectedVersion,
+  beforeValues,
+  contextGuard,
+) {
   const { definition, id, assignments, values } = normalized;
   const setClauses = assignments.map((column, index) => `${column} = ?${index + 1}`);
   const idPosition = values.length + 1;
   const versionPosition = values.length + 2;
-  const associationPosition = normalized.targetType === 'acquisition'
+  const contextPosition = contextGuard
     ? values.length + 3
     : null;
-  const beforeStartPosition = values.length + (associationPosition === null ? 3 : 4);
+  const beforeStartPosition = values.length + (contextPosition === null ? 3 : 4);
   const priorValueClauses = assignments.map(
     (column, index) => `${column} IS ?${beforeStartPosition + index}`,
   );
-  const associationClause = associationPosition === null
+  const contextClause = contextPosition === null
     ? ''
-    : ` AND keeper_piece_id = ?${associationPosition}`;
+    : ` AND ${contextGuard.column} ${contextGuard.operator} ?${contextPosition}`;
   setClauses.push(`${definition.versionColumn} = ${definition.versionColumn} + 1`);
   return env.DB.prepare(
     `UPDATE ${definition.table}
         SET ${setClauses.join(', ')}
-      WHERE id = ?${idPosition} AND ${definition.versionColumn} = ?${versionPosition}${associationClause}
+      WHERE id = ?${idPosition} AND ${definition.versionColumn} = ?${versionPosition}${contextClause}
         AND ${priorValueClauses.join(' AND ')}`,
   ).bind(
     ...values,
     id,
     expectedVersion,
-    ...(associationPosition === null ? [] : [normalized.keeperPieceId]),
+    ...(contextPosition === null ? [] : [contextGuard.value]),
     ...beforeValues,
   );
 }
@@ -676,6 +713,7 @@ export async function commitMaintenanceMutation(env, {
       target: {
         type: normalizedTarget.targetType,
         keeperPieceId: normalizedTarget.keeperPieceId,
+        artworkId: normalizedTarget.artworkId,
       },
       id: normalizedTarget.id,
       expectedVersion,
@@ -691,6 +729,7 @@ export async function commitMaintenanceMutation(env, {
       normalizedTarget,
       expectedVersion,
       validatedEvent.beforeValues,
+      validatedEvent.contextGuard,
     );
     eventStatement = prepareMaintenanceEventStatement(env, normalizedEvent);
   } catch {
