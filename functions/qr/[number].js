@@ -54,7 +54,7 @@ export async function onRequest({ params, request, env }) {
           `SELECT piece_id
              FROM keeper_pieces
             WHERE public_code = ?1
-              AND plate_status IN ('generated', 'active')`,
+              AND plate_status IN ('generated', 'active', 'superseded')`,
         )
         .bind(code)
         .first();

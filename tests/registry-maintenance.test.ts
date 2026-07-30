@@ -14,7 +14,11 @@ import {
   normalizeReason,
   replayMaintenanceEvent,
 } from '../functions/api/_lib/registryMaintenance.js';
-import { buildLineageEvent } from '../functions/api/_lib/lineage.js';
+import {
+  buildLineageEvent,
+  lineageAnchorStatement,
+  lineageStatement,
+} from '../functions/api/_lib/lineage.js';
 import { LAUNCH_FLAGS } from '../launchFlags.ts';
 
 let maintenanceSession: {
@@ -48,6 +52,7 @@ const registryMigrations = [
   '015_registry_artworks.sql',
   '016_keeper_piece_edition_kind_guard.sql',
   '017_creator_registry_maintenance.sql',
+  '018_registry_plate_lifecycle.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -1171,6 +1176,34 @@ async function unlockedCookie(env: Record<string, unknown>) {
   return `registry_unlock=${token}`;
 }
 
+const ownershipCrypto = {
+  OWNERSHIP_CODE_ACTIVE_KEY_VERSION: '1',
+  OWNERSHIP_CODE_KEY_V1: Buffer.alloc(32, 42).toString('base64'),
+};
+
+async function seedGeneratedPlate(env: any, input: Record<string, unknown> = {}) {
+  const {
+    createRegistryPlateCandidate,
+    registryPlateInsertStatement,
+  } = await import('../functions/api/_lib/registryPlateIssuance.js');
+  const candidate = await createRegistryPlateCandidate({ ...env, ...ownershipCrypto }, {
+    keeperPieceId: 'kp-lifecycle',
+    pieceId: 'UL-100',
+    editionNumber: 0,
+    issuanceKey: 'initial-lifecycle-issuance',
+    publicCode: 'AR-7KQ9M2WX',
+    ownershipCode: 'J4KM-7NQP-X2RD-9VTC',
+    generatedAt: '2026-07-30T00:00:00.000Z',
+    ...input,
+  });
+  await env.DB.batch([
+    registryPlateInsertStatement(env, candidate),
+    lineageStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
+    lineageAnchorStatement(env, candidate.lineageEvent, { onlyIfPreviousChanged: true }),
+  ]);
+  return candidate;
+}
+
 describe('dedicated acquisition creation', () => {
   it('creates one private integer-minor record and event, replays exactly, and conflicts on reuse', async () => {
     const { database, env } = createSqliteD1();
@@ -1863,6 +1896,256 @@ describe('private maintenance APIs', () => {
     }
   });
 
+  it('corrects only digitally wrong links confirmed against truthful engraving', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      await seedGeneratedPlate(sqliteEnv);
+      database.prepare(
+        `INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
+         VALUES ('UL-101', 'Crystal Creation - 36', 'Universal Language', NULL,
+                 '2026-07-30T00:00:00.000Z')`,
+      ).run();
+      const env = {
+        ...sqliteEnv, ...ownershipCrypto,
+        ADMIN_EMAILS: 'artist@example.com', REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const prematureReplacement = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', {
+          action: 'replace_plate', physicalDisposition: 'Not yet active.',
+          reason: 'Reject replacement before activation.',
+          idempotencyKey: 'replace-generated-rejected', expectedRecordVersion: 0,
+        }, cookie), env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(prematureReplacement.status, 409);
+      assert.deepEqual(await prematureReplacement.json(), { ok: false, error: 'plate_not_active' });
+      const body = {
+        action: 'correct_link', artworkId: 'UL-101', editionNumber: 0,
+        physicalEngravingMatches: true,
+        reason: 'Correct the digital record to match the engraved plate.',
+        idempotencyKey: 'api-correct-link', expectedRecordVersion: 0,
+      };
+      database.prepare(
+        `INSERT INTO keeper_pieces
+           (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+            plate_status, registered_at)
+         VALUES ('kp-link-collision', 'UL-101', 0, 'collision-hash', 'AR-ABCDEFGH',
+                 'collision-issuance', 'generated', '2026-07-30T00:00:00.000Z')`,
+      ).run();
+      const collision = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', {
+          ...body, idempotencyKey: 'correct-link-collision',
+        }, cookie), env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(collision.status, 409);
+      assert.deepEqual(await collision.json(), { ok: false, error: 'link_collision' });
+      database.prepare(
+        `UPDATE keeper_pieces
+            SET plate_status = 'void', physical_disposition = 'Unused collision fixture.'
+          WHERE id = 'kp-link-collision'`,
+      ).run();
+
+      const missingConfirmation = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', {
+          ...body, physicalEngravingMatches: false, idempotencyKey: 'missing-confirmation',
+        }, cookie), env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(missingConfirmation.status, 400);
+      assert.deepEqual(await missingConfirmation.json(), {
+        ok: false, error: 'physical_engraving_confirmation_required',
+      });
+
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(response.status, 200);
+      const payload = await response.json();
+      assert.deepEqual(payload.record, {
+        keeperPieceId: 'kp-lifecycle', pieceId: 'UL-101', editionNumber: 0, recordVersion: 1,
+      });
+      assert.equal(payload.replayed, false);
+      assert.deepEqual({ ...database.prepare(
+        "SELECT piece_id, edition_number, record_version FROM keeper_pieces WHERE id = 'kp-lifecycle'",
+      ).get() }, { piece_id: 'UL-101', edition_number: 0, record_version: 1 });
+      const event = database.prepare(
+        "SELECT event_type, before_json, after_json FROM registry_maintenance_events WHERE idempotency_key = 'api-correct-link'",
+      ).get();
+      assert.equal(event.event_type, 'link_corrected');
+      assert.doesNotMatch(JSON.stringify(event), /ownership|recovery|ciphertext|nonce|verifier/i);
+
+      const replay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(replay.status, 200);
+      assert.equal((await replay.json()).replayed, true);
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('voids generated plates only, permanently retiring their public identity', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      await seedGeneratedPlate(sqliteEnv);
+      const env = {
+        ...sqliteEnv, ...ownershipCrypto,
+        ADMIN_EMAILS: 'artist@example.com', REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const body = {
+        action: 'void_plate', physicalDisposition: 'Engraving blank destroyed in studio.',
+        reason: 'Retire the unused generated plate.', idempotencyKey: 'api-void-plate',
+        expectedRecordVersion: 0,
+      };
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(response.status, 200);
+      const payload = await response.json();
+      assert.deepEqual(payload.record, {
+        keeperPieceId: 'kp-lifecycle', artworkId: 'UL-100', plateStatus: 'void',
+        physicalDisposition: body.physicalDisposition, recordVersion: 1,
+      });
+      assert.equal(payload.replayed, false);
+      assert.deepEqual({ ...database.prepare(
+        "SELECT plate_status, physical_disposition, record_version FROM keeper_pieces WHERE id = 'kp-lifecycle'",
+      ).get() }, {
+        plate_status: 'void', physical_disposition: body.physicalDisposition, record_version: 1,
+      });
+      assert.throws(() => database.prepare(
+        `INSERT INTO keeper_pieces
+           (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key, plate_status)
+         VALUES ('reuse', 'UL-100', 0, 'different-hash', 'AR-7KQ9M2WX',
+                 'initial-lifecycle-issuance', 'generated')`,
+      ).run(), /unique/i);
+
+      const replay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(replay.status, 200);
+      assert.equal((await replay.json()).replayed, true);
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
+  it('atomically supersedes an active plate and exactly replays its generated replacement', async () => {
+    const { database, env: sqliteEnv } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      const old = await seedGeneratedPlate(sqliteEnv);
+      const activatedAt = '2026-07-30T01:00:00.000Z';
+      const activated = await buildLineageEvent({
+        keeperPieceId: old.id, sequence: 2, eventType: 'activated', eventAt: activatedAt,
+        previousHash: old.lineageEvent.eventHash, publicPayload: { plateStatus: 'active' },
+      });
+      await sqliteEnv.DB.batch([
+        sqliteEnv.DB.prepare(
+          `UPDATE keeper_pieces SET plate_status = 'active', plate_activated_at = ?1
+            WHERE id = ?2`,
+        ).bind(activatedAt, old.id),
+        lineageStatement(sqliteEnv, activated),
+        lineageAnchorStatement(sqliteEnv, activated, {
+          expectedCount: 1, expectedHash: old.lineageEvent.eventHash,
+        }),
+      ]);
+      const env = {
+        ...sqliteEnv, ...ownershipCrypto,
+        ADMIN_EMAILS: 'artist@example.com', REGISTRY_STEP_UP_SECRET: 'registry-secret',
+      };
+      maintenanceSession = {
+        session: adminIdentity.session,
+        user: { id: adminIdentity.userId, email: adminIdentity.email, emailVerified: true },
+      };
+      const cookie = await unlockedCookie(env);
+      const { onRequest: action } = await import('../functions/api/admin/maintenance/[id]/actions.js');
+      const activeVoid = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', {
+          action: 'void_plate', physicalDisposition: 'Must not retire an active plate this way.',
+          reason: 'Reject voiding an active plate.', idempotencyKey: 'void-active-rejected',
+          expectedRecordVersion: 1,
+        }, cookie), env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(activeVoid.status, 409);
+      assert.deepEqual(await activeVoid.json(), { ok: false, error: 'plate_not_generated' });
+      const body = {
+        action: 'replace_plate', physicalDisposition: 'Damaged metal plate retained in studio archive.',
+        reason: 'Replace the physically incorrect engraved plate.',
+        idempotencyKey: 'api-replace-plate', expectedRecordVersion: 1,
+      };
+      const response = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(response.status, 201);
+      const payload = await response.json();
+      assert.equal(payload.replayed, false);
+      assert.match(payload.replacement.publicCode, /^AR-/);
+      assert.match(payload.replacement.ownershipCode, /^[A-Z0-9-]+$/);
+      assert.notEqual(payload.replacement.publicCode, old.publicCode);
+
+      const rows = database.prepare(
+        `SELECT id, public_code, issuance_key, plate_status, supersedes_keeper_piece_id,
+                superseded_by_keeper_piece_id, physical_disposition, replaced_at, record_version
+           FROM keeper_pieces ORDER BY id`,
+      ).all();
+      const oldRow = rows.find((row: any) => row.id === old.id) as any;
+      const newRow = rows.find((row: any) => row.id !== old.id) as any;
+      assert.equal(oldRow.plate_status, 'superseded');
+      assert.equal(oldRow.superseded_by_keeper_piece_id, newRow.id);
+      assert.equal(oldRow.physical_disposition, body.physicalDisposition);
+      assert.equal(newRow.plate_status, 'generated');
+      assert.equal(newRow.supersedes_keeper_piece_id, old.id);
+      assert.equal(oldRow.replaced_at, payload.replacement.generatedAt);
+      const event = database.prepare(
+        "SELECT before_json, after_json FROM registry_maintenance_events WHERE idempotency_key = 'api-replace-plate'",
+      ).get();
+      assert.doesNotMatch(JSON.stringify(event), /ownership|recovery|ciphertext|nonce|verifier/i);
+
+      const replay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(replay.status, 200);
+      const replayPayload = await replay.json();
+      assert.equal(replayPayload.replayed, true);
+      assert.deepEqual(replayPayload.replacement, payload.replacement);
+      assert.equal(database.prepare('SELECT count(*) AS count FROM keeper_pieces').get().count, 2);
+
+      database.prepare(
+        `UPDATE keeper_pieces SET plate_status = 'active', plate_activated_at = ?1
+          WHERE id = ?2`,
+      ).run('2026-07-30T02:00:00.000Z', newRow.id);
+      const lockedReplay = await action({
+        request: adminRequest('/api/admin/maintenance/kp-lifecycle/actions', 'POST', body, cookie),
+        env, params: { id: 'kp-lifecycle' },
+      });
+      assert.equal(lockedReplay.status, 409);
+      assert.deepEqual(await lockedReplay.json(), { ok: false, error: 'plate_identity_locked' });
+    } finally {
+      maintenanceSession = null;
+      database.close();
+    }
+  });
+
   it('keeps all acquisition fields out of public registry, lineage, and QR identity responses', async () => {
     const { database, env } = createSqliteD1();
     try {
@@ -1937,6 +2220,57 @@ describe('private maintenance APIs', () => {
             name,
           );
         }
+
+        database.exec(`BEGIN IMMEDIATE;
+          UPDATE keeper_pieces
+             SET plate_status = 'superseded', superseded_by_keeper_piece_id = 'kp-middle',
+                 physical_disposition = 'First retired plate.', replaced_at = '2026-07-30T01:00:00.000Z'
+           WHERE id = 'kp-maint';
+          INSERT INTO keeper_pieces
+            (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+             plate_status, registered_at, supersedes_keeper_piece_id,
+             superseded_by_keeper_piece_id, physical_disposition, replaced_at)
+          VALUES
+            ('kp-middle', 'UL-100', 0, 'middle-hash', 'AR-ABCDEFGH', 'middle-issue',
+             'superseded', '2026-07-30T01:00:00.000Z', 'kp-maint', 'kp-current',
+             'Second retired plate.', '2026-07-30T02:00:00.000Z');
+          INSERT INTO keeper_pieces
+            (id, piece_id, edition_number, recovery_code_hash, public_code, issuance_key,
+             plate_status, registered_at, supersedes_keeper_piece_id)
+          VALUES
+            ('kp-current', 'UL-100', 0, 'current-hash', 'AR-BCDEFGHJ', 'current-issue',
+             'generated', '2026-07-30T02:00:00.000Z', 'kp-middle');
+          COMMIT;
+        `);
+        const disclosedEnv = {
+          ...env,
+          ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE: 'disclosed',
+        };
+        const chainRegistry = await registry({
+          request: new Request('https://adrianrasmussen.com/api/registry/AR-7KQ9M2WX'),
+          env: disclosedEnv,
+          params: { publicCode: 'AR-7KQ9M2WX' },
+        });
+        const chainLineage = await lineage({
+          request: new Request('https://adrianrasmussen.com/api/lineage/AR-7KQ9M2WX'),
+          env: disclosedEnv,
+          params: { publicCode: 'AR-7KQ9M2WX' },
+        });
+        assert.equal((await chainRegistry.json()).identity.currentPublicCode, 'AR-BCDEFGHJ');
+        assert.equal((await chainLineage.json()).artwork.currentPublicCode, 'AR-BCDEFGHJ');
+
+        database.prepare(
+          `UPDATE keeper_pieces SET superseded_by_keeper_piece_id = 'kp-maint'
+            WHERE id = 'kp-current'`,
+        ).run();
+        const cyclic = await registry({
+          request: new Request('https://adrianrasmussen.com/api/registry/AR-7KQ9M2WX'),
+          env: disclosedEnv,
+          params: { publicCode: 'AR-7KQ9M2WX' },
+        });
+        const cyclicIdentity = (await cyclic.json()).identity;
+        assert.equal(cyclicIdentity.successorDisclosure, 'withheld');
+        assert.equal(Object.hasOwn(cyclicIdentity, 'currentPublicCode'), false);
       } finally {
         LAUNCH_FLAGS.livingLegacy = previousFlag;
       }

@@ -139,9 +139,68 @@ describe('public registry identity projection', () => {
     }), /provenance/i);
     assert.equal(validatePublicPlateIdentity({ ...base, amount: 1111 }), false);
   });
+
+  it('makes successor disclosure explicit and refuses malformed superseded identities', () => {
+    const base = {
+      artworkId: 'UL-100', title: 'Art of Living - 32', series: 'Universal Language',
+      editionKind: 'numbered', editionNumber: 2, editionSize: 7,
+      publicCode: PUBLIC_CODE, plateStatus: 'superseded', publicProvenance: [],
+    };
+    const withheld = projectPublicPlateIdentity({
+      ...base, successorDisclosure: 'withheld', currentPublicCode: 'AR-ABCDEFGH',
+    });
+    assert.equal(withheld.plateStatus, 'superseded');
+    if (withheld.plateStatus !== 'superseded') assert.fail('expected superseded identity');
+    assert.equal(withheld.successorDisclosure, 'withheld');
+    assert.equal(Object.hasOwn(withheld, 'currentPublicCode'), false);
+    assert.equal(validatePublicPlateIdentity(withheld), true);
+
+    const disclosed = projectPublicPlateIdentity({
+      ...base, successorDisclosure: 'disclosed', currentPublicCode: 'AR-ABCDEFGH',
+    });
+    assert.equal(disclosed.plateStatus, 'superseded');
+    if (disclosed.plateStatus !== 'superseded') assert.fail('expected superseded identity');
+    assert.equal(disclosed.successorDisclosure, 'disclosed');
+    if (disclosed.successorDisclosure !== 'disclosed') assert.fail('expected disclosed successor');
+    assert.equal(disclosed.currentPublicCode, 'AR-ABCDEFGH');
+    assert.equal(validatePublicPlateIdentity(disclosed), true);
+    assert.throws(() => projectPublicPlateIdentity({
+      ...base, successorDisclosure: 'disclosed', currentPublicCode: null,
+    }), /successor/i);
+  });
 });
 
 describe('GET /api/registry/:publicCode', () => {
+  it('resolves old superseded codes while disclosing the current code only by explicit policy', async () => {
+    const db = registryDb({
+      plate: {
+        piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+        plate_status: 'superseded', current_public_code: 'AR-ABCDEFGH',
+      },
+      artwork: { id: 'UL-100', edition_size: 7 },
+    });
+    const withheld = await onRequest({
+      request: request(), env: { DB: db.DB }, params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(withheld.status, 200);
+    const withheldIdentity = (await withheld.json()).identity;
+    assert.equal(withheldIdentity.plateStatus, 'superseded');
+    assert.equal(withheldIdentity.successorDisclosure, 'withheld');
+    assert.equal(Object.hasOwn(withheldIdentity, 'currentPublicCode'), false);
+
+    const disclosed = await onRequest({
+      request: request(),
+      env: { DB: db.DB, ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE: 'disclosed' },
+      params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(disclosed.status, 200);
+    const disclosedIdentity = (await disclosed.json()).identity;
+    assert.equal(disclosedIdentity.successorDisclosure, 'disclosed');
+    assert.equal(disclosedIdentity.currentPublicCode, 'AR-ABCDEFGH');
+    assert.match(db.calls[0].sql, /WITH RECURSIVE successor_chain/i);
+    assert.doesNotMatch(JSON.stringify(disclosedIdentity), /ownership|recovery|steward|amount|cipher|nonce/i);
+  });
+
   it('resolves a generated numbered plate with canonical static metadata and overlay size', async () => {
     const { response, calls } = await lookup({
       plate: {

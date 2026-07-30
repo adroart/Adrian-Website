@@ -460,6 +460,7 @@ describe('permanent artwork QR resolver', () => {
     assert.equal(lookup.calls.length, 1);
     assert.deepEqual(lookup.calls[0].values, ['AR-7KQ9M2WX']);
     assert.match(lookup.calls[0].sql, /SELECT\s+piece_id\s+FROM/i);
+    assert.match(lookup.calls[0].sql, /plate_status IN \('generated', 'active', 'superseded'\)/i);
     assert.doesNotMatch(lookup.calls[0].sql, /edition_number/i);
     assert.doesNotMatch(
       lookup.calls[0].sql,

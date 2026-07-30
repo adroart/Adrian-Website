@@ -40,11 +40,32 @@ export async function onRequest({ request, env, params }) {
   let rows;
   try {
     artwork = await env.DB.prepare(
-      `SELECT id, piece_id, edition_number, public_code,
-              lineage_head_hash, lineage_event_count
-         FROM keeper_pieces
-        WHERE public_code = ?1
-          AND plate_status = 'active'`,
+      `WITH RECURSIVE successor_chain(
+         id, public_code, plate_status, superseded_by_keeper_piece_id, depth
+       ) AS (
+         SELECT successor.id, successor.public_code, successor.plate_status,
+                successor.superseded_by_keeper_piece_id, 1
+           FROM keeper_pieces root
+           JOIN keeper_pieces successor
+             ON successor.id = root.superseded_by_keeper_piece_id
+          WHERE root.public_code = ?1
+         UNION ALL
+         SELECT successor.id, successor.public_code, successor.plate_status,
+                successor.superseded_by_keeper_piece_id, chain.depth + 1
+           FROM successor_chain chain
+           JOIN keeper_pieces successor
+             ON successor.id = chain.superseded_by_keeper_piece_id
+          WHERE chain.depth < 64
+       )
+       SELECT plate.id, plate.piece_id, plate.edition_number, plate.public_code,
+              plate.plate_status, plate.lineage_head_hash, plate.lineage_event_count,
+              (SELECT public_code FROM successor_chain
+                WHERE plate_status IN ('generated', 'active')
+                  AND superseded_by_keeper_piece_id IS NULL
+                ORDER BY depth DESC LIMIT 1) AS current_public_code
+         FROM keeper_pieces plate
+        WHERE plate.public_code = ?1
+          AND plate.plate_status IN ('active', 'superseded')`,
     ).bind(publicCode).first();
 
     if (!artwork) return json({ ok: false, error: 'not_found' }, 404);
@@ -108,12 +129,20 @@ export async function onRequest({ request, env, params }) {
     return json({ ok: false, error: 'lineage_integrity_error' }, 409);
   }
 
+  const discloseSuccessor = artwork.plate_status === 'superseded'
+    && env.ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE === 'disclosed'
+    && PUBLIC_CODE_PATTERN.test(artwork.current_public_code || '');
   return json({
     ok: true,
     artwork: {
       pieceId: artwork.piece_id,
       editionNumber: artwork.edition_number,
       publicCode: artwork.public_code,
+      ...(artwork.plate_status === 'superseded' ? {
+        plateStatus: 'superseded',
+        successorDisclosure: discloseSuccessor ? 'disclosed' : 'withheld',
+        ...(discloseSuccessor ? { currentPublicCode: artwork.current_public_code } : {}),
+      } : {}),
     },
     events,
   });

@@ -82,15 +82,37 @@ export async function onRequest({ request, env, params }) {
   try {
     plate = await env.DB
       .prepare(
-        `SELECT piece_id, edition_number, public_code, plate_status
-           FROM keeper_pieces
-          WHERE public_code = ?1
-            AND plate_status IN ('generated', 'active')`,
+        `WITH RECURSIVE successor_chain(
+           id, public_code, plate_status, superseded_by_keeper_piece_id, depth
+         ) AS (
+           SELECT successor.id, successor.public_code, successor.plate_status,
+                  successor.superseded_by_keeper_piece_id, 1
+             FROM keeper_pieces root
+             JOIN keeper_pieces successor
+               ON successor.id = root.superseded_by_keeper_piece_id
+            WHERE root.public_code = ?1
+           UNION ALL
+           SELECT successor.id, successor.public_code, successor.plate_status,
+                  successor.superseded_by_keeper_piece_id, chain.depth + 1
+             FROM successor_chain chain
+             JOIN keeper_pieces successor
+               ON successor.id = chain.superseded_by_keeper_piece_id
+            WHERE chain.depth < 64
+         )
+         SELECT plate.piece_id, plate.edition_number, plate.public_code,
+                plate.plate_status,
+                (SELECT public_code FROM successor_chain
+                  WHERE plate_status IN ('generated', 'active')
+                    AND superseded_by_keeper_piece_id IS NULL
+                  ORDER BY depth DESC LIMIT 1) AS current_public_code
+           FROM keeper_pieces plate
+          WHERE plate.public_code = ?1
+            AND plate.plate_status IN ('generated', 'active', 'superseded')`,
       )
       .bind(publicCode)
       .first();
     if (!plate) return json({ ok: false, error: 'not_found' }, 404);
-    if (plate.plate_status !== 'generated' && plate.plate_status !== 'active') {
+    if (!['generated', 'active', 'superseded'].includes(plate.plate_status)) {
       return json({ ok: false, error: 'not_found' }, 404);
     }
     if (plate.public_code !== publicCode) return integrityError();
@@ -105,6 +127,9 @@ export async function onRequest({ request, env, params }) {
 
   try {
     const metadata = resolveMetadata(plate, overlay);
+    const discloseSuccessor = plate.plate_status === 'superseded'
+      && env.ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE === 'disclosed'
+      && isPublicRegistryCode(plate.current_public_code);
     const identity = projectPublicPlateIdentity({
       artworkId: plate.piece_id,
       title: metadata.title,
@@ -115,6 +140,10 @@ export async function onRequest({ request, env, params }) {
       publicCode: plate.public_code,
       plateStatus: plate.plate_status,
       publicProvenance: metadata.publicProvenance,
+      ...(plate.plate_status === 'superseded' ? {
+        successorDisclosure: discloseSuccessor ? 'disclosed' : 'withheld',
+        ...(discloseSuccessor ? { currentPublicCode: plate.current_public_code } : {}),
+      } : {}),
     });
     return json({ ok: true, identity });
   } catch {

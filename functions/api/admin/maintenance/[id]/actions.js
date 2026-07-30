@@ -6,6 +6,7 @@ import {
   normalizeReason,
   projectMaintenanceHistorySnapshots,
 } from '../../../_lib/registryMaintenance.js';
+import { handleRegistryPlateLifecycle } from '../../../_lib/registryPlateLifecycle.js';
 
 const REQUEST_FIELDS = new Set([
   'action', 'targetEmail', 'reason', 'idempotencyKey', 'expectedStewardVersion',
@@ -174,6 +175,13 @@ export async function onRequest({ request, env, params }) {
     body = await request.json();
   } catch {
     return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+  }
+  if (body && typeof body === 'object' && !Array.isArray(body)
+    && ['correct_link', 'void_plate', 'replace_plate'].includes(body.action)) {
+    const result = await handleRegistryPlateLifecycle({
+      body, env, keeperPieceId, authorization,
+    });
+    return jsonResponse(result.body, result.status);
   }
   if (!body || typeof body !== 'object' || Array.isArray(body)
     || Object.keys(body).some((key) => !REQUEST_FIELDS.has(key))) {

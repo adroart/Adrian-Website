@@ -66,7 +66,7 @@ function environment(options: {
           const normalized = sql.replace(/\s+/g, ' ').trim();
           statements.push(normalized);
           if (options.schemaFailure) throw new Error('no such table: keeper_pieces');
-          if (/SELECT id, piece_id, edition_number, public_code, lineage_head_hash, lineage_event_count FROM keeper_pieces/i.test(normalized)) {
+          if (/SELECT plate\.id, plate\.piece_id, plate\.edition_number, plate\.public_code/i.test(normalized)) {
             return {
               bind(value: string) {
                 assert.equal(value, PUBLIC_CODE);
@@ -132,7 +132,7 @@ describe('public artwork lineage history', () => {
         publicPayload: JSON.parse(String(event.public_payload_json)),
       })),
     });
-    assert.match(statements[0], /plate_status = 'active'/);
+    assert.match(statements[0], /plate\.plate_status IN \('active', 'superseded'\)/);
     assert.equal(statements.join(' ').match(/email|ip_address|user_agent|order_ref|keeper_user_id/gi), null);
   });
 
@@ -152,6 +152,46 @@ describe('public artwork lineage history', () => {
       assert.equal(response.status, 409);
       assert.deepEqual(await response.json(), { ok: false, error: 'lineage_integrity_error' });
     }
+  });
+
+  it('keeps a superseded code resolvable and gates its successor code explicitly', async () => {
+    const activeEvents = await lineageRows();
+    const final = await buildLineageEvent({
+      keeperPieceId: 'kp-1', sequence: 3, eventType: 'superseded',
+      eventAt: '2026-07-30T00:00:00.000Z', previousHash: activeEvents[1].event_hash,
+      publicPayload: { plateStatus: 'superseded' },
+    });
+    const events = [...activeEvents, {
+      sequence: final.sequence, event_type: final.eventType, event_at: final.eventAt,
+      previous_hash: final.previousHash, event_hash: final.eventHash,
+      public_payload_json: final.publicPayloadJson,
+    }];
+    const piece = {
+      id: 'kp-1', piece_id: 'UL-100', edition_number: 2, public_code: PUBLIC_CODE,
+      plate_status: 'superseded', current_public_code: 'AR-ABCDEFGH',
+      lineage_event_count: 3, lineage_head_hash: final.eventHash,
+    };
+    const withheldEnv = environment({ piece, events }).env;
+    const withheld = await onRequest({
+      request: request(), env: withheldEnv, params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(withheld.status, 200);
+    assert.deepEqual((await withheld.json()).artwork, {
+      pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE,
+      plateStatus: 'superseded', successorDisclosure: 'withheld',
+    });
+
+    const disclosedFixture = environment({ piece, events });
+    const disclosedEnv = {
+      ...disclosedFixture.env,
+      ARTWORK_REGISTRY_SUCCESSOR_DISCLOSURE: 'disclosed',
+    };
+    const disclosed = await onRequest({
+      request: request(), env: disclosedEnv, params: { publicCode: PUBLIC_CODE },
+    });
+    assert.equal(disclosed.status, 200);
+    assert.equal((await disclosed.json()).artwork.currentPublicCode, 'AR-ABCDEFGH');
+    assert.match(disclosedFixture.statements[0], /WITH RECURSIVE successor_chain/i);
   });
 
   it('fails closed on an active empty chain or a chain truncated before its anchor', async () => {
@@ -273,6 +313,13 @@ describe('lineage public payload allowlist', () => {
       pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE,
     }), { pieceId: 'UL-100', editionNumber: 2, publicCode: PUBLIC_CODE });
     assert.deepEqual(projectLineagePublicPayload('activated', { plateStatus: 'active' }), { plateStatus: 'active' });
+    assert.deepEqual(projectLineagePublicPayload('link_corrected', {
+      pieceId: 'UL-101', editionNumber: 0,
+    }), { pieceId: 'UL-101', editionNumber: 0 });
+    assert.deepEqual(projectLineagePublicPayload('voided', { plateStatus: 'void' }), { plateStatus: 'void' });
+    assert.deepEqual(projectLineagePublicPayload('superseded', {
+      plateStatus: 'superseded',
+    }), { plateStatus: 'superseded' });
     assert.deepEqual(projectLineagePublicPayload('first_bound', {}), {});
 
     for (const payload of [

@@ -57,6 +57,27 @@ export function projectLineagePublicPayload(eventType, publicPayload = {}) {
     }
     return { plateStatus: 'active' };
   }
+  if (eventType === 'link_corrected') {
+    if (!exactKeys(publicPayload, ['pieceId', 'editionNumber'])
+      || typeof publicPayload.pieceId !== 'string'
+      || !ARTWORK_ID_PATTERN.test(publicPayload.pieceId)
+      || !Number.isSafeInteger(publicPayload.editionNumber)
+      || publicPayload.editionNumber < 0
+      || publicPayload.editionNumber > 9999) {
+      throw new Error('invalid link_corrected lineage payload');
+    }
+    return {
+      pieceId: publicPayload.pieceId,
+      editionNumber: publicPayload.editionNumber,
+    };
+  }
+  if (eventType === 'voided' || eventType === 'superseded') {
+    const plateStatus = eventType === 'voided' ? 'void' : 'superseded';
+    if (!exactKeys(publicPayload, ['plateStatus']) || publicPayload.plateStatus !== plateStatus) {
+      throw new Error(`invalid ${eventType} lineage payload`);
+    }
+    return { plateStatus };
+  }
   if (EMPTY_PAYLOAD_EVENTS.has(eventType)) {
     if (!exactKeys(publicPayload, [])) throw new Error(`invalid ${eventType} lineage payload`);
     return {};

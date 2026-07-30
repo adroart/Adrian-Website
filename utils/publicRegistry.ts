@@ -3,7 +3,7 @@ export const PUBLIC_REGISTRY_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ234567
 
 const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
 const MAX_EDITION_NUMBER = 9999;
-const PLATE_STATUSES = ['generated', 'active'] as const;
+const PLATE_STATUSES = ['generated', 'active', 'superseded'] as const;
 const PROVENANCE_EVENTS = [
   'created',
   'exhibited',
@@ -26,16 +26,25 @@ export type PublicEditionIdentity =
   | { kind: 'unique'; number: null; size: null; label: 'Unique work' }
   | { kind: 'numbered'; number: number; size: number | null; label: string };
 
-export interface PublicPlateIdentity {
+interface PublicPlateIdentityBase {
   artworkId: string;
   title: string;
   series: string | null;
   edition: PublicEditionIdentity;
   publicCode: string;
   artistName: typeof PUBLIC_REGISTRY_ARTIST_NAME;
-  plateStatus: PublicPlateStatus;
   publicProvenance: PublicProvenanceEvent[];
 }
+
+export type PublicPlateIdentity = PublicPlateIdentityBase & (
+  | { plateStatus: 'generated' | 'active' }
+  | { plateStatus: 'superseded'; successorDisclosure: 'withheld' }
+  | {
+      plateStatus: 'superseded';
+      successorDisclosure: 'disclosed';
+      currentPublicCode: string;
+    }
+);
 
 export interface PublicPlateIdentityProjection {
   artworkId: unknown;
@@ -47,6 +56,8 @@ export interface PublicPlateIdentityProjection {
   publicCode: unknown;
   plateStatus: unknown;
   publicProvenance: unknown;
+  successorDisclosure?: unknown;
+  currentPublicCode?: unknown;
   [key: string]: unknown;
 }
 
@@ -148,7 +159,7 @@ export function projectPublicPlateIdentity(
     throw new Error('Invalid public identity plate status');
   }
 
-  return {
+  const identity = {
     artworkId,
     title,
     series,
@@ -158,13 +169,39 @@ export function projectPublicPlateIdentity(
     plateStatus: input.plateStatus as PublicPlateStatus,
     publicProvenance: projectPublicProvenance(input.publicProvenance),
   };
+  if (input.plateStatus !== 'superseded') return identity as PublicPlateIdentity;
+  if (input.successorDisclosure === 'withheld') {
+    return { ...identity, successorDisclosure: 'withheld' } as PublicPlateIdentity;
+  }
+  if (input.successorDisclosure === 'disclosed'
+    && isPublicRegistryCode(input.currentPublicCode)
+    && input.currentPublicCode !== input.publicCode) {
+    return {
+      ...identity,
+      successorDisclosure: 'disclosed',
+      currentPublicCode: input.currentPublicCode,
+    } as PublicPlateIdentity;
+  }
+  throw new Error('Invalid public identity successor disclosure');
 }
 
 export function validatePublicPlateIdentity(value: unknown): value is PublicPlateIdentity {
-  if (!isObject(value) || !hasExactKeys(value, [
+  if (!isObject(value)) return false;
+  const expectedKeys = value.plateStatus === 'superseded'
+    ? value.successorDisclosure === 'disclosed'
+      ? [
+          'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
+          'plateStatus', 'publicProvenance', 'successorDisclosure', 'currentPublicCode',
+        ]
+      : [
+          'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
+          'plateStatus', 'publicProvenance', 'successorDisclosure',
+        ]
+    : [
     'artworkId', 'title', 'series', 'edition', 'publicCode', 'artistName',
     'plateStatus', 'publicProvenance',
-  ])) return false;
+      ];
+  if (!hasExactKeys(value, expectedKeys)) return false;
   if (value.artistName !== PUBLIC_REGISTRY_ARTIST_NAME || !isObject(value.edition)) return false;
   if (!hasExactKeys(value.edition, ['kind', 'number', 'size', 'label'])) return false;
 
@@ -179,6 +216,8 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
       publicCode: value.publicCode,
       plateStatus: value.plateStatus,
       publicProvenance: value.publicProvenance,
+      successorDisclosure: value.successorDisclosure,
+      currentPublicCode: value.currentPublicCode,
     });
     if (
       projected.artworkId !== value.artworkId
@@ -187,6 +226,10 @@ export function validatePublicPlateIdentity(value: unknown): value is PublicPlat
       || projected.publicCode !== value.publicCode
       || projected.artistName !== value.artistName
       || projected.plateStatus !== value.plateStatus
+      || ('successorDisclosure' in projected
+        && projected.successorDisclosure !== value.successorDisclosure)
+      || ('currentPublicCode' in projected
+        && projected.currentPublicCode !== value.currentPublicCode)
       || projected.edition.kind !== value.edition.kind
       || projected.edition.number !== value.edition.number
       || projected.edition.size !== value.edition.size

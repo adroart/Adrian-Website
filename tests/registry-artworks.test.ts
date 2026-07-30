@@ -182,11 +182,16 @@ describe('artwork resolution for minting', () => {
 describe('mint + admin wiring', () => {
   it('the mint endpoint resolves an artwork from either source', () => {
     const pieces = readFileSync(new URL('../functions/api/admin/pieces.js', import.meta.url), 'utf8');
-    assert.match(pieces, /resolveArtwork/);
-    assert.match(pieces, /await validateNewIssuance\(env, basic\)/);
-    const issuePiece = pieces.slice(pieces.indexOf('async function issuePiece'));
-    assert.ok(issuePiece.indexOf('findByIssuanceKey') < issuePiece.indexOf('validateNewIssuance(env, basic)'));
-    assert.doesNotMatch(pieces, /FULL_ARCHIVE/);
+    const issuance = readFileSync(
+      new URL('../functions/api/_lib/registryPlateIssuance.js', import.meta.url),
+      'utf8',
+    );
+    assert.match(pieces, /issueRegistryPlate/);
+    assert.match(issuance, /resolveArtwork/);
+    assert.match(issuance, /await validateNewIssuance\(env, basic\)/);
+    const issuePlate = issuance.slice(issuance.indexOf('export async function issueRegistryPlate'));
+    assert.ok(issuePlate.indexOf('findByIssuanceKey') < issuePlate.indexOf('validateNewIssuance(env, basic)'));
+    assert.doesNotMatch(`${pieces}\n${issuance}`, /FULL_ARCHIVE/);
   });
 
   it('the draft admin endpoint gates create behind the registry unlock', () => {
