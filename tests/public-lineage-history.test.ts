@@ -341,13 +341,13 @@ describe('lineage public payload allowlist', () => {
 describe('registry rollout boundary', () => {
   it('keeps scratch admin explicit and delays the public flip until after metal qualification', () => {
     const runbook = readFileSync(new URL('../docs/lineage-plate-runbook.md', import.meta.url), 'utf8');
-    const scratchStart = runbook.indexOf('### 7. Prove restoration and decryption before engraving');
-    const prototypeStart = runbook.indexOf('## Prototype qualification');
-    const activationGate = runbook.indexOf('Only after all checks pass', prototypeStart);
+    const adminGate = runbook.indexOf('ARTWORK_REGISTRY_ADMIN_ENABLED=true');
+    const scratchStart = runbook.indexOf('## First non-production canary');
+    const prototypeStart = runbook.indexOf('## Material prototype qualification');
+    const activationGate = runbook.indexOf('## Activate only the real metal', prototypeStart);
     const publicFlip = runbook.indexOf('set `LAUNCH_FLAGS.livingLegacy` to `true`');
 
-    assert.ok(scratchStart >= 0 && prototypeStart > scratchStart);
-    assert.match(runbook.slice(scratchStart, prototypeStart), /ARTWORK_REGISTRY_ADMIN_ENABLED=true/);
+    assert.ok(adminGate >= 0 && scratchStart > adminGate && prototypeStart > scratchStart);
     assert.ok(activationGate >= 0);
     assert.ok(publicFlip > activationGate);
 

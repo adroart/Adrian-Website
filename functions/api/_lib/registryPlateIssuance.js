@@ -221,9 +221,21 @@ export async function packageFromStoredRegistryPlate(row, env) {
 }
 
 export async function backupRegistryPlate(env, row) {
-  const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
+  let storedRow;
   try {
-    await recordPlateBackupResult(env.DB, row, result);
+    storedRow = await env.DB.prepare(
+      'SELECT * FROM keeper_pieces WHERE id = ?1',
+    ).bind(row.id).first();
+  } catch {
+    return { status: row.backup_status || 'pending', warning: 'backup_status_record_failed' };
+  }
+  if (!storedRow) {
+    return { status: row.backup_status || 'pending', warning: 'backup_status_record_failed' };
+  }
+  Object.assign(row, storedRow);
+  const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, storedRow);
+  try {
+    await recordPlateBackupResult(env.DB, storedRow, result);
     row.backup_status = result.status;
     if (result.status === 'verified') {
       row.backup_reference = result.reference;
@@ -234,6 +246,28 @@ export async function backupRegistryPlate(env, row) {
       warning: result.status === 'failed' ? 'online_backup_failed' : undefined,
     };
   } catch {
+    const current = await env.DB.prepare(
+      'SELECT * FROM keeper_pieces WHERE id = ?1',
+    ).bind(storedRow.id).first().catch(() => null);
+    const sameSource = current && [
+      'public_code', 'piece_id', 'edition_number', 'plate_generated_at',
+      'front_svg_sha256', 'back_svg_sha256', 'ownership_code_ciphertext',
+      'ownership_code_nonce', 'ownership_code_key_version', 'recovery_code_hash',
+    ].every((field) => current[field] === storedRow[field]);
+    if (
+      sameSource
+      && result.status === 'verified'
+      && plateBackupIsVerified(current)
+      && current.backup_reference === result.reference
+      && current.backup_sha256 === result.sha256
+    ) {
+      Object.assign(row, current);
+      return { status: 'verified' };
+    }
+    if (sameSource && result.status === 'failed' && current.backup_status === 'failed') {
+      Object.assign(row, current);
+      return { status: 'failed', warning: 'online_backup_failed' };
+    }
     return {
       status: row.backup_status || 'pending',
       warning: 'backup_status_record_failed',

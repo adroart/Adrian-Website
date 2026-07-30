@@ -1703,6 +1703,9 @@ function makeIssuanceDb(options: {
     if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
       return { kind: 'first', row: rows.find((row) => row.issuance_key === params[0]) || null };
     }
+    if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: rows.find((row) => row.id === params[0]) || null };
+    }
     if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
       return { kind: 'first', row: find(params[0], params[1]) || null };
     }
@@ -2633,6 +2636,74 @@ describe('encrypted plate backup adapter', () => {
     assert.match(sql, /ownership_code_ciphertext = \?13/);
     assert.match(sql, /recovery_code_hash = \?16/);
   });
+
+  it('treats an identical concurrent backup status winner as success', async () => {
+    const { backupRegistryPlate } = await import('../functions/api/_lib/registryPlateIssuance.js');
+    const row: any = {
+      id: 'kp-race', record_version: 4, public_code: 'AR-ABCDEFGH',
+      piece_id: 'UL-100', edition_number: 0,
+      plate_generated_at: '2026-07-31T00:00:00.000Z',
+      front_svg_sha256: 'a'.repeat(64), back_svg_sha256: 'b'.repeat(64),
+      ownership_code_ciphertext: 'cipher', ownership_code_nonce: 'nonce',
+      ownership_code_key_version: 1, recovery_code_hash: 'c'.repeat(64),
+      backup_status: 'pending', backup_reference: null, backup_sha256: null,
+    };
+    const current = { ...row };
+    let reads = 0;
+    const DB = {
+      prepare(sql: string) {
+        const statement: any = {
+          values: [] as any[],
+          bind(...values: any[]) { statement.values = values; return statement; },
+          async first() {
+            assert.match(sql, /SELECT \* FROM keeper_pieces WHERE id = \?1/);
+            reads += 1;
+            return reads === 1 ? { ...row } : { ...current };
+          },
+          async run() {
+            assert.match(sql, /^UPDATE keeper_pieces/i);
+            current.backup_status = 'verified';
+            current.backup_reference = statement.values[1];
+            current.backup_sha256 = statement.values[2];
+            current.backup_at = statement.values[3];
+            current.record_version += 1;
+            return { success: true, meta: { changes: 0 } };
+          },
+        };
+        return statement;
+      },
+    };
+    const result = await backupRegistryPlate({
+      DB,
+      ARTWORK_REGISTRY_BACKUP: makeBackupBucket(),
+    }, row);
+    assert.deepEqual(result, { status: 'verified' });
+    assert.equal(row.backup_status, 'verified');
+    assert.match(row.backup_reference, /^plates\/AR-ABCDEFGH\/[0-9a-f]{64}\.json$/);
+    assert.equal(reads, 2);
+  });
+
+  it('preserves a committed package outcome when the post-commit row reload is unavailable', async () => {
+    const { backupRegistryPlate } = await import('../functions/api/_lib/registryPlateIssuance.js');
+    let bucketTouched = false;
+    const result = await backupRegistryPlate({
+      DB: {
+        prepare() {
+          return {
+            bind() { return this; },
+            async first() { throw new Error('D1 read unavailable'); },
+          };
+        },
+      },
+      ARTWORK_REGISTRY_BACKUP: {
+        async put() { bucketTouched = true; },
+      },
+    }, { id: 'kp-committed', backup_status: 'pending' });
+    assert.deepEqual(result, {
+      status: 'pending', warning: 'backup_status_record_failed',
+    });
+    assert.equal(bucketTouched, false);
+  });
 });
 
 type LifecycleFixtureOptions = {
@@ -2640,6 +2711,7 @@ type LifecycleFixtureOptions = {
   backupStatus?: 'pending' | 'failed' | 'verified';
   failAudit?: boolean;
   raceActivation?: boolean;
+  raceBackup?: boolean;
 };
 
 async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) {
@@ -2703,7 +2775,7 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
   rows[0].backup_reference = `plates/${rows[0].public_code}/${rows[0].backup_sha256}.json`;
   const qualifications: any[] = [{
     id: 'rq-current', keeper_piece_id: rows[0].id, result: 'passed', copied_artifacts: 1,
-    schema_version: '1', build_version: 'development', key_version: 1,
+    schema_version: '1', build_version: 'registry-recovery-build-v1', key_version: 1,
     generator_version: 'artwork-plate-v1', verifier_version: 'copied-plate-v1',
     backup_reference: rows[0].backup_reference, backup_sha256: rows[0].backup_sha256,
     qualified_at: '2026-07-13T10:30:00.000Z',
@@ -2761,6 +2833,10 @@ async function makePlateLifecycleFixture(options: LifecycleFixtureOptions = {}) 
               backup_sha256: sha256,
               backup_at: at,
             });
+          }
+          if (options.raceBackup) {
+            row.record_version += 1;
+            return { success: true, meta: { changes: 0 } };
           }
           return { success: true, meta: { changes: 1 } };
         }
@@ -2961,6 +3037,21 @@ describe('admin artwork plate lifecycle', () => {
     assert.equal(failed.headers.get('Cache-Control'), 'no-store');
   });
 
+  it('reports an identical concurrent manual backup retry as verified success', async () => {
+    const fixture = await makePlateLifecycleFixture({ backupStatus: 'pending', raceBackup: true });
+    const response = await retryArtworkPlateBackup({
+      request: lifecycleRequest('/api/admin/pieces/kp-one/backup', 'POST', {}),
+      env: lifecycleEnv(fixture.DB),
+      params: { id: 'kp-one' },
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.backupStatus, 'verified');
+    assert.match(body.backupReference, /^plates\/AR-7KQ9M2WX\/[0-9a-f]{64}\.json$/);
+    assert.equal(body.backupSha256, body.backupReference.split('/').at(-1).replace('.json', ''));
+  });
+
   it('requires verified backup, exact hashes, and every physical inspection confirmation', async () => {
     const fixture = await makePlateLifecycleFixture({ backupStatus: 'failed' });
     const env = lifecycleEnv(fixture.DB);
@@ -3069,6 +3160,7 @@ describe('admin artwork plate lifecycle', () => {
 // edition_number); UNIQUE(piece_id, edition_number) is honoured.
 function makeKeeperDb() {
   const pieces: any[] = [];
+  const qualifications: any[] = [];
   const lineage: any[] = [];
   const evidence: any[] = [];
   let loseNextFirstBind = false;
@@ -3104,7 +3196,7 @@ function makeKeeperDb() {
     // Public-code lookup: the row itself is the only source of artwork and
     // edition identity. Bind deliberately sees released rows as well.
     if (
-      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256 FROM keeper_pieces WHERE public_code = \?1$/i.test(
+      /^SELECT id, piece_id, edition_number, keeper_user_id, recovery_code_hash, claimed_at, released_at, public_code, plate_status, backup_status, backup_reference, backup_sha256, ownership_code_key_version FROM keeper_pieces WHERE public_code = \?1$/i.test(
         s,
       )
     ) {
@@ -3113,6 +3205,17 @@ function makeKeeperDb() {
 
     if (/^SELECT .* FROM keeper_pieces WHERE issuance_key = \?1/i.test(s)) {
       return { kind: 'first', row: pieces.find((row) => row.issuance_key === params[0]) || null };
+    }
+    if (/^SELECT \* FROM keeper_pieces WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: pieces.find((row) => row.id === params[0]) || null };
+    }
+    if (/^SELECT id, result, copied_artifacts, schema_version, build_version, key_version, generator_version, verifier_version, backup_reference, backup_sha256, qualified_at FROM registry_recovery_qualifications/i.test(s)) {
+      return {
+        kind: 'first',
+        row: qualifications
+          .filter((row) => row.keeper_piece_id === params[0] && row.result === 'passed' && row.copied_artifacts === 1)
+          .sort((left, right) => `${right.qualified_at}:${right.id}`.localeCompare(`${left.qualified_at}:${left.id}`))[0] || null,
+      };
     }
     if (/^SELECT id FROM keeper_pieces WHERE piece_id = \?1 AND edition_number = \?2/i.test(s)) {
       return { kind: 'first', row: findAny(params[0], params[1]) || null };
@@ -3181,14 +3284,37 @@ function makeKeeperDb() {
         s,
       )
     ) {
-      const [keeperUserId, claimedAt, id] = params;
+      const [
+        keeperUserId, claimedAt, id, backupReference, backupSha256,
+        qualificationId, schemaVersion, buildVersion, keyVersion,
+        generatorVersion, verifierVersion,
+      ] = params;
       const row = pieces.find((r) => r.id === id);
       if (loseNextFirstBind) {
         loseNextFirstBind = false;
         lastChanges = 0;
         return { kind: 'run', meta: { changes: 0 } };
       }
-      const guardPasses = row && row.keeper_user_id == null && row.claimed_at == null && row.released_at == null;
+      const qualification = qualifications.find((candidate) => candidate.id === qualificationId);
+      const recoveryGuardPasses = row?.public_code == null || (
+        row?.plate_status === 'active'
+        && row?.backup_status === 'verified'
+        && row?.backup_reference === backupReference
+        && row?.backup_sha256 === backupSha256
+        && Number(row?.ownership_code_key_version) === keyVersion
+        && qualification?.keeper_piece_id === row?.id
+        && qualification?.result === 'passed'
+        && qualification?.copied_artifacts === 1
+        && qualification?.schema_version === schemaVersion
+        && qualification?.build_version === buildVersion
+        && qualification?.key_version === keyVersion
+        && qualification?.generator_version === generatorVersion
+        && qualification?.verifier_version === verifierVersion
+        && qualification?.backup_reference === backupReference
+        && qualification?.backup_sha256 === backupSha256
+      );
+      const guardPasses = row && recoveryGuardPasses
+        && row.keeper_user_id == null && row.claimed_at == null && row.released_at == null;
       if (row && guardPasses) {
         row.keeper_user_id = keeperUserId;
         row.claimed_at = claimedAt;
@@ -3272,7 +3398,23 @@ function makeKeeperDb() {
   };
 
   return {
-    DB, pieces, users, lineage, evidence,
+    DB, pieces, users, lineage, evidence, qualifications,
+    qualify(row: any) {
+      qualifications.push({
+        id: `qualification-${qualifications.length + 1}`,
+        keeper_piece_id: row.id,
+        result: 'passed',
+        copied_artifacts: 1,
+        schema_version: '1',
+        build_version: 'registry-recovery-build-v1',
+        key_version: Number(row.ownership_code_key_version),
+        generator_version: 'artwork-plate-v1',
+        verifier_version: 'copied-plate-v1',
+        backup_reference: row.backup_reference,
+        backup_sha256: row.backup_sha256,
+        qualified_at: new Date().toISOString(),
+      });
+    },
     loseNextFirstBind() { loseNextFirstBind = true; },
   };
 }
@@ -3298,7 +3440,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users, lineage, evidence, loseNextFirstBind } = makeKeeperDb();
+      const { DB, pieces, users, lineage, evidence, qualify, loseNextFirstBind } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -3334,6 +3476,11 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
 
       // 2) FIRST BIND: active + verified, so the holder can bind.
       pieces[0].backup_status = 'verified';
+      const unqualifiedRes = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
+      assert.equal(unqualifiedRes.status, 409);
+      assert.equal((await unqualifiedRes.json()).error, 'plate_recovery_not_qualified');
+      assert.equal(pieces[0].keeper_user_id, null);
+      qualify(pieces[0]);
       const fixtureState = { lineage: lineage.length, evidence: evidence.length };
       // Simulate a competing steward winning after the read but before UPDATE.
       // The losing batch must not stamp lineage or evidence.
@@ -3485,8 +3632,10 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
         plate_status: 'active', backup_status: 'verified',
         backup_reference: `plates/AR-ABCDEFGH/${draftBackupSha256}.json`,
         backup_sha256: draftBackupSha256,
+        ownership_code_key_version: 1,
         lineage_head_hash: null, lineage_event_count: 0,
       });
+      qualify(pieces.at(-1));
       const draftRes = await bind({
         request: bindReq({ publicCode: 'AR-ABCDEFGH', ownershipCode: draftCode }),
         env: bindEnv,

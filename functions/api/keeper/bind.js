@@ -64,6 +64,11 @@ import {
 import { requestContestedClaim } from '../_lib/claimBridge.js';
 import { plateBackupIsVerified } from '../_lib/plateBackup.js';
 import {
+  loadLatestPassedPieceQualification,
+  recoveryDependenciesForRow,
+  recoveryQualificationStatus,
+} from '../_lib/recoveryQualification.js';
+import {
   claimEvidenceStatement,
   prepareNextLineageEvent,
 } from '../_lib/lineage.js';
@@ -139,7 +144,8 @@ export async function onRequest(context) {
       .prepare(
         `SELECT id, piece_id, edition_number, keeper_user_id,
                 recovery_code_hash, claimed_at, released_at, public_code,
-                plate_status, backup_status, backup_reference, backup_sha256
+                plate_status, backup_status, backup_reference, backup_sha256,
+                ownership_code_key_version
            FROM keeper_pieces
           WHERE public_code = ?1`,
       )
@@ -321,6 +327,25 @@ export async function onRequest(context) {
       );
     }
 
+    const recoveryDependencies = recoveryDependenciesForRow(existing, env);
+    const recoveryQualification = await loadLatestPassedPieceQualification(
+      env.DB,
+      existing.id,
+    );
+    if (
+      recoveryQualificationStatus(recoveryQualification, recoveryDependencies).status
+      !== 'current'
+    ) {
+      return json(
+        {
+          ok: false,
+          error: 'plate_recovery_not_qualified',
+          message: 'This artwork is temporarily unavailable while its recovery proof is renewed.',
+        },
+        409,
+      );
+    }
+
     // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
     // Only a never-claimed row reaches here. Stamp this user as the steward,
     // record first-bound lineage, and retain private claim evidence atomically.
@@ -334,6 +359,22 @@ export async function onRequest(context) {
             OR (
               plate_status = 'active' AND backup_status = 'verified'
               AND backup_reference = ?4 AND backup_sha256 = ?5
+              AND ownership_code_key_version = ?9
+              AND EXISTS (
+                SELECT 1 FROM registry_recovery_qualifications qualification
+                 WHERE qualification.id = ?6
+                   AND qualification.keeper_piece_id = keeper_pieces.id
+                   AND qualification.scope = 'piece'
+                   AND qualification.result = 'passed'
+                   AND qualification.copied_artifacts = 1
+                   AND qualification.schema_version = ?7
+                   AND qualification.build_version = ?8
+                   AND qualification.key_version = ?9
+                   AND qualification.generator_version = ?10
+                   AND qualification.verifier_version = ?11
+                   AND qualification.backup_reference = ?4
+                   AND qualification.backup_sha256 = ?5
+              )
             )
           )`,
     ).bind(
@@ -342,6 +383,12 @@ export async function onRequest(context) {
       existing.id,
       existing.backup_reference,
       existing.backup_sha256,
+      recoveryQualification.id,
+      recoveryDependencies.schemaVersion,
+      recoveryDependencies.buildVersion,
+      recoveryDependencies.keyVersion,
+      recoveryDependencies.generatorVersion,
+      recoveryDependencies.verifierVersion,
     );
     if (typeof env.DB.batch !== 'function') {
       return json({ ok: false, error: 'atomic_write_unavailable' }, 503);

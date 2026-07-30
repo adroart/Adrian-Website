@@ -7,10 +7,9 @@ import {
 } from '../../../_lib/admin.js';
 import {
   backupDocumentSha256,
-  backupPlateEnvelope,
   readBackupObjectBytes,
-  recordPlateBackupResult,
 } from '../../../_lib/plateBackup.js';
+import { backupRegistryPlate } from '../../../_lib/registryPlateIssuance.js';
 
 export async function onRequest({ request, env, params }) {
   if (!['GET', 'POST'].includes(request.method)) {
@@ -31,22 +30,16 @@ export async function onRequest({ request, env, params }) {
 
     if (request.method === 'GET') return downloadBackupCopy(env, row);
 
-    const result = await backupPlateEnvelope(env.ARTWORK_REGISTRY_BACKUP, row);
-    try {
-      await recordPlateBackupResult(env.DB, row, result);
-    } catch {
+    const result = await backupRegistryPlate(env, row);
+    if (result.warning === 'backup_status_record_failed') {
       return jsonResponse({ ok: false, error: 'backup_status_record_failed' }, 500);
     }
     return jsonResponse(
       {
         ok: result.status === 'verified',
         backupStatus: result.status,
-        backupReference: result.status === 'verified'
-          ? result.reference
-          : row.backup_reference || null,
-        backupSha256: result.status === 'verified'
-          ? result.sha256
-          : row.backup_sha256 || null,
+        backupReference: row.backup_reference || null,
+        backupSha256: row.backup_sha256 || null,
       },
       result.status === 'verified' ? 200 : 503,
     );

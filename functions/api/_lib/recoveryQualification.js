@@ -5,12 +5,13 @@ import {
 import { BACKUP_SCHEMA_VERSION } from './plateBackup.js';
 
 export const RECOVERY_VERIFIER_VERSION = 'copied-plate-v1';
+export const RECOVERY_BUILD_VERSION = 'registry-recovery-build-v1';
 
 export function recoveryBuildVersion(env) {
   const configured = env?.REGISTRY_BUILD_VERSION || env?.CF_PAGES_COMMIT_SHA;
   return typeof configured === 'string' && configured.trim()
     ? configured.trim().slice(0, 256)
-    : 'development';
+    : RECOVERY_BUILD_VERSION;
 }
 
 export function recoveryDependenciesForRow(row, env) {

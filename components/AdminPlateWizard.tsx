@@ -156,6 +156,7 @@ function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
   return {
     plateStatus: row.plateStatus,
     backupStatus: row.backupStatus,
+    recoveryQualificationStatus: row.recoveryQualification?.status,
   };
 }
 
@@ -300,18 +301,14 @@ const AdminPlateWizard: React.FC = () => {
   // Clear sensitive material if the wizard unmounts.
   useEffect(() => () => resetSensitive(), [resetSensitive]);
 
-  useEffect(() => {
-    if (!started || finished || stage.key !== 'activate' || piece?.plateStatus !== 'active') return;
-    resetSensitive();
-    setStepNote('Plate identity is active and permanently locked. The registry lifecycle is complete.');
-    setFinished(true);
-  }, [finished, piece?.plateStatus, resetSensitive, stage.key, started]);
-
   const registryErrorMessage = (error: unknown, fallback: string) => {
     const message = errorMessage(error, fallback);
     if (message === 'registry_locked') {
       setRegistryUnlocked(false);
       return 'Private registry access expired. Unlock it again to continue.';
+    }
+    if (message === 'recovery_qualification_required') {
+      return 'Activation is blocked because copied-file recovery proof is missing or stale. Return to the recovery step and verify a fresh archived copy.';
     }
     return message;
   };
@@ -607,9 +604,11 @@ const AdminPlateWizard: React.FC = () => {
     }
   };
 
-  const refreshPiece = async () => {
+  const refreshPiece = async (): Promise<PieceRow[]> => {
     const piecesData = await jsonRequest('/api/admin/pieces');
-    setRows(piecesData.pieces as PieceRow[]);
+    const nextRows = piecesData.pieces as PieceRow[];
+    setRows(nextRows);
+    return nextRows;
   };
 
   const runRowAction = async (action: 'backup' | 'package' | 'verify-recovery') => {
@@ -699,6 +698,23 @@ const AdminPlateWizard: React.FC = () => {
       setFinished(true);
       void syncDrive({ silent: true });
     } catch (error) {
+      const code = errorMessage(error, 'Could not activate this plate.');
+      if (code === 'recovery_qualification_required' || code === 'activation_conflict') {
+        try {
+          const refreshedRows = await refreshPiece();
+          const refreshedPiece = refreshedRows.find((row) => row.id === piece.id);
+          if (
+            code === 'recovery_qualification_required'
+            || refreshedPiece?.recoveryQualification?.status !== 'current'
+          ) {
+            setCopiedBackupDocument('');
+            setCopiedBackupFilename('');
+            setStageIndex(plateWizardStageIndex('recovery'));
+          }
+        } catch {
+          // Keep the original fail-closed activation error if refresh also fails.
+        }
+      }
       setStepError(registryErrorMessage(error, 'Could not activate this plate.'));
     } finally {
       setBusy('');
@@ -1040,11 +1056,8 @@ const AdminPlateWizard: React.FC = () => {
 
               {/* ACTIVATE */}
               {stage.key === 'activate' && (
-                piece?.plateStatus === 'active' ? (
-                  <p className="font-sans text-sm text-green-800" role="status">Plate is active and permanently locked. Completing the registry lifecycle…</p>
-                ) : (
-                  <div>
-                    <p className="font-serif text-sm text-wood-600 mb-4">Activation permanently locks the two codes. Compare the actual engraved metal, not a screen preview. Paste both SHA-256 values from the private manifest; they start empty so copied screen state cannot confirm this check.</p>
+                <div>
+                    <p className="font-serif text-sm text-wood-600 mb-4">{piece?.plateStatus === 'active' ? 'This active identity was repaired. Re-check the actual engraved metal before confirming its renewed recovery proof and identity.' : 'Activation permanently locks the two codes. Compare the actual engraved metal, not a screen preview.'} Paste both SHA-256 values from the private manifest; they start empty so copied screen state cannot confirm this check.</p>
                     <div className="grid gap-3">
                       {([
                         ['realMetalQrScanned', 'Scanned the engraved metal QR on a phone and it opened the exact URL'],
@@ -1062,9 +1075,8 @@ const AdminPlateWizard: React.FC = () => {
                       <div><label className={labelClass} htmlFor="wizard-front-hash">Front SHA-256</label><input id="wizard-front-hash" value={checks.frontSha256} onChange={(event) => setChecks((current) => ({ ...current, frontSha256: event.target.value.trim() }))} className={inputClass} /></div>
                       <div><label className={labelClass} htmlFor="wizard-under-hash">Underside SHA-256</label><input id="wizard-under-hash" value={checks.undersideSha256} onChange={(event) => setChecks((current) => ({ ...current, undersideSha256: event.target.value.trim() }))} className={inputClass} /></div>
                     </div>
-                    <button type="button" className={`${buttonClass} mt-4`} disabled={Boolean(busy)} onClick={() => void runActivate()}>{busy === 'activate' ? 'Activating…' : 'Activate and lock identity'}</button>
-                  </div>
-                )
+                    <button type="button" className={`${buttonClass} mt-4`} disabled={Boolean(busy)} onClick={() => void runActivate()}>{busy === 'activate' ? 'Activating…' : piece?.plateStatus === 'active' ? 'Confirm repaired identity' : 'Activate and lock identity'}</button>
+                </div>
               )}
 
               {stepNote && <p className="font-sans text-sm text-green-800 mt-4" role="status">{stepNote}</p>}

@@ -158,6 +158,9 @@ const AdminPieces: React.FC = () => {
       setRegistryUnlocked(false);
       return 'Private registry access expired. Unlock it again.';
     }
+    if (message === 'recovery_qualification_required') {
+      return 'Activation is blocked because copied-file recovery proof is missing or stale. Use the guided wizard to verify a fresh archived copy.';
+    }
     return message;
   };
 

@@ -58,17 +58,20 @@ export const PLATE_WIZARD_STAGES: readonly PlateWizardStage[] = [
 export interface PlateLifecycleSnapshot {
   plateStatus: string; // 'legacy' | 'generated' | 'active'
   backupStatus: string | null; // 'pending' | 'failed' | 'verified' | null
+  recoveryQualificationStatus?: 'missing' | 'stale' | 'current';
 }
 
 /**
  * The earliest incomplete stage for RESUMING a piece already in the registry.
  * Returns null when the piece is either not wizard-eligible (a legacy row with
- * no minted plate identity) or already active (nothing left to do).
+ * no minted plate identity) or active with a current copied-file recovery proof.
  *
  * A freshly generated plate whose backup is not yet verified must repair the
  * backup first, so it resumes at 'backup'. Once verified, it resumes at
  * 'fabricate' so the operator can re-download the etch files and walk forward
- * through the recovery drill and activation.
+ * through the recovery drill and activation. An active identity whose backup
+ * dependencies changed is reopened at recovery and must pass the physical
+ * activation checks again after its copied-file proof is renewed.
  */
 export function plateWizardStageForPiece(
   piece: PlateLifecycleSnapshot,
@@ -77,7 +80,10 @@ export function plateWizardStageForPiece(
     return piece.backupStatus === 'verified' ? 'fabricate' : 'backup';
   }
   if (piece.plateStatus === 'active') {
-    return null; // activation is the terminal registry state
+    return piece.backupStatus === 'verified'
+      && piece.recoveryQualificationStatus !== 'current'
+      ? 'recovery'
+      : null;
   }
   return null; // legacy or unknown — not wizard-eligible
 }

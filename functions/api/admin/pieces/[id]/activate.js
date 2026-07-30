@@ -109,7 +109,15 @@ export async function onRequest({ request, env, params }) {
                AND qualification.verifier_version = ?10
                AND qualification.backup_reference = ?3
                AND qualification.backup_sha256 = ?4
-          )`,
+          )
+          AND record_version = ?11
+          AND public_code = ?12
+          AND piece_id = ?13
+          AND edition_number = ?14
+          AND plate_generated_at = ?15
+          AND front_svg_sha256 = ?16
+          AND back_svg_sha256 = ?17
+          AND recovery_code_hash = ?18`,
     ).bind(
       activatedAt,
       row.id,
@@ -121,6 +129,14 @@ export async function onRequest({ request, env, params }) {
       dependencies.buildVersion,
       dependencies.generatorVersion,
       dependencies.verifierVersion,
+      row.record_version,
+      row.public_code,
+      row.piece_id,
+      row.edition_number,
+      row.plate_generated_at,
+      row.front_svg_sha256,
+      row.back_svg_sha256,
+      row.recovery_code_hash,
     );
     if (typeof env.DB.batch !== 'function') {
       return jsonResponse({ ok: false, error: 'atomic_write_unavailable' }, 503);

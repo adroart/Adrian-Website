@@ -291,8 +291,8 @@ function r2RecoveryEnvironment(options: {
   };
 }
 
-describe('R2 recovery canary', () => {
-  it('reads the encrypted envelope from R2 and returns pass metadata only', async () => {
+describe('copied-file recovery qualification', () => {
+  it('reads the submitted encrypted copy and returns pass metadata only', async () => {
     const { env, operations, qualifications, copiedDocument } = r2RecoveryEnvironment();
     const response = await verifyR2Recovery({
       request: request('POST', { backupDocument: copiedDocument }), env, params: { id: 'kp-package-1' },
@@ -322,7 +322,7 @@ describe('R2 recovery canary', () => {
     assert.equal(JSON.stringify(body).includes(OWNERSHIP_CODE), false);
   });
 
-  it('requires admin step-up, D1, R2, and a successful pre-decryption audit', async () => {
+  it('requires admin step-up, D1, a copied document, and a successful pre-decryption audit', async () => {
     const { env, copiedDocument } = r2RecoveryEnvironment();
     assert.equal((await verifyR2Recovery({ request: request('GET'), env, params: { id: 'kp-package-1' } })).status, 405);
     const noCookie = request();
@@ -335,7 +335,7 @@ describe('R2 recovery canary', () => {
     assert.equal(blocked.status, 503);
   });
 
-  it('fails closed when the R2 reference, schema, or identity is not exact', async () => {
+  it('fails closed when the persisted backup reference, schema, or identity is not exact', async () => {
     const wrongReference = r2RecoveryEnvironment({
       row: {
         id: fixtureRow.id, piece_id: fixtureRow.piece_id, edition_number: fixtureRow.edition_number,
@@ -364,7 +364,7 @@ describe('R2 recovery canary', () => {
     }
   });
 
-  it('rejects a stored object whose bytes do not match the persisted digest before decryption', async () => {
+  it('rejects submitted bytes that do not match the persisted digest before decryption', async () => {
     const valid = r2RecoveryEnvironment();
     const validResponse = await verifyR2Recovery({
       request: request('POST', { backupDocument: valid.copiedDocument }), env: valid.env, params: { id: 'kp-package-1' },
@@ -440,10 +440,10 @@ describe('R2 recovery canary', () => {
     assert.match(wizardSource, /backupDocument/);
 
     const runbook = readFileSync(new URL('../docs/lineage-plate-runbook.md', import.meta.url), 'utf8');
-    assert.match(runbook, /Verify R2 recovery/);
-    assert.match(runbook, /copied R2 object/i);
-    assert.match(runbook, /post-issuance D1 export/i);
-    assert.match(runbook, /escrowed versioned key/i);
+    assert.match(runbook, /Verify copied recovery file/);
+    assert.match(runbook, /downloaded copy/i);
+    assert.match(runbook, /private full-registry recovery archive/i);
+    assert.match(runbook, /separate key/i);
     assert.doesNotMatch(runbook, /Reveal exactly one non-production canary plate/);
   });
 });

@@ -1,265 +1,177 @@
-# Artwork Registry — activation checklist
+# Registry production activation checklist
 
-> **Status 2026-07-26.** Steps 1–5 are DONE and verified directly against
-> Cloudflare (not just recorded). Both keys were generated without ever being
-> displayed, installed into Cloudflare Pages production, and escrowed at
-> `~/.infisical-backups/adrian-website/` (mode 0600).
->
-> | Step | State |
-> |---|---|
-> | 1. Master encryption key + active version | done — active key is **V3** (2026-07-26), escrowed at generation and mirrored to Infisical `prod`. V2 is burned, see below. |
-> | 2. Registry step-up secret | done — verified present; this is the unlock you type in the admin |
-> | 3. Admin allowlist + private desk flag | done (both admin emails, desk on, public steward surface still off) |
-> | 4. Encrypted backup bucket | done — `adrian-artwork-registry-backup` exists |
-> | 5. Database migrations | done — live database reports "No migrations to apply"; 260/260 tests pass |
-> | 6. Redeploy | done via direct upload — but **CI is broken, see below**. |
-> | 7. Google Drive sync | not started — needs interactive Google sign-in (you only) |
-> | 8. Stripe reversal webhooks | blocked — `STRIPE_WEBHOOK_SECRET` is absent from Pages production, and the event list is dashboard-only (you only) |
-> | 9. Proof-before-engraving gate | not started — run after the deploy is green |
->
-> Settings 1–3 do not reach the live site until the next deployment.
-> Step 3's values were stored as encrypted secrets rather than plaintext
-> dashboard variables, because there is no command-line path for Pages plaintext
-> variables; they read identically at runtime.
->
-> ## ⚠ Cloudflare CI cannot build `main`
->
-> **Every** Git-triggered production build of `main` fails, and has since at
-> least `6a7461c` (4 days ago). Preview builds on branches succeed from the same
-> commits, and `npm run build` is clean locally at the exact failing commit, so
-> this is a Pages build-environment fault, not a code defect.
->
-> An earlier note in this file called it a "duplicate build trigger." That was
-> wrong — the successful rows were branch previews, not a second production
-> build. Corrected here so the mistake isn't inherited.
->
-> **Consequence:** pushing to `main` no longer updates the live site. Until this
-> is fixed, deploy with a direct upload, which does build the Functions bundle:
->
-> ```bash
-> npm run build
-> npx wrangler pages deploy dist --project-name adrian-website --branch main
-> ```
->
-> To diagnose the CI itself, open the failing build's log in the dashboard
-> (Workers & Pages → adrian-website → the `Failure` row). Likely candidates are a
-> Node version mismatch or a missing build-time environment variable — neither is
-> visible from the CLI.
->
-> ## Master key — rotated to V2 on 2026-07-26 (escrow gap closed)
->
-> **What was wrong.** `OWNERSHIP_CODE_KEY_V1` was live in Cloudflare with no
-> escrow copy anywhere. The only key file on disk was
-> `SUPERSEDED-do-not-use-OWNERSHIP_CODE_KEY_V1.txt`, a retired key. A Pages
-> secret is write-only once set, so the value actually encrypting codes could
-> never be read back. Had it been lost or overwritten, every Ownership Code
-> would have become permanently undecryptable — the escrow *is* the recovery
-> path.
->
-> **Why rotating was safe.** The live database held `0` pieces and `0` encrypted
-> codes, so there was nothing to re-encrypt and nothing to lose. Rotating after
-> the first plate is engraved would not be free.
->
-> **What was done.** A new 32-byte key was generated directly into
-> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V2.txt` (mode 0600) and
-> piped into Cloudflare from that file, so the value was never displayed, never
-> entered a chat, and never reached shell history. Verified 44 base64 chars →
-> 32 bytes with a clean roundtrip, matching the app's own `cryptoConfigured`
-> check. `OWNERSHIP_CODE_ACTIVE_KEY_VERSION` was set to `2`.
->
-> `OWNERSHIP_CODE_KEY_V1` is deliberately retained: a retired key must outlive
-> every code it ever wrote. Never delete a versioned key.
->
-> ### V2 is burned — do not activate it
->
-> While mirroring V2 into Infisical, the Infisical CLI echoed the key value in
-> plaintext in its success table, putting it into an assistant transcript. The
-> key guarded nothing at the time (0 pieces, 0 codes) and is unusable without the
-> Cloudflare account, so the practical risk was low — but a master key that has
-> appeared in plaintext must never become the long-lived one.
->
-> **Never set `OWNERSHIP_CODE_ACTIVE_KEY_VERSION` to 2.** `OWNERSHIP_CODE_KEY_V2`
-> is retained only so no version number is ever reused. It encrypted nothing.
->
-> **Lesson for any future rotation:** the Infisical CLI prints the value it just
-> wrote. Always redirect its output to `/dev/null` and verify by listing secret
-> *names* instead. Wrangler's `secret put` does not echo values.
->
-> ### Active key: V3
->
-> Generated 2026-07-26 straight into
-> `~/.infisical-backups/adrian-website/OWNERSHIP_CODE_KEY_V3.txt` (mode 0600),
-> validated as 32 bytes with a clean roundtrip, and pushed to both Cloudflare
-> Pages and Infisical `prod` with all command output suppressed. The value was
-> never displayed. Confirmed live at runtime: `POST /api/admin/pieces` returns
-> `401 unauthorized` rather than `503 ownership_code_crypto_not_configured`,
-> which proves the Function resolved version 3 and accepted the key.
->
-> **Remaining manual step.** Copy the contents of
-> `OWNERSHIP_CODE_KEY_V3.txt` into your password manager. It now exists in three
-> places (laptop escrow, Cloudflare, Infisical), so this is defence in depth
-> rather than the single-point-of-failure it was before. Then confirm with the
-> restore/decrypt drill in `docs/lineage-plate-runbook.md`.
->
-> **Housekeeping.** Pages production contains a malformed secret whose *name* is
-> a base64 string (`sntt…7jQ=`) — a value pasted into the name field by an
-> earlier session. It is inert but should be removed:
-> `npx wrangler pages secret delete 'snttEiUHmtsP21x8sU/GpQXDyQbGoREbVC8jZ/UM7jQ=' --project-name adrian-website`
+This checklist covers the actions that require Adrian's production accounts,
+physical prototype, or independent key custody. Completing code does not
+complete these steps. Do not engrave a production plate until every required
+item is checked.
 
-The code for the whole system (QR mint, Ownership Code, laser-etch files,
-encrypted recovery, R2 backup, activation, fulfillment, the guided wizard, the
-offline master ledger, and Google Drive sync) is built, tested, and on the
-branch. This file is the one-time **account provisioning** that only you can do,
-in order. None of it can be done by an agent: it needs your Cloudflare account,
-your Google account, and a master key that must be generated by you and never
-pass through a chat, log, or shell history.
+## 1. Production secrets and bindings
 
-The deeper canary/restore/qualification procedure lives in
-`docs/lineage-plate-runbook.md`. This is the ordered command list; run the
-runbook's "Prototype qualification" and "Prove restoration" gates before you
-engrave a real plate.
+- [ ] `OWNERSHIP_CODE_KEY_V1` contains one base64-encoded 32-byte key.
+- [ ] The same versioned key is escrowed outside Cloudflare.
+- [ ] `OWNERSHIP_CODE_ACTIVE_KEY_VERSION=1` is configured.
+- [ ] `REGISTRY_STEP_UP_SECRET` is separate, high entropy, and escrowed.
+- [ ] `ARTWORK_REGISTRY_BACKUP` points at the intended private R2 bucket.
+- [ ] `REGISTRY_RECOVERY_EXPORT_KEY` contains a different base64 32-byte key.
+- [ ] `REGISTRY_RECOVERY_EXPORT_KEY_ID` is a stable non-secret version label.
+- [ ] The recovery export key is stored outside Cloudflare and separately from
+  the encrypted private archives.
+- [ ] `REGISTRY_BUILD_VERSION` or `CF_PAGES_COMMIT_SHA` identifies deployments,
+  or the source constant `registry-recovery-build-v1` has been deliberately
+  reviewed and will be bumped with recovery behavior changes.
+- [ ] `ARTWORK_REGISTRY_ADMIN_ENABLED=true` is set if private administration is
+  needed before the public Living Legacy launch.
 
-Two ways to store secrets, pick the one you use:
+No Stripe, webhook, price, checkout, order, or payment variable is required by
+the artwork registry.
 
-- **Cloudflare directly** — `npx wrangler pages secret put NAME --project-name adrian-website`
-- **Infisical** (this repo has `.infisical.json`) — add the same NAMEs to your
-  Infisical project's **production** environment; the names below are identical.
+## 2. Database preparation
 
-Plaintext (non-secret) variables like `ARTWORK_REGISTRY_ADMIN_ENABLED` are set in
-the Cloudflare Pages dashboard under **Settings → Environment variables**, not
-with `secret put`.
+- [ ] A dated encrypted pre-migration D1 export exists outside the repository.
+- [ ] All migrations through `022_registry_fulfillment_detachment.sql` pass on a
+  disposable local database.
+- [ ] Migration 022 has been applied to production before private export.
+- [ ] Old dormant fulfillment source IDs, if any, are now opaque `legacy:`
+  references without order-table foreign keys.
+- [ ] Focused registry tests, complete unit tests, typecheck, and production
+  build pass against the exact code to deploy.
 
----
+## 3. Administrator recovery
 
-## 1. Generate the master encryption key (on your own machine)
+Registry data recovery and administrator account recovery are separate.
 
-```bash
-openssl rand -base64 32
-```
+- [ ] At least two intentionally controlled administrator accounts exist if the
+  authentication system supports this policy.
+- [ ] Each account can complete verified sign-in without relying on the registry
+  recovery archive.
+- [ ] The allowlist or role configuration is documented outside the repository.
+- [ ] The process for rotating or recovering `REGISTRY_STEP_UP_SECRET` is stored
+  with the operations record.
+- [ ] Losing one device, email session, or password-manager login does not lose
+  all administrator access.
 
-Keep this output off screenshots, tickets, chat, and shell history. Store it in
-**two** places: Cloudflare (below) and a separate escrow (password manager or
-institutional vault) with the key version and recovery notes.
+Never put session tokens, passwords, unlock secrets, or private keys in a
+registry archive or maintenance note.
 
-```bash
-npx wrangler pages secret put OWNERSHIP_CODE_KEY_V1 --project-name adrian-website
-# paste the value when prompted
-```
+## 4. Non-production canary identity
 
-Set the non-secret active version (dashboard → Environment variables):
+- [ ] A clearly marked non-production artwork identity has been issued through
+  `/admin/pieces/wizard`.
+- [ ] Exact artwork ID and unique or numbered edition intent were confirmed.
+- [ ] The issuance response was archived before leaving the one-time screen.
+- [ ] Front SVG, underside SVG, and private manifest are stored together.
+- [ ] Both file hashes match the manifest.
+- [ ] Encrypted online backup shows **Verified**.
+- [ ] The object reference is content-addressed as
+  `plates/<public-code>/<sha256>.json`.
+- [ ] The encrypted recovery JSON was downloaded and moved outside the website.
+- [ ] That downloaded copy was selected in the wizard and passed
+  **Verify copied recovery file**.
+- [ ] The persisted qualification status shows **Current**.
+- [ ] The canary's public QR resolves to the exact server-derived artwork and
+  edition without revealing the Ownership Code.
 
-```text
-OWNERSHIP_CODE_ACTIVE_KEY_VERSION = 1
-```
+## 5. Full private recovery rehearsal
 
-Never delete a versioned key while any row still uses it.
+- [ ] A fresh encrypted archive was downloaded from
+  `/api/admin/registry-recovery-export` after sign-in and registry unlock.
+- [ ] The archive and its two-line key file are in separate trusted locations.
+- [ ] Archive media and key media were copied, not read from the live runtime.
+- [ ] `npm run ledger -- restore-sql` authenticated and validated the copied
+  archive before producing SQL.
+- [ ] The generated SQL file had mode 0600 and did not overwrite an existing file.
+- [ ] A new scratch D1 database received all migrations before restore.
+- [ ] Every registry and referenced authentication table was empty before restore.
+- [ ] Restore completed as one transaction.
+- [ ] Per-table counts and SHA-256 digests match the archive manifest.
+- [ ] Canary identity, encrypted envelope, backup digest, recovery qualification,
+  maintenance history, lineage chain, and steward state were recovered.
+- [ ] The scratch public QR resolved correctly.
+- [ ] A second restore was refused.
+- [ ] A restore into a deliberately non-empty scratch registry was refused.
+- [ ] A deliberately damaged archive was refused before SQL was generated.
 
-## 2. Registry step-up secret
+The Google Drive ledger is a public-safe integrity mirror. It is not accepted as
+a substitute for this encrypted private recovery rehearsal.
 
-```bash
-openssl rand -base64 48
-npx wrangler pages secret put REGISTRY_STEP_UP_SECRET --project-name adrian-website
-```
+## 6. Physical prototype
 
-As soon as this exists (even empty) the registry stops falling back to
-`UPLOAD_SECRET`. This is the "private registry unlock" you type in the admin.
+- [ ] Plate is exactly 50 mm by 62 mm, unless the vector specification is later
+  intentionally changed and all hashes and qualification are repeated.
+- [ ] Front and underside SVGs were imported at native dimensions.
+- [ ] QR quiet zone is clear.
+- [ ] Public code is readable by eye.
+- [ ] Underside Ownership Code is readable character for character.
+- [ ] Attached plate cannot rotate, detach, or become obscured in normal use.
+- [ ] Intended underside access works without damaging the art.
+- [ ] Representative cleaning and abrasion do not defeat legibility.
+- [ ] Current iPhone passes bright, indoor, dim, straight, angled, unattached,
+  attached, and post-abrasion scans.
+- [ ] Current Android passes the same scans.
+- [ ] Every scan opens the exact Adrian domain and correct identity.
 
-## 3. Admin allowlist and the private staging flag
+## 7. First production plate
 
-Dashboard → Environment variables:
+- [ ] A second person cross-checks the artwork, edition, public code, Ownership
+  Code, filenames, and both hashes where practical.
+- [ ] Fabrication package is archived before vendor transfer.
+- [ ] Vendor receives only the required fabrication files through an approved
+  private channel.
+- [ ] Recovery status is still **Current** immediately before engraving.
+- [ ] The real returned metal matches the manifest and the intended art.
+- [ ] Physical activation checks are completed against the real attached plate.
+- [ ] Activation succeeds without a backup, hash, audit, version, or recovery
+  warning.
+- [ ] The physical QR is scanned again after activation.
 
-```text
-ADMIN_EMAILS = your-verified-email@example.com
-ARTWORK_REGISTRY_ADMIN_ENABLED = true
-```
+## 8. Maintenance rehearsal
 
-`ADMIN_EMAILS` is who can even reach the admin. `ARTWORK_REGISTRY_ADMIN_ENABLED`
-turns on the private plate desk without exposing the public steward surface
-(keep `LAUNCH_FLAGS.livingLegacy` = `false` in source until the runbook's public
-launch gate).
+Use a non-production identity.
 
-## 4. Create the encrypted backup bucket
+- [ ] Create and correct a private acquisition with an amount, currency, date,
+  internal reference, notes, and document reference.
+- [ ] Confirm exact amount is absent from public API, QR, lineage, and ledger.
+- [ ] Create private, steward, and public creator-history examples.
+- [ ] Confirm each visibility boundary with the appropriate account.
+- [ ] Simulate a lost maintenance response and use only the unchanged retry.
+- [ ] Reset or transfer a test steward and confirm append-only history.
+- [ ] Correct a deliberately wrong digital link only after confirming test metal
+  is truthful.
+- [ ] Confirm backup and recovery proof become stale after that correction.
+- [ ] Confirm the active test identity reappears in the wizard at recovery.
+- [ ] Re-back up, requalify the copied file, and repeat physical checks.
+- [ ] Confirm first steward bind remains blocked until those steps pass.
+- [ ] Void a generated bad test plate and record physical disposition.
+- [ ] Replace an active bad test plate, archive the one-time replacement package,
+  and confirm the old identity is superseded rather than deleted.
 
-The binding `ARTWORK_REGISTRY_BACKUP` is already declared in `wrangler.toml`.
-Create the bucket once:
+## 9. Public launch
 
-```bash
-npx wrangler r2 bucket create adrian-artwork-registry-backup
-```
+- [ ] Public launch remains off until copied-file recovery, full clean restore,
+  physical prototype, and first production activation all pass.
+- [ ] Launch is a deliberate reviewed change, not a side effect of unrelated work.
+- [ ] After launch, the same real QR shows the correct public artwork record.
+- [ ] Public responses contain no Ownership Code, exact amount, private notes,
+  steward email, IP address, ciphertext, nonce, or administrator identity.
 
-## 5. Apply the database migrations
+## 10. Ongoing schedule
 
-```bash
-# test locally first
-npx wrangler d1 migrations apply adrian-website --local
-npm run test:unit && npm run build
+Monthly:
 
-# then production
-npx wrangler d1 migrations apply adrian-website --remote
-```
+- [ ] verify and diff the secret-free public ledger;
+- [ ] download a fresh encrypted private archive;
+- [ ] check failed backups and stale qualifications;
+- [ ] review unlock, reveal, package recovery, maintenance, void, and replacement
+  audit events;
+- [ ] confirm archive and keys remain readable from their separate locations.
 
-Migrations are additive only; there is no down-migration for issued identities.
-Take a dated D1 export first (runbook step 4).
+Quarterly, and after a migration, key rotation, generator change, verifier
+change, or recovery code change:
 
-## 6. Google Drive sync (optional — automatic offline-ledger capture)
+- [ ] repeat copied-file plate recovery;
+- [ ] repeat a clean full-registry scratch restore;
+- [ ] scan a representative attached plate on current iPhone and Android devices.
 
-Reuses your existing sign-in OAuth client. You only add a Drive-scoped refresh
-token. Easiest path, no code:
-
-1. Google Cloud Console → the OAuth client used for sign-in → **enable the
-   Google Drive API** for that project, and add
-   `https://developers.google.com/oauthplayground` as an **Authorized redirect
-   URI**.
-2. Open <https://developers.google.com/oauthplayground>. Gear icon → check **Use
-   your own OAuth credentials** → paste `GOOGLE_CLIENT_ID` and
-   `GOOGLE_CLIENT_SECRET`.
-3. In "Input your own scopes" enter `https://www.googleapis.com/auth/drive.file`
-   → **Authorize APIs** → sign in with the Google account that owns the target
-   Drive and grant it.
-4. **Exchange authorization code for tokens** → copy the **refresh token**.
-5. Store it:
-
-   ```bash
-   npx wrangler pages secret put GOOGLE_DRIVE_REFRESH_TOKEN --project-name adrian-website
-   ```
-
-6. Optional target folder (dashboard → Environment variables):
-
-   ```text
-   GOOGLE_DRIVE_FOLDER_ID = <folder id from the folder URL>
-   ```
-
-`drive.file` scope lets the app manage only the one file it creates. Once set,
-the desk and wizard sync `registry-ledger.jsonl` automatically after every
-issue, activation, and shipment, and Drive keeps its own revision history.
-
-## 7. Stripe reversal webhooks (for the shipment gate)
-
-In the Stripe Dashboard, add these to your existing signed webhook endpoint so a
-refunded or disputed order can no longer be marked shipped:
-
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
-- `charge.refunded` (incl. partial)
-- `charge.dispute.created`
-- `payment_intent.canceled`
-- `payment_intent.payment_failed`
-
-Confirm `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY` are set.
-
----
-
-## 8. Prove it before engraving
-
-Do not fabricate a production plate until, per `docs/lineage-plate-runbook.md`:
-
-- [ ] a labeled **canary** plate issues and its R2 backup shows **Verified**;
-- [ ] a scratch **restore + decrypt** drill passes with the escrowed key
-      (D1 export + R2 envelope + key together);
-- [ ] the real engraved metal passes the phone-scan and physical checks;
-- [ ] you have downloaded (or Drive-synced) the offline ledger and run
-      `npm run ledger verify` on it.
-
-Everything after that — issuing, etching, activating, assigning, shipping,
-claiming — is the day-to-day flow the wizard walks you through.
+If a check fails, stop new engraving. Use Admin Maintenance for digital repairs.
+Void or supersede wrong metal. Never relink an engraving that is physically
+wrong.

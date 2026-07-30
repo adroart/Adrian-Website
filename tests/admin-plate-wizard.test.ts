@@ -36,10 +36,24 @@ describe('plate wizard stage logic', () => {
     );
   });
 
-  it('treats an active plate as terminal', () => {
+  it('reopens recovery for an active plate whose copied-file proof is missing or stale', () => {
     assert.equal(
-      plateWizardStageForPiece({ plateStatus: 'active', backupStatus: 'verified' }),
+      plateWizardStageForPiece({
+        plateStatus: 'active', backupStatus: 'verified', recoveryQualificationStatus: 'current',
+      }),
       null,
+    );
+    assert.equal(
+      plateWizardStageForPiece({
+        plateStatus: 'active', backupStatus: 'verified', recoveryQualificationStatus: 'stale',
+      }),
+      'recovery',
+    );
+    assert.equal(
+      plateWizardStageForPiece({
+        plateStatus: 'active', backupStatus: 'verified', recoveryQualificationStatus: 'missing',
+      }),
+      'recovery',
     );
   });
 
@@ -93,16 +107,22 @@ describe('plate wizard component wiring', () => {
     assert.match(wizard, /Recovery proof is stale/);
   });
 
-  it('restarts after completion and automatically completes an already-active plate', () => {
+  it('restarts after completion and requires an active repaired plate to pass the activation checks again', () => {
     assert.match(
       wizard,
       /const beginNewPiece[\s\S]*?setFinished\(false\);[\s\S]*?setStarted\(true\);/,
     );
-    assert.match(
-      wizard,
-      /useEffect\(\(\) => \{\s*if \(!started \|\| finished \|\| stage\.key !== 'activate' \|\| piece\?\.plateStatus !== 'active'\) return;\s*resetSensitive\(\);\s*setStepNote\([\s\S]*?\);\s*setFinished\(true\);\s*\}, \[/,
-    );
-    assert.doesNotMatch(wizard, /Plate is active and permanently locked\. You can continue\./);
+    assert.doesNotMatch(wizard, /piece\?\.plateStatus !== 'active'/);
+    assert.match(wizard, /Activating…/);
+    assert.match(wizard, /This active identity was repaired/);
+    assert.match(wizard, /Confirm repaired identity/);
+    assert.doesNotMatch(wizard, /Completing the registry lifecycle/);
+  });
+
+  it('refreshes and returns to recovery when activation discovers stale proof', () => {
+    assert.match(wizard, /code === 'recovery_qualification_required' \|\| code === 'activation_conflict'/);
+    assert.match(wizard, /await refreshPiece\(\)/);
+    assert.match(wizard, /setStageIndex\(plateWizardStageIndex\('recovery'\)\)/);
   });
 
   it('re-locks the flow when the registry unlock expires mid-run', () => {

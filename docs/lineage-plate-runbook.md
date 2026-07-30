@@ -1,463 +1,287 @@
-# Artwork Registry: First Plate and Shipment Runbook
+# Permanent artwork plate runbook
 
-This is the release gate for an Adrian Rasmussen artwork plate. A plate is not
-ready because an SVG exists. It is ready only after the registry is backed up,
-the fabricated metal has been checked against the stored identity, the real QR
-has scanned successfully, the exact sale or handoff has been assigned, and the
-final packed piece has been scanned again.
+This is the release gate for an Adrian Rasmussen artwork plate. Use the guided
+wizard at `/admin/pieces/wizard` for every new plate. The flat desk at
+`/admin/pieces` is for inspection and specialist recovery. Use
+`/admin/maintenance` when the digital record needs correction.
 
-The permanent public identity is `AR-XXXXXXXX`. The permanent private credential
-is the **Ownership Code** etched on the underside. The QR never contains the
-Ownership Code. Possessing the Ownership Code can begin a claim, but it cannot
-silently replace a registered steward.
+The front carries a public `AR-XXXXXXXX` QR identity. The underside carries the
+private Ownership Code. The QR is look-only. The Ownership Code is never placed
+in a URL, public page, public ledger, audit log, or acquisition record.
 
-## Current release boundary
+The registry has no Stripe, checkout, order, or shipment dependency. Adrian
+records acquisition details himself, when and if they are known.
 
-This release supports issuance, encrypted recovery, encrypted online backup,
-physical activation, exact paid-sale or manual-handoff assignment, shipment
-locking, QR lookup, and first steward binding.
+## Stop conditions
 
-It does **not** switch on the public shop, automate ordinary transfers or the
-30-day claim process, add annual inscriptions, migrate the Mandala map, or set
-up museum succession. Those are separate releases.
+Do not engrave production metal unless all of these are true:
 
-Do not deploy this registry or fabricate a production plate until all items in
-"Production infrastructure" and "Prototype qualification" are complete.
+- the exact artwork and edition structure are confirmed;
+- the encrypted R2 backup is content-addressed and verified;
+- a separately downloaded copy of that encrypted backup has been re-uploaded
+  and successfully used to rebuild both plate hashes;
+- the private full-registry recovery archive and its separate key are stored in
+  different trusted locations;
+- a clean scratch restore of the private archive has passed;
+- the front and underside SVG hashes match the private manifest;
+- a material prototype has passed the phone, lighting, angle, abrasion, and
+  attachment tests below.
 
-## Production infrastructure
+Stop issuance and engraving if the database, backup bucket, encryption key,
+registry unlock, audit log, copied-file qualification, or full private recovery
+archive is unavailable or uncertain.
 
-### 1. Generate the encryption key once
+## One-time production setup
 
-On a trusted computer, create a 32-byte key and keep the terminal output out of
-screenshots, tickets, chat, shell history, and repository files:
+### Ownership Code encryption
+
+Generate a 32-byte key on a trusted computer. Do not place it in chat, source
+control, screenshots, tickets, or shell history.
 
 ```bash
 openssl rand -base64 32
 ```
 
-Store the value in two places:
+Store independent copies in:
 
-1. Cloudflare Pages as `OWNERSHIP_CODE_KEY_V1`.
-2. A separate, access-controlled online password manager or institutional
-   vault entry, together with the key version and recovery instructions.
+1. Cloudflare Pages as `OWNERSHIP_CODE_KEY_V1`;
+2. an access-controlled password manager or institutional vault outside the
+   Cloudflare account.
 
-The second copy must not be in D1, R2, the repository, `.env.production`, or the
-same Cloudflare account alone. Anyone entrusted with the key can recover codes,
-so access should be logged and limited. Never delete an old versioned key while
-any row still uses it.
+Set `OWNERSHIP_CODE_ACTIVE_KEY_VERSION=1`. Never delete an old versioned key
+while any registry row uses it. Provision a separate high-entropy
+`REGISTRY_STEP_UP_SECRET`. Sensitive registry actions require both an approved
+administrator account and a recent registry unlock.
 
-Configure Pages without putting the value on a command line:
-
-```bash
-npx wrangler pages secret put OWNERSHIP_CODE_KEY_V1 --project-name adrian-website
-```
-
-Set the non-secret active version in the Cloudflare Pages production variables:
-
-```text
-OWNERSHIP_CODE_ACTIVE_KEY_VERSION=1
-```
-
-Provision a separate, high-entropy `REGISTRY_STEP_UP_SECRET`. The reveal,
-recovery verification, backup retry, activation, packaging, and issuance routes
-require it in addition to a verified allowlisted administrator account.
-
-`UPLOAD_SECRET` is accepted for registry unlock only while
-`REGISTRY_STEP_UP_SECRET` is absent. Provision the new variable before retiring
-the old upload credential. As soon as the new variable exists, even if it is
-empty, the registry fails closed and never falls back to `UPLOAD_SECRET`.
-
-Keep the public `LAUNCH_FLAGS.livingLegacy` flag off during staging. Set this
-non-secret Cloudflare Pages production variable instead:
+The private admin can be enabled before public launch with:
 
 ```text
 ARTWORK_REGISTRY_ADMIN_ENABLED=true
 ```
 
-That runtime gate enables only the authenticated private plate desk and its
-admin API. It does not expose the public steward, claim, map, or lineage UI. This
-separate gate is what makes it possible to issue and prove a canary before the
-public launch flag is changed.
+### Encrypted plate backup
 
-### 2. Provision the encrypted backup bucket
+The `ARTWORK_REGISTRY_BACKUP` binding points at the private R2 bucket. Each
+object is immutable and content-addressed:
 
-The binding is already declared as `ARTWORK_REGISTRY_BACKUP` in `wrangler.toml`.
-Create its production bucket once:
-
-```bash
-npx wrangler r2 bucket create adrian-artwork-registry-backup
+```text
+plates/<public-code>/<sha256>.json
 ```
 
-R2 receives ciphertext, nonce, key version, and non-secret identity metadata.
-It must never receive a plaintext Ownership Code or encryption key.
+The object contains encrypted code material and identity context, never the
+plaintext Ownership Code or an encryption key. A database row is considered
+backed up only when its status, object reference, and SHA-256 digest agree.
 
-### 3. Subscribe Stripe order-state events
+### Private full-registry recovery
 
-The shipment gate relies on the local order status being current. In the Stripe
-Dashboard, configure the existing signed webhook endpoint to receive:
+Configure a second, independently escrowed 32-byte key:
 
-- `checkout.session.completed`;
-- `checkout.session.async_payment_succeeded`;
-- `checkout.session.async_payment_failed`;
-- `charge.refunded` (including partial refunds);
-- `charge.dispute.created`;
-- `payment_intent.canceled`;
-- `payment_intent.payment_failed`.
+- `REGISTRY_RECOVERY_EXPORT_KEY_ID`, a non-secret version label;
+- `REGISTRY_RECOVERY_EXPORT_KEY`, the base64 form of exactly 32 random bytes.
 
-Confirm `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY` are provisioned. Send a
-test event for each reversal path and confirm the order leaves `paid`. A Stripe
-assignment cannot be marked shipped unless its order is still `paid` at the
-exact shipment write.
+This key protects the full private recovery archive. It should not be the
+Ownership Code encryption key. Keep its offline key file separately from the
+archive. See `docs/registry-private-recovery.md` for the exact two-line key-file
+format and clean-only restore command.
 
-### 4. Export D1 before migration
+### Migrations and pre-change backup
 
-Create a dated export outside the repository and verify that it is non-empty:
+Before applying migrations, export the current D1 database to an encrypted
+storage location outside the repository. Test migrations locally, then apply
+them deliberately. Migration `022_registry_fulfillment_detachment.sql` removes
+the registry's old order-table dependency while retaining any historical source
+identifier only as an opaque `legacy:` reference.
 
-```bash
-mkdir -p "$HOME/secure-backups/adrian-registry"
-npx wrangler d1 export adrian-website --remote \
-  --output "$HOME/secure-backups/adrian-registry/adrian-website-before-registry.sql"
-```
+A pre-migration D1 export is rollback evidence. It is not the ongoing recovery
+method and it does not prove that newly issued plates can be rebuilt.
 
-Keep the export encrypted at rest. It contains account and commerce data and is
-not a source-control artifact.
+## First non-production canary
 
-This pre-migration export is rollback evidence only. It does not contain a
-registry canary and cannot prove that a plate can be recovered.
+Before any production engraving:
 
-### 5. Apply migrations
+1. Issue one clearly marked non-production identity in the guided wizard.
+2. Download its front SVG, underside SVG, and private manifest.
+3. Confirm its R2 backup is **Verified**.
+4. Download the encrypted recovery JSON from the wizard.
+5. Move that file outside the website workspace, then choose that downloaded
+   file in the wizard and run **Verify copied recovery file**.
+6. Require the persisted recovery status to show **Current**. The server checks
+   the copied bytes' digest, identity, key version, Ownership Code verifier, and
+   regenerated front and underside hashes. It returns no code or SVG content.
+7. Download a private full-registry recovery archive and store its separate key
+   elsewhere.
+8. Generate restore SQL from those copied artifacts and apply it only to a new,
+   fully migrated, empty scratch database.
+9. Verify table counts and digests, the canary identity, lineage chain, current
+   steward state if any, and the public QR result in the scratch environment.
+10. Confirm a second restore or a restore into any non-empty registry is refused.
 
-First apply all migrations to a local disposable D1 and run the application
-tests. Then apply to production:
+The public Drive ledger is useful for secret-free integrity comparison, but it
+cannot restore private acquisition data, steward bindings, encrypted Ownership
+Codes, claim evidence, administrator references, or recovery qualifications.
 
-```bash
-npx wrangler d1 migrations apply adrian-website --local
-npm run test:unit
-npm run typecheck
-npm run build
-npx wrangler d1 migrations apply adrian-website --remote
-```
+## Issue one permanent identity
 
-Cloudflare captures a backup when migrations are applied. Keep the explicit SQL
-export as the independently controlled copy.
+1. Open `/admin/pieces/wizard` and unlock the private registry.
+2. Select the exact artwork.
+3. Confirm whether it is unique or numbered. Unique work uses edition `0` in
+   storage. Numbered work uses its real edition number and exact edition size.
+4. Read the artwork ID, edition, title, and intended physical piece aloud before
+   pressing **Issue**.
+5. Issue once. If the response is lost, retry the unchanged attempt. The same
+   issuance key returns the same identity and never creates a second plate.
+6. Download the front SVG, underside SVG, and private manifest together.
+7. Archive the package before leaving the screen. The one-time Ownership Code
+   must not be copied into ordinary notes or messages.
+8. Compare public code, artwork ID, edition, generation time, filenames, and
+   both SHA-256 hashes across the screen, manifest, and files.
+9. Confirm the encrypted online backup is **Verified**.
+10. Download its encrypted recovery JSON, archive it outside the site, re-upload
+    that downloaded copy, and require recovery status **Current**.
 
-There is no casual "down migration" for issued identities. If a migration fails,
-stop issuance and deployment. For a data-loss incident, restore the pre-change
-export to a newly created recovery database, validate it, then deliberately
-switch the binding. Do not overwrite the live database or delete issued rows as
-an improvised rollback. Once a plate is active, its public code and Ownership
-Code are permanent records.
+Do not send files to the engraver until steps 1 to 10 pass.
 
-### 6. Issue a canary and create a post-issuance recovery set
+## Material prototype qualification
 
-After migrations, secrets, and R2 are configured, issue one clearly labeled
-non-production canary plate through the admin desk. Confirm its encrypted R2
-backup is verified, then create a new D1 export:
+The front and underside are opposite faces of one 50 mm by 62 mm plate. Import
+both SVGs at native dimensions without cropping, stretching, redrawing the QR,
+or scaling the faces independently.
 
-```bash
-npx wrangler d1 export adrian-website --remote \
-  --output "$HOME/secure-backups/adrian-registry/adrian-website-with-registry-canary.sql"
-```
-
-The recovery set is all three of the following:
-
-1. the **post-issuance** D1 export containing the full registry row and event
-   history;
-2. the matching R2 encrypted envelope;
-3. the separately escrowed versioned encryption key.
-
-R2 is defense in depth for encrypted Ownership Codes. It is not a standalone
-database backup: it deliberately omits steward accounts, private claim evidence,
-fulfillment state, and lineage history.
-
-### 7. Prove restoration and decryption before engraving
-
-Use a disposable local or Cloudflare scratch environment, never production.
-This drill must use copies of the independently held recovery artifacts; pointing
-the scratch runtime back at the production D1 or production R2 bucket does not
-prove recovery.
-
-1. Restore the **post-issuance D1 export**
-   `adrian-website-with-registry-canary.sql` into a new scratch database.
-2. Copy the canary's R2 object from its recorded `backup_reference` into a new
-   scratch R2 bucket at the identical object key. Use the copied R2 object, not
-   a new backup generated from the restored D1 row.
-3. Bind the scratch runtime only to that scratch database and scratch bucket.
-   Temporarily remove or rename the D1 ciphertext and nonce columns in the
-   scratch copy if you want independent operator evidence that the operation
-   cannot use them; the recovery endpoint does not select either column.
-4. Configure the scratch environment with the **escrowed versioned key**, not a
-   value copied from the live Pages environment. Keep the public launch flag
-   off and explicitly enable only the private scratch administration runtime:
-
-   ```text
-   ARTWORK_REGISTRY_ADMIN_ENABLED=true
-   ```
-
-5. Start the full Pages runtime, sign in as an admin, enter the step-up secret,
-   and click **Verify R2 recovery** for the non-production canary.
-6. Require a pass showing the exact public code, artwork ID, edition, R2
-   reference, key version, and both matching SVG hashes. The operation reads the
-   encrypted envelope from R2, decrypts only in memory, verifies the D1 code
-   commitment, regenerates both fabrication files, and returns no Ownership Code
-   or SVG content.
-7. Confirm the public QR resolves without revealing the Ownership Code.
-8. Record only the date, tester, public code, key version, hash result, and
-   pass/fail outcome. The operation does not create plaintext output to retain.
-
-Do not engrave if the D1 export, R2 envelope, and escrowed key have not been
-proven together in this canary.
-
-After the canary passes, keep `LAUNCH_FLAGS.livingLegacy` set to `false` and
-continue to fabrication and prototype qualification. The permanent QR resolver
-remains available for physical prelaunch scans, while public lineage history,
-steward claims, and Living Legacy UI remain invisible.
-
-## Issue a plate
-
-1. Open the admin artwork registry.
-2. Select the exact artwork and edition. Edition `0` means a unique/non-numbered
-   piece; numbered editions use their real number.
-3. Issue once. A retry with the same issuance key must return the same identity,
-   never mint a replacement.
-4. Confirm the backup status is **Verified**.
-5. Download and archive together:
-   - front QR SVG;
-   - underside Ownership Code SVG;
-   - private manifest.
-6. Compare the displayed artwork ID, edition, public code, filenames, and both
-   SHA-256 hashes with the manifest before sending files to the engraver.
-7. Keep the manifest private. It contains the Ownership Code and is not a
-   certificate for the buyer.
-8. After issuance and before engraving, create a fresh encrypted D1 export. A
-   pre-issuance export plus R2 is not sufficient to reconstruct the registry.
-
-If backup fails, use **Retry encrypted backup**. Do not activate, assign, or ship
-the plate while the backup is unverified.
-
-## Prototype qualification
-
-Qualify the real material, size, finish, engraving depth, and attachment method
-before using the design on a sale.
-
-Fabricate the front and underside as opposite faces of one **50 mm × 62 mm**
-plate. Import both SVGs at their native dimensions without cropping, stretching,
-or independently scaling either face.
-
-Test the front QR on at least one current iPhone and one current Android phone:
+Test the engraved front QR with at least one current iPhone and one current
+Android phone:
 
 - bright direct light;
-- normal indoor light;
+- ordinary indoor light;
 - dim light;
 - straight-on;
 - approximately 30 degrees off-axis;
-- before attachment and after attachment to the artwork.
+- before attachment;
+- after attachment in the final location;
+- after the representative abrasion and cleaning test.
 
-Every scan must open the exact Adrian URL and show the same public code,
-artwork, and edition. A QR that scans only from a saved SVG or paper proof does
-not qualify the engraved plate.
+Every scan must open the exact Adrian domain and the correct artwork identity.
+A QR that works only from an SVG, paper print, or a single phone does not pass.
 
-Then inspect and compare:
+Also verify:
 
 - public code on metal equals the manifest;
 - artwork ID and edition on metal equal the physical artwork;
 - underside Ownership Code equals the manifest character for character;
-- front and underside production files hash to the stored values;
-- QR quiet zone is intact and not crossed by a screw, frame, adhesive, texture,
-  or plate edge;
-- attachment cannot rotate, obscure, or detach during ordinary handling;
-- underside remains readable after the intended flip/removal action;
-- finish survives a representative abrasion/cleaning test.
+- quiet zone is intact and clear of fasteners, texture, adhesive, and edges;
+- attachment cannot rotate, obscure, or detach in ordinary handling;
+- underside remains readable through the intended access method;
+- finish and legibility survive representative handling and cleaning.
 
-Only after all checks pass, enter the admin step-up secret, tick every physical
-confirmation, submit the stored hashes, and activate. Activation is the moment
-the two permanent codes are locked. Never activate from a vendor proof.
+## Activate only the real metal
 
-### Public registry launch
+Activation is not approval of a vendor proof. With the final plate attached to
+the intended artwork:
 
-Flip the public flag only after all three gates have passed: the copied-artifact
-R2 recovery canary, the real engraved-metal phone tests above, and physical
-activation of that qualified plate. Then set `LAUNCH_FLAGS.livingLegacy` to `true`,
-build, and deploy deliberately. Verify that the same physical QR now
-shows the exact public lineage before using the system for a sale.
+1. scan the real metal QR;
+2. compare artwork, edition, and public code;
+3. compare the underside Ownership Code;
+4. inspect attachment and abrasion results;
+5. paste both hashes from the archived private manifest;
+6. submit activation in the wizard.
 
-The public flag remains `false` in source until this point so an unrelated
-deployment cannot expose a partially qualified registry. After the public
-deployment is verified, `ARTWORK_REGISTRY_ADMIN_ENABLED` may be removed because
-the public flag also keeps private administration available.
+The server requires the immutable backup and copied-file recovery qualification
+to still be current. If code, generator, key, backup, or build dependencies
+changed after qualification, activation stops and returns to recovery. The
+versioned fallback `registry-recovery-build-v1` must be deliberately bumped
+whenever recovery behavior changes if a deployment commit ID is not supplied.
 
-## Assign the exact sale or handoff
+## Creator-entered private records
 
-Assignment happens during packing, not at checkout.
+Use `/admin/maintenance` to record acquisitions and creator history. Acquisition
+amount, currency, date, type, internal reference, notes, and document reference
+are private. Exact amount is never returned by public registry or QR endpoints.
 
-For a Stripe sale:
+Creator history can record contributors, places, intentions, materials,
+techniques, and notes. Choose visibility explicitly:
 
-1. Confirm the order is **Paid**.
-2. Select its single unassigned order item.
-3. Select the active, backed-up plate for the same artwork.
-4. Assign and compare the resulting public code with the physical plate.
+- **Private**, administrator only;
+- **Steward**, current steward and administrator;
+- **Public**, shown on the public artwork record.
 
-For a manual sale or gift:
+Do not put private contact details or an Ownership Code in public or steward
+history. If a save loses its response, do not edit, cancel, search, or navigate.
+Use the offered unchanged retry so the same idempotency key resolves to exactly
+one outcome.
 
-1. Create an opaque internal reference, such as an invoice or consignment ID.
-2. Do not put a name, email, phone number, address, or dedication in the
-   reference.
-3. Select the exact active, backed-up plate and assign it.
+## Admin maintenance and physical truth
 
-A correction requires a written reason and is permitted only before shipment.
-After shipment, the assignment is immutable; resolve mistakes as an incident,
-not by rewriting lineage.
+The administrator can repair digital state, but cannot make incorrect metal
+truthful by changing a database link.
 
-## Final packing and shipment gate
+### Digital link is wrong, metal is correct
 
-Two people should perform the first production shipment if possible: one reads
-the system record and the other holds the physical piece.
+Use **Correct link** only after physically reading the plate and confirming that
+the engraving already matches the intended artwork and edition. The operation
+regenerates the encrypted identity context and hashes, clears old backup proof,
+and records an append-only maintenance event. Then:
 
-- [ ] Artwork title and artwork ID match the order/manual record.
-- [ ] Edition on artwork, plate, manifest, and assignment all match.
-- [ ] Public code on metal matches the assigned registry row.
-- [ ] Front QR scans from the attached, packed-position plate.
-- [ ] Scan opens `adrianrasmussen.com` and the correct artwork history.
-- [ ] Ownership Code is present and legible on the underside.
-- [ ] Plate status is **Active**.
-- [ ] Backup status is **Verified**.
-- [ ] Recipient/shipping label belongs to this order; do not copy it into the
-      public registry.
-- [ ] Attachment and protective packing do not obscure or damage the plate.
-- [ ] Assignment was corrected, if necessary, before this point with a reason.
-- [ ] Package is sealed and the assignment is now marked **Shipped**.
+1. retry encrypted backup;
+2. download and verify a new copied recovery file;
+3. repeat the physical activation checks, even if the plate was already active;
+4. only then allow first steward binding.
 
-Do not mark shipped before the final physical comparison. Once marked shipped,
-the artwork/plate/order relationship cannot be corrected through the normal UI.
+### Metal is wrong
 
-## Recipient claim
+Never relink wrong metal.
 
-The recipient signs in with a verified email, scans the public QR, and enters
-the permanent Ownership Code from the underside. A never-claimed piece binds to
-that account and stamps the fulfillment as claimed. A rescan by the same steward
-is idempotent.
+- If the identity is generated but not active, void it and record the physical
+  disposition. Destroy, permanently mark, or quarantine the bad plate.
+- If the identity is active, use **Replace plate**. This supersedes the old
+  public identity and creates one new generated identity.
+- Archive the replacement package before clearing the one-time screen.
+- Fabricate, recover, qualify, and activate the replacement from the beginning.
 
-Email-code and supported social sign-in establish email verification. A
-password account that has not verified its email cannot claim; sign out and use
-the emailed one-time code before retrying.
+The old record remains as history. Do not delete or recycle an engraved public
+code or Ownership Code.
 
-After any steward has ever claimed the piece, the permanent code never becomes a
-bearer override again. A different account is routed into the governed claim
-process; it cannot silently take control.
+### Steward record is wrong
 
-Code-valid first and contested claim attempts create a private evidence record
-containing the verified account identity, email, request IP when Cloudflare
-provides it, user agent, outcome, and time. This evidence is never public and is
-read only through the admin step-up endpoint in bounded pages. Do not copy it
-into certificates, public lineage payloads, support tickets, or ordinary logs.
+Admin maintenance can reset an incorrect steward, transfer to exactly one
+verified account, or assign a verified account. Each action requires a reason,
+version check, registry unlock, and append-only event. A collector entering an
+already-used Ownership Code cannot silently replace the current steward.
 
-## Incident rules
+## Public launch and ongoing checks
 
-- **Lost fabrication package before activation:** use **Recover full fabrication
-  package**; never mint a second code for the same artwork/edition.
-- **Wrong engraving before activation:** destroy or permanently deface the bad
-  plate, fabricate from the same package, re-run every check, then activate.
-- **Wrong engraving after activation:** stop shipment and treat as an identity
-  incident. Do not edit codes or delete the row.
-- **Wrong sale assignment before shipment:** correct it in the fulfillment desk
-  with a specific reason and repeat the packing checklist.
-- **Wrong sale assignment after shipment:** do not rewrite the record; document
-  the incident and resolve custody through the governed process.
-- **Backup or key unavailable:** stop issuance, reveal, activation, and shipment
-  until a scratch restore/decrypt canary passes.
-- **Suspected code exposure:** record which public identity was affected and
-  monitor claims. Do not rotate the permanent physical code behind the plate.
+Keep public registry exposure off until the canary restore, copied-file recovery,
+real-metal phone tests, and physical activation all pass. After deliberate
+review, set `LAUNCH_FLAGS.livingLegacy` to `true`, deploy, then scan the same
+physical QR again and confirm the public page derives its
+artwork and edition from the server-side public code record.
 
-## Public issuance ledger and private recovery archive
+Monthly:
 
-The registry has two offline records with different security boundaries. The
-online D1 database serves live QR lookups. The separately encrypted private
-recovery archive is the complete recovery source. The public issuance ledger is
-a secret-free integrity record, not a database backup.
+- verify the public secret-free ledger chain and compare it with the live view;
+- download a fresh encrypted private registry archive;
+- confirm the archive and key remain in separate accessible locations;
+- review failed backups, stale recovery qualifications, ambiguous maintenance
+  attempts, unlock events, reveal/package events, and plate replacements.
 
-The ledger is `registry-ledger.jsonl` — a deterministic, hash-chained export of
-every issued plate identity and its append-only lineage. It carries the
-recovery-code **hash** and the **encrypted** Ownership Code envelope, never a
-plaintext code, and no steward identity, email, IP, or display location. It is an
-artist's issuance record, not a personal-data export; the private encrypted D1
-recovery archive remains the complementary full-state backup.
+Quarterly, and after any relevant schema, key, generator, verifier, or recovery
+code change, repeat a clean scratch restore and copied-file plate recovery.
 
-### Download it
+## Final pre-engraving sign-off
 
-Unlock the private registry, then use **Download offline ledger** on the plate
-desk (`/admin/pieces`) or at the end of the guided wizard
-(`/admin/pieces/wizard`). Store each export with your recovery set (the escrowed
-key and the R2 envelopes). Keep every export; a newer one only ever adds lines.
+- [ ] Exact physical artwork, artwork ID, uniqueness or edition size confirmed
+- [ ] Exact edition number confirmed
+- [ ] Public code read back from screen, manifest, and front SVG
+- [ ] Ownership Code archived privately and matched to underside SVG
+- [ ] Front and underside SHA-256 hashes match the manifest
+- [ ] Content-addressed R2 backup verified
+- [ ] Downloaded recovery JSON independently archived and re-uploaded
+- [ ] Copied-file recovery status current
+- [ ] Encrypted full-registry archive stored
+- [ ] Separate full-registry recovery key stored elsewhere
+- [ ] Clean scratch restore passed with counts, digests, lineage, and QR checks
+- [ ] Real engraved prototype passed both phones, lighting, angle, and abrasion
+- [ ] Attachment and underside access passed
+- [ ] No Stripe, order, or shipment assumption is involved
+- [ ] A second person has read the permanent identity fields where practical
 
-### Work with it offline (no server, no network)
-
-```bash
-# Confirm the file is intact and unaltered (recomputes the whole hash chain).
-npm run ledger verify ./registry-ledger.jsonl
-
-# Prove the online mirror still matches your held master. Silence = identical.
-# "Removed" or "changed" lines mean the online copy was altered out of band.
-npm run ledger diff ./held-master.jsonl ./fresh-export.jsonl
-```
-
-The public ledger cannot create restore SQL. For full recovery, download the
-step-up-gated private archive, move it and its separately escrowed key file to a
-controlled recovery machine, then run:
-
-```bash
-npm run ledger -- restore-sql ./registry-private-recovery-<timestamp>.json \
-  ./registry-private-recovery.key ./registry-private-restore.sql
-```
-
-Apply the resulting SQL only to a new, fully migrated recovery database, never
-directly to production. The SQL refuses a non-empty target and rolls the whole
-transaction back if any row fails. Follow `docs/registry-private-recovery.md`
-for the exact key-file format and qualification steps.
-
-### Automatic capture to Google Drive (optional)
-
-So the master copy is captured without remembering to download it, the admin can
-sync the ledger to Adrian's own Google Drive. This runs server-side in the
-Cloudflare account; nothing is routed through any AI assistant. When configured,
-the plate desk and the wizard sync automatically after every issue, activation,
-and shipment, and expose a manual **Sync to Google Drive** button. Until it is
-configured the feature is dormant and the automatic calls do nothing.
-
-One-time setup:
-
-1. In the existing Google Cloud OAuth client (the one already used for sign-in),
-   enable the Google Drive API and mint a refresh token with the least-privilege
-   `https://www.googleapis.com/auth/drive.file` scope. That scope lets the app
-   see and manage only the single file it creates, never the rest of the Drive.
-2. Set the Cloudflare Pages secret:
-
-   ```bash
-   npx wrangler pages secret put GOOGLE_DRIVE_REFRESH_TOKEN --project-name adrian-website
-   ```
-
-3. Optionally set a target folder as a non-secret variable:
-
-   ```text
-   GOOGLE_DRIVE_FOLDER_ID=<folder id>
-   ```
-
-`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are reused from sign-in. The sync
-writes one canonical `registry-ledger.jsonl` and updates it in place; Google
-Drive keeps its own revision history, so every export is retained. The file
-carries no plaintext code and no steward identity, exactly like the download.
-
-Drive is a convenience capture, not the only copy. Continue to keep the ledger
-with your escrowed key and R2 envelopes, and run `npm run ledger verify` on the
-copy you rely on.
-
-## Routine custody checks
-
-Before every new batch, and at least quarterly while pieces are circulating:
-
-1. Export D1 to encrypted storage.
-2. Confirm new issued plates have verified R2 objects.
-3. Run one scratch restore/decrypt canary with the current and oldest retained
-   key versions.
-4. Review reveal, activation, fulfillment correction, and shipment audit events.
-5. Confirm the Adrian domain, Cloudflare project, D1 database, R2 bucket, and
-   password-manager escrow remain under the intended registry custodian's control.
+If any box is uncertain, stop. Digital records can be repaired later. Engraved
+metal cannot.
