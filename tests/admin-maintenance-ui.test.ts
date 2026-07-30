@@ -88,7 +88,8 @@ describe('registry Maintenance client contract', () => {
     });
 
     const {
-      beginMaintenanceSaveAttempt,
+      beginMaintenanceSaveRequestAttempt,
+      discardMaintenanceSaveAttempt,
       saveMaintenanceAcquisition,
       shouldRetainMaintenanceSaveAttempt,
     } = await import('../utils/adminRegistryMaintenance.ts');
@@ -102,13 +103,19 @@ describe('registry Maintenance client contract', () => {
       documentReference: 'private receipt',
       publicProvenance: 'Acquired from the artist.',
     };
-    const attemptKey = beginMaintenanceSaveAttempt(null, createKey);
+    const request = {
+      keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
+    };
+    const attempt = beginMaintenanceSaveRequestAttempt(null, request, createKey);
+    const afterAttemptedNavigation = discardMaintenanceSaveAttempt(attempt, true);
+    assert.strictEqual(afterAttemptedNavigation, attempt);
+    request.reason = 'A later mutable value must not alter the attempt.';
+    acquisition.privateNotes = 'A later mutable note must not alter the attempt.';
+    assert.equal(attempt.request.reason, 'Record acquisition.');
+    assert.equal(attempt.request.acquisition.privateNotes, 'private note');
     let lostResponse: unknown;
     await assert.rejects(
-      saveMaintenanceAcquisition({
-        keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
-        idempotencyKey: attemptKey,
-      }),
+      saveMaintenanceAcquisition(attempt.request),
       error => {
         lostResponse = error;
         return error instanceof TypeError;
@@ -116,13 +123,9 @@ describe('registry Maintenance client contract', () => {
     );
     assert.equal(shouldRetainMaintenanceSaveAttempt(lostResponse), true);
 
-    const lockedRetryKey = beginMaintenanceSaveAttempt(attemptKey, createKey);
     let lockedResponse: unknown;
     await assert.rejects(
-      saveMaintenanceAcquisition({
-        keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
-        idempotencyKey: lockedRetryKey,
-      }),
+      saveMaintenanceAcquisition(attempt.request),
       error => {
         lockedResponse = error;
         return error instanceof Error && error.message === 'registry_locked';
@@ -131,11 +134,7 @@ describe('registry Maintenance client contract', () => {
     assert.equal(shouldRetainMaintenanceSaveAttempt(lockedResponse), true);
 
     registryUnlocked = true;
-    const retryKey = beginMaintenanceSaveAttempt(lockedRetryKey, createKey);
-    const replay = await saveMaintenanceAcquisition({
-      keeperPieceId: 'kp-1', reason: 'Record acquisition.', acquisition,
-      idempotencyKey: retryKey,
-    });
+    const replay = await saveMaintenanceAcquisition(attempt.request);
 
     assert.equal(createKey.mock.callCount(), 1);
     assert.equal(records.size, 1);
@@ -144,6 +143,17 @@ describe('registry Maintenance client contract', () => {
       'attempt-lost-response', 'attempt-lost-response', 'attempt-lost-response',
     ]);
     assert.doesNotMatch(requests.map(request => request.url).join(' '), /125000|IDR|collector|receipt/i);
+  });
+
+  it('accepts only the latest search or detail generation', async () => {
+    const { createMaintenanceRequestGate } = await import('../utils/adminRegistryMaintenance.ts');
+    const gate = createMaintenanceRequestGate();
+    const first = gate.next();
+    const second = gate.next();
+    assert.equal(gate.isCurrent(first), false);
+    assert.equal(gate.isCurrent(second), true);
+    gate.invalidate();
+    assert.equal(gate.isCurrent(second), false);
   });
 
   it('clears attempts only for definitive success or client rejection', async () => {
@@ -162,6 +172,7 @@ describe('registry Maintenance client contract', () => {
     const {
       currencyAmountToInput,
       formatMaintenanceCurrencyAmount,
+      maintenanceCurrencyAmountToDraft,
       parseMaintenanceCurrencyAmount,
     } = await import('../utils/adminRegistryMaintenance.ts');
 
@@ -189,6 +200,23 @@ describe('registry Maintenance client contract', () => {
     const existingServerRecord = { amountMinor: 98765, currency: 'CHF' };
     assert.equal(currencyAmountToInput(existingServerRecord.amountMinor, existingServerRecord.currency), '987.65');
     assert.throws(() => parseMaintenanceCurrencyAmount('10', 'XTS'), /unsupported currency/i);
+
+    const supportedValuesOf = Object.getOwnPropertyDescriptor(Intl, 'supportedValuesOf');
+    try {
+      Object.defineProperty(Intl, 'supportedValuesOf', { configurable: true, value: undefined });
+      assert.equal(parseMaintenanceCurrencyAmount('2.50', 'CHF'), 250);
+      assert.throws(() => parseMaintenanceCurrencyAmount('2.50', 'ZZZ'), /unsupported currency/i);
+      assert.throws(() => parseMaintenanceCurrencyAmount('2.50', 'XTS'), /unsupported currency/i);
+    } finally {
+      if (supportedValuesOf) Object.defineProperty(Intl, 'supportedValuesOf', supportedValuesOf);
+      else delete (Intl as typeof Intl & { supportedValuesOf?: unknown }).supportedValuesOf;
+    }
+
+    assert.deepEqual(maintenanceCurrencyAmountToDraft(54321, 'ZZZ'), {
+      amount: '54321',
+      currency: 'ZZZ',
+      preservedUnsupported: { amountMinor: 54321, currency: 'ZZZ' },
+    });
   });
 });
 
@@ -235,9 +263,14 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /version_conflict/);
     assert.match(component, /loadDetail/);
     assert.ok(component.indexOf('version_conflict') < component.lastIndexOf('loadDetail'));
-    assert.match(component, /saveAttemptKeyRef/);
-    assert.match(component, /beginMaintenanceSaveAttempt/);
+    assert.match(component, /saveAttemptRef/);
+    assert.match(component, /beginMaintenanceSaveRequestAttempt/);
     assert.match(component, /shouldRetainMaintenanceSaveAttempt/);
+    assert.match(component, /createMaintenanceRequestGate/);
+    assert.match(component, /discardMaintenanceSaveAttempt/);
+    assert.match(component, /disabled=\{saving/);
+    assert.match(component, /latest detail could not be reloaded/i);
+    assert.match(component, /throw error/);
   });
 
   it('labels every control and provides live loading, error, and status feedback', () => {

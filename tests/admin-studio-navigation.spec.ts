@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test.describe.configure({ mode: 'serial' });
+
 test('navigates into and out of Stories without the global error screen', async ({ page }) => {
   await page.goto('/');
 
@@ -90,13 +92,14 @@ test('opens Maintenance from Artwork and renders the private five-section detail
 
 test('reviews, unlocks, creates, and corrects a private acquisition', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
+  const privateNote = `Private browser-flow ${Date.now()}-${Math.random()}`;
 
   await page.goto('/admin/maintenance');
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
   await page.getByRole('button', { name: 'Record acquisition', exact: true }).click();
   await page.getByLabel('Amount paid').fill('1250.00');
   await page.getByRole('combobox', { name: 'Currency' }).fill('USD');
-  await page.getByLabel('Private notes').fill('Private browser-flow check.');
+  await page.getByLabel('Private notes').fill(privateNote);
   await page.getByRole('button', { name: 'Review acquisition' }).click();
   await expect(page.getByRole('heading', { name: 'Before' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'After' })).toBeVisible();
@@ -111,7 +114,12 @@ test('reviews, unlocks, creates, and corrects a private acquisition', async ({ p
   await page.getByRole('button', { name: 'Confirm save' }).click();
   await expect(page.locator('.admin-alert').getByText('Acquisition recorded.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Correct record' }).last().click();
+  const createdDetail = await page.evaluate(async () => {
+    const response = await fetch('/api/admin/maintenance/kp-local-maintenance');
+    return response.json();
+  });
+  const created = createdDetail.piece.acquisitions.find((item: { privateNotes: string }) => item.privateNotes === privateNote);
+  await page.getByRole('button', { name: `Correct acquisition ${created.acquisitionId}` }).click();
   await expect(page.getByLabel('Amount paid')).toHaveValue('1250.00');
   await page.getByLabel('Amount paid').fill('1300.00');
   await page.getByRole('button', { name: 'Review acquisition' }).click();
@@ -125,9 +133,57 @@ test('reviews, unlocks, creates, and corrects a private acquisition', async ({ p
     const response = await fetch('/api/admin/maintenance/kp-local-maintenance');
     return response.json();
   });
-  const saved = detail.piece.acquisitions.find((item: { privateNotes: string }) => item.privateNotes === 'Private browser-flow check.');
+  const saved = detail.piece.acquisitions.find((item: { privateNotes: string }) => item.privateNotes === privateNote);
   expect(saved.amountMinor).toBe(130000);
   expect(saved.currency).toBe('USD');
+});
+
+test('preserves a correction draft when version-conflict detail reload fails', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
+  await page.goto('/admin/maintenance');
+  const created = await page.evaluate(async () => {
+    await fetch('/api/admin/registry-unlock', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: 'local-development-secret' }),
+    });
+    const suffix = `${Date.now()}-${Math.random()}`;
+    const response = await fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idempotencyKey: `conflict-reload-${suffix}`,
+        reason: 'Create reload failure fixture.',
+        acquisition: {
+          acquisitionType: 'sale', acquiredAt: null, amountMinor: 4200, currency: 'USD',
+          acquirerReference: null, privateNotes: `Reload failure ${suffix}`,
+          documentReference: null, publicProvenance: null,
+        },
+      }),
+    });
+    return (await response.json()).acquisition;
+  });
+
+  let failDetailReload = false;
+  await page.route('**/api/admin/maintenance/kp-local-maintenance/acquisitions/*', async route => {
+    if (route.request().method() !== 'PUT') return route.continue();
+    failDetailReload = true;
+    return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'version_conflict' }) });
+  });
+  await page.route('**/api/admin/maintenance/kp-local-maintenance', async route => {
+    if (!failDetailReload) return route.continue();
+    return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'maintenance_read_failed' }) });
+  });
+
+  await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await page.getByRole('button', { name: `Correct acquisition ${created.acquisitionId}` }).click();
+  await page.getByLabel('Amount paid').fill('43.00');
+  await page.getByRole('button', { name: 'Review acquisition' }).click();
+  await page.getByLabel('Reason for this change').fill('Exercise failed conflict reload.');
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Review acquisition change' })).toBeVisible();
+  await expect(page.getByLabel('Reason for this change')).toHaveValue('Exercise failed conflict reload.');
+  await expect(page.getByRole('alert').filter({ hasText: 'latest detail could not be reloaded' })).toBeVisible();
+  await expect(page.getByText(/has been reloaded/)).toHaveCount(0);
 });
 
 test('development Maintenance API replays idempotent create and correction requests', async ({ page }, testInfo) => {
@@ -148,6 +204,28 @@ test('development Maintenance API replays idempotent create and correction reque
       acquirerReference: null, privateNotes: note, documentReference: null,
       publicProvenance: null,
     };
+    const invalidKey = await fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idempotencyKey: ' ', reason: 'Reject empty key.', acquisition }),
+    });
+    const invalidReason = await fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idempotencyKey: `invalid-reason-${suffix}`, reason: ' ', acquisition }),
+    });
+    const unknownField = await fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idempotencyKey: `unknown-field-${suffix}`, reason: 'Reject unknown acquisition field.',
+        acquisition: { ...acquisition, unexpected: 'private' },
+      }),
+    });
+    const missingCurrency = await fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idempotencyKey: `missing-currency-${suffix}`, reason: 'Reject unpaired amount.',
+        acquisition: { ...acquisition, currency: null },
+      }),
+    });
     const createBody = { idempotencyKey: createKey, reason: 'Test create replay.', acquisition };
     const create = () => fetch('/api/admin/maintenance/kp-local-maintenance/acquisitions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(createBody),
@@ -169,6 +247,10 @@ test('development Maintenance API replays idempotent create and correction reque
       acquisition: { ...acquisition, amountMinor: 11001 },
     };
     const correctionUrl = `/api/admin/maintenance/kp-local-maintenance/acquisitions/${created.acquisition.acquisitionId}`;
+    const invalidVersion = await fetch(correctionUrl, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...correctionBody, idempotencyKey: `invalid-version-${suffix}`, expectedVersion: '1' }),
+    });
     const correct = () => fetch(correctionUrl, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(correctionBody),
     });
@@ -184,6 +266,16 @@ test('development Maintenance API replays idempotent create and correction reque
     const detail = await detailResponse.json();
 
     return {
+      invalidKeyStatus: invalidKey.status,
+      invalidKey: await invalidKey.json(),
+      invalidReasonStatus: invalidReason.status,
+      invalidReason: await invalidReason.json(),
+      unknownFieldStatus: unknownField.status,
+      unknownField: await unknownField.json(),
+      missingCurrencyStatus: missingCurrency.status,
+      missingCurrency: await missingCurrency.json(),
+      invalidVersionStatus: invalidVersion.status,
+      invalidVersion: await invalidVersion.json(),
       firstCreateStatus: firstCreate.status,
       replayCreateStatus: replayCreate.status,
       createReplayed: replayedCreate.replayed,
@@ -199,6 +291,16 @@ test('development Maintenance API replays idempotent create and correction reque
     };
   });
 
+  expect(outcome.invalidKeyStatus).toBe(400);
+  expect(outcome.invalidKey).toEqual({ ok: false, error: 'invalid_idempotency_key' });
+  expect(outcome.invalidReasonStatus).toBe(400);
+  expect(outcome.invalidReason).toEqual({ ok: false, error: 'reason_required' });
+  expect(outcome.unknownFieldStatus).toBe(400);
+  expect(outcome.unknownField).toEqual({ ok: false, error: 'unknown_field' });
+  expect(outcome.missingCurrencyStatus).toBe(400);
+  expect(outcome.missingCurrency).toEqual({ ok: false, error: 'currency_required' });
+  expect(outcome.invalidVersionStatus).toBe(400);
+  expect(outcome.invalidVersion).toEqual({ ok: false, error: 'invalid_expected_version' });
   expect(outcome.firstCreateStatus).toBe(201);
   expect(outcome.replayCreateStatus).toBe(200);
   expect(outcome.createReplayed).toBe(true);

@@ -215,6 +215,99 @@ function mockApiPlugin(): Plugin {
     return true;
   }
 
+  const mockAcquisitionFields = new Set([
+    'acquisitionType', 'acquiredAt', 'amountMinor', 'currency', 'acquirerReference',
+    'privateNotes', 'documentReference', 'publicProvenance',
+  ]);
+  const mockAcquisitionTypes = new Set([
+    'sale', 'gift', 'retained', 'loan', 'consignment', 'inheritance', 'other',
+  ]);
+  const mockTextLimits: Record<string, number> = {
+    acquirerReference: 200,
+    privateNotes: 5000,
+    documentReference: 1000,
+    publicProvenance: 2000,
+  };
+
+  function normalizeMockAcquisition(input: any): { ok: true; acquisition: any } | { ok: false; error: string } {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: false, error: 'invalid_input' };
+    if (Object.keys(input).some(key => !mockAcquisitionFields.has(key))) return { ok: false, error: 'unknown_field' };
+    const acquisitionType = typeof input.acquisitionType === 'string' ? input.acquisitionType.trim().toLowerCase() : '';
+    if (!mockAcquisitionTypes.has(acquisitionType)) return { ok: false, error: 'invalid_acquisition_type' };
+
+    const acquiredAt = input.acquiredAt === undefined || input.acquiredAt === null || input.acquiredAt === ''
+      ? null
+      : typeof input.acquiredAt === 'string' && /^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(input.acquiredAt.trim())
+        && !Number.isNaN(new Date(input.acquiredAt.trim().length === 10 ? `${input.acquiredAt.trim()}T00:00:00.000Z` : input.acquiredAt.trim()).getTime())
+        ? input.acquiredAt.trim()
+        : undefined;
+    if (acquiredAt === undefined) return { ok: false, error: 'invalid_acquired_at' };
+
+    const amountProvided = input.amountMinor !== undefined && input.amountMinor !== null;
+    const currencyValue = typeof input.currency === 'string' ? input.currency.trim() : input.currency;
+    const currencyProvided = currencyValue !== undefined && currencyValue !== null && currencyValue !== '';
+    if (amountProvided && !currencyProvided) return { ok: false, error: 'currency_required' };
+    if (!amountProvided && currencyProvided) return { ok: false, error: 'amount_required' };
+    if (amountProvided && (!Number.isSafeInteger(input.amountMinor) || input.amountMinor < 0)) {
+      return { ok: false, error: 'invalid_amount' };
+    }
+    const currency = amountProvided && typeof currencyValue === 'string' ? currencyValue.toUpperCase() : null;
+    if (amountProvided && !/^[A-Z]{3}$/.test(currency || '')) return { ok: false, error: 'invalid_currency' };
+
+    const text: Record<string, string | null> = {};
+    for (const [field, limit] of Object.entries(mockTextLimits)) {
+      const value = input[field];
+      if (value === undefined || value === null || value === '') {
+        text[field] = null;
+      } else if (typeof value !== 'string') {
+        return { ok: false, error: `${field}_invalid` };
+      } else if (value.trim().length > limit) {
+        return { ok: false, error: `${field.replace(/[A-Z]/g, match => `_${match.toLowerCase()}`)}_too_long` };
+      } else {
+        text[field] = value.trim() || null;
+      }
+    }
+    return {
+      ok: true,
+      acquisition: {
+        acquisitionType,
+        acquiredAt,
+        amountMinor: amountProvided ? input.amountMinor : null,
+        currency,
+        ...text,
+      },
+    };
+  }
+
+  function validateMockMaintenanceBody(body: any, correcting: boolean):
+    | { ok: false; error: string }
+    | { ok: true; idempotencyKey: string; reason: string; expectedVersion: number | null; acquisition: any } {
+    const allowed = correcting
+      ? new Set(['idempotencyKey', 'reason', 'expectedVersion', 'acquisition'])
+      : new Set(['idempotencyKey', 'reason', 'acquisition']);
+    if (!body || typeof body !== 'object' || Array.isArray(body)
+      || Object.keys(body).some(key => !allowed.has(key))) {
+      return { ok: false as const, error: 'invalid_input' };
+    }
+    const idempotencyKey = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : '';
+    if (!idempotencyKey || idempotencyKey.length > 128) return { ok: false as const, error: 'invalid_idempotency_key' };
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
+    if (!reason) return { ok: false as const, error: 'reason_required' };
+    if (reason.length > 500) return { ok: false as const, error: 'reason_too_long' };
+    if (correcting && (!Number.isSafeInteger(body.expectedVersion) || body.expectedVersion < 1)) {
+      return { ok: false as const, error: 'invalid_expected_version' };
+    }
+    const acquisition = normalizeMockAcquisition(body.acquisition);
+    if ('error' in acquisition) return { ok: false, error: acquisition.error };
+    return {
+      ok: true as const,
+      idempotencyKey,
+      reason,
+      expectedVersion: correcting ? body.expectedVersion : null,
+      acquisition: acquisition.acquisition,
+    };
+  }
+
   function devAdminStatus(req: any): 'authorized' | 'guest' | 'forbidden' {
     const header = req.headers['x-dev-admin-status'];
     if (header === 'guest' || header === 'forbidden') return header;
@@ -348,18 +441,20 @@ function mockApiPlugin(): Plugin {
           if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
           if (createMatch[1] !== maintenancePiece.id) return send(res, 404, { ok: false, error: 'not_found' });
           const body = await readBody(req);
+          const validated = validateMockMaintenanceBody(body, false);
+          if ('error' in validated) return send(res, 400, { ok: false, error: validated.error });
           const signature = maintenanceMutationSignature({
             operation: 'create_acquisition',
             keeperPieceId: createMatch[1],
-            reason: typeof body.reason === 'string' ? body.reason.trim() : body.reason,
-            acquisition: body.acquisition,
+            reason: validated.reason,
+            acquisition: validated.acquisition,
           });
-          if (replayMaintenanceMutation(res, body.idempotencyKey, signature)) return;
+          if (replayMaintenanceMutation(res, validated.idempotencyKey, signature)) return;
           const createdAt = nowIso();
           const acquisition = {
             acquisitionId: `acq-local-${maintenanceAcquisitionId}`,
             keeperPieceId: maintenancePiece.id,
-            ...(body.acquisition || {}),
+            ...validated.acquisition,
             recordVersion: 1,
             createdAt,
             updatedAt: createdAt,
@@ -368,17 +463,17 @@ function mockApiPlugin(): Plugin {
           maintenancePiece.acquisitions.push(acquisition);
           maintenancePiece.maintenanceHistory.push({
             id: `rme-local-${maintenancePiece.maintenanceHistory.length + 1}`,
-            idempotencyKey: body.idempotencyKey,
+            idempotencyKey: validated.idempotencyKey,
             eventType: 'acquisition_created',
             administrator: { userId: 'local-dev-admin', email: 'local-admin@example.test' },
-            reason: body.reason,
+            reason: validated.reason,
             before: null,
             after: acquisition,
             outcome: 'succeeded',
             relatedRecordId: acquisition.acquisitionId,
             createdAt,
           });
-          maintenanceMutationAttempts.set(body.idempotencyKey.trim(), { signature, acquisition });
+          maintenanceMutationAttempts.set(validated.idempotencyKey, { signature, acquisition });
           return send(res, 201, { ok: true, replayed: false, acquisition });
         }
 
@@ -386,44 +481,46 @@ function mockApiPlugin(): Plugin {
         if (req.method === 'PUT' && correctionMatch) {
           if (!registryUnlocked) return send(res, 403, { ok: false, error: 'registry_locked' });
           const body = await readBody(req);
+          const validated = validateMockMaintenanceBody(body, true);
+          if ('error' in validated) return send(res, 400, { ok: false, error: validated.error });
           const signature = maintenanceMutationSignature({
             operation: 'correct_acquisition',
             keeperPieceId: correctionMatch[1],
             acquisitionId: correctionMatch[2],
-            expectedVersion: body.expectedVersion,
-            reason: typeof body.reason === 'string' ? body.reason.trim() : body.reason,
-            acquisition: body.acquisition,
+            expectedVersion: validated.expectedVersion,
+            reason: validated.reason,
+            acquisition: validated.acquisition,
           });
-          if (replayMaintenanceMutation(res, body.idempotencyKey, signature)) return;
+          if (replayMaintenanceMutation(res, validated.idempotencyKey, signature)) return;
           const acquisitionIndex = maintenancePiece.acquisitions.findIndex(
             (item: any) => item.acquisitionId === correctionMatch[2] && item.keeperPieceId === correctionMatch[1],
           );
           if (acquisitionIndex < 0) return send(res, 404, { ok: false, error: 'not_found' });
           const before = maintenancePiece.acquisitions[acquisitionIndex];
-          if (before.recordVersion !== body.expectedVersion) {
+          if (before.recordVersion !== validated.expectedVersion) {
             return send(res, 409, { ok: false, error: 'version_conflict' });
           }
           const updatedAt = nowIso();
           const acquisition = {
             ...before,
-            ...(body.acquisition || {}),
+            ...validated.acquisition,
             recordVersion: before.recordVersion + 1,
             updatedAt,
           };
           maintenancePiece.acquisitions[acquisitionIndex] = acquisition;
           maintenancePiece.maintenanceHistory.push({
             id: `rme-local-${maintenancePiece.maintenanceHistory.length + 1}`,
-            idempotencyKey: body.idempotencyKey,
+            idempotencyKey: validated.idempotencyKey,
             eventType: 'acquisition_corrected',
             administrator: { userId: 'local-dev-admin', email: 'local-admin@example.test' },
-            reason: body.reason,
+            reason: validated.reason,
             before,
             after: acquisition,
             outcome: 'succeeded',
             relatedRecordId: acquisition.acquisitionId,
             createdAt: updatedAt,
           });
-          maintenanceMutationAttempts.set(body.idempotencyKey.trim(), { signature, acquisition });
+          maintenanceMutationAttempts.set(validated.idempotencyKey, { signature, acquisition });
           return send(res, 200, { ok: true, replayed: false, acquisition });
         }
 

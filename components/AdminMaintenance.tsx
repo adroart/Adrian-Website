@@ -7,11 +7,13 @@ import {
   AdminSection,
 } from './admin/AdminPage';
 import {
-  beginMaintenanceSaveAttempt,
-  currencyAmountToInput,
+  beginMaintenanceSaveRequestAttempt,
+  createMaintenanceRequestGate,
+  discardMaintenanceSaveAttempt,
   formatMaintenanceCurrencyAmount,
   getMaintenanceDetail,
   MAINTENANCE_CURRENCY_CODES,
+  maintenanceCurrencyAmountToDraft,
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
   saveMaintenanceAcquisition,
@@ -23,6 +25,7 @@ import {
   type MaintenanceListItem,
   type MaintenancePieceDetail,
   type MaintenanceSearchFilters,
+  type MaintenanceSaveAttempt,
 } from '../utils/adminRegistryMaintenance';
 
 type SearchDraft = {
@@ -37,6 +40,7 @@ type AcquisitionDraft = {
   acquiredAt: string;
   amount: string;
   currency: string;
+  preservedUnsupported: { amountMinor: number; currency: string } | null;
   acquirerReference: string;
   privateNotes: string;
   documentReference: string;
@@ -59,6 +63,7 @@ const EMPTY_ACQUISITION: AcquisitionDraft = {
   acquiredAt: '',
   amount: '',
   currency: '',
+  preservedUnsupported: null,
   acquirerReference: '',
   privateNotes: '',
   documentReference: '',
@@ -110,7 +115,7 @@ function displayPrivateAmount(acquisition: MaintenanceAcquisitionInput): string 
   try {
     return formatMaintenanceCurrencyAmount(acquisition.amountMinor, acquisition.currency);
   } catch {
-    return `Unsupported currency code ${acquisition.currency}`;
+    return `${acquisition.currency} · stored integer amount ${acquisition.amountMinor}`;
   }
 }
 
@@ -121,19 +126,11 @@ function textOrNull(value: string): string | null {
 
 function draftFromAcquisition(acquisition?: MaintenanceAcquisition): AcquisitionDraft {
   if (!acquisition) return { ...EMPTY_ACQUISITION };
-  let amount = '';
-  if (acquisition.amountMinor !== null && acquisition.currency) {
-    try {
-      amount = currencyAmountToInput(acquisition.amountMinor, acquisition.currency);
-    } catch {
-      // Leave the familiar amount blank until a supported currency is chosen.
-    }
-  }
+  const amountDraft = maintenanceCurrencyAmountToDraft(acquisition.amountMinor, acquisition.currency);
   return {
     acquisitionType: acquisition.acquisitionType,
     acquiredAt: acquisition.acquiredAt?.slice(0, 10) || '',
-    amount,
-    currency: acquisition.currency || '',
+    ...amountDraft,
     acquirerReference: acquisition.acquirerReference || '',
     privateNotes: acquisition.privateNotes || '',
     documentReference: acquisition.documentReference || '',
@@ -148,14 +145,16 @@ function normalizeAcquisitionDraft(draft: AcquisitionDraft): MaintenanceAcquisit
     throw new Error('Enter both the familiar amount and its currency, or leave both blank.');
   }
   let amountMinor: number | null = null;
-  if (amountEntered) {
+  if (draft.preservedUnsupported) {
+    amountMinor = draft.preservedUnsupported.amountMinor;
+  } else if (amountEntered) {
     amountMinor = parseMaintenanceCurrencyAmount(draft.amount, currency);
   }
   return {
     acquisitionType: draft.acquisitionType,
     acquiredAt: textOrNull(draft.acquiredAt),
     amountMinor,
-    currency: amountEntered ? currency : null,
+    currency: draft.preservedUnsupported?.currency || (amountEntered ? currency : null),
     acquirerReference: textOrNull(draft.acquirerReference),
     privateNotes: textOrNull(draft.privateNotes),
     documentReference: textOrNull(draft.documentReference),
@@ -209,35 +208,58 @@ const AdminMaintenance: React.FC = () => {
   const [unlockError, setUnlockError] = useState('');
   const unlockInputRef = useRef<HTMLInputElement>(null);
   const reasonRef = useRef<HTMLTextAreaElement>(null);
-  const saveAttemptKeyRef = useRef<string | null>(null);
+  const saveAttemptRef = useRef<MaintenanceSaveAttempt | null>(null);
+  const saveInFlightRef = useRef(false);
+  const searchGateRef = useRef(createMaintenanceRequestGate());
+  const detailGateRef = useRef(createMaintenanceRequestGate());
 
   const clearSaveAttempt = () => {
-    saveAttemptKeyRef.current = null;
+    saveAttemptRef.current = discardMaintenanceSaveAttempt(
+      saveAttemptRef.current,
+      saveInFlightRef.current,
+    );
+    return saveAttemptRef.current === null;
   };
 
   const loadSearch = useCallback(async (filters: MaintenanceSearchFilters = {}, signal?: AbortSignal) => {
+    const generation = searchGateRef.current.next();
     setSearching(true);
     setSearchError('');
     try {
-      setResults(await searchMaintenance(filters, signal));
+      const nextResults = await searchMaintenance(filters, signal);
+      if (searchGateRef.current.isCurrent(generation)) setResults(nextResults);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
-      setSearchError(messageFor(error, 'Maintenance records could not be loaded.'));
+      if (searchGateRef.current.isCurrent(generation)) {
+        setSearchError(messageFor(error, 'Maintenance records could not be loaded.'));
+      }
     } finally {
-      if (!signal?.aborted) setSearching(false);
+      if (!signal?.aborted && searchGateRef.current.isCurrent(generation)) setSearching(false);
     }
   }, []);
 
-  const loadDetail = useCallback(async (keeperPieceId: string, signal?: AbortSignal) => {
+  const loadDetail = useCallback(async (
+    keeperPieceId: string,
+    signal?: AbortSignal,
+  ): Promise<MaintenancePieceDetail> => {
+    const generation = detailGateRef.current.next();
     setDetailLoading(true);
     setDetailError('');
     try {
-      setSelected(await getMaintenanceDetail(keeperPieceId, signal));
+      const detail = await getMaintenanceDetail(keeperPieceId, signal);
+      if (!detailGateRef.current.isCurrent(generation)) {
+        throw new DOMException('A newer detail request replaced this one.', 'AbortError');
+      }
+      setSelected(detail);
+      return detail;
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      setDetailError(messageFor(error, 'The private record could not be loaded.'));
+      if (detailGateRef.current.isCurrent(generation)
+        && !(error instanceof DOMException && error.name === 'AbortError')) {
+        setDetailError(messageFor(error, 'The private record could not be loaded.'));
+      }
+      throw error;
     } finally {
-      if (!signal?.aborted) setDetailLoading(false);
+      if (!signal?.aborted && detailGateRef.current.isCurrent(generation)) setDetailLoading(false);
     }
   }, []);
 
@@ -270,8 +292,9 @@ const AdminMaintenance: React.FC = () => {
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!clearSaveAttempt()) return;
     try {
-      clearSaveAttempt();
+      detailGateRef.current.invalidate();
       setSelected(null);
       setEditor(undefined);
       setReview(null);
@@ -284,7 +307,8 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const clearSearch = () => {
-    clearSaveAttempt();
+    if (!clearSaveAttempt()) return;
+    detailGateRef.current.invalidate();
     setSearchDraft(EMPTY_SEARCH);
     setSelected(null);
     setEditor(undefined);
@@ -295,16 +319,16 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const openDetail = (item: MaintenanceListItem) => {
-    clearSaveAttempt();
+    if (!clearSaveAttempt()) return;
     setSelected(null);
     setEditor(undefined);
     setReview(null);
     setNotice('');
-    void loadDetail(item.id);
+    void loadDetail(item.id).catch(() => undefined);
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
-    clearSaveAttempt();
+    if (!clearSaveAttempt()) return;
     setEditor(acquisition);
     setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
     setReview(null);
@@ -314,7 +338,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const closeEditor = () => {
-    clearSaveAttempt();
+    if (!clearSaveAttempt()) return;
     setEditor(undefined);
     setReview(null);
     setReason('');
@@ -323,8 +347,8 @@ const AdminMaintenance: React.FC = () => {
 
   const prepareReview = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!clearSaveAttempt()) return;
     try {
-      clearSaveAttempt();
       const after = normalizeAcquisitionDraft(acquisitionDraft);
       setReview({
         ...(editor ? { acquisitionId: editor.acquisitionId, expectedVersion: editor.recordVersion } : {}),
@@ -339,7 +363,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const backToEditor = () => {
-    clearSaveAttempt();
+    if (!clearSaveAttempt()) return;
     setReview(null);
     setFormError('');
   };
@@ -384,39 +408,46 @@ const AdminMaintenance: React.FC = () => {
       setFormError('Unlock the private registry before confirming this change.');
       return;
     }
-    const idempotencyKey = beginMaintenanceSaveAttempt(saveAttemptKeyRef.current);
-    saveAttemptKeyRef.current = idempotencyKey;
+    const attempt = beginMaintenanceSaveRequestAttempt(saveAttemptRef.current, {
+      keeperPieceId: selected.id,
+      ...(review.acquisitionId ? {
+        acquisitionId: review.acquisitionId,
+        expectedVersion: review.expectedVersion,
+      } : {}),
+      reason,
+      acquisition: review.after,
+    });
+    saveAttemptRef.current = attempt;
+    saveInFlightRef.current = true;
     setSaving(true);
     setFormError('');
     try {
-      await saveMaintenanceAcquisition({
-        keeperPieceId: selected.id,
-        ...(review.acquisitionId ? {
-          acquisitionId: review.acquisitionId,
-          expectedVersion: review.expectedVersion,
-        } : {}),
-        idempotencyKey,
-        reason,
-        acquisition: review.after,
-      });
-      clearSaveAttempt();
-      await loadDetail(selected.id);
+      await saveMaintenanceAcquisition(attempt.request);
+      saveInFlightRef.current = false;
+      saveAttemptRef.current = null;
+      await loadDetail(attempt.request.keeperPieceId);
       setNotice(review.acquisitionId ? 'Acquisition correction saved.' : 'Acquisition recorded.');
       closeEditor();
     } catch (error) {
-      if (!shouldRetainMaintenanceSaveAttempt(error)) clearSaveAttempt();
+      saveInFlightRef.current = false;
+      if (!shouldRetainMaintenanceSaveAttempt(error)) saveAttemptRef.current = null;
       if (error instanceof MaintenanceRequestError && error.code === 'registry_locked') {
         setRegistryUnlocked(false);
       }
       if (error instanceof MaintenanceRequestError && error.code === 'version_conflict') {
-        await loadDetail(selected.id);
-        setReview(null);
-        setEditor(undefined);
-        setNotice('The acquisition changed after you opened it. The latest detail has been reloaded; review it before trying again.');
+        try {
+          await loadDetail(attempt.request.keeperPieceId);
+          setReview(null);
+          setEditor(undefined);
+          setNotice('The acquisition changed after you opened it. The latest detail has been reloaded; review it before trying again.');
+        } catch {
+          setFormError('The acquisition changed, but the latest detail could not be reloaded. Your draft is preserved; retry the reload before editing further.');
+        }
       } else {
         setFormError(messageFor(error, 'The outcome could not be confirmed. Retry this unchanged confirmation to safely check the same save attempt.'));
       }
     } finally {
+      saveInFlightRef.current = false;
       setSaving(false);
     }
   };
@@ -439,8 +470,8 @@ const AdminMaintenance: React.FC = () => {
             <p>Search fields are public identity only. Private values never enter the URL.</p>
           </div>
           <div className="maintenance-actions">
-            <button type="button" className={quietButtonClass} onClick={clearSearch}>Clear</button>
-            <button type="submit" className={primaryButtonClass} disabled={searching}>Search Maintenance</button>
+            <button type="button" className={quietButtonClass} onClick={clearSearch} disabled={saving}>Clear</button>
+            <button type="submit" className={primaryButtonClass} disabled={searching || saving}>Search Maintenance</button>
           </div>
         </div>
         <div className="maintenance-search-grid">
@@ -476,6 +507,7 @@ const AdminMaintenance: React.FC = () => {
               key={item.id}
               className={selected?.id === item.id ? 'maintenance-result is-selected' : 'maintenance-result'}
               onClick={() => openDetail(item)}
+              disabled={saving}
               aria-pressed={selected?.id === item.id}
               aria-label={`${item.title}, ${item.publicCode || item.artworkId}`}
             >
@@ -529,7 +561,7 @@ const AdminMaintenance: React.FC = () => {
 
           <AdminSection title="Private acquisition" description="Exact amounts and collector references stay inside this authenticated detail.">
             <div className="maintenance-section-actions">
-              <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)}>Record acquisition</button>
+              <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)} disabled={saving}>Record acquisition</button>
             </div>
             {selected.acquisitions.length === 0 ? (
               <AdminEmptyState title="No acquisition recorded" description="Record a sale, gift, retained work, loan, or other acquisition event." />
@@ -542,7 +574,7 @@ const AdminMaintenance: React.FC = () => {
                       <span>{displayDate(acquisition.acquiredAt)} · {displayPrivateAmount(acquisition)}</span>
                       {acquisition.acquirerReference && <span>Reference: {acquisition.acquirerReference}</span>}
                     </div>
-                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)}>Correct record</button>
+                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={saving} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
                   </article>
                 ))}
               </div>
@@ -565,16 +597,25 @@ const AdminMaintenance: React.FC = () => {
                   </label>
                   <label htmlFor="maintenance-amount">
                     <span className={labelClass}>Amount paid</span>
-                    <input id="maintenance-amount" className={inputClass} inputMode="decimal" type="text" value={acquisitionDraft.amount} onChange={event => setAcquisitionDraft(draft => ({ ...draft, amount: event.target.value }))} placeholder="1250.00" autoComplete="off" />
-                    <small className="maintenance-helper">Enter the familiar amount exactly as you would normally write it. Decimals are validated for the selected currency and are never rounded.</small>
+                    <input id="maintenance-amount" className={inputClass} inputMode="decimal" type="text" value={acquisitionDraft.amount} onChange={event => setAcquisitionDraft(draft => ({ ...draft, amount: event.target.value }))} placeholder="1250.00" autoComplete="off" readOnly={Boolean(acquisitionDraft.preservedUnsupported)} />
+                    {acquisitionDraft.preservedUnsupported ? (
+                      <small className="maintenance-helper">This stored integer amount is preserved exactly because its currency is outside the current policy.</small>
+                    ) : (
+                      <small className="maintenance-helper">Enter the familiar amount exactly as you would normally write it. Decimals are validated for the selected currency and are never rounded.</small>
+                    )}
                   </label>
                   <label htmlFor="maintenance-currency">
                     <span className={labelClass}>Currency</span>
-                    <input id="maintenance-currency" className={inputClass} list="maintenance-currency-options" maxLength={3} value={acquisitionDraft.currency} onChange={event => setAcquisitionDraft(draft => ({ ...draft, currency: event.target.value.toUpperCase() }))} placeholder="USD" autoComplete="off" />
+                    <input id="maintenance-currency" className={inputClass} list="maintenance-currency-options" maxLength={3} value={acquisitionDraft.currency} onChange={event => setAcquisitionDraft(draft => ({ ...draft, currency: event.target.value.toUpperCase() }))} placeholder="USD" autoComplete="off" readOnly={Boolean(acquisitionDraft.preservedUnsupported)} />
                     <datalist id="maintenance-currency-options">
                       {MAINTENANCE_CURRENCY_CODES.map(code => <option key={code} value={code} />)}
                     </datalist>
                   </label>
+                  {acquisitionDraft.preservedUnsupported && (
+                    <div className="maintenance-field-wide maintenance-actions">
+                      <button type="button" className={quietButtonClass} onClick={() => setAcquisitionDraft(draft => ({ ...draft, amount: '', currency: '', preservedUnsupported: null }))}>Replace stored amount and currency</button>
+                    </div>
+                  )}
                   <label htmlFor="maintenance-acquirer-reference">
                     <span className={labelClass}>Acquirer reference</span>
                     <input id="maintenance-acquirer-reference" className={inputClass} value={acquisitionDraft.acquirerReference} onChange={event => setAcquisitionDraft(draft => ({ ...draft, acquirerReference: event.target.value }))} autoComplete="off" />
@@ -594,7 +635,7 @@ const AdminMaintenance: React.FC = () => {
                 </div>
                 {formError && <p className="maintenance-inline-error" role="alert">{formError}</p>}
                 <div className="maintenance-actions">
-                  <button type="button" className={quietButtonClass} onClick={closeEditor}>Cancel</button>
+                  <button type="button" className={quietButtonClass} onClick={closeEditor} disabled={saving}>Cancel</button>
                   <button type="submit" className={primaryButtonClass}>Review acquisition</button>
                 </div>
               </form>
@@ -613,7 +654,7 @@ const AdminMaintenance: React.FC = () => {
                 </div>
                 <label htmlFor="maintenance-reason">
                   <span className={labelClass}>Reason for this change</span>
-                  <textarea ref={reasonRef} id="maintenance-reason" className={inputClass} rows={3} required value={reason} onChange={event => { clearSaveAttempt(); setReason(event.target.value); }} />
+                  <textarea ref={reasonRef} id="maintenance-reason" className={inputClass} rows={3} required value={reason} disabled={saving} onChange={event => { clearSaveAttempt(); setReason(event.target.value); }} />
                 </label>
                 {!registryUnlocked && (
                   <AdminAlert tone="warning">

@@ -7,19 +7,32 @@ export type MaintenanceAcquisitionType =
   | 'inheritance'
   | 'other';
 
-const COMMON_MAINTENANCE_CURRENCIES = ['USD', 'IDR', 'KWD', 'CHF', 'NZD', 'CNY'] as const;
-type IntlWithSupportedCurrencies = typeof Intl & {
-  supportedValuesOf?: (key: 'currency') => string[];
-};
+/**
+ * Current tender currencies and standard display digits from Unicode CLDR 48.0.0.
+ * Source: cldr-json/cldr-core/supplemental/currencyData.json, current region entries
+ * with `_tender !== "false"`; digit overrides use `fractions`, default 2.
+ */
+export const MAINTENANCE_CURRENCY_EXPONENTS: Readonly<Record<string, number>> = Object.freeze({
+  AED: 2, AFN: 0, ALL: 0, AMD: 2, AOA: 2, ARS: 2, AUD: 2, AWG: 2, AZN: 2,
+  BAM: 2, BBD: 2, BDT: 2, BHD: 3, BIF: 0, BMD: 2, BND: 2, BOB: 2, BRL: 2,
+  BSD: 2, BTN: 2, BWP: 2, BYN: 2, BZD: 2, CAD: 2, CDF: 2, CHF: 2, CLP: 0,
+  CNY: 2, COP: 0, CRC: 2, CUP: 2, CVE: 2, CZK: 2, DJF: 0, DKK: 2, DOP: 2,
+  DZD: 2, EGP: 2, ERN: 2, ETB: 2, EUR: 2, FJD: 2, FKP: 2, GBP: 2, GEL: 2,
+  GHS: 2, GIP: 2, GMD: 2, GNF: 0, GTQ: 2, GYD: 2, HKD: 2, HNL: 2, HTG: 2,
+  HUF: 0, IDR: 0, ILS: 2, INR: 2, IQD: 0, IRR: 0, ISK: 0, JMD: 2, JOD: 3,
+  JPY: 0, KES: 2, KGS: 2, KHR: 2, KMF: 0, KPW: 0, KRW: 0, KWD: 3, KYD: 2,
+  KZT: 2, LAK: 0, LBP: 0, LKR: 2, LRD: 2, LSL: 2, LYD: 3, MAD: 2, MDL: 2,
+  MGA: 0, MKD: 2, MMK: 0, MNT: 2, MOP: 2, MRU: 2, MUR: 2, MVR: 2, MWK: 2,
+  MXN: 2, MYR: 2, MZN: 2, NAD: 2, NGN: 2, NIO: 2, NOK: 2, NPR: 2, NZD: 2,
+  OMR: 3, PAB: 2, PEN: 2, PGK: 2, PHP: 2, PKR: 0, PLN: 2, PYG: 0, QAR: 2,
+  RON: 2, RSD: 0, RUB: 2, RWF: 0, SAR: 2, SBD: 2, SCR: 2, SDG: 2, SEK: 2,
+  SGD: 2, SHP: 2, SLE: 2, SOS: 0, SRD: 2, SSP: 2, STN: 2, SYP: 0, SZL: 2,
+  THB: 2, TJS: 2, TMT: 2, TND: 3, TOP: 2, TRY: 2, TTD: 2, TWD: 2, TZS: 2,
+  UAH: 2, UGX: 0, USD: 2, UYU: 2, UZS: 2, VES: 2, VND: 0, VUV: 0, WST: 2,
+  XAF: 0, XCD: 2, XCG: 2, XOF: 0, XPF: 0, YER: 0, ZAR: 2, ZMW: 2, ZWG: 2,
+});
 
-function runtimeCurrencyCodes(): string[] {
-  const supportedValuesOf = (Intl as IntlWithSupportedCurrencies).supportedValuesOf;
-  const runtimeCodes = supportedValuesOf ? supportedValuesOf.call(Intl, 'currency') : [];
-  return Array.from(new Set([...COMMON_MAINTENANCE_CURRENCIES, ...runtimeCodes])).sort();
-}
-
-/** Runtime-maintained ISO currency choices; the text field also accepts valid codes not suggested here. */
-export const MAINTENANCE_CURRENCY_CODES = runtimeCurrencyCodes();
+export const MAINTENANCE_CURRENCY_CODES = Object.freeze(Object.keys(MAINTENANCE_CURRENCY_EXPONENTS));
 
 /** Only public fields are allowed to become query-string values. */
 export type MaintenanceSearchFilters = {
@@ -121,23 +134,11 @@ export class MaintenanceRequestError extends Error {
 
 function supportedCurrency(value: string) {
   const code = value.trim().toUpperCase();
-  if (!/^[A-Z]{3}$/.test(code)) {
-    throw new Error(`Unsupported currency ${code || 'code'}. Enter a valid three-letter ISO currency code.`);
+  const exponent = MAINTENANCE_CURRENCY_EXPONENTS[code];
+  if (!/^[A-Z]{3}$/.test(code) || exponent === undefined) {
+    throw new Error(`Unsupported currency ${code || 'code'}. Enter a supported three-letter ISO currency code.`);
   }
-  const supportedValuesOf = (Intl as IntlWithSupportedCurrencies).supportedValuesOf;
-  if (supportedValuesOf && !supportedValuesOf.call(Intl, 'currency').includes(code)) {
-    throw new Error(`Unsupported currency ${code}. Enter a valid three-letter ISO currency code.`);
-  }
-  try {
-    const options = new Intl.NumberFormat('en', {
-      style: 'currency', currency: code, currencyDisplay: 'code', useGrouping: false,
-    }).resolvedOptions();
-    const exponent = options.maximumFractionDigits;
-    if (!Number.isSafeInteger(exponent) || exponent < 0 || exponent > 20) throw new RangeError();
-    return { code, exponent };
-  } catch {
-    throw new Error(`Unsupported currency ${code}. Enter a valid three-letter ISO currency code.`);
-  }
+  return { code, exponent };
 }
 
 function decimalPlacesLabel(exponent: number): string {
@@ -186,12 +187,39 @@ export function formatMaintenanceCurrencyAmount(amountMinor: number, currencyCod
   return `${currency.code} ${grouped}${fraction === undefined ? '' : `.${fraction}`}`;
 }
 
-/** Start one confirmation attempt, or retain its key while its outcome is ambiguous. */
-export function beginMaintenanceSaveAttempt(
-  currentKey: string | null,
-  createKey: () => string = () => crypto.randomUUID(),
-): string {
-  return currentKey || createKey();
+export type MaintenanceCurrencyAmountDraft = {
+  amount: string;
+  currency: string;
+  preservedUnsupported: { amountMinor: number; currency: string } | null;
+};
+
+/** Preserve unknown stored values exactly; their exponent must never be guessed. */
+export function maintenanceCurrencyAmountToDraft(
+  amountMinor: number | null,
+  currencyCode: string | null,
+): MaintenanceCurrencyAmountDraft {
+  if (amountMinor === null || !currencyCode) {
+    return { amount: '', currency: currencyCode || '', preservedUnsupported: null };
+  }
+  const currency = currencyCode.trim().toUpperCase();
+  try {
+    return { amount: currencyAmountToInput(amountMinor, currency), currency, preservedUnsupported: null };
+  } catch {
+    return {
+      amount: String(amountMinor),
+      currency,
+      preservedUnsupported: { amountMinor, currency },
+    };
+  }
+}
+
+export function createMaintenanceRequestGate() {
+  let current = 0;
+  return {
+    next: () => ++current,
+    invalidate: () => { current += 1; },
+    isCurrent: (generation: number) => generation === current,
+  };
 }
 
 /** Ambiguous failures and expired authorization keep the key so an unlock can safely replay it. */
@@ -259,7 +287,7 @@ export async function getMaintenanceDetail(
   return data.piece;
 }
 
-type SaveAcquisitionRequest = {
+export type SaveAcquisitionRequest = {
   keeperPieceId: string;
   acquisitionId?: string;
   expectedVersion?: number;
@@ -267,6 +295,33 @@ type SaveAcquisitionRequest = {
   reason: string;
   acquisition: MaintenanceAcquisitionInput;
 };
+
+export type MaintenanceSaveRequestInput = Omit<SaveAcquisitionRequest, 'idempotencyKey'>;
+export type MaintenanceSaveAttempt = Readonly<{ request: Readonly<SaveAcquisitionRequest> }>;
+
+/** Freeze one exact request at the confirmation boundary and reuse it until definitive resolution. */
+export function beginMaintenanceSaveRequestAttempt(
+  current: MaintenanceSaveAttempt | null,
+  request: MaintenanceSaveRequestInput,
+  createKey: () => string = () => crypto.randomUUID(),
+): MaintenanceSaveAttempt {
+  if (current) return current;
+  const acquisition = Object.freeze({ ...request.acquisition });
+  const immutableRequest = Object.freeze({
+    ...request,
+    acquisition,
+    idempotencyKey: createKey(),
+  });
+  return Object.freeze({ request: immutableRequest });
+}
+
+/** An in-flight request cannot be abandoned by a competing UI transition. */
+export function discardMaintenanceSaveAttempt(
+  current: MaintenanceSaveAttempt | null,
+  inFlight: boolean,
+): MaintenanceSaveAttempt | null {
+  return inFlight ? current : null;
+}
 
 export async function saveMaintenanceAcquisition(
   request: SaveAcquisitionRequest,
