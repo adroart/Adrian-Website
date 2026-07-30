@@ -115,6 +115,11 @@ CREATE TABLE registry_maintenance_events (
     related_record_id IS NULL
     OR (typeof(related_record_id) = 'text' AND length(trim(related_record_id)) BETWEEN 1 AND 128)
   ),
+  mutation_fingerprint ANY NOT NULL CHECK (
+    typeof(mutation_fingerprint) = 'text'
+    AND length(mutation_fingerprint) = 64
+    AND mutation_fingerprint NOT GLOB '*[^0-9a-f]*'
+  ),
   created_at ANY NOT NULL CHECK (
     typeof(created_at) = 'text' AND length(trim(created_at)) BETWEEN 1 AND 40
   )

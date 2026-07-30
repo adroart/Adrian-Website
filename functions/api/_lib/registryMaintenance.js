@@ -41,18 +41,9 @@ const MAINTENANCE_TARGETS = {
     fields: {
       pieceId: ['piece_id', stringValue],
       editionNumber: ['edition_number', nonnegativeInteger],
-      recoveryCodeHash: ['recovery_code_hash', stringValue],
-      registeredAt: ['registered_at', stringOrNull],
-      publicCode: ['public_code', stringOrNull],
-      issuanceKey: ['issuance_key', stringOrNull],
       plateStatus: ['plate_status', stringValue],
-      plateGeneratedAt: ['plate_generated_at', stringOrNull],
-      plateActivatedAt: ['plate_activated_at', stringOrNull],
-      frontSvgSha256: ['front_svg_sha256', stringOrNull],
-      backSvgSha256: ['back_svg_sha256', stringOrNull],
-      backupStatus: ['backup_status', stringOrNull],
-      backupReference: ['backup_reference', stringOrNull],
-      backupAt: ['backup_at', stringOrNull],
+      supersededByKeeperPieceId: ['superseded_by_keeper_piece_id', stringOrNull],
+      physicalDisposition: ['physical_disposition', stringOrNull],
     },
   },
   keeper_steward: {
@@ -103,12 +94,12 @@ const EVENT_SNAPSHOT_FIELDS = {
     'recordVersion',
   ]),
   plate_voided: new Set([
-    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus', 'voidedAt',
+    'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus', 'physicalDisposition', 'voidedAt',
     'recordVersion',
   ]),
   plate_superseded: new Set([
     'keeperPieceId', 'artworkId', 'publicCode', 'plateStatus',
-    'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'supersededAt',
+    'supersedesKeeperPieceId', 'supersededByKeeperPieceId', 'physicalDisposition', 'supersededAt',
     'recordVersion',
   ]),
   plate_replaced: new Set([
@@ -134,6 +125,40 @@ const SENSITIVE_SNAPSHOT_KEY_PARTS = [
   'ownershipcode', 'recoverycode', 'ciphertext', 'nonce', 'verifier',
   'secret', 'token', 'password',
 ];
+
+const EVENT_MUTATION_POLICIES = {
+  acquisition_created: {
+    targetType: 'acquisition',
+    mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.acquisition.fields)),
+    beforeMayBeNull: true,
+  },
+  acquisition_corrected: {
+    targetType: 'acquisition',
+    mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.acquisition.fields)),
+  },
+  steward_reset: {
+    targetType: 'keeper_steward',
+    mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+  },
+  steward_transferred: {
+    targetType: 'keeper_steward',
+    mutableFields: new Set(Object.keys(MAINTENANCE_TARGETS.keeper_steward.fields)),
+  },
+  link_corrected: {
+    targetType: 'keeper_record',
+    mutableFields: new Set(['pieceId', 'editionNumber']),
+  },
+  plate_voided: {
+    targetType: 'keeper_record',
+    mutableFields: new Set(['plateStatus', 'physicalDisposition']),
+  },
+  plate_superseded: {
+    targetType: 'keeper_record',
+    mutableFields: new Set([
+      'plateStatus', 'supersededByKeeperPieceId', 'physicalDisposition',
+    ]),
+  },
+};
 
 function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -196,18 +221,61 @@ function normalizeMaintenanceTarget(target, changes) {
 
   const assignments = [];
   const values = [];
+  const normalizedChanges = Object.create(null);
   for (const [field, value] of Object.entries(changes)) {
     const mapping = Object.hasOwn(definition.fields, field) ? definition.fields[field] : null;
     if (!mapping || !mapping[1](value)) return null;
     assignments.push(mapping[0]);
     values.push(value);
+    normalizedChanges[field] = value;
   }
   return {
+    targetType: target.type,
     definition,
     id: target.id.trim(),
     assignments,
     values,
+    changes: normalizedChanges,
   };
+}
+
+function sameKeys(left, right) {
+  if (left.length !== right.length) return false;
+  const rightKeys = new Set(right);
+  return left.every((key) => rightKeys.has(key));
+}
+
+function validateEventMutation(normalizedTarget, event) {
+  const eventType = typeof event?.eventType === 'string' ? event.eventType.trim() : '';
+  const policy = Object.hasOwn(EVENT_MUTATION_POLICIES, eventType)
+    ? EVENT_MUTATION_POLICIES[eventType]
+    : null;
+  if (!policy || policy.targetType !== normalizedTarget.targetType || event?.outcome !== 'succeeded') {
+    return null;
+  }
+
+  const changeKeys = Object.keys(normalizedTarget.changes);
+  if (changeKeys.some((key) => !policy.mutableFields.has(key))) return null;
+
+  const before = normalizeEventSnapshot(eventType, event?.before);
+  const after = normalizeEventSnapshot(eventType, event?.after);
+  if (!isPlainRecord(after)) return null;
+  if (before === null && !policy.beforeMayBeNull) return null;
+  if (before !== null && !isPlainRecord(before)) return null;
+
+  const beforeMutationKeys = before === null
+    ? []
+    : Object.keys(before).filter((key) => policy.mutableFields.has(key));
+  const afterMutationKeys = Object.keys(after).filter((key) => policy.mutableFields.has(key));
+  if ((!policy.beforeMayBeNull || before !== null) && !sameKeys(beforeMutationKeys, changeKeys)) {
+    return null;
+  }
+  if (!sameKeys(afterMutationKeys, changeKeys)) return null;
+
+  for (const key of changeKeys) {
+    if (canonicalJson(after[key]) !== canonicalJson(normalizedTarget.changes[key])) return null;
+  }
+  return { eventType, before, after };
 }
 
 function buildVersionedMutationStatement(env, normalized, expectedVersion) {
@@ -272,6 +340,12 @@ function normalizeAcquiredAt(value) {
 /** Stable JSON for maintenance snapshots. Object keys are recursively sorted. */
 export function canonicalJson(value) {
   return JSON.stringify(canonicalValue(value, new Set()));
+}
+
+async function maintenanceMutationFingerprint(value) {
+  const bytes = new TextEncoder().encode(canonicalJson(value));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 export const canonicalMaintenanceJson = canonicalJson;
@@ -390,6 +464,12 @@ function normalizeEventDetails(details, eventId) {
   if (!Object.hasOwn(EVENT_SNAPSHOT_FIELDS, eventType)) throw new Error('invalid_event_type');
   const outcome = details?.outcome;
   if (outcome !== 'succeeded' && outcome !== 'failed') throw new Error('invalid_event_outcome');
+  const mutationFingerprint = typeof details?.mutationFingerprint === 'string'
+    ? details.mutationFingerprint.trim()
+    : '';
+  if (!/^[0-9a-f]{64}$/.test(mutationFingerprint)) {
+    throw new Error('invalid_mutation_fingerprint');
+  }
   const createdAt = typeof details?.createdAt === 'string' && details.createdAt.trim()
     ? new Date(details.createdAt.trim())
     : new Date();
@@ -406,6 +486,7 @@ function normalizeEventDetails(details, eventId) {
     afterJson: canonicalJson(normalizeEventSnapshot(eventType, details?.after)),
     outcome,
     relatedRecordId: normalizeOptionalIdentifier(details?.relatedRecordId),
+    mutationFingerprint,
     createdAt: createdAt.toISOString(),
   };
 }
@@ -415,7 +496,7 @@ export async function findMaintenanceEventByIdempotencyKey(env, value) {
   return env.DB.prepare(
     `SELECT id, idempotency_key, event_type, keeper_piece_id, artwork_id,
             administrator_user_id, administrator_email, reason, before_json,
-            after_json, outcome, related_record_id, created_at
+            after_json, outcome, related_record_id, mutation_fingerprint, created_at
        FROM registry_maintenance_events
       WHERE idempotency_key = ?1`,
   ).bind(idempotencyKey).first();
@@ -436,19 +517,19 @@ export function classifyMaintenanceIdempotency(existing, expected) {
     && existing.before_json === normalized.beforeJson
     && existing.after_json === normalized.afterJson
     && existing.outcome === normalized.outcome
-    && (existing.related_record_id ?? null) === normalized.relatedRecordId;
+    && (existing.related_record_id ?? null) === normalized.relatedRecordId
+    && existing.mutation_fingerprint === normalized.mutationFingerprint;
   return exact ? { kind: 'replay', event: existing } : { kind: 'conflict' };
 }
 
-export function buildMaintenanceEventStatement(env, details, options = {}) {
-  const normalized = normalizeEventDetails(details, details?.id);
+function prepareMaintenanceEventStatement(env, normalized, options = {}) {
   const guard = options.requirePreviousChange === false ? '1 = 1' : 'changes() = 1';
   return env.DB.prepare(
     `INSERT INTO registry_maintenance_events
        (id, idempotency_key, event_type, keeper_piece_id, artwork_id,
         administrator_user_id, administrator_email, reason, before_json,
-        after_json, outcome, related_record_id, created_at)
-     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
+        after_json, outcome, related_record_id, mutation_fingerprint, created_at)
+     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
       WHERE ${guard}`,
   ).bind(
     normalized.id,
@@ -463,7 +544,16 @@ export function buildMaintenanceEventStatement(env, details, options = {}) {
     normalized.afterJson,
     normalized.outcome,
     normalized.relatedRecordId,
+    normalized.mutationFingerprint,
     normalized.createdAt,
+  );
+}
+
+export function buildMaintenanceEventStatement(env, details, options = {}) {
+  return prepareMaintenanceEventStatement(
+    env,
+    normalizeEventDetails(details, details?.id),
+    options,
   );
 }
 
@@ -489,7 +579,7 @@ async function resolveMaintenanceIdempotency(env, event, fallback) {
 }
 
 /**
- * Run one optimistic mutation and its succeeded/failed maintenance event in a
+ * Run one optimistic mutation and its succeeded maintenance event in a
  * single D1 batch. The helper owns the target allowlist, version increment and
  * optimistic WHERE guard. The event SELECT sees SQLite changes() from that
  * mutation, so a zero-row conflict cannot append a success event.
@@ -505,16 +595,36 @@ export async function commitMaintenanceMutation(env, {
   }
   const normalizedTarget = normalizeMaintenanceTarget(target, changes);
   if (!normalizedTarget) return { ok: false, error: 'invalid_maintenance_target' };
+
+  let validatedEvent;
+  try {
+    validatedEvent = validateEventMutation(normalizedTarget, event);
+  } catch {
+    return { ok: false, error: 'invalid_event_mutation' };
+  }
+  if (!validatedEvent) return { ok: false, error: 'invalid_event_mutation' };
   if (typeof env?.DB?.batch !== 'function') {
     return { ok: false, error: 'atomic_write_unavailable' };
   }
 
   const eventId = event?.id ?? `rme-${crypto.randomUUID()}`;
+  let boundEvent;
   let mutationStatement;
   let eventStatement;
   try {
+    const mutationFingerprint = await maintenanceMutationFingerprint({
+      target: normalizedTarget.targetType,
+      id: normalizedTarget.id,
+      expectedVersion,
+      changes: normalizedTarget.changes,
+      eventType: validatedEvent.eventType,
+      before: validatedEvent.before,
+      after: validatedEvent.after,
+    });
+    boundEvent = { ...event, id: eventId, mutationFingerprint };
+    const normalizedEvent = normalizeEventDetails(boundEvent, eventId);
     mutationStatement = buildVersionedMutationStatement(env, normalizedTarget, expectedVersion);
-    eventStatement = buildMaintenanceEventStatement(env, { ...event, id: eventId });
+    eventStatement = prepareMaintenanceEventStatement(env, normalizedEvent);
   } catch {
     return { ok: false, error: 'invalid_maintenance_event' };
   }
@@ -529,21 +639,21 @@ export async function commitMaintenanceMutation(env, {
     if (mutationResult?.success !== true || eventResult?.success !== true) {
       return resolveMaintenanceIdempotency(
         env,
-        event,
+        boundEvent,
         { ok: false, error: 'maintenance_write_failed' },
       );
     }
     if (mutationChanges !== 1) {
       return resolveMaintenanceIdempotency(
         env,
-        event,
+        boundEvent,
         { ok: false, error: 'version_conflict' },
       );
     }
     if (eventChanges !== 1) {
       return resolveMaintenanceIdempotency(
         env,
-        event,
+        boundEvent,
         { ok: false, error: 'maintenance_write_failed' },
       );
     }
@@ -551,7 +661,7 @@ export async function commitMaintenanceMutation(env, {
   } catch {
     return resolveMaintenanceIdempotency(
       env,
-      event,
+      boundEvent,
       { ok: false, error: 'maintenance_write_failed' },
     );
   }

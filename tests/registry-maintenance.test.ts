@@ -59,11 +59,11 @@ const eventInsert = `
   INSERT INTO registry_maintenance_events
     (id, idempotency_key, event_type, keeper_piece_id, artwork_id,
      administrator_user_id, administrator_email, reason, before_json,
-     after_json, outcome, related_record_id, created_at)
+     after_json, outcome, related_record_id, mutation_fingerprint, created_at)
   VALUES
     ('rme-1', 'idem-1', 'acquisition_created', 'kp-maint', 'UL-100',
      'admin-1', 'admin@example.com', 'Record the studio acquisition.',
-     '{}', '{"id":"acq-1"}', 'succeeded', 'acq-1',
+     '{}', '{"id":"acq-1"}', 'succeeded', 'acq-1', '${'a'.repeat(64)}',
      '2026-07-30T01:00:00.000Z');
 `;
 
@@ -90,7 +90,8 @@ describe('creator registry maintenance migration', () => {
         artwork_acquisitions.currency,
         registry_maintenance_events.outcome,
         registry_maintenance_events.before_json,
-        registry_maintenance_events.after_json
+        registry_maintenance_events.after_json,
+        registry_maintenance_events.mutation_fingerprint
       FROM keeper_pieces
       JOIN artwork_acquisitions
         ON artwork_acquisitions.keeper_piece_id = keeper_pieces.id
@@ -108,6 +109,7 @@ describe('creator registry maintenance migration', () => {
       outcome: 'succeeded',
       before_json: '{}',
       after_json: '{"id":"acq-1"}',
+      mutation_fingerprint: 'a'.repeat(64),
     }]);
 
     const indexNames = sqliteJson(`
@@ -186,19 +188,22 @@ describe('creator registry maintenance migration', () => {
     const invalidEvents = [
       `INSERT INTO registry_maintenance_events
         (id, idempotency_key, event_type, administrator_user_id,
-         administrator_email, reason, before_json, after_json, outcome, created_at)
+         administrator_email, reason, before_json, after_json, outcome,
+         mutation_fingerprint, created_at)
        VALUES (2.5, 'real-id', 'test', 'admin', 'admin@example.com', 'Reason',
-               '{}', '{}', 'failed', 'x');`,
+               '{}', '{}', 'failed', '${'c'.repeat(64)}', 'x');`,
       `INSERT INTO registry_maintenance_events
         (id, idempotency_key, event_type, administrator_user_id,
-         administrator_email, reason, before_json, after_json, outcome, created_at)
+         administrator_email, reason, before_json, after_json, outcome,
+         mutation_fingerprint, created_at)
        VALUES ('blob-event', 'blob-event', X'00', 'admin', 'admin@example.com', 'Reason',
-               '{}', '{}', 'failed', 'x');`,
+               '{}', '{}', 'failed', '${'c'.repeat(64)}', 'x');`,
       `INSERT INTO registry_maintenance_events
         (id, idempotency_key, event_type, administrator_user_id,
-         administrator_email, reason, before_json, after_json, outcome, created_at)
+         administrator_email, reason, before_json, after_json, outcome,
+         mutation_fingerprint, created_at)
        VALUES ('blob-time', 'blob-time', 'test', 'admin', 'admin@example.com', 'Reason',
-               '{}', '{}', 'failed', X'00');`,
+               '{}', '{}', 'failed', '${'c'.repeat(64)}', X'00');`,
     ];
 
     for (const insert of [...invalidAcquisitions, ...invalidEvents]) {
@@ -261,14 +266,36 @@ describe('creator registry maintenance migration', () => {
       ${eventInsert}
       INSERT INTO registry_maintenance_events
         (id, idempotency_key, event_type, administrator_user_id,
-         administrator_email, reason, before_json, after_json, outcome, created_at)
+         administrator_email, reason, before_json, after_json, outcome,
+         mutation_fingerprint, created_at)
       VALUES
         ('rme-2', 'idem-1', 'acquisition_created', 'admin-1',
-         'admin@example.com', 'Retry.', '{}', '{}', 'succeeded',
+         'admin@example.com', 'Retry.', '{}', '{}', 'succeeded', '${'b'.repeat(64)}',
          '2026-07-30T01:01:00.000Z');
     `);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /unique/i);
+  });
+
+  it('requires a lowercase SHA-256 mutation fingerprint', () => {
+    for (const fingerprint of [
+      'a'.repeat(63),
+      'A'.repeat(64),
+      `${'a'.repeat(63)}g`,
+    ]) {
+      const result = sqliteResult(`
+        ${registryMigrations}
+        INSERT INTO registry_maintenance_events
+          (id, idempotency_key, event_type, administrator_user_id,
+           administrator_email, reason, before_json, after_json, outcome,
+           mutation_fingerprint, created_at)
+        VALUES
+          ('rme-bad-fingerprint', 'bad-fingerprint', 'acquisition_corrected',
+           'admin-1', 'admin@example.com', 'Reason.', '{}', '{}', 'failed',
+           '${fingerprint}', '2026-07-30T01:01:00.000Z');
+      `);
+      assert.notEqual(result.status, 0, fingerprint);
+    }
   });
 });
 
@@ -381,6 +408,7 @@ const expectedEvent = {
   after: { acquiredAt: '2026-02-01T00:00:00.000Z' },
   outcome: 'succeeded',
   relatedRecordId: 'acq-1',
+  mutationFingerprint: 'a'.repeat(64),
   createdAt: '2026-07-30T02:00:00.000Z',
 };
 
@@ -398,6 +426,7 @@ function storedEvent(overrides: Record<string, unknown> = {}) {
     after_json: canonicalMaintenanceJson(expectedEvent.after),
     outcome: expectedEvent.outcome,
     related_record_id: expectedEvent.relatedRecordId,
+    mutation_fingerprint: expectedEvent.mutationFingerprint,
     created_at: expectedEvent.createdAt,
     ...overrides,
   };
@@ -473,6 +502,10 @@ describe('maintenance idempotency and atomic writes', () => {
     assert.equal(classifyMaintenanceIdempotency(
       storedEvent(),
       { ...expectedEvent, reason: 'A different request.' },
+    ).kind, 'conflict');
+    assert.equal(classifyMaintenanceIdempotency(
+      storedEvent(),
+      { ...expectedEvent, mutationFingerprint: 'b'.repeat(64) },
     ).kind, 'conflict');
   });
 
@@ -584,20 +617,20 @@ describe('maintenance idempotency and atomic writes', () => {
 
     await commitMaintenanceMutation(env, {
       target: { type: 'keeper_record', id: 'kp-maint' },
-      changes: { backupStatus: 'verified' },
+      changes: { pieceId: 'UL-101' },
       event: {
         ...expectedEvent,
         idempotencyKey: 'keeper-record-update',
-        eventType: 'metadata_corrected',
-        before: { recordVersion: 2 },
-        after: { recordVersion: 3 },
+        eventType: 'link_corrected',
+        before: { pieceId: 'UL-100', recordVersion: 2 },
+        after: { pieceId: 'UL-101', recordVersion: 3 },
       },
       expectedVersion: 2,
     });
     assert.match(prepared[2].sql, /^UPDATE keeper_pieces/i);
-    assert.match(prepared[2].sql, /backup_status = \?1/);
+    assert.match(prepared[2].sql, /piece_id = \?1/);
     assert.match(prepared[2].sql, /record_version = record_version \+ 1/);
-    assert.deepEqual(prepared[2].values, ['verified', 'kp-maint', 2]);
+    assert.deepEqual(prepared[2].values, ['UL-101', 'kp-maint', 2]);
 
     await commitMaintenanceMutation(env, {
       target: { type: 'keeper_steward', id: 'kp-maint' },
@@ -630,12 +663,72 @@ describe('maintenance idempotency and atomic writes', () => {
         target: { type: 'acquisition', id: 'acq-1' },
         changes: { ownershipCode: 'forbidden' },
       },
+      {
+        target: { type: 'keeper_record', id: 'kp-maint' },
+        changes: { recoveryCodeHash: 'forbidden-generic-repair' },
+      },
     ]) {
       assert.deepEqual(await commitMaintenanceMutation(env, {
         ...request,
         event: expectedEvent,
         expectedVersion: 2,
       }), { ok: false, error: 'invalid_maintenance_target' });
+    }
+    assert.equal(prepared.length, prepareCount);
+
+    for (const request of [
+      {
+        target: { type: 'keeper_record', id: 'kp-maint' },
+        changes: { pieceId: 'UL-101' },
+        event: {
+          ...expectedEvent,
+          eventType: 'steward_transferred',
+          before: { keeperUserId: null },
+          after: { keeperUserId: 'keeper-2' },
+        },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+        event: { ...expectedEvent, before: {}, after: {} },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+        event: {
+          ...expectedEvent,
+          before: { acquiredAt: '2026-01-01T00:00:00.000Z', amountMinor: 100 },
+          after: { acquiredAt: '2026-02-01T00:00:00.000Z', amountMinor: 100 },
+        },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+        event: {
+          ...expectedEvent,
+          after: { acquiredAt: '2026-03-01T00:00:00.000Z' },
+        },
+      },
+      {
+        target: { type: 'acquisition', id: 'acq-1' },
+        changes: { acquiredAt: '2026-02-01T00:00:00.000Z' },
+        event: { ...expectedEvent, outcome: 'failed' },
+      },
+      {
+        target: { type: 'keeper_record', id: 'kp-maint' },
+        changes: { pieceId: 'UL-101' },
+        event: {
+          ...expectedEvent,
+          eventType: 'metadata_corrected',
+          before: { pieceId: 'UL-100' },
+          after: { pieceId: 'UL-101' },
+        },
+      },
+    ]) {
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        expectedVersion: 2,
+      }), { ok: false, error: 'invalid_event_mutation' });
     }
     assert.equal(prepared.length, prepareCount);
 
@@ -722,6 +815,11 @@ describe('maintenance idempotency and atomic writes', () => {
       const replay = await commitMaintenanceMutation(env, request);
       assert.equal(replay.ok, true);
       assert.equal(replay.replayed, true);
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        ...request,
+        expectedVersion: 2,
+      }), { ok: false, error: 'idempotency_conflict' });
 
       const conflict = await commitMaintenanceMutation(env, {
         ...request,
