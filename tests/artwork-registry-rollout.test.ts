@@ -6,7 +6,7 @@ import { LAUNCH_FLAGS } from '../launchFlags.ts';
 import { registryAdminEnabled } from '../functions/api/_lib/keeper.js';
 
 describe('artwork registry staged rollout', () => {
-  it('allows only an explicit runtime admin gate while the public surface is off', () => {
+  it('keeps private admin repair available when the hardened registry infrastructure is provisioned', () => {
     const prior = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = false;
     try {
@@ -14,6 +14,16 @@ describe('artwork registry staged rollout', () => {
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'false' }), false);
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'TRUE' }), false);
       assert.equal(registryAdminEnabled({ ARTWORK_REGISTRY_ADMIN_ENABLED: 'true' }), true);
+      assert.equal(registryAdminEnabled({
+        ARTWORK_REGISTRY_ADMIN_ENABLED: 'false',
+        DB: {},
+        ARTWORK_REGISTRY_BACKUP: {},
+        REGISTRY_STEP_UP_SECRET: 'configured',
+      }), true);
+      assert.equal(registryAdminEnabled({
+        DB: {},
+        ARTWORK_REGISTRY_BACKUP: {},
+      }), false);
     } finally {
       LAUNCH_FLAGS.livingLegacy = prior;
     }

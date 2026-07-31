@@ -41,11 +41,20 @@ export function legacyEnabled() {
 
 /**
  * Private registry operations can be staged before the public steward surface.
- * This runtime gate is separate from the compile-time public flag so a canary
- * can be issued and recovery-tested without exposing collector claims.
+ * This remains separate from the compile-time public flag so a canary can be
+ * issued and recovery-tested without exposing collector claims. Once the
+ * hardened private registry infrastructure is provisioned, administrators keep
+ * repair access even if the temporary rollout variable is absent or stale.
  */
 export function registryAdminEnabled(env) {
-  return legacyEnabled() || env?.ARTWORK_REGISTRY_ADMIN_ENABLED === 'true';
+  const infrastructureReady = Boolean(
+    env?.DB
+    && env?.ARTWORK_REGISTRY_BACKUP
+    && env?.REGISTRY_STEP_UP_SECRET,
+  );
+  return legacyEnabled()
+    || env?.ARTWORK_REGISTRY_ADMIN_ENABLED === 'true'
+    || infrastructureReady;
 }
 
 /** Graceful 503 when the shared D1 migration 008 has not been applied yet. */
