@@ -4,6 +4,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
+- [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
+
 ### Recent decisions to watch
 
 - [ ] **Bali in bio** — decide whether to strip Bali from the About bio and Writings stories _(you · moderate)_
@@ -213,8 +215,6 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   This isolates per-route failures and smooths browsing a large catalogue. Done when routes have error boundaries and the Store paginates by scroll.
 - [ ] **Backup strategy** — set up a backup strategy for content, images, and order data _(you · moderate)_
   This protects against data loss once real orders exist. Done when a documented, tested backup runs on a schedule.
-- [ ] **Works registry** — populate the works registry as pieces are engraved/printed _(you · moderate)_
-  Each physical piece's QR code must be registered in `data/qrRegistry.ts` or its plaque won't resolve; provenance events come later when the model supports them. Done when every issued QR is registered. → File: [data/qrRegistry.ts](data/qrRegistry.ts)
 - [ ] **Bigger surfaces** — virtual tours, commission client portal, events calendar, press section, process videos _(you · deep)_
   This is a parking lot of bigger future surfaces, none yet scoped. Done when any one is picked up and shaped into its own item.
 
