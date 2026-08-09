@@ -179,16 +179,67 @@ parent. It opens the passing: name the person, they receive an invitation carryi
 and the piece registers to them. One brass pill, one text link; the hierarchy carries the
 meaning.
 
-**The passing (piece already has a caretaker on record) — LOCKED 2026-08-09:**
+**"The code is true" belongs to first registration only.** Every other situation behind the
+unlock has its own screen and its own temperature; see the fork below.
 
-> **The code is true**
+**The fork — LOCKED 2026-08-09.** Tapping "This piece is for someone else" opens one choice,
+two hairline rows, two intentions separated before either begins:
+
+> **For someone else**
 >
-> Earth's Breath is real, and it is in your hands. It has been held before you, and its story
-> comes with it. We will ask its current caretaker to confirm the passing; then it becomes
-> yours to carry.
+> **Giving it as a gift** · leave your wishes with the piece; they are sealed until its new
+> caretaker unlocks it
+>
+> **Passing on my own piece** · begin handing your caretakership to another
+
+**The gift path — LOCKED. No ownership moves.** The giver writes wishes; they seal into the
+piece; the record stays untouched. The wishes live with the piece forever: opened once by
+the receiver, then part of its story permanently.
+
+Giver's side:
+
+> **Leave your wishes with it**
+>
+> Write what you wish for the one who will hold this piece. Your words seal into it, greet
+> them the day they make it theirs, and live with the piece forever.
+>
+> **[ Seal your wishes ]**
+
+Receiver's side, shown right after the vault opens, before everything else:
+
+> **Something was left for you**
+>
+> Whoever gave you this piece placed words inside it, sealed until this moment.
+>
+> **[ Open them ]**
+
+Then the walk begins, with the giver's love already in the room.
+
+**The transfer path — LOCKED. Weighted like it deserves, it does not soften:**
+
+> **Passing it on**
+>
+> You are releasing Earth's Breath to its next caretaker. Everything you placed in it stays
+> with the piece forever, as its story. When they accept, your hold ends and theirs begins.
+>
+> **[ Begin the passing ]**
+>
+> Not now
+
+**The receiving side of a held piece — LOCKED.** No duplicate headline; patient, not
+grasping:
+
+> **A passing begins**
+>
+> Earth's Breath is real, and it is in your hands. But it is held by another caretaker, and
+> nothing moves without them. We will ask them to let go; when they do, it becomes yours to
+> carry.
 
 **Dispute (both claim, nobody confirms):** one honest line, no pretending: "This needs a
 person. Adrian will be in touch."
+
+**Four temperatures, held deliberately:** the fork neutral, the gift warm, the release
+grave, the receiving patient.
 
 **Sacred rule.** The code alone never transfers ownership. The screens may say "it is in your
 hands" because that is physically true, but becoming caretaker of a held piece always waits
