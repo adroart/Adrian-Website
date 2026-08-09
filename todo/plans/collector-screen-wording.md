@@ -78,8 +78,9 @@ code-entry screens (Adrian, 2026-08-09: "I like this better").
 > Into the artist's website
 >
 > **[ Unlock ]**
->
-> Where is my code?
+
+*(No "where is my code" on the resting page, Adrian 2026-08-09: that guidance lives on the
+morphed unlock state, where the turn-it-over instruction already answers it.)*
 
 The rows are a hairline list, each a click deeper into the public layers: story, materials
 and making, the public history spine, the dreams their caretakers chose to share, and the
@@ -93,9 +94,13 @@ the unlock.
 
 **Page behaviors (Adrian, 2026-08-09):**
 - **The photograph slot has an empty state.** When no photograph exists, the slot shows the
-  piece's line drawing and a place to add a photograph. Adding one is a caretaker act, behind
-  the unlock; a visitor only ever sees the drawing standing in. The page never shows a broken
-  or blank image.
+  piece's line drawing with a quiet plus; the caretaker uploads their own photograph. Adding
+  one is a caretaker act, behind their login; a visitor only ever sees the drawing standing
+  in. The page never shows a broken or blank image.
+- **Admin can edit or remove an uploaded photograph, or any shining content, on abuse
+  (Adrian, 2026-08-09).** Same shape as the tending model: nothing waits on approval before
+  it shows, and Adrian sweeps when needed, quality assurance after publication, never a gate
+  before it.
 - **The registered line reads the truth:** "Registered · a light in the Resonant Grid" or
   "Not yet registered."
 - **Rows expand in place, not navigate away.** Tapping a row animates it open until it is the
