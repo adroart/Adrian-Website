@@ -387,15 +387,26 @@ light. Each caretaker feeds it.**
 >
 > For the piece's astrology, and for the ones who will find you through it.
 >
-> BORN — [ date ] [ time ] [ place ]
+> BORN — [ date ] [ time ] on one row, [ place of birth ] full width beneath (the place
+> field must never be cramped)
 > A full reading needs all three. They are never shown to anyone; only what they produce can
 > be, and only if you choose.
+> *Why we ask*
+>
+> WHERE THE ART LIVES — [ city ] full width. REQUIRED, the one field skip cannot skip: a
+> light must live somewhere.
+> Its light shows at city level at most, never an address. If even the city feels close, you
+> can widen it to the region: the light stays true but cannot be pinpointed.
 >
 > YOUR LINKS — Instagram · X · Facebook · YouTube · Your website, each tappable to add;
 > beneath them a small dotted tile with a plus for anything more. Choose which ones people
 > see (per-link visibility).
 >
 > [ Continue ] · Skip for now
+
+**The art-location rule (Adrian, 2026-08-09, requirement):** the city is always entered and
+the record always knows it. What the caretaker controls is the display grain, city or
+region, chosen here or in What shows. Display may widen; the data never coarsens.
 
 **"Why we ask" (Adrian, same day).** A quiet two-word text link under the born fields, italic
 body face, no icon, no badge: *Why we ask.* It opens the same sheet the skip shows. One
