@@ -1,5 +1,11 @@
 # The Collector Build — ordered work
 
+> **2026-08-09 — THE FLOW IS NOW SETTLED IN WORDING.** Before building any screen in this
+> plan, open `collector-screen-wording.md` (the master record, locked copy in Adrian's
+> voice), `collector-flow-preview.html` (every screen as a card), and
+> `collector-flow-chart.html` (the journey with branches). Where this plan and the wording
+> record disagree, the wording record wins; a reconcile task is in `TODO.md`.
+
 > **What this is.** What to do next, in order. The companion to `the-collector-journey.md`,
 > which says what must be *true*. This says what to *do*.
 >

@@ -4,7 +4,7 @@ status: active
 stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
 deploy: https://adrianrasmussen.com
 family: art
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-09
 ---
 
 # Adrian Rasmussen Art Website — personal portfolio + shop
@@ -25,6 +25,7 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases
 - `src/types.ts` — TypeScript type definitions
 
 ## Where to look for…
+- **Collector journey — the settled flow (READ BEFORE BUILDING ANY OF IT)** → `todo/plans/collector-screen-wording.md` is the master record: every screen's locked wording in Adrian's voice, the privacy model, the passing mechanic, the rules. Its two companions render the flow visually: `todo/plans/collector-flow-preview.html` (every screen as a phone card) and `todo/plans/collector-flow-chart.html` (the whole journey with branches). Open all three before touching registration, the piece page, unlock, transfer, or onboarding. The wording is locked; do not paraphrase it.
 - **QR registry and rules** → `data/qrRegistry.ts` (single source of truth for every issued QR code)
 - **Works page (permanent artwork record)** → `components/WorksPage.tsx` at `/works/:id`
 - **QR index (private registry)** → `components/QRIndex.tsx` at `/qr`
