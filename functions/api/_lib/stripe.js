@@ -58,7 +58,7 @@ async function stripeFetch(path, params, env) {
  * Idempotent: looks up an existing Stripe Customer by email first, then
  * creates one if none match. Returns the Stripe customer id.
  */
-export async function ensureStripeCustomer(env, { email, clerkUserId }) {
+export async function ensureStripeCustomer(env, { email, authUserId }) {
   // Find by email — Stripe doesn't enforce uniqueness so we take the
   // first match. If multiple exist Adrian has a deeper data issue worth
   // investigating manually.
@@ -73,7 +73,7 @@ export async function ensureStripeCustomer(env, { email, clerkUserId }) {
     '/customers',
     {
       email,
-      metadata: { clerk_user_id: clerkUserId },
+      metadata: { auth_user_id: authUserId },
     },
     env,
   );

@@ -36,7 +36,9 @@
  * a pure function of the records.
  */
 
-export const REGISTRY_LEDGER_SCHEMA_VERSION = 1 as const;
+export const REGISTRY_LEDGER_SCHEMA_VERSION = 2 as const;
+export const SUPPORTED_REGISTRY_LEDGER_SCHEMA_VERSIONS = [1, 2] as const;
+export type RegistryLedgerSchemaVersion = typeof SUPPORTED_REGISTRY_LEDGER_SCHEMA_VERSIONS[number];
 
 export interface OwnershipEnvelope {
   ciphertext: string;
@@ -75,7 +77,30 @@ export interface LedgerEventRecord {
   publicPayload: unknown;
 }
 
-export type LedgerRecord = LedgerPlateRecord | LedgerEventRecord;
+export interface LedgerSourceChainRecord {
+  kind: 'source-chain';
+  sourceChainId: string;
+  keeperPieceId: string;
+  sourceSystem: 'mandalacodes-atlas';
+  sourceReference: string;
+  movedOn: string;
+  eventCount: number;
+  headHash: string;
+}
+
+export interface LedgerSourceEventRecord {
+  kind: 'source-event';
+  sourceChainId: string;
+  sequence: number;
+  eventId: string;
+  eventType: string;
+  eventAt: string;
+  previousHash: string | null;
+  eventHash: string;
+}
+
+export type LedgerRecord = LedgerPlateRecord | LedgerEventRecord
+  | LedgerSourceChainRecord | LedgerSourceEventRecord;
 
 export interface LedgerLine {
   n: number;
@@ -86,7 +111,7 @@ export interface LedgerLine {
 
 export interface LedgerHeader {
   kind: 'header';
-  schemaVersion: typeof REGISTRY_LEDGER_SCHEMA_VERSION;
+  schemaVersion: RegistryLedgerSchemaVersion;
   exportedAt: string;
   recordCount: number;
   headHash: string | null;
@@ -153,9 +178,10 @@ async function sha256Hex(value: string): Promise<string> {
 
 /** Stable, deterministic key for a record — used for ordering and diffing. */
 export function ledgerRecordKey(record: LedgerRecord): string {
-  return record.kind === 'plate'
-    ? `plate:${record.id}`
-    : `event:${record.keeperPieceId}:${record.sequence}`;
+  if (record.kind === 'plate') return `plate:${record.id}`;
+  if (record.kind === 'event') return `event:${record.keeperPieceId}:${record.sequence}`;
+  if (record.kind === 'source-chain') return `source-chain:${record.sourceChainId}`;
+  return `source-event:${record.sourceChainId}:${record.sequence}`;
 }
 
 /**
@@ -166,6 +192,8 @@ export function ledgerRecordKey(record: LedgerRecord): string {
 export function orderLedgerRecords(records: LedgerRecord[]): LedgerRecord[] {
   const plates = records.filter((r): r is LedgerPlateRecord => r.kind === 'plate');
   const events = records.filter((r): r is LedgerEventRecord => r.kind === 'event');
+  const sourceChains = records.filter((r): r is LedgerSourceChainRecord => r.kind === 'source-chain');
+  const sourceEvents = records.filter((r): r is LedgerSourceEventRecord => r.kind === 'source-event');
   const generatedAt = (plate: LedgerPlateRecord) =>
     plate.plateGeneratedAt || plate.registeredAt || '';
   plates.sort((a, b) => (generatedAt(a) < generatedAt(b) ? -1 : generatedAt(a) > generatedAt(b) ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -177,6 +205,14 @@ export function orderLedgerRecords(records: LedgerRecord[]): LedgerRecord[] {
     eventsByPiece.set(event.keeperPieceId, list);
   }
   for (const list of eventsByPiece.values()) list.sort((a, b) => a.sequence - b.sequence);
+  const sourceChainByPiece = new Map(sourceChains.map((chain) => [chain.keeperPieceId, chain]));
+  const sourceEventsByChain = new Map<string, LedgerSourceEventRecord[]>();
+  for (const event of sourceEvents) {
+    const list = sourceEventsByChain.get(event.sourceChainId) || [];
+    list.push(event);
+    sourceEventsByChain.set(event.sourceChainId, list);
+  }
+  for (const list of sourceEventsByChain.values()) list.sort((a, b) => a.sequence - b.sequence);
 
   const ordered: LedgerRecord[] = [];
   const seenPieces = new Set<string>();
@@ -184,12 +220,30 @@ export function orderLedgerRecords(records: LedgerRecord[]): LedgerRecord[] {
     ordered.push(plate);
     seenPieces.add(plate.id);
     for (const event of eventsByPiece.get(plate.id) || []) ordered.push(event);
+    const sourceChain = sourceChainByPiece.get(plate.id);
+    if (sourceChain) {
+      ordered.push(sourceChain);
+      sourceChainByPiece.delete(plate.id);
+      const sourceChainId = sourceChain.sourceChainId;
+      for (const event of sourceEventsByChain.get(sourceChainId) || []) ordered.push(event);
+      sourceEventsByChain.delete(sourceChainId);
+    }
   }
   // Events for pieces without a plate record (legacy) still belong in the chain,
   // appended after the plated pieces in a deterministic order.
   const orphanPieceIds = [...eventsByPiece.keys()].filter((id) => !seenPieces.has(id)).sort();
   for (const id of orphanPieceIds) {
     for (const event of eventsByPiece.get(id) || []) ordered.push(event);
+  }
+  for (const chain of [...sourceChainByPiece.values()].sort((a, b) =>
+    a.keeperPieceId.localeCompare(b.keeperPieceId))) {
+    ordered.push(chain);
+    const sourceChainId = chain.sourceChainId;
+    for (const event of sourceEventsByChain.get(sourceChainId) || []) ordered.push(event);
+    sourceEventsByChain.delete(sourceChainId);
+  }
+  for (const chainId of [...sourceEventsByChain.keys()].sort()) {
+    for (const event of sourceEventsByChain.get(chainId) || []) ordered.push(event);
   }
   return ordered;
 }
@@ -256,7 +310,8 @@ export async function verifyLedgerFile(file: {
     return { ok: false, count: file.lines.length, headHash: null, reason: 'record_count' };
   }
   for (let index = 0; index < file.lines.length; index += 1) {
-    if (!isLedgerLine(file.lines[index]) || !isLedgerRecord(file.lines[index].record)) {
+    if (!isLedgerLine(file.lines[index])
+      || !isLedgerRecordForSchema(file.lines[index].record, file.header.schemaVersion)) {
       return {
         ok: false,
         count: file.lines.length,
@@ -367,8 +422,47 @@ function isLedgerEventRecord(value: unknown): value is LedgerEventRecord {
     && isJsonValue(value.publicPayload);
 }
 
+function isLedgerSourceChainRecord(value: unknown): value is LedgerSourceChainRecord {
+  if (!isPlainObject(value) || !hasExactKeys(value, [
+    'kind', 'sourceChainId', 'keeperPieceId', 'sourceSystem', 'sourceReference', 'movedOn',
+    'eventCount', 'headHash',
+  ])) return false;
+  return value.kind === 'source-chain'
+    && isString(value.sourceChainId)
+    && isString(value.keeperPieceId)
+    && value.sourceSystem === 'mandalacodes-atlas'
+    && isString(value.sourceReference)
+    && isString(value.movedOn)
+    && isNonNegativeInteger(value.eventCount)
+    && typeof value.headHash === 'string'
+    && /^[a-f0-9]{64}$/.test(value.headHash);
+}
+
+function isLedgerSourceEventRecord(value: unknown): value is LedgerSourceEventRecord {
+  if (!isPlainObject(value) || !hasExactKeys(value, [
+    'kind', 'sourceChainId', 'sequence', 'eventId', 'eventType', 'eventAt',
+    'previousHash', 'eventHash',
+  ])) return false;
+  return value.kind === 'source-event'
+    && isString(value.sourceChainId)
+    && isNonNegativeInteger(value.sequence)
+    && value.sequence > 0
+    && isString(value.eventId)
+    && isString(value.eventType)
+    && isString(value.eventAt)
+    && isHashOrNull(value.previousHash)
+    && typeof value.eventHash === 'string'
+    && /^[a-f0-9]{64}$/.test(value.eventHash);
+}
+
 function isLedgerRecord(value: unknown): value is LedgerRecord {
-  return isLedgerPlateRecord(value) || isLedgerEventRecord(value);
+  return isLedgerPlateRecord(value) || isLedgerEventRecord(value)
+    || isLedgerSourceChainRecord(value) || isLedgerSourceEventRecord(value);
+}
+
+function isLedgerRecordForSchema(value: unknown, schemaVersion: RegistryLedgerSchemaVersion) {
+  if (schemaVersion === 1) return isLedgerPlateRecord(value) || isLedgerEventRecord(value);
+  return isLedgerRecord(value);
 }
 
 function isLedgerLine(value: unknown): value is LedgerLine {
@@ -385,7 +479,9 @@ function isLedgerHeader(value: unknown): value is LedgerHeader {
     'kind', 'schemaVersion', 'exportedAt', 'recordCount', 'headHash', 'note',
   ])) return false;
   return value.kind === 'header'
-    && value.schemaVersion === REGISTRY_LEDGER_SCHEMA_VERSION
+    && SUPPORTED_REGISTRY_LEDGER_SCHEMA_VERSIONS.includes(
+      value.schemaVersion as RegistryLedgerSchemaVersion,
+    )
     && isString(value.exportedAt)
     && isNonNegativeInteger(value.recordCount)
     && isHashOrNull(value.headHash)

@@ -162,10 +162,10 @@ export async function onRequestPost(context) {
   if (env.DB) {
     try {
       const { verifyRequest } = await import('./_lib/auth.js');
-      const { getUserByClerkId } = await import('./_lib/db.js');
+      const { getUserByAuthId } = await import('./_lib/db.js');
       const auth = await verifyRequest(request, env);
       if (auth) {
-        const user = await getUserByClerkId(env.DB, auth.userId);
+        const user = await getUserByAuthId(env.DB, auth.userId);
         if (user?.stripe_customer_id) stripeCustomerId = user.stripe_customer_id;
       }
     } catch {

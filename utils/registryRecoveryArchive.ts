@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 1 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 2 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -18,6 +18,9 @@ export const REGISTRY_RECOVERY_TABLES = [
   'account',
   'registry_artworks',
   'keeper_pieces',
+  'atlas_source_cities',
+  'atlas_source_chains',
+  'atlas_source_chain_events',
   'keeper_intentions',
   'piece_fulfillments',
   'artwork_acquisitions',
@@ -28,6 +31,10 @@ export const REGISTRY_RECOVERY_TABLES = [
   'registry_maintenance_events',
   'registry_recovery_qualifications',
 ] as const;
+
+export const REGISTRY_RECOVERY_V1_TABLES = REGISTRY_RECOVERY_TABLES.filter(
+  (table) => !table.startsWith('atlas_source_'),
+);
 
 const RECOVERY_CLEANLINESS_TABLES = [
   ...REGISTRY_RECOVERY_TABLES,
@@ -56,6 +63,18 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'lineage_event_count', 'record_version', 'steward_version',
     'supersedes_keeper_piece_id', 'superseded_by_keeper_piece_id',
     'physical_disposition', 'replaced_at', 'backup_sha256',
+  ],
+  atlas_source_cities: [
+    'id', 'city', 'region', 'country', 'country_code', 'lat', 'lng',
+  ],
+  atlas_source_chains: [
+    'id', 'keeper_piece_id', 'source_system', 'source_reference', 'moved_on',
+    'source_event_count', 'source_head_hash',
+  ],
+  atlas_source_chain_events: [
+    'id', 'source_chain_id', 'source_sequence', 'source_event_id',
+    'source_event_type', 'source_event_at', 'source_previous_hash',
+    'source_event_hash', 'source_event_json',
   ],
   keeper_intentions: [
     'id', 'piece_id', 'edition_number', 'author_user_id', 'kind', 'body',
@@ -108,6 +127,13 @@ export type PrivateRecoveryPayload = {
   tables: Record<RegistryRecoveryTable, RecoveryRow[]>;
 };
 
+type PrivateRecoveryPayloadV1 = {
+  kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
+  schemaVersion: 1;
+  exportedAt: string;
+  tables: Record<string, RecoveryRow[]>;
+};
+
 export type PrivateRecoveryManifestTable = {
   name: RegistryRecoveryTable;
   count: number;
@@ -127,6 +153,12 @@ export type PrivateRecoveryArchive = {
     tables: PrivateRecoveryManifestTable[];
   };
   ciphertext: string;
+};
+
+type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
+  manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
+    schemaVersion: 1 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+  };
 };
 
 export type PrivateRecoveryKey = { key: string; keyId: string };
@@ -195,7 +227,7 @@ async function importAesKey(configuration: PrivateRecoveryKey, usage: KeyUsage) 
   return crypto.subtle.importKey('raw', keyBytes(configuration), { name: 'AES-GCM' }, false, [usage]);
 }
 
-function archiveAad(archive: Omit<PrivateRecoveryArchive, 'ciphertext'>) {
+function archiveAad(archive: Omit<SupportedPrivateRecoveryArchive, 'ciphertext'>) {
   return canonicalRecoveryJson({
     kind: archive.kind,
     version: archive.version,
@@ -214,20 +246,25 @@ function validateRow(row: unknown): row is RecoveryRow {
 }
 
 /** Strict synchronous payload shape check used again immediately before SQL emission. */
-export function validatePrivateRecoveryPayload(payload: unknown): asserts payload is PrivateRecoveryPayload {
+export function validatePrivateRecoveryPayload(
+  payload: unknown,
+): asserts payload is PrivateRecoveryPayload | PrivateRecoveryPayloadV1 {
   if (!isPlainObject(payload) || !hasExactKeys(payload, ['kind', 'schemaVersion', 'exportedAt', 'tables'])) {
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION
+    || (payload.schemaVersion !== 1 && payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION)
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
+  const tableNames = payload.schemaVersion === 1
+    ? REGISTRY_RECOVERY_V1_TABLES
+    : REGISTRY_RECOVERY_TABLES;
   if (!isPlainObject(payload.tables)
-    || !hasExactKeys(payload.tables, REGISTRY_RECOVERY_TABLES)) {
+    || !hasExactKeys(payload.tables, tableNames)) {
     throw new Error('recovery_payload_tables');
   }
-  for (const table of REGISTRY_RECOVERY_TABLES) {
+  for (const table of tableNames) {
     const rows = payload.tables[table];
     if (!Array.isArray(rows) || !rows.every(validateRow)) {
       throw new Error(`recovery_payload_rows_${table}`);
@@ -247,7 +284,23 @@ export function validatePrivateRecoveryPayload(payload: unknown): asserts payloa
   }
 }
 
-function validateArchiveShape(value: unknown): asserts value is PrivateRecoveryArchive {
+export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecoveryPayload {
+  validatePrivateRecoveryPayload(payload);
+  if (payload.schemaVersion === PRIVATE_RECOVERY_SCHEMA_VERSION) return payload;
+  return {
+    kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+    schemaVersion: PRIVATE_RECOVERY_SCHEMA_VERSION,
+    exportedAt: payload.exportedAt,
+    tables: {
+      ...payload.tables,
+      atlas_source_cities: [],
+      atlas_source_chains: [],
+      atlas_source_chain_events: [],
+    } as Record<RegistryRecoveryTable, RecoveryRow[]>,
+  };
+}
+
+function validateArchiveShape(value: unknown): asserts value is SupportedPrivateRecoveryArchive {
   if (!isPlainObject(value) || !hasExactKeys(value, [
     'kind', 'version', 'algorithm', 'keyId', 'nonce', 'manifest', 'ciphertext',
   ])) throw new Error('recovery_archive_shape');
@@ -263,18 +316,24 @@ function validateArchiveShape(value: unknown): asserts value is PrivateRecoveryA
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if (value.manifest.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION
+  if ((value.manifest.schemaVersion !== 1
+      && value.manifest.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION)
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
-    || !Array.isArray(value.manifest.tables)
-    || value.manifest.tables.length !== REGISTRY_RECOVERY_TABLES.length) {
+    || !Array.isArray(value.manifest.tables)) {
     throw new Error('recovery_archive_manifest');
   }
-  for (let index = 0; index < REGISTRY_RECOVERY_TABLES.length; index += 1) {
+  const tableNames = value.manifest.schemaVersion === 1
+    ? REGISTRY_RECOVERY_V1_TABLES
+    : REGISTRY_RECOVERY_TABLES;
+  if (value.manifest.tables.length !== tableNames.length) {
+    throw new Error('recovery_archive_manifest');
+  }
+  for (let index = 0; index < tableNames.length; index += 1) {
     const entry = value.manifest.tables[index];
     if (!isPlainObject(entry) || !hasExactKeys(entry, ['name', 'count', 'sha256'])
-      || entry.name !== REGISTRY_RECOVERY_TABLES[index]
+      || entry.name !== tableNames[index]
       || !Number.isSafeInteger(entry.count) || Number(entry.count) < 0
       || typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(entry.sha256)) {
       throw new Error('recovery_archive_manifest');
@@ -287,6 +346,9 @@ export async function encryptPrivateRecoveryPayload(
   configuration: PrivateRecoveryKey,
 ): Promise<PrivateRecoveryArchive> {
   validatePrivateRecoveryPayload(payload);
+  if (payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION) {
+    throw new Error('recovery_payload_unsupported');
+  }
   const plaintext = new TextEncoder().encode(canonicalRecoveryJson(payload));
   const tables: PrivateRecoveryManifestTable[] = [];
   for (const name of REGISTRY_RECOVERY_TABLES) {
@@ -357,18 +419,24 @@ export async function decryptPrivateRecoveryExport(
     throw new Error('recovery_payload_json');
   }
   validatePrivateRecoveryPayload(payload);
+  if (payload.schemaVersion !== value.manifest.schemaVersion) {
+    throw new Error('recovery_archive_manifest');
+  }
   if (payload.exportedAt !== value.manifest.exportedAt) {
     throw new Error('recovery_archive_manifest');
   }
-  for (let index = 0; index < REGISTRY_RECOVERY_TABLES.length; index += 1) {
-    const name = REGISTRY_RECOVERY_TABLES[index];
+  const tableNames = value.manifest.schemaVersion === 1
+    ? REGISTRY_RECOVERY_V1_TABLES
+    : REGISTRY_RECOVERY_TABLES;
+  for (let index = 0; index < tableNames.length; index += 1) {
+    const name = tableNames[index];
     const expected = value.manifest.tables[index];
     if (payload.tables[name].length !== expected.count
       || await sha256Text(canonicalRecoveryJson(payload.tables[name])) !== expected.sha256) {
       throw new Error('recovery_archive_manifest');
     }
   }
-  return payload;
+  return upgradePrivateRecoveryPayload(payload);
 }
 
 function sqlIdentifier(value: string): string {
@@ -392,8 +460,10 @@ function sqlValue(value: RecoveryRow[string]): string {
  * SQL runner that continues after the first error. A final expected-count
  * trigger rolls back the whole transaction if any insert was skipped or failed.
  */
-export function buildRegistryRestoreSql(payload: PrivateRecoveryPayload): string {
-  validatePrivateRecoveryPayload(payload);
+export function buildRegistryRestoreSql(
+  sourcePayload: PrivateRecoveryPayload | PrivateRecoveryPayloadV1,
+): string {
+  const payload = upgradePrivateRecoveryPayload(sourcePayload);
   const guardTable = '__registry_recovery_clean_guard';
   const completionTable = '__registry_recovery_completion_guard';
   const completionTrigger = '__registry_recovery_require_complete';

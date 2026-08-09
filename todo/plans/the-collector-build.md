@@ -28,21 +28,24 @@ below, marked where it bites.
 
 ## Phase 0 — Stop the bleeding
 
-Both systems currently claim to own who holds a piece. Two records of ownership is the one
+Both codebases can currently claim to own who holds a piece. Two ownership writers is the one
 thing a provenance system cannot have. Nothing else is safe to build on top until this is
-resolved, and it is small right now: 18 pieces in the mandalacodes ledger, zero production
-identities here, no real collectors on either side.
+resolved. The corrected audit found one existing registry identity here and no recoverable
+authoritative mandalacodes ledger export.
 
 **0.1 Freeze the mandalacodes ledger as canonical-elsewhere.** Mark it read-only for new
 claims and record the date. Nothing new enters it after this point. *Serves the whole spec.*
 
-**0.2 Migrate the 18 ledger pieces into this site's registry.** Chain identity is content-based
-and carries no domain, so hashes survive. Record the move date and cross-reference the old
-mirror as the historical proof for events before it. *Serves step 15.*
+**0.2 Import every verified historical source chain into this site's registry.** Preserve each
+source event and its original hash in a separate append-only evidence envelope, linked to the
+local keeper record. The two native hash formats are not interchangeable. Record the move date
+and cross-reference the old mirror as historical proof. Do not invent the expected 18 pieces if
+the authoritative export cannot be recovered. *Serves step 15.*
 
-**0.3 Collapse birth details into one field on the person.** Two databases each define their
-own copy today, computed separately. One row, on this site, read by both. This is what makes
-the never-asked-twice test possible. *Serves step 9.*
+**0.3 Keep birth details in the one shared profile row.** Both sites already use the same account
+database and profile record. Consolidate migration ownership and keep both readers on that row;
+do not create a second consolidation migration. This is what makes the never-asked-twice test
+possible. *Serves step 9.*
 
 **0.4 Point mandalacodes at the registry.** It reads; it no longer holds. The oracle and the
 kinship between the 64 stay there and stay theirs.

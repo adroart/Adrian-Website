@@ -31,7 +31,7 @@
  */
 
 import { requireUser } from '../_lib/auth.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { getUserByAuthId } from '../_lib/db.js';
 import {
   legacyEnabled,
   notFound,
@@ -84,7 +84,7 @@ export async function onRequest(context) {
   if (auth instanceof Response) return auth;
   if (!env.DB) return migrationNotApplied();
 
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await getUserByAuthId(env.DB, auth.userId);
   if (!user) return json({ ok: false, error: 'account_not_synced' }, 409);
 
   try {

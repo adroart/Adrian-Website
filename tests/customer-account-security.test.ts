@@ -30,7 +30,7 @@ before(() => {
   });
   mock.module('../functions/api/_lib/db.js', {
     namedExports: {
-      getUserByClerkId: async () => ({ id: 'bridge-user-1', stripe_customer_id: null }),
+      getUserByAuthId: async () => ({ id: 'bridge-user-1', stripe_customer_id: null }),
       upsertUser: async () => ({ id: 'bridge-user-1', stripe_customer_id: null }),
       setUserStripeCustomer: async () => undefined,
       relinkOrdersByEmail: async () => { relinkCalls += 1; },
@@ -136,7 +136,7 @@ describe('verified-email customer identity bridge', () => {
   });
 });
 
-describe('Clerk retirement', () => {
+describe('legacy authentication vendor retirement', () => {
   it('uses only the central auth module in customer runtime handlers', () => {
     const paths = [
       'functions/api/auth/sync-user.js',

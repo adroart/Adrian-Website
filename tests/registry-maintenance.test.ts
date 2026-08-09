@@ -43,6 +43,7 @@ const readMigration = (name: string) =>
 
 const registryMigrations = [
   '001_init.sql',
+  '003_atlas_legacy.sql',
   '006_better_auth.sql',
   '008_living_legacy.sql',
   '009_keeper_register.sql',
@@ -57,6 +58,7 @@ const registryMigrations = [
   '018_registry_plate_lifecycle.sql',
   '019_registry_creator_history.sql',
   '021_registry_plate_backup_digest.sql',
+  '023_collector_registry_merge.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -1490,7 +1492,8 @@ describe('private maintenance APIs', () => {
           ownership_code_ciphertext = 'PRIVATE-CIPHERTEXT', ownership_code_nonce = 'PRIVATE-NONCE',
           ownership_code_key_version = 7, recovery_code_hash = 'PRIVATE-VERIFIER'
         WHERE id = 'kp-maint';
-        INSERT INTO users (clerk_user_id, email) VALUES ('keeper-1', 'keeper@example.com');
+        INSERT INTO users (auth_user_id, clerk_user_id, email)
+        VALUES ('keeper-1', 'keeper-1', 'keeper@example.com');
         INSERT INTO artwork_acquisitions
           (id, keeper_piece_id, acquisition_type, acquired_at, amount_minor, currency,
            private_notes, created_at, updated_at)

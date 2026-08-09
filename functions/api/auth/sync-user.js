@@ -3,13 +3,13 @@
  *
  * Called once per session after Better Auth reports a signed-in user. Idempotent:
  * upserts the D1 users bridge row (keyed by the external auth id, stored in the
- * legacy clerk_user_id column), creates (or finds) a Stripe Customer for that
+ * vendor-neutral authentication column), creates (or finds) a Stripe Customer for that
  * email, and links them. Returns the persisted row. Customer endpoints also
  * lazily upsert this row via ensureUser, so a missed call here is non-fatal.
  */
 
 import { requireUser, jsonResponse } from '../_lib/auth.js';
-import { getUserByClerkId, upsertUser, setUserStripeCustomer, relinkOrdersByEmail } from '../_lib/db.js';
+import { getUserByAuthId, upsertUser, setUserStripeCustomer, relinkOrdersByEmail } from '../_lib/db.js';
 import { ensureStripeCustomer } from '../_lib/stripe.js';
 
 export async function onRequest(context) {
@@ -32,7 +32,7 @@ export async function onRequest(context) {
 
   // Initial upsert (creates row if missing, refreshes email if changed).
   let user = await upsertUser(env.DB, {
-    clerkUserId: auth.userId,
+    authUserId: auth.userId,
     email,
     stripeCustomerId: null,
   });
@@ -49,10 +49,10 @@ export async function onRequest(context) {
     try {
       const stripeCustomerId = await ensureStripeCustomer(env, {
         email,
-        clerkUserId: auth.userId,
+        authUserId: auth.userId,
       });
       await setUserStripeCustomer(env.DB, user.id, stripeCustomerId);
-      user = await getUserByClerkId(env.DB, auth.userId);
+      user = await getUserByAuthId(env.DB, auth.userId);
     } catch (err) {
       // Don't fail the whole sync just because Stripe is unavailable;
       // the next sync will retry.

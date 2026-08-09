@@ -38,27 +38,32 @@ record. The ceremony layer — four privacy rings, the dream, letters from the p
 Founding Lights ordinals — rehomes here from mandalacodes. The reasoning that overturned the
 earlier opposite decision is in the journey spec. Do not reopen it.
 
-**There are two complete ownership systems, both live, neither referencing the other.** This is
-the single most important fact in the build.
+**There are two ownership implementations, but the audited storage is not two populated live
+systems.** This is the corrected ground truth from the Phase 0 audit.
 - Here: `keeper_pieces` with a hash chain enforced by database triggers (migration 013 raises
   ABORT on UPDATE and DELETE), encrypted ownership codes with versioned keys, `AR-XXXXXXXX`
   public codes, and a dependency on commerce that migration 022 deliberately severed.
 - On mandalacodes: the Atlas — hash chain in R2 JSON, `StewardRecord`s, letters, consent rings,
-  claim requests.
+  claim requests. Its configured ledger object was absent and its public Atlas response was empty
+  on 2026-08-09. No authoritative export containing the planned 18 pieces was found.
+
+Both deployments already bind to the same account database. The collision is therefore two sets
+of ownership code and two possible writers, not two account databases that need to be combined.
 
 **Auth ground truth.** Adrian-Website is on self-hosted Better Auth, not Clerk. Migration
 completed July 2026. `users.clerk_user_id`, `getUserByClerkId`, `upsertUser({clerkUserId})`, and
 `atlas_inscriptions.author_clerk_id` are stale Clerk-era names now carrying Better Auth ids.
 `TODO.md` and `CLAUDE.md` both still claim Clerk and are wrong.
 
-**Zero real collectors. Zero production artwork identities.** Confirmed in migration 013's header
-(production audited with zero `keeper_pieces` rows), in `better-auth-migration.md`, and in the
-identity direction. The migration window is open and this is why the merge is cheap now.
+**Preserve the small live registry exactly.** A read-only production audit on 2026-08-09 found one
+keeper piece with one lineage event, alongside four account rows and two profile rows. The older
+zero-row statement was stale. Phase 0 must not replace or rewrite that history.
 
 **The catalog already holds everything.** 173 pieces across five series in `data/mockData.ts`:
 64 Universal Language, 42 Mandala, 34 Light Codes, 21 Objects, 12 Signature. `series` and
 `category` on the `Artwork` type are free-form strings. All-artwork-filterable-by-series needs no
-data model change. Only 18 pieces exist in the mandalacodes ledger, and no non-UL work at all.
+data model change. The earlier plan expected 18 mandalacodes pieces, all from the UL work, but the
+current configured ledger and local recovery copies do not contain an authoritative export.
 
 **`CLAUDE.md` is wrong about the architecture.** It claims "No backend, all data lives in
 mockData.ts." There are 88 function files and 24 migrations. Fix it when you touch it.
@@ -102,6 +107,10 @@ and do not let them stall anything else. Skip the item, note it in `## Progress`
    carries as proof for a collector with no printed code. Block build items 3.2, 3.1, 2.4, 1.2.
 3. **The aesthetic questions** are already answered. Design work runs in parallel under
    `collector-design-handoff.md` and does not block anything here.
+4. **The historical Atlas export:** provide or identify the authoritative legacy ledger if one
+   still exists. The configured live object is absent, the public Atlas is empty, and the local
+   recovery copies contain no pieces. This blocks only the actual source-history import in 0.2;
+   the importer and every other Phase 0 item can proceed without guessing.
 
 ---
 
@@ -111,10 +120,10 @@ and do not let them stall anything else. Skip the item, note it in `## Progress`
 
 The phases are in `the-collector-build.md`. In short:
 
-- **Phase 0 — the merge.** Five items. Freeze the mandalacodes ledger, migrate its 18 pieces
-  here, collapse the duplicated birth-details storage into one row on the person, point
-  mandalacodes at this registry as a reader, rename the stale login column. **This blocks
-  everything else** — until it lands, two systems claim to own who holds a piece.
+- **Phase 0, the merge.** Five items. Freeze mandalacodes ownership writes, import any verified
+  historical source chains into a separate preserved envelope, confirm the already-shared profile
+  row, point mandalacodes at this registry as a reader, rename the stale login column. **This blocks
+  everything else** until one system is the only writer for who holds a piece.
 - **Phase 1 — the walkable registration.** Eight items. Reframe registration around the artwork
   rather than the plate, build the invitation door, the opening screen, arrival, the certificate,
   the privacy screen, birth details at onboarding, and seed the missing pieces.
@@ -132,10 +141,13 @@ systems in the first place.
 
 ---
 
-## The chain migrates cleanly
+## The source chain is preserved separately
 
-Chain identity is content-based — SHA-256 over canonicalized event JSON, with no domain or bucket
-in the hash. Nothing invalidates on relocation.
+The source hashes remain valid because they are content-based SHA-256 values over canonicalized
+source event JSON. They cannot be inserted as this site's native lineage events, however, because
+the two systems hash different envelopes and allow different event vocabularies. Phase 0 keeps the
+verified source events in their own append-only evidence chain linked to the local keeper record.
+It never recomputes or disguises them as native history.
 
 The one real cost is the public mirror, whose tamper-evidence is a commit history rather than the
 chain itself. Either carry that repository along unchanged, or record honestly that the trust
@@ -193,4 +205,24 @@ written, committed, and pushed. Four survey agents established the ground truth 
 The two-ownership-systems collision was found and the placement decision ratified. Design work is
 staged separately and runs in parallel.
 
-**Next session picks up: Phase 0, item 0.1.** Nothing is blocked on Adrian for Phase 0.
+**2026-08-09: Phase 0 implementation stopped at its boundary.** Mandalacodes ownership writes are
+frozen and its Atlas surfaces now read the canonical registry. This site has an additive source
+history envelope, a fail-closed and replay-safe import path, a verified public reader, private
+recovery support, and a rolling login-name compatibility change that keeps both deployments safe
+during rollout. The existing keeper record and lineage event are preserved. The already-shared
+profile storage was verified rather than duplicated again.
+
+The actual historical import is not complete. The configured legacy ledger object is absent, the
+live public Atlas reports no pieces, and the available recovery copies are empty. The import tool
+therefore refuses to manufacture the planned 18 records. Adrian needs to identify an authoritative
+historical export if one exists; otherwise a later decision must record honestly that there was no
+recoverable source history to import.
+
+Verification passed on both projects: focused provenance and compatibility tests, each full unit
+suite, each typecheck, each production build, and clean-diff checks. Independent reviews found and
+closed privacy, replay, semantic-integrity, old-backup compatibility, read-side mutation, rollout,
+and truthful-empty-state defects before the boundary report.
+
+**Next session stays in Phase 0, item 0.2.** Resolve the missing historical export, then perform a
+reviewed canary and restore rehearsal before any production write. Do not begin Phase 1 until the
+source-history disposition and two-site rollout order are approved.

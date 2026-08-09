@@ -21,7 +21,8 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "sitemap": "tsx scripts/generate-sitemap.ts",
-    "ledger": "tsx scripts/registry-ledger.ts"
+    "ledger": "tsx scripts/registry-ledger.ts",
+    "atlas:import-source": "tsx scripts/import-atlas-source.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.11",

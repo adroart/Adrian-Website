@@ -51,7 +51,7 @@
  */
 
 import { requireUser } from '../_lib/auth.js';
-import { getUserByClerkId } from '../_lib/db.js';
+import { getUserByAuthId } from '../_lib/db.js';
 import { isPublicRegistryCode } from '../../../utils/publicRegistry.ts';
 import {
   legacyEnabled,
@@ -126,7 +126,7 @@ export async function onRequest(context) {
   }
 
   // Resolve the internal user row (keeper_user_id is the opaque Better Auth id).
-  const user = await getUserByClerkId(env.DB, auth.userId);
+  const user = await getUserByAuthId(env.DB, auth.userId);
   if (!user) {
     // Should be rare — sync-user runs on first sign-in. Surface a clear retry.
     return json({ ok: false, error: 'account_not_synced' }, 409);

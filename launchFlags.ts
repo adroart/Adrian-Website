@@ -65,21 +65,17 @@ export const LAUNCH_FLAGS = {
   aboutMeaning: false,
 
   /**
-   * ACCOUNTS — Unified Clerk sign-in for profile sync, order history, saved
-   * collections, and synced cart across devices.
-   * Disabled because: Clerk app + D1 database + Stripe webhook still need to
-   *   be provisioned in Cloudflare. See todo/oracle-accounts-implementation.md
-   *   under "Adrian to provision" for the exact env vars and steps.
-   * To re-enable: provision the external services, set env vars, flip to true.
+   * ACCOUNTS, Better Auth sign-in for profile sync, order history, saved
+   * collections, and synced cart across devices. Both sites use the same
+   * authentication service and shared D1 database.
    * Files affected:
    *   - Navigation.tsx (AuthButton in header)
-   *   - App.tsx (ClerkProvider, /account routes)
+   *   - App.tsx (/account routes)
    *   - CartContext.tsx (D1 sync when signed in)
    *   - components/account/* (all account UI)
    *
-   * Enabled 2026-06-09: shared Clerk app (enabling-oyster-2) across
-   * adrianrasmussen.com + mandalacodes.com, shared D1 (adrian-website).
-   * Keys live in Infisical (dev) and Cloudflare Pages env (prod).
+   * Better Auth configuration lives in Infisical for development and in the
+   * Cloudflare Pages environment for production.
    */
   accounts: true,
 

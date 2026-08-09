@@ -1,7 +1,7 @@
 ---
 name: adrian-website
 status: active
-stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages, Stripe]
+stack: [Vite, React 18, TypeScript, Tailwind v4, React Router v7, Cloudflare Pages Functions, D1, R2, Better Auth, Stripe]
 deploy: https://adrianrasmussen.com
 family: art
 last_reviewed: 2026-07-31
@@ -10,18 +10,19 @@ last_reviewed: 2026-07-31
 # Adrian Rasmussen Art Website — personal portfolio + shop
 
 ## What this is
-Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases creations, writings, a shop, and commission inquiries. No backend — all data lives in `src/data/mockData.ts`. Stripe for payments via Checkout Sessions.
+Personal art website for Adrian Rasmussen, a multidisciplinary artist. It showcases creations, writings, a shop, commission inquiries, customer accounts, and the canonical artwork registry. Catalog content is compiled from local data. Cloudflare Pages Functions, D1, and R2 provide the backend.
 
 ## Stack & constraints
 - Vite + React 18 + TypeScript + Tailwind CSS 4.2 + React Router v7
-- No backend — all content in `src/data/mockData.ts`
+- Cloudflare Pages Functions with shared D1 accounts and registry data, plus R2 backups
+- Better Auth for customer and administrator sessions
 - Cloudflare Pages (merging to `main` triggers deploy)
 - Stripe Checkout Sessions (payment links currently placeholders)
 
 ## Entry points
 - `src/main.tsx` — app bootstrap
 - `src/App.tsx` — route definitions (static routes BEFORE `:id` catch-alls — order matters)
-- `src/data/mockData.ts` — ALL artwork, writing, and product data lives here
+- `data/mockData.ts`: primary compiled artwork, writing, and product catalog
 - `src/types.ts` — TypeScript type definitions
 
 ## Where to look for…
@@ -30,6 +31,9 @@ Personal art website for Adrian Rasmussen, a multidisciplinary artist. Showcases
 - **QR index (private registry)** → `components/QRIndex.tsx` at `/qr`
 - **QR redirect function** → `functions/qr/[number].js` (Cloudflare Function, permanent infrastructure)
 - **Artwork / product data** → `data/mockData.ts`
+- **Accounts and registry data** → `functions/api/`, `migrations/`, and the shared D1 database
+- **Registry source-chain import** → `utils/atlasSourceImport.ts` and `scripts/import-atlas-source.ts`
+- **Public Atlas projection** → `functions/api/atlas.js` at `/api/atlas`
 - **Creations / category pages** → `components/Creations.tsx`, `components/MultidimensionalArt.tsx`, `components/SubcategoryPage.tsx`
 - **Shop** → `components/Store.tsx`
 - **Oracle hub page (directory only)** → `components/OracleGateway.tsx` at `/oracle`

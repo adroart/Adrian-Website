@@ -13,7 +13,12 @@ import {
 } from '../functions/api/_lib/registryRecoveryExport.js';
 import {
   buildRegistryRestoreSql,
+  canonicalRecoveryJson,
   decryptPrivateRecoveryExport,
+  PRIVATE_RECOVERY_ALGORITHM,
+  PRIVATE_RECOVERY_ARCHIVE_VERSION,
+  PRIVATE_RECOVERY_KIND,
+  PRIVATE_RECOVERY_PAYLOAD_KIND,
   PRIVATE_RECOVERY_SCHEMA_VERSION,
 } from '../utils/registryRecoveryArchive';
 
@@ -22,6 +27,7 @@ const readMigration = (name: string) =>
 
 const registryMigrationsBeforeFulfillmentDetachment = [
   '001_init.sql',
+  '003_atlas_legacy.sql',
   '006_better_auth.sql',
   '008_living_legacy.sql',
   '009_keeper_register.sql',
@@ -40,11 +46,53 @@ const registryMigrationsBeforeFulfillmentDetachment = [
 ].map(readMigration).join('\n');
 const registryMigrations = `${registryMigrationsBeforeFulfillmentDetachment}\n${
   readMigration('022_registry_fulfillment_detachment.sql')
-}`;
+}\n${readMigration('023_collector_registry_merge.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
 const exportedAt = '2026-07-31T03:04:05.000Z';
+
+const legacyRecoveryTables = REGISTRY_RECOVERY_TABLES.filter(
+  (table) => !table.startsWith('atlas_source_'),
+);
+
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Buffer.from(digest).toString('hex');
+}
+
+async function encryptLegacyV1Payload(payload: any) {
+  const plaintext = new TextEncoder().encode(canonicalRecoveryJson(payload));
+  const nonce = Buffer.alloc(12, 7);
+  const manifestTables = await Promise.all(legacyRecoveryTables.map(async (name) => ({
+    name,
+    count: payload.tables[name].length,
+    sha256: await sha256Hex(canonicalRecoveryJson(payload.tables[name])),
+  })));
+  const archiveWithoutCiphertext = {
+    kind: PRIVATE_RECOVERY_KIND,
+    version: PRIVATE_RECOVERY_ARCHIVE_VERSION,
+    algorithm: PRIVATE_RECOVERY_ALGORITHM,
+    keyId: exportKeyId,
+    nonce: nonce.toString('base64'),
+    manifest: {
+      schemaVersion: 1,
+      exportedAt: payload.exportedAt,
+      payloadSha256: await sha256Hex(new TextDecoder().decode(plaintext)),
+      tables: manifestTables,
+    },
+  };
+  const key = await crypto.subtle.importKey(
+    'raw', Buffer.from(exportKey, 'base64'), { name: 'AES-GCM' }, false, ['encrypt'],
+  );
+  const ciphertext = await crypto.subtle.encrypt({
+    name: 'AES-GCM',
+    iv: nonce,
+    additionalData: new TextEncoder().encode(canonicalRecoveryJson(archiveWithoutCiphertext)),
+    tagLength: 128,
+  }, key, plaintext);
+  return { ...archiveWithoutCiphertext, ciphertext: Buffer.from(ciphertext).toString('base64') };
+}
 
 function createSqliteD1(database = new DatabaseSync(':memory:')) {
   database.exec('PRAGMA foreign_keys = ON;');
@@ -335,17 +383,56 @@ describe('private registry recovery export', () => {
         seen.push(sql);
         if (/FROM keeper_pieces/i.test(sql)) return { all: async () => ({ results: [] }) };
         if (/FROM artwork_lineage_events/i.test(sql)) return { all: async () => ({ results: [] }) };
+        if (/FROM atlas_source_chains/i.test(sql)) return { all: async () => ({ results: [] }) };
+        if (/FROM atlas_source_chain_events/i.test(sql)) return { all: async () => ({ results: [] }) };
         throw new Error(`public ledger queried private table: ${sql}`);
       },
     };
     const ledger = await buildLedgerFile({ DB });
-    assert.equal(seen.length, 2);
+    assert.equal(seen.length, 4);
     assert.doesNotMatch(seen.join('\n'), /artwork_acquisitions|artwork_claim_evidence|keeper_intentions|registry_maintenance_events|\buser\b|\baccount\b/i);
     assert.doesNotMatch(ledger.body, /amount_minor|private_notes|verified_email|keeper_user_id|current_display_location/i);
   });
 });
 
 describe('clean-only private registry restore', () => {
+  it('decrypts and upgrades a valid schema v1 archive with empty source-chain tables', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const legacyPayload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 1,
+        exportedAt,
+        tables: Object.fromEntries(legacyRecoveryTables.map((name) => [name, current.tables[name]])),
+      };
+      const legacyArchive = await encryptLegacyV1Payload(legacyPayload);
+      const upgraded = await decryptPrivateRecoveryExport(legacyArchive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.equal(upgraded.schemaVersion, PRIVATE_RECOVERY_SCHEMA_VERSION);
+      assert.deepEqual(upgraded.tables.atlas_source_cities, []);
+      assert.deepEqual(upgraded.tables.atlas_source_chains, []);
+      assert.deepEqual(upgraded.tables.atlas_source_chain_events, []);
+      target.database.exec(buildRegistryRestoreSql(upgraded));
+      assert.equal(tableCount(target.database, 'keeper_pieces'), 1);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
   it('documents the separate encrypted artifact and clean recovery database boundary', () => {
     const guide = readFileSync(
       new URL('../docs/registry-private-recovery.md', import.meta.url), 'utf8',

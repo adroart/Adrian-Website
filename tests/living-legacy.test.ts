@@ -3144,7 +3144,7 @@ describe('admin artwork plate lifecycle', () => {
 // These exercise functions/api/keeper/bind.js against the SAME in-memory D1
 // stand-in the admin suite uses, extended to the few extra statement shapes
 // bind issues (the no-released-filter SELECT, the legacy keeper_user_id UPDATE, and the users
-// lookup getUserByClerkId runs). The session layer (requireUser) is module-
+// lookup getUserByAuthId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth
 // cookie; the contested-claim bridge fetch is stubbed at globalThis.fetch.
 //
@@ -3152,7 +3152,7 @@ describe('admin artwork plate lifecycle', () => {
 // with `npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts`.
 // The flag is benign for every other test in this file.
 
-// getUserByClerkId is satisfied by the fake DB's users SELECT below, so we do
+// getUserByAuthId is satisfied by the fake DB's users SELECT below, so we do
 // not mock db.js; we just make the fake DB answer that statement.
 
 // A fuller fake D1 that serves BOTH the admin registration statements and the
@@ -3165,7 +3165,7 @@ function makeKeeperDb() {
   const evidence: any[] = [];
   let loseNextFirstBind = false;
   let lastChanges = 0;
-  const users: any[] = [{ id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' }];
+  const users: any[] = [{ id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' }];
 
   function findActive(pieceId: string, edition: number) {
     return pieces.find(
@@ -3187,9 +3187,9 @@ function makeKeeperDb() {
       return { kind: 'first', row: overlays.find((row) => row.id === params[0]) || null };
     }
 
-    // users lookup (getUserByClerkId)
-    if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(s)) {
-      const u = users.find((r) => r.clerk_user_id === params[0]) || null;
+    // users lookup (getUserByAuthId)
+    if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(s)) {
+      const u = users.find((r) => r.auth_user_id === params[0]) || null;
       return { kind: 'first', row: u };
     }
 
@@ -3534,9 +3534,9 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
           status: 200,
         });
       }) as typeof fetch;
-      // Seed the contesting user so getUserByClerkId resolves them, then bind AS
+      // Seed the contesting user so getUserByAuthId resolves them, then bind AS
       // that user. user-first still holds the piece, so this is a genuine contest.
-      users.push({ id: 'row-2', clerk_user_id: 'user-second', email: 'second@example.com' });
+      users.push({ id: 'row-2', auth_user_id: 'user-second', email: 'second@example.com' });
       CURRENT_AUTH = { userId: 'user-second', email: 'second@example.com', emailVerified: true };
 
       const contestRes = await bind({ request: bindReq({
@@ -3696,8 +3696,8 @@ describe('steward status and display location by public identity', () => {
           bind(...values: unknown[]) { params = values; return statement; },
           async first() {
             seen.push({ sql: normalized, params });
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) {
               return params[0] === row.public_code ? row : null;
@@ -3751,8 +3751,8 @@ describe('steward status and display location by public identity', () => {
         const statement = {
           bind() { return statement; },
           async first() {
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
             throw new Error(`unexpected steward-history first: ${normalized}`);
@@ -3821,8 +3821,8 @@ describe('steward status and display location by public identity', () => {
           bind(...values: unknown[]) { params = values; return statement; },
           async first() {
             seen.push({ sql: normalized, params });
-            if (/^SELECT \* FROM users WHERE clerk_user_id = \?1/i.test(normalized)) {
-              return { id: 'row-1', clerk_user_id: 'user-first', email: 'first@example.com' };
+            if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(normalized)) {
+              return { id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' };
             }
             if (/FROM keeper_pieces WHERE public_code = \?1/i.test(normalized)) return row;
             throw new Error(`unexpected location first: ${normalized}`);

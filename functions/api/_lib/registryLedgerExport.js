@@ -64,9 +64,35 @@ function eventRecordFromRow(row) {
   };
 }
 
+function sourceChainRecordFromRow(row) {
+  return {
+    kind: 'source-chain',
+    sourceChainId: row.id,
+    keeperPieceId: row.keeper_piece_id,
+    sourceSystem: row.source_system,
+    sourceReference: row.source_reference,
+    movedOn: row.moved_on,
+    eventCount: Number(row.source_event_count),
+    headHash: row.source_head_hash,
+  };
+}
+
+function sourceEventRecordFromRow(row) {
+  return {
+    kind: 'source-event',
+    sourceChainId: row.source_chain_id,
+    sequence: Number(row.source_sequence),
+    eventId: row.source_event_id,
+    eventType: row.source_event_type,
+    eventAt: row.source_event_at,
+    previousHash: row.source_previous_hash || null,
+    eventHash: row.source_event_hash,
+  };
+}
+
 /** Reads the registry from D1 and returns the serialized ledger file. */
 export async function buildLedgerFile(env) {
-  const [platesResult, eventsResult] = await Promise.all([
+  const [platesResult, eventsResult, sourceChainsResult, sourceEventsResult] = await Promise.all([
     env.DB.prepare(
       `SELECT id, piece_id, edition_number, public_code, plate_status,
               recovery_code_hash, front_svg_sha256, back_svg_sha256,
@@ -80,11 +106,23 @@ export async function buildLedgerFile(env) {
               event_hash, public_payload_json
          FROM artwork_lineage_events`,
     ).all(),
+    env.DB.prepare(
+      `SELECT id, keeper_piece_id, source_system, source_reference, moved_on,
+              source_event_count, source_head_hash
+         FROM atlas_source_chains`,
+    ).all(),
+    env.DB.prepare(
+      `SELECT source_chain_id, source_sequence, source_event_id, source_event_type,
+              source_event_at, source_previous_hash, source_event_hash
+         FROM atlas_source_chain_events`,
+    ).all(),
   ]);
 
   const records = [
     ...(platesResult.results || []).map(plateRecordFromRow),
     ...(eventsResult.results || []).map(eventRecordFromRow),
+    ...(sourceChainsResult.results || []).map(sourceChainRecordFromRow),
+    ...(sourceEventsResult.results || []).map(sourceEventRecordFromRow),
   ];
   const lines = await computeLedgerLines(records);
   const headHash = lines.length ? lines[lines.length - 1].hash : null;
@@ -94,7 +132,7 @@ export async function buildLedgerFile(env) {
     exportedAt: new Date().toISOString(),
     recordCount: lines.length,
     headHash,
-    note: 'Offline master ledger for adrianrasmussen.com artwork registry. No plaintext codes or steward identity.',
+    note: 'Offline master ledger for adrianrasmussen.com artwork registry, including exact historical source-chain evidence. No plaintext codes or steward identity.',
   };
   return { body: serializeLedgerJsonl(header, lines), lineCount: lines.length, headHash };
 }

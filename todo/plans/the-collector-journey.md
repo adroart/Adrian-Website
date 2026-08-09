@@ -49,8 +49,10 @@ The succession letter in `mandalacodes/docs/ledger-successor.md` already opens b
 Atlas "the living history system for every piece of physical art that has left Adrian
 Rasmussen's studio" — the intent was always general; only the hosting was specific.
 
-**Fact two — there are two complete ownership systems, not one.** This was not visible when
-`living-legacy.md` was written. Both are built, both are live, neither references the other:
+**Fact two: there are two ownership implementations, not two populated account stores.** This
+was not visible when `living-legacy.md` was written. Both code paths can write ownership, but both
+deployments already share the same account database. The configured Atlas ledger object was absent
+and its public response was empty when Phase 0 audited it:
 
 | | mandalacodes Atlas | this site's registry |
 |---|---|---|
@@ -84,12 +86,12 @@ already ratified as permanent and it stays permanent; it is a boundary, not a ga
 the 64. All other work needs a different way in, by series or year or where it lives. That is
 new design, called out in Missing below.
 
-**The chain moves cleanly.** Chain identity is content-based — SHA-256 over canonicalized event
-JSON, with no domain or bucket in the hash. Nothing invalidates on relocation. The one real cost
-is the public mirror: its tamper-evidence is a commit history, so relocating either carries that
-repository along unchanged or records honestly that the trust chain moved on a given date. One
-paragraph of documentation, not an engineering problem. With 18 pieces in the ledger and zero in
-production on this side, the migration is small and now is the cheapest it will ever be.
+**The source chain keeps its identity in a separate envelope.** Its hashes are content-based over
+canonicalized source events, with no domain or bucket in the hash, so the original source evidence
+survives relocation. The local registry uses a different hash envelope and event vocabulary, so
+source events must not be inserted as native lineage. They remain an append-only source chain
+linked to the local keeper record. The public mirror still matters as historical evidence, but the
+planned 18-piece export was not present in the configured object or available recovery copies.
 
 ---
 

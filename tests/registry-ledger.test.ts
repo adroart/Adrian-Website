@@ -161,6 +161,19 @@ describe('complete registry ledger file verification', () => {
     });
   });
 
+  it('continues to verify schema v1 headers with only v1 plate and event records', async () => {
+    const lines = await computeLedgerLines([plate(), event()]);
+    const result = await verifyLedgerFile({
+      header: { ...headerFor(lines), schemaVersion: 1 } as LedgerHeader,
+      lines,
+    });
+    assert.deepEqual(result, {
+      ok: true,
+      count: 2,
+      headHash: lines.at(-1)?.hash ?? null,
+    });
+  });
+
   it('rejects a missing header', async () => {
     const lines = await computeLedgerLines([plate()]);
     const parsed = parseLedgerJsonl(lines.map((line) => JSON.stringify(line)).join('\n'));

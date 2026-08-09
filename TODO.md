@@ -5,9 +5,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 ## Soon
 
 - [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  The ownership record was ratified to this site on 2026-08-09 and the ceremony layer rehomes here from mandalacodes. Blocked on four aesthetic questions, the per-piece materials data, and four design calls. Done when a person can walk all fifteen steps of the spec end to end.
-- [ ] Answer the four aesthetic questions so screens can be designed _(band: you-required | effort: quick)_ → Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  No screen can be briefed to Claude Design until these are answered, so every design item is stalled behind them. Done when all four are answered in one round.
+  The ownership record was ratified to this site on 2026-08-09 and the ceremony layer rehomes here from mandalacodes. Blocked on the per-piece materials data and four design calls. Done when a person can walk all fifteen steps of the spec end to end.
 - [ ] Record what each artwork is actually made of: wood, stones, makers, where it was made _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
   Every one of the 64 currently carries the identical material string, so the certificate has nothing to show. The table to hold it exists and is empty. Done when a certificate can be read for any registered piece.
 - [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
@@ -38,9 +36,6 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   The defaults are plan estimates; no real art-pricing data was available to calibrate. Load real pieces, set Settings to match your intuition, save pieces to Reference with their actual prices, and recenter. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
 - [ ] **Pricing tool: flip the explorer on** — make the public Pricing Explorer live once the model reads true _(you · quick)_
   Set `LAUNCH_FLAGS.pricingExplorer` to `true`. It lives on the Multidimensional Art page. → Doc: [docs/pricing-tool.md](docs/pricing-tool.md)
-- [ ] **Clerk prod** — take Clerk login to production: rotate the exposed secret, add the 5 DNS records, finish Google OAuth, then Claude wires the live keys _(you · deep)_
-  Shared dev login is live, but production needs its own keys and DNS, and the pasted `sk_live_` must be rotated for safety. Done when DNS is verified, Google OAuth is set, prod keys are wired, and a real sign-up lands a D1 row on the live site. → Plan: [clerk-production-launch.md](todo/plans/clerk-production-launch.md)
-
 ### Adrian-only: backend security pass (waiting on you to verify before it goes live)
 
 - [ ] **Backend security hardening** — review, verify, and merge the open security pass, and rotate the live Stripe key _(you · deep)_
@@ -67,8 +62,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ### Oracle accounts branch: decision pending
 
-- [ ] **Oracle branch** — decide what happens to the oracle accounts branch _(you · deep)_
-  An older oracle-accounts branch predates the shared-Clerk work that just shipped, so it may now be partly redundant. Done when you decide to merge, salvage, or close it. → Plan: [oracle-accounts-decision.md](todo/plans/oracle-accounts-decision.md)
+- [ ] **Oracle branch:** decide what happens to the old oracle accounts branch _(you · deep)_
+  This branch predates the completed Better Auth migration, so its account work may now be redundant. Done when you decide to merge, salvage, or close it. → Plan: [oracle-accounts-decision.md](todo/plans/oracle-accounts-decision.md)
 
 ## Future
 
@@ -147,8 +142,6 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
   The collections feature exists but the save button isn't shown where users browse. Done when the button appears on piece pages and Store cards for signed-in users.
 - [ ] **Configurator sync** — thread configurator state through the cart sync if configured options ship in the cart _(agent · moderate)_
   This keeps a piece's chosen size and finish attached to it through the synced cart. Done when configured options persist in the cart across devices.
-- [ ] **Lazy Clerk SDK** — lazy-load the sign-in SDK so the home page bundle stays light while accounts are off _(agent · quick)_
-  The Clerk SDK adds weight even when sign-in isn't shown, so defer it. Done when the home page bundle no longer eagerly loads Clerk.
 - [ ] **Cities index** — expand the cities index from a fresh GeoNames extract _(agent · quick)_
   The birth-location city picker uses a limited city list, and a fresh extract widens coverage. Done when the cities index is regenerated from current GeoNames data.
 
@@ -239,4 +232,4 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - The cart system and checkout flow are already built. Stripe webhooks for fulfillment notifications are wired (see `docs/oracle-accounts-implementation.md` for the per-file detail). Cart persists via localStorage.
 
-- Accounts/login: shared Clerk app + shared D1 (`adrian-website`) with mandalacodes.com — one collector identity across both sites, dev login live as of 2026-06-09. Production launch is tracked in Pre-launch above. No Clerk Pro / no paid satellite (each site gets its own free prod instance on the same DB).
+- Accounts/login: both sites use Better Auth and the same D1 database, so one person has one account row and one birth-details row across both sites.
