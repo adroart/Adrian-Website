@@ -1,3 +1,28 @@
+# Living Legacy — Build Plan (SUPERSEDED 2026-08-09)
+
+> **SUPERSEDED. Do not build from this file.**
+>
+> Replaced by `the-collector-journey.md` (the spec) and `the-collector-build.md` (the ordered work).
+>
+> **What changed: Decision A below is overturned.** This plan recommended keeping the ledger on
+> mandalacodes with this site as the front door. Adrian ratified the reverse on 2026-08-09: **this
+> site's registry is the ownership record**, and the ceremony layer (rings, dreams, letters, globe)
+> rehomes here from mandalacodes.
+>
+> Two facts changed it, neither visible when this was written. **One:** the Atlas is not a mandala
+> system — it holds every artwork ever sold, filterable by series, of which the 64 are one series
+> among five in a catalog of 173. **Two:** there are two complete ownership systems, not one. This
+> site's `keeper_pieces` registry is a full parallel implementation with its own hash chain, its own
+> encrypted codes, and a dependency on commerce that was deliberately severed. This plan did not
+> know it existed.
+>
+> **Still accurate and worth reading:** the capability map, the correction table showing what the
+> vault handoff got backwards, and Decisions B and C. The reasoning here was sound for what it knew.
+
+---
+
+## Original document follows
+
 # Living Legacy — Build Plan (reconciled with the actual code)
 
 > **What this is.** The execution plan for the Living Legacy layer: a QR on every physical

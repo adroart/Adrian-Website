@@ -1,0 +1,234 @@
+# The Collector Build — ordered work
+
+> **What this is.** What to do next, in order. The companion to `the-collector-journey.md`,
+> which says what must be *true*. This says what to *do*.
+>
+> Every item names the journey step it serves. Work that serves no step does not belong here.
+>
+> **Ratified 2026-08-09:** this site's registry is the ownership record. The ceremony layer
+> (rings, dreams, letters, globe) rehomes here from mandalacodes. Mandala Codes becomes a
+> portal and keeps the oracle and the kinship between the 64.
+
+---
+
+## Blocked on Adrian — nothing below starts without these
+
+**B1. The Stage 1 aesthetic questions.** Four questions, one round, in the Visual Design
+section below. Until answered, no screen can be briefed and every design item is stalled.
+
+**B2. The materials data.** Wood species, stones, makers, manufacture location, per piece.
+The table to hold it exists and is empty. Without it the certificate has nothing to show.
+*Serves step 6.*
+
+**B3. Four design calls** — video, co-holding, brightness, and what the invitation carries
+as proof. Each is listed in the journey's Open section. Each blocks a specific build item
+below, marked where it bites.
+
+---
+
+## Phase 0 — Stop the bleeding
+
+Both systems currently claim to own who holds a piece. Two records of ownership is the one
+thing a provenance system cannot have. Nothing else is safe to build on top until this is
+resolved, and it is small right now: 18 pieces in the mandalacodes ledger, zero production
+identities here, no real collectors on either side.
+
+**0.1 Freeze the mandalacodes ledger as canonical-elsewhere.** Mark it read-only for new
+claims and record the date. Nothing new enters it after this point. *Serves the whole spec.*
+
+**0.2 Migrate the 18 ledger pieces into this site's registry.** Chain identity is content-based
+and carries no domain, so hashes survive. Record the move date and cross-reference the old
+mirror as the historical proof for events before it. *Serves step 15.*
+
+**0.3 Collapse birth details into one field on the person.** Two databases each define their
+own copy today, computed separately. One row, on this site, read by both. This is what makes
+the never-asked-twice test possible. *Serves step 9.*
+
+**0.4 Point mandalacodes at the registry.** It reads; it no longer holds. The oracle and the
+kinship between the 64 stay there and stay theirs.
+
+**0.5 Rename the legacy login column and clear the dead vendor settings.** The column still
+carries the old vendor's name while holding the new system's identifier. Cosmetic, but it is
+what made two surveys disagree about which login was live.
+
+---
+
+## Phase 1 — The registration a person can actually walk
+
+**1.1 Reframe registration around the artwork, not the plate.** The flow currently reads as
+"make a metal plate." It becomes "register an artwork," with the plate an optional step
+afterward. This is task one of the registry's own eight-task plan and the same reframe the
+invitation door needs. *Serves steps 1, 4, and door two.*
+
+**1.2 Build the invitation door.** Adrian invites someone who bought years ago; the invitation
+itself carries the proof, because they have no printed code. Their piece has a history that
+predates the system. *Serves door two. Blocked on B3.*
+
+**1.3 Build the opening screen.** What is about to happen, said plainly, before anything is
+asked. Registering to you, certifying as authentic, storing your intentions, joining the map.
+The piece lasts. The code lasts. Whoever holds the code holds the access. **Its wording is
+constrained by what can honestly be promised — see the video note in the journey.**
+*Serves step 5.*
+
+**1.4 Rehome the arrival page.** Zero sign-in, the artwork, its story, its public history spine.
+A person who only wants to look gets a complete experience. *Serves step 2.*
+
+**1.5 Fill the certificate.** The provenance table exists with typed entries for contributor,
+creation place, material, technique, and intention, each with its own visibility. Populate and
+surface it. *Serves step 6. Blocked on B2.*
+
+**1.6 Rehome the four rings as one privacy screen.** One page, plain words, decided once.
+Ring two stays unticked by default. *Serves step 7.*
+
+**1.7 Birth details at onboarding.** Asked, framed as connecting to the wider system, never
+displayed, skippable, addable later through the oracle. Adrian's rule overrides both earlier
+positions. *Serves step 9.*
+
+**1.8 Seed the remaining pieces.** Forty-six of the 64 are absent, and no other series is in
+at all. The catalog already holds 173 pieces across five series, so this is registry entry,
+not cataloguing. *Serves every step — it is what makes the flow walkable end to end.*
+
+---
+
+## Phase 2 — The piece becomes alive
+
+**2.1 Rehome the dream.** One dream at registration at one of four scopes, an optional thread
+of markers added only when something real happens. **No approval gate, ever.** *Serves step 11.*
+
+**2.2 Rehome the globe and the ordinals.** Founding Lights is already ratified as all pieces,
+all series. *Serves step 10.*
+
+**2.3 Design a way in that is not the hexagram ring.** The ring is the index of the 64 and
+does not generalize. Other work needs browsing by series, year, or place. *Serves step 10.*
+
+**2.4 Define brightness.** What actually makes a light brighter, defined so it cannot be farmed
+by visiting or padding. *Serves step 10. Blocked on B3.*
+
+**2.5 Rehome letters.** Kin claims, anniversaries, transfers. A letter may only mention what a
+ring has made visible. *Serves step 14.*
+
+**2.6 Build the yearly ritual.** Near the holder's birthday: reinforce, plant new, or mark
+fulfilled. Never a blank form. *Serves step 14.*
+
+---
+
+## Phase 3 — What only exists on paper
+
+**3.1 Co-holding.** Roles (holder versus contributor) and holder type (person versus
+organization). Heirs stay hints that never auto-bind. *Serves step 13. Blocked on B3.*
+
+**3.2 Video.** Where it lives, what is promised, how extra uploads are paid for. The honest
+frame governs: a record you can always export and hold yourself, not forever.
+*Serves step 12. Blocked on B3.*
+
+**3.3 Warning delivery, then the claim window.** The escalation path that can free a piece from
+an unresponsive holder stays switched off until four warnings can actually be delivered.
+*Serves step 15.*
+
+**3.4 The sale door.** A purchase starts registration automatically. Additive by construction —
+the registry does not read from commerce, so this touches nothing already built. *Serves door three.*
+
+---
+
+## Visual design production
+
+When this plan needs screens designed, this produces the inputs for Claude Design. Adrian runs
+them through it. **Nothing here designs anything itself or writes interface code for these screens.**
+
+**What is greenfield and what is not.** This flow has no visual language and none may be invented
+or inferred from the subject matter. But it sits inside a house that already has one: the site's
+palette is paper, wood, stone, bronze; its fonts are Cormorant Garamond, Lato, and Cinzel; and its
+standing rules are no icons, no badges, no stickers, no em dashes, text and colour only for states.
+State this to Claude Design as an existing constraint, not as the direction. The direction is
+Adrian's, decided once, at Stage 1.
+
+### Stage 1 — Get the aesthetic decided
+
+**Do not proceed past this stage without answers.** Four questions, one round:
+
+1. What should this feel like to open?
+2. Who opens it, and what are they like?
+3. Anything to look at as a reference, or to deliberately look nothing like?
+4. Anything it must not do?
+
+Do not offer palettes, font names, or style labels to choose from. Ask what it should feel like
+and let Claude Design propose the visual answer — proposing it here narrows the range before
+anything has been tried. If Adrian gives a reference or an asset, that becomes the direction and
+the style questions stop.
+
+### Stage 2 — Establish the look on one screen
+
+Do not write a style guide first; there is nothing to write it from. Pick the single densest
+screen — the one carrying the most different kinds of element — and have it designed first with
+a full range of variations. The look gets decided by choosing among real screens, not by approving
+a description. Name the screen chosen and why.
+
+**The chosen screen: the piece page after registration.** It carries more distinct element types
+than anything else in the flow — the artwork, the certificate's factual block, the public history
+spine, the private record, the ring switches, the dream, the letters, the ordinal, and the map dot.
+Whatever look survives that screen survives everywhere.
+
+### Stage 3 — Brief that first screen
+
+The brief carries: what it is and who opens it; what appears on it using **real content** — actual
+titles, real piece names, real numbers, real labels, never placeholder text and never invented
+figures; what the point of the screen is, because if everything is equally weighted it has no
+structure; the structural rules written out — how sections nest, what sits at top level versus
+inside something else, what appears together versus what is held to another screen, and the
+intended reading order; the states, loaded and empty and error; and Adrian's Stage 1 answers
+quoted as he said them, not paraphrased into design language.
+
+Do not specify colors, fonts, spacing, or aesthetic adjectives. Do not specify a variation count.
+
+Expect clarifying questions and expect Adrian to answer them live.
+
+### Stage 4 — Lock the look, then go wide
+
+Once Adrian picks a direction, that screen is the reference. Say so plainly. Every screen after
+names it as the reference and states only what differs: what this screen is, its real content,
+its point, how its structure differs. Short briefs from here — re-describing the direction invites
+drift.
+
+**The screens after, in build order:** the opening screen (1.3), arrival (1.4), the privacy screen
+(1.6), the invitation (1.2), the dream (2.1), the globe (2.2), the yearly ritual (2.6).
+
+### Stage 5 — Capture the house style
+
+After the direction is locked, have Claude Design record it as the project's house style so every
+later screen inherits it. Note here that it exists and what it covers.
+
+### Stage 6 — Review as a set
+
+Evaluate screens side by side, never one at a time — inconsistency and repetition are only visible
+across a set. When the same correction is made twice, it belongs in the house style, not the next
+brief. Update it and say that it changed.
+
+### Standing rules
+
+Real content everywhere; placeholder text produces placeholder-shaped design. Flag gaps rather
+than filling them, and say what will be guessed as a result. Cap attachments at five or six per
+brief — one complete example beats three partial ones.
+
+---
+
+## Document map — what is canonical and what is superseded
+
+**Canonical, read these:**
+
+- `the-collector-journey.md` — the spec. What must be true.
+- `the-collector-build.md` — this file. What to do, in order.
+- `artwork-registry-finish-and-handover.md` — the registry's own eight tasks. Still live;
+  its task one is the same reframe as 1.1 here.
+
+**Superseded, kept readable so the reasoning survives:**
+
+- `living-legacy.md` — its Decision A recommended keeping the ledger on mandalacodes. Overturned
+  2026-08-09. Correct for what it knew; two facts changed it, both recorded in the journey.
+- `clerk-production-launch.md` — the login it describes was replaced in July. Dead.
+- `mandalacodes/todo/plans/living-art-legacy.md` — the ceremony, consent, and dream design.
+  Still the best thinking in either system; its *placement* is superseded, its *content* is
+  being rehomed here.
+
+**Rule going forward: one spec, one build list, one reference per subject.** Anything that
+contradicts the spec gets a superseded header naming what replaced it, never a silent deletion.
+Two documents disagreeing about who owns the record is how two ownership systems got built.

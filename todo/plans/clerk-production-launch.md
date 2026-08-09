@@ -1,3 +1,21 @@
+# Clerk production launch — SUPERSEDED 2026-07-16
+
+> **SUPERSEDED. Do not work this checklist.**
+>
+> The paid login vendor this plan launches was replaced by self-owned sign-in in July 2026.
+> The vendor is no longer a dependency anywhere in this site's code, and the account, session,
+> and verification tables now live in this site's own database. See `better-auth-migration.md`.
+>
+> **One item may still be live: the exposed secret in section B.** A key that was exposed should
+> be revoked at the vendor even though nothing uses it any more. Adrian: worth one minute at the
+> vendor's dashboard to confirm it is dead. Nothing else here applies.
+>
+> Ownership and login decisions now live in `the-collector-journey.md` and `the-collector-build.md`.
+
+---
+
+## Original document follows
+
 # Clerk production launch — go-live checklist
 
 ## TL;DR — what's actually urgent

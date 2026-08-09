@@ -4,7 +4,14 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
+- [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
+  The ownership record was ratified to this site on 2026-08-09 and the ceremony layer rehomes here from mandalacodes. Blocked on four aesthetic questions, the per-piece materials data, and four design calls. Done when a person can walk all fifteen steps of the spec end to end.
+- [ ] Answer the four aesthetic questions so screens can be designed _(band: you-required | effort: quick)_ → Build: [the-collector-build.md](todo/plans/the-collector-build.md)
+  No screen can be briefed to Claude Design until these are answered, so every design item is stalled behind them. Done when all four are answered in one round.
+- [ ] Record what each artwork is actually made of: wood, stones, makers, where it was made _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
+  Every one of the 64 currently carries the identical material string, so the certificate has nothing to show. The table to hold it exists and is empty. Done when a certificate can be read for any registered piece.
 - [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
+  Its task one (reframe registration around the artwork, not the plate) is the same work as the collector build's 1.1.
 
 ### Recent decisions to watch
 
