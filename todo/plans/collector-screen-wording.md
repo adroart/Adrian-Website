@@ -119,6 +119,14 @@ over completes the gesture the entry screen opened.
 > as yours, and give it its place.
 >
 > **[ Continue ]**
+>
+> This piece is for someone else
+
+**The fork (Adrian, 2026-08-09).** Continue registers it to you; the quiet link serves
+whoever holds a piece meant for another: the gift buyer, the seller, the inheritor helping a
+parent. It opens the passing: name the person, they receive an invitation carrying the proof,
+and the piece registers to them. One brass pill, one text link; the hierarchy carries the
+meaning.
 
 **The passing (piece already has a caretaker on record) — LOCKED 2026-08-09:**
 
