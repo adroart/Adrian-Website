@@ -30,6 +30,12 @@ for a physical piece. The screens recognize a member, they do not persuade a str
 hundreds across the world; the crowd of registrants is still forming, and being early is the
 privilege.
 
+**The daily gaze (added 2026-08-09).** Everything placed in the piece is connected to it.
+Every time the caretaker looks at it, on their wall, in their home, they feel what is in
+there, and what is important to them is reinforced. The piece practices their intentions back
+at them, daily, whether they think about it or not. This is the strongest personal reason to
+write carefully, and the writing screens should reprise it in one clause.
+
 ---
 
 ## The flow at a glance
@@ -160,7 +166,12 @@ hands.
 
 > **When you focus your love, it grows**
 >
-> Place your love into this art and its light shines brighter.
+> Infuse your love into this art and its light shines brighter. Every time you see it, you
+> will feel everything it holds, and the resonance you have placed within it.
+
+*(Adrian's line, extended 2026-08-09 with the daily gaze: the piece on the wall returns what
+was placed in it every time eyes cross it. If he prefers the double echo, the last clause
+reads "the resonance you have infused it with.")*
 
 **Four · it carries on** (no drawing: the only screen without one, the words alone)
 
