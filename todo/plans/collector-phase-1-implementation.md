@@ -109,13 +109,23 @@ git commit -m "test(collector): support browser checks in worktrees"
 - Create: `migrations/025_artwork_registration.sql`
 - Create: `functions/api/_lib/artworkRegistration.js`
 - Create: `functions/api/_lib/keeperClaim.js`
+- Create: `functions/api/_lib/identityBackup.js`
 - Create: `functions/api/admin/registrations.js`
+- Modify: `functions/api/_lib/plateBackup.js`
+- Modify: `functions/api/_lib/recoveryQualification.js`
 - Modify: `functions/api/_lib/registryPlateIssuance.js`
+- Modify: `functions/api/admin/pieces/[id]/verify-recovery.js`
+- Modify: `functions/api/admin/pieces/[id]/reveal.js`
 - Modify: `functions/api/keeper/bind.js`
 - Modify: `functions/api/registry/[publicCode].js`
 - Modify: `functions/qr/[number].js`
 - Modify: `utils/publicRegistry.ts`
 - Create: `tests/artwork-registration.test.ts`
+- Modify: `tests/living-legacy.test.ts`
+- Modify: `tests/registry-plate-lifecycle.test.ts`
+- Modify: `tests/registry-recovery-qualification.test.ts`
+- Modify: `tests/artwork-package-recovery.test.ts`
+- Modify: `tests/public-registry-identity.test.ts`
 
 The stable interface is:
 
@@ -123,12 +133,14 @@ The stable interface is:
 registerArtwork(env, {
   artworkId,
   edition: { kind: 'unique' } | { kind: 'numbered'; number: number; size: number | null },
+  authorization: { userId: string; email: string; registryUnlockExpiresAt: number },
   idempotencyKey,
   registeredAt,
 }): Promise<{
   keeperPieceId: string;
   publicCode: string;
-  ownershipCode: string;
+  ownershipCode?: string;
+  codeAccess: 'created' | 'active-unlock-replay' | 'audited-reveal-required';
   registrationStatus: 'registered';
   backupStatus: string;
 }>
@@ -142,6 +154,7 @@ prepareFirstKeeperBind(env, {
   piece,
   claimant: { userId: string; verifiedEmail: string },
   proof: { kind: 'ownership_code' | 'invitation'; reference: string },
+  evidence: { ipAddress: string | null; userAgent: string | null },
   boundAt,
 }): Promise<{ statements: D1PreparedStatement[]; result: object }>
 ```
@@ -162,17 +175,25 @@ Expected: FAIL because the digital-only registration interface does not exist.
 
 - [ ] **Step 3: Add the registered identity state and minimal registration module**
 
-The migration must preserve every existing keeper row and make `registered` a valid public identity
-state without requiring SVG hashes or plate timestamps. The module must mint and encrypt the
-Ownership Code through the existing key-versioned implementation and return plaintext only once.
+The migration must preserve every existing keeper row, dependent foreign key, index, trigger, and
+uniqueness guarantee, then finish with a clean foreign-key check. It makes `registered` a valid
+public identity state without requiring SVG hashes or plate timestamps. The permanent issuance key
+becomes the registration key. A private maintenance event stores the registering administrator,
+and optional plate preparation gets its own maintenance-event idempotency key. This reuses the
+existing encrypted recovery boundary rather than creating another operation table. The module must
+mint and encrypt the Ownership Code through the existing key-versioned implementation and return
+plaintext only once.
 
 - [ ] **Step 4: Add idempotency tests and implementation**
 
 Test exact replay for the same key and input, conflict for a reused key with changed identity, and
-rollback when backup persistence fails. At rest, the Ownership Code remains encrypted only. An
-exact retry may reveal the same code only to the same administrator while the registry step-up is
-still active, and every replay reveal is audited. After step-up expiry, replay returns the stored
-identity without plaintext and directs the administrator through the existing audited reveal path.
+no identity row or lineage event when backup persistence fails. Persist the immutable,
+content-addressed identity backup before the atomic D1 insert. A later D1 race may leave an
+unreferenced identical backup object, never a partial registry identity. At rest, the Ownership
+Code remains encrypted only. An exact retry may reveal the same code only to the same administrator
+while the registry step-up is still active, and every replay reveal is audited. After step-up
+expiry, replay returns the stored identity without plaintext and directs the administrator through
+the existing audited reveal path.
 
 - [ ] **Step 5: Add public resolution tests and implementation**
 
@@ -182,24 +203,32 @@ Ownership Code verifier, ciphertext, nonce, keeper identity, or backup reference
 - [ ] **Step 6: Extract the canonical first-bind preparation**
 
 Write a failing test proving an ownership code can bind a registered identity after its identity
-backup is qualified, without plate activation. Move the shared bind statements behind
-`prepareFirstKeeperBind` and make the existing keeper endpoint consume it.
+backup is qualified, without plate activation. Identity qualification and physical-plate
+qualification remain distinct, so identity proof can never activate a plate. Move the shared bind
+statements behind `prepareFirstKeeperBind` and make the existing keeper endpoint consume it while
+preserving the existing private request evidence.
 
 - [ ] **Step 7: Separate optional plate preparation**
 
 Write a failing test proving plate preparation preserves the same keeper-piece identity, public
 code, encrypted Ownership Code, and lineage head. Then adapt the existing plate issuance module to
-add fabrication to the registered identity.
+add fabrication to the registered identity. The audited reveal route returns only the Ownership
+Code for a registered identity, while generated and active plates retain exact SVG verification.
 
 - [ ] **Step 8: Verify the registration lane**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
   tests/artwork-registration.test.ts \
+  tests/living-legacy.test.ts \
   tests/admin-plate-wizard.test.ts \
   tests/admin-registry-ui.test.ts \
   tests/registry-artworks.test.ts \
   tests/registry-commerce-neutral.test.ts \
+  tests/registry-plate-lifecycle.test.ts \
+  tests/registry-recovery-qualification.test.ts \
+  tests/artwork-package-recovery.test.ts \
+  tests/registry-recovery.test.ts \
   tests/public-registry-identity.test.ts
 npm run typecheck
 git diff --check
@@ -210,11 +239,18 @@ git diff --check
 ```bash
 git add migrations/025_artwork_registration.sql functions/api/_lib/artworkRegistration.js \
   functions/api/_lib/keeperClaim.js functions/api/admin/registrations.js \
+  functions/api/_lib/identityBackup.js functions/api/_lib/plateBackup.js \
+  functions/api/_lib/recoveryQualification.js \
   functions/api/_lib/registryPlateIssuance.js functions/api/keeper/bind.js \
+  functions/api/admin/pieces/[id]/verify-recovery.js \
+  functions/api/admin/pieces/[id]/reveal.js \
   functions/api/registry/[publicCode].js functions/qr/[number].js utils/publicRegistry.ts \
   tests/artwork-registration.test.ts tests/admin-plate-wizard.test.ts \
   tests/admin-registry-ui.test.ts tests/registry-artworks.test.ts \
-  tests/registry-commerce-neutral.test.ts tests/public-registry-identity.test.ts
+  tests/registry-commerce-neutral.test.ts tests/living-legacy.test.ts \
+  tests/registry-plate-lifecycle.test.ts tests/registry-recovery-qualification.test.ts \
+  tests/artwork-package-recovery.test.ts \
+  tests/public-registry-identity.test.ts
 git commit -m "feat(collector): register artwork before optional plates"
 ```
 
@@ -603,7 +639,9 @@ Plate fabrication remains a later optional action.
 Advance the encrypted archive schema from 3 to 4 exactly once after all Phase 1 migrations merge.
 Add catalog membership, invitations, certificate templates and assignments, artwork overrides,
 current consent, and consent history to the exact table and column manifest. Referenced-account
-discovery includes invitation creators and redeemers plus consent authors, while unrelated accounts remain excluded.
+discovery includes invitation creators and redeemers plus consent authors, while unrelated accounts
+remain excluded. Registration and plate-preparation audits already travel through the existing
+private maintenance-event recovery boundary and must remain covered by its regression tests.
 Add export, decrypt, clean restore, row-count, digest, and dependency-closure assertions for every
 new table. Every older supported archive version upgrades with empty new tables and the same
 verified legacy rows.
