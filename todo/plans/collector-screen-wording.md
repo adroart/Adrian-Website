@@ -40,34 +40,73 @@ write carefully, and the writing screens should reprise it in one clause.
 
 ## The flow at a glance
 
-1. **Arrival** — the piece's public page. PROPOSED, next to close.
-2. **Code entry** — turn the piece over. LOCKED.
-3. **Code confirmed** — the threshold crossed; the project introduced. LOCKED, passing variant proposed.
+1. **The piece page** — the QR landing, one page for everyone: the piece shown publicly, the
+   Unlock door at the bottom. SHAPE LOCKED 2026-08-09, row wording proposed.
+2. **The unlock** — the same page, morphed: the pill becomes the code field. Copy LOCKED.
+3. **Code confirmed** — the threshold crossed; the project introduced; the fork. LOCKED.
 4. **The four screens** — the pull · the grid · the love · it carries on. LOCKED.
 5. **The writing** — name, story, privacy, birthday, the registration itself. NOT YET WORKED.
 
-The same code-entry door serves first registration, transfer, and dispute; the system routes
-behind it. There is no separate transfer entrance: the piece carries its own door on its body,
-forever.
+The same unlock door serves first registration, transfer, gift, and dispute; the system
+routes behind it after the code. There is no separate transfer entrance: the piece carries
+its own door on its body, forever. **The old separate arrival screen and code-entry screen
+are superseded by the two-state piece page; the two-doors question (register or dream) died
+with them.**
 
 ---
 
-## 2. Code entry — LOCKED
+## 1. The piece page — the QR landing. SHAPE LOCKED, row wording proposed
 
-**Drawing.** The piece turned over, the code on its underside.
+One page for everyone who scans or types the piece's address. The piece shows itself
+publicly; the code is the deeper door on the same page. Replaces the separate arrival and
+code-entry screens (Adrian, 2026-08-09: "I like this better").
 
-> **Turn the piece over**
+**Resting state:**
+
+> *(photograph of the piece, leading)*
 >
-> On its underside is a code only its caretaker can see. It is the key to everything this
-> piece will hold.
+> UNIVERSAL LANGUAGE 1
 >
+> **Earth's Breath**
+>
+> Registered · a light in the Resonant Grid *(or: Not yet registered)*
+>
+> The story
+> The certificate
+> The history
+> The dreams
+> Into the artist's website
+>
+> **[ Unlock ]**
+>
+> Where is my code?
+
+The rows are a hairline list, each a click deeper into the public layers: story, materials
+and making, the public history spine, the dreams their caretakers chose to share, and the
+road into the full site. The registration line is the authenticity, visible to anyone. A
+visitor with no code gets a complete experience; this is also what a guest who scans the
+piece on a caretaker's wall sees.
+
+**What was paid lives behind the code, always.** Public rows carry story, materials, year,
+history, shared dreams. Price and the private record belong to the caretaker's side, after
+the unlock.
+
+## 2. The unlock — same page, morphed. Copy LOCKED
+
+Tapping Unlock melts the pill into the code field; the keyboard rises; the instruction
+appears. The locked "Turn the piece over" copy lives here, compressed to the moment it
+serves:
+
 > *[ code field ]*
+>
+> Turn the piece over. The code is written on its underside, and only its caretaker can see
+> it.
 >
 > Whoever holds the code holds access. Keep it safe.
 >
 > **[ Unlock ]**
 >
-> I don't have the code
+> I don't have a code
 
 **The motion — LOCKED, Adrian's spec.** On Unlock the characters resolve one at a time, like
 tumblers finding their places, a pause, one soft click as the last one seats. Then the screen
@@ -228,44 +267,15 @@ reads "the resonance you have infused it with.")*
 
 ---
 
-## 1. Arrival — PROPOSED, next to close
+### Superseded: the standalone arrival screen (2026-08-09, same day)
 
-The piece's public page: what a person sees the moment they scan the code, before any
-sign-in. Not a setup screen. A gallery label they can walk away from satisfied; the short
-path must feel complete on its own.
-
-Top to bottom:
-
-> *(photograph of the piece, leading the page: the one place photography lives, the flow
-> screens stay line-drawn)*
->
-> UNIVERSAL LANGUAGE 1
->
-> **Earth's Breath**
->
-> Its story, a few sentences.
->
-> Laser cut wood and acrylic · its year
->
-> **Part of the Resonant Grid**
-> Every piece Adrian has released into the world belongs to one living artwork. Each piece is
-> a light. Each caretaker feeds it. This one is waiting to take its place.
->
-> **Its record**: the public spine. Created · First registered · Passed on. Each line one
-> event, dated.
->
-> This piece keeps a living record.
->
-> **[ Register and certify this piece ]**
-> A few minutes. It stays with the piece forever.
-
-**Open calls on arrival, awaiting Adrian:**
-- Doors come last, after the story and the record, so looking feels complete without them.
-- "This piece keeps a living record" as the single quiet line above the door.
-- **The dream door: cut from arrival** (lean). A stranger does not yet know what a dream is
-  here; the dream belongs to a registered caretaker. It appears after registration where it
-  means something. The spec's two-door reading of step 3 would be satisfied inside the flow
-  instead.
+An earlier draft had arrival as its own screen with a "Register and certify this piece" pill
+and a possible dream door. Adrian replaced it with the two-state piece page above: the public
+showcase and the unlock live on one page, and the dream door question died. Kept here only so
+the reasoning survives; do not design the standalone version. One line from it worth
+reusing somewhere on the piece page or its story row: **Part of the Resonant Grid: every
+piece Adrian has released into the world belongs to one living artwork. Each piece is a
+light. Each caretaker feeds it.**
 
 ---
 
