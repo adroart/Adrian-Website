@@ -1,0 +1,1854 @@
+<!--
+THESIS: An interaction spec you touch, not read. Six primitives shown inside the real
+piece page that uses them, refusing the specimen-sheet arrangement that shows parts
+away from the thing they build.
+OWN-WORLD: Espresso grounds (#171310 to #29231c), cream #ede9e2, brass #d4b88a on
+actionable things only. Cormorant 20px+, Lora body, Karla eyebrows. Hairline rules
+at 1px rgba cream. CAD linework: outline only, uniform 1.25 stroke, no fill.
+STORY: The designer taps a row, watches it lift and take the page, and understands
+the flow's signature move in one gesture. Then reads which of the 24 screens use it.
+FIRST VIEWPORT: The phone standing alone on espresso, piece drawing above the title,
+four hairline rows, the brass Unlock pill low. Primary action is the row tap.
+FORM: The walk (structure 2 of 6 derived). concept-seed produced no assignment in
+this environment; chosen deliberately with reason recorded in the session.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish
+review, the verdict, and DESIGN.md
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collector journey, the six primitives</title>
+
+<style>
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url(https://fonts.gstatic.com/s/cormorantgaramond/v16/co3bmX5slCNuHLi8bLeY9MK7whWMhyjornFLsS6V7w.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Lora';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/lora/v35/0QI6MX1D_JOuGQbT0gvTJPa787weuyJGmKxemMeZ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Karla';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/karla/v31/qkBIXvYC6trAT55ZBi1ueQVIjQTD-JqqFENLR7fHGw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+:root{
+  --ground:#171310; --ground-2:#1f1a15; --ground-3:#29231c; --ground-4:#312a21;
+  --cream:#ede9e2; --cream-2:#c4beb4; --cream-3:#8d867c;
+  --brass:#d4b88a; --brass-2:#c4a878; --brass-deep:#5a4a30;
+  --hair:rgba(237,233,226,.13); --hair-soft:rgba(237,233,226,.07);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --body:'Lora',Georgia,serif;
+  --label:'Karla',system-ui,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--ground); color:var(--cream);
+  font-family:var(--body); font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:2px}
+
+/* ─────────── page frame ─────────── */
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+.masthead{
+  padding:88px 0 0;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,286px);
+  gap:72px;align-items:end
+}
+.masthead .mast-copy{min-width:0}
+.masthead .mast-side{
+  border-left:1px solid var(--hair);padding-left:26px;
+  align-self:end;padding-bottom:6px
+}
+.masthead .mast-side dl{display:grid;gap:14px;font-size:13.5px}
+.masthead .mast-side dt{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cream-3);margin-bottom:3px
+}
+.masthead .mast-side dd{color:var(--cream-2);line-height:1.5}
+@media(max-width:900px){
+  .masthead{grid-template-columns:1fr;gap:38px;align-items:start}
+  .masthead .mast-side{border-left:0;border-top:1px solid var(--hair);
+    padding-left:0;padding-top:24px}
+  .masthead .mast-side dl{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+}
+.masthead .eyebrow{
+  font-family:var(--label);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:22px
+}
+.masthead h1{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(2.4rem,4.6vw,3.9rem);line-height:1.04;
+  letter-spacing:-.02em;color:var(--cream);text-wrap:balance;max-width:15ch
+}
+.masthead p{
+  margin-top:26px;font-size:17px;line-height:1.72;color:var(--cream-2);
+  max-width:56ch
+}
+.masthead .note{margin-top:18px;font-size:15px;color:var(--cream-3);max-width:56ch}
+
+.rule{height:1px;background:var(--hair);margin:72px 0}
+
+/* ─────────── the stage: phone + annotations ─────────── */
+.stage{
+  display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
+  gap:64px;align-items:start
+}
+@media(max-width:900px){.stage{grid-template-columns:1fr;gap:44px}}
+
+.phone-col{position:sticky;top:32px}
+@media(max-width:900px){.phone-col{position:static}}
+
+.phone{
+  width:100%;max-width:340px;aspect-ratio:9/19.5;
+  background:var(--ground-2);
+  border:1px solid var(--hair);
+  border-radius:34px;
+  position:relative;overflow:hidden;
+  box-shadow:0 32px 64px -24px rgba(0,0,0,.7), 0 4px 16px -4px rgba(0,0,0,.5);
+}
+.phone-caption{
+  font-family:var(--label);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cream-3);
+  margin-top:18px;text-align:center
+}
+
+/* the screen itself */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:34px 26px 26px}
+
+/* ── the piece drawing (CAD, geometry only) ── */
+.piece-slot{
+  display:grid;place-items:center;
+  grid-template-rows:126px;
+  transition:grid-template-rows .62s var(--ease-out), opacity .4s var(--ease);
+  margin-bottom:22px;flex:none
+}
+.piece-slot svg{
+  width:100px;height:100px;overflow:visible;
+  transform-origin:center;
+  transition:transform .62s var(--ease-out)
+}
+.piece-slot path,.piece-slot circle,.piece-slot line,.piece-slot polygon{
+  fill:none;stroke:var(--cream-2);stroke-width:1.25;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke
+}
+/* stroke-draw on entry */
+.draw path,.draw circle,.draw polygon,.draw line{
+  stroke-dasharray:var(--len,420);stroke-dashoffset:var(--len,420);
+  animation:draw 1.5s var(--ease-out) forwards
+}
+.draw path:nth-child(2){animation-delay:.18s}
+.draw path:nth-child(3){animation-delay:.34s}
+.draw circle{animation-delay:.5s}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* promoted: drawing shrinks to anchor */
+.screen.promoted .piece-slot{grid-template-rows:44px;margin-bottom:16px;justify-items:start}
+.screen.promoted .piece-slot svg{transform:scale(.38)}
+
+/* ── the head ── */
+.head{text-align:center;flex:none;transition:opacity .34s var(--ease),transform .5s var(--ease-out)}
+.head .ul{
+  font-family:var(--label);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cream-3);margin-bottom:9px
+}
+.head .name{
+  font-family:var(--serif);font-weight:300;font-size:29px;line-height:1.1;
+  letter-spacing:-.01em;color:var(--cream)
+}
+.head .status{
+  margin-top:11px;font-size:12.5px;color:var(--cream-3);line-height:1.5
+}
+.screen.promoted .head{opacity:0;transform:translateY(-10px);pointer-events:none;
+  height:0;overflow:hidden;margin:0}
+
+/* ── the rows ── */
+.rows{margin-top:26px;flex:none;position:relative}
+.row{
+  position:relative;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;width:100%;background:none;border:0;
+  padding:14.5px 2px;cursor:pointer;text-align:left;
+  font-family:var(--body);font-size:15.5px;color:var(--cream);
+  border-top:1px solid var(--hair);
+  transition:transform .58s var(--ease-out), opacity .38s var(--ease),
+             color .22s var(--ease), border-color .3s var(--ease);
+}
+.row:last-of-type{border-bottom:1px solid var(--hair)}
+.row .chev{
+  font-family:var(--body);color:var(--cream-3);font-size:15px;
+  transition:transform .3s var(--ease),color .22s var(--ease)
+}
+.row:hover{color:var(--brass)}
+.row:hover .chev{color:var(--brass);transform:translateX(3px)}
+.row:active{transform:scale(.985)}
+
+/* row promotion */
+.screen.promoted .row{opacity:0;transform:translateY(16px);pointer-events:none}
+.screen.promoted .row.is-open{
+  opacity:1;transform:translateY(0);pointer-events:auto;
+  color:var(--cream);border-top-color:transparent;
+  font-family:var(--serif);font-size:25px;font-weight:300;letter-spacing:-.01em;
+  padding:0 2px 15px;border-bottom:1px solid var(--hair)
+}
+.screen.promoted .row.is-open .chev{transform:rotate(90deg);color:var(--cream-3)}
+.screen.promoted .rows{margin-top:0}
+
+/* absolute-collapse the closed rows so they take no space */
+.screen.promoted .row:not(.is-open){position:absolute;left:0;right:0;height:0;
+  padding:0;border:0;overflow:hidden}
+
+/* a surface reached from something other than a row carries its own header */
+.ghead{
+  display:none;align-items:center;justify-content:space-between;flex:none;
+  font-family:var(--serif);font-size:25px;font-weight:300;letter-spacing:-.01em;
+  color:var(--cream);padding:0 2px 15px;border-bottom:1px solid var(--hair)
+}
+.screen.promoted .ghead:not([hidden]){display:flex}
+.ghead .chev{transform:rotate(90deg);color:var(--cream-3)}
+
+/* ── the walk: code confirmed, then the four screens ── */
+.screen.walking .piece-slot,
+.screen.walking .head,
+.screen.walking .rows,
+.screen.walking .foot,
+.screen.walking .opened,
+.screen.walking .ghead,
+.screen.walking .backlink,
+.screen.walking .spacer{display:none}
+.walk{
+  display:none;flex:1;min-height:0;
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px 2px
+}
+.screen.walking .walk{display:flex;cursor:pointer}
+.walk-art{height:112px;margin-bottom:30px;display:grid;place-items:center;flex:none}
+.walk-art svg{width:92px;height:92px;overflow:visible}
+.walk-art path,.walk-art circle{
+  fill:none;stroke:var(--cream-2);stroke-width:1.25;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke
+}
+.walk-art.hide{display:none}
+.walk-h{
+  font-family:var(--serif);font-weight:300;font-size:31px;line-height:1.12;
+  letter-spacing:-.015em;color:var(--cream);margin-bottom:18px;text-wrap:balance
+}
+/* #walkB is the container; .walk-b are the paragraphs inside it */
+#walkB{width:100%;display:flex;flex-direction:column;align-items:center;flex:none}
+.walk-b{
+  font-size:15px;line-height:1.7;color:var(--cream-2);max-width:27ch;margin:0 auto
+}
+.walk-b2{margin-top:13px}
+/* choice rows inside the walk: hairline list, never a stack of buttons */
+.walk-rows{margin-top:22px;width:100%;text-align:left}
+.walk-row{
+  display:flex;flex-direction:column;gap:3px;width:100%;
+  background:none;border:0;border-top:1px solid var(--hair);
+  padding:13px 2px;cursor:pointer;text-align:left;font-family:var(--body);
+  transition:color .22s var(--ease)
+}
+.walk-row:last-child{border-bottom:1px solid var(--hair)}
+.walk-row .wr-t{font-size:15px;color:var(--cream)}
+.walk-row .wr-s{font-size:12.5px;color:var(--cream-3);line-height:1.5}
+.walk-row:hover .wr-t{color:var(--brass)}
+.wr-check{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+.wr-check .wr-mark{
+  font-family:var(--label);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--brass);white-space:nowrap
+}
+.wr-check:not(.is-on) .wr-mark{color:var(--cream-3);opacity:.5}
+/* fields: the shape only, this is a spec not a form */
+.walk-eyebrow{
+  font-family:var(--label);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--cream-3);margin-top:22px;width:100%;text-align:left
+}
+.walk-fields{margin-top:14px;width:100%;display:flex;flex-direction:column;gap:10px}
+.wf-row{display:flex;gap:10px}
+.wf{
+  flex:1;min-width:0;border-bottom:1px solid var(--hair);
+  padding:11px 2px;font-size:13.5px;color:var(--cream-3);text-align:left
+}
+/* stacked, one wide: a link is a line you fill, not a tile you pick */
+.walk-tiles{margin-top:20px;width:100%;display:flex;flex-direction:column;gap:8px}
+.wt{
+  width:100%;border:1px solid var(--hair);border-radius:10px;
+  padding:12px 14px;font-size:13px;color:var(--cream-2);text-align:left
+}
+.wt-add{border-style:dashed;color:var(--cream-3)}
+.walk-note{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:12px;line-height:1.6;color:var(--cream-3)
+}
+.walk-why{
+  margin-top:9px;align-self:flex-start;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-style:italic;font-size:13.5px;color:var(--cream-2);
+  padding:4px 2px;transition:color .22s var(--ease)
+}
+.walk-why:hover{color:var(--brass)}
+/* the explainer is a sheet, it rises over the screen beneath it */
+.walk.sheet{justify-content:flex-end;padding-bottom:16px}
+
+.walk-foot{margin-top:26px;flex:none;min-height:24px}
+.walk-foot .tlink{margin-top:12px}
+.walk-hint{
+  font-size:12px;color:var(--cream-3);font-style:italic;margin-top:4px
+}
+/* each walk screen enacts its own meaning, once, on entry */
+.walk.enter .walk-art path,.walk.enter .walk-art circle{
+  stroke-dasharray:var(--len,420);stroke-dashoffset:var(--len,420);
+  animation:draw 1.5s var(--ease-out) forwards
+}
+.walk.enter .walk-h,.walk.enter .walk-b{animation:riseIn .5s var(--ease-out) both}
+.walk.enter .walk-b{animation-delay:.1s}
+@keyframes riseIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+/* screen three: the glow swells once */
+.walk.glow .walk-art{animation:swell 1.6s var(--ease) 1}
+@keyframes swell{
+  0%,100%{filter:drop-shadow(0 0 0 rgba(212,184,138,0))}
+  45%{filter:drop-shadow(0 0 18px rgba(212,184,138,.55))}
+}
+/* screen four: the words arrive line by line */
+.walk.written .walk-b{animation:riseIn .55s var(--ease-out) both .35s}
+.walk.written .walk-foot{animation:riseIn .5s var(--ease-out) both .95s}
+
+/* the account row belongs to the caretaker's page only */
+.care-only{display:none}
+.screen.caretaker .care-only{display:flex}
+
+/* ── promoted content ── */
+.opened{
+  opacity:0;transform:translateY(14px);pointer-events:none;
+  transition:opacity .44s var(--ease) .1s, transform .56s var(--ease-out) .1s;
+  margin-top:20px;overflow-y:auto;flex:1;min-height:0;
+  padding-right:4px
+}
+.screen.promoted .opened{opacity:1;transform:translateY(0);pointer-events:auto}
+.opened::-webkit-scrollbar{width:2px}
+.opened::-webkit-scrollbar-thumb{background:var(--hair);border-radius:2px}
+.opened p{font-size:14.5px;line-height:1.75;color:var(--cream-2);margin-bottom:14px}
+.opened .facts{border-top:1px solid var(--hair-soft);padding-top:14px;margin-top:4px}
+.opened .fact{
+  display:flex;justify-content:space-between;gap:16px;
+  padding:8px 0;font-size:13.5px;border-bottom:1px solid var(--hair-soft)
+}
+.opened .fact dt{color:var(--cream-3);font-family:var(--label);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;padding-top:3px}
+.opened .fact dd{color:var(--cream-2);text-align:right}
+.opened .empty{color:var(--cream-3);font-style:italic;font-size:14px}
+
+/* ── the spacer + foot ── */
+.spacer{flex:1;min-height:8px}
+.screen.promoted .spacer{display:none}
+
+.foot{flex:none;text-align:center;padding-top:18px;
+  transition:opacity .34s var(--ease)}
+.screen.promoted .foot{opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0}
+.screen.promoted .foot > *{visibility:hidden}
+.screen.caretaker.promoted .foot,
+.screen.caretaker.promoted .foot > *{visibility:visible}
+
+/* ── the brass pill ── */
+.pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:46px;padding:0 44px;border:0;border-radius:999px;
+  background:var(--brass);color:#241d13;
+  font-family:var(--label);font-size:12px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;
+  transition:background .24s var(--ease),transform .22s var(--ease),
+             box-shadow .28s var(--ease);
+  box-shadow:0 6px 22px -8px rgba(212,184,138,.5)
+}
+.pill:hover{background:#e2c99f;box-shadow:0 10px 30px -8px rgba(212,184,138,.62)}
+.pill:active{transform:scale(.97)}
+/* disabled loses brass entirely, because brass is a promise you can act */
+.pill:disabled{
+  background:none;border:1px solid var(--hair);color:var(--cream-3);
+  box-shadow:none;cursor:default
+}
+.pill:disabled:hover{background:none;box-shadow:none}
+
+/* ── the text link ── */
+.tlink{
+  display:inline-block;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-size:14px;color:var(--cream-3);
+  padding:9px 4px;text-decoration:none;
+  transition:color .22s var(--ease)
+}
+.tlink:hover{color:var(--cream-2)}
+.foot .tlink{margin-top:14px}
+
+/* back link inside promoted */
+.backlink{
+  flex:none;padding-top:14px;opacity:0;pointer-events:none;
+  transition:opacity .4s var(--ease) .16s
+}
+.screen.promoted .backlink{opacity:1;pointer-events:auto}
+
+/* ── the code field state ── */
+.codefield{
+  display:none;flex-direction:column;align-items:center;
+  animation:fadeUp .5s var(--ease-out)
+}
+.screen.unlocking .codefield{display:flex}
+/* the Unlock pill STAYS on the code page: it is the second press.
+   Only the resting-page links step aside. */
+/* the Unlock pill STAYS on the code page: it is the second press.
+   Only the resting-page links step aside. */
+.screen.unlocking .foot > .tlink,
+.screen.unlocking .foot > br{display:none}
+.screen.unlocking .foot > .pill{margin-top:18px}
+.screen.wrongcode .foot > .pill{display:none}
+/* the code page is its OWN page: the rows and the status give way,
+   the field sits in the middle with room to breathe */
+.screen.unlocking .rows{display:none}
+.screen.unlocking .head .status{display:none}
+.screen.unlocking .piece-slot{grid-template-rows:96px;margin-bottom:16px}
+.screen.unlocking .piece-slot svg{transform:scale(.8)}
+.screen.unlocking .foot{padding-top:0}
+.screen.unlocking .spacer{flex:0 0 26px;min-height:0}
+.screen.unlocking .codefield{margin-top:10px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.code-in{
+  display:flex;gap:7px;margin-bottom:16px;position:relative
+}
+/* a real input, invisible over the six cells: you type, they fill */
+.code-in input{
+  position:absolute;inset:0;width:100%;height:100%;
+  background:none;border:0;outline:0;color:transparent;caret-color:transparent;
+  font-family:var(--label);font-size:19px;letter-spacing:2.05em;
+  text-indent:.6em;padding:0;cursor:text;-webkit-text-fill-color:transparent
+}
+.code-in span.cursor::after{
+  content:'';display:block;width:11px;height:1px;background:var(--brass);
+  animation:blink 1.1s steps(2,start) infinite
+}
+@keyframes blink{to{opacity:0}}
+.code-in span{
+  width:32px;height:44px;display:flex;align-items:center;justify-content:center;
+  border-bottom:1px solid var(--hair);
+  font-family:var(--label);font-size:19px;letter-spacing:.05em;
+  color:var(--cream);
+}
+.code-in span.seated{border-bottom-color:var(--brass)}
+.code-in span.seat-in{animation:seat .34s var(--ease-out)}
+@keyframes seat{
+  0%{transform:translateY(-5px);opacity:0}
+  60%{transform:translateY(1.5px);opacity:1}
+  100%{transform:none}
+}
+.code-help{font-size:12.5px;line-height:1.6;color:var(--cream-3);
+  text-align:center;margin-bottom:8px;max-width:28ch}
+.code-warn{font-size:12px;color:var(--cream-3);text-align:center;
+  margin-bottom:4px;max-width:28ch;font-style:italic}
+/* the wrong-code state carries longer copy: give the field room by dropping
+   the spacer above it, the same budget the meter gets */
+.screen.wrongcode .spacer{min-height:0;flex:0 1 auto}
+/* cleared field: one quiet rule, never six orphan dashes */
+.screen.wrongcode .code-in{gap:0;margin-bottom:12px}
+.screen.wrongcode .code-in span{border-bottom-color:var(--hair-soft);height:34px}
+/* the longer copy plus the recovery pair needs the rows to yield */
+.screen.wrongcode .rows{display:none}
+.screen.wrongcode .head{margin-bottom:4px}
+.screen.wrongcode .code-help{margin-bottom:4px}
+/* the recovery is two real buttons, never brass on inert text */
+/* [hidden] must win over display:flex */
+.code-actions[hidden]{display:none}
+.code-actions{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:8px}
+.code-actions .pill{min-height:42px;padding:0 36px}
+.code-nocode{margin-top:10px}
+.screen.wrongcode .code-nocode{display:none}
+
+/* the vault */
+.vault{
+  position:absolute;inset:0;pointer-events:none;z-index:5;
+  display:none
+}
+.screen.vaulting .vault{display:block}
+.vault .half{
+  position:absolute;left:0;right:0;height:50%;
+  background:var(--ground-2);
+  transition:transform 1.15s cubic-bezier(.65,0,.35,1)
+}
+.vault .half.top{top:0;border-bottom:1px solid var(--brass-deep)}
+.vault .half.bot{bottom:0;border-top:1px solid var(--brass-deep)}
+.screen.vaulting .vault .half.top{transform:translateY(-100%)}
+.screen.vaulting .vault .half.bot{transform:translateY(100%)}
+.vault .light{
+  position:absolute;inset:0;opacity:0;
+  background:radial-gradient(ellipse 130% 55% at 50% 50%,
+    rgba(212,184,138,.9) 0%, rgba(196,168,120,.42) 32%,
+    rgba(90,74,48,.18) 58%, transparent 78%);
+  transition:opacity .95s var(--ease) .12s
+}
+.screen.vaulting .vault .light{opacity:1}
+
+/* ── the glow meter ── */
+.meter-wrap{
+  display:none;flex-direction:column;align-items:stretch;gap:0;flex:none;
+  padding-bottom:4px;width:100%
+}
+.screen.caretaker .meter-wrap{display:flex}
+/* the meter is the foot in caretaker mode: give it the room the pill had */
+.screen.caretaker .spacer{min-height:0;flex:0 1 auto}
+.screen.caretaker .foot{padding-top:6px}
+/* home carries seven rows plus the light: the list yields, nothing is cut */
+.screen.caretaker .row{padding:10.5px 2px;font-size:14.5px}
+.screen.caretaker .rows{margin-top:16px}
+.screen.caretaker .piece-slot{grid-template-rows:96px;margin-bottom:14px}
+.screen.caretaker .piece-slot svg{transform:scale(.8)}
+.screen.caretaker .head .name{font-size:25px}
+.screen.caretaker .head .status{margin-top:8px;font-size:12px}
+/* the meter survives promotion: it shrinks to a small lit anchor beside the
+   header, exactly as the drawing does. Screen 23 is meter and rows together. */
+.screen.caretaker.promoted .foot{
+  opacity:1;pointer-events:auto;height:auto;overflow:visible;
+  padding:0;order:-1;margin-bottom:14px
+}
+.screen.caretaker.promoted .meter{height:16px}
+.screen.caretaker.promoted .meter .halo{filter:blur(6px)}
+.screen.caretaker.promoted .meter-label{display:none}
+.screen.caretaker.promoted .meter-wrap{padding-bottom:0}
+/* with the meter as the anchor, the drawing steps aside */
+.screen.caretaker.promoted .piece-slot{grid-template-rows:0;opacity:0;margin:0}
+.screen.caretaker .foot > .pill,
+.screen.caretaker .foot > .tlink,
+.screen.caretaker .foot > br{display:none}
+/* a line of light that lengthens, not a number in a ring. It reads as
+   brightness because it IS brightness: no score, no count, no total. */
+.meter{
+  position:relative;width:100%;height:34px;
+  background:none;border:0;cursor:pointer;padding:0;
+  display:grid;place-items:center;
+  transition:transform .3s var(--ease)
+}
+.meter:hover{transform:scaleY(1.12)}
+.meter:active{transform:scaleY(.94)}
+.meter .halo{
+  position:absolute;left:0;right:0;top:50%;height:3px;transform:translateY(-50%);
+  border-radius:99px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(212,184,138,var(--g,.3)) 12%,
+    rgba(212,184,138,var(--g,.3)) 88%,
+    transparent 100%);
+  filter:blur(9px);
+  transition:background .85s var(--ease);
+  animation:breathe 5.5s ease-in-out infinite
+}
+@keyframes breathe{0%,100%{opacity:.72}50%{opacity:1}}
+.meter .bar{
+  position:relative;z-index:1;width:100%;height:1px;
+  background:var(--hair);border-radius:99px;overflow:visible
+}
+.meter .bar-fill{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  height:1.5px;width:var(--w,29%);
+  background:linear-gradient(90deg,var(--brass-2),var(--brass));
+  border-radius:99px;
+  box-shadow:0 0 10px rgba(212,184,138,.55);
+  /* width, deliberately: scaleX would stretch the glow and the rounded cap
+     with it, so the light would distort instead of lengthen. One element,
+     once a year, is worth the layout pass. */
+  transition:width 1s var(--ease-out), box-shadow .85s var(--ease)
+}
+.meter-label{
+  margin-top:14px;font-size:12px;color:var(--cream-3);text-align:center;
+  line-height:1.45;align-self:center;max-width:26ch
+}
+/* demo controls: outside the phone, they are not part of any screen */
+.controls{
+  margin-top:20px;padding-top:16px;border-top:1px solid var(--hair-soft);
+  display:flex;flex-direction:column;align-items:center;gap:11px
+}
+.ctl-label{
+  font-family:var(--label);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3)
+}
+.meter-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.meter-steps button{
+  background:none;border:1px solid var(--hair);color:var(--cream-3);
+  font-family:var(--label);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;padding:6px 11px;border-radius:999px;cursor:pointer;
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.meter-steps button:hover{border-color:var(--brass);color:var(--brass)}
+
+/* ─────────── annotations column ─────────── */
+.annos{display:flex;flex-direction:column}
+.annos-head{margin-bottom:8px}
+.annos-head h2{
+  font-family:var(--serif);font-weight:300;font-size:34px;line-height:1.12;
+  letter-spacing:-.015em;color:var(--cream)
+}
+.annos-head p{margin-top:14px;font-size:15.5px;color:var(--cream-2);max-width:56ch}
+
+.prim{
+  border-top:1px solid var(--hair);padding:26px 0 26px 22px;
+  position:relative;
+  transition:background .5s var(--ease)
+}
+.prim::before{
+  content:'';position:absolute;left:0;top:26px;bottom:26px;width:1px;
+  background:var(--hair);transition:background .45s var(--ease),box-shadow .45s var(--ease)
+}
+.prim.lit::before{background:var(--brass);box-shadow:0 0 12px rgba(212,184,138,.5)}
+.prim:last-child{border-bottom:1px solid var(--hair)}
+
+.prim .n{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cream-3);
+  transition:color .4s var(--ease)
+}
+.prim.lit .n{color:var(--brass)}
+.prim h3{
+  font-family:var(--serif);font-weight:300;font-size:25px;line-height:1.2;
+  margin:7px 0 12px;color:var(--cream);letter-spacing:-.01em
+}
+.prim .what{font-size:15px;line-height:1.7;color:var(--cream-2);margin-bottom:18px;max-width:54ch}
+.prim dl{display:grid;grid-template-columns:auto 1fr;gap:9px 20px;font-size:13.5px;max-width:54ch}
+.prim dt{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--cream-3);padding-top:3px;white-space:nowrap
+}
+.prim dd{color:var(--cream-2);line-height:1.6}
+.prim .try{
+  margin-top:16px;font-size:13px;color:var(--brass);font-style:italic
+}
+
+/* ─────────── the rule callouts ─────────── */
+.laws{margin-top:0}
+.laws h2{
+  font-family:var(--serif);font-weight:300;font-size:34px;line-height:1.12;
+  letter-spacing:-.015em;margin-bottom:14px
+}
+.laws .lede{font-size:16px;color:var(--cream-2);max-width:60ch;margin-bottom:40px}
+.lawgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:0}
+.law{padding:26px 26px 26px 0;border-top:1px solid var(--hair)}
+.law h4{
+  font-family:var(--serif);font-weight:300;font-size:21px;line-height:1.25;
+  color:var(--cream);margin-bottom:10px
+}
+.law p{font-size:14.5px;line-height:1.68;color:var(--cream-2)}
+.law .open{
+  display:block;margin-top:11px;font-size:12.5px;color:var(--brass);font-style:italic
+}
+
+/* ─────────── assembly table ─────────── */
+.tablewrap{overflow-x:auto;margin-top:34px;padding-bottom:6px}
+.tablewrap::-webkit-scrollbar{height:3px}
+.tablewrap::-webkit-scrollbar-thumb{background:var(--hair);border-radius:3px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+thead th{
+  font-family:var(--label);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--cream-3);font-weight:400;
+  text-align:left;padding:0 14px 13px 0;border-bottom:1px solid var(--hair);
+  white-space:nowrap;vertical-align:bottom
+}
+thead th.num{width:34px}
+tbody td{
+  padding:13px 14px 13px 0;border-bottom:1px solid var(--hair-soft);
+  vertical-align:top;color:var(--cream-2);line-height:1.55
+}
+tbody td.num{font-family:var(--label);font-size:11px;color:var(--cream-3);padding-top:15px}
+tbody td.scr{color:var(--cream);font-family:var(--serif);font-size:20px;
+  font-weight:300;white-space:nowrap;padding-right:26px;letter-spacing:-.005em}
+tbody tr.sect td{
+  border-bottom:1px solid var(--hair);padding-top:30px;
+  font-family:var(--label);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brass)
+}
+tbody tr:hover td{color:var(--cream)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{
+  font-family:var(--label);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid var(--hair);border-radius:999px;
+  color:var(--cream-3);white-space:nowrap
+}
+.chip.b{border-color:var(--brass-deep);color:var(--brass)}
+/* not primitives: named in the note above the table */
+.chip.nonp{border-style:dashed;border-color:var(--hair-soft);color:var(--cream-3)}
+
+.moment{color:var(--cream-3);font-size:13.5px;line-height:1.55;max-width:34ch}
+
+/* ─────────── closing ─────────── */
+.close{padding:0 0 100px}
+.close h2{font-family:var(--serif);font-weight:300;font-size:30px;margin-bottom:16px}
+.close p{font-size:15.5px;color:var(--cream-2);max-width:62ch;margin-bottom:12px}
+.close .q{
+  border-top:1px solid var(--hair);margin-top:30px;padding-top:24px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px
+}
+.close .q div h4{font-family:var(--serif);font-weight:300;font-size:20px;margin-bottom:9px}
+.close .q div p{font-size:14.5px}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.12s!important
+  }
+  .draw path,.draw circle,.draw polygon,.draw line{stroke-dashoffset:0!important}
+}
+
+@media(max-width:640px){
+  .masthead{padding-top:56px}
+  .rule{margin:52px 0}
+  .law{padding-right:0}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-copy">
+      <div class="eyebrow">Adrian Rasmussen · The collector journey</div>
+      <h1>Six primitives, and the twenty four screens they build</h1>
+      <p>The wording for this flow is locked. What was never written down is how any of it
+      moves. Every screen in the journey is assembled from the six behaviors below. Touch
+      them here, then read the table for which screens use which.</p>
+      <p class="note">Nothing here is a finished screen. It is the behavior underneath
+      every screen, so that a designer dressing them has the motion already decided.</p>
+    </div>
+    <div class="mast-side">
+      <dl>
+        <div><dt>Ground</dt><dd>Espresso, dark first. Light follows once dark is locked.</dd></div>
+        <div><dt>Brass</dt><dd>Only on the thing you can act on. Never more than one per screen.</dd></div>
+        <div><dt>Drawings</dt><dd>Outline only, uniform stroke, authored as ordered paths.</dd></div>
+        <div><dt>Scroll</dt><dd>No setup screen ever scrolls. If it would, it splits.</dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ THE STAGE ══════════ -->
+  <section class="stage">
+
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen" id="screen">
+
+          <div class="vault"><div class="half top"></div><div class="half bot"></div><div class="light"></div></div>
+
+          <!-- the CAD drawing -->
+          <div class="piece-slot draw" id="pieceSlot">
+            <svg viewBox="0 0 100 100" aria-label="Earth's Breath, line drawing">
+              <path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>
+              <path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>
+              <path d="M14 50 L86 50 M50 8 L50 92" style="--len:150"/>
+              <circle cx="50" cy="50" r="9" style="--len:57"/>
+            </svg>
+          </div>
+
+          <!-- the head -->
+          <div class="head" id="head">
+            <div class="ul">Universal Language 1</div>
+            <div class="name">Earth&rsquo;s Breath</div>
+            <div class="status">Registered · a light in the Resonant Grid</div>
+          </div>
+
+          <!-- the rows -->
+          <div class="rows" id="rows">
+            <button class="row" data-row="story" data-prim="row">
+              <span>The story</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="cert" data-prim="row">
+              <span>The certificate</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="hist" data-prim="row">
+              <span>The history</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row" data-row="dreams" data-prim="row">
+              <span>The dreams</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="video" data-prim="row">
+              <span>Record a video</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="info" data-prim="row">
+              <span>Piece information</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="account" data-prim="row">
+              <span>Your account</span><span class="chev">&rsaquo;</span>
+            </button>
+          </div>
+
+          <!-- the walk: code confirmed, then the four. Tap anywhere advances. -->
+          <div class="walk" id="walk" hidden>
+            <div class="walk-art" id="walkArt">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>
+                <path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>
+                <circle cx="50" cy="50" r="9" style="--len:57"/>
+              </svg>
+            </div>
+            <h2 class="walk-h" id="walkH">The code is true</h2>
+            <p class="walk-b" id="walkB"></p>
+            <div class="walk-foot" id="walkFoot"></div>
+          </div>
+
+          <!-- a header for surfaces with no row of their own (the garden) -->
+          <div class="ghead" id="gardenHead" hidden>
+            <span id="gheadTitle">The garden</span><span class="chev">&rsaquo;</span>
+          </div>
+
+          <!-- promoted content -->
+          <div class="opened" id="opened"></div>
+
+          <div class="backlink" id="backlink">
+            <button class="tlink" data-close>Back to the piece</button>
+          </div>
+
+          <div class="spacer"></div>
+
+          <!-- foot: pill, link, code, meter -->
+          <div class="foot">
+
+            <div class="codefield" id="codefield">
+              <div class="code-in" id="codeIn">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <input id="codeInput" inputmode="text" autocomplete="off"
+                       spellcheck="false" maxlength="6" aria-label="The code">
+              </div>
+              <p class="code-help" id="codeHelp">Turn the piece over. The code is written on
+              its underside, and only its caretaker can see it.</p>
+              <p class="code-warn" id="codeWarn">Whoever holds the code holds access. Keep
+              it safe.</p>
+              <p class="code-nocode" id="codeNoCode">
+                <button class="tlink" id="noCodeBtn">I don&rsquo;t have a code</button>
+              </p>
+              <div class="code-actions" id="codeActions" hidden>
+                <button class="pill" id="tryAgainBtn">Try again</button>
+                <button class="tlink" id="contactBtn">Contact Adrian</button>
+              </div>
+            </div>
+
+            <div class="meter-wrap">
+              <button class="meter" id="meter" aria-label="Open the garden">
+                <span class="halo" id="halo"></span>
+                <span class="bar"><span class="bar-fill" id="mfill"></span></span>
+              </button>
+              <p class="meter-label" id="meterLabel">Seven answers placed.<br>Tap the light to open the garden.</p>
+            </div>
+
+            <button class="pill" id="unlockBtn" data-prim="pill">Unlock</button>
+            <br>
+            <a class="tlink" href="#" data-prim="link" id="siteLink">Into the artist&rsquo;s website</a>
+            <br>
+            <button class="tlink" id="signinLink" data-prim="link">Sign in to your account</button>
+          </div>
+
+        </div>
+      </div>
+      <p class="phone-caption" id="phoneCap">Resting state · tap anything</p>
+      <div class="controls">
+        <span class="ctl-label">Run a state</span>
+        <div class="meter-steps">
+          <button id="wrongBtn">A code that is not true</button>
+          <button id="heldBtn">A piece already held</button>
+        </div>
+      </div>
+      <div class="controls" id="meterCtl" hidden>
+        <span class="ctl-label">Answers placed</span>
+        <div class="meter-steps">
+          <button data-glow="0">None</button>
+          <button data-glow="2">Two</button>
+          <button data-glow="7">Seven</button>
+          <button data-glow="16">Sixteen</button>
+          <button data-glow="24">All</button>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:10px">
+        <button class="tlink" id="resetBtn" hidden>Back to the door, and run it again</button>
+      </p>
+    </div>
+
+    <!-- ══════════ ANNOTATIONS ══════════ -->
+    <div class="annos">
+      <div class="annos-head">
+        <h2>What each one does</h2>
+        <p>Touch a primitive on the phone and its entry lights. Every behavior below is
+        specified as duration, easing, and its three states, so nothing is left to be
+        guessed at build time.</p>
+      </div>
+
+      <article class="prim" data-p="row">
+        <div class="n">One</div>
+        <h3>The row that opens</h3>
+        <p class="what">The signature move. A hairline row lifts to the top of the page,
+        becomes the header, and its content rises into the space its siblings left. The
+        drawing shrinks and stays, so the piece is never out of sight while you read about
+        it. Nothing navigates. There is no back arrow: the header dropping back into the
+        list is the way out.</p>
+        <dl>
+          <dt>Motion</dt><dd>Row travels up over 580ms, siblings fall and fade over 380ms,
+          content rises at 100ms delay over 440ms. All on an exponential ease out.</dd>
+          <dt>Reverse</dt><dd>Exact inverse. The same object returning to the same slot is
+          what makes the page feel like one surface.</dd>
+          <dt>Loaded</dt><dd>Title as header, content beneath, drawing anchored left.</dd>
+          <dt>Empty</dt><dd>Row still opens. One quiet line: nothing written yet.</dd>
+          <dt>Error</dt><dd>Row opens to the failure with a retry, never a blocked tap.</dd>
+          <dt>Reduced</dt><dd>Crossfade at 120ms, no travel.</dd>
+        </dl>
+        <p class="try">Tap any of the four rows.</p>
+      </article>
+
+      <article class="prim" data-p="pill">
+        <div class="n">Two</div>
+        <h3>The brass pill</h3>
+        <p class="what">The only colored thing on any screen, and never more than one per
+        screen. Brass means you can act on this. That single rule is what buys the flow its
+        clarity: a person scanning a screen has exactly one place to look.</p>
+        <dl>
+          <dt>Motion</dt><dd>Press scales to 97% over 220ms. Its glow lifts on hover. Never
+          bounces, never pulses to attract.</dd>
+          <dt>Loaded</dt><dd>Filled brass, wood-dark label, uppercase Karla at 12px.</dd>
+          <dt>Working</dt><dd>Label holds, brass dims to 70%, input blocks.</dd>
+          <dt>Disabled</dt><dd>Falls to hairline outline. Loses brass entirely, because
+          brass is a promise you can act.</dd>
+        </dl>
+        <p class="try">Press Unlock.</p>
+      </article>
+
+      <article class="prim" data-p="link">
+        <div class="n">Three</div>
+        <h3>The plain text link</h3>
+        <p class="what">Every escape, every refusal, every departure. Not now. Skip for
+        now. I don&rsquo;t have a code. Into the artist&rsquo;s website. The contrast between
+        one solid pill and plain text is the entire hierarchy on a screen, which means a
+        link must never look like a row.</p>
+        <dl>
+          <dt>The law</dt><dd>Hairline rows open in place. Text links travel. Anything
+          that leaves this page is a link, never a row.</dd>
+          <dt>Sign in</dt><dd>Also a link, on the resting page, under the pill. The daily
+          return is the account; the code claims and transfers, then sleeps. Once signed
+          in as this piece&rsquo;s caretaker the link is gone and Your account is a row.</dd>
+          <dt>Motion</dt><dd>Color only, 220ms. No underline animation, no arrow.</dd>
+          <dt>Placement</dt><dd>Below the pill, never beside it. Vertical stacking is what
+          makes the hierarchy readable at a glance.</dd>
+        </dl>
+        <p class="try">Hover the link under the pill.</p>
+      </article>
+
+      <article class="prim" data-p="code">
+        <div class="n">Four</div>
+        <h3>The code field</h3>
+        <p class="what">Appears once in the entire journey and is the only input that
+        performs. Six characters resolve one at a time like tumblers finding their places,
+        a pause, then one soft seat on the last. Then the vault opens: the ground parts,
+        warm light comes through, and the light carries you to the next screen. No button
+        press after the click. Being carried through is the reward.</p>
+        <dl>
+          <dt>Tumblers</dt><dd>One character every 150ms, each seating with a 5px drop.</dd>
+          <dt>Pause</dt><dd>400ms of stillness after the last. The pause is what makes the
+          opening feel earned rather than automatic.</dd>
+          <dt>Vault</dt><dd>Ground parts over 1150ms on a slow-in-slow-out curve, light
+          blooms behind it. Whole passage two to four seconds. Never longer.</dd>
+          <dt>Wrong</dt><dd>No shake, no red. The field clears and the copy changes to
+          the code is not true, with try again and contact Adrian.</dd>
+          <dt>Reduced</dt><dd>Characters appear at once, vault becomes a clean fade.</dd>
+        </dl>
+        <p class="try">Press Unlock, then watch. This is the one theatrical moment in the
+        flow, and nothing else competes with its scale. The link beneath it runs a code
+        that will not match, so the refusal of shake and red can be seen rather than
+        trusted.</p>
+      </article>
+
+      <article class="prim" data-p="surface">
+        <div class="n">Five</div>
+        <h3>The promoted surface</h3>
+        <p class="what">What a row becomes. Its own scroll, its own three states, the
+        drawing anchored beside its title. This is also every caretaker door inside the
+        piece page: the garden, the video capsule, the account, piece information. One
+        motion vocabulary, used everywhere, so a person learns the gesture once.</p>
+        <dl>
+          <dt>Title</dt><dd>Cormorant 25px, promoted from Lora 15.5px. The type change is
+          how you know it is now a header and not a row.</dd>
+          <dt>Scroll</dt><dd>Only the content scrolls. The header and anchor stay fixed.
+          The page itself never scrolls, which is what protects the no-scroll rule.</dd>
+          <dt>Depth</dt><dd>One level only. A promoted surface never promotes another.</dd>
+        </dl>
+        <p class="try">Open The certificate to see a facts layout, The dreams to see empty.</p>
+      </article>
+
+      <article class="prim" data-p="meter">
+        <div class="n">Six</div>
+        <h3>The glow meter</h3>
+        <p class="what">The only element in the system that changes over years. Brightness
+        is questions answered: the caretaker&rsquo;s piece page carries a glow that deepens
+        with each one. It is never a readout. Tapping the glow opens the garden, which
+        makes it the door to making it brighter rather than a score.</p>
+        <dl>
+          <dt>Form</dt><dd>A line of light that lengthens. No number, no ring, no total,
+          because any of those turn brightness into a score. The line is the light.</dd>
+          <dt>Ramp</dt><dd>Length and glow grow together from a visible floor, so an
+          unanswered piece still looks alive. Reaching full is warmth, not completion.</dd>
+          <dt>Breath</dt><dd>A 5.5 second glow cycle. Slow enough to feel like light
+          rather than a loading state.</dd>
+          <dt>On answer</dt><dd>The line grows over one second, the glow follows at 850ms.
+          Plays once, on return to the page, never on a loop.</dd>
+          <dt>Zero</dt><dd>A short lit line, copy reads: the questions are waiting. Never
+          dark, because an unanswered piece is not a failed one.</dd>
+          <dt>Promoted</dt><dd>Survives. It thins to a quiet lit line above the header, the
+          way the drawing shrinks, so the caretaker page shows meter and rows at once.</dd>
+        </dl>
+        <p class="try">Tap the light to open the garden, then step the amounts below the phone.</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ LAWS ══════════ -->
+  <section class="laws">
+    <h2>Four rules the primitives depend on</h2>
+    <p class="lede">These are the decisions that keep six behaviors from becoming twenty
+    four inconsistent ones. Each was a real ambiguity in the wording record.</p>
+    <div class="lawgrid">
+      <div class="law">
+        <h4>Rows open, links travel</h4>
+        <p>The five rows on the piece page were not five of a kind. Four open in place and
+        one leaves the site entirely, while looking identical. Into the artist&rsquo;s
+        website is now a text link below the list, not a row.</p>
+        <span class="open">Recommended, open to redirect.</span>
+      </div>
+      <div class="law">
+        <h4>The drawing shrinks, it never leaves</h4>
+        <p>When a row promotes, the piece scales to a small anchor beside the new header.
+        You are never not looking at the piece while reading about the piece, and the
+        header gets weight the type alone could not give it.</p>
+        <span class="open">Recommended, open to redirect.</span>
+      </div>
+      <div class="law">
+        <h4>One theatrical moment</h4>
+        <p>The vault is the only passage over one and a half seconds. Every other payoff
+        is under it, plays once on entry, and can be interrupted by a tap. The screens
+        ship with plain fades first if that is faster; motion layers in after without
+        changing a single line of copy or layout.</p>
+      </div>
+      <div class="law">
+        <h4>Drawings are stroke paths, not assets</h4>
+        <p>Every CAD drawing draws itself, so each one has to be authored as ordered
+        strokes with a drawing sequence, not exported flat. A flat export kills the motion
+        layer quietly, and it is the easiest thing in this whole document to get wrong.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ══════════ TABLE ══════════ -->
+  <section>
+    <h2 style="font-family:var(--serif);font-weight:300;font-size:34px;letter-spacing:-.015em;line-height:1.12">
+      The twenty four screens</h2>
+    <p class="lede" style="font-size:16px;color:var(--cream-2);max-width:60ch;margin-top:14px">
+      Every screen in walking order, which primitives assemble it, and the one moment that
+      belongs to it alone. Screens with no moment listed are deliberately still.</p>
+    <p style="font-size:14.5px;color:var(--cream-3);max-width:60ch;margin-top:14px;
+      border-left:1px solid var(--hair);padding-left:16px;line-height:1.65">
+      Two labels in the table are not primitives, and are set in a lighter face to say so.
+      <strong style="font-weight:400;color:var(--cream-2)">Field</strong> is the plain text
+      input on the five gathering screens; it has no motion of its own and inherits whatever
+      the form pattern turns out to be. <strong style="font-weight:400;color:var(--cream-2)">Tap
+      anywhere</strong> is the four introduction screens having no target at all: the whole
+      screen advances. Both are named here so the count of six stays honest.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="num"></th><th>Screen</th><th>Primitives</th><th>Its own moment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sect"><td colspan="4">The door</td></tr>
+          <tr><td class="num">01</td><td class="scr">The piece page</td>
+            <td><div class="chips"><span class="chip">Row</span><span class="chip b">Pill</span><span class="chip">Link</span><span class="chip">Surface</span></div></td>
+            <td class="moment">The drawing draws itself on first arrival, once. Carries two
+            links: into the website, and sign in to your account.</td></tr>
+          <tr><td class="num">02</td><td class="scr">The unlock</td>
+            <td><div class="chips"><span class="chip">Code</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">The pill melts into the field. Tumblers, pause, seat.
+            Carries I don&rsquo;t have a code.</td></tr>
+          <tr><td class="num">03</td><td class="scr">The vault</td>
+            <td><div class="chips"><span class="chip">Code</span></div></td>
+            <td class="moment">The ground parts and light carries you through. The one big one.</td></tr>
+          <tr><td class="num">04</td><td class="scr">The code is not true</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">No shake, no red. The field clears, the copy changes, Try
+            again is the pill and Contact Adrian the link.</td></tr>
+
+          <tr class="sect"><td colspan="4">The threshold</td></tr>
+          <tr><td class="num">05</td><td class="scr">The code is true</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Arrives already lit by the vault. Nothing of its own.</td></tr>
+          <tr><td class="num">06</td><td class="scr">For someone else</td>
+            <td><div class="chips"><span class="chip">Row</span></div></td>
+            <td class="moment">Two rows, no pill. Neutral by construction.</td></tr>
+          <tr><td class="num">07</td><td class="scr">Leave your wishes</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Surface</span></div></td>
+            <td class="moment">Warm. The seal closes over the words once written.</td></tr>
+          <tr><td class="num">08</td><td class="scr">Something was left for you</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">The seal breaks. Shown before anything else, after the vault.</td></tr>
+          <tr><td class="num">09</td><td class="scr">Passing it on</td>
+            <td><div class="chips"><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Grave. Slowest fade in the flow, and no drawing.</td></tr>
+          <tr><td class="num">10</td><td class="scr">A passing begins</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">Patient, never grasping. Continue leads to the thirty days.</td></tr>
+          <tr><td class="num">11</td><td class="scr">We have written to its caretaker</td>
+            <td><div class="chips"><span class="chip">Link</span></div></td>
+            <td class="moment">Still. Thirty days live behind this screen.</td></tr>
+
+          <tr class="sect"><td colspan="4">The four</td></tr>
+          <tr><td class="num">12</td><td class="scr">You felt the pull</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">The line drawing draws itself over 1.5 seconds.</td></tr>
+          <tr><td class="num">13</td><td class="scr">The resonant grid</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">Globe arrives dark. Lights come on one by one, lines weave.</td></tr>
+          <tr><td class="num">14</td><td class="scr">When you focus your love</td>
+            <td><div class="chips"><span class="chip nonp">Tap anywhere</span></div></td>
+            <td class="moment">The drawing&rsquo;s glow swells once, softly, then settles.</td></tr>
+          <tr><td class="num">15</td><td class="scr">It carries on</td>
+            <td><div class="chips"><span class="chip b">Pill</span></div></td>
+            <td class="moment">Words arrive line by line, like being written. No drawing.</td></tr>
+
+          <tr class="sect"><td colspan="4">The gathering</td></tr>
+          <tr><td class="num">16</td><td class="scr">Sign its record</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Three fields. Never scrolls, so it never grows.</td></tr>
+          <tr><td class="num">17</td><td class="scr">Who you are</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Why we ask opens the same sheet the skip shows.</td></tr>
+          <tr><td class="num">18</td><td class="scr">Where it lives</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Shortest screen in the flow, deliberately. One field.</td></tr>
+          <tr><td class="num">19</td><td class="scr">Your links</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">Its own temperature: lighter, fully skippable.</td></tr>
+          <tr><td class="num">20</td><td class="scr">What this is for</td>
+            <td><div class="chips"><span class="chip">Surface</span><span class="chip b">Pill</span><span class="chip">Link</span></div></td>
+            <td class="moment">A sheet, not a screen. Rises over the one beneath it.</td></tr>
+          <tr><td class="num">21</td><td class="scr">Your piece shines</td>
+            <td><div class="chips"><span class="chip">Row</span><span class="chip b">Pill</span></div></td>
+            <td class="moment">Each row carries a lit mark. Unchecking is withholding.</td></tr>
+
+          <tr class="sect"><td colspan="4">Home</td></tr>
+          <tr><td class="num">22</td><td class="scr">You are Light 47</td>
+            <td><div class="chips"><span class="chip">Meter</span></div></td>
+            <td class="moment">Ignition. The light comes on for the first time.</td></tr>
+          <tr><td class="num">23</td><td class="scr">The piece page, warmed</td>
+            <td><div class="chips"><span class="chip">Meter</span><span class="chip">Row</span><span class="chip">Surface</span><span class="chip">Link</span></div></td>
+            <td class="moment">Same page, no Unlock. The meter has taken the pill&rsquo;s place.</td></tr>
+          <tr><td class="num">24</td><td class="scr">Welcome back</td>
+            <td><div class="chips"><span class="chip nonp">Field</span><span class="chip b">Pill</span><span class="chip">Link</span><span class="chip">Surface</span></div></td>
+            <td class="moment">Nothing. It is a door, and doors do not perform. Reached from
+            the piece page, or from any caretaker door touched while signed out.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section class="close">
+    <h2>What is still open</h2>
+    <p>Two decisions are built here on my recommendation and are the fastest things to
+    redirect. Everything else follows the locked wording record.</p>
+    <div class="q">
+      <div>
+        <h4>The photograph</h4>
+        <p>Built as: shrinks to an anchor and stays. The alternatives are that it collapses
+        away entirely, which gives the most room and the cleanest header but loses the piece
+        while you read about it, or that it holds full size with content scrolling under,
+        which is most reverent but breaks the no scroll rule.</p>
+      </div>
+      <div>
+        <h4>The fifth row</h4>
+        <p>Built as: a text link below the list. The alternatives are that it stays a row
+        with a quiet outbound mark, which needs a mark the no icons rule has to allow, or
+        that it opens in place with a short invitation and a real link inside it, which
+        never sends anyone away by accident at the cost of one extra tap.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen'),
+      opened=document.getElementById('opened'),
+      cap=document.getElementById('phoneCap'),
+      rows=document.getElementById('rows'),
+      unlockBtn=document.getElementById('unlockBtn'),
+      codeIn=document.getElementById('codeIn'),
+      meter=document.getElementById('meter'),
+      mfill=document.getElementById('mfill'),
+      halo=document.getElementById('halo'),
+      resetBtn=document.getElementById('resetBtn'),
+      gardenHead=document.getElementById('gardenHead'),
+      pieceSlot=document.getElementById('pieceSlot');
+
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── annotation lighting ── */
+  var litTimer=null;
+  function clearLit(){
+    document.querySelectorAll('.prim.lit').forEach(function(e){e.classList.remove('lit')});
+  }
+  /* hold: stays lit until the state changes. flash: fades after a beat. */
+  function lite(p,hold){
+    clearTimeout(litTimer); clearLit();
+    var el=document.querySelector('.prim[data-p="'+p+'"]');
+    if(!el) return;
+    el.classList.add('lit');
+    if(!hold) litTimer=setTimeout(clearLit,4200);
+  }
+
+  /* ── content for promoted rows ── */
+  var content={
+    story:'<p>Earth&rsquo;s Breath was carved from a single piece of claro walnut over '+
+      'eleven months. The grain runs the full length of the form, so the piece reads '+
+      'differently from either side.</p>'+
+      '<p>It is the first of the sixty four. The geometry came before the wood did, and '+
+      'the wood argued with it for most of a year.</p>'+
+      '<p class="empty">Loaded state. Long copy scrolls inside the surface; the page '+
+      'itself does not move.</p>',
+    cert:'<div class="facts">'+
+      '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
+      '<div class="fact"><dt>Material</dt><dd>Claro walnut, brass inlay</dd></div>'+
+      '<div class="fact"><dt>Dimensions</dt><dd>420 &times; 420 &times; 90 mm</dd></div>'+
+      '<div class="fact"><dt>Series</dt><dd>Universal Language, 1 of 64</dd></div>'+
+      '<div class="fact"><dt>Registered</dt><dd>Light 47</dd></div>'+
+      '</div><p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Illustrative values. Real per piece materials data is still to come from Adrian.</p>',
+    hist:'<p>Two entries on the public spine. Names appear only where a caretaker '+
+      'chose to be seen.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024</dt><dd>Released from the studio</dd></div>'+
+      '<div class="fact"><dt>2024</dt><dd>Registered · Sonoma County</dd></div>'+
+      '</div>',
+    dreams:'<p class="empty">Nothing written yet.</p>'+
+      '<p style="margin-top:18px;font-size:13px;color:var(--cream-3)">'+
+      'The empty state. A row always opens; it never refuses the tap.</p>',
+    garden:'<p>The questions you have answered, and the ones still waiting. Answer one '+
+      'now, five next month, the rest across years.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Answered</dt><dd>Why you brought it home</dd></div>'+
+      '<div class="fact"><dt>Answered</dt><dd>Where it hangs</dd></div>'+
+      '<div class="fact"><dt>Waiting</dt><dd>What you were carrying that year</dd></div>'+
+      '<div class="fact"><dt>Waiting</dt><dd>Who you would pass it to</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Illustrative questions. The real set is a wording session still to come.</p>',
+    account:'<p>Nothing from setting up is frozen. Move house and the light moves with '+
+      'you.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Where it lives</dt><dd>Sonoma County</dd></div>'+
+      '<div class="fact"><dt>Your links</dt><dd>Two shown, one hidden</dd></div>'+
+      '<div class="fact"><dt>Name and email</dt><dd>Changeable any day</dd></div>'+
+      '<div class="fact"><dt>Password</dt><dd>Change, or recover by email</dd></div>'+
+      '<div class="fact"><dt>What shows</dt><dd>Five choices, yours</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'A caretaker door reached while signed out goes to sign in, then straight back '+
+      'here. Never a dead end.</p>',
+    signin:'<p>The daily return is through the account, never the code. The code claims '+
+      'and transfers, then sleeps.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Email</dt><dd>you@example.com</dd></div>'+
+      '<div class="fact"><dt>Password</dt><dd>Six dots</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:14px"><span style="color:var(--brass)">Sign in</span></p>'+
+      '<p style="margin-top:10px;font-size:13px;color:var(--cream-3)">'+
+      'I forgot my password. Recovery touches the account only; the record and the piece '+
+      'are never edited by it.</p>',
+    passing:'<p>Earth&rsquo;s Breath is real, and it is in your hands. But it is held by '+
+      'another caretaker, and nothing moves without them. We will ask them to let go; '+
+      'when they do, it becomes yours to carry.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Now</dt><dd>We write to its caretaker</dd></div>'+
+      '<div class="fact"><dt>If they agree</dt><dd>It becomes yours</dd></div>'+
+      '<div class="fact"><dt>If silent</dt><dd>Thirty days, with reminders</dd></div>'+
+      '<div class="fact"><dt>If refused</dt><dd>Adrian steps in, the one human case</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'The code alone never transfers a piece. Silence is never consent.</p>',
+    video:'<p>The capsule: short, rare, sealed with the piece. Possibly one at purchase, '+
+      'another at the yearly ritual.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Status</dt><dd>Waiting on the cost research</dd></div>'+
+      '<div class="fact"><dt>The bound</dt><dd>The video can always be exported and held. '+
+      'Never the word forever for hosting.</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'The row reads: Record a video, when it is ready. No promise appears in any screen '+
+      'wording until the research lands.</p>',
+    info:'<p>The full record, including the depths only its caretaker sees.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
+      '<div class="fact"><dt>Materials</dt><dd>Claro walnut, brass inlay</dd></div>'+
+      '<div class="fact"><dt>Elements</dt><dd>Earth, air</dd></div>'+
+      '<div class="fact"><dt>What was paid</dt><dd>Caretaker only</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Illustrative. Real per piece materials data is still to come from Adrian; the '+
+      'certificate is empty without it.</p>',
+    fork:'<p>Two intentions, separated before either begins.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Giving it as a gift</dt><dd>Leave your wishes with the '+
+      'piece; they are sealed until its new caretaker unlocks it</dd></div>'+
+      '<div class="fact"><dt>Passing on my own piece</dt><dd>Begin handing your '+
+      'caretakership to another</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Four temperatures held deliberately: the fork neutral, the gift warm, the release '+
+      'grave, the receiving patient.</p>'
+  };
+  var titles={story:'The story',cert:'The certificate',hist:'The history',
+    dreams:'The dreams',garden:'The garden',account:'Your account',
+    signin:'Welcome back',passing:'A passing begins',fork:'For someone else',
+    video:'Record a video',info:'Piece information'};
+
+  /* ── row promotion ── */
+  function openRow(key,btn){
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    if(btn) btn.classList.add('is-open');
+    gardenHead.hidden=!!btn;
+    if(!btn) document.getElementById('gheadTitle').textContent=titles[key]||'';
+    opened.innerHTML=content[key]||'';
+    screen.classList.add('promoted');
+    cap.textContent='Promoted · '+titles[key];
+    lite('row'); setTimeout(function(){lite('surface',true)},900);
+  }
+  function closeRow(){
+    screen.classList.remove('promoted');
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    gardenHead.hidden=true;
+    cap.textContent='Resting state · tap anything';
+    clearTimeout(litTimer); clearLit();
+    setTimeout(function(){ if(!screen.classList.contains('promoted')) opened.innerHTML=''; },620);
+  }
+
+  rows.addEventListener('click',function(e){
+    var btn=e.target.closest('.row'); if(!btn) return;
+    if(btn.classList.contains('is-open')){ closeRow(); return; }
+    openRow(btn.dataset.row,btn);
+  });
+  document.addEventListener('click',function(e){
+    if(e.target.closest('[data-close]')) closeRow();
+  });
+
+  /* ── the code field + vault ── */
+  var CODE='4K7X2M', WRONG='9B3P1R', HELD='7T4N8K', running=false,
+      codeHelp=document.getElementById('codeHelp'),
+      codeWarn=document.getElementById('codeWarn'),
+      codeActions=document.getElementById('codeActions'),
+      wrongBtn=document.getElementById('wrongBtn');
+
+  var HELP='Turn the piece over. The code is written on its underside, and only its '+
+           'caretaker can see it.',
+      WARN='Whoever holds the code holds access. Keep it safe.';
+
+  function runCode(chars, done, label){
+    if(running) return; running=true;
+    lite('pill');
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    codeActions.hidden=true;
+    screen.classList.remove('wrongcode');
+    screen.classList.add('unlocking');
+    unlockBtn.disabled=true;
+    cap.textContent=label;
+    var cells=codeIn.children, i=0;
+    Array.prototype.forEach.call(cells,function(c){c.textContent='';c.classList.remove('seated')});
+    setTimeout(function(){ lite('code'); },260);
+
+    if(reduce){
+      Array.prototype.forEach.call(cells,function(c,n){
+        c.textContent=chars[n]; c.classList.add('seated');
+      });
+      setTimeout(done,300);
+      return;
+    }
+    (function seat(){
+      if(i>=cells.length){ setTimeout(done,400); return; }
+      cells[i].textContent=chars[i];
+      cells[i].classList.add('seated');
+      i++;
+      setTimeout(seat,150);
+    })();
+  }
+
+  /* TWO PRESSES, per the flow.
+     One: Unlock opens the code page, the field empty and waiting.
+     Two: you enter the code and press Unlock again. Then the tumblers. */
+  var codeInput=document.getElementById('codeInput');
+
+  function openCodePage(){
+    screen.classList.remove('wrongcode');
+    screen.classList.add('unlocking');
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    codeActions.hidden=true;
+    codeInput.value='';
+    paintCode();
+    cap.textContent='The unlock · the field is waiting';
+    lite('code',true);
+    setTimeout(function(){ codeInput.focus(); },260);
+  }
+
+  /* the six cells mirror what is typed */
+  function paintCode(){
+    var v=(codeInput.value||'').toUpperCase(), cells=codeIn.querySelectorAll('span');
+    for(var i=0;i<cells.length;i++){
+      var had=cells[i].textContent;
+      cells[i].textContent=v[i]||'';
+      cells[i].classList.toggle('seated', !!v[i]);
+      cells[i].classList.toggle('cursor', i===v.length && v.length<6);
+      if(v[i] && !had){
+        cells[i].classList.remove('seat-in'); void cells[i].offsetWidth;
+        cells[i].classList.add('seat-in');
+      }
+    }
+    unlockBtn.disabled = v.length<6;
+  }
+
+  codeInput.addEventListener('input',function(){
+    codeInput.value=codeInput.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+    paintCode();
+  });
+  codeInput.addEventListener('keydown',function(e){
+    if(e.key==='Enter' && codeInput.value.length===6){ e.preventDefault(); submitCode(); }
+  });
+  codeIn.addEventListener('click',function(){ codeInput.focus(); });
+
+  /* what the code you typed actually opens */
+  function submitCode(){
+    var v=(codeInput.value||'').toUpperCase();
+    if(v.length<6) return;
+    if(v===HELD){ runCode(v, function(){
+        screen.classList.remove('unlocking'); startWalk('receiving'); running=false;
+      }, 'The unlock · a piece already held'); return; }
+    if(v===CODE){ runCode(v, vault, 'The unlock · tumblers'); return; }
+    runCode(v, wrongCode, 'The unlock · a code that will not match');
+  }
+
+  unlockBtn.addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')){ openCodePage(); return; }
+    submitCode();
+  });
+
+  /* the account door on the resting page: the daily return, no code */
+  document.getElementById('signinLink').addEventListener('click',function(){
+    startWalk('welcome');
+  });
+
+  /* the other door behind the same unlock: a piece already held */
+  document.getElementById('heldBtn').addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')) openCodePage();
+    runCode(HELD, function(){
+      screen.classList.remove('unlocking');
+      startWalk('receiving');
+      running=false;
+    }, 'The unlock · a piece already held');
+  });
+
+  /* no code: the door for someone who scanned a piece they do not hold */
+  document.getElementById('noCodeBtn').addEventListener('click',function(){
+    codeHelp.textContent='Without the code you can still see everything the piece shows '+
+      'in public. The code lives on its underside, and only its caretaker can see it.';
+    codeWarn.textContent='';
+    cap.textContent='I don\u2019t have a code · the guest stops here, complete';
+    lite('link',true);
+  });
+
+  /* the recovery: real buttons, because brass promises you can act */
+  document.getElementById('tryAgainBtn').addEventListener('click',function(){
+    screen.classList.remove('wrongcode');
+    openCodePage();
+  });
+  document.getElementById('contactBtn').addEventListener('click',function(){
+    codeHelp.textContent='This is where the message to Adrian opens. It is the one '+
+      'genuinely human case in the flow.';
+    cap.textContent='Contact Adrian · the human case';
+  });
+
+  /* the wrong code: no shake, no red. The field clears, the copy changes. */
+  /* the wrong code: no shake, no red. The field clears, the copy changes. */
+  function wrongCode(){
+    codeIn.querySelectorAll('span').forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
+    if(codeInput) codeInput.value='';
+    screen.classList.add('wrongcode');
+    codeHelp.textContent='The code is not true. It did not match this piece. Turn it '+
+      'over and look again; if it still will not open, Adrian will help.';
+    codeWarn.textContent='';
+    codeActions.hidden=false;
+    cap.textContent='The code is not true · no shake, no red';
+    resetBtn.hidden=false;
+    lite('code',true);
+    running=false;
+  }
+
+  wrongBtn.addEventListener('click',function(){
+    if(!screen.classList.contains('unlocking')) openCodePage();
+    runCode(WRONG, wrongCode, 'The unlock · a code that will not match');
+  });
+
+  function vault(){
+    cap.textContent='The vault · the one big moment';
+    screen.classList.add('vaulting');
+    setTimeout(function(){
+      screen.classList.remove('vaulting','unlocking');
+      startWalk();
+      running=false;
+    }, reduce?700:2000);
+  }
+
+  /* ── the walk: what the vault actually lands on ──
+     Code confirmed, then the four screens, then Begin. Tap anywhere advances,
+     exactly as the locked record specifies: no skip link, four taps in four
+     seconds still delivers the arc. */
+  var walk=document.getElementById('walk'),
+      walkArt=document.getElementById('walkArt'),
+      walkH=document.getElementById('walkH'),
+      walkB=document.getElementById('walkB'),
+      walkFoot=document.getElementById('walkFoot'),
+      step=null;
+
+  /* Every screen below is VERBATIM from collector-flow-preview.html.
+     Do not paraphrase. `to` names the next screen; a screen with `rows`
+     branches by row index. */
+  var WALK={
+
+    /* ── the threshold ── */
+    codetrue:{ h:'The code is true', art:'piece',
+      b:'Earth’s Breath is real, and it is in your hands. It is one light in the '+
+        'Resonant Grid: a living artwork spread across the world. The next few minutes '+
+        'register it as authentic and as yours, and give it its place.',
+      pill:'Continue', to:'pull',
+      link:'This piece is for someone else', linkTo:'fork',
+      cap:'Code confirmed · first caretaker' },
+
+    fork:{ h:'For someone else', art:'none',
+      rows:[
+        ['Giving it as a gift','leave your wishes with the piece; they are sealed until its new caretaker unlocks it','gift'],
+        ['Passing on my own piece','begin handing your caretakership to another','transfer']
+      ],
+      cap:'The fork · two intentions, separated' },
+
+    gift:{ h:'Leave your wishes with it', art:'none',
+      b:'Write what you wish for the one who will hold this piece. Your words seal into '+
+        'it, greet them the day they make it theirs, and live with the piece forever.',
+      pill:'Seal your wishes', to:'sealed',
+      cap:'The gift · giver’s side · warm' },
+
+    sealed:{ h:'Something was left for you', art:'letter',
+      b:'Whoever gave you this piece placed words inside it, sealed until this moment.',
+      pill:'Open them', to:'pull',
+      cap:'The gift · receiver’s side, right after the vault' },
+
+    transfer:{ h:'Passing it on', art:'none',
+      b:'You are releasing Earth’s Breath to its next caretaker. Everything you '+
+        'placed in it stays with the piece forever, as its story. When they accept, your '+
+        'hold ends and theirs begins.',
+      pill:'Begin the passing', to:'written',
+      link:'Not now', linkTo:'codetrue',
+      cap:'The transfer · grave, never softened' },
+
+    receiving:{ h:'A passing begins', art:'piece',
+      b:'Earth’s Breath is real, and it is in your hands. But it is held by another '+
+        'caretaker, and nothing moves without them. We will ask them to let go; when they '+
+        'do, it becomes yours to carry.',
+      pill:'Continue', to:'written',
+      cap:'The receiving side · patient, never grasping' },
+
+    written:{ h:'We have written to its caretaker', art:'none',
+      b:'Earth’s Breath is registered to someone. They will confirm the letting go. '+
+        'If thirty days pass in silence, with reminders along the way, the piece passes '+
+        'to you and both of you are told.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The passing, resolved · thirty days live here' },
+
+    /* ── the four ── */
+    pull:{ h:'You felt the pull', art:'piece', tap:true, to:'grid',
+      b:'Perhaps it was beauty. Or the story. Or just a feeling beyond words. There was '+
+        'a connection.',
+      cap:'One of four · the drawing draws itself' },
+
+    grid:{ h:'The resonant grid', art:'globe', tap:true, to:'love',
+      b:'The ones who hold these creations feel it too. They weave a grid across the '+
+        'planet. And you are a part of that.',
+      cap:'Two of four · lights come on one by one' },
+
+    love:{ h:'When you focus your love, it grows', art:'piece', tap:true, to:'carries',
+      glow:true,
+      b:'Infuse your love into this art and its light shines brighter. Every time you '+
+        'see it, you will feel everything it holds, and the resonance you have placed '+
+        'within it.',
+      cap:'Three of four · the glow swells once' },
+
+    carries:{ h:'It carries on', art:'none', lines:true,
+      b:'Hundreds of years from now, whoever is fortunate enough to caretake this art '+
+        'will feel the love you have infused it with today. Everything you enter now '+
+        'will live with it forever.',
+      b2:'So take a moment, and write your story.',
+      pill:'Begin', to:'sign',
+      cap:'Four of four · the only screen with no drawing' },
+
+    /* ── the gathering: five screens, none of them scroll ── */
+    sign:{ h:'Sign its record', art:'none',
+      b:'Earth’s Breath will carry your name from today. Your email is where the '+
+        'piece will write to you.',
+      fields:[['first name','last name'],['email'],['create a password']],
+      pill:'Sign', to:'born',
+      cap:'One of five · the account born as a signature' },
+
+    born:{ h:'Who you are', art:'none',
+      b:'For the piece’s astrology, and for the ones who will find you through it.',
+      eyebrow:'Born',
+      fields:[['date','time'],['place of birth']],
+      note:'A full reading needs all three. They are never shown to anyone; only what '+
+        'they produce can be, and only if you choose.',
+      pill:'Continue', to:'lives',
+      link:'Skip for now', linkTo:'explain',
+      why:'Why we ask',
+      cap:'Two of five · born only, one idea' },
+
+    lives:{ h:'Where it lives', art:'none',
+      b:'The city Earth’s Breath calls home. Its light shows at city level at most, '+
+        'never an address.',
+      fields:[['city']],
+      note:'If even the city feels close, widen it to the region: the light stays true '+
+        'but cannot be pinpointed.',
+      pill:'Continue', to:'links',
+      cap:'Three of five · the shortest screen in the flow' },
+
+    links:{ h:'Your links', art:'none',
+      b:'For the people your piece moves, so they can find who holds it. Choose which '+
+        'ones people see.',
+      tiles:['Instagram','X','Your website','+ add another'],
+      pill:'Continue', to:'shows',
+      link:'Skip for now', linkTo:'explain',
+      cap:'Four of five · fully skippable, its own temperature' },
+
+    explain:{ h:'What this is for', art:'none', sheet:true,
+      b:'Your birthday ties your piece to your astrology, and it lets the piece mark '+
+        'your day: once a year, near your birthday, it asks for a moment with you. Your '+
+        'links are for the people your piece moves, so they can find who holds it. '+
+        'Nothing here is shown without your choice, and everything can be added later.',
+      pill:'Add it now', to:'born',
+      link:'Skip anyway', linkTo:'shows',
+      cap:'The explainer · one sheet, two doors' },
+
+    shows:{ h:'Your piece shines', art:'none',
+      b:'What you place in it glows on the grid as words with no name, and its light '+
+        'shows at city level, never an address. Anything you would rather keep quiet, '+
+        'uncheck.',
+      checks:[
+        'Its light on the map · your city only',
+        'Its words · shown without your name',
+        'Your name · off until you open it',
+        'Your face and links · off until you open them'
+      ],
+      pill:'Keep these choices', to:'light47',
+      cap:'Five of five · the piece shines, the person opts in' },
+
+    /* ── ignition ── */
+    light47:{ h:'You are Light 47', art:'globelit',
+      b:'Earth’s Breath now shines on the Resonant Grid. Its light deepens with '+
+        'everything you place in it, starting whenever you wish.',
+      pill:'See your piece', to:'__home',
+      cap:'Ignition · the light comes on for the first time' },
+
+    /* ── returning ── */
+    welcome:{ h:'Welcome back', art:'none',
+      b:'Sign in and every piece you caretake opens to you. No code needed; the code '+
+        'sleeps until a passing.',
+      fields:[['email'],['password']],
+      pill:'Sign in', to:'__home',
+      link:'I forgot my password', linkTo:'forgot',
+      cap:'Signing in again · a returning caretaker' },
+
+    forgot:{ h:'A way back in', art:'none',
+      b:'Enter your email and we will send you a way back in. The reset link arrives by '+
+        'email; the record and the piece are untouched.',
+      fields:[['email']],
+      pill:'Send it', to:'welcome',
+      link:'Back to sign in', linkTo:'welcome',
+      cap:'Recovery · never an edit to history' }
+  };
+
+  var GLOBE='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<circle cx="50" cy="50" r="38" style="--len:239"/>'+
+    '<path d="M50 12 C30 30 30 70 50 88 C70 70 70 30 50 12 Z" style="--len:200"/>'+
+    '<path d="M12 50 L88 50" style="--len:76"/>'+
+    '<path d="M20 30 L80 30 M20 70 L80 70" style="--len:120"/></svg>',
+    GLOBELIT=GLOBE.replace('</svg>',
+      '<circle cx="68" cy="34" r="3.2" class="lit" style="--len:20"/></svg>'),
+    PIECE='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<path d="M50 8 L86 50 L50 92 L14 50 Z" style="--len:290"/>'+
+    '<path d="M50 24 L72 50 L50 76 L28 50 Z" style="--len:180"/>'+
+    '<circle cx="50" cy="50" r="9" style="--len:57"/></svg>',
+    LETTER='<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<path d="M14 30 L86 30 L86 76 L14 76 Z" style="--len:236"/>'+
+    '<path d="M14 30 L50 56 L86 30" style="--len:88"/>'+
+    '<circle cx="50" cy="56" r="7" style="--len:44"/></svg>';
+
+  var ART={piece:PIECE,globe:GLOBE,globelit:GLOBELIT,letter:LETTER};
+
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  function startWalk(key){ screen.classList.add('walking'); renderWalk(key||'codetrue'); }
+
+  function renderWalk(key){
+    var s=WALK[key];
+    if(!s) return;
+    step=key;
+    walk.hidden=false;
+    walkH.textContent=s.h;
+
+    /* body: one or two paragraphs, verbatim */
+    var body='<p class="walk-b">'+esc(s.b)+'</p>';
+    if(s.b2) body+='<p class="walk-b walk-b2">'+esc(s.b2)+'</p>';
+
+    /* the screen's own middle: rows, fields, tiles, or checks */
+    var mid='';
+    if(s.rows){
+      mid='<div class="walk-rows">'+s.rows.map(function(r,i){
+        return '<button class="walk-row" data-go="'+r[2]+'">'+
+               '<span class="wr-t">'+esc(r[0])+'</span>'+
+               '<span class="wr-s">'+esc(r[1])+'</span></button>';
+      }).join('')+'</div>';
+    }
+    if(s.eyebrow) mid+='<div class="walk-eyebrow">'+esc(s.eyebrow)+'</div>';
+    if(s.fields){
+      mid+='<div class="walk-fields">'+s.fields.map(function(row){
+        return '<div class="wf-row">'+row.map(function(f){
+          return '<span class="wf">'+esc(f)+'</span>'; }).join('')+'</div>';
+      }).join('')+'</div>';
+    }
+    if(s.tiles){
+      mid+='<div class="walk-tiles">'+s.tiles.map(function(t,i){
+        return '<span class="wt'+(i===s.tiles.length-1?' wt-add':'')+'">'+esc(t)+'</span>';
+      }).join('')+'</div>';
+    }
+    if(s.checks){
+      mid+='<div class="walk-rows">'+s.checks.map(function(c){
+        return '<button class="walk-row wr-check is-on"><span class="wr-t">'+esc(c)+'</span>'+
+               '<span class="wr-mark">shining</span></button>';
+      }).join('')+'</div>';
+    }
+    if(s.note) mid+='<p class="walk-note">'+esc(s.note)+'</p>';
+    if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
+
+    walkB.innerHTML=body+mid;
+
+    /* foot: pill, link, or the tap hint */
+    var foot='';
+    if(s.pill) foot+='<button class="pill" data-go="'+s.to+'">'+esc(s.pill)+'</button>';
+    if(s.link) foot+='<div><button class="tlink" data-go="'+s.linkTo+'">'+esc(s.link)+'</button></div>';
+    if(s.tap) foot+='<p class="walk-hint">tap anywhere to continue</p>';
+    walkFoot.innerHTML=foot;
+
+    if(s.art==='none'){ walkArt.classList.add('hide'); walkArt.innerHTML=''; }
+    else { walkArt.classList.remove('hide'); walkArt.innerHTML=ART[s.art]||PIECE; }
+
+    walk.classList.remove('enter','glow','lines');
+    walk.classList.toggle('sheet', !!s.sheet);
+    void walk.offsetWidth;
+    walk.classList.add('enter');
+    if(s.glow) walk.classList.add('glow');
+    if(s.lines) walk.classList.add('lines');
+    cap.textContent=s.cap;
+    lite(s.pill?'pill':(s.rows?'row':'link'));
+    resetBtn.hidden=false;
+  }
+
+  function goWalk(key){
+    if(key==='__home'){ enterHome(); return; }
+    renderWalk(key);
+  }
+  /* jump to any screen by name, for review and for testing */
+  window.__go=function(key){
+    screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode');
+    screen.classList.add('walking');
+    goWalk(key);
+  };
+
+  function enterHome(){
+    screen.classList.remove('walking');
+    walk.hidden=true;
+    screen.classList.add('caretaker');
+    cap.textContent='Home · the same piece page, now yours';
+    lite('meter',true);
+    resetBtn.hidden=false;
+    document.getElementById('meterCtl').hidden=false;
+  }
+
+  /* a named target wins; otherwise tap anywhere advances, per the locked record */
+  walk.addEventListener('click',function(e){
+    var t=e.target.closest('[data-go]');
+    if(t){ goWalk(t.getAttribute('data-go')); return; }
+    var s=WALK[step];
+    if(s && s.tap && s.to) goWalk(s.to);
+  });
+
+  /* ── the glow meter ── */
+  var TOTAL=24,
+      meterLabel=document.getElementById('meterLabel'),
+      words={0:'No',1:'One',2:'Two',7:'Seven',16:'Sixteen',24:'Twenty four'};
+  function setGlow(n){
+    var frac=n/TOTAL;
+    /* a visible floor at zero: an unanswered piece is still alive */
+    mfill.style.setProperty('--w', (6 + frac*94).toFixed(1)+'%');
+    halo.style.setProperty('--g', String(0.16 + frac*0.5));
+    meterLabel.innerHTML = n===0
+      ? 'The questions are waiting.<br>Tap the light to open the garden.'
+      : (words[n]||n)+' answer'+(n===1?'':'s')+' placed.<br>Tap the light to open the garden.';
+    lite('meter',true);
+  }
+  /* the meter is a door, not a readout: it opens the garden */
+  meter.addEventListener('click',function(){
+    if(screen.classList.contains('promoted')){ closeRow(); return; }
+    openRow('garden',null);
+    cap.textContent='The garden, opened by the light';
+    lite('meter',true);
+  });
+  document.querySelectorAll('[data-glow]').forEach(function(b){
+    b.addEventListener('click',function(){ setGlow(parseInt(b.dataset.glow,10)); });
+  });
+  setGlow(7);
+
+  /* back to the door, so the vault can be watched again */
+  resetBtn.addEventListener('click',function(){
+    screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+    walk.hidden=true; step=null;
+    Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
+    codeIn.querySelectorAll('span').forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
+    if(codeInput) codeInput.value='';
+    unlockBtn.disabled=false;
+    opened.innerHTML='';
+    gardenHead.hidden=true;
+    codeHelp.textContent=HELP; codeWarn.textContent=WARN;
+    resetBtn.hidden=true;
+    document.getElementById('meterCtl').hidden=true;
+    clearTimeout(litTimer); clearLit();
+    cap.textContent='Resting state · tap anything';
+    /* replay the stroke draw */
+    pieceSlot.classList.remove('draw');
+    void pieceSlot.offsetWidth;
+    pieceSlot.classList.add('draw');
+  });
+
+  /* link + drawing */
+  document.getElementById('siteLink').addEventListener('click',function(e){
+    e.preventDefault(); lite('link');
+    cap.textContent='Links travel. Rows open. Never the same treatment.';
+  });
+  document.getElementById('siteLink').addEventListener('mouseenter',function(){lite('link')});
+  unlockBtn.addEventListener('mouseenter',function(){lite('pill')});
+
+  /* replay the drawing when returning to rest */
+  pieceSlot.addEventListener('animationend',function(){},{once:true});
+})();
+</script>
