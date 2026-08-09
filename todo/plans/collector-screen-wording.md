@@ -377,6 +377,29 @@ Open shape calls: the dream as the garden's most honored question versus its own
 (lean: inside the garden); privacy as the one rings page after collection versus per-field
 switches at collection (lean: one page, the spec's long rule).
 
+**The privacy model — SETTLED 2026-08-09, supersedes the off-by-default ring model.**
+Adrian's frame: "Part of this is about being seen. If you don't want to be seen, you can
+uncheck it." The reconciliation, confirmed: **the piece shines by default; the person opts
+in.**
+
+- **What is placed in the piece shines by default, as words with no name.** Story, dreams,
+  answers: shared anonymously unless withheld. Each garden card carries a small lit mark
+  meaning "this will shine"; unchecking is the act of withholding.
+- **The light on the map is on by default, and city is the ceiling.** Never an address,
+  never a neighborhood. Adrian: "The maximum detail you can get is the city. Never the
+  address. It makes it safe."
+- **Small-town floor stays.** Where a city is too small to be anonymous, the light shows at
+  the wider region instead. This is what keeps the city ceiling true to its promise.
+- **Who you are stays opt-in.** Name, face, links, business: each its own tick, off until
+  ticked. And identity and city never appear together on one surface unless both were
+  explicitly opened; the join is the danger, not either half.
+- **The birthday is never shown to anyone, ever.** No switch exists.
+- **A child's words cannot be made public until that person is grown** and chooses it.
+
+The "What shows" page's copy flips accordingly: it is no longer "everything is private until
+you open it" but "your piece shines; here is what shows, and anything you would rather keep
+quiet, uncheck." Wording to be worked when that screen is written.
+
 ## The earlier writing-screen sketches — superseded shape, kept for the wording
 
 The registration steps themselves: name, the first words placed in the piece, privacy, birth
