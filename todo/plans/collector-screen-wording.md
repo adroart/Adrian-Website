@@ -63,10 +63,14 @@ forever.
 >
 > I don't have the code
 
-**The motion.** On entry the characters resolve one at a time, like tumblers finding their
-places, a pause, one soft click as it locks in, and the screen advances on its own. No button
-press after the click; being carried forward is the reward. Two or three seconds, never
-longer. Plays gently for anyone with motion turned down.
+**The motion — LOCKED, Adrian's spec.** On Unlock the characters resolve one at a time, like
+tumblers finding their places, a pause, one soft click as the last one seats. Then the screen
+itself opens like a vault: the dark ground parts and warm light comes through the opening,
+and the light carries you onto the next page, which is "The code is true." No button press
+after the click; being carried through is the reward. The whole passage two to four seconds,
+never longer. This is the single most theatrical moment in the flow, and the only one: it is
+the threshold, and nothing after it competes with it. Plays as a gentle fade for anyone with
+motion turned down.
 
 **Why the warning lives here.** "Whoever holds the code holds access" was cut from the opening
 sequence; it belongs on the one screen where the code is in the person's hand.
@@ -168,10 +172,12 @@ hands.
 - **Caretaker / caretake.** LOCKED, Adrian confirmed 2026-08-09. The word for the person, on
   every screen, everywhere. Not holder, not keeper, not steward. Arrived unprompted in his
   most emotional sentence, which is why it is the true one.
-- **The Resonant Grid.** The proper name of the living artwork, elevated from Adrian's own
-  phrase. Named twice before it is unfolded: once on arrival, once on code confirmed; screen
-  two of the four is then recognition, not surprise. PENDING Adrian's final confirm. Becomes
-  permanent public vocabulary the moment it ships.
+- **The Resonant Grid.** LOCKED, Adrian confirmed 2026-08-09. The proper name of the living
+  artwork, elevated from his own phrase. Named twice before it is unfolded: once on arrival,
+  once on code confirmed; screen two of the four is then recognition, not surprise. Permanent
+  public vocabulary.
+- **Unlock.** LOCKED, Adrian confirmed 2026-08-09. The code button. One word, physical,
+  matches the tumblers, promises exactly what happens.
 - **Outcomes, never mechanics.** Screens name what the journey does (certify, register, give
   it its place), never the steps (privacy settings, birthday, email). Each screen explains
   only itself when it arrives.
