@@ -165,9 +165,9 @@ hands.
 
 ## Vocabulary — decisions carried by every screen
 
-- **Caretaker / caretake.** The word for the person. Arrived unprompted in Adrian's most
-  emotional sentence and stays. Not holder, not keeper, not steward. PENDING Adrian's final
-  confirm, in use throughout meanwhile.
+- **Caretaker / caretake.** LOCKED, Adrian confirmed 2026-08-09. The word for the person, on
+  every screen, everywhere. Not holder, not keeper, not steward. Arrived unprompted in his
+  most emotional sentence, which is why it is the true one.
 - **The Resonant Grid.** The proper name of the living artwork, elevated from Adrian's own
   phrase. Named twice before it is unfolded: once on arrival, once on code confirmed; screen
   two of the four is then recognition, not surprise. PENDING Adrian's final confirm. Becomes
