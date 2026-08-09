@@ -2,6 +2,7 @@ import {
   encryptPrivateRecoveryPayload,
   PRIVATE_RECOVERY_PAYLOAD_KIND,
   PRIVATE_RECOVERY_SCHEMA_VERSION,
+  REGISTRY_RECOVERY_ORDER_COLUMNS,
   REGISTRY_RECOVERY_TABLES,
 } from '../../../utils/registryRecoveryArchive.ts';
 
@@ -25,6 +26,26 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
     WHERE administrator_user_id IS NOT NULL
   UNION SELECT administrator_user_id FROM registry_recovery_qualifications
     WHERE administrator_user_id IS NOT NULL
+  UNION SELECT registered_by_user_id FROM keeper_pieces WHERE registered_by_user_id IS NOT NULL
+  UNION SELECT administrator_user_id FROM artwork_identity_recovery_qualifications
+    WHERE administrator_user_id IS NOT NULL
+  UNION SELECT created_by_user_id FROM artwork_invitations WHERE created_by_user_id IS NOT NULL
+  UNION SELECT revoked_by_user_id FROM artwork_invitations WHERE revoked_by_user_id IS NOT NULL
+  UNION SELECT redeemed_by_user_id FROM artwork_invitation_redemptions
+    WHERE redeemed_by_user_id IS NOT NULL
+  UNION SELECT created_by_user_id FROM certificate_templates WHERE created_by_user_id IS NOT NULL
+  UNION SELECT assigned_by_user_id FROM certificate_assignment_operations
+    WHERE assigned_by_user_id IS NOT NULL
+  UNION SELECT updated_by_user_id FROM certificate_artwork_overrides
+    WHERE updated_by_user_id IS NOT NULL
+  UNION SELECT changed_by_user_id FROM certificate_override_history
+    WHERE changed_by_user_id IS NOT NULL
+  UNION SELECT bridge.auth_user_id FROM users AS bridge
+    WHERE bridge.id IN (
+      SELECT user_id FROM collector_person_privacy
+      UNION SELECT user_id FROM collector_piece_privacy
+      UNION SELECT user_id FROM collector_consent_history
+    ) AND bridge.auth_user_id IS NOT NULL
   UNION SELECT COALESCE(
       json_extract(before_json, '$.keeperUserId'),
       json_extract(before_json, '$.keeper_user_id')
@@ -41,6 +62,12 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
       json_extract(after_json, '$.keeperUserId'),
       json_extract(after_json, '$.keeper_user_id')
     ) IS NOT NULL
+`;
+
+const REFERENCED_COLLECTOR_USER_IDS_SQL = `
+  SELECT user_id AS id FROM collector_person_privacy
+  UNION SELECT user_id FROM collector_piece_privacy
+  UNION SELECT user_id FROM collector_consent_history
 `;
 
 function tableStatement(env, table) {
@@ -60,7 +87,25 @@ function tableStatement(env, table) {
        ORDER BY auth_account.id ASC`,
     );
   }
-  return env.DB.prepare(`SELECT * FROM "${table}" ORDER BY id ASC`);
+  if (table === 'users') {
+    return env.DB.prepare(
+      `WITH referenced_users(id) AS (${REFERENCED_COLLECTOR_USER_IDS_SQL})
+       SELECT collector_user.* FROM users AS collector_user
+       JOIN referenced_users ON referenced_users.id = collector_user.id
+       ORDER BY collector_user.id ASC`,
+    );
+  }
+  if (table === 'profiles') {
+    return env.DB.prepare(
+      `WITH referenced_users(id) AS (${REFERENCED_COLLECTOR_USER_IDS_SQL})
+       SELECT profile.* FROM profiles AS profile
+       JOIN referenced_users ON referenced_users.id = profile.user_id
+       ORDER BY profile.user_id ASC`,
+    );
+  }
+  const order = REGISTRY_RECOVERY_ORDER_COLUMNS[table]
+    .map((column) => `"${column}" ASC`).join(', ');
+  return env.DB.prepare(`SELECT * FROM "${table}" ORDER BY ${order}`);
 }
 
 function collectUserIdsFromValue(value, ids) {
@@ -107,6 +152,39 @@ function collectReferencedAuthUserIds(tables) {
       }
     }
   }
+  for (const row of tables.keeper_pieces) {
+    if (typeof row.registered_by_user_id === 'string' && row.registered_by_user_id) {
+      ids.add(row.registered_by_user_id);
+    }
+  }
+  for (const row of tables.artwork_identity_recovery_qualifications) {
+    if (typeof row.administrator_user_id === 'string' && row.administrator_user_id) {
+      ids.add(row.administrator_user_id);
+    }
+  }
+  for (const row of tables.artwork_invitations) {
+    for (const field of ['created_by_user_id', 'revoked_by_user_id']) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const row of tables.artwork_invitation_redemptions) {
+    if (typeof row.redeemed_by_user_id === 'string' && row.redeemed_by_user_id) {
+      ids.add(row.redeemed_by_user_id);
+    }
+  }
+  for (const [table, field] of [
+    ['certificate_templates', 'created_by_user_id'],
+    ['certificate_assignment_operations', 'assigned_by_user_id'],
+    ['certificate_artwork_overrides', 'updated_by_user_id'],
+    ['certificate_override_history', 'changed_by_user_id'],
+  ]) {
+    for (const row of tables[table]) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const row of tables.users) {
+    if (typeof row.auth_user_id === 'string' && row.auth_user_id) ids.add(row.auth_user_id);
+  }
   for (const row of tables.registry_maintenance_events) {
     for (const field of ['before_json', 'after_json']) {
       try {
@@ -143,6 +221,33 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
   if (referencedIds.length !== exportedUserIds.length
     || referencedIds.some((id, index) => id !== exportedUserIds[index])) {
     throw new Error('registry_recovery_missing_referenced_user');
+  }
+  const referencedCollectorIds = [...new Set([
+    ...orderedTables.collector_person_privacy.map((row) => row.user_id),
+    ...orderedTables.collector_piece_privacy.map((row) => row.user_id),
+    ...orderedTables.collector_consent_history.map((row) => row.user_id),
+  ])].sort((left, right) => Number(left) - Number(right));
+  const exportedCollectorIds = orderedTables.users.map((row) => row.id);
+  if (referencedCollectorIds.length !== exportedCollectorIds.length
+    || referencedCollectorIds.some((id, index) => id !== exportedCollectorIds[index])) {
+    throw new Error('registry_recovery_missing_collector_user');
+  }
+  if (orderedTables.users.some((row) =>
+    typeof row.auth_user_id !== 'string' || !row.auth_user_id.trim())) {
+    throw new Error('registry_recovery_missing_collector_auth_user');
+  }
+  const profiledIds = new Set(orderedTables.profiles.map((row) => row.user_id));
+  const openUserIds = new Set([
+    ...orderedTables.collector_person_privacy
+      .filter((row) => [
+        row.share_derived_chart, row.share_face, row.share_name, row.share_intention,
+        row.share_business, row.share_mission,
+      ].some((value) => value === 1)).map((row) => row.user_id),
+    ...orderedTables.collector_piece_privacy
+      .filter((row) => row.share_city === 1).map((row) => row.user_id),
+  ]);
+  if ([...openUserIds].some((id) => !profiledIds.has(id))) {
+    throw new Error('registry_recovery_missing_collector_profile');
   }
   return encryptPrivateRecoveryPayload({
     kind: PRIVATE_RECOVERY_PAYLOAD_KIND,

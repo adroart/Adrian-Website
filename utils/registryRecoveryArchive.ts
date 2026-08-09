@@ -8,12 +8,12 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 3 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 4 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
 
-export const REGISTRY_RECOVERY_TABLES = [
+export const REGISTRY_RECOVERY_V3_TABLES = [
   'user',
   'account',
   'registry_artworks',
@@ -36,12 +36,51 @@ export const REGISTRY_RECOVERY_TABLES = [
   'artwork_transfer_receipts',
 ] as const;
 
-export const REGISTRY_RECOVERY_V2_TABLES = REGISTRY_RECOVERY_TABLES.filter(
+export const REGISTRY_RECOVERY_V2_TABLES = REGISTRY_RECOVERY_V3_TABLES.filter(
   (table) => !table.startsWith('artwork_transfer_') && table !== 'artwork_claim_requests',
 );
 export const REGISTRY_RECOVERY_V1_TABLES = REGISTRY_RECOVERY_V2_TABLES.filter(
   (table) => !table.startsWith('atlas_source_'),
 );
+
+export const REGISTRY_RECOVERY_TABLES = [
+  'user',
+  'account',
+  'users',
+  'profiles',
+  'registry_artworks',
+  'registry_catalog_membership',
+  'keeper_pieces',
+  'artwork_claim_requests',
+  'artwork_transfer_intents',
+  'artwork_transfer_parties',
+  'atlas_source_cities',
+  'atlas_source_chains',
+  'atlas_source_chain_events',
+  'keeper_intentions',
+  'piece_fulfillments',
+  'artwork_acquisitions',
+  'artwork_provenance_entries',
+  'artwork_claim_evidence',
+  'artwork_lineage_events',
+  'ownership_code_audit',
+  'registry_maintenance_events',
+  'registry_recovery_qualifications',
+  'artwork_identity_recovery_qualifications',
+  'artwork_invitations',
+  'artwork_invitation_redemptions',
+  'artwork_invitation_redemption_completions',
+  'certificate_templates',
+  'certificate_assignment_operations',
+  'certificate_artwork_assignments',
+  'certificate_artwork_overrides',
+  'certificate_override_history',
+  'collector_curated_cities',
+  'collector_person_privacy',
+  'collector_piece_privacy',
+  'collector_consent_history',
+  'artwork_transfer_receipts',
+] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
   ...REGISTRY_RECOVERY_TABLES,
@@ -59,7 +98,18 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'accessTokenExpiresAt', 'refreshTokenExpiresAt', 'scope', 'idToken', 'password',
     'createdAt', 'updatedAt',
   ],
+  users: [
+    'id', 'clerk_user_id', 'email', 'stripe_customer_id', 'created_at', 'updated_at',
+    'auth_user_id',
+  ],
+  profiles: [
+    'user_id', 'birth_date', 'birth_time', 'birth_place_label', 'lat', 'lng', 'tz_id',
+    'computed_json', 'updated_at',
+  ],
   registry_artworks: ['id', 'title', 'series', 'edition_size', 'created_at'],
+  registry_catalog_membership: [
+    'artwork_id', 'series', 'category', 'catalog_digest', 'first_seeded_at',
+  ],
   keeper_pieces: [
     'id', 'piece_id', 'edition_number', 'keeper_user_id', 'recovery_code_hash',
     'current_display_location', 'registered_at', 'claimed_at', 'released_at',
@@ -70,6 +120,8 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'lineage_event_count', 'record_version', 'steward_version',
     'supersedes_keeper_piece_id', 'superseded_by_keeper_piece_id',
     'physical_disposition', 'replaced_at', 'backup_sha256', 'last_transfer_id',
+    'registration_status', 'registered_by_user_id', 'identity_backup_status',
+    'identity_backup_reference', 'identity_backup_sha256', 'identity_backup_at',
   ],
   artwork_claim_requests: [
     'id', 'keeper_piece_id', 'requester_user_id', 'requester_email', 'note',
@@ -138,6 +190,53 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'backup_reference', 'backup_sha256', 'administrator_user_id',
     'administrator_email', 'safe_failure_code', 'qualified_at',
   ],
+  artwork_identity_recovery_qualifications: [
+    'id', 'keeper_piece_id', 'result', 'copied_artifact', 'schema_version',
+    'build_version', 'key_version', 'verifier_version', 'backup_reference',
+    'backup_sha256', 'administrator_user_id', 'administrator_email',
+    'safe_failure_code', 'qualified_at',
+  ],
+  artwork_invitations: [
+    'id', 'keeper_piece_id', 'token_hash', 'intended_recipient_email',
+    'created_by_user_id', 'idempotency_key', 'created_at', 'expires_at',
+    'revoked_at', 'revoked_by_user_id',
+  ],
+  artwork_invitation_redemptions: [
+    'invitation_id', 'keeper_piece_id', 'redeemed_by_user_id',
+    'verified_recipient_email', 'proof_reference', 'presented_token_hash', 'redeemed_at',
+  ],
+  artwork_invitation_redemption_completions: ['invitation_id', 'completed_at'],
+  certificate_templates: [
+    'id', 'name', 'content_json', 'version', 'created_by_user_id', 'created_by_email',
+    'created_at', 'updated_at',
+  ],
+  certificate_assignment_operations: [
+    'idempotency_key', 'request_digest', 'template_id', 'artwork_ids_json',
+    'assigned_by_user_id', 'assigned_by_email', 'assigned_at',
+  ],
+  certificate_artwork_assignments: [
+    'artwork_id', 'template_id', 'assignment_operation_key', 'version', 'assigned_at',
+  ],
+  certificate_artwork_overrides: [
+    'artwork_id', 'field', 'mode', 'value_json', 'version', 'updated_by_user_id',
+    'updated_by_email', 'updated_at',
+  ],
+  certificate_override_history: [
+    'id', 'artwork_id', 'field', 'before_json', 'after_json', 'version',
+    'changed_by_user_id', 'changed_by_email', 'changed_at',
+  ],
+  collector_curated_cities: ['id', 'label', 'population', 'active'],
+  collector_person_privacy: [
+    'user_id', 'share_derived_chart', 'share_face', 'share_name', 'share_intention',
+    'share_business', 'share_mission', 'policy_version', 'updated_at',
+  ],
+  collector_piece_privacy: [
+    'keeper_piece_id', 'user_id', 'share_city', 'city_id', 'policy_version', 'updated_at',
+  ],
+  collector_consent_history: [
+    'id', 'user_id', 'scope', 'target_ref', 'before_json', 'after_json',
+    'policy_version', 'changed_at',
+  ],
   artwork_transfer_receipts: ['id', 'transfer_intent_id', 'committed_at'],
 };
 
@@ -150,7 +249,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -178,7 +277,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -266,11 +365,56 @@ function validateRow(row: unknown): row is RecoveryRow {
       || (typeof value === 'number' && Number.isFinite(value)));
 }
 
+const V4_KEEPER_COLUMNS = new Set([
+  'registration_status', 'registered_by_user_id', 'identity_backup_status',
+  'identity_backup_reference', 'identity_backup_sha256', 'identity_backup_at',
+]);
+
+export const REGISTRY_RECOVERY_ORDER_COLUMNS: Record<RegistryRecoveryTable, readonly string[]> = {
+  ...Object.fromEntries(REGISTRY_RECOVERY_TABLES.map((table) => [table, ['id']])) as unknown as Record<RegistryRecoveryTable, readonly string[]>,
+  users: ['id'],
+  profiles: ['user_id'],
+  registry_catalog_membership: ['artwork_id'],
+  artwork_invitation_redemptions: ['invitation_id'],
+  artwork_invitation_redemption_completions: ['invitation_id'],
+  certificate_assignment_operations: ['idempotency_key'],
+  certificate_artwork_assignments: ['artwork_id'],
+  certificate_artwork_overrides: ['artwork_id', 'field'],
+  collector_person_privacy: ['user_id'],
+  collector_piece_privacy: ['keeper_piece_id'],
+};
+
+function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[] {
+  if (schemaVersion === 1) return REGISTRY_RECOVERY_V1_TABLES;
+  if (schemaVersion === 2) return REGISTRY_RECOVERY_V2_TABLES;
+  if (schemaVersion === 3) return REGISTRY_RECOVERY_V3_TABLES;
+  return REGISTRY_RECOVERY_TABLES;
+}
+
 function recoveryColumns(table: RegistryRecoveryTable, schemaVersion: number) {
-  if (table === 'keeper_pieces' && schemaVersion < 3) {
-    return REGISTRY_RECOVERY_COLUMNS.keeper_pieces.filter((column) => column !== 'last_transfer_id');
+  if (table === 'keeper_pieces' && schemaVersion < 4) {
+    return REGISTRY_RECOVERY_COLUMNS.keeper_pieces.filter((column) =>
+      !V4_KEEPER_COLUMNS.has(column) && (schemaVersion >= 3 || column !== 'last_transfer_id'));
   }
   return REGISTRY_RECOVERY_COLUMNS[table];
+}
+
+function compareRecoveryRows(
+  left: RecoveryRow,
+  right: RecoveryRow,
+  columns: readonly string[],
+): number {
+  for (const column of columns) {
+    const leftValue = left[column];
+    const rightValue = right[column];
+    if ((typeof leftValue !== 'string' && typeof leftValue !== 'number')
+      || (typeof rightValue !== 'string' && typeof rightValue !== 'number')) return 0;
+    const comparison = typeof leftValue === 'number' && typeof rightValue === 'number'
+      ? leftValue - rightValue
+      : String(leftValue).localeCompare(String(rightValue));
+    if (comparison) return comparison;
+  }
+  return 0;
 }
 
 /** Strict synchronous payload shape check used again immediately before SQL emission. */
@@ -281,13 +425,11 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
-  const tableNames = payload.schemaVersion === 1
-    ? REGISTRY_RECOVERY_V1_TABLES
-    : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
+  const tableNames = recoveryTables(payload.schemaVersion as number);
   if (!isPlainObject(payload.tables)
     || !hasExactKeys(payload.tables, tableNames)) {
     throw new Error('recovery_payload_tables');
@@ -301,11 +443,8 @@ export function validatePrivateRecoveryPayload(
       throw new Error(`recovery_payload_columns_${table}`);
     }
     for (let index = 1; index < rows.length; index += 1) {
-      const previous = rows[index - 1].id;
-      const current = rows[index].id;
-      if ((typeof previous !== 'string' && typeof previous !== 'number')
-        || (typeof current !== 'string' && typeof current !== 'number')
-        || String(previous).localeCompare(String(current)) >= 0) {
+      if (compareRecoveryRows(rows[index - 1], rows[index],
+        REGISTRY_RECOVERY_ORDER_COLUMNS[table as RegistryRecoveryTable]) >= 0) {
         throw new Error(`recovery_payload_order_${table}`);
       }
     }
@@ -322,17 +461,42 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
     tables: {
       ...payload.tables,
       keeper_pieces: payload.tables.keeper_pieces.map((row) => ({
-        ...row, last_transfer_id: null,
+        ...row,
+        ...(payload.schemaVersion < 3 ? { last_transfer_id: null } : {}),
+        registration_status: row.public_code === null ? null : 'registered',
+        registered_by_user_id: null,
+        identity_backup_status: null,
+        identity_backup_reference: null,
+        identity_backup_sha256: null,
+        identity_backup_at: null,
       })),
       ...(payload.schemaVersion === 1 ? {
         atlas_source_cities: [],
         atlas_source_chains: [],
         atlas_source_chain_events: [],
       } : {}),
-      artwork_claim_requests: [],
-      artwork_transfer_intents: [],
-      artwork_transfer_parties: [],
-      artwork_transfer_receipts: [],
+      ...(payload.schemaVersion < 3 ? {
+        artwork_claim_requests: [],
+        artwork_transfer_intents: [],
+        artwork_transfer_parties: [],
+        artwork_transfer_receipts: [],
+      } : {}),
+      users: [],
+      profiles: [],
+      registry_catalog_membership: [],
+      artwork_identity_recovery_qualifications: [],
+      artwork_invitations: [],
+      artwork_invitation_redemptions: [],
+      artwork_invitation_redemption_completions: [],
+      certificate_templates: [],
+      certificate_assignment_operations: [],
+      certificate_artwork_assignments: [],
+      certificate_artwork_overrides: [],
+      certificate_override_history: [],
+      collector_curated_cities: [],
+      collector_person_privacy: [],
+      collector_piece_privacy: [],
+      collector_consent_history: [],
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -353,16 +517,14 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
     || !Array.isArray(value.manifest.tables)) {
     throw new Error('recovery_archive_manifest');
   }
-  const tableNames = value.manifest.schemaVersion === 1
-    ? REGISTRY_RECOVERY_V1_TABLES
-    : value.manifest.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
+  const tableNames = recoveryTables(value.manifest.schemaVersion as number);
   if (value.manifest.tables.length !== tableNames.length) {
     throw new Error('recovery_archive_manifest');
   }
@@ -461,9 +623,7 @@ export async function decryptPrivateRecoveryExport(
   if (payload.exportedAt !== value.manifest.exportedAt) {
     throw new Error('recovery_archive_manifest');
   }
-  const tableNames = value.manifest.schemaVersion === 1
-    ? REGISTRY_RECOVERY_V1_TABLES
-    : value.manifest.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
+  const tableNames = recoveryTables(value.manifest.schemaVersion as number);
   for (let index = 0; index < tableNames.length; index += 1) {
     const name = tableNames[index];
     const expected = value.manifest.tables[index];
@@ -537,8 +697,8 @@ function transferRestoreRows(payload: PrivateRecoveryPayload) {
       ...row,
       keeper_user_id: firstIntent.expected_from_user_id,
       claimed_at: claimedAt,
-      released_at: releasedAt,
-      current_display_location: currentDisplayLocation,
+      released_at: releasedAt as string | null,
+      current_display_location: currentDisplayLocation as string | null,
       steward_version: firstIntent.expected_steward_version,
       lineage_event_count: firstIntent.expected_lineage_count,
       lineage_head_hash: firstIntent.expected_lineage_hash,
@@ -547,6 +707,171 @@ function transferRestoreRows(payload: PrivateRecoveryPayload) {
   });
   return { keeperRows, receipts };
 }
+
+function invitationRestoreRows(payload: PrivateRecoveryPayload, keeperRows: RecoveryRow[]) {
+  const lineageByPiece = new Map<string | number, RecoveryRow[]>();
+  for (const row of payload.tables.artwork_lineage_events) {
+    const rows = lineageByPiece.get(row.keeper_piece_id) ?? [];
+    rows.push(row);
+    lineageByPiece.set(row.keeper_piece_id, rows);
+  }
+  const completions = new Map(payload.tables.artwork_invitation_redemption_completions
+    .map((row) => [row.invitation_id, row]));
+  const firstBoundRows = new Map<string | number, RecoveryRow>();
+  const redemptionsByPiece = new Map<string | number, RecoveryRow>();
+  for (const redemption of payload.tables.artwork_invitation_redemptions) {
+    if (!completions.has(redemption.invitation_id)
+      || redemptionsByPiece.has(redemption.keeper_piece_id)) {
+      throw new Error('recovery_invitation_completion_invalid');
+    }
+    const lineage = (lineageByPiece.get(redemption.keeper_piece_id) ?? []).find((row) =>
+      row.event_type === 'first_bound' && row.event_at === redemption.redeemed_at);
+    const evidence = payload.tables.artwork_claim_evidence.find((row) =>
+      row.keeper_piece_id === redemption.keeper_piece_id
+      && row.actor_user_id === redemption.redeemed_by_user_id
+      && row.verified_email === redemption.verified_recipient_email
+      && row.outcome === 'first_bound'
+      && row.created_at === redemption.redeemed_at);
+    if (!lineage || !evidence) throw new Error('recovery_invitation_completion_invalid');
+    redemptionsByPiece.set(redemption.keeper_piece_id, redemption);
+    firstBoundRows.set(redemption.keeper_piece_id, lineage);
+  }
+
+  const unboundKeeperRows = keeperRows.map((row) => {
+    const redemption = redemptionsByPiece.get(row.id);
+    if (!redemption) return row;
+    const lineage = firstBoundRows.get(row.id)!;
+    return {
+      ...row,
+      keeper_user_id: null,
+      claimed_at: null,
+      released_at: null,
+      current_display_location: null,
+      lineage_event_count: Number(lineage.sequence) - 1,
+      lineage_head_hash: lineage.previous_hash,
+      steward_version: 0,
+      last_transfer_id: null,
+    };
+  });
+  const firstBoundUpdates = keeperRows.flatMap((row) => {
+    const redemption = redemptionsByPiece.get(row.id);
+    if (!redemption) return [];
+    const lineage = firstBoundRows.get(row.id)!;
+    return [{
+      id: row.id,
+      keeper_user_id: redemption.redeemed_by_user_id,
+      claimed_at: redemption.redeemed_at,
+      released_at: null,
+      current_display_location: row.current_display_location,
+      lineage_event_count: lineage.sequence,
+      lineage_head_hash: lineage.event_hash,
+      steward_version: row.steward_version,
+      last_transfer_id: null,
+    }];
+  });
+  return { unboundKeeperRows, firstBoundUpdates };
+}
+
+function insertStatement(table: RegistryRecoveryTable, row: RecoveryRow): string {
+  const columns = Object.keys(row).sort();
+  if (!columns.length) throw new Error(`recovery_payload_columns_${table}`);
+  return `INSERT INTO ${sqlIdentifier(table)} (${columns.map(sqlIdentifier).join(', ')}) VALUES (`
+    + `${columns.map((column) => sqlValue(row[column])).join(', ')});`;
+}
+
+function certificateRestoreStatements(payload: PrivateRecoveryPayload): string[] {
+  const statements: string[] = [];
+  const historiesByOverride = new Map<string, RecoveryRow[]>();
+  for (const row of payload.tables.certificate_override_history) {
+    const key = `${row.artwork_id}\u0000${row.field}`;
+    const rows = historiesByOverride.get(key) ?? [];
+    rows.push(row);
+    historiesByOverride.set(key, rows);
+  }
+  const currentKeys = new Set(payload.tables.certificate_artwork_overrides
+    .map((row) => `${row.artwork_id}\u0000${row.field}`));
+  for (const history of payload.tables.certificate_override_history) {
+    const key = `${history.artwork_id}\u0000${history.field}`;
+    if (!currentKeys.has(key)) statements.push(insertStatement('certificate_override_history', history));
+  }
+  for (const current of payload.tables.certificate_artwork_overrides) {
+    const key = `${current.artwork_id}\u0000${current.field}`;
+    const history = [...(historiesByOverride.get(key) ?? [])]
+      .sort((left, right) => Number(left.version) - Number(right.version));
+    if (!history.length || history.at(-1)?.version !== current.version) {
+      throw new Error('recovery_certificate_history_invalid');
+    }
+    let previousAfterJson: string | null = null;
+    history.forEach((entry, index) => {
+      let after: Record<string, unknown>;
+      try {
+        after = JSON.parse(String(entry.after_json));
+      } catch {
+        throw new Error('recovery_certificate_history_invalid');
+      }
+      if (!['inherit', 'override', 'suppress'].includes(String(after.mode))
+        || after.version !== entry.version) {
+        throw new Error('recovery_certificate_history_invalid');
+      }
+      const valueJson = after.mode === 'override' ? JSON.stringify(after.value) : null;
+      const expectedAfterJson = JSON.stringify({
+        mode: after.mode,
+        value: after.mode === 'override' ? after.value : null,
+        version: after.version,
+      });
+      if (entry.after_json !== expectedAfterJson
+        || entry.before_json !== previousAfterJson) {
+        throw new Error('recovery_certificate_history_invalid');
+      }
+      const replayRow: RecoveryRow = {
+        artwork_id: entry.artwork_id,
+        field: entry.field,
+        mode: String(after.mode),
+        value_json: valueJson,
+        version: Number(entry.version),
+        updated_by_user_id: entry.changed_by_user_id,
+        updated_by_email: entry.changed_by_email,
+        updated_at: entry.changed_at,
+      };
+      if (index === history.length - 1 && (
+        current.mode !== replayRow.mode
+        || current.value_json !== replayRow.value_json
+        || current.version !== replayRow.version
+        || current.updated_by_user_id !== replayRow.updated_by_user_id
+        || current.updated_by_email !== replayRow.updated_by_email
+        || current.updated_at !== replayRow.updated_at
+      )) throw new Error('recovery_certificate_history_invalid');
+      if (index === 0) {
+        statements.push(insertStatement('certificate_artwork_overrides', replayRow));
+      } else {
+        statements.push(
+          `UPDATE certificate_artwork_overrides SET `
+          + `mode = ${sqlValue(replayRow.mode)}, value_json = ${sqlValue(replayRow.value_json)}, `
+          + `version = ${sqlValue(replayRow.version)}, `
+          + `updated_by_user_id = ${sqlValue(replayRow.updated_by_user_id)}, `
+          + `updated_by_email = ${sqlValue(replayRow.updated_by_email)}, `
+          + `updated_at = ${sqlValue(replayRow.updated_at)} `
+          + `WHERE artwork_id = ${sqlValue(replayRow.artwork_id)} `
+          + `AND field = ${sqlValue(replayRow.field)};`,
+        );
+      }
+      previousAfterJson = expectedAfterJson;
+    });
+  }
+  return statements;
+}
+
+const REGISTERED_IDENTITY_INSERT_GUARD_SQL = `CREATE TRIGGER keeper_piece_registered_identity_insert_guard
+BEFORE INSERT ON keeper_pieces
+WHEN NEW.registration_status = 'registered' AND (
+  NEW.public_code IS NULL OR NEW.issuance_key IS NULL OR NEW.registered_at IS NULL
+  OR NEW.ownership_code_ciphertext IS NULL OR NEW.ownership_code_nonce IS NULL
+  OR NEW.ownership_code_key_version IS NULL OR NEW.identity_backup_status <> 'verified'
+  OR NEW.identity_backup_reference IS NULL OR NEW.identity_backup_sha256 IS NULL
+  OR NEW.identity_backup_at IS NULL OR NEW.identity_backup_reference <>
+    'identities/' || NEW.public_code || '/' || NEW.identity_backup_sha256 || '.json'
+)
+BEGIN SELECT RAISE(ABORT, 'registered artwork identity is incomplete'); END;`;
 
 /**
  * Generate offline-only SQL after the encrypted artifact has been fully
@@ -561,6 +886,7 @@ export function buildRegistryRestoreSql(
 ): string {
   const payload = upgradePrivateRecoveryPayload(sourcePayload);
   const transferRows = transferRestoreRows(payload);
+  const invitationRows = invitationRestoreRows(payload, transferRows.keeperRows);
   const guardTable = '__registry_recovery_clean_guard';
   const completionTable = '__registry_recovery_completion_guard';
   const completionTrigger = '__registry_recovery_require_complete';
@@ -586,20 +912,55 @@ export function buildRegistryRestoreSql(
     'BEGIN IMMEDIATE;',
     `INSERT INTO ${guardTable} (token) VALUES (1);`,
   ];
-
-  for (const table of REGISTRY_RECOVERY_TABLES) {
-    const rows = table === 'keeper_pieces'
-      ? transferRows.keeperRows
-      : table === 'artwork_transfer_receipts' ? transferRows.receipts : payload.tables[table];
-    for (const row of rows) {
-      const columns = Object.keys(row).sort();
-      if (!columns.length) throw new Error(`recovery_payload_columns_${table}`);
-      statements.push(
-        `INSERT INTO ${sqlIdentifier(table)} (${columns.map(sqlIdentifier).join(', ')}) VALUES (`
-        + `${columns.map((column) => sqlValue(row[column])).join(', ')});`,
-      );
+  const insertTables = (tables: readonly RegistryRecoveryTable[]) => {
+    for (const table of tables) {
+      for (const row of payload.tables[table]) statements.push(insertStatement(table, row));
     }
+  };
+
+  insertTables([
+    'user', 'account', 'users', 'profiles', 'registry_artworks',
+    'registry_catalog_membership',
+  ]);
+  statements.push('DROP TRIGGER keeper_piece_registered_identity_insert_guard;');
+  for (const row of invitationRows.unboundKeeperRows) {
+    statements.push(insertStatement('keeper_pieces', row));
   }
+  statements.push(REGISTERED_IDENTITY_INSERT_GUARD_SQL);
+  insertTables(['artwork_invitations', 'artwork_invitation_redemptions']);
+  insertTables([
+    'artwork_claim_requests', 'artwork_transfer_intents', 'artwork_transfer_parties',
+    'atlas_source_cities', 'atlas_source_chains', 'atlas_source_chain_events',
+    'keeper_intentions', 'piece_fulfillments', 'artwork_acquisitions',
+    'artwork_provenance_entries', 'artwork_claim_evidence', 'artwork_lineage_events',
+    'ownership_code_audit', 'registry_maintenance_events',
+    'registry_recovery_qualifications', 'artwork_identity_recovery_qualifications',
+  ]);
+  for (const row of invitationRows.firstBoundUpdates) {
+    statements.push(
+      `UPDATE keeper_pieces SET keeper_user_id = ${sqlValue(row.keeper_user_id)}, `
+      + `claimed_at = ${sqlValue(row.claimed_at)}, released_at = ${sqlValue(row.released_at)}, `
+      + `current_display_location = ${sqlValue(row.current_display_location)}, `
+      + `lineage_event_count = ${sqlValue(row.lineage_event_count)}, `
+      + `lineage_head_hash = ${sqlValue(row.lineage_head_hash)}, `
+      + `steward_version = ${sqlValue(row.steward_version)}, `
+      + `last_transfer_id = ${sqlValue(row.last_transfer_id)} `
+      + `WHERE id = ${sqlValue(row.id)};`,
+    );
+  }
+  insertTables(['artwork_invitation_redemption_completions']);
+  for (const row of transferRows.receipts) {
+    statements.push(insertStatement('artwork_transfer_receipts', row));
+  }
+  insertTables([
+    'certificate_templates', 'certificate_assignment_operations',
+    'certificate_artwork_assignments',
+  ]);
+  statements.push(...certificateRestoreStatements(payload));
+  insertTables([
+    'collector_curated_cities', 'collector_person_privacy',
+    'collector_piece_privacy', 'collector_consent_history',
+  ]);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);
