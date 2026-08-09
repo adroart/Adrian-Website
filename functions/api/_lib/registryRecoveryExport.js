@@ -15,6 +15,12 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
   SELECT keeper_user_id AS id FROM keeper_pieces WHERE keeper_user_id IS NOT NULL
   UNION SELECT author_user_id FROM keeper_intentions WHERE author_user_id IS NOT NULL
   UNION SELECT actor_user_id FROM artwork_claim_evidence WHERE actor_user_id IS NOT NULL
+  UNION SELECT requester_user_id FROM artwork_claim_requests WHERE requester_user_id IS NOT NULL
+  UNION SELECT routed_to_user_id FROM artwork_claim_requests WHERE routed_to_user_id IS NOT NULL
+  UNION SELECT resolved_by_user_id FROM artwork_claim_requests WHERE resolved_by_user_id IS NOT NULL
+  UNION SELECT expected_from_user_id FROM artwork_transfer_intents WHERE expected_from_user_id IS NOT NULL
+  UNION SELECT target_user_id FROM artwork_transfer_intents WHERE target_user_id IS NOT NULL
+  UNION SELECT user_id FROM artwork_transfer_parties WHERE user_id IS NOT NULL
   UNION SELECT administrator_user_id FROM registry_maintenance_events
     WHERE administrator_user_id IS NOT NULL
   UNION SELECT administrator_user_id FROM registry_recovery_qualifications
@@ -80,6 +86,19 @@ function collectReferencedAuthUserIds(tables) {
   }
   for (const row of tables.artwork_claim_evidence) {
     if (typeof row.actor_user_id === 'string' && row.actor_user_id) ids.add(row.actor_user_id);
+  }
+  for (const row of tables.artwork_claim_requests) {
+    for (const field of ['requester_user_id', 'routed_to_user_id', 'resolved_by_user_id']) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const row of tables.artwork_transfer_intents) {
+    for (const field of ['expected_from_user_id', 'target_user_id']) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const row of tables.artwork_transfer_parties) {
+    if (typeof row.user_id === 'string' && row.user_id) ids.add(row.user_id);
   }
   for (const table of ['registry_maintenance_events', 'registry_recovery_qualifications']) {
     for (const row of tables[table]) {

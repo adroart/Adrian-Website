@@ -379,12 +379,14 @@ export async function saveMaintenanceAcquisition(
   return data.acquisition;
 }
 
-export type MaintenanceStewardAction = 'reset_steward' | 'transfer_steward';
+export type MaintenanceStewardAction = 'transfer_steward';
+export type MaintenanceTransferKind = 'sale' | 'gift' | 'inheritance' | 'artist-rebind';
 
 export type MaintenanceStewardActionInput = {
   keeperPieceId: string;
   action: MaintenanceStewardAction;
-  targetEmail?: string;
+  targetEmail: string;
+  transferKind: MaintenanceTransferKind;
   reason: string;
   expectedStewardVersion: number;
 };
@@ -417,7 +419,8 @@ export function beginMaintenanceStewardActionAttempt(
   const immutableRequest = Object.freeze({
     keeperPieceId: input.keeperPieceId,
     action: input.action,
-    ...(input.action === 'transfer_steward' ? { targetEmail: input.targetEmail?.trim().toLowerCase() } : {}),
+    targetEmail: input.targetEmail.trim().toLowerCase(),
+    transferKind: input.transferKind,
     reason: input.reason.trim(),
     idempotencyKey: createKey(),
     expectedStewardVersion: input.expectedStewardVersion,
@@ -430,7 +433,8 @@ export async function saveMaintenanceStewardAction(
 ): Promise<MaintenanceStewardActionResult> {
   const body = {
     action: request.action,
-    ...(request.action === 'transfer_steward' ? { targetEmail: request.targetEmail?.trim().toLowerCase() } : {}),
+    targetEmail: request.targetEmail.trim().toLowerCase(),
+    transferKind: request.transferKind,
     reason: request.reason.trim(),
     idempotencyKey: request.idempotencyKey.trim(),
     expectedStewardVersion: request.expectedStewardVersion,

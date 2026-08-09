@@ -44,11 +44,7 @@ import {
   IntentionRow,
 } from '../utils/intentions';
 
-import {
-  buildClaimBridgePayload,
-  requestContestedClaim,
-  CLAIM_REQUEST_NOTE_MAX,
-} from '../functions/api/_lib/claimBridge.js';
+import { CLAIM_REQUEST_NOTE_MAX } from '../functions/api/_lib/claimRequests.js';
 
 import { buildLineageEvent, prepareNextLineageEvent } from '../functions/api/_lib/lineage.js';
 import { applyOrderStatusEvent, upsertCheckoutOrder } from '../functions/api/stripe/webhook.js';
@@ -1145,21 +1141,6 @@ describe('private claim evidence pagination', () => {
   });
 });
 
-// The contested-claim handoff opens a request on mandalacodes' SINGLE shared
-// store, then leans on the escalation logic merged there. These pure modules
-// are the contract Adrian-Website depends on; we import them across the repo
-// boundary to lock that contract (skips cleanly if the sister repo is absent).
-import {
-  planClaimRequest,
-  MAX_OPEN_REQUESTS_PER_REQUESTER,
-} from '../../mandalacodes/utils/claimRequests.ts';
-import {
-  evaluateClaimWindow,
-  CLAIM_WINDOW_DAYS,
-  CLAIM_WARNING_DAYS,
-  FINAL_WARNING_GRACE_DAYS,
-} from '../../mandalacodes/utils/claimWindow.ts';
-
 // ── Recovery code ──────────────────────────────────────────────────────────
 
 describe('recovery code', () => {
@@ -1361,308 +1342,6 @@ describe('parseIntentionInput (whitelist)', () => {
     assert.equal(parseIntentionInput({ kind: 'motivation', body: 'x', evil: 1 }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'spell', body: 'x' }).ok, false);
     assert.equal(parseIntentionInput({ kind: 'journal', body: '   ' }).ok, false);
-  });
-});
-
-// ── Contested-claim handoff: Adrian-side bridge payload ──────────────────────
-
-describe('claim bridge payload (Adrian side, whitelist)', () => {
-  it('builds exactly the fields the receiver accepts, edition 0 always sent', () => {
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      editionNumber: 0,
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.deepEqual(Object.keys(p).sort(), [
-      'editionNumber',
-      'pieceId',
-      'requesterEmail',
-      'requesterRef',
-    ]);
-    // edition 0 is the chain-key default and must travel (not dropped as falsy).
-    assert.equal(p.editionNumber, 0);
-  });
-
-  it('defaults a missing/invalid editionNumber to 0', () => {
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.equal(p.editionNumber, 0);
-  });
-
-  it('includes a trimmed note and caps it at CLAIM_REQUEST_NOTE_MAX', () => {
-    const long = 'x'.repeat(CLAIM_REQUEST_NOTE_MAX + 200);
-    const p = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: `   bought at auction lot 12   `,
-    });
-    assert.equal(p.note, 'bought at auction lot 12');
-
-    const capped = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: long,
-    });
-    assert.equal(capped.note?.length, CLAIM_REQUEST_NOTE_MAX);
-
-    // An empty/whitespace note is omitted entirely (never an empty string).
-    const blank = buildClaimBridgePayload({
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      note: '   ',
-    });
-    assert.equal('note' in blank, false);
-  });
-});
-
-describe('requestContestedClaim (Adrian side, transport)', () => {
-  it('no-ops with secret_unset when CLAIM_BRIDGE_SECRET is not provisioned', async () => {
-    const r = await requestContestedClaim({}, {
-      pieceId: 'UL-100',
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-    });
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, 'secret_unset');
-  });
-
-  it('reports missing required fields without calling out', async () => {
-    const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 's' }, {
-      pieceId: 'UL-100',
-      // requesterRef / requesterEmail missing
-    } as never);
-    assert.equal(r.ok, false);
-    assert.equal(r.reason, 'missing_required_fields');
-  });
-
-  it('passes through the receiver status on a 200 (opened / duplicate)', async () => {
-    const calls: string[] = [];
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async (_url: string, init: { headers: Record<string, string> }) => {
-      calls.push(init.headers['X-Claim-Signature']);
-      return new Response(JSON.stringify({ ok: true, status: 'opened', request: { id: 'req-1' } }), {
-        status: 200,
-      });
-    }) as typeof fetch;
-    try {
-      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        editionNumber: 0,
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.equal(r.ok, true);
-      assert.equal(r.status, 'opened');
-      assert.equal(r.request?.id, 'req-1');
-      // The call was signed (an HMAC hex of length 64 went out).
-      assert.match(calls[0], /^[0-9a-f]{64}$/);
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-
-  it('rejects an unknown receiver outcome instead of inventing a request', async () => {
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async () => new Response(JSON.stringify({
-      ok: true,
-      status: 'unexpected',
-      request: { id: 'req-unknown' },
-    }), { status: 200 })) as typeof fetch;
-    try {
-      const response = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        editionNumber: 0,
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.deepEqual(response, { ok: false, reason: 'invalid_outcome' });
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-
-  it('does NOT retry a 400 (our payload is wrong)', async () => {
-    let n = 0;
-    const origFetch = globalThis.fetch;
-    globalThis.fetch = (async () => {
-      n++;
-      return new Response(JSON.stringify({ ok: false, error: 'bad' }), { status: 400 });
-    }) as typeof fetch;
-    try {
-      const r = await requestContestedClaim({ CLAIM_BRIDGE_SECRET: 'shared-secret' }, {
-        pieceId: 'UL-100',
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-      });
-      assert.equal(r.ok, false);
-      assert.equal(r.reason, 'rejected_400');
-      assert.equal(n, 1); // no retry
-    } finally {
-      globalThis.fetch = origFetch;
-    }
-  });
-});
-
-// ── Contested-claim handoff: shared escalation contract (mandalacodes) ────────
-// These pin the rules Adrian-Website hands the claim into. They live on the
-// mandalacodes side (one source of truth); we assert the contract here so a
-// drift on either side is caught.
-
-describe('contested claim opens a request (not a 409)', () => {
-  const boundSteward = {
-    pieceId: 'UL-100',
-    clerkUserId: 'user-holder',
-    email: 'holder@example.com',
-    issuedAt: '2026-01-01T00:00:00Z',
-    outreachStatus: 'claimed' as const,
-  };
-
-  it('a bound piece routes the request to the HOLDER, pending, never binding', () => {
-    const plan = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward: boundSteward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(plan.ok, true);
-    assert.equal(plan.value?.status, 'pending'); // not bound, not 409
-    assert.equal(plan.value?.routedTo, 'holder'); // anti-takeover: the holder decides
-    assert.equal(plan.value?.requesterRef, 'user-asker');
-  });
-
-  it('the bound holder cannot request their own piece (self-guard)', () => {
-    const plan = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-holder',
-      requesterEmail: 'holder@example.com',
-      steward: boundSteward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(plan.ok, false);
-  });
-});
-
-describe('dedupe + rate limit (shared store guardrails)', () => {
-  const steward = {
-    pieceId: 'UL-100',
-    clerkUserId: 'user-holder',
-    email: 'holder@example.com',
-    issuedAt: '2026-01-01T00:00:00Z',
-    outreachStatus: 'claimed' as const,
-  };
-
-  it('a second request for the same piece by the same requester is one open request', () => {
-    const first = planClaimRequest([], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(first.ok, true);
-    const second = planClaimRequest([first.value!], {
-      input: { pieceId: 'UL-100' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward,
-      now: '2026-06-23T01:00:00Z',
-    });
-    assert.equal(second.ok, false); // dedupe → no duplicate open request
-  });
-
-  it('caps a requester at MAX_OPEN_REQUESTS_PER_REQUESTER open requests', () => {
-    const open = [];
-    for (let i = 0; i < MAX_OPEN_REQUESTS_PER_REQUESTER; i++) {
-      const r = planClaimRequest(open, {
-        input: { pieceId: `UL-10${i}` },
-        requesterRef: 'user-asker',
-        requesterEmail: 'asker@example.com',
-        steward: undefined,
-        now: '2026-06-23T00:00:00Z',
-      });
-      assert.equal(r.ok, true);
-      open.push(r.value!);
-    }
-    const overflow = planClaimRequest(open, {
-      input: { pieceId: 'UL-999' },
-      requesterRef: 'user-asker',
-      requesterEmail: 'asker@example.com',
-      steward: undefined,
-      now: '2026-06-23T00:00:00Z',
-    });
-    assert.equal(overflow.ok, false); // rate limited
-  });
-});
-
-describe('escalation outcomes (run on the mandalacodes side)', () => {
-  const baseRequest = {
-    id: 'req-1',
-    pieceId: 'UL-100',
-    requesterRef: 'user-asker',
-    requesterEmail: 'asker@example.com',
-    createdAt: '2026-06-01T00:00:00Z',
-    status: 'pending' as const,
-    routedTo: 'holder' as const,
-  };
-  const dayMs = 24 * 60 * 60 * 1000;
-  const isoDaysAfterRequest = (days: number) =>
-    new Date(Date.parse(baseRequest.createdAt) + days * dayMs).toISOString();
-  const deliveredWarnings = () =>
-    CLAIM_WARNING_DAYS.map((day, index) => ({
-      ordinal: index + 1,
-      sentAt: isoDaysAfterRequest(day),
-    }));
-
-  it("a holder's NO stops the claim cold, regardless of elapsed time", () => {
-    const declined = { ...baseRequest, status: 'declined' as const };
-    // Even far past the full window, a decline never frees the piece.
-    const r = evaluateClaimWindow({
-      request: declined,
-      holderResponded: false,
-      nowIso: '2027-01-01T00:00:00Z',
-    });
-    assert.equal(r.status, 'declined');
-  });
-
-  it('only unanswered silence across the FULL window, every warning delivered, frees the piece', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS + FINAL_WARNING_GRACE_DAYS);
-    const freed = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: false,
-      nowIso: past,
-      warnings: deliveredWarnings(), // all four delivered
-    });
-    assert.equal(freed.status, 'frees-to-requester');
-  });
-
-  it('mere inactivity never frees: full window but warnings undelivered stays blocked', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
-    const notFreed = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: false,
-      nowIso: past,
-      warnings: [], // nothing actually delivered to the steward yet
-    });
-    assert.notEqual(notFreed.status, 'frees-to-requester');
-  });
-
-  it('any steward response keeps the piece blocked (engagement never frees)', () => {
-    const past = isoDaysAfterRequest(CLAIM_WINDOW_DAYS);
-    const held = evaluateClaimWindow({
-      request: baseRequest,
-      holderResponded: true,
-      nowIso: past,
-      warnings: deliveredWarnings(),
-    });
-    assert.equal(held.status, 'blocked-active');
   });
 });
 
@@ -3146,7 +2825,7 @@ describe('admin artwork plate lifecycle', () => {
 // bind issues (the no-released-filter SELECT, the legacy keeper_user_id UPDATE, and the users
 // lookup getUserByAuthId runs). The session layer (requireUser) is module-
 // mocked so we can drive distinct signed-in users without a real Better Auth
-// cookie; the contested-claim bridge fetch is stubbed at globalThis.fetch.
+// cookie; contested claims are stored in the same canonical D1 stand-in.
 //
 // Run note: this section uses node:test's mock.module, so the suite is invoked
 // with `npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts`.
@@ -3163,6 +2842,7 @@ function makeKeeperDb() {
   const qualifications: any[] = [];
   const lineage: any[] = [];
   const evidence: any[] = [];
+  const claimRequests: any[] = [];
   let loseNextFirstBind = false;
   let lastChanges = 0;
   const users: any[] = [{ id: 'row-1', auth_user_id: 'user-first', email: 'first@example.com' }];
@@ -3191,6 +2871,35 @@ function makeKeeperDb() {
     if (/^SELECT \* FROM users WHERE auth_user_id = \?1/i.test(s)) {
       const u = users.find((r) => r.auth_user_id === params[0]) || null;
       return { kind: 'first', row: u };
+    }
+    if (/^INSERT INTO artwork_claim_requests/i.test(s)) {
+      const [id, keeperPieceId, requesterUserId, requesterEmail, note,
+        expectedStewardUserId, createdAt, limit] = params;
+      const piece = pieces.find((row) => row.id === keeperPieceId);
+      const duplicate = claimRequests.some((row) => row.keeper_piece_id === keeperPieceId
+        && row.requester_user_id === requesterUserId && row.status === 'pending');
+      const openByUser = claimRequests.filter((row) => row.requester_user_id === requesterUserId
+        && row.status === 'pending').length;
+      const openByEmail = claimRequests.filter((row) => row.requester_email === requesterEmail
+        && row.status === 'pending').length;
+      if (!piece || piece.keeper_user_id !== expectedStewardUserId || !piece.claimed_at
+        || piece.keeper_user_id === requesterUserId || duplicate
+        || openByUser >= limit || openByEmail >= limit) {
+        return { kind: 'run', meta: { changes: 0 } };
+      }
+      claimRequests.push({
+        id, keeper_piece_id: keeperPieceId, requester_user_id: requesterUserId,
+        requester_email: requesterEmail, note, routed_to_user_id: piece.keeper_user_id,
+        status: 'pending', created_at: createdAt,
+      });
+      return { kind: 'run', meta: { changes: 1 } };
+    }
+    if (/^SELECT keeper_user_id, claimed_at FROM keeper_pieces WHERE id = \?1/i.test(s)) {
+      return { kind: 'first', row: pieces.find((row) => row.id === params[0]) || null };
+    }
+    if (/^SELECT id FROM artwork_claim_requests/i.test(s)) {
+      return { kind: 'first', row: claimRequests.find((row) => row.keeper_piece_id === params[0]
+        && row.requester_user_id === params[1] && row.status === 'pending') || null };
     }
 
     // Public-code lookup: the row itself is the only source of artwork and
@@ -3398,7 +3107,7 @@ function makeKeeperDb() {
   };
 
   return {
-    DB, pieces, users, lineage, evidence, qualifications,
+    DB, pieces, users, lineage, evidence, claimRequests, qualifications,
     qualify(row: any) {
       qualifications.push({
         id: `qualification-${qualifications.length + 1}`,
@@ -3435,12 +3144,11 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
   it('walks the full happy path and the contested handoff', async () => {
     const wasOn = LAUNCH_FLAGS.livingLegacy;
     LAUNCH_FLAGS.livingLegacy = true;
-    const origFetch = globalThis.fetch;
     try {
       // Imported AFTER the requireUser mock is installed.
       const { onRequest: bind } = await import('../functions/api/keeper/bind.js');
 
-      const { DB, pieces, users, lineage, evidence, qualify, loseNextFirstBind } = makeKeeperDb();
+      const { DB, pieces, users, lineage, evidence, claimRequests, qualify, loseNextFirstBind } = makeKeeperDb();
       const adminEnv = issuanceEnv(DB);
 
       // 1) Admin registers the piece → we capture the printed recovery code.
@@ -3454,8 +3162,7 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(pieces[0].keeper_user_id, null);
       assert.equal(pieces[0].claimed_at, null);
 
-      // Bind env: the bridge secret is set so the contested path actually fires.
-      const bindEnv = { DB, CLAIM_BRIDGE_SECRET: 'shared-secret' };
+      const bindEnv = { DB };
 
       // A new registry identity is not bindable until physical activation and
       // verified online backup are both complete.
@@ -3513,27 +3220,8 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(againJson.ok, true);
       assert.equal('status' in againJson, false); // not a claim_requested envelope
 
-      // 3) A DIFFERENT user now tries to bind → CONTESTED. Goes to a claim
-      //    request (202), never a silent takeover. Stub the bridge fetch.
-      let bridgeCalled = 0;
-      let bridgeOutcome: 'opened' | 'duplicate' | 'rate_limited' | 'self' = 'opened';
-      globalThis.fetch = (async (_input, init) => {
-        bridgeCalled++;
-        const bridged = JSON.parse(String(init?.body));
-        assert.equal(bridged.requesterRef, 'user-second');
-        assert.equal(bridged.requesterEmail, 'second@example.com');
-        assert.equal(bridged.pieceId, 'UL-100');
-        assert.equal(bridged.editionNumber, 0);
-        return new Response(JSON.stringify({
-          ok: true,
-          status: bridgeOutcome,
-          ...(bridgeOutcome === 'opened' || bridgeOutcome === 'duplicate'
-            ? { request: { id: 'req-1' } }
-            : {}),
-        }), {
-          status: 200,
-        });
-      }) as typeof fetch;
+      // 3) A DIFFERENT user now tries to bind → CONTESTED. The pending request
+      //    is written locally and never changes the current steward.
       // Seed the contesting user so getUserByAuthId resolves them, then bind AS
       // that user. user-first still holds the piece, so this is a genuine contest.
       users.push({ id: 'row-2', auth_user_id: 'user-second', email: 'second@example.com' });
@@ -3555,55 +3243,38 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.match(contestJson.message, /remain unchanged/i);
       assert.doesNotMatch(contestJson.message, /notif|silence|window|free|release/i);
       assert.doesNotMatch(contestJson.message, /\bkeeper\b/i);
-      assert.equal(bridgeCalled, 1);
+      assert.equal(claimRequests.length, 1);
+      assert.equal(claimRequests[0].requester_user_id, 'user-second');
+      assert.equal(claimRequests[0].requester_email, 'second@example.com');
+      assert.equal(claimRequests[0].note, 'Auction receipt available');
+      assert.equal(claimRequests[0].routed_to_user_id, 'user-first');
       assert.equal(evidence.at(-1)[6], 'contested_attempt');
       // The binding was NOT stolen: user-first is still the steward.
       assert.equal(pieces[0].keeper_user_id, 'user-first');
 
-      // Retries still reach the governed bridge, but private evidence is
-      // atomically throttled for this piece/requester/outcome tuple.
+      // Retries deduplicate locally, while private evidence remains throttled.
       const evidenceCount = evidence.length;
-      bridgeOutcome = 'duplicate';
       const repeatedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(repeatedContest.status, 202);
       const repeatedJson = await repeatedContest.json();
       assert.equal(repeatedJson.claim.outcome, 'duplicate');
       assert.match(repeatedJson.message, /already recorded/i);
       assert.doesNotMatch(repeatedJson.message, /notif|silence|window|free|release/i);
-      assert.equal(bridgeCalled, 2);
+      assert.equal(claimRequests.length, 1);
       assert.equal(evidence.length, evidenceCount);
-
-      bridgeOutcome = 'rate_limited';
-      const rateLimited = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(rateLimited.status, 429);
-      const rateLimitedJson = await rateLimited.json();
-      assert.equal(rateLimitedJson.error, 'claim_rate_limited');
-      assert.match(rateLimitedJson.message, /no new request was recorded/i);
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
-
-      bridgeOutcome = 'self';
-      const self = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
-      assert.equal(self.status, 409);
-      assert.deepEqual(await self.json(), {
-        ok: false,
-        error: 'already_current_steward',
-        message: 'You are already the current steward for this piece. No request was recorded.',
-      });
-      assert.equal(pieces[0].keeper_user_id, 'user-first');
 
       // A copied permanent code is not enough to open a governed claim.
       const wrongContest = await bind({ request: bindReq({ publicCode, ownershipCode: 'AAAA-BBBB-CCCC-DDDD' }), env: bindEnv });
       assert.equal(wrongContest.status, 403);
-      assert.equal(bridgeCalled, 4);
+      assert.equal(claimRequests.length, 1);
 
       // Once claimed, release never turns the permanent Ownership Code back
       // into a bearer instrument. A later holder enters the governed path.
-      bridgeOutcome = 'opened';
       pieces[0].released_at = '2026-07-13T12:00:00Z';
       const releasedContest = await bind({ request: bindReq({ publicCode, ownershipCode: recoveryCode }), env: bindEnv });
       assert.equal(releasedContest.status, 202);
       assert.equal(pieces[0].keeper_user_id, 'user-first');
-      assert.equal(bridgeCalled, 5);
+      assert.equal(claimRequests.length, 1);
 
       // 4) WRONG code on an unclaimed piece is rejected (register a fresh piece).
       const reg2 = await adminPieces({ request: adminReq('POST', { pieceId: 'UL-101', editionKind: 'unique', editionNumber: 0, uniqueConfirmed: true, issuanceKey: 'keeper-negative' }), env: adminEnv });
@@ -3671,7 +3342,6 @@ describe('steward bind lifecycle (register → first-bind → contested)', () =>
       assert.equal(unregJson.error, 'not_registered');
     } finally {
       LAUNCH_FLAGS.livingLegacy = wasOn;
-      globalThis.fetch = origFetch;
       CURRENT_AUTH = null;
     }
   });

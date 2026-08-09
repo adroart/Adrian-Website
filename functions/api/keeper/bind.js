@@ -27,23 +27,12 @@
  * A CONTESTED bind records a request for manual review when the receiver accepts
  * it. It never changes the current steward or registration in this endpoint.
  *
- * The single source of truth for contested requests is mandalacodes' R2 store
- * atlas/claimRequests.json. This file only asks that service to record the
- * request. It does not adjudicate it or change a steward binding.
- *
- * INTEGRATION SHAPE (decision): shape (1), one shared store, server-to-server.
- * Adrian-Website does not bind the atlas R2 bucket (wrangler.toml: MUSIC_BUCKET
- * + shared D1 only), so it cannot write atlas/claimRequests.json directly; and
- * mandalacodes' user-facing request-claim endpoint authenticates with a
- * per-domain session cookie that cannot be forwarded from here. So the bind
- * step validates the requester's session locally, then makes a machine-auth
- * HMAC call (functions/api/_lib/claimBridge.js, mirroring the M4 sale webhook)
- * to mandalacodes, which appends to the ONE store and runs the existing
- * routing / dedupe / rate-limit behavior. No claim machinery is forked here.
+ * Contested requests live in this registry's canonical D1. They remain pending
+ * for human resolution and never change the steward in this endpoint.
  *
  * INVARIANT: nothing written here enters a ledger hash. keeper_pieces is mutable
- * D1; the chain (mandalacodes side) carries only opaque ids + salted
- * commitments. recovery_code_hash is the online verifier; plaintext never enters logs.
+ * D1; public lineage carries only opaque ids and commitments. recovery_code_hash
+ * is the online verifier; plaintext never enters logs.
  *
  * Auth: Better Auth session cookie (requireUser). The email-fallback identity
  * claim that mandalacodes' steward bind allows is NOT used here. Binding keys
@@ -61,7 +50,7 @@ import {
   isMissingTableError,
   hashRecoveryCode,
 } from '../_lib/keeper.js';
-import { requestContestedClaim } from '../_lib/claimBridge.js';
+import { openContestedClaim } from '../_lib/claimRequests.js';
 import { plateBackupIsVerified } from '../_lib/plateBackup.js';
 import {
   loadLatestPassedPieceQualification,
@@ -118,7 +107,7 @@ export async function onRequest(context) {
     : '';
   // Optional evidence note, used ONLY on the contested-claim path ("bought at
   // the Vienna auction, lot 12"). Mutable-store only; never hashed, never
-  // required, capped to mandalacodes' CLAIM_REQUEST_NOTE_MAX (500).
+  // required, capped to the canonical claim-request limit (500).
   const note =
     typeof body?.note === 'string' && body.note.trim() ? body.note.trim().slice(0, 500) : undefined;
   if (!isPublicRegistryCode(publicCode) || !ownershipCode) {
@@ -227,39 +216,16 @@ export async function onRequest(context) {
         dedupeWithinSeconds: 15 * 60,
       }).run();
 
-      const bridge = await requestContestedClaim(env, {
-        pieceId,
-        editionNumber,
-        requesterRef: auth.userId,
+      const claim = await openContestedClaim(env, {
+        keeperPieceId: existing.id,
+        requesterUserId: auth.userId,
         requesterEmail,
         note,
+        expectedKeeperUserId: existing.keeper_user_id,
+        openedAt: nowIso,
       });
 
-      if (!bridge.ok) {
-        // The handoff could not be opened. Distinguish "not configured yet"
-        // from a transient failure so the requester is not told they were
-        // refused when the bridge is simply pending provisioning.
-        if (bridge.reason === 'secret_unset') {
-          return json(
-            {
-              ok: false,
-              error: 'claim_handoff_unconfigured',
-              message: 'Stewardship requests are not switched on yet. No request was recorded. Please try again later.',
-            },
-            503,
-          );
-        }
-        return json(
-          {
-            ok: false,
-            error: 'claim_handoff_failed',
-            message: 'We could not record your request just now. Please try again shortly.',
-          },
-          502,
-        );
-      }
-
-      if (bridge.status === 'opened') {
+      if (claim.status === 'opened') {
         return json(
           {
             ok: true,
@@ -270,7 +236,7 @@ export async function onRequest(context) {
           202,
         );
       }
-      if (bridge.status === 'duplicate') {
+      if (claim.status === 'duplicate') {
         return json(
           {
             ok: true,
@@ -281,7 +247,7 @@ export async function onRequest(context) {
           202,
         );
       }
-      if (bridge.status === 'rate_limited') {
+      if (claim.status === 'rate_limited') {
         return json(
           {
             ok: false,
@@ -291,7 +257,7 @@ export async function onRequest(context) {
           429,
         );
       }
-      if (bridge.status === 'self') {
+      if (claim.status === 'self') {
         return json(
           {
             ok: false,
@@ -302,14 +268,11 @@ export async function onRequest(context) {
         );
       }
 
-      return json(
-        {
-          ok: false,
-          error: 'claim_handoff_failed',
-          message: 'We could not record your request just now. Please try again shortly.',
-        },
-        502,
-      );
+      return json({
+        ok: false,
+        error: 'bind_conflict',
+        message: 'This piece changed steward while your request was being recorded. Reload and try again.',
+      }, 409);
     }
 
     // Permanent identities are not bearer-bindable while fabrication or

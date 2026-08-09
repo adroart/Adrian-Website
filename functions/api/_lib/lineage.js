@@ -1,6 +1,8 @@
 const PRIVATE_KEY = /(?:email|ip|user.?agent|ownership|recovery|verifier|cipher|nonce|secret|password|token|key)/i;
 const PUBLIC_CODE_PATTERN = /^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 const ARTWORK_ID_PATTERN = /^[A-Z]{2,3}-[0-9]{3}$/;
+const TRANSFER_PARTY_REF_PATTERN = /^tp-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const TRANSFER_KINDS = new Set(['sale', 'gift', 'inheritance', 'artist-rebind']);
 const EMPTY_PAYLOAD_EVENTS = new Set([
   'fulfillment_assign',
   'fulfillment_correct',
@@ -77,6 +79,20 @@ export function projectLineagePublicPayload(eventType, publicPayload = {}) {
       throw new Error(`invalid ${eventType} lineage payload`);
     }
     return { plateStatus };
+  }
+  if (eventType === 'transferred') {
+    if (!exactKeys(publicPayload, ['fromRef', 'toRef', 'transferKind'])
+      || !TRANSFER_PARTY_REF_PATTERN.test(publicPayload.fromRef)
+      || !TRANSFER_PARTY_REF_PATTERN.test(publicPayload.toRef)
+      || publicPayload.fromRef === publicPayload.toRef
+      || !TRANSFER_KINDS.has(publicPayload.transferKind)) {
+      throw new Error('invalid transferred lineage payload');
+    }
+    return {
+      fromRef: publicPayload.fromRef,
+      toRef: publicPayload.toRef,
+      transferKind: publicPayload.transferKind,
+    };
   }
   if (EMPTY_PAYLOAD_EVENTS.has(eventType)) {
     if (!exactKeys(publicPayload, [])) throw new Error(`invalid ${eventType} lineage payload`);

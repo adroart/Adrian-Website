@@ -96,6 +96,21 @@ function request(method = 'GET') {
 }
 
 describe('public artwork lineage history', () => {
+  it('accepts only transfer-scoped opaque references in a transferred event', () => {
+    assert.deepEqual(projectLineagePublicPayload('transferred', {
+      fromRef: 'tp-00000000-0000-4000-8000-000000000001',
+      toRef: 'tp-00000000-0000-4000-8000-000000000002',
+      transferKind: 'gift',
+    }), {
+      fromRef: 'tp-00000000-0000-4000-8000-000000000001',
+      toRef: 'tp-00000000-0000-4000-8000-000000000002',
+      transferKind: 'gift',
+    });
+    assert.throws(() => projectLineagePublicPayload('transferred', {
+      fromRef: 'user-current', toRef: 'user-target', transferKind: 'other',
+    }));
+  });
+
   it('stays invisible and never queries D1 while the public flag is off', async () => {
     LAUNCH_FLAGS.livingLegacy = false;
     try {

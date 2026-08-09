@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 2 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 3 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -18,6 +18,9 @@ export const REGISTRY_RECOVERY_TABLES = [
   'account',
   'registry_artworks',
   'keeper_pieces',
+  'artwork_claim_requests',
+  'artwork_transfer_intents',
+  'artwork_transfer_parties',
   'atlas_source_cities',
   'atlas_source_chains',
   'atlas_source_chain_events',
@@ -30,9 +33,13 @@ export const REGISTRY_RECOVERY_TABLES = [
   'ownership_code_audit',
   'registry_maintenance_events',
   'registry_recovery_qualifications',
+  'artwork_transfer_receipts',
 ] as const;
 
-export const REGISTRY_RECOVERY_V1_TABLES = REGISTRY_RECOVERY_TABLES.filter(
+export const REGISTRY_RECOVERY_V2_TABLES = REGISTRY_RECOVERY_TABLES.filter(
+  (table) => !table.startsWith('artwork_transfer_') && table !== 'artwork_claim_requests',
+);
+export const REGISTRY_RECOVERY_V1_TABLES = REGISTRY_RECOVERY_V2_TABLES.filter(
   (table) => !table.startsWith('atlas_source_'),
 );
 
@@ -62,7 +69,20 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'backup_status', 'backup_reference', 'backup_at', 'lineage_head_hash',
     'lineage_event_count', 'record_version', 'steward_version',
     'supersedes_keeper_piece_id', 'superseded_by_keeper_piece_id',
-    'physical_disposition', 'replaced_at', 'backup_sha256',
+    'physical_disposition', 'replaced_at', 'backup_sha256', 'last_transfer_id',
+  ],
+  artwork_claim_requests: [
+    'id', 'keeper_piece_id', 'requester_user_id', 'requester_email', 'note',
+    'routed_to_user_id', 'status', 'created_at', 'resolved_at', 'resolved_by_user_id',
+  ],
+  artwork_transfer_intents: [
+    'id', 'keeper_piece_id', 'expected_from_user_id', 'target_user_id',
+    'target_email_commitment',
+    'expected_steward_version', 'expected_lineage_count', 'expected_lineage_hash',
+    'transfer_kind', 'maintenance_event_id', 'lineage_event_id', 'created_at',
+  ],
+  artwork_transfer_parties: [
+    'id', 'transfer_intent_id', 'party_role', 'user_id', 'public_ref', 'created_at',
   ],
   atlas_source_cities: [
     'id', 'city', 'region', 'country', 'country_code', 'lat', 'lng',
@@ -118,6 +138,7 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'backup_reference', 'backup_sha256', 'administrator_user_id',
     'administrator_email', 'safe_failure_code', 'qualified_at',
   ],
+  artwork_transfer_receipts: ['id', 'transfer_intent_id', 'committed_at'],
 };
 
 export type PrivateRecoveryPayload = {
@@ -127,9 +148,9 @@ export type PrivateRecoveryPayload = {
   tables: Record<RegistryRecoveryTable, RecoveryRow[]>;
 };
 
-type PrivateRecoveryPayloadV1 = {
+type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -157,7 +178,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -245,21 +266,28 @@ function validateRow(row: unknown): row is RecoveryRow {
       || (typeof value === 'number' && Number.isFinite(value)));
 }
 
+function recoveryColumns(table: RegistryRecoveryTable, schemaVersion: number) {
+  if (table === 'keeper_pieces' && schemaVersion < 3) {
+    return REGISTRY_RECOVERY_COLUMNS.keeper_pieces.filter((column) => column !== 'last_transfer_id');
+  }
+  return REGISTRY_RECOVERY_COLUMNS[table];
+}
+
 /** Strict synchronous payload shape check used again immediately before SQL emission. */
 export function validatePrivateRecoveryPayload(
   payload: unknown,
-): asserts payload is PrivateRecoveryPayload | PrivateRecoveryPayloadV1 {
+): asserts payload is PrivateRecoveryPayload | LegacyPrivateRecoveryPayload {
   if (!isPlainObject(payload) || !hasExactKeys(payload, ['kind', 'schemaVersion', 'exportedAt', 'tables'])) {
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (payload.schemaVersion !== 1 && payload.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION)
+    || (![1, 2, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
   const tableNames = payload.schemaVersion === 1
     ? REGISTRY_RECOVERY_V1_TABLES
-    : REGISTRY_RECOVERY_TABLES;
+    : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
   if (!isPlainObject(payload.tables)
     || !hasExactKeys(payload.tables, tableNames)) {
     throw new Error('recovery_payload_tables');
@@ -269,7 +297,7 @@ export function validatePrivateRecoveryPayload(
     if (!Array.isArray(rows) || !rows.every(validateRow)) {
       throw new Error(`recovery_payload_rows_${table}`);
     }
-    if (rows.some((row) => !hasExactKeys(row, REGISTRY_RECOVERY_COLUMNS[table]))) {
+    if (rows.some((row) => !hasExactKeys(row, recoveryColumns(table, payload.schemaVersion as number)))) {
       throw new Error(`recovery_payload_columns_${table}`);
     }
     for (let index = 1; index < rows.length; index += 1) {
@@ -293,10 +321,19 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
     exportedAt: payload.exportedAt,
     tables: {
       ...payload.tables,
-      atlas_source_cities: [],
-      atlas_source_chains: [],
-      atlas_source_chain_events: [],
-    } as Record<RegistryRecoveryTable, RecoveryRow[]>,
+      keeper_pieces: payload.tables.keeper_pieces.map((row) => ({
+        ...row, last_transfer_id: null,
+      })),
+      ...(payload.schemaVersion === 1 ? {
+        atlas_source_cities: [],
+        atlas_source_chains: [],
+        atlas_source_chain_events: [],
+      } : {}),
+      artwork_claim_requests: [],
+      artwork_transfer_intents: [],
+      artwork_transfer_parties: [],
+      artwork_transfer_receipts: [],
+    } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
 
@@ -316,8 +353,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((value.manifest.schemaVersion !== 1
-      && value.manifest.schemaVersion !== PRIVATE_RECOVERY_SCHEMA_VERSION)
+  if ((![1, 2, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -326,7 +362,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
   }
   const tableNames = value.manifest.schemaVersion === 1
     ? REGISTRY_RECOVERY_V1_TABLES
-    : REGISTRY_RECOVERY_TABLES;
+    : value.manifest.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
   if (value.manifest.tables.length !== tableNames.length) {
     throw new Error('recovery_archive_manifest');
   }
@@ -427,7 +463,7 @@ export async function decryptPrivateRecoveryExport(
   }
   const tableNames = value.manifest.schemaVersion === 1
     ? REGISTRY_RECOVERY_V1_TABLES
-    : REGISTRY_RECOVERY_TABLES;
+    : value.manifest.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_TABLES;
   for (let index = 0; index < tableNames.length; index += 1) {
     const name = tableNames[index];
     const expected = value.manifest.tables[index];
@@ -452,6 +488,66 @@ function sqlValue(value: RecoveryRow[string]): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
+function transferRestoreRows(payload: PrivateRecoveryPayload) {
+  const intentsById = new Map(payload.tables.artwork_transfer_intents.map((row) => [row.id, row]));
+  const maintenanceById = new Map(payload.tables.registry_maintenance_events.map((row) => [row.id, row]));
+  const receipts = [...payload.tables.artwork_transfer_receipts].sort((left, right) => {
+    const leftIntent = intentsById.get(left.transfer_intent_id);
+    const rightIntent = intentsById.get(right.transfer_intent_id);
+    if (!leftIntent || !rightIntent) throw new Error('recovery_transfer_intent_missing');
+    const lineageOrder = Number(leftIntent.expected_lineage_count)
+      - Number(rightIntent.expected_lineage_count);
+    return lineageOrder || String(left.id).localeCompare(String(right.id));
+  });
+  const firstIntentByPiece = new Map<string | number, RecoveryRow>();
+  for (const receipt of receipts) {
+    const intent = intentsById.get(receipt.transfer_intent_id);
+    if (!intent) throw new Error('recovery_transfer_intent_missing');
+    const current = firstIntentByPiece.get(intent.keeper_piece_id);
+    if (!current
+      || Number(intent.expected_lineage_count) < Number(current.expected_lineage_count)) {
+      firstIntentByPiece.set(intent.keeper_piece_id, intent);
+    }
+  }
+
+  const keeperRows = payload.tables.keeper_pieces.map((row) => {
+    const firstIntent = firstIntentByPiece.get(row.id);
+    if (!firstIntent) return row;
+    const maintenance = maintenanceById.get(firstIntent.maintenance_event_id);
+    let before: Record<string, unknown>;
+    try {
+      before = JSON.parse(String(maintenance?.before_json));
+    } catch {
+      throw new Error('recovery_transfer_baseline_invalid');
+    }
+    const claimedAt = before.claimedAt ?? before.claimed_at;
+    const releasedAt = before.releasedAt ?? before.released_at ?? null;
+    const currentDisplayLocation = before.currentDisplayLocation
+      ?? before.current_display_location ?? null;
+    const keeperUserId = before.keeperUserId ?? before.keeper_user_id;
+    const stewardVersion = before.stewardVersion ?? before.steward_version;
+    if (keeperUserId !== firstIntent.expected_from_user_id
+      || typeof claimedAt !== 'string' || !claimedAt
+      || stewardVersion !== firstIntent.expected_steward_version
+      || (releasedAt !== null && typeof releasedAt !== 'string')
+      || (currentDisplayLocation !== null && typeof currentDisplayLocation !== 'string')) {
+      throw new Error('recovery_transfer_baseline_invalid');
+    }
+    return {
+      ...row,
+      keeper_user_id: firstIntent.expected_from_user_id,
+      claimed_at: claimedAt,
+      released_at: releasedAt,
+      current_display_location: currentDisplayLocation,
+      steward_version: firstIntent.expected_steward_version,
+      lineage_event_count: firstIntent.expected_lineage_count,
+      lineage_head_hash: firstIntent.expected_lineage_hash,
+      last_transfer_id: null,
+    };
+  });
+  return { keeperRows, receipts };
+}
+
 /**
  * Generate offline-only SQL after the encrypted artifact has been fully
  * authenticated. Every insert is guarded, conflict-failing and transactional.
@@ -461,9 +557,10 @@ function sqlValue(value: RecoveryRow[string]): string {
  * trigger rolls back the whole transaction if any insert was skipped or failed.
  */
 export function buildRegistryRestoreSql(
-  sourcePayload: PrivateRecoveryPayload | PrivateRecoveryPayloadV1,
+  sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
 ): string {
   const payload = upgradePrivateRecoveryPayload(sourcePayload);
+  const transferRows = transferRestoreRows(payload);
   const guardTable = '__registry_recovery_clean_guard';
   const completionTable = '__registry_recovery_completion_guard';
   const completionTrigger = '__registry_recovery_require_complete';
@@ -491,7 +588,10 @@ export function buildRegistryRestoreSql(
   ];
 
   for (const table of REGISTRY_RECOVERY_TABLES) {
-    for (const row of payload.tables[table]) {
+    const rows = table === 'keeper_pieces'
+      ? transferRows.keeperRows
+      : table === 'artwork_transfer_receipts' ? transferRows.receipts : payload.tables[table];
+    for (const row of rows) {
       const columns = Object.keys(row).sort();
       if (!columns.length) throw new Error(`recovery_payload_columns_${table}`);
       statements.push(

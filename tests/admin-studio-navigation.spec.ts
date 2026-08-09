@@ -379,17 +379,16 @@ test('development Maintenance API replays idempotent create and correction reque
   expect(outcome.corrected.acquisition.recordVersion).toBe(2);
 });
 
-test('reviews and saves steward transfer and reset with exact visible consequences', async ({ page }, testInfo) => {
+test('reviews and saves governed steward transfer with exact visible consequences', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Steward mutation flow runs once against shared development state.');
   const targetEmail = 'verified-steward@example.test';
   const transferReason = `Transfer steward ${Date.now()}-${Math.random()}`;
-  const resetReason = `Reset steward ${Date.now()}-${Math.random()}`;
-  const assignReason = `Assign after reset ${Date.now()}-${Math.random()}`;
 
   await page.goto('/admin/maintenance');
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
   await page.getByRole('button', { name: 'Transfer steward', exact: true }).click();
   await page.getByLabel('Verified account email').fill(targetEmail);
+  await page.getByLabel('Transfer kind').selectOption('gift');
   await expect(page.getByText(/current display location clears/i)).toBeVisible();
   await page.getByRole('button', { name: 'Review transfer' }).click();
   await expect(page.getByRole('heading', { name: 'Review steward transfer' })).toBeVisible();
@@ -397,7 +396,9 @@ test('reviews and saves steward transfer and reset with exact visible consequenc
   await expect(reviewColumns.nth(0)).toContainText('keeper@example.test');
   await expect(reviewColumns.nth(0)).toContainText('Ubud studio');
   await expect(reviewColumns.nth(1)).toContainText(targetEmail);
+  await expect(reviewColumns.nth(1)).toContainText('gift');
   await expect(reviewColumns.nth(1)).toContainText('Cleared');
+  await expect(page.getByText(/permanent public lineage event/i)).toBeVisible();
   await page.getByLabel('Reason for this steward change').fill(transferReason);
   const secret = page.getByLabel('Registry secret');
   if (await secret.isVisible().catch(() => false)) {
@@ -408,25 +409,6 @@ test('reviews and saves steward transfer and reset with exact visible consequenc
   await expect(page.getByText(`Steward transfer saved for ${targetEmail}. The display location was cleared.`)).toBeVisible();
   await expect(page.getByText(targetEmail, { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Reset steward', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Review steward reset' })).toBeVisible();
-  await expect(page.locator('.maintenance-review-grid > div').nth(0)).toContainText(targetEmail);
-  await expect(page.locator('.maintenance-review-grid > div').nth(1)).toContainText('Unclaimed');
-  await expect(page.getByText(/claim and release timestamps, and display location all clear/i)).toBeVisible();
-  await page.getByLabel('Reason for this steward change').fill(resetReason);
-  await page.getByRole('button', { name: 'Confirm steward reset' }).click();
-  await expect(page.getByText('Steward reset saved. This artwork is now Unclaimed.')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'No current steward' })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Assign steward', exact: true }).click();
-  await page.getByLabel('Verified account email').fill(targetEmail);
-  await page.getByRole('button', { name: 'Review transfer' }).click();
-  await expect(page.locator('.maintenance-review-grid > div').nth(0)).toContainText('Unclaimed');
-  await expect(page.locator('.maintenance-review-grid > div').nth(1)).toContainText(targetEmail);
-  await page.getByLabel('Reason for this steward change').fill(assignReason);
-  await page.getByRole('button', { name: 'Confirm steward transfer' }).click();
-  await expect(page.getByText(`Steward transfer saved for ${targetEmail}. The display location was cleared.`)).toBeVisible();
-
   const privacy = await page.evaluate(() => ({
     url: location.href,
     local: JSON.stringify(localStorage),
@@ -434,35 +416,18 @@ test('reviews and saves steward transfer and reset with exact visible consequenc
   }));
   expect(JSON.stringify(privacy)).not.toContain(targetEmail);
   expect(JSON.stringify(privacy)).not.toContain(transferReason);
-  expect(JSON.stringify(privacy)).not.toContain(resetReason);
-  expect(JSON.stringify(privacy)).not.toContain(assignReason);
 });
 
-test('replays one frozen steward reset after the committed response is lost', async ({ page }, testInfo) => {
+test('replays one governed steward transfer after the committed response is lost', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Steward replay flow runs once against shared development state.');
   const reason = `Lost steward response ${Date.now()}-${Math.random()}`;
+  const targetEmail = 'replay-steward@example.test';
 
   await page.goto('/admin/maintenance');
   await page.evaluate(async () => {
     await fetch('/api/admin/registry-unlock', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ secret: 'local-development-secret' }),
-    });
-    const detail = await (await fetch('/api/admin/maintenance/kp-local-maintenance')).json();
-    if (detail.piece.steward) return;
-    const latestVersion = detail.piece.maintenanceHistory.reduce(
-      (highest: number, event: { after?: { stewardVersion?: number } }) =>
-        Math.max(highest, Number(event.after?.stewardVersion || 0)),
-      0,
-    );
-    await fetch('/api/admin/maintenance/kp-local-maintenance/actions', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'transfer_steward', targetEmail: 'verified-steward@example.test',
-        reason: 'Prepare the steward replay fixture.',
-        idempotencyKey: `prepare-replay-${Date.now()}-${Math.random()}`,
-        expectedStewardVersion: latestVersion,
-      }),
     });
   });
 
@@ -478,13 +443,16 @@ test('replays one frozen steward reset after the committed response is lost', as
 
   await page.reload();
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
-  await page.getByRole('button', { name: 'Reset steward', exact: true }).click();
+  await page.getByRole('button', { name: 'Transfer steward', exact: true }).click();
+  await page.getByLabel('Verified account email').fill(targetEmail);
+  await page.getByLabel('Transfer kind').selectOption('artist-rebind');
+  await page.getByRole('button', { name: 'Review transfer' }).click();
   await page.getByLabel('Reason for this steward change').fill(reason);
-  await page.getByRole('button', { name: 'Confirm steward reset' }).click();
+  await page.getByRole('button', { name: 'Confirm steward transfer' }).click();
   await expect(page.getByText(/outcome could not be confirmed/i)).toBeVisible();
   await expect(page.getByLabel('Reason for this steward change')).toHaveValue(reason);
-  await page.getByRole('button', { name: 'Confirm steward reset' }).click();
-  await expect(page.getByText('Steward reset saved. This artwork is now Unclaimed.')).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm steward transfer' }).click();
+  await expect(page.getByText(`Steward transfer saved for ${targetEmail}. The display location was cleared.`)).toBeVisible();
 
   expect(bodies).toHaveLength(2);
   expect(bodies[0]).toEqual(bodies[1]);
@@ -744,6 +712,7 @@ test('development steward mock validates verified targets, versions, and exact i
     const suffix = `${Date.now()}-${Math.random()}`;
     const base = {
       action: 'transfer_steward', targetEmail: 'verified-steward@example.test',
+      transferKind: 'sale',
       reason: 'Exercise exact steward replay.', idempotencyKey: `steward-mock-${suffix}`,
       expectedStewardVersion: version,
     };

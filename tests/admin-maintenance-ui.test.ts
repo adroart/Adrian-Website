@@ -192,6 +192,7 @@ describe('registry Maintenance client contract', () => {
       keeperPieceId: 'kp-1',
       action: 'transfer_steward' as const,
       targetEmail: ' verified@example.test ',
+      transferKind: 'gift' as const,
       reason: ' Transfer to the verified account. ',
       expectedStewardVersion: 3,
     };
@@ -210,14 +211,15 @@ describe('registry Maintenance client contract', () => {
     assert.deepEqual(JSON.parse(String(requests[0].init?.body)), {
       action: 'transfer_steward',
       targetEmail: 'verified@example.test',
+      transferKind: 'gift',
       reason: 'Transfer to the verified account.',
       idempotencyKey: 'steward-attempt-1',
       expectedStewardVersion: 3,
     });
   });
 
-  it('omits targetEmail from reset requests and preserves a retry key after ambiguity', async () => {
-    const createKey = mock.fn(() => 'steward-reset-attempt');
+  it('preserves the complete transfer request and retry key after ambiguity', async () => {
+    const createKey = mock.fn(() => 'steward-transfer-attempt');
     const bodies: Array<Record<string, unknown>> = [];
     let loseFirstResponse = true;
     mock.method(globalThis, 'fetch', async (_input: string | URL | Request, init?: RequestInit) => {
@@ -227,10 +229,11 @@ describe('registry Maintenance client contract', () => {
         throw new TypeError('Response lost after commit.');
       }
       return new Response(JSON.stringify({
-        ok: true, replayed: true, eventId: 'rme-reset-1',
+        ok: true, replayed: true, eventId: 'rme-transfer-1',
         steward: {
-          keeperPieceId: 'kp-1', artworkId: 'UL-100', keeperUserId: null,
-          claimedAt: null, releasedAt: null, currentDisplayLocation: null,
+          keeperPieceId: 'kp-1', artworkId: 'UL-100', keeperUserId: 'next-user',
+          claimedAt: '2026-08-09T00:00:00.000Z', releasedAt: null,
+          currentDisplayLocation: null,
           stewardVersion: 2,
         },
       }), { status: 200 });
@@ -242,8 +245,9 @@ describe('registry Maintenance client contract', () => {
       shouldRetainMaintenanceSaveAttempt,
     } = await import('../utils/adminRegistryMaintenance.ts');
     const attempt = beginMaintenanceStewardActionAttempt(null, {
-      keeperPieceId: 'kp-1', action: 'reset_steward',
-      reason: 'Return the artwork to unclaimed.', expectedStewardVersion: 1,
+      keeperPieceId: 'kp-1', action: 'transfer_steward',
+      targetEmail: 'next@example.test', transferKind: 'inheritance',
+      reason: 'Record the inherited stewardship.', expectedStewardVersion: 1,
     }, createKey);
     let ambiguous: unknown;
     await assert.rejects(saveMaintenanceStewardAction(attempt.request), error => {
@@ -256,12 +260,14 @@ describe('registry Maintenance client contract', () => {
     assert.equal(createKey.mock.callCount(), 1);
     assert.deepEqual(bodies, [
       {
-        action: 'reset_steward', reason: 'Return the artwork to unclaimed.',
-        idempotencyKey: 'steward-reset-attempt', expectedStewardVersion: 1,
+        action: 'transfer_steward', targetEmail: 'next@example.test',
+        transferKind: 'inheritance', reason: 'Record the inherited stewardship.',
+        idempotencyKey: 'steward-transfer-attempt', expectedStewardVersion: 1,
       },
       {
-        action: 'reset_steward', reason: 'Return the artwork to unclaimed.',
-        idempotencyKey: 'steward-reset-attempt', expectedStewardVersion: 1,
+        action: 'transfer_steward', targetEmail: 'next@example.test',
+        transferKind: 'inheritance', reason: 'Record the inherited stewardship.',
+        idempotencyKey: 'steward-transfer-attempt', expectedStewardVersion: 1,
       },
     ]);
   });
@@ -454,9 +460,10 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /id=["']maintenance-reason["']/);
     assert.match(component, /reason\.trim\(\)/);
     assert.match(component, /Confirm (?:creation|correction)|Confirm save/);
-    assert.match(component, /Reset steward/);
     assert.match(component, /Transfer steward/);
-    assert.match(component, /Assign steward/);
+    assert.doesNotMatch(component, /Reset steward/);
+    assert.doesNotMatch(component, /Assign steward/);
+    assert.match(component, /permanent public lineage event/i);
     assert.match(component, /selected\.stewardVersion/);
     assert.match(component, /Correct digital link/);
     assert.match(component, /Void generated plate/);

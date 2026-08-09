@@ -871,15 +871,18 @@ async function resolveMaintenanceIdempotency(env, event, fallback) {
 
 /**
  * Run one optimistic mutation and its succeeded maintenance event in a
- * single D1 batch. The helper owns the target allowlist, version increment and
- * optimistic WHERE guard. The event SELECT sees SQLite changes() from that
- * mutation, so a zero-row conflict cannot append a success event.
+ * single D1 batch. Most callers use the generated versioned mutation. A
+ * structurally guarded workflow may instead supply a final gateway statement
+ * whose database trigger performs and verifies the mutation atomically.
  */
 export async function commitMaintenanceMutation(env, {
   target,
   changes,
   event,
   expectedVersion,
+  beforeStatements = [],
+  afterStatements = [],
+  gatewayStatement = null,
 }) {
   if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 0) {
     return { ok: false, error: 'invalid_expected_version' };
@@ -911,24 +914,31 @@ export async function commitMaintenanceMutation(env, {
     );
     boundEvent = { ...event, id: eventId, mutationFingerprint };
     const normalizedEvent = normalizeEventDetails(boundEvent, eventId);
-    mutationStatement = buildVersionedMutationStatement(
-      env,
-      normalizedTarget,
-      expectedVersion,
-      validatedEvent.beforeValues,
-      validatedEvent.contextGuard,
-    );
+    if (!gatewayStatement) {
+      mutationStatement = buildVersionedMutationStatement(
+        env,
+        normalizedTarget,
+        expectedVersion,
+        validatedEvent.beforeValues,
+        validatedEvent.contextGuard,
+      );
+    }
     eventStatement = prepareMaintenanceEventStatement(env, normalizedEvent);
   } catch {
     return { ok: false, error: 'invalid_maintenance_event' };
   }
 
   try {
-    const [mutationResult, eventResult] = await env.DB.batch([
-      mutationStatement,
-      eventStatement,
-    ]);
-    const mutationChanges = mutationResult?.meta?.changes;
+    const statements = gatewayStatement
+      ? [...beforeStatements, eventStatement, ...afterStatements, gatewayStatement]
+      : [...beforeStatements, mutationStatement, eventStatement, ...afterStatements];
+    const results = await env.DB.batch(statements);
+    const mutationResult = gatewayStatement
+      ? results.at(-1)
+      : results[beforeStatements.length];
+    const eventResult = gatewayStatement
+      ? results[beforeStatements.length]
+      : results[beforeStatements.length + 1];
     const eventChanges = eventResult?.meta?.changes;
     if (mutationResult?.success !== true || eventResult?.success !== true) {
       return resolveMaintenanceIdempotency(
@@ -937,7 +947,7 @@ export async function commitMaintenanceMutation(env, {
         { ok: false, error: 'maintenance_write_failed' },
       );
     }
-    if (mutationChanges !== 1) {
+    if (!gatewayStatement && mutationResult?.meta?.changes !== 1) {
       return resolveMaintenanceIdempotency(
         env,
         boundEvent,

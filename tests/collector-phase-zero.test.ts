@@ -49,7 +49,7 @@ const registrySchema = [
   '022_registry_fulfillment_detachment.sql',
 ].map(migration).join('\n');
 
-const mergedSchema = `${registrySchema}\n${migration('023_collector_registry_merge.sql')}`;
+const mergedSchema = `${registrySchema}\n${migration('023_collector_registry_merge.sql')}\n${migration('024_ownership_foundation.sql')}`;
 
 function databaseWithSchema(includeMerge = true) {
   const database = new DatabaseSync(':memory:');

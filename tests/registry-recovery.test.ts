@@ -20,6 +20,8 @@ import {
   PRIVATE_RECOVERY_KIND,
   PRIVATE_RECOVERY_PAYLOAD_KIND,
   PRIVATE_RECOVERY_SCHEMA_VERSION,
+  REGISTRY_RECOVERY_V1_TABLES,
+  REGISTRY_RECOVERY_V2_TABLES,
 } from '../utils/registryRecoveryArchive';
 
 const readMigration = (name: string) =>
@@ -46,25 +48,25 @@ const registryMigrationsBeforeFulfillmentDetachment = [
 ].map(readMigration).join('\n');
 const registryMigrations = `${registryMigrationsBeforeFulfillmentDetachment}\n${
   readMigration('022_registry_fulfillment_detachment.sql')
-}\n${readMigration('023_collector_registry_merge.sql')}`;
+}\n${readMigration('023_collector_registry_merge.sql')}\n${readMigration('024_ownership_foundation.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
 const exportedAt = '2026-07-31T03:04:05.000Z';
 
-const legacyRecoveryTables = REGISTRY_RECOVERY_TABLES.filter(
-  (table) => !table.startsWith('atlas_source_'),
-);
+const legacyRecoveryTables = REGISTRY_RECOVERY_V1_TABLES;
 
 async function sha256Hex(value: string) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return Buffer.from(digest).toString('hex');
 }
 
-async function encryptLegacyV1Payload(payload: any) {
+async function encryptLegacyPayload(payload: any) {
   const plaintext = new TextEncoder().encode(canonicalRecoveryJson(payload));
   const nonce = Buffer.alloc(12, 7);
-  const manifestTables = await Promise.all(legacyRecoveryTables.map(async (name) => ({
+  const tableNames = payload.schemaVersion === 1
+    ? REGISTRY_RECOVERY_V1_TABLES : REGISTRY_RECOVERY_V2_TABLES;
+  const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
     sha256: await sha256Hex(canonicalRecoveryJson(payload.tables[name])),
@@ -76,7 +78,7 @@ async function encryptLegacyV1Payload(payload: any) {
     keyId: exportKeyId,
     nonce: nonce.toString('base64'),
     manifest: {
-      schemaVersion: 1,
+      schemaVersion: payload.schemaVersion,
       exportedAt: payload.exportedAt,
       payloadSha256: await sha256Hex(new TextDecoder().decode(plaintext)),
       tables: manifestTables,
@@ -153,6 +155,9 @@ function seedCompleteRegistry(database: DatabaseSync) {
     INSERT INTO registry_artworks (id, title, series, edition_size, created_at)
     VALUES ('UL-100', 'Art of Living', 'Universal Language', NULL, '${exportedAt}');
 
+    INSERT INTO atlas_source_cities (id, city, region, country, country_code, lat, lng)
+    VALUES ('city-ubud', 'Ubud', 'Bali', 'Indonesia', 'ID', -8.5069, 115.2625);
+
     INSERT INTO keeper_pieces
       (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
        current_display_location, registered_at, claimed_at, public_code,
@@ -161,7 +166,7 @@ function seedCompleteRegistry(database: DatabaseSync) {
        ownership_code_nonce, ownership_code_key_version, backup_status,
        backup_reference, backup_sha256, backup_at, lineage_head_hash, lineage_event_count)
     VALUES
-      ('kp-recovery', 'UL-100', 0, 'steward-current', '${'a'.repeat(64)}',
+      ('kp-recovery', 'UL-100', 0, 'steward-prior', '${'a'.repeat(64)}',
        'Ubud, Bali', '${exportedAt}', '${exportedAt}', 'AR-7KQ9M2WX',
        'issuance-recovery', 'active', '${exportedAt}', '${exportedAt}',
        '${'b'.repeat(64)}', '${'c'.repeat(64)}', 'ENCRYPTED-OWNERSHIP-ENVELOPE',
@@ -208,6 +213,13 @@ function seedCompleteRegistry(database: DatabaseSync) {
       ('claim-recovery', 'kp-recovery', 'steward-prior', 'prior@example.com',
        '192.0.2.1', 'Private Agent', 'verified', '${exportedAt}');
 
+    INSERT INTO artwork_claim_requests
+      (id, keeper_piece_id, requester_user_id, requester_email, note,
+       routed_to_user_id, status, created_at)
+    VALUES
+      ('claim-request-recovery', 'kp-recovery', 'steward-prior', 'prior@example.com',
+       'Pending human review', 'steward-current', 'pending', '${exportedAt}');
+
     INSERT INTO artwork_lineage_events
       (id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
        event_hash, public_payload_json)
@@ -229,8 +241,9 @@ function seedCompleteRegistry(database: DatabaseSync) {
       ('maintenance-recovery', 'maintenance-recovery', 'steward_transferred',
        'kp-recovery', 'UL-100', 'admin-user', 'admin@example.com',
        'Correct historical stewardship.',
-       '{"keeperUserId":"steward-event-only"}',
-       '{"keeperUserId":"steward-current"}', 'succeeded', 'kp-recovery',
+       '{"keeperUserId":"steward-prior","claimedAt":"${exportedAt}","releasedAt":null,"currentDisplayLocation":"Ubud, Bali","stewardVersion":0}',
+       '{"keeperUserId":"steward-current","claimedAt":"${exportedAt}","releasedAt":null,"currentDisplayLocation":null,"stewardVersion":1}',
+       'succeeded', 'kp-recovery',
        '${'1'.repeat(64)}', '${exportedAt}');
 
     INSERT INTO registry_recovery_qualifications
@@ -243,6 +256,81 @@ function seedCompleteRegistry(database: DatabaseSync) {
        'build-recovery', 7, 'generator-v1', 'verifier-v1',
        'plates/AR-7KQ9M2WX/${'d'.repeat(64)}.json', '${'d'.repeat(64)}',
        'admin-user', 'admin@example.com', NULL, '${exportedAt}');
+  `);
+  database.exec(`
+    BEGIN IMMEDIATE;
+    INSERT INTO artwork_transfer_intents
+      (id, keeper_piece_id, expected_from_user_id, target_user_id,
+       target_email_commitment,
+       expected_steward_version, expected_lineage_count, expected_lineage_hash,
+       transfer_kind, maintenance_event_id, lineage_event_id, created_at)
+    VALUES
+      ('transfer-recovery', 'kp-recovery', 'steward-prior', 'steward-current',
+       '${'3'.repeat(64)}',
+       0, 1, '${'e'.repeat(64)}', 'gift', 'maintenance-recovery',
+       'lineage-transfer-recovery', '${exportedAt}');
+    INSERT INTO artwork_transfer_parties
+      (id, transfer_intent_id, party_role, user_id, public_ref, created_at)
+    VALUES
+      ('party-recovery-from', 'transfer-recovery', 'from', 'steward-prior',
+       'tp-00000000-0000-4000-8000-000000000001', '${exportedAt}'),
+      ('party-recovery-to', 'transfer-recovery', 'to', 'steward-current',
+       'tp-00000000-0000-4000-8000-000000000002', '${exportedAt}');
+    INSERT INTO artwork_lineage_events
+      (id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
+       event_hash, public_payload_json)
+    VALUES
+      ('lineage-transfer-recovery', 'kp-recovery', 2, 'transferred', '${exportedAt}',
+       '${'e'.repeat(64)}', '${'2'.repeat(64)}',
+       '{"fromRef":"tp-00000000-0000-4000-8000-000000000001","toRef":"tp-00000000-0000-4000-8000-000000000002","transferKind":"gift"}');
+    INSERT INTO artwork_transfer_receipts (id, transfer_intent_id, committed_at)
+    VALUES ('receipt-recovery', 'transfer-recovery', '${exportedAt}');
+    COMMIT;
+  `);
+}
+
+function appendSecondTransfer(database: DatabaseSync) {
+  const secondTransferAt = '2026-08-01T03:04:05.000Z';
+  database.exec(`
+    INSERT INTO registry_maintenance_events
+      (id, idempotency_key, event_type, keeper_piece_id, artwork_id,
+       administrator_user_id, administrator_email, reason, before_json,
+       after_json, outcome, related_record_id, mutation_fingerprint, created_at)
+    VALUES
+      ('maintenance-second-transfer', 'maintenance-second-transfer', 'steward_transferred',
+       'kp-recovery', 'UL-100', 'admin-user', 'admin@example.com',
+       'Record the second stewardship transfer.',
+       '{"keeperUserId":"steward-current","claimedAt":"${exportedAt}","releasedAt":null,"currentDisplayLocation":null,"stewardVersion":1}',
+       '{"keeperUserId":"steward-event-only","claimedAt":"${secondTransferAt}","releasedAt":null,"currentDisplayLocation":null,"stewardVersion":2}',
+       'succeeded', 'kp-recovery', '${'5'.repeat(64)}', '${secondTransferAt}');
+    BEGIN IMMEDIATE;
+    INSERT INTO artwork_transfer_intents
+      (id, keeper_piece_id, expected_from_user_id, target_user_id,
+       target_email_commitment,
+       expected_steward_version, expected_lineage_count, expected_lineage_hash,
+       transfer_kind, maintenance_event_id, lineage_event_id, created_at)
+    VALUES
+      ('transfer-second-recovery', 'kp-recovery', 'steward-current', 'steward-event-only',
+       '${'4'.repeat(64)}',
+       1, 2, '${'2'.repeat(64)}', 'sale', 'maintenance-second-transfer',
+       'lineage-second-transfer-recovery', '${secondTransferAt}');
+    INSERT INTO artwork_transfer_parties
+      (id, transfer_intent_id, party_role, user_id, public_ref, created_at)
+    VALUES
+      ('party-second-recovery-from', 'transfer-second-recovery', 'from', 'steward-current',
+       'tp-00000000-0000-4000-8000-000000000003', '${secondTransferAt}'),
+      ('party-second-recovery-to', 'transfer-second-recovery', 'to', 'steward-event-only',
+       'tp-00000000-0000-4000-8000-000000000004', '${secondTransferAt}');
+    INSERT INTO artwork_lineage_events
+      (id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
+       event_hash, public_payload_json)
+    VALUES
+      ('lineage-second-transfer-recovery', 'kp-recovery', 3, 'transferred',
+       '${secondTransferAt}', '${'2'.repeat(64)}', '${'6'.repeat(64)}',
+       '{"fromRef":"tp-00000000-0000-4000-8000-000000000003","toRef":"tp-00000000-0000-4000-8000-000000000004","transferKind":"sale"}');
+    INSERT INTO artwork_transfer_receipts (id, transfer_intent_id, committed_at)
+    VALUES ('receipt-second-recovery', 'transfer-second-recovery', '${secondTransferAt}');
+    COMMIT;
   `);
 }
 
@@ -356,13 +444,26 @@ describe('private registry recovery export', () => {
       assert.equal(payload.tables.artwork_acquisitions[0].amount_minor, 987654321);
       assert.equal(payload.tables.artwork_acquisitions[0].private_notes, 'private acquisition note');
       assert.equal(payload.tables.artwork_claim_evidence[0].verified_email, 'prior@example.com');
+      assert.equal(payload.tables.artwork_claim_requests[0].status, 'pending');
+      assert.equal(payload.tables.keeper_pieces[0].last_transfer_id, 'transfer-recovery');
+      assert.equal(payload.tables.artwork_transfer_intents[0].transfer_kind, 'gift');
+      assert.equal(payload.tables.artwork_transfer_intents[0].target_email_commitment,
+        '3'.repeat(64));
+      assert.deepEqual(payload.tables.artwork_transfer_parties.map((row: any) => [
+        row.party_role, row.user_id, row.public_ref,
+      ]), [
+        ['from', 'steward-prior', 'tp-00000000-0000-4000-8000-000000000001'],
+        ['to', 'steward-current', 'tp-00000000-0000-4000-8000-000000000002'],
+      ]);
+      assert.equal(payload.tables.artwork_transfer_receipts[0].transfer_intent_id,
+        'transfer-recovery');
       assert.equal(payload.tables.keeper_pieces[0].ownership_code_ciphertext, 'ENCRYPTED-OWNERSHIP-ENVELOPE');
       assert.equal(Object.keys(payload.tables.keeper_pieces[0]).some((key) => /plaintext|ownership_code$/i.test(key)), false);
       assert.deepEqual(payload.tables.user.map((row: any) => row.id), [
-        'admin-user', 'steward-current', 'steward-event-only', 'steward-prior',
+        'admin-user', 'steward-current', 'steward-prior',
       ]);
       assert.deepEqual(payload.tables.account.map((row: any) => row.id), [
-        'acct-admin', 'acct-current', 'acct-event', 'acct-prior',
+        'acct-admin', 'acct-current', 'acct-prior',
       ]);
       assert.equal(serialized.includes('unrelated@example.com'), false);
       for (const table of REGISTRY_RECOVERY_TABLES) {
@@ -415,9 +516,13 @@ describe('clean-only private registry restore', () => {
         kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
         schemaVersion: 1,
         exportedAt,
-        tables: Object.fromEntries(legacyRecoveryTables.map((name) => [name, current.tables[name]])),
+        tables: Object.fromEntries(legacyRecoveryTables.map((name) => [name,
+          name === 'keeper_pieces'
+            ? current.tables[name].map(({ last_transfer_id: _lastTransferId, ...row }) => row)
+            : current.tables[name],
+        ])),
       };
-      const legacyArchive = await encryptLegacyV1Payload(legacyPayload);
+      const legacyArchive = await encryptLegacyPayload(legacyPayload);
       const upgraded = await decryptPrivateRecoveryExport(legacyArchive as any, {
         key: exportKey, keyId: exportKeyId,
       });
@@ -427,6 +532,51 @@ describe('clean-only private registry restore', () => {
       assert.deepEqual(upgraded.tables.atlas_source_chain_events, []);
       target.database.exec(buildRegistryRestoreSql(upgraded));
       assert.equal(tableCount(target.database, 'keeper_pieces'), 1);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('decrypts and upgrades schema v2 while preserving Atlas data', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const v2Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 2,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V2_TABLES.map((name) => [name,
+          name === 'keeper_pieces'
+            ? current.tables[name].map(({ last_transfer_id: _lastTransferId, ...row }) => row)
+            : current.tables[name],
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v2Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.equal(upgraded.schemaVersion, PRIVATE_RECOVERY_SCHEMA_VERSION);
+      assert.equal(upgraded.tables.atlas_source_cities[0].id, 'city-ubud');
+      assert.equal(upgraded.tables.keeper_pieces[0].last_transfer_id, null);
+      assert.deepEqual(upgraded.tables.artwork_claim_requests, []);
+      assert.deepEqual(upgraded.tables.artwork_transfer_intents, []);
+      assert.deepEqual(upgraded.tables.artwork_transfer_parties, []);
+      assert.deepEqual(upgraded.tables.artwork_transfer_receipts, []);
+      target.database.exec(buildRegistryRestoreSql(upgraded));
+      assert.equal(tableCount(target.database, 'atlas_source_cities'), 1);
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       source.database.close();
       target.database.close();
@@ -468,9 +618,70 @@ describe('clean-only private registry restore', () => {
       for (const table of REGISTRY_RECOVERY_TABLES) {
         assert.equal(tableCount(target.database, table), payload.tables[table].length, table);
       }
+      assert.equal(target.database.prepare(
+        "SELECT last_transfer_id FROM keeper_pieces WHERE id = 'kp-recovery'",
+      ).get()?.last_transfer_id, 'transfer-recovery');
+      assert.equal(target.database.prepare(
+        "SELECT transfer_kind FROM artwork_transfer_intents WHERE id = 'transfer-recovery'",
+      ).get()?.transfer_kind, 'gift');
+      assert.deepEqual(target.database.prepare(
+        "SELECT party_role, user_id, public_ref FROM artwork_transfer_parties ORDER BY id",
+      ).all().map((row: any) => [row.party_role, row.user_id, row.public_ref]), [
+        ['from', 'steward-prior', 'tp-00000000-0000-4000-8000-000000000001'],
+        ['to', 'steward-current', 'tp-00000000-0000-4000-8000-000000000002'],
+      ]);
+      assert.equal(target.database.prepare(
+        "SELECT transfer_intent_id FROM artwork_transfer_receipts WHERE id = 'receipt-recovery'",
+      ).get()?.transfer_intent_id, 'transfer-recovery');
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
 
       assert.throws(() => target.database.exec(sql), /registry_recovery_target_not_empty/i);
       assert.equal(tableCount(target.database, 'keeper_pieces'), 1);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('replays two transfer receipts in lineage order and restores the final keeper state', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      appendSecondTransfer(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      target.database.exec(buildRegistryRestoreSql(payload));
+
+      assert.deepEqual({ ...target.database.prepare(
+        `SELECT keeper_user_id, claimed_at, steward_version, lineage_event_count,
+                lineage_head_hash, last_transfer_id
+           FROM keeper_pieces WHERE id = 'kp-recovery'`,
+      ).get() }, {
+        keeper_user_id: 'steward-event-only',
+        claimed_at: '2026-08-01T03:04:05.000Z',
+        steward_version: 2,
+        lineage_event_count: 3,
+        lineage_head_hash: '6'.repeat(64),
+        last_transfer_id: 'transfer-second-recovery',
+      });
+      assert.equal(tableCount(target.database, 'artwork_transfer_receipts'), 2);
+      assert.deepEqual(target.database.prepare(
+        'SELECT target_email_commitment FROM artwork_transfer_intents ORDER BY id',
+      ).all().map((row: any) => row.target_email_commitment), [
+        '3'.repeat(64),
+        '4'.repeat(64),
+      ]);
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       source.database.close();
       target.database.close();

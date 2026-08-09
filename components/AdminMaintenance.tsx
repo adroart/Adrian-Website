@@ -41,6 +41,7 @@ import {
   type MaintenanceSaveAttempt,
   type MaintenanceStewardAction,
   type MaintenanceStewardActionAttempt,
+  type MaintenanceTransferKind,
 } from '../utils/adminRegistryMaintenance';
 import { projectPlateDownloads, type IssuedPlatePackage } from '../utils/adminArtworkRegistry';
 
@@ -72,7 +73,8 @@ type ReviewState = {
 
 type StewardReviewState = {
   action: MaintenanceStewardAction;
-  targetEmail?: string;
+  targetEmail: string;
+  transferKind: MaintenanceTransferKind;
   expectedStewardVersion: number;
   before: MaintenancePieceDetail['steward'];
 };
@@ -304,20 +306,11 @@ const StewardSnapshot: React.FC<{
   steward: MaintenancePieceDetail['steward'];
   after?: StewardReviewState;
 }> = ({ steward, after }) => {
-  if (after?.action === 'reset_steward') {
-    return <DefinitionList items={[
-      ['Status', 'Unclaimed'],
-      ['Steward account', 'Cleared'],
-      ['Display location', 'Cleared'],
-      ['Claimed', 'Cleared'],
-      ['Released', 'Cleared'],
-      ['Steward version', after.expectedStewardVersion + 1],
-    ]} />;
-  }
   if (after?.action === 'transfer_steward') {
     return <DefinitionList items={[
       ['Status', 'Active steward'],
       ['Verified account email', after.targetEmail],
+      ['Transfer kind', after.transferKind.replace('-', ' ')],
       ['Display location', 'Cleared'],
       ['Claimed', 'Set when saved'],
       ['Released', 'Cleared'],
@@ -366,6 +359,7 @@ const AdminMaintenance: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [stewardEditor, setStewardEditor] = useState<MaintenanceStewardAction | null>(null);
   const [stewardTargetEmail, setStewardTargetEmail] = useState('');
+  const [stewardTransferKind, setStewardTransferKind] = useState<MaintenanceTransferKind>('gift');
   const [stewardReview, setStewardReview] = useState<StewardReviewState | null>(null);
   const [stewardReason, setStewardReason] = useState('');
   const [stewardError, setStewardError] = useState('');
@@ -638,15 +632,7 @@ const AdminMaintenance: React.FC = () => {
     setProvenanceReview(null);
     setProvenanceError('');
     setNotice('');
-    if (action === 'reset_steward' && selected.steward) {
-      setStewardReview({
-        action,
-        expectedStewardVersion: selected.steward.stewardVersion,
-        before: selected.steward,
-      });
-    } else {
-      setStewardReview(null);
-    }
+    setStewardReview(null);
   };
 
   const closeStewardEditor = () => {
@@ -671,6 +657,7 @@ const AdminMaintenance: React.FC = () => {
     setStewardReview({
       action: 'transfer_steward',
       targetEmail,
+      transferKind: stewardTransferKind,
       expectedStewardVersion: selected.stewardVersion,
       before: selected.steward,
     });
@@ -1160,9 +1147,8 @@ const AdminMaintenance: React.FC = () => {
     const attempt = beginMaintenanceStewardActionAttempt(stewardAttemptRef.current, {
       keeperPieceId: selected.id,
       action: stewardReview.action,
-      ...(stewardReview.action === 'transfer_steward'
-        ? { targetEmail: stewardReview.targetEmail }
-        : {}),
+      targetEmail: stewardReview.targetEmail,
+      transferKind: stewardReview.transferKind,
       reason: stewardReason,
       expectedStewardVersion: stewardReview.expectedStewardVersion,
     });
@@ -1175,9 +1161,7 @@ const AdminMaintenance: React.FC = () => {
       stewardInFlightRef.current = false;
       stewardAttemptRef.current = null;
       setAmbiguousAttempt(null);
-      const savedMessage = stewardReview.action === 'reset_steward'
-        ? 'Steward reset saved. This artwork is now Unclaimed.'
-        : `Steward transfer saved for ${stewardReview.targetEmail}. The display location was cleared.`;
+      const savedMessage = `Steward transfer saved for ${stewardReview.targetEmail}. The display location was cleared.`;
       setSelected(current => {
         if (!current || current.id !== attempt.request.keeperPieceId) return current;
         return {
@@ -1738,16 +1722,12 @@ const AdminMaintenance: React.FC = () => {
             {selected.steward ? (
               <>
                 <div className="maintenance-section-actions">
-                  <button type="button" className={quietButtonClass} onClick={() => openStewardEditor('reset_steward')} disabled={transitionBusy}>Reset steward</button>
                   <button type="button" className={primaryButtonClass} onClick={() => openStewardEditor('transfer_steward')} disabled={transitionBusy}>Transfer steward</button>
                 </div>
                 <StewardSnapshot steward={selected.steward} />
               </>
             ) : (
               <>
-                <div className="maintenance-section-actions">
-                  <button type="button" className={primaryButtonClass} onClick={() => openStewardEditor('transfer_steward')} disabled={transitionBusy}>Assign steward</button>
-                </div>
                 <AdminEmptyState title="No current steward" description="This physical artwork is not associated with a steward account." />
               </>
             )}
@@ -1773,6 +1753,15 @@ const AdminMaintenance: React.FC = () => {
                     />
                     <small className="maintenance-helper">This must match one verified account. The current display location clears when the transfer succeeds.</small>
                   </label>
+                  <label className="maintenance-field-wide" htmlFor="maintenance-transfer-kind">
+                    <span className={labelClass}>Transfer kind</span>
+                    <select id="maintenance-transfer-kind" className={inputClass} value={stewardTransferKind} onChange={event => setStewardTransferKind(event.target.value as MaintenanceTransferKind)}>
+                      <option value="sale">Sale</option>
+                      <option value="gift">Gift</option>
+                      <option value="inheritance">Inheritance</option>
+                      <option value="artist-rebind">Artist rebind</option>
+                    </select>
+                  </label>
                 </div>
                 {stewardError && <p className="maintenance-inline-error" role="alert">{stewardError}</p>}
                 <div className="maintenance-actions">
@@ -1786,12 +1775,8 @@ const AdminMaintenance: React.FC = () => {
               <div className="maintenance-review" aria-labelledby="maintenance-steward-review-title">
                 <div className="maintenance-review-heading">
                   <p className="admin-eyebrow">Confirmation required</p>
-                  <h3 id="maintenance-steward-review-title">Review steward {stewardReview.action === 'reset_steward' ? 'reset' : 'transfer'}</h3>
-                  <p>
-                    {stewardReview.action === 'reset_steward'
-                      ? 'Reset returns this artwork to Unclaimed. The steward account, claim and release timestamps, and display location all clear.'
-                      : 'Transfer assigns the verified account, starts a new claim time, and clears the current display location.'}
-                  </p>
+                  <h3 id="maintenance-steward-review-title">Review steward transfer</h3>
+                  <p>Transfer assigns the verified account, starts a new claim time, clears the current display location, and appends a permanent public lineage event.</p>
                 </div>
                 <div className="maintenance-review-grid">
                   <div><h4>Before</h4><StewardSnapshot steward={stewardReview.before} /></div>
@@ -1835,7 +1820,7 @@ const AdminMaintenance: React.FC = () => {
                     onClick={() => void confirmStewardSave()}
                     disabled={stewardSaving || !registryUnlocked || !stewardReason.trim()}
                   >
-                    {stewardSaving ? 'Saving…' : `Confirm steward ${stewardReview.action === 'reset_steward' ? 'reset' : 'transfer'}`}
+                    {stewardSaving ? 'Saving…' : 'Confirm steward transfer'}
                   </button>
                 </div>
               </div>
