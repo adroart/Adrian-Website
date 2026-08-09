@@ -235,8 +235,21 @@ grasping:
 > nothing moves without them. We will ask them to let go; when they do, it becomes yours to
 > carry.
 
-**Dispute (both claim, nobody confirms):** one honest line, no pretending: "This needs a
-person. Adrian will be in touch."
+**The code is not true — LOCKED 2026-08-09, the wrong-code state:**
+
+> **The code is not true**
+>
+> It did not match this piece. Turn it over and look again; if it still will not open,
+> Adrian will help.
+>
+> [ Try again ] · Contact Adrian
+
+**The passing confirmation — SETTLED 2026-08-09, Adrian's mechanic, replaces the dispute
+limbo.** Walking the claim IS the claim. When someone claims a held piece: email goes to the
+registered caretaker's account; logging in is the identity proof; they confirm the letting
+go. Silence for thirty days, with more than one reminder across it, passes the piece to the
+claimant, both sides notified. This is the death-and-lost-account rescue: a piece is never
+orphaned. Only an active refusal reaches Adrian, the one genuinely human case.
 
 **Four temperatures, held deliberately:** the fork neutral, the gift warm, the release
 grave, the receiving patient.
@@ -446,6 +459,16 @@ by relationship: a stranger sees the public face with Unlock; the piece's own ca
 logged in, sees the same page warmed, meter, Add to your piece, the garden, and no Unlock;
 anyone else logged in sees the public face with Unlock, because unlocking is about whose
 hands hold this piece, not about having an account.
+
+**Home's interior (Adrian, 2026-08-09): the doors inside the caretaker's page, all to be
+built.** Each opens with the same slide-open-in-place motion the public rows use, one motion
+vocabulary everywhere:
+- **The garden** — the questions, opened by the glowing meter or Add to your piece.
+- **Record a video** — the capsule, once the cost research clears it.
+- **Piece information** — the full certificate and facts: made when, materials, elements,
+  what was paid (caretaker-only), the complete record.
+- **The rows the public sees** — story, certificate, history, dreams — same page, editable
+  where the caretaker owns the content.
 
 Open shape calls: the dream as the garden's most honored question versus its own screen
 (lean: inside the garden); privacy as the one rings page after collection versus per-field
