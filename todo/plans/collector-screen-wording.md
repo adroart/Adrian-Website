@@ -360,18 +360,25 @@ light. Each caretaker feeds it.**
   resolves the long-open brightness question. Contribution is answering; the light warms with
   each answer, at ignition or a year later.
 
-**The map (shape proposed, wording to be worked screen by screen):**
+**The map — TRIMMED TO THREE 2026-08-09 (Adrian): onboarding collects, the piece page keeps.**
 
 1. **Sign its record** — name and email; the account born as a signature.
-2. **Who you are** — birthday, socials, business; every field private by default, said
-   quietly as it collects.
-3. **What shows** — the rings page, right after collection, concrete because the data now
-   exists.
-4. **The questions** — the garden: why this piece found you, what you wish over it, the
-   dream, what it should tell the next caretaker. Answer any, none required, waits forever.
-   Each answer brightens the light.
-5. **You are Light 47** — ignition; the light appears dim and warms with answers.
-6. **Home** — the piece page as caretaker, with Add to your piece from then on.
+2. **Who you are** — birthday, socials, business; gathered while momentum is high.
+3. **What shows** — the shines-by-default page, right after collection, concrete because the
+   data now exists.
+
+Then you are logged in. **You are Light 47** plays as the closing moment, ignition, and it
+opens onto the piece page: home.
+
+**The garden does not live in onboarding. It lives on the piece page, always.** The
+questions are accessible from the first page from the day of registration onward: fill one
+now, five next month, the rest over years. **The video capsule lives there too** when the
+cost research clears it.
+
+**The glowing meter (Adrian, 2026-08-09).** The caretaker's piece page carries a glow that
+deepens with every question answered: the piece's own light, made visible at home. Rule from
+the house: the meter is never wallpaper, tapping the glow opens the garden. The meter is the
+door to making it brighter.
 
 Open shape calls: the dream as the garden's most honored question versus its own screen
 (lean: inside the garden); privacy as the one rings page after collection versus per-field
