@@ -378,7 +378,21 @@ light. Each caretaker feeds it.**
   resolves the long-open brightness question. Contribution is answering; the light warms with
   each answer, at ignition or a year later.
 
-**The map — TRIMMED TO THREE 2026-08-09 (Adrian): onboarding collects, the piece page keeps.**
+**No setup screen ever scrolls (Adrian, 2026-08-09).** If a screen would scroll, it splits.
+One breath, one idea, one tap. Taps are cheap; scrolls are expensive. This split "Who you
+are" into three: born, where it lives, your links.
+
+**The map — onboarding collects, the piece page keeps. Five quick screens:**
+
+1. **Sign its record** — full name, email, password.
+2. **Who you are** — born: date, time, place; the never-shown line; Why we ask.
+3. **Where it lives** — the art's city, required; widen to region. The shortest screen in
+   the flow, deliberately.
+4. **Your links** — the grid with the dotted plus; fully skippable, its own temperature.
+5. **What shows** — the shines-by-default page.
+
+**The earlier three-screen map below is superseded by the split above; the wording per
+block is unchanged, only the screen boundaries moved.**
 
 1. **Sign its record** — full name, email, password; the account born as a signature.
    **Recovery (Adrian, 2026-08-09):** a forgotten password is recovered by email, "Enter
