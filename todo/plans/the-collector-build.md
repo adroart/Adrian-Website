@@ -55,7 +55,7 @@ what made two surveys disagree about which login was live.
 
 ## Phase 1 — The registration a person can actually walk
 
-**1.0 Repair the post-freeze ownership paths.** Make keeper transfer and its public transfer
+**1.0 Repair the post-freeze ownership paths. Complete locally, not deployed.** Keeper transfer and its public transfer
 history one atomic, replay-safe operation. Remove reset-to-bearer behavior for every previously
 claimed piece. Move contested claims into the canonical database and remove new-write calls to the
 frozen legacy writer. This is a correctness preflight discovered after Phase 0 froze that writer,

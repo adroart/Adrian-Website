@@ -36,6 +36,8 @@ Playwright, encrypted registry recovery archives.
 
 - `migrations/024_ownership_foundation.sql`
 - `functions/api/_lib/claimRequests.js`
+- `scripts/preflight-ownership-foundation.ts`
+- `tests/ownership-foundation-preflight.test.ts`
 
 **Modify:**
 
@@ -55,6 +57,9 @@ Playwright, encrypted registry recovery archives.
 - `tests/admin-maintenance-ui.test.ts`
 - `tests/admin-studio-navigation.spec.ts`
 - `tests/steward-registration.spec.ts`
+- `tests/collector-phase-zero.test.ts`
+- `tests/privileged-endpoints.test.ts`
+- `vite.config.ts`
 
 **Delete:**
 
@@ -64,7 +69,7 @@ No other agent may edit these files until this plan passes review.
 
 ### Task 1: Make previously claimed state irreversible
 
-- [ ] **Step 1: Add failing migration and endpoint tests**
+- [x] **Step 1: Add failing migration and endpoint tests**
 
 In `tests/registry-maintenance.test.ts`, prove:
 
@@ -78,7 +83,7 @@ aborts after the row has a non-null claim time. A raw direct non-null steward-to
 also abort. Only the authorized atomic transfer operation may change the keeper. Through the
 administrator endpoint, assert `reset_steward` returns `invalid_action` and performs no write.
 
-- [ ] **Step 2: Run the focused red test**
+- [x] **Step 2: Run the focused red test**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -88,43 +93,29 @@ npx tsx --test --experimental-test-module-mocks \
 
 Expected: FAIL because reset is accepted and no database trigger prevents it.
 
-- [ ] **Step 3: Add the database guard**
+- [x] **Step 3: Add the database guard**
 
-The migration adds `last_transfer_id` to the keeper record plus append-only `artwork_transfers`,
-`artwork_transfer_parties`, and `artwork_transfer_commits` tables. A keeper-update trigger requires
-the exact pending transfer intent and values. A final commit-receipt trigger verifies the keeper,
-maintenance event, party mappings, lineage event, and lineage anchor before accepting the receipt.
-Any missing or stale component raises `ABORT`, rolling back the complete D1 batch.
+The migration adds a transfer marker to the keeper record plus append-only transfer intents,
+private party mappings, and receipts. A previously claimed artwork cannot lose or directly rewrite
+its keeper, claim time, or transfer marker. The final receipt validates the exact intent, both
+private parties, the maintenance record, and the three-field public lineage event. Its database
+gateway alone changes the keeper, claim time, version, display location, lineage anchor, and
+transfer marker, then verifies the final state. Any missing or stale component aborts the complete
+transaction.
 
-The irreversible-state guard remains equivalent to:
-
-```sql
-CREATE TRIGGER keeper_piece_ever_claimed_governed
-BEFORE UPDATE OF keeper_user_id, claimed_at ON keeper_pieces
-WHEN OLD.claimed_at IS NOT NULL
- AND (
-   NEW.claimed_at IS NULL
-   OR NEW.keeper_user_id IS NULL
-   OR NEW.last_transfer_id IS OLD.last_transfer_id
- )
-BEGIN
-  SELECT RAISE(ABORT, 'ever-claimed artwork requires governed transfer');
-END;
-```
-
-- [ ] **Step 4: Remove reset from every runtime and UI contract**
+- [x] **Step 4: Remove reset from every runtime and UI contract**
 
 Delete reset request parsing, replay classification, client types, controls, warning copy, and Vite
 mock behavior. Keep read compatibility for historical private maintenance events.
 
-- [ ] **Step 5: Verify green**
+- [x] **Step 5: Verify green**
 
 Run the focused command again. Expected: PASS, including proof that an ever-claimed Ownership Code
 continues into the contested path.
 
 ### Task 2: Store contested claims in canonical D1
 
-- [ ] **Step 1: Write failing keeper-bind tests**
+- [x] **Step 1: Write failing keeper-bind tests**
 
 Through the public keeper bind endpoint, prove a valid contested attempt:
 
@@ -138,7 +129,7 @@ Through the public keeper bind endpoint, prove a valid contested attempt:
 Also prove wrong code, unverified email, missing database, self-rescan, rate limit, and failed insert
 produce no request.
 
-- [ ] **Step 2: Run the focused red test**
+- [x] **Step 2: Run the focused red test**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts
@@ -146,14 +137,14 @@ npx tsx --test --experimental-test-module-mocks tests/living-legacy.test.ts
 
 Expected: FAIL because the endpoint still depends on the legacy bridge.
 
-- [ ] **Step 3: Add the canonical claim-request table**
+- [x] **Step 3: Add the canonical claim-request table**
 
 The migration creates `artwork_claim_requests` with a keeper-piece foreign key, requester account,
-normalized requester email, optional note, routed keeper account, pending or resolved status,
+normalized requester email, optional note, routed keeper account, pending, approved, or declined status,
 created and resolved times, resolver account, and a unique pending request per requester and piece.
 Indexes support pending requests by routed keeper, requester account, and normalized email.
 
-- [ ] **Step 4: Implement guarded local insertion**
+- [x] **Step 4: Implement guarded local insertion**
 
 `claimRequests.js` exposes:
 
@@ -175,17 +166,20 @@ openContestedClaim(env, {
 The insert must be guarded by the current keeper account so a concurrent transfer cannot route a
 request to a stale person.
 
-- [ ] **Step 5: Replace and delete the legacy bridge**
+- [x] **Step 5: Replace and delete the legacy bridge**
 
 Update keeper bind to call `openContestedClaim`, remove bridge configuration and commentary, delete
 the bridge module, and retain the current public response contract.
 
-- [ ] **Step 6: Add recovery tests and implementation**
+- [x] **Step 6: Add recovery tests and implementation**
 
 Seed a pending claim, export, decrypt, restore to a fresh schema, and prove the request plus only its
 referenced accounts survive. Upgrade older supported archives with an empty claim-request table.
 
-- [ ] **Step 7: Verify and commit the claim slice**
+- [x] **Step 7: Verify and commit the claim slice**
+
+This landed in the single reviewed ownership-foundation commit with the inseparable transfer and
+recovery changes, rather than as a separate intermediate commit.
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -204,7 +198,7 @@ git commit -m "feat(registry): store contested claims in canonical D1"
 
 ### Task 3: Append transfer lineage atomically
 
-- [ ] **Step 1: Write the failing transfer behavior test**
+- [x] **Step 1: Write the failing transfer behavior test**
 
 Extend the transfer request with required `transferKind`. Assert one successful transfer performs
 all of the following or none of them:
@@ -221,15 +215,15 @@ The public payload is exactly:
 
 ```ts
 {
-  fromRef: 'party-<random opaque id>',
-  toRef: 'party-<random opaque id>',
+  fromRef: 'tp-<lowercase UUIDv4>',
+  toRef: 'tp-<lowercase UUIDv4>',
   transferKind: 'sale' | 'gift' | 'inheritance' | 'artist-rebind',
 }
 ```
 
 It contains no email, name, reason, note, code, administrator ID, or stable cross-piece person ID.
 
-- [ ] **Step 2: Add rollback and replay tests**
+- [x] **Step 2: Add rollback and replay tests**
 
 Force failure at keeper update, maintenance insert, party mapping insert, lineage insert, anchor
 update, and final commit receipt. Also force a zero-row keeper update with stale version and a
@@ -237,7 +231,7 @@ zero-row anchor update with stale lineage state. Each case must raise inside the
 leave every surface unchanged. Replay the same idempotency key after a simulated lost response and
 assert exactly one private and one public event.
 
-- [ ] **Step 3: Run the focused red tests**
+- [x] **Step 3: Run the focused red tests**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -247,32 +241,33 @@ npx tsx --test --experimental-test-module-mocks \
 
 Expected: FAIL because `transferred` is rejected and the maintenance helper writes only two parts.
 
-- [ ] **Step 4: Extend the lineage schema and exact validator**
+- [x] **Step 4: Extend the lineage schema and exact validator**
 
 Rebuild the lineage table in the migration so `transferred` is allowed while preserving every row,
 foreign key, index, unique constraint, and append-only trigger. Extend the lineage utility to accept
 only the exact payload above and the four allowed transfer kinds.
 
-- [ ] **Step 5: Add private transfer-party mapping**
+- [x] **Step 5: Add private transfer-party mapping**
 
 The migration creates an append-only private transfer intent, party mapping, and commit receipt.
 Each random party reference maps to its transfer, keeper piece, role, and account ID. Add all three
 tables to encrypted recovery and referenced-account discovery. None are included in public registry
 or ledger exports.
 
-- [ ] **Step 6: Extend the atomic maintenance primitive**
+- [x] **Step 6: Extend the atomic maintenance primitive**
 
 The transfer path prepares the next lineage event before writing. One D1 batch contains the guarded
-transfer intent, two party mappings, keeper update, private maintenance event, public lineage insert,
-lineage anchor update, and final commit receipt. The receipt trigger performs the in-database final
-assertion, so a zero-row intermediate statement cannot be mistaken for a successful transaction.
+transfer intent, two private party mappings, the private maintenance event, the public lineage event,
+and the final receipt. Inserting that receipt invokes the database gateway that changes the keeper,
+claim time, version, display location, lineage anchor, and transfer marker, then verifies the final
+state. A zero-row intermediate statement cannot be mistaken for a successful transaction.
 
-- [ ] **Step 7: Update administrator transfer UI**
+- [x] **Step 7: Update administrator transfer UI**
 
 Require a transfer-kind choice and explain that the keeper change creates permanent public transfer
 history. Do not show or accept random party references.
 
-- [ ] **Step 8: Verify and commit the transfer slice**
+- [x] **Step 8: Verify and commit the transfer slice**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -295,13 +290,18 @@ git commit -m "fix(registry): make stewardship transfer permanent and atomic"
 
 ### Task 4: Foundation review and boundary verification
 
-- [ ] **Step 1: Run a preflight for earlier reset damage**
+- [x] **Step 1a: Build and test the earlier-damage detector and migration guard**
 
-On a read-only database copy, identify any currently unclaimed keeper row that has a `first_bound`
-lineage event or a prior non-null keeper in private maintenance history. If any exist, stop the
-production migration and require an explicit reviewed rebind. Never infer the keeper.
+Reject any half-bound row and any currently unclaimed row that has a `first_bound` lineage event or
+a prior non-null keeper in private maintenance history. The migration itself must stop on the same
+conditions, even when the standalone detector was not run. Never infer the keeper.
 
-- [ ] **Step 2: Run the full local boundary**
+- [ ] **Step 1b: Run the detector against a fresh read-only production copy before deployment**
+
+If it finds damage, stop the production migration and require an explicit reviewed rebind. This is
+deployment evidence and remains pending until the production rehearsal.
+
+- [x] **Step 2: Run the full local boundary**
 
 ```bash
 npm run test:unit
@@ -313,18 +313,18 @@ git diff --check
 
 Expected: every command exits 0.
 
-- [ ] **Step 3: Run independent reviews**
+- [x] **Step 3: Run independent reviews**
 
 Give the complete ownership diff to a fresh spec-compliance reviewer. After every spec issue is
 fixed and re-reviewed, give it to a fresh code-quality reviewer. Ownership, lineage, migration,
 privacy, and recovery findings must be closed before the phase advances.
 
-- [ ] **Step 4: Update the standing progress record**
+- [x] **Step 4: Update the standing progress record**
 
 Record actual passing checks, the removal of reset-to-bearer, the canonical claim queue, the atomic
 public transfer event, and the next Phase 1 task. Do not claim production deployment.
 
-- [ ] **Step 5: Commit documentation**
+- [x] **Step 5: Commit documentation**
 
 ```bash
 git add todo/plans/the-collector-journey.md todo/plans/the-collector-build.md \

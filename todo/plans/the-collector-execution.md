@@ -158,9 +158,8 @@ before it. One paragraph of documentation, not an engineering problem.
 **State how you will verify before writing the code, not after.** Both typechecks must exit 0.
 
 **For anything touching the chain, the ownership state machine, or the migration: hand the
-finished diff to a second model** via the `codex:rescue` skill before declaring it done. A
-different model has different blind spots. A silent bug in a provenance system is expensive and
-may not surface for years.
+finished diff to a fresh second model before declaring it done.** A different model has different
+blind spots. A silent bug in a provenance system is expensive and may not surface for years.
 
 **Never claim work is complete without running the check and reading its output.** Evidence before
 assertions.
@@ -236,3 +235,27 @@ placement decision.
 **Next session begins Phase 1, item 1.0.** Then item 1.1 publishes the artwork-registration seam
 that the parallel invitation, certificate, privacy, and birth lanes consume. Perform a reviewed
 canary and restore rehearsal before any production write.
+
+**2026-08-09: Phase 1 item 1.0 is complete locally and has not been deployed.** A previously
+claimed artwork can no longer return to bearer binding or change keeper through an unaudited
+update. Governed transfer now records its private evidence, advances keeper state and public
+lineage together, clears the prior display location, and replays without duplication even if the
+recipient's account email later changes. Public transfer history contains only random
+transfer-scoped references and the transfer kind.
+
+Contested claims now stay in the canonical registry, preserve the current keeper, remain private,
+and wait for human resolution. Encrypted recovery carries the claim queue and complete transfer
+evidence, retains support for older archives, and has been tested across two successive transfers.
+
+Verification passed with 455 unit tests, typecheck, the production build, and the complete browser
+suite with 58 passes and 10 intentional skips. Focused ownership, privacy, migration, and recovery
+checks passed. Independent specification, security, and final re-review found and closed raw state
+mutation, partial transaction, private-data, stale retry, damaged migration, and multi-transfer
+restore defects.
+
+The damage detector and migration guard are built and tested. Before any production migration,
+run the detector against a fresh read-only database copy, rehearse migration and restore on copies,
+and stop if it finds a previously claimed artwork in an unclaimed or half-bound state.
+
+**Next: Phase 1 item 1.1, artwork-first registration with optional plate preparation.** No
+additional Adrian content is needed to begin it.

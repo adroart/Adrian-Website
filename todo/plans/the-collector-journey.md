@@ -313,14 +313,12 @@ holder opened ring two, and it may not name the person unless they opened ring f
 The piece sells. The new holder enters the code. Everything stays with the piece as part of its
 history, and the process begins again for them.
 
-**Built in structure, with a Phase 1 foundation repair required.** The canonical registry has the
-keeper state, private maintenance history, recovery, and an append-only public lineage. The current
-administrator transfer does not yet append the public `transferred` lineage event, and its reset
-action can make a previously claimed piece directly bearer-bindable again. Both paths must be
-replaced by one atomic governed transfer before new registration work relies on them. Contested
-claims must also move off the frozen legacy writer into this registry. After that repair, transfer
-carries an opaque kind such as sale, gift, inheritance, or artist rebind, and a claimed piece can
-never rebind outside audited transfer. A contested claim can only resolve through a human. The
+**Built locally, not deployed.** The canonical registry now records keeper state, private transfer
+evidence, recovery, and append-only public transfer history as one governed operation. A previously
+claimed piece cannot return to bearer binding or change keeper outside audited transfer. Public
+history carries only random transfer-scoped references and the kind, such as sale, gift,
+inheritance, or artist rebind. Contested claims stay in this registry and can only resolve through
+a human. The
 escalation path that could free a piece from an
 unresponsive holder is **deliberately switched off** because it requires four warnings a person
 actually received and there is no way to send them yet: *"Silence a keeper never heard is not
@@ -331,9 +329,9 @@ consent."* Leave it off until warnings can be delivered.
 ## What blocks a full walk today
 
 **The ownership authority is now one system.** Phase 0 froze the legacy writer and retired its
-holder-dependent readers. Before the registration experience builds on it, Phase 1 repairs the
-canonical transfer path and moves contested claims into the canonical database. This is not a
-second ownership merge.
+holder-dependent readers. Phase 1 has repaired the canonical transfer path and moved contested
+claims into the canonical database locally. The remaining deployment rehearsal is not a second
+ownership merge.
 
 **The catalog still needs registry identities.** The catalog already contains every artwork, so
 seeding registry entries is agent-runnable implementation rather than Adrian's data entry.
