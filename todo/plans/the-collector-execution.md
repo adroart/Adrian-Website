@@ -120,9 +120,10 @@ The phases are in `the-collector-build.md`. In short:
   historical source chains into a separate preserved envelope, confirm the already-shared profile
   row, point mandalacodes at this registry as a reader, rename the stale login column. **This blocks
   everything else** until one system is the only writer for who holds a piece.
-- **Phase 1 — the walkable registration.** Eight items. Reframe registration around the artwork
-  rather than the plate, build the invitation door, the opening screen, arrival, the certificate,
-  the privacy screen, birth details at onboarding, and seed the missing pieces.
+- **Phase 1, the walkable registration.** One ownership-integrity preflight, then eight journey
+  items. Repair transfer and contested-claim paths, reframe registration around the artwork rather
+  than the plate, build the invitation door, the opening screen, arrival, the certificate, the
+  privacy screen, birth details at onboarding, and seed catalog membership.
 - **Phase 2 — the piece becomes alive.** Six items. The dream, the globe and ordinals, a way in
   that is not the hexagram ring, brightness, letters, the yearly ritual.
 - **Phase 3 — what only exists on paper.** Four items. Co-holding, video, warning delivery, the
@@ -221,5 +222,17 @@ and truthful-empty-state defects before the boundary report.
 the project had not begun. Materials, makers, origins, and wording will be editable through reusable
 templates with individual artwork overrides and can be filled gradually after the interface exists.
 
-**Next session begins Phase 1, item 1.1.** Use the conservative product defaults above. Perform a
-reviewed canary and restore rehearsal before any production write.
+**2026-08-09: Adrian approved the hybrid multi-agent execution design.** Independent leaf modules
+may build in parallel behind closed launch flags. Ownership mutation, migrations, recovery
+registration, parent-route integration, and production rollout remain single-owner seams. The
+approved design and Phase 1 work packets are recorded beside this file.
+
+The repository-wide audit corrected one more statement before implementation. Administrator
+transfer does not yet append the promised public transfer event, administrator reset can make a
+previously claimed piece directly bearer-bindable, and contested claims still call the frozen
+legacy writer. Phase 1 begins with item 1.0 to repair those paths. This does not reopen Phase 0's
+placement decision.
+
+**Next session begins Phase 1, item 1.0.** Then item 1.1 publishes the artwork-registration seam
+that the parallel invitation, certificate, privacy, and birth lanes consume. Perform a reviewed
+canary and restore rehearsal before any production write.
