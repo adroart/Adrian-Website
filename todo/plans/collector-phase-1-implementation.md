@@ -121,7 +121,10 @@ git commit -m "test(collector): support browser checks in worktrees"
 - Modify: `functions/qr/[number].js`
 - Modify: `utils/publicRegistry.ts`
 - Create: `tests/artwork-registration.test.ts`
+- Create: `tests/admin-artwork-registration.test.ts`
 - Modify: `tests/living-legacy.test.ts`
+- Modify: `tests/registry-artworks.test.ts`
+- Modify: `tests/registry-maintenance.test.ts`
 - Modify: `tests/registry-plate-lifecycle.test.ts`
 - Modify: `tests/registry-recovery-qualification.test.ts`
 - Modify: `tests/artwork-package-recovery.test.ts`
@@ -148,6 +151,8 @@ registerArtwork(env, {
 prepareOptionalPlate(env, {
   keeperPieceId,
   idempotencyKey,
+  authorization: { userId: string; email: string; registryUnlockExpiresAt: number },
+  preparedAt?: string,
 }): Promise<IssuedPlatePackage>
 
 prepareFirstKeeperBind(env, {
@@ -159,13 +164,13 @@ prepareFirstKeeperBind(env, {
 }): Promise<{ statements: D1PreparedStatement[]; result: object }>
 ```
 
-- [ ] **Step 1: Write a failing registration test**
+- [x] **Step 1: Write a failing registration test**
 
 Assert that registering one known catalog artwork returns a permanent public identity and a
 one-time Ownership Code while every plate artifact, keeper, order, fulfillment, and shipment field
 remains absent.
 
-- [ ] **Step 2: Run the focused test and observe that issuance requires plate generation**
+- [x] **Step 2: Run the focused test and observe that issuance requires plate generation**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks tests/artwork-registration.test.ts
@@ -173,7 +178,7 @@ npx tsx --test --experimental-test-module-mocks tests/artwork-registration.test.
 
 Expected: FAIL because the digital-only registration interface does not exist.
 
-- [ ] **Step 3: Add the registered identity state and minimal registration module**
+- [x] **Step 3: Add the registered identity state and minimal registration module**
 
 The migration must preserve every existing keeper row, dependent foreign key, index, trigger, and
 uniqueness guarantee, then finish with a clean foreign-key check. It makes `registered` a valid
@@ -184,7 +189,7 @@ existing encrypted recovery boundary rather than creating another operation tabl
 mint and encrypt the Ownership Code through the existing key-versioned implementation and return
 plaintext only once.
 
-- [ ] **Step 4: Add idempotency tests and implementation**
+- [x] **Step 4: Add idempotency tests and implementation**
 
 Test exact replay for the same key and input, conflict for a reused key with changed identity, and
 no identity row or lineage event when backup persistence fails. Persist the immutable,
@@ -195,12 +200,12 @@ while the registry step-up is still active, and every replay reveal is audited. 
 expiry, replay returns the stored identity without plaintext and directs the administrator through
 the existing audited reveal path.
 
-- [ ] **Step 5: Add public resolution tests and implementation**
+- [x] **Step 5: Add public resolution tests and implementation**
 
 Assert that public registry lookup and QR resolution accept a registered identity and reveal no
 Ownership Code verifier, ciphertext, nonce, keeper identity, or backup reference.
 
-- [ ] **Step 6: Extract the canonical first-bind preparation**
+- [x] **Step 6: Extract the canonical first-bind preparation**
 
 Write a failing test proving an ownership code can bind a registered identity after its identity
 backup is qualified, without plate activation. Identity qualification and physical-plate
@@ -208,14 +213,14 @@ qualification remain distinct, so identity proof can never activate a plate. Mov
 statements behind `prepareFirstKeeperBind` and make the existing keeper endpoint consume it while
 preserving the existing private request evidence.
 
-- [ ] **Step 7: Separate optional plate preparation**
+- [x] **Step 7: Separate optional plate preparation**
 
 Write a failing test proving plate preparation preserves the same keeper-piece identity, public
 code, encrypted Ownership Code, and lineage head. Then adapt the existing plate issuance module to
 add fabrication to the registered identity. The audited reveal route returns only the Ownership
 Code for a registered identity, while generated and active plates retain exact SVG verification.
 
-- [ ] **Step 8: Verify the registration lane**
+- [x] **Step 8: Verify the registration lane**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -234,7 +239,7 @@ npm run typecheck
 git diff --check
 ```
 
-- [ ] **Step 9: Commit the registration seam**
+- [x] **Step 9: Commit the registration seam**
 
 ```bash
 git add migrations/025_artwork_registration.sql functions/api/_lib/artworkRegistration.js \
@@ -245,9 +250,11 @@ git add migrations/025_artwork_registration.sql functions/api/_lib/artworkRegist
   functions/api/admin/pieces/[id]/verify-recovery.js \
   functions/api/admin/pieces/[id]/reveal.js \
   functions/api/registry/[publicCode].js functions/qr/[number].js utils/publicRegistry.ts \
-  tests/artwork-registration.test.ts tests/admin-plate-wizard.test.ts \
+  tests/artwork-registration.test.ts tests/admin-artwork-registration.test.ts \
+  tests/admin-plate-wizard.test.ts \
   tests/admin-registry-ui.test.ts tests/registry-artworks.test.ts \
   tests/registry-commerce-neutral.test.ts tests/living-legacy.test.ts \
+  tests/registry-maintenance.test.ts \
   tests/registry-plate-lifecycle.test.ts tests/registry-recovery-qualification.test.ts \
   tests/artwork-package-recovery.test.ts \
   tests/public-registry-identity.test.ts
@@ -638,7 +645,8 @@ Plate fabrication remains a later optional action.
 
 Advance the encrypted archive schema from 3 to 4 exactly once after all Phase 1 migrations merge.
 Add catalog membership, invitations, certificate templates and assignments, artwork overrides,
-current consent, and consent history to the exact table and column manifest. Referenced-account
+current consent, consent history, and identity recovery qualifications to the exact table and
+column manifest. Referenced-account
 discovery includes invitation creators and redeemers plus consent authors, while unrelated accounts
 remain excluded. Registration and plate-preparation audits already travel through the existing
 private maintenance-event recovery boundary and must remain covered by its regression tests.

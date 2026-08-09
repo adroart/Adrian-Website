@@ -259,3 +259,24 @@ and stop if it finds a previously claimed artwork in an unclaimed or half-bound 
 
 **Next: Phase 1 item 1.1, artwork-first registration with optional plate preparation.** No
 additional Adrian content is needed to begin it.
+
+**2026-08-09: Phase 1 item 1.1 is complete locally and has not been deployed.** An artwork can now
+receive its permanent public identity, encrypted Ownership Code, verified identity backup, and
+initial public history before any physical plate exists. Public lookup and the permanent QR work in
+that registered state without exposing ownership secrets, keeper identity, or private recovery
+data. First keeper binding uses the qualified identity backup independently of plate fabrication.
+
+Optional plate preparation keeps the same artwork identity, code, keeper state, and public history.
+It records a separate administrator action and remains replay-safe. The older plate endpoint can
+only replay a previously generated package and cannot mint around artwork registration. Catalog
+membership storage is separate and cannot create an edition, public code, keeper, or lineage.
+
+Verification passed with 482 unit tests, typecheck, the production build, and the complete browser
+suite with 58 passes and 10 intentional skips. The focused registration gate passed 230 tests.
+Independent specification and security reviews found and closed expired-authority creation,
+plate-first bypass, qualification ordering, catalog conflict, endpoint-coverage, and concurrent
+replay defects.
+
+**Next: Phase 1 items 1.2 through 1.7 can build in parallel behind the published registration and
+first-bind seams.** No additional Adrian content is needed for invitation proof, template editing,
+privacy and shared birth onboarding, or dry-run catalog membership.
