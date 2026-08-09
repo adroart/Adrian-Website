@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import { readFileSync, realpathSync, writeFileSync, readdirSync } from 'fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import matter from 'gray-matter';
@@ -854,6 +854,12 @@ export default defineConfig({
     port: 5555,
     host: '0.0.0.0',
     strictPort: true,
+    fs: {
+      allow: [
+        __dirname,
+        realpathSync(path.resolve(__dirname, 'node_modules')),
+      ],
+    },
     watch: {
       usePolling: true,
       interval: 500,
