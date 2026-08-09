@@ -34,6 +34,14 @@ review, the verdict, and DESIGN.md
   --ease-out:cubic-bezier(.16,1,.3,1);
 }
 
+/* Two axes, never combined into one number.
+   --life  what has been PLACED in it. The light, the words, their presence.
+   --years how long it has been HELD. The ground, the patina, the settling.
+   They are different materials on purpose: a ten year old piece with little
+   written reads old and quiet, a new piece written into deeply reads bright and
+   new, and there is no shared scale on which one beats the other. */
+.screen{--years:0}
+
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -112,6 +120,20 @@ body{
 /* the screen itself */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:34px 26px 26px}
 
+/* ── season, hour, and the birthday month ──
+   A tint over the whole ground so the piece belongs to the time it is being
+   looked at. It moves the GROUND ONLY. Brass never shifts, because "brass means
+   you can act" is what keeps every screen legible, and an accent that drifts
+   stops being a signal. --tint-h and --tint-a are set by the date. */
+.screen{--tint-h:32; --tint-a:0}
+.screen::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:hsl(var(--tint-h) 62% 52% / var(--tint-a));
+  mix-blend-mode:soft-light;
+  transition:background 2s var(--ease)
+}
+.screen > *{position:relative;z-index:1}
+
 /* ── the page comes alive ──
    Nothing asks for anything. What was placed in the piece is simply visible:
    the ground lifts, the drawing's stroke strengthens, the words surface. A piece
@@ -124,9 +146,19 @@ body{
       rgba(212,184,138,calc(var(--life) * .17)) 0%,
       transparent 62%),
     linear-gradient(180deg,
-      rgba(41,35,28,calc(var(--life) * .55)) 0%,
-      transparent 46%);
+      rgba(41,35,28,calc(var(--years) * .75)) 0%,
+      rgba(41,35,28,calc(var(--years) * .28)) 52%,
+      transparent 100%);
   transition:background 1.4s var(--ease)
+}
+/* years settle the surface itself: the frame warms and the hairlines soften,
+   the way a held object gains patina. Nothing here is earned or awarded. */
+.screen{
+  --hair:rgba(237,233,226,calc(.13 + var(--years) * .05))
+}
+.screen .head .ul{
+  letter-spacing:calc(.2em + var(--years) * .02em);
+  color:color-mix(in srgb, var(--cream-2) calc(var(--years) * 45%), var(--cream-3))
 }
 .screen .piece-slot path,
 .screen .piece-slot circle{
@@ -192,6 +224,30 @@ body{
 }
 .screen.promoted .head{opacity:0;transform:translateY(-10px);pointer-events:none;
   height:0;overflow:hidden;margin:0}
+
+/* ── the dream ──
+   The one thing every visitor reads. It shows because it was written, not
+   because a switch was flipped, so it carries no toggle anywhere. The words
+   show; who wrote them stays opt-in like everything else. */
+.dream{
+  flex:none;margin-top:18px;padding:0 2px;text-align:center;
+  opacity:calc(.55 + var(--life) * .45);
+  transition:opacity 1.2s var(--ease)
+}
+.dream p{
+  font-family:var(--serif);font-weight:300;font-size:19px;line-height:1.42;
+  letter-spacing:-.005em;color:var(--cream);text-wrap:balance;
+  text-shadow:0 0 calc(var(--life) * 20px) rgba(212,184,138,calc(var(--life) * .3))
+}
+.dream cite{
+  display:block;margin-top:9px;font-style:normal;
+  font-family:var(--label);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3)
+}
+.dream:empty,.dream[hidden]{display:none}
+/* deep in, the words become the page's body and the interface recedes */
+.screen.deep .dream p{font-size:22px;line-height:1.38}
+.screen.deep .rows{opacity:.72}
 
 /* ── the rows ── */
 .rows{margin-top:26px;flex:none;position:relative}
@@ -318,7 +374,7 @@ body{
 /* the explainer is a sheet, it rises over the screen beneath it */
 .walk.sheet{justify-content:flex-end;padding-bottom:16px}
 
-.walk-foot{margin-top:26px;flex:none;min-height:24px}
+.walk-foot{margin-top:22px;flex:none;min-height:24px}
 .walk-foot .tlink{margin-top:12px}
 .walk-hint{
   font-size:12px;color:var(--cream-3);font-style:italic;margin-top:4px
@@ -341,8 +397,28 @@ body{
 .walk.written .walk-b{animation:riseIn .55s var(--ease-out) both .35s}
 .walk.written .walk-foot{animation:riseIn .5s var(--ease-out) both .95s}
 
-/* [hidden] must win over any display rule */
-.foot .tlink[hidden], .tlink[hidden]{display:none}
+/* ── the two doors ──
+   A guest is here to look, the caretaker is here to tend, and the page cannot
+   know which arrived. So neither is styled as the primary: two peers, equal
+   weight, differing only in what they say. This is the ONE screen in the flow
+   with two peer actions, and it is bent here because it is the one screen where
+   the system genuinely does not know who is holding the phone. */
+.doors{
+  display:flex;align-items:stretch;justify-content:center;
+  width:100%;margin-top:2px
+}
+.doors[hidden]{display:none}
+.door{
+  flex:1;min-width:0;background:none;border:0;cursor:pointer;
+  font-family:var(--body);font-size:14px;color:var(--cream);
+  padding:13px 6px;line-height:1.35;
+  transition:color .22s var(--ease)
+}
+.door:hover{color:var(--brass)}
+.door-sep{width:1px;background:var(--hair);flex:none;margin:8px 0}
+
+/* [hidden] must win over any display rule, everywhere */
+[hidden]{display:none !important}
 
 /* ── the page dressed by relationship ──
    unclaimed: one lit pill, the only bright thing.
@@ -360,9 +436,18 @@ body{
 
 .screen.claimed .foot > .pill{display:block;margin:0 auto 2px}
 .screen.claimed .row{padding:11px 2px}
-.screen.claimed .piece-slot{grid-template-rows:104px;margin-bottom:16px}
-.screen.claimed .piece-slot svg{transform:scale(.86)}
-.screen.claimed .placed{margin-top:8px;font-size:11.5px}
+.screen.claimed .piece-slot{grid-template-rows:76px;margin-bottom:10px}
+.screen.claimed .piece-slot svg{transform:scale(.64)}
+.screen.claimed .placed{display:none}
+.screen.claimed .head .ul{margin-bottom:5px}
+.screen.claimed .head .name{font-size:24px}
+.screen.claimed .head .status{margin-top:6px;font-size:11.5px}
+.screen.claimed .dream{margin-top:13px}
+.screen.claimed .dream p{font-size:17px;line-height:1.4}
+.screen.claimed .dream cite{margin-top:7px}
+.screen.claimed .rows{margin-top:14px}
+.screen.claimed .row{padding:9.5px 2px;font-size:14px}
+.screen.claimed .spacer{min-height:0;flex:0 1 auto}
 /* the account row belongs to the caretaker's page only */
 .care-only{display:none}
 .screen.caretaker .care-only{display:flex}
@@ -803,6 +888,13 @@ tbody tr:hover td{color:var(--cream)}
             <div class="status">Registered · a light in the Resonant Grid</div>
           </div>
 
+          <!-- the dream: what a guest reads first. Placed once a year, and
+               placing it IS the choice to show it. Words only, never a name. -->
+          <blockquote class="dream" id="dream">
+            <p id="dreamText"></p>
+            <cite id="dreamCite">placed this year</cite>
+          </blockquote>
+
           <!-- the rows -->
           <div class="rows" id="rows">
             <button class="row" data-row="story" data-prim="row">
@@ -898,9 +990,14 @@ tbody tr:hover td{color:var(--cream)}
             </div>
 
             <button class="pill" id="unlockBtn" data-prim="pill">Begin</button>
+            <div class="doors" id="doors" hidden>
+              <button class="door" id="lookDoor">Look through it</button>
+              <span class="door-sep"></span>
+              <button class="door" id="tendDoor">Sign in to tend it</button>
+            </div>
+            <br id="signinBr" hidden>
+            <button class="tlink" id="signinLink" data-prim="link" hidden>Sign in</button>
             <br>
-            <button class="tlink" id="signinLink" data-prim="link">Sign in</button>
-            <br id="signinBr">
             <a class="tlink" href="#" data-prim="link" id="siteLink">Into the artist&rsquo;s website</a>
           </div>
 
@@ -915,10 +1012,31 @@ tbody tr:hover td{color:var(--cream)}
         </div>
       </div>
       <div class="controls">
+        <span class="ctl-label">Years held · the ground</span>
+        <div class="meter-steps">
+          <button data-years="0">New</button>
+          <button data-years="3">Three</button>
+          <button data-years="7">Seven</button>
+          <button data-years="10">Ten</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Season and hour · the tint</span>
+        <div class="meter-steps">
+          <button data-tint="spring">Spring</button>
+          <button data-tint="summer">Summer</button>
+          <button data-tint="autumn">Autumn</button>
+          <button data-tint="winter">Winter</button>
+          <button data-tint="night">Night</button>
+          <button data-tint="birthday">Birthday month</button>
+        </div>
+      </div>
+      <div class="controls">
         <span class="ctl-label">Run a state</span>
         <div class="meter-steps">
           <button id="wrongBtn">A code that is not true</button>
           <button id="heldBtn">A piece already held</button>
+          <button onclick="window.__go('ritual')">The year turns</button>
         </div>
       </div>
       <div class="controls" id="meterCtl" hidden>
@@ -1381,7 +1499,11 @@ tbody tr:hover td{color:var(--cream)}
       '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
       'Placing love is never ownership. An invited person gains no code, no transfer '+
       'right, no inheritance. A child&rsquo;s words shine nameless, and the switch passes '+
-      'to them when they are grown.</p>',
+      'to them when they are grown.</p>'+
+      '<p style="margin-top:12px;font-size:13px;color:var(--cream-3)">'+
+      'An invited person gets an account of their own, with their own birthday, so the '+
+      'piece asks each of them at their own moment. The account is not per piece: it is '+
+      'the same one that opens their readings on Mandala Codes.</p>',
     video:'<p>The capsule: short, rare, sealed with the piece. Possibly one at purchase, '+
       'another at the yearly ritual.</p>'+
       '<div class="facts">'+
@@ -1416,6 +1538,7 @@ tbody tr:hover td{color:var(--cream)}
   var titles={story:'The story',cert:'The certificate',hist:'The history',
     dreams:'The dreams',garden:'The garden',account:'Your account',
     signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
+    ritual:'The year turns',ritualfamily:'The people you love',
     video:'Record a video',info:'Piece information',family:'The people you love'};
 
   /* ── row promotion ── */
@@ -1775,6 +1898,35 @@ tbody tr:hover td{color:var(--cream)}
       pill:'See your piece', to:'__home',
       cap:'Ignition · the light comes on for the first time' },
 
+    /* ── the year turns ──
+       Once a year, near the birthday, one occasion rather than two: the dream
+       opens for changing, and each invited person's words open for theirs.
+       Every person has their OWN birthday window, so the piece asks each of them
+       at their own moment rather than all at the caretaker's. */
+    ritual:{ h:'The year turns', art:'piece',
+      b:'Near your birthday the piece asks once. What it holds for the year ahead '+
+        'is yours to place now, and it will be read by everyone who meets the piece '+
+        'until the next time it asks.',
+      note:'What you write here shows with the piece. There is no switch for it: '+
+        'placing it is the choosing. Your name is not shown unless you have opened it.',
+      fields:[['the one thing it holds this year']],
+      pill:'Place it', to:'ritualfamily',
+      link:'Keep last year\u2019s', linkTo:'__home',
+      cap:'The year turns \u00b7 one occasion, once a year' },
+
+    ritualfamily:{ h:'The people you love', art:'none',
+      b:'Each person you have invited is asked near their own birthday, and each '+
+        'places one thing for the year. Theirs pass through you once before they '+
+        'show, for typos and judgement, never for permission.',
+      rows:[
+        ['Sara \u00b7 waiting for you','\u201cThat it keeps holding the quiet in this house.\u201d','__home'],
+        ['Ines \u00b7 waiting for you','\u201cI hope it is still here when I am big.\u201d \u00b7 shown without her name','__home'],
+        ['Tomas \u00b7 asked in March','his window has not come round yet','__home']
+      ],
+      note:'Anything not passed simply does not show this year. Nothing is lost; it '+
+        'waits. A child\u2019s words never carry a name, whatever is chosen.',
+      cap:'The year turns \u00b7 each person at their own birthday' },
+
     /* ── returning ── */
     welcome:{ h:'Welcome back', art:'none',
       b:'Sign in and every piece you caretake opens to you. No code needed; the code '+
@@ -1883,23 +2035,75 @@ tbody tr:hover td{color:var(--cream)}
     if(key==='__home'){ enterHome(); return; }
     renderWalk(key);
   }
+  /* ── the dream ── */
+  var dream=document.getElementById('dream'),
+      dreamText=document.getElementById('dreamText'),
+      dreamCite=document.getElementById('dreamCite');
+  var DREAM='That this house stays a place people arrive at unannounced.';
+  function setDream(on){
+    dream.hidden=!on;
+    if(on){ dreamText.textContent='\u201c'+DREAM+'\u201d';
+      dreamCite.textContent='placed this year \u00b7 opens again near the birthday'; }
+  }
+
+  /* ── years held: the ground, not the light. Never a number on screen. ── */
+  function setYears(y){
+    screen.style.setProperty('--years',(y/10).toFixed(3));
+    screen.classList.toggle('deep', y>=7);
+  }
+  document.querySelectorAll('[data-years]').forEach(function(b){
+    b.addEventListener('click',function(){
+      setYears(parseInt(b.dataset.years,10));
+      cap.textContent=b.dataset.years==='0'
+        ? 'Newly held \u00b7 the ground has not settled yet'
+        : 'Held '+b.dataset.years+' years \u00b7 the surface has settled, the light is separate';
+    });
+  });
+
+  /* ── season, hour, birthday month: the ground only ── */
+  var TINTS={spring:[96,.05],summer:[46,.06],autumn:[24,.08],winter:[212,.05],
+             night:[228,.07],birthday:[34,.13]};
+  document.querySelectorAll('[data-tint]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=TINTS[b.dataset.tint]||[32,0];
+      screen.style.setProperty('--tint-h',t[0]);
+      screen.style.setProperty('--tint-a',t[1]);
+      cap.textContent=b.dataset.tint==='birthday'
+        ? 'The birthday month \u00b7 the warmest the piece ever gets'
+        : b.dataset.tint+' \u00b7 the ground shifts, the brass never does';
+    });
+  });
+
+  /* ── the two doors ── */
+  document.getElementById('lookDoor').addEventListener('click',function(){
+    cap.textContent='Look through it \u00b7 a guest sees a complete piece';
+    lite('row',true);
+  });
+  document.getElementById('tendDoor').addEventListener('click',function(){
+    startWalk('welcome');
+  });
+
   /* ── the three arrival states ──
      Every visitor lands on this same page. What it shows is decided by
      the piece's state and by who is looking. */
   var statusLine=document.querySelector('.head .status');
   function setArrival(state){
     screen.classList.remove('claimed');
+    var doors=document.getElementById('doors');
     if(state==='unclaimed'){
+      unlockBtn.hidden=false;
       unlockBtn.textContent='Begin';
       statusLine.textContent='Not yet registered';
-      signinLink.hidden=true; signinBr.hidden=true;
+      doors.hidden=true;
+      setDream(false); setYears(0);
       cap.textContent='Unclaimed \u00b7 one lit thing on the page';
     } else if(state==='claimed'){
       screen.classList.add('claimed');
-      unlockBtn.textContent='I hold this piece';
+      unlockBtn.hidden=true;
       statusLine.textContent='Registered \u00b7 a light in the Resonant Grid';
-      signinLink.hidden=false; signinBr.hidden=false;
-      cap.textContent='Claimed by another \u00b7 sign in is the move';
+      doors.hidden=false;
+      setDream(true); setYears(3);
+      cap.textContent='Registered \u00b7 two doors, neither above the other';
     }
     setGlow(state==='unclaimed'?0:7);
   }
