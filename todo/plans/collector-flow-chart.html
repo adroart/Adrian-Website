@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Collector Journey — flow chart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Lora:wght@400;500&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#0d0b09; --card:#171310; --card-2:#1f1a15;
+    --ink-hi:#ede9e2; --ink:#c4beb4; --ink-lo:#8f8a81;
+    --brass:#c4aa7c; --hair:rgba(196,190,180,.18); --line:rgba(196,190,180,.34);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);font-family:"Lora",Georgia,serif;color:var(--ink);
+       display:flex;flex-direction:column;align-items:center;padding:48px 16px 96px}
+  .title{font-family:"Cormorant Garamond",serif;font-weight:400;font-size:30px;color:var(--ink-hi);margin:0;text-align:center}
+  .sub{font-family:"Karla",sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-lo);margin:6px 0 40px;text-align:center}
+
+  .col{display:flex;flex-direction:column;align-items:center;width:100%;max-width:960px}
+
+  .node{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:18px 22px;
+        width:340px;max-width:92vw;text-align:center}
+  .node h2{font-family:"Cormorant Garamond",serif;font-weight:400;font-size:22px;color:var(--ink-hi);margin:0;line-height:1.2}
+  .node p{font-size:13px;line-height:1.55;margin:7px 0 0;color:var(--ink)}
+  .node .k{font-family:"Karla",sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-lo);display:block;margin-bottom:7px}
+  .node.brass{border-color:rgba(196,170,124,.5)}
+  .node.brass h2{color:var(--brass)}
+  .node.quiet{background:transparent;border-style:dashed}
+
+  .down{width:1px;height:34px;background:var(--line)}
+  .down-label{font-family:"Karla",sans-serif;font-size:11px;letter-spacing:.08em;color:var(--ink-lo);
+              margin:6px 0;text-align:center;max-width:300px;line-height:1.5}
+
+  .split{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;width:100%;margin-top:0}
+  .branch{display:flex;flex-direction:column;align-items:center;flex:0 1 300px}
+  .branch .node{width:100%}
+  .split-bar{width:70%;max-width:660px;height:1px;background:var(--line)}
+  .loop-note{font-family:"Lora",serif;font-style:italic;font-size:13.5px;color:var(--ink-lo);
+             text-align:center;max-width:420px;line-height:1.7;margin:10px 0 0}
+  .section{font-family:"Karla",sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+           color:var(--ink-lo);margin:52px 0 18px;text-align:center}
+</style>
+</head>
+<body>
+
+<h1 class="title">The Collector Journey</h1>
+<p class="sub">Flow chart · one page, one code, one walk · <a href="collector-flow-preview.html" style="color:inherit">the screen preview</a></p>
+
+<div class="col">
+
+  <div class="node quiet">
+    <h2>The piece on the wall</h2>
+    <p>Its QR and written address, carried on its body for life.</p>
+  </div>
+  <div class="down"></div>
+  <p class="down-label">scan or type</p>
+
+  <div class="node">
+    <span class="k">One page, ever · dressed by relationship</span>
+    <h2>The piece page</h2>
+    <p>Photograph · registered or not · The story, The certificate, The history, The dreams, the website · rows expand in place. Guests stop here, complete.</p>
+  </div>
+  <div class="down"></div>
+  <p class="down-label">Unlock · the pill melts into the code field · "Turn the piece over"</p>
+
+  <div class="node brass">
+    <h2>The vault opens</h2>
+    <p>Tumblers resolve, one click, warm light through the seam. The code is used only here and at a passing; afterwards it sleeps.</p>
+  </div>
+
+  <div class="down"></div>
+  <div class="split-bar"></div>
+  <div class="split">
+    <div class="branch">
+      <div class="down"></div>
+      <div class="node">
+        <span class="k">First claim</span>
+        <h2>The code is true</h2>
+        <p>The Resonant Grid named. Continue, or the quiet link: this piece is for someone else.</p>
+      </div>
+    </div>
+    <div class="branch">
+      <div class="down"></div>
+      <div class="node">
+        <span class="k">Already held</span>
+        <h2>A passing begins</h2>
+        <p>Nothing moves without the current caretaker. They let go; then the walk begins for the new hands.</p>
+      </div>
+    </div>
+    <div class="branch">
+      <div class="down"></div>
+      <div class="node">
+        <span class="k">Both claim, nobody confirms</span>
+        <h2>A human</h2>
+        <p>"This needs a person. Adrian will be in touch."</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="section">The fork · this piece is for someone else</p>
+  <div class="split">
+    <div class="branch">
+      <div class="node">
+        <span class="k">Gift · no ownership moves</span>
+        <h2>Leave your wishes with it</h2>
+        <p>Sealed into the piece forever. The receiver meets them right after their vault opens: "Something was left for you."</p>
+      </div>
+    </div>
+    <div class="branch">
+      <div class="node">
+        <span class="k">Transfer · grave, not softened</span>
+        <h2>Passing it on</h2>
+        <p>Everything placed stays with the piece as its story. When the next caretaker accepts, your hold ends and theirs begins.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="section">The four screens · fifteen seconds, tap anywhere</p>
+  <div class="node">
+    <h2>You felt the pull</h2>
+    <p>Perhaps it was beauty. Or the story. Or just a feeling beyond words.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node">
+    <h2>The resonant grid</h2>
+    <p>The ones who hold these creations feel it too. And you are a part of that.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node">
+    <h2>When you focus your love, it grows</h2>
+    <p>Every time you see it, you feel everything it holds.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node">
+    <h2>It carries on</h2>
+    <p>Hundreds of years from now, whoever caretakes this art will feel the love you infused today. So take a moment, and write your story.</p>
+  </div>
+  <div class="down"></div>
+  <p class="down-label">Begin</p>
+
+  <p class="section">The gathering · three screens, then home</p>
+  <div class="node">
+    <h2>Sign its record</h2>
+    <p>Full name · email · password. The account born as a signature; the code never needed again for daily life.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node">
+    <h2>Who you are</h2>
+    <p>Born: date, time, place, never shown, only what they produce. Where the art lives: city, required, widen to region if it feels close. Your links, chosen. "Why we ask" opens the explainer; so does Skip.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node">
+    <h2>What shows</h2>
+    <p>The piece shines by default, words with no name, city at most. The person opts in, tick by tick. Uncheck to withhold.</p>
+  </div>
+  <div class="down"></div>
+  <div class="node brass">
+    <h2>You are Light 47</h2>
+    <p>Ignition. The ordinal is permanent; the light appears dim and warms with every answer.</p>
+  </div>
+  <div class="down"></div>
+
+  <div class="node">
+    <span class="k">The same piece page · now yours</span>
+    <h2>Home</h2>
+    <p>The glowing meter, tap it and the garden opens. Add to your piece. The video capsule lives here when the costs clear. Letters arrive; the yearly ritual returns near your birthday.</p>
+  </div>
+  <p class="loop-note">and the loop: scan the piece on your wall any day, logged in, and this same page opens warm, one more question answered, one shade brighter, for as long as the piece is held, and then it carries on.</p>
+
+</div>
+
+</body>
+</html>
