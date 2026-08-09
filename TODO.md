@@ -4,10 +4,10 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
-- [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  The ownership record was ratified to this site on 2026-08-09 and the ceremony layer rehomes here from mandalacodes. Blocked on the per-piece materials data and four design calls. Done when a person can walk all fifteen steps of the spec end to end.
-- [ ] Record what each artwork is actually made of: wood, stones, makers, where it was made _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
-  Every one of the 64 currently carries the identical material string, so the certificate has nothing to show. The table to hold it exists and is empty. Done when a certificate can be read for any registered piece.
+- [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: agent-runnable | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
+  Phase 0 is complete. Continue with conservative, tunable defaults and build all fifteen steps without waiting for bulk content entry.
+- [ ] Record and refine what each artwork is made of, who made it, where it was made, and its wording _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
+  The collector build provides reusable templates with per-artwork overrides. Done when the desired factual fields are filled; incomplete entries simply stay hidden until then.
 - [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
   Its task one (reframe registration around the artwork, not the plate) is the same work as the collector build's 1.1.
 

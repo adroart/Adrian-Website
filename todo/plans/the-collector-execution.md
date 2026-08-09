@@ -94,23 +94,19 @@ risks that were specifically closed.
 
 ---
 
-## Blocked on Adrian — skip, list, never guess
+## Adrian inputs do not block implementation
 
-Three things only Adrian can answer. Do not build around them, do not invent placeholder answers,
-and do not let them stall anything else. Skip the item, note it in `## Progress`, continue.
+Build the complete editing and journey surfaces before asking Adrian for bulk content entry.
 
-1. **The materials data** — wood species, stones, makers, manufacture location, per piece. The
-   `artwork_provenance_entries` table exists with typed entries and visibility flags. It is empty.
-   Blocks the certificate (journey step 6, build item 1.5).
-2. **Four design calls** — what video actually promises, whether a spouse is a holder or a
-   contributor, what makes a light brighter without being gameable, and what the invitation
-   carries as proof for a collector with no printed code. Block build items 3.2, 3.1, 2.4, 1.2.
+1. **Materials, makers, origins, and wording** use reusable templates with per-artwork overrides.
+   Missing values remain absent from the public certificate. Adrian adds and tunes the facts later.
+2. **Product behavior uses the ratified conservative defaults:** single-use artwork invitations,
+   one canonical keeper with contributors, equal brightness for registered lights, and optional
+   attached video with no personal or permanent-hosting promise.
 3. **The aesthetic questions** are already answered. Design work runs in parallel under
    `collector-design-handoff.md` and does not block anything here.
-4. **The historical Atlas export:** provide or identify the authoritative legacy ledger if one
-   still exists. The configured live object is absent, the public Atlas is empty, and the local
-   recovery copies contain no pieces. This blocks only the actual source-history import in 0.2;
-   the importer and every other Phase 0 item can proceed without guessing.
+4. **No historical Atlas import is required.** Adrian confirmed on 2026-08-09 that the Atlas never
+   began. The empty live object and backups are the expected state, not lost provenance.
 
 ---
 
@@ -212,17 +208,18 @@ recovery support, and a rolling login-name compatibility change that keeps both 
 during rollout. The existing keeper record and lineage event are preserved. The already-shared
 profile storage was verified rather than duplicated again.
 
-The actual historical import is not complete. The configured legacy ledger object is absent, the
-live public Atlas reports no pieces, and the available recovery copies are empty. The import tool
-therefore refuses to manufacture the planned 18 records. Adrian needs to identify an authoritative
-historical export if one exists; otherwise a later decision must record honestly that there was no
-recoverable source history to import.
+No historical import was performed. The configured legacy ledger object, public Atlas, and recovery
+copies are empty because the Atlas never began. Adrian confirmed this on 2026-08-09. Phase 0 correctly
+creates no historical records; the fail-closed import path remains only as a safeguard.
 
 Verification passed on both projects: focused provenance and compatibility tests, each full unit
 suite, each typecheck, each production build, and clean-diff checks. Independent reviews found and
 closed privacy, replay, semantic-integrity, old-backup compatibility, read-side mutation, rollout,
 and truthful-empty-state defects before the boundary report.
 
-**Next session stays in Phase 0, item 0.2.** Resolve the missing historical export, then perform a
-reviewed canary and restore rehearsal before any production write. Do not begin Phase 1 until the
-source-history disposition and two-site rollout order are approved.
+**2026-08-09: Adrian closed the final Phase 0 question.** There is no missing Atlas export because
+the project had not begun. Materials, makers, origins, and wording will be editable through reusable
+templates with individual artwork overrides and can be filled gradually after the interface exists.
+
+**Next session begins Phase 1, item 1.1.** Use the conservative product defaults above. Perform a
+reviewed canary and restore rehearsal before any production write.

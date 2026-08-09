@@ -326,17 +326,18 @@ consent."* Leave it off until warnings can be delivered.
 
 ## What blocks a full walk today
 
-**The two systems are one system in name only.** Until the ceremony layer is rehomed, a person's
-journey crosses two records of who owns a piece. Two records of ownership is the one thing a
-provenance system cannot have.
+**The ownership authority is now one system.** Phase 0 froze the legacy writer and retired its
+holder-dependent readers. The remaining work is moving the ceremony and registration experience,
+not reconciling competing ownership records.
 
-**Forty-six of sixty-four pieces are not in the ledger at all**, and no non-Universal-Language
-work is in it. Someone who buys one of those and scans it reaches nothing. This is the gap that
-makes the flow untestable end to end, and it is Adrian's data entry.
+**The catalog still needs registry identities.** The catalog already contains every artwork, so
+seeding registry entries is agent-runnable implementation rather than Adrian's data entry.
 
-**The certificate has nothing to read from** until materials, makers, and origins are recorded.
+**The certificate needs an editing workflow.** Materials, makers, origins, and wording use reusable
+templates with per-artwork overrides. Unrecorded fields remain absent until Adrian fills them.
 
-**Birth details are stored twice**, so the never-asked-twice test fails by construction.
+**Birth details already use one shared profile row.** Phase 1 only needs to make the onboarding
+experience reuse that row so a person is never asked twice.
 
 **The registration flow is still framed around making a metal plate.** The registry's own build
 plan already diagnoses this and calls for reframing it as registering an artwork with the plate
@@ -363,14 +364,16 @@ These were paid for with real review and must not be relitigated when the ceremo
 
 ---
 
-## Open, needing Adrian
+## Tunable after the walk exists
 
-1. **The materials data.** Wood species, stones, makers, manufacture location, per piece. The place
-   to hold it exists and is empty.
-2. **Video.** Where it lives, what is promised, how extra uploads are paid for. Governs step 5's wording.
-3. **Co-holding.** Whether a spouse and children are holders with their own access, or contributors
-   under one holder.
-4. **Brightness.** What actually makes a light brighter, defined so it cannot be farmed.
-5. **The invitation.** What proof it carries, since a retroactive collector has no printed code.
-6. **The plate registry's eight tasks.** Its own plan is written and unstarted; task one is the same
-   reframe this document needs.
+1. **Factual content.** Adrian gradually fills materials, makers, manufacture location, and wording
+   through templates and per-artwork overrides.
+2. **Video.** Optional attached video, with no promise of a personal recording or permanent hosting.
+3. **Holding roles.** One canonical keeper has authority; spouses and family are contributors unless
+   a later reviewed ownership model deliberately changes that rule.
+4. **Brightness.** Unregistered pieces are dim and registered pieces are equally lit. Engagement does
+   not change brightness.
+5. **Invitations.** A single-use, artwork-specific invitation tied to its intended recipient supplies
+   the proof for a retroactive collector with no printed code.
+6. **The plate registry's eight tasks.** Its first task is the same registration reframe this document
+   needs; physical production still waits for Adrian's test-piece approval.

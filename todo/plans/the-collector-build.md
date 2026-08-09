@@ -11,18 +11,17 @@
 
 ---
 
-## Blocked on Adrian — nothing below starts without these
+## Inputs and defaults
 
-**B1. The Stage 1 aesthetic questions.** Four questions, one round, in the Visual Design
-section below. Until answered, no screen can be briefed and every design item is stalled.
+**B1. Factual content is entered through reusable templates with per-artwork overrides.** Materials,
+makers, manufacture location, certificate wording, and related factual fields need an admin editing
+surface. Adrian can apply one template to many works, then change any field on an individual work.
+Missing facts stay absent from the public certificate rather than blocking the build. *Serves step 6.*
 
-**B2. The materials data.** Wood species, stones, makers, manufacture location, per piece.
-The table to hold it exists and is empty. Without it the certificate has nothing to show.
-*Serves step 6.*
-
-**B3. Four design calls** — video, co-holding, brightness, and what the invitation carries
-as proof. Each is listed in the journey's Open section. Each blocks a specific build item
-below, marked where it bites.
+**B2. Product calls use conservative defaults and remain tunable.** Invitations are single-use and
+artwork-specific; one canonical keeper retains ownership authority; registered lights have equal
+brightness; video is optional and carries no promise of personal or permanent hosting. These defaults
+can be tuned later without changing the ownership foundation.
 
 ---
 
@@ -36,11 +35,9 @@ authoritative mandalacodes ledger export.
 **0.1 Freeze the mandalacodes ledger as canonical-elsewhere.** Mark it read-only for new
 claims and record the date. Nothing new enters it after this point. *Serves the whole spec.*
 
-**0.2 Import every verified historical source chain into this site's registry.** Preserve each
-source event and its original hash in a separate append-only evidence envelope, linked to the
-local keeper record. The two native hash formats are not interchangeable. Record the move date
-and cross-reference the old mirror as historical proof. Do not invent the expected 18 pieces if
-the authoritative export cannot be recovered. *Serves step 15.*
+**0.2 Preserve any verified historical source chain.** The audit and Adrian's confirmation establish
+that the Atlas never began and no historical chains exist to import. The verified import path remains
+available if contrary evidence ever appears, but Phase 0 creates no fictional history. *Serves step 15.*
 
 **0.3 Keep birth details in the one shared profile row.** Both sites already use the same account
 database and profile record. Consolidate migration ownership and keep both readers on that row;
@@ -65,20 +62,23 @@ invitation door needs. *Serves steps 1, 4, and door two.*
 
 **1.2 Build the invitation door.** Adrian invites someone who bought years ago; the invitation
 itself carries the proof, because they have no printed code. Their piece has a history that
-predates the system. *Serves door two. Blocked on B3.*
+predates the system. Use a single-use, artwork-specific invitation tied to the intended recipient.
+*Serves door two.*
 
 **1.3 Build the opening screen.** What is about to happen, said plainly, before anything is
 asked. Registering to you, certifying as authentic, storing your intentions, joining the map.
-The piece lasts. The code lasts. Whoever holds the code holds the access. **Its wording is
-constrained by what can honestly be promised — see the video note in the journey.**
+The piece lasts. The code lasts. Whoever holds the code holds the access. Store the wording as a
+reusable template with per-artwork overrides. Promise only optional attached video, never personal
+or permanent hosting.
 *Serves step 5.*
 
 **1.4 Rehome the arrival page.** Zero sign-in, the artwork, its story, its public history spine.
 A person who only wants to look gets a complete experience. *Serves step 2.*
 
-**1.5 Fill the certificate.** The provenance table exists with typed entries for contributor,
-creation place, material, technique, and intention, each with its own visibility. Populate and
-surface it. *Serves step 6. Blocked on B2.*
+**1.5 Build and fill the certificate.** The provenance table exists with typed entries for contributor,
+creation place, material, technique, maker, intention, and wording, each with its own visibility.
+Build an admin editor that applies reusable templates to many artworks and supports per-artwork
+overrides. Surface only recorded fields, so Adrian can add facts gradually. *Serves step 6.*
 
 **1.6 Rehome the four rings as one privacy screen.** One page, plain words, decided once.
 Ring two stays unticked by default. *Serves step 7.*
