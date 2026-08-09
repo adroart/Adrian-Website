@@ -112,6 +112,41 @@ body{
 /* the screen itself */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:34px 26px 26px}
 
+/* ── the page comes alive ──
+   Nothing asks for anything. What was placed in the piece is simply visible:
+   the ground lifts, the drawing's stroke strengthens, the words surface. A piece
+   with nothing in it is calm and complete; a piece with years in it is lit from
+   within. --life runs 0 to 1 and is set by what has been placed, nothing else. */
+.screen{
+  --life:0;
+  background:
+    radial-gradient(120% 62% at 50% 108%,
+      rgba(212,184,138,calc(var(--life) * .17)) 0%,
+      transparent 62%),
+    linear-gradient(180deg,
+      rgba(41,35,28,calc(var(--life) * .55)) 0%,
+      transparent 46%);
+  transition:background 1.4s var(--ease)
+}
+.screen .piece-slot path,
+.screen .piece-slot circle{
+  stroke:color-mix(in srgb, var(--cream) calc(var(--life) * 100%), var(--cream-2));
+  stroke-width:calc(1.25px + var(--life) * .45px);
+  transition:stroke .9s var(--ease), stroke-width .9s var(--ease)
+}
+.screen .head .name{
+  transition:text-shadow 1.2s var(--ease);
+  text-shadow:0 0 calc(var(--life) * 26px) rgba(212,184,138,calc(var(--life) * .34))
+}
+/* words placed in the piece surface on the page as it fills */
+.placed{
+  display:none;flex:none;margin-top:14px;text-align:center;
+  font-size:12.5px;line-height:1.7;color:var(--cream-3);font-style:italic;
+  opacity:calc(.35 + var(--life) * .65);
+  transition:opacity 1.2s var(--ease)
+}
+.screen.alive .placed{display:block}
+
 /* ── the piece drawing (CAD, geometry only) ── */
 .piece-slot{
   display:grid;place-items:center;
@@ -306,6 +341,28 @@ body{
 .walk.written .walk-b{animation:riseIn .55s var(--ease-out) both .35s}
 .walk.written .walk-foot{animation:riseIn .5s var(--ease-out) both .95s}
 
+/* [hidden] must win over any display rule */
+.foot .tlink[hidden], .tlink[hidden]{display:none}
+
+/* ── the page dressed by relationship ──
+   unclaimed: one lit pill, the only bright thing.
+   claimed by someone else: no pill, sign in is the move; the code door is quiet.
+   yours: no pill and no sign in, the light and your doors instead. */
+.screen.claimed .foot > .pill{
+  background:none;border:1px solid var(--hair);color:var(--cream-2);
+  box-shadow:none;font-family:var(--body);font-size:14px;font-weight:400;
+  letter-spacing:0;text-transform:none;min-height:0;padding:9px 4px
+}
+.screen.claimed .foot > .pill:hover{background:none;color:var(--brass);box-shadow:none}
+.screen.claimed #signinLink{color:var(--cream);font-size:15px}
+.screen.claimed .foot{padding-top:8px}
+.screen.claimed .foot > .tlink{padding:6px 4px;font-size:13.5px}
+
+.screen.claimed .foot > .pill{display:block;margin:0 auto 2px}
+.screen.claimed .row{padding:11px 2px}
+.screen.claimed .piece-slot{grid-template-rows:104px;margin-bottom:16px}
+.screen.claimed .piece-slot svg{transform:scale(.86)}
+.screen.claimed .placed{margin-top:8px;font-size:11.5px}
 /* the account row belongs to the caretaker's page only */
 .care-only{display:none}
 .screen.caretaker .care-only{display:flex}
@@ -488,12 +545,16 @@ body{
 .screen.caretaker .spacer{min-height:0;flex:0 1 auto}
 .screen.caretaker .foot{padding-top:6px}
 /* home carries seven rows plus the light: the list yields, nothing is cut */
-.screen.caretaker .row{padding:10.5px 2px;font-size:14.5px}
-.screen.caretaker .rows{margin-top:16px}
-.screen.caretaker .piece-slot{grid-template-rows:96px;margin-bottom:14px}
-.screen.caretaker .piece-slot svg{transform:scale(.8)}
-.screen.caretaker .head .name{font-size:25px}
-.screen.caretaker .head .status{margin-top:8px;font-size:12px}
+.screen.caretaker .row{padding:8px 2px;font-size:14px}
+.screen.caretaker .rows{margin-top:12px}
+.screen.caretaker .piece-slot{grid-template-rows:64px;margin-bottom:10px}
+.screen.caretaker .piece-slot svg{transform:scale(.56)}
+.screen.caretaker .head .name{font-size:22px}
+.screen.caretaker .head .ul{margin-bottom:6px}
+.screen.caretaker .head .status{display:none}
+.screen.caretaker .placed{margin-top:8px;font-size:11.5px;line-height:1.55}
+.screen.caretaker .meter-label{margin-top:9px;font-size:11.5px}
+.screen.caretaker .meter{height:22px}
 /* the meter survives promotion: it shrinks to a small lit anchor beside the
    header, exactly as the drawing does. Screen 23 is meter and rows together. */
 .screen.caretaker.promoted .foot{
@@ -762,10 +823,18 @@ tbody tr:hover td{color:var(--cream)}
             <button class="row care-only" data-row="info" data-prim="row">
               <span>Piece information</span><span class="chev">&rsaquo;</span>
             </button>
+            <button class="row care-only" data-row="family" data-prim="row">
+              <span>The people you love</span><span class="chev">&rsaquo;</span>
+            </button>
+            <button class="row care-only" data-row="passing" data-prim="row">
+              <span>Passing it on</span><span class="chev">&rsaquo;</span>
+            </button>
             <button class="row care-only" data-row="account" data-prim="row">
               <span>Your account</span><span class="chev">&rsaquo;</span>
             </button>
           </div>
+
+          <p class="placed" id="placed"></p>
 
           <!-- the walk: code confirmed, then the four. Tap anywhere advances. -->
           <div class="walk" id="walk" hidden>
@@ -811,6 +880,9 @@ tbody tr:hover td{color:var(--cream)}
               <p class="code-nocode" id="codeNoCode">
                 <button class="tlink" id="noCodeBtn">I don&rsquo;t have a code</button>
               </p>
+              <p class="code-nocode" id="codeGift">
+                <button class="tlink" id="giftBtn">I am giving this to someone</button>
+              </p>
               <div class="code-actions" id="codeActions" hidden>
                 <button class="pill" id="tryAgainBtn">Try again</button>
                 <button class="tlink" id="contactBtn">Contact Adrian</button>
@@ -825,16 +897,23 @@ tbody tr:hover td{color:var(--cream)}
               <p class="meter-label" id="meterLabel">Seven answers placed.<br>Tap the light to open the garden.</p>
             </div>
 
-            <button class="pill" id="unlockBtn" data-prim="pill">Unlock</button>
+            <button class="pill" id="unlockBtn" data-prim="pill">Begin</button>
             <br>
+            <button class="tlink" id="signinLink" data-prim="link">Sign in</button>
+            <br id="signinBr">
             <a class="tlink" href="#" data-prim="link" id="siteLink">Into the artist&rsquo;s website</a>
-            <br>
-            <button class="tlink" id="signinLink" data-prim="link">Sign in to your account</button>
           </div>
 
         </div>
       </div>
       <p class="phone-caption" id="phoneCap">Resting state · tap anything</p>
+      <div class="controls">
+        <span class="ctl-label">Who is looking</span>
+        <div class="meter-steps">
+          <button data-arrive="unclaimed">Nobody holds it</button>
+          <button data-arrive="claimed">Someone else holds it</button>
+        </div>
+      </div>
       <div class="controls">
         <span class="ctl-label">Run a state</span>
         <div class="meter-steps">
@@ -900,6 +979,14 @@ tbody tr:hover td{color:var(--cream)}
           <dt>Working</dt><dd>Label holds, brass dims to 70%, input blocks.</dd>
           <dt>Disabled</dt><dd>Falls to hairline outline. Loses brass entirely, because
           brass is a promise you can act.</dd>
+          <dt>Arrival</dt><dd>The piece page is one page dressed by relationship, and the
+          pill is how it says which. Unclaimed: a lit <em>Begin</em>, the only bright thing
+          on an otherwise quiet page. Already registered to someone else: no brass at all,
+          the code door drops to a quiet line and Sign in becomes the obvious move.
+          Registered to you: no pill, because there is nothing left to claim.</dd>
+          <dt>Begin, not Unlock</dt><dd>Unlock names the mechanism; Begin names what
+          happens, and it honestly covers both openings, because behind it sits registering
+          it to yourself or leaving sealed words for whoever you bought it for.</dd>
         </dl>
         <p class="try">Press Unlock.</p>
       </article>
@@ -914,9 +1001,10 @@ tbody tr:hover td{color:var(--cream)}
         <dl>
           <dt>The law</dt><dd>Hairline rows open in place. Text links travel. Anything
           that leaves this page is a link, never a row.</dd>
-          <dt>Sign in</dt><dd>Also a link, on the resting page, under the pill. The daily
-          return is the account; the code claims and transfers, then sleeps. Once signed
-          in as this piece&rsquo;s caretaker the link is gone and Your account is a row.</dd>
+          <dt>Sign in</dt><dd>Also a link, under the pill, and only when the piece is
+          already registered. The daily return is the account; the code claims and
+          transfers, then sleeps. Once signed in as this piece&rsquo;s caretaker the link
+          is gone and Your account is a row.</dd>
           <dt>Motion</dt><dd>Color only, 220ms. No underline animation, no arrow.</dd>
           <dt>Placement</dt><dd>Below the pill, never beside it. Vertical stacking is what
           makes the hierarchy readable at a glance.</dd>
@@ -968,10 +1056,12 @@ tbody tr:hover td{color:var(--cream)}
       <article class="prim" data-p="meter">
         <div class="n">Six</div>
         <h3>The glow meter</h3>
-        <p class="what">The only element in the system that changes over years. Brightness
-        is questions answered: the caretaker&rsquo;s piece page carries a glow that deepens
-        with each one. It is never a readout. Tapping the glow opens the garden, which
-        makes it the door to making it brighter rather than a score.</p>
+        <p class="what">The only element in the system that changes over years, and the
+        one place the whole page&rsquo;s aliveness is set from. You feel something, you
+        place it in the piece, and the piece glows brighter: cause and effect, never a
+        request. Nothing counts, nothing nags, nothing asks. The page simply becomes more
+        alive as intention accumulates, and that visible aliveness is the whole invitation.
+        Tapping the light opens the garden.</p>
         <dl>
           <dt>Form</dt><dd>A line of light that lengthens. No number, no ring, no total,
           because any of those turn brightness into a score. The line is the light.</dd>
@@ -985,6 +1075,14 @@ tbody tr:hover td{color:var(--cream)}
           dark, because an unanswered piece is not a failed one.</dd>
           <dt>Promoted</dt><dd>Survives. It thins to a quiet lit line above the header, the
           way the drawing shrinks, so the caretaker page shows meter and rows at once.</dd>
+          <dt>The page</dt><dd>One variable drives everything: the ground lifts from
+          near-black toward warm espresso, the drawing&rsquo;s stroke thickens and brightens,
+          the name gains a faint glow, and words placed in the piece surface beneath it. A
+          piece with nothing in it is calm and complete, never empty; a piece with years in
+          it reads as lit from within. This is public: a guest scanning a loved piece sees
+          that it has been loved.</dd>
+          <dt>Never</dt><dd>A count, a bar, a streak, a badge, or a line asking for
+          anything. The piece is not owed a debt and the caretaker is never behind.</dd>
         </dl>
         <p class="try">Tap the light to open the garden, then step the amounts below the phone.</p>
       </article>
@@ -1184,6 +1282,8 @@ tbody tr:hover td{color:var(--cream)}
       halo=document.getElementById('halo'),
       resetBtn=document.getElementById('resetBtn'),
       gardenHead=document.getElementById('gardenHead'),
+      signinLink=document.getElementById('signinLink'),
+      signinBr=document.getElementById('signinBr'),
       pieceSlot=document.getElementById('pieceSlot');
 
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1260,9 +1360,9 @@ tbody tr:hover td{color:var(--cream)}
       '<p style="margin-top:10px;font-size:13px;color:var(--cream-3)">'+
       'I forgot my password. Recovery touches the account only; the record and the piece '+
       'are never edited by it.</p>',
-    passing:'<p>Earth&rsquo;s Breath is real, and it is in your hands. But it is held by '+
-      'another caretaker, and nothing moves without them. We will ask them to let go; '+
-      'when they do, it becomes yours to carry.</p>'+
+    passing:'<p>You are releasing Earth&rsquo;s Breath to its next caretaker. Everything '+
+      'you placed in it stays with the piece forever, as its story. When they accept, '+
+      'your hold ends and theirs begins.</p>'+
       '<div class="facts">'+
       '<div class="fact"><dt>Now</dt><dd>We write to its caretaker</dd></div>'+
       '<div class="fact"><dt>If they agree</dt><dd>It becomes yours</dd></div>'+
@@ -1271,6 +1371,17 @@ tbody tr:hover td{color:var(--cream)}
       '</div>'+
       '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
       'The code alone never transfers a piece. Silence is never consent.</p>',
+    family:'<p>Invite the people who share this piece with you to place their love in '+
+      'it too. They are known by name and relation.</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>Sara</dt><dd>Wife · has written twice</dd></div>'+
+      '<div class="fact"><dt>Ines</dt><dd>Daughter · her words shine without her name</dd></div>'+
+      '<div class="fact"><dt>Invite</dt><dd>By name and relation</dd></div>'+
+      '</div>'+
+      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
+      'Placing love is never ownership. An invited person gains no code, no transfer '+
+      'right, no inheritance. A child&rsquo;s words shine nameless, and the switch passes '+
+      'to them when they are grown.</p>',
     video:'<p>The capsule: short, rare, sealed with the piece. Possibly one at purchase, '+
       'another at the yearly ritual.</p>'+
       '<div class="facts">'+
@@ -1304,8 +1415,8 @@ tbody tr:hover td{color:var(--cream)}
   };
   var titles={story:'The story',cert:'The certificate',hist:'The history',
     dreams:'The dreams',garden:'The garden',account:'Your account',
-    signin:'Welcome back',passing:'A passing begins',fork:'For someone else',
-    video:'Record a video',info:'Piece information'};
+    signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
+    video:'Record a video',info:'Piece information',family:'The people you love'};
 
   /* ── row promotion ── */
   function openRow(key,btn){
@@ -1435,7 +1546,7 @@ tbody tr:hover td{color:var(--cream)}
   });
 
   /* the account door on the resting page: the daily return, no code */
-  document.getElementById('signinLink').addEventListener('click',function(){
+  signinLink.addEventListener('click',function(){
     startWalk('welcome');
   });
 
@@ -1447,6 +1558,12 @@ tbody tr:hover td{color:var(--cream)}
       startWalk('receiving');
       running=false;
     }, 'The unlock · a piece already held');
+  });
+
+  /* the gift buyer never has to register anything: the code seals the words */
+  document.getElementById('giftBtn').addEventListener('click',function(){
+    screen.classList.remove('unlocking');
+    startWalk('gift');
   });
 
   /* no code: the door for someone who scanned a piece they do not hold */
@@ -1766,6 +1883,35 @@ tbody tr:hover td{color:var(--cream)}
     if(key==='__home'){ enterHome(); return; }
     renderWalk(key);
   }
+  /* ── the three arrival states ──
+     Every visitor lands on this same page. What it shows is decided by
+     the piece's state and by who is looking. */
+  var statusLine=document.querySelector('.head .status');
+  function setArrival(state){
+    screen.classList.remove('claimed');
+    if(state==='unclaimed'){
+      unlockBtn.textContent='Begin';
+      statusLine.textContent='Not yet registered';
+      signinLink.hidden=true; signinBr.hidden=true;
+      cap.textContent='Unclaimed \u00b7 one lit thing on the page';
+    } else if(state==='claimed'){
+      screen.classList.add('claimed');
+      unlockBtn.textContent='I hold this piece';
+      statusLine.textContent='Registered \u00b7 a light in the Resonant Grid';
+      signinLink.hidden=false; signinBr.hidden=false;
+      cap.textContent='Claimed by another \u00b7 sign in is the move';
+    }
+    setGlow(state==='unclaimed'?0:7);
+  }
+  document.querySelectorAll('[data-arrive]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+      walk.hidden=true; step=null; opened.innerHTML=''; gardenHead.hidden=true;
+      resetBtn.hidden=true; document.getElementById('meterCtl').hidden=true;
+      setArrival(btn.getAttribute('data-arrive'));
+    });
+  });
+
   /* jump to any screen by name, for review and for testing */
   window.__go=function(key){
     screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode');
@@ -1795,8 +1941,24 @@ tbody tr:hover td{color:var(--cream)}
   var TOTAL=24,
       meterLabel=document.getElementById('meterLabel'),
       words={0:'No',1:'One',2:'Two',7:'Seven',16:'Sixteen',24:'Twenty four'};
+  /* what has been placed in the piece is simply visible. Nothing asks. */
+  var placed=document.getElementById('placed'),
+      PLACED=[
+        '',
+        '\u201cIt was the first thing I saw that morning.\u201d',
+        '\u201cIt was the first thing I saw that morning.\u201d \u00b7 '+
+          '\u201cThe year everything changed.\u201d',
+        '\u201cIt was the first thing I saw that morning.\u201d \u00b7 '+
+          '\u201cThe year everything changed.\u201d \u00b7 '+
+          '\u201cFor Ines, when she is old enough to hold it.\u201d'
+      ];
+
   function setGlow(n){
     var frac=n/TOTAL;
+    /* the page comes alive in proportion to what is in it */
+    screen.style.setProperty('--life', frac.toFixed(3));
+    screen.classList.toggle('alive', n>0);
+    placed.innerHTML=PLACED[n===0?0:(n<7?1:(n<16?2:3))];
     /* a visible floor at zero: an unanswered piece is still alive */
     mfill.style.setProperty('--w', (6 + frac*94).toFixed(1)+'%');
     halo.style.setProperty('--g', String(0.16 + frac*0.5));
