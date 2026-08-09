@@ -91,6 +91,18 @@ piece on a caretaker's wall sees.
 history, shared dreams. Price and the private record belong to the caretaker's side, after
 the unlock.
 
+**Page behaviors (Adrian, 2026-08-09):**
+- **The photograph slot has an empty state.** When no photograph exists, the slot shows the
+  piece's line drawing and a place to add a photograph. Adding one is a caretaker act, behind
+  the unlock; a visitor only ever sees the drawing standing in. The page never shows a broken
+  or blank image.
+- **The registered line reads the truth:** "Registered · a light in the Resonant Grid" or
+  "Not yet registered."
+- **Rows expand in place, not navigate away.** Tapping a row animates it open until it is the
+  full surface: the row's title at the top, its content beneath, the rest of the page giving
+  way. Closing returns to the page. One motion vocabulary for all five rows; simple React,
+  nothing heavier.
+
 ## 2. The unlock — same page, morphed. Copy LOCKED
 
 Tapping Unlock melts the pill into the code field; the keyboard rises; the instruction
