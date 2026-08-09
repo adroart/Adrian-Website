@@ -1032,10 +1032,10 @@ tbody tr:hover td{color:var(--cream)}
         </div>
       </div>
       <div class="controls">
-        <span class="ctl-label">Run a state</span>
+        <span class="ctl-label">Run a state · or type the code yourself</span>
         <div class="meter-steps">
-          <button id="wrongBtn">A code that is not true</button>
-          <button id="heldBtn">A piece already held</button>
+          <button id="wrongBtn">A code that is not true · 999999</button>
+          <button id="heldBtn">A piece already held · 222222</button>
           <button onclick="window.__go('ritual')">The year turns</button>
         </div>
       </div>
@@ -1049,6 +1049,9 @@ tbody tr:hover td{color:var(--cream)}
           <button data-glow="24">All</button>
         </div>
       </div>
+      <p class="phone-caption" style="margin-top:12px;text-transform:none;
+         letter-spacing:0;font-family:var(--body);font-size:12.5px;font-style:italic">
+        This piece&rsquo;s code is 111111</p>
       <p style="text-align:center;margin-top:10px">
         <button class="tlink" id="resetBtn" hidden>Back to the door, and run it again</button>
       </p>
@@ -1571,7 +1574,7 @@ tbody tr:hover td{color:var(--cream)}
   });
 
   /* ── the code field + vault ── */
-  var CODE='4K7X2M', WRONG='9B3P1R', HELD='7T4N8K', running=false,
+  var CODE='111111', WRONG='999999', HELD='222222', running=false,
       codeHelp=document.getElementById('codeHelp'),
       codeWarn=document.getElementById('codeWarn'),
       codeActions=document.getElementById('codeActions'),
