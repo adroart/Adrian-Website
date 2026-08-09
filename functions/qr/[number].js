@@ -43,7 +43,7 @@ export async function onRequest({ params, request, env }) {
     );
   }
 
-  // Issued physical artwork instances
+  // Permanent artwork identities, with or without an optional physical plate
   if (/^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(code)) {
     if (!env?.DB) return new Response('Registry unavailable', { status: 503 });
 
@@ -54,7 +54,13 @@ export async function onRequest({ params, request, env }) {
           `SELECT piece_id
              FROM keeper_pieces
             WHERE public_code = ?1
-              AND plate_status IN ('generated', 'active', 'superseded')`,
+              AND (
+                plate_status IN ('generated', 'active', 'superseded')
+                OR (
+                  registration_status = 'registered'
+                  AND plate_status = 'legacy'
+                )
+              )`,
         )
         .bind(code)
         .first();

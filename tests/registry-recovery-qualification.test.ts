@@ -8,6 +8,7 @@ import {
   type RecoveryDependencies,
   type StoredQualification,
 } from '../utils/registryRecovery';
+import * as recoveryQualification from '../functions/api/_lib/recoveryQualification.js';
 
 const migrationUrl = new URL(
   '../migrations/020_registry_recovery_qualification.sql',
@@ -329,5 +330,105 @@ describe('recovery qualification currentness', () => {
         ],
       },
     );
+  });
+});
+
+describe('registered identity recovery qualification', () => {
+  it('uses identity backup proof independently from physical plate proof', () => {
+    const row = {
+      registration_status: 'registered',
+      ownership_code_key_version: 7,
+      identity_backup_reference: `identities/AR-7KQ9M2WX/${'a'.repeat(64)}.json`,
+      identity_backup_sha256: 'a'.repeat(64),
+      backup_reference: `plates/AR-7KQ9M2WX/${'b'.repeat(64)}.json`,
+      backup_sha256: 'b'.repeat(64),
+    };
+    const env = { REGISTRY_BUILD_VERSION: 'build-registration' };
+
+    assert.equal(typeof recoveryQualification.identityRecoveryDependenciesForRow, 'function');
+    const identity = recoveryQualification.identityRecoveryDependenciesForRow(row, env);
+    const physical = recoveryQualification.recoveryDependenciesForRow({
+      ...row,
+      plate_status: 'generated',
+    }, env);
+
+    assert.equal(identity.backupReference, row.identity_backup_reference);
+    assert.equal(identity.backupSha256, row.identity_backup_sha256);
+    assert.equal(physical.backupReference, row.backup_reference);
+    assert.equal(physical.backupSha256, row.backup_sha256);
+    assert.notEqual(identity.verifierVersion, physical.verifierVersion);
+  });
+
+  it('records identity qualification in its append-only identity table', () => {
+    let sql = '';
+    let values: unknown[] = [];
+    const db = {
+      prepare(source: string) {
+        sql = source;
+        return {
+          bind(...bound: unknown[]) { values = bound; return this; },
+        };
+      },
+    };
+    const dependencies = {
+      schemaVersion: '1',
+      buildVersion: 'build-registration',
+      keyVersion: 7,
+      verifierVersion: 'copied-identity-v1',
+      backupReference: `identities/AR-7KQ9M2WX/${'a'.repeat(64)}.json`,
+      backupSha256: 'a'.repeat(64),
+    };
+
+    assert.equal(typeof recoveryQualification.identityRecoveryQualificationStatement, 'function');
+    recoveryQualification.identityRecoveryQualificationStatement(db, {
+      keeperPieceId: 'kp-registered',
+      result: 'passed',
+      copiedArtifact: true,
+      dependencies,
+      administrator: { userId: 'admin-1', email: 'artist@example.com' },
+      qualifiedAt: '2026-08-09T12:00:00.000Z',
+      id: 'irq-1',
+    });
+
+    assert.match(sql, /INSERT INTO artwork_identity_recovery_qualifications/);
+    assert.deepEqual(values, [
+      'irq-1', 'kp-registered', 'passed', 1, '1', 'build-registration', 7,
+      'copied-identity-v1', dependencies.backupReference, dependencies.backupSha256,
+      'admin-1', 'artist@example.com', null, '2026-08-09T12:00:00.000Z',
+    ]);
+  });
+
+  it('does not accept physical qualification as current identity qualification', () => {
+    const dependencies = {
+      schemaVersion: '1',
+      buildVersion: 'build-registration',
+      keyVersion: 7,
+      verifierVersion: 'copied-identity-v1',
+      backupReference: `identities/AR-7KQ9M2WX/${'a'.repeat(64)}.json`,
+      backupSha256: 'a'.repeat(64),
+    };
+    const physicalQualification = {
+      result: 'passed',
+      copiedArtifact: 1,
+      schemaVersion: '1',
+      buildVersion: 'build-registration',
+      keyVersion: 7,
+      verifierVersion: 'copied-plate-v1',
+      backupReference: `plates/AR-7KQ9M2WX/${'b'.repeat(64)}.json`,
+      backupSha256: 'b'.repeat(64),
+      qualifiedAt: '2026-08-09T12:00:00.000Z',
+    };
+
+    assert.equal(typeof recoveryQualification.identityRecoveryQualificationStatus, 'function');
+    assert.deepEqual(recoveryQualification.identityRecoveryQualificationStatus(
+      physicalQualification,
+      dependencies,
+    ), {
+      status: 'stale',
+      reasons: [
+        'verifier_version_changed', 'backup_reference_changed', 'backup_sha256_changed',
+      ],
+      qualifiedAt: '2026-08-09T12:00:00.000Z',
+    });
   });
 });

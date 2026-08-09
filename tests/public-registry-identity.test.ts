@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { onRequest } from '../functions/api/registry/[publicCode].js';
+import { onRequest as resolveArtworkQr } from '../functions/qr/[number].js';
 import {
   isPublicRegistryCode,
   projectPublicPlateIdentity,
@@ -241,6 +242,47 @@ describe('public registry identity projection', () => {
 });
 
 describe('GET /api/registry/:publicCode', () => {
+  it('resolves a registered identity before any plate exists without exposing private proof', async () => {
+    const { response, calls } = await lookup({
+      plate: {
+        id: 'kp-registered', piece_id: 'UL-100', edition_number: 2,
+        public_code: PUBLIC_CODE, plate_status: 'legacy', registration_status: 'registered',
+        keeper_user_id: 'private-keeper',
+        ownership_code_verifier: 'private-verifier',
+        ownership_code_ciphertext: 'private-ciphertext',
+        ownership_code_nonce: 'private-nonce',
+        ownership_code_key_version: 'private-key-version',
+        identity_backup_key: 'private-backup-reference',
+        maintenance_event_id: 'private-maintenance-event',
+        front_svg_hash: 'plate-only-front-proof',
+        underside_svg_hash: 'plate-only-underside-proof',
+        plate_generated_at: 'plate-only-generated-time',
+      },
+      artwork: { id: 'UL-100', edition_size: 7 },
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      identity: {
+        artworkId: 'UL-100',
+        title: 'Art of Living - 32',
+        series: 'Universal Language',
+        edition: { kind: 'numbered', number: 2, size: 7, label: 'Edition 2 of 7' },
+        publicCode: PUBLIC_CODE,
+        artistName: 'Adrian Rasmussen',
+        plateStatus: 'registered',
+        publicProvenance: [],
+        creatorHistory: [],
+      },
+    });
+    const sql = calls.map((call) => call.sql).join('\n');
+    assert.doesNotMatch(
+      sql,
+      /keeper_user|ownership_code|ciphertext|nonce|key_version|backup|maintenance|svg|plate_generated/i,
+    );
+  });
+
   it('loads only current public creator history and exposes only public fields', async () => {
     const { response, calls } = await lookup({
       plate: {
@@ -496,5 +538,53 @@ describe('GET /api/registry/:publicCode', () => {
     assert.equal(response.status, 405);
     assert.equal(response.headers.get('allow'), 'GET');
     assert.equal(calls.length, 0);
+  });
+});
+
+describe('GET /qr/:number registered identity resolution', () => {
+  it('routes a registered public identity without consulting plate or private proof fields', async () => {
+    const calls: Array<{ sql: string; values: unknown[] }> = [];
+    const DB = {
+      prepare(sql: string) {
+        let values: unknown[] = [];
+        const statement = {
+          bind(...bound: unknown[]) {
+            values = bound;
+            return statement;
+          },
+          async first() {
+            calls.push({ sql, values });
+            return {
+              piece_id: 'UL-100', plate_status: 'legacy', registration_status: 'registered',
+            };
+          },
+        };
+        return statement;
+      },
+    };
+
+    const response = await resolveArtworkQr({
+      params: { number: PUBLIC_CODE },
+      request: new Request(`https://adrianrasmussen.com/qr/${PUBLIC_CODE}`),
+      env: { DB },
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.headers.get('location'),
+      `https://adrianrasmussen.com/works/UL-100?instance=${PUBLIC_CODE}&ref=qr`,
+    );
+    assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0].values, [PUBLIC_CODE]);
+    assert.match(calls[0].sql, /plate_status IN \('generated', 'active', 'superseded'\)/i);
+    assert.match(
+      calls[0].sql,
+      /registration_status\s*=\s*'registered'\s+AND\s+plate_status\s*=\s*'legacy'/i,
+    );
+    assert.match(calls[0].sql, /^\s*SELECT\s+piece_id\s+FROM/i);
+    assert.doesNotMatch(
+      calls[0].sql,
+      /keeper_user|ownership_code|ciphertext|nonce|key_version|backup|maintenance|svg|plate_generated/i,
+    );
   });
 });

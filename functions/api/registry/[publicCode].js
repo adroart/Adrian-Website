@@ -91,6 +91,7 @@ export async function onRequest({ request, env, params }) {
   let plate;
   let overlay;
   let creatorHistoryRows;
+  let publicIdentityStatus;
   try {
     plate = await env.DB
       .prepare(
@@ -112,19 +113,32 @@ export async function onRequest({ request, env, params }) {
             WHERE chain.depth < 64
          )
          SELECT plate.id, plate.piece_id, plate.edition_number, plate.public_code,
-                plate.plate_status,
+                plate.plate_status, plate.registration_status,
                 (SELECT public_code FROM successor_chain
                   WHERE plate_status IN ('generated', 'active')
                     AND superseded_by_keeper_piece_id IS NULL
                   ORDER BY depth DESC LIMIT 1) AS current_public_code
            FROM keeper_pieces plate
           WHERE plate.public_code = ?1
-            AND plate.plate_status IN ('generated', 'active', 'superseded')`,
+            AND (
+              plate.plate_status IN ('generated', 'active', 'superseded')
+              OR (
+                plate.registration_status = 'registered'
+                AND plate.plate_status = 'legacy'
+              )
+            )`,
       )
       .bind(publicCode)
       .first();
     if (!plate) return json({ ok: false, error: 'not_found' }, 404);
-    if (!['generated', 'active', 'superseded'].includes(plate.plate_status)) {
+    const physicalStatus = ['generated', 'active', 'superseded'].includes(plate.plate_status)
+      ? plate.plate_status
+      : null;
+    publicIdentityStatus = physicalStatus
+      || (plate.registration_status === 'registered' && plate.plate_status === 'legacy'
+        ? 'registered'
+        : null);
+    if (!publicIdentityStatus) {
       return json({ ok: false, error: 'not_found' }, 404);
     }
     if (plate.public_code !== publicCode) return integrityError();
@@ -163,7 +177,7 @@ export async function onRequest({ request, env, params }) {
       editionNumber: plate.edition_number,
       editionSize: metadata.editionSize,
       publicCode: plate.public_code,
-      plateStatus: plate.plate_status,
+      plateStatus: publicIdentityStatus,
       publicProvenance: metadata.publicProvenance,
       creatorHistory: projectStoredCreatorHistory(creatorHistoryRows),
       ...(plate.plate_status === 'superseded' ? {

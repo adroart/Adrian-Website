@@ -61,6 +61,7 @@ const registryMigrations = [
   '021_registry_plate_backup_digest.sql',
   '023_collector_registry_merge.sql',
   '024_ownership_foundation.sql',
+  '025_artwork_registration.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -2733,7 +2734,10 @@ describe('private maintenance APIs', () => {
         '../functions/api/admin/pieces/[id]/verify-recovery.js'
       );
       const staleBackup = await verifyRecovery({
-        request: adminRequest('/api/admin/pieces/kp-lifecycle/verify-recovery', 'POST', {}, cookie),
+        request: adminRequest('/api/admin/pieces/kp-lifecycle/verify-recovery', 'POST', {
+          qualificationKind: 'plate',
+          backupDocument: '{}',
+        }, cookie),
         env: { ...env, ARTWORK_REGISTRY_BACKUP: { get: async () => null } },
         params: { id: 'kp-lifecycle' },
       });

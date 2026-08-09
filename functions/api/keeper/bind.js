@@ -5,7 +5,7 @@
  *
  * Binds the signed-in user as the steward of a physical piece. The proof of
  * ownership is the permanent Ownership Code printed on the underside
- * of the art (utils/recoveryCode.ts) — distinct from the public QR number,
+ * of the art (utils/recoveryCode.ts), distinct from the public QR number,
  * which is look-only. Its verifier is matched; readable ciphertext is stored
  * online for authorized recovery, while plaintext never enters logs.
  *
@@ -51,16 +51,8 @@ import {
   hashRecoveryCode,
 } from '../_lib/keeper.js';
 import { openContestedClaim } from '../_lib/claimRequests.js';
-import { plateBackupIsVerified } from '../_lib/plateBackup.js';
-import {
-  loadLatestPassedPieceQualification,
-  recoveryDependenciesForRow,
-  recoveryQualificationStatus,
-} from '../_lib/recoveryQualification.js';
-import {
-  claimEvidenceStatement,
-  prepareNextLineageEvent,
-} from '../_lib/lineage.js';
+import { claimEvidenceStatement } from '../_lib/lineage.js';
+import { prepareFirstKeeperBind } from '../_lib/keeperClaim.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -117,7 +109,7 @@ export async function onRequest(context) {
   // Resolve the internal user row (keeper_user_id is the opaque Better Auth id).
   const user = await getUserByAuthId(env.DB, auth.userId);
   if (!user) {
-    // Should be rare — sync-user runs on first sign-in. Surface a clear retry.
+    // Should be rare. sync-user runs on first sign-in. Surface a clear retry.
     return json({ ok: false, error: 'account_not_synced' }, 409);
   }
 
@@ -134,7 +126,9 @@ export async function onRequest(context) {
         `SELECT id, piece_id, edition_number, keeper_user_id,
                 recovery_code_hash, claimed_at, released_at, public_code,
                 plate_status, backup_status, backup_reference, backup_sha256,
-                ownership_code_key_version
+                ownership_code_key_version, registration_status,
+                identity_backup_status, identity_backup_reference,
+                identity_backup_sha256
            FROM keeper_pieces
           WHERE public_code = ?1`,
       )
@@ -275,111 +269,50 @@ export async function onRequest(context) {
       }, 409);
     }
 
-    // Permanent identities are not bearer-bindable while fabrication or
-    // online backup verification is incomplete.
-    if (
-      (existing.plate_status !== 'active' || !plateBackupIsVerified(existing))
-    ) {
-      return json(
-        {
-          ok: false,
-          error: 'plate_not_ready',
-          message: 'This artwork plate is not active with a verified backup yet.',
-        },
-        409,
-      );
-    }
-
-    const recoveryDependencies = recoveryDependenciesForRow(existing, env);
-    const recoveryQualification = await loadLatestPassedPieceQualification(
-      env.DB,
-      existing.id,
-    );
-    if (
-      recoveryQualificationStatus(recoveryQualification, recoveryDependencies).status
-      !== 'current'
-    ) {
-      return json(
-        {
-          ok: false,
-          error: 'plate_recovery_not_qualified',
-          message: 'This artwork is temporarily unavailable while its recovery proof is renewed.',
-        },
-        409,
-      );
-    }
-
     // ── Case 2: FIRST BIND ──────────────────────────────────────────────────
     // Only a never-claimed row reaches here. Stamp this user as the steward,
     // record first-bound lineage, and retain private claim evidence atomically.
-    const keeperMutation = env.DB.prepare(
-      `UPDATE keeper_pieces
-          SET keeper_user_id = ?1, claimed_at = ?2, released_at = NULL
-        WHERE id = ?3
-          AND keeper_user_id IS NULL AND claimed_at IS NULL AND released_at IS NULL
-          AND (
-            public_code IS NULL
-            OR (
-              plate_status = 'active' AND backup_status = 'verified'
-              AND backup_reference = ?4 AND backup_sha256 = ?5
-              AND ownership_code_key_version = ?9
-              AND EXISTS (
-                SELECT 1 FROM registry_recovery_qualifications qualification
-                 WHERE qualification.id = ?6
-                   AND qualification.keeper_piece_id = keeper_pieces.id
-                   AND qualification.scope = 'piece'
-                   AND qualification.result = 'passed'
-                   AND qualification.copied_artifacts = 1
-                   AND qualification.schema_version = ?7
-                   AND qualification.build_version = ?8
-                   AND qualification.key_version = ?9
-                   AND qualification.generator_version = ?10
-                   AND qualification.verifier_version = ?11
-                   AND qualification.backup_reference = ?4
-                   AND qualification.backup_sha256 = ?5
-              )
-            )
-          )`,
-    ).bind(
-      auth.userId,
-      nowIso,
-      existing.id,
-      existing.backup_reference,
-      existing.backup_sha256,
-      recoveryQualification.id,
-      recoveryDependencies.schemaVersion,
-      recoveryDependencies.buildVersion,
-      recoveryDependencies.keyVersion,
-      recoveryDependencies.generatorVersion,
-      recoveryDependencies.verifierVersion,
-    );
     if (typeof env.DB.batch !== 'function') {
       return json({ ok: false, error: 'atomic_write_unavailable' }, 503);
     }
-    const lineage = await prepareNextLineageEvent(env, {
-      keeperPieceId: existing.id,
-      eventType: 'first_bound',
-      eventAt: nowIso,
-      publicPayload: {},
-      onlyIfPreviousChanged: true,
-    });
-    const evidence = claimEvidenceStatement(env, {
-      keeperPieceId: existing.id,
-      actorUserId: auth.userId,
-      verifiedEmail,
-      ipAddress: request.headers.get('CF-Connecting-IP'),
-      userAgent: request.headers.get('User-Agent'),
-      outcome: 'first_bound',
-      createdAt: nowIso,
-      requireKeeperUserId: auth.userId,
-      requireClaimedAt: nowIso,
-    });
-    const [updated] = await env.DB.batch([
-      keeperMutation,
-      lineage.statement,
-      lineage.anchorStatement,
-      evidence,
-    ]);
+    let prepared;
+    try {
+      prepared = await prepareFirstKeeperBind(env, {
+        piece: existing,
+        claimant: { userId: auth.userId, verifiedEmail },
+        proof: { kind: 'ownership_code', reference: ownershipCode },
+        evidence: {
+          ipAddress: request.headers.get('CF-Connecting-IP'),
+          userAgent: request.headers.get('User-Agent'),
+        },
+        boundAt: nowIso,
+      });
+    } catch (error) {
+      if (error?.code === 'plate_not_ready') {
+        return json({
+          ok: false,
+          error: 'plate_not_ready',
+          message: 'This artwork plate is not active with a verified backup yet.',
+        }, 409);
+      }
+      if (error?.code === 'plate_recovery_not_qualified') {
+        return json({
+          ok: false,
+          error: 'plate_recovery_not_qualified',
+          message: 'This artwork is temporarily unavailable while its recovery proof is renewed.',
+        }, 409);
+      }
+      if (error?.code === 'identity_not_ready'
+        || error?.code === 'identity_recovery_not_qualified') {
+        return json({
+          ok: false,
+          error: 'identity_recovery_not_qualified',
+          message: 'This artwork is temporarily unavailable while its identity recovery proof is renewed.',
+        }, 409);
+      }
+      throw error;
+    }
+    const [updated] = await env.DB.batch(prepared.statements);
 
     if (!updated?.success || (updated.meta?.changes ?? 0) === 0) {
       // The guard matched no row → a concurrent bind beat us to this piece.
@@ -394,10 +327,7 @@ export async function onRequest(context) {
       );
     }
 
-    return json({
-      ok: true,
-      keeper: { pieceId, editionNumber, claimedAt: nowIso },
-    });
+    return json({ ok: true, ...prepared.result });
   } catch (err) {
     if (isMissingTableError(err)) return migrationNotApplied();
     // Never leak internals; never log the plaintext code (we never had it past
