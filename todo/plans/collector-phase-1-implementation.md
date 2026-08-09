@@ -36,22 +36,33 @@ the recovery archive table manifest.
 - Modify: `vite.config.ts`
 - Create: `tests/vite-worktree.test.ts`
 
-- [ ] **Step 1: Write the failing worktree-path test**
+- [x] **Step 1: Write the failing worktree-path test**
 
 ```ts
 import assert from 'node:assert/strict';
+import { realpathSync } from 'node:fs';
+import path from 'node:path';
 import { describe, it } from 'node:test';
-import config from '../vite.config.ts';
+import { fileURLToPath } from 'node:url';
+import { loadConfigFromFile } from 'vite';
 
 describe('Vite worktree filesystem access', () => {
-  it('allows the real dependency directory when node_modules is a worktree symlink', () => {
-    const allow = config.server?.fs?.allow ?? [];
-    assert.ok(allow.some((entry) => entry.endsWith('/node_modules')));
+  it('allows the real dependency directory when node_modules is a worktree symlink', async () => {
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const loaded = await loadConfigFromFile(
+      { command: 'serve', mode: 'test' },
+      path.join(root, 'vite.config.ts'),
+      root,
+    );
+    assert.ok(loaded);
+
+    const allow = loaded.config.server?.fs?.allow ?? [];
+    assert.ok(allow.includes(realpathSync(path.join(root, 'node_modules'))));
   });
 });
 ```
 
-- [ ] **Step 2: Run the test and observe the missing allowlist**
+- [x] **Step 2: Run the test and observe the missing allowlist**
 
 Run:
 
@@ -61,7 +72,7 @@ npx tsx --test tests/vite-worktree.test.ts
 
 Expected: FAIL because `server.fs.allow` is absent.
 
-- [ ] **Step 3: Allow the worktree and resolved dependency roots**
+- [x] **Step 3: Allow the worktree and resolved dependency roots**
 
 Add `realpathSync` to the existing `fs` import and configure:
 
@@ -74,16 +85,18 @@ fs: {
 },
 ```
 
-- [ ] **Step 4: Verify unit and browser baseline**
+- [x] **Step 4: Verify unit and browser baseline**
 
 ```bash
 npx tsx --test tests/vite-worktree.test.ts
 npm run test:e2e
 ```
 
-Expected: the focused test passes and the browser suite has no font-resource 403 failures.
+Observed: the focused test passes and the browser suite has no font-resource 403 failures. A
+separate administrator mobile-navigation test failed while its UI files were being edited by the
+ownership lane, so that spec remains part of the ownership boundary rerun.
 
-- [ ] **Step 5: Commit the harness repair**
+- [x] **Step 5: Commit the harness repair**
 
 ```bash
 git add vite.config.ts tests/vite-worktree.test.ts
