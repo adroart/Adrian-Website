@@ -492,6 +492,12 @@ vocabulary everywhere:
   what was paid (caretaker-only), the complete record.
 - **The rows the public sees** — story, certificate, history, dreams — same page, editable
   where the caretaker owns the content.
+- **Your account (Adrian, 2026-08-09)** — the door where signing in lives, on the piece
+  page. Two rules: any caretaker-only door reached while signed out automatically takes you
+  to sign-in and then straight back to where you were headed, never to a dead end. And
+  nothing from onboarding is frozen: where the art lives (you move, the light moves with
+  you), your links, your name, email, password, and what shows are all changeable here, any
+  day.
 
 Open shape calls: the dream as the garden's most honored question versus its own screen
 (lean: inside the garden); privacy as the one rings page after collection versus per-field
