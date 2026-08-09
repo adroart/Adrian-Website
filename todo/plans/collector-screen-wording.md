@@ -114,7 +114,7 @@ over completes the gesture the entry screen opened.
 >
 > **[ Continue ]**
 
-**The passing (piece already has a caretaker on record):**
+**The passing (piece already has a caretaker on record) — LOCKED 2026-08-09:**
 
 > **The code is true**
 >
@@ -333,6 +333,23 @@ The moment the piece becomes a light. A confirmation, not a map to browse. Two l
 - The ordinal is permanent and belongs to the claim order across all pieces and all series.
 - Drawing: the globe as a wireframe, one point lit. The lit point is ink, not brass; it is
   not something you act on.
+
+### Inviting loved ones — the family of the piece. DECIDED 2026-08-09
+
+The caretaker can invite others, a spouse, children, to place their love into the piece.
+
+- **When: a letter from the piece, weeks after registration**, plus a standing quiet door on
+  the piece page from day one. Registration itself stays solitary: one voice, one story. The
+  letter makes the offer feel like the piece asking, not the app upselling, and it is the
+  return loop working. Letter wording to be worked when letters are worked.
+- **Placing love is never ownership (locked).** An invited loved one is known by name and
+  relation; they gain no code, no transfer right, no inheritance. An invitation to love is
+  never an invitation to inherit.
+- **The family is the caretaker's domain (Adrian's rule).** Who they invite, who writes,
+  whether a child's words go in: their call, and the system never plays chaperone inside a
+  family's private record. One narrow rail only: a child's words cannot be switched public
+  until that person is grown and chooses it themselves. Private is untouched; the rail bites
+  only on publishing, and it protects Adrian as the publisher.
 
 ### The yearly ritual
 
