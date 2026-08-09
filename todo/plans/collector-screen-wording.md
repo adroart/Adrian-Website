@@ -89,6 +89,11 @@ tap always interrupts, completing the animation instantly and advancing; the vau
 only big one, payoffs live under a second and a half; reduced motion gets clean fades
 everywhere.
 
+**Approved but never blocking (Adrian, 2026-08-09).** The payoffs are additive: the screens
+ship with plain fades first if that is faster, and each animation layers in afterwards
+without changing any copy or layout. Only the vault threshold is worth holding a ship for,
+and even it can arrive one release later than the screens.
+
 **Why the warning lives here.** "Whoever holds the code holds access" was cut from the opening
 sequence; it belongs on the one screen where the code is in the person's hand.
 
