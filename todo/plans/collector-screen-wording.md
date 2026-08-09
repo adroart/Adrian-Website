@@ -376,6 +376,10 @@ light. Each caretaker feeds it.**
 **The map — TRIMMED TO THREE 2026-08-09 (Adrian): onboarding collects, the piece page keeps.**
 
 1. **Sign its record** — full name, email, password; the account born as a signature.
+   **Recovery (Adrian, 2026-08-09):** a forgotten password is recovered by email, "Enter
+   your email and we will send you a way back in." The sign-in screen ("Welcome back") for a
+   returning caretaker carries the "I forgot my password" link. Recovery touches only the
+   account; the record and the piece are untouched, recovery is never an edit to history.
 2. **Who you are** — birth date, time, and place (a full astrology reading needs all three),
    plus links; gathered while momentum is high.
 3. **What shows** — the shines-by-default page, right after collection, concrete because the
