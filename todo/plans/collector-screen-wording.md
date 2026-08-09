@@ -342,7 +342,42 @@ light. Each caretaker feeds it.**
 
 ---
 
-## 5. The writing — NOT YET WORKED
+## 5. After Begin — data first, the garden of questions, the light
+
+**Structural rules — LOCKED 2026-08-09, Adrian's words:**
+
+- **The unlock code is for claiming and transferring only.** It is used at first claim and
+  when the piece changes hands, and otherwise sleeps. "We want people to keep that key really
+  safe." The daily return is through the account: a logged-in caretaker who scans their piece
+  lands on the piece page with a quiet Add to your piece; the garden reopens from there. No
+  code for everyday life.
+- **Data first, story later.** Name, email, birthday, socials are gathered right after Begin
+  while momentum is high. The story takes long and is returnable forever; it must never gate
+  registration.
+- **The writing is a garden of chosen questions, never a blank page.** A set of questions;
+  the caretaker picks which to answer, in any order, now or across years.
+- **Brightness is defined: the more questions answered, the brighter the light.** This
+  resolves the long-open brightness question. Contribution is answering; the light warms with
+  each answer, at ignition or a year later.
+
+**The map (shape proposed, wording to be worked screen by screen):**
+
+1. **Sign its record** — name and email; the account born as a signature.
+2. **Who you are** — birthday, socials, business; every field private by default, said
+   quietly as it collects.
+3. **What shows** — the rings page, right after collection, concrete because the data now
+   exists.
+4. **The questions** — the garden: why this piece found you, what you wish over it, the
+   dream, what it should tell the next caretaker. Answer any, none required, waits forever.
+   Each answer brightens the light.
+5. **You are Light 47** — ignition; the light appears dim and warms with answers.
+6. **Home** — the piece page as caretaker, with Add to your piece from then on.
+
+Open shape calls: the dream as the garden's most honored question versus its own screen
+(lean: inside the garden); privacy as the one rings page after collection versus per-field
+switches at collection (lean: one page, the spec's long rule).
+
+## The earlier writing-screen sketches — superseded shape, kept for the wording
 
 The registration steps themselves: name, the first words placed in the piece, privacy, birth
 details. The screens below are early proposals from before the conversation reshaped the
