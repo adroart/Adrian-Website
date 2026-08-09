@@ -142,19 +142,69 @@ standing rules are no icons, no badges, no stickers, no em dashes, text and colo
 State this to Claude Design as an existing constraint, not as the direction. The direction is
 Adrian's, decided once, at Stage 1.
 
-### Stage 1 — Get the aesthetic decided
+### Stage 1 — ANSWERED 2026-08-09
 
-**Do not proceed past this stage without answers.** Four questions, one round:
+Adrian's answers, verbatim. **Quote these into every brief as written — do not paraphrase them
+into design language.** The paraphrase is where the direction gets lost.
 
-1. What should this feel like to open?
-2. Who opens it, and what are they like?
-3. Anything to look at as a reference, or to deliberately look nothing like?
-4. Anything it must not do?
+**What it should feel like to open:**
 
-Do not offer palettes, font names, or style labels to choose from. Ask what it should feel like
-and let Claude Design propose the visual answer — proposing it here narrows the range before
-anything has been tried. If Adrian gives a reference or an asset, that becomes the direction and
-the style questions stop.
+> "I like that apple side simplicity, how polished everything is. How responsive everything is,
+> however I'm a bigger fan of the dark mode and meditative so instead of Apple's icons you would
+> use high polished vectors instead of the bright apple colors you would use the elegant metallic
+> or brass and dark espresso and blacks When you're on dark mode. Light mode is more gallery type
+> style."
+
+**Who opens it:**
+
+> "anyone can buy my art. This is why we are going with Apple type simplicity. Since it is built
+> for anyone."
+
+**The reference, corrected in a second pass and this is the load-bearing one:**
+
+> "I'm actually looking for Apple's setup screens like when you just install a new iPad and you
+> have to walk through it. This is more of the direction."
+
+On the ten sites originally proposed as references:
+
+> "I like the things that you said about the different 10 Especially the CAD style line drawings
+> of Number four however the sites aren't designed exactly how I like them so though you understand
+> conceptually the actual sites are not fully imagined."
+
+**What it must not do:**
+
+> "it needs to match the clean aesthetic design. And as they are saying, things like Icons should
+> be vector instead. It's okay if there is UI or UX. It just needs to be clean, elegant, minimal
+> But I am a fan of clarity and layout. So not at the expense of that. Some of what is already in
+> the sight are also things to pull from."
+
+**How to read that last answer:** minimal never wins over clarity. If a screen has to choose
+between fewer elements and being obvious, it chooses obvious. This inverts the usual minimalism
+failure and it is the sentence to check a design against.
+
+### What this means for the brief
+
+**Structure comes from Apple's first-run setup flow, not from any website.** One question per
+screen, one illustration, an enormous short headline, one or two lines of explanation, a single
+primary action, and a quiet skip where skipping is allowed. No navigation, no browsing, no way to
+wander. Progress is felt, not displayed as a bar. This is a flow, not a site — which is why the
+ten reference sites were withdrawn: they are references for *taste*, not for *shape*, and sending
+them pulls the layout toward gallery pages.
+
+Screenshots of the real setup flow live in the scratchpad reference folder, with a `NOTES.md`
+recording the recurring layout pattern observed across them.
+
+**Surface comes from Adrian's palette and the line-drawing quality.** Brass and dark espresso and
+black in dark mode; gallery light in light mode. Illustrations are precise CAD-style line drawings,
+never filled icons — the one element Adrian singled out from the reference sweep.
+
+**The illustrations are a real asset need and probably the make-or-break.** Apple's setup screens
+carry one clean illustration per step. Here they would be line drawings of the actual piece, the
+code on its underside, the map, the sealed letter. This is where the flow either feels made for
+these objects or feels like a template.
+
+**Reference set for the brief:** the setup-flow screenshots for shape, and this site itself for
+the house it lives in. No third-party site references — Adrian withdrew them explicitly.
 
 ### Stage 2 — Establish the look on one screen
 
