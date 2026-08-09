@@ -68,9 +68,26 @@ tumblers finding their places, a pause, one soft click as the last one seats. Th
 itself opens like a vault: the dark ground parts and warm light comes through the opening,
 and the light carries you onto the next page, which is "The code is true." No button press
 after the click; being carried through is the reward. The whole passage two to four seconds,
-never longer. This is the single most theatrical moment in the flow, and the only one: it is
-the threshold, and nothing after it competes with it. Plays as a gentle fade for anyone with
-motion turned down.
+never longer. This is the biggest moment of motion in the flow: it is the threshold, and
+nothing after it competes with its scale. Plays as a gentle fade for anyone with motion
+turned down.
+
+**Motion everywhere else — subtle payoffs, Adrian's call 2026-08-09.** Small animations
+between and inside screens keep the walk engaging; each one enacts its screen's meaning,
+never decorates:
+- Screen one, the pull: the line drawing draws itself, the stroke tracing the piece into
+  existence over about a second and a half.
+- Screen two, the grid: the globe arrives dark; lights come on one by one and thin lines
+  weave between them as the word "grid" is read.
+- Screen three, the love: the drawing's glow swells once, softly, as the screen settles.
+- Screen four, it carries on: the words arrive line by line in reading order, like being
+  written, ending on the Begin pill.
+- Between screens: slight upward drift and crossfade, under half a second, pages lifting.
+
+Rules protecting it: every animation plays once, on entry, then stillness, nothing loops; a
+tap always interrupts, completing the animation instantly and advancing; the vault stays the
+only big one, payoffs live under a second and a half; reduced motion gets clean fades
+everywhere.
 
 **Why the warning lives here.** "Whoever holds the code holds access" was cut from the opening
 sequence; it belongs on the one screen where the code is in the person's hand.
