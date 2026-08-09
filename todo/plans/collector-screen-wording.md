@@ -380,6 +380,13 @@ deepens with every question answered: the piece's own light, made visible at hom
 the house: the meter is never wallpaper, tapping the glow opens the garden. The meter is the
 door to making it brighter.
 
+**One page, ever (Adrian, 2026-08-09): "We don't need two different home places."** There is
+no separate caretaker home. The piece page is the only page, one QR address forever, dressed
+by relationship: a stranger sees the public face with Unlock; the piece's own caretaker,
+logged in, sees the same page warmed, meter, Add to your piece, the garden, and no Unlock;
+anyone else logged in sees the public face with Unlock, because unlocking is about whose
+hands hold this piece, not about having an account.
+
 Open shape calls: the dream as the garden's most honored question versus its own screen
 (lean: inside the garden); privacy as the one rings page after collection versus per-field
 switches at collection (lean: one page, the spec's long rule).
