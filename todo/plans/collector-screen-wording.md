@@ -404,13 +404,13 @@ in.**
   judgment, before they glow. The caretaker's own words shine unapproved; the system
   approves nothing; Adrian is never the editor of anyone's piece.
 
-**Video — the yearly capsule (shape proposed 2026-08-09, sealing choice open).** One short
-video a year, no library: the bound is what makes the promise keepable and the scarcity is
-what makes it precious. Lives inside the yearly ritual as a fourth gesture: record this
-year's capsule. Open call, Adrian's pick: sealed forward (opens for the next caretaker, a
-child at adulthood, or a chosen date; the lean), an open album, or seal-or-show chosen per
-video. Wording rule regardless: the video lives with the piece and can always be exported
-and held; never the word "forever" for hosting.
+**Video — the capsule, DEFERRED pending cost research (Adrian, 2026-08-09).** The sketch:
+possibly one video at purchase, another at the yearly ritual, like time capsules. Before any
+of it is promised or worded, research the data costs and feasibility: storage per short
+video, per-piece economics over years, what a solo artist can underwrite. No video promise
+appears in any screen wording until that research lands. Wording rule whenever it does: the
+video lives with the piece and can always be exported and held; never the word "forever" for
+hosting. The sealing question (sealed forward, open album, per-video choice) waits with it.
 
 The "What shows" page's copy flips accordingly: it is no longer "everything is private until
 you open it" but "your piece shines; here is what shows, and anything you would rather keep

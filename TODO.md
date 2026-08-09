@@ -6,8 +6,8 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 - [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
   The ownership record was ratified to this site on 2026-08-09 and the ceremony layer rehomes here from mandalacodes. Blocked on four aesthetic questions, the per-piece materials data, and four design calls. Done when a person can walk all fifteen steps of the spec end to end.
-- [ ] Answer the four aesthetic questions so screens can be designed _(band: you-required | effort: quick)_ → Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  No screen can be briefed to Claude Design until these are answered, so every design item is stalled behind them. Done when all four are answered in one round.
+- [ ] Research whether the video time capsule is affordable: storage costs per short video, per piece, over years _(band: agent-runnable | effort: moderate)_ → Context: [collector-screen-wording.md](todo/plans/collector-screen-wording.md)
+  Adrian sketched one video at purchase plus a yearly one, sealed like time capsules. Deferred until the cost model exists. Done when a one-page answer says what it costs at 50, 200, and 1000 pieces and whether a solo artist can underwrite it.
 - [ ] Record what each artwork is actually made of: wood, stones, makers, where it was made _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
   Every one of the 64 currently carries the identical material string, so the certificate has nothing to show. The table to hold it exists and is empty. Done when a certificate can be read for any registered piece.
 - [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
