@@ -362,10 +362,59 @@ light. Each caretaker feeds it.**
 
 **The map — TRIMMED TO THREE 2026-08-09 (Adrian): onboarding collects, the piece page keeps.**
 
-1. **Sign its record** — name and email; the account born as a signature.
-2. **Who you are** — birthday, socials, business; gathered while momentum is high.
+1. **Sign its record** — full name, email, password; the account born as a signature.
+2. **Who you are** — birth date, time, and place (a full astrology reading needs all three),
+   plus links; gathered while momentum is high.
 3. **What shows** — the shines-by-default page, right after collection, concrete because the
    data now exists.
+
+**Final development wording (worked with Adrian 2026-08-09, his spec):**
+
+**Sign its record:**
+
+> **Sign its record**
+>
+> Earth's Breath will carry your name from today. Your email is where the piece will write
+> to you.
+>
+> [ first name ] [ last name ] · [ email ] · [ create a password ]
+>
+> [ Sign ]
+
+**Who you are:**
+
+> **Who you are**
+>
+> For the piece's astrology, and for the ones who will find you through it.
+>
+> BORN — [ date ] [ time ] [ place ]
+> A full reading needs all three. They are never shown to anyone; only what they produce can
+> be, and only if you choose.
+>
+> YOUR LINKS — Instagram · X · Facebook · YouTube · Your website, each tappable to add;
+> beneath them a small dotted tile with a plus for anything more. Choose which ones people
+> see (per-link visibility).
+>
+> [ Continue ] · Skip for now
+
+**"Why we ask" (Adrian, same day).** A quiet two-word text link under the born fields, italic
+body face, no icon, no badge: *Why we ask.* It opens the same sheet the skip shows. One
+explainer, two doors: the curious reach it by choice, the hesitant meet it on their way out.
+
+**The skip explainer** — the same small sheet, also shown if skip is tapped, never a blocker:
+
+> **What this is for**
+>
+> Your birthday ties your piece to your astrology, and it lets the piece mark your day: once
+> a year, near your birthday, it asks for a moment with you. Your links are for the people
+> your piece moves, so they can find who holds it. Nothing here is shown without your
+> choice, and everything can be added later.
+>
+> [ Add it now ] · Skip anyway
+
+**Guard:** all three birth details, date, time, and place, fall under never-shown equally;
+the birthplace is as identifying as the date. Only what they produce, the chart and the
+reading, can shine, and only by choice.
 
 Then you are logged in. **You are Light 47** plays as the closing moment, ignition, and it
 opens onto the piece page: home.
