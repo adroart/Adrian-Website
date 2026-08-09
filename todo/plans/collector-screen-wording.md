@@ -1,219 +1,344 @@
-# Collector journey — screen wording and concepts
+# Collector journey — the flow and its wording
 
-> **What this is.** The wording, concept, drawing subject, and states for every screen of the
-> collector flow, aligned to the Apple setup shape. Written 2026-08-09, the same day round 1 of
-> the opening screen was designed. Copy here is proposed, not locked: Adrian reacts screen by
-> screen as each one gets designed. The one-screen-per-design-session rule still holds; this
-> document is the wording that walks in the door with each session so no session reinvents it.
+> **What this is.** The ongoing record of every screen in the collector flow, in walking order,
+> with its exact wording. Worked line by line with Adrian in conversation, 2026-08-09. Each
+> screen is marked **LOCKED** (Adrian's words, settled) or **PROPOSED** (drafted, not yet worked
+> through with him). Locked copy is used verbatim in design and build; do not paraphrase it.
 >
 > Companion to `collector-design-handoff.md` (how to brief Claude Design) and
 > `the-collector-journey.md` (what each step must accomplish).
 
 ---
 
-## Rules shared by every screen, stated once
+## The pillar — why any of this moves a person. SETTLED
 
-- **Shape:** one line drawing in the upper third, headline of two to four words, body under
-  about twenty words, one brass pill in the lower third, skips as plain text links, no
-  navigation beyond a quiet back link. Choice screens use a hairline-divided list, not buttons.
-- **Brass only on the thing you can act on.** Everywhere else is espresso and black.
-- **Honesty:** never the word "forever." The piece endures, the code endures. Unlimited hosting
-  of anything is not promised.
-- **The drawing is a real object from this system**, drawn as a technical line drawing: outline
-  only, uniform thin stroke, no fill, no shading, one motif per screen.
-- **Eyebrow line:** the piece's name, a middle dot, its series and number. Karla, uppercase.
-- **Every screen carries three states:** loaded, empty, error.
-- **Walking example:** Earth's Breath, Universal Language 1, is the sample piece throughout.
-  Every screen swaps in the real piece at runtime. Ordinal numbers shown are samples.
+Every screen's copy hangs off this paragraph; when a line drifts from it, the line is wrong.
 
----
+> We are drawn to these pieces by resonance. The people who hold them are connected by
+> something that cannot be spoken, and the globe is where that shows: a resonant grid across
+> the planet, people who cherish what these pieces hold. Meaning is made by putting love into
+> something. When you feed the fire, the fire grows. And everything placed inside a piece
+> lives with it beyond any of our lives. What you choose to put in it, and why you brought it
+> into your life, belongs to its whole story: whoever holds it hundreds of years from now
+> inherits what you placed there. So give this process a minute. It will live with the piece
+> forever.
 
-## 1. The opening screen — designed, round 1 in review
+**The audience is warm, not cold.** Nobody reaches this flow by accident; they paid real money
+for a physical piece. The screens recognize a member, they do not persuade a stranger.
 
-**Concept.** The promise, said plainly, before anything is asked. The first thing a person
-reads after entering the ownership code. Where the promise gets made, so every word is
-load-bearing.
-
-**Drawing.** The piece itself, face on.
-
-**Wording.**
-- Eyebrow: EARTH'S BREATH · UNIVERSAL LANGUAGE 1
-- Headline: Begin its record
-- Body: Register Earth's Breath to you, certify it as authentic, keep your intentions with it,
-  and connect it to the collectors map.
-- The quiet promise, seated above the action: The piece and its code endure. Whoever holds the
-  code holds access. Keep it safe.
-- Primary: Begin registration
-- Secondary: Back to the piece
-
-**States.** Empty: "This piece is not ready" with a plain way back. Error: "We could not open
-the record" with try again and a way back.
+**The honest scale is earliness.** Never claim a crowd. Claim the pieces, which exist in the
+hundreds across the world; the crowd of registrants is still forming, and being early is the
+privilege.
 
 ---
 
-## 2. Arrival
+## The flow at a glance
 
-**Concept.** Not a setup step: the one screen that is a page. A gallery label a person can walk
-away from satisfied, with no sign-in and nothing withheld that is public. The artwork leads.
-This is the single place photography belongs; the setup screens stay line drawn.
+1. **Arrival** — the piece's public page. PROPOSED, next to close.
+2. **Code entry** — turn the piece over. LOCKED.
+3. **Code confirmed** — the threshold crossed; the project introduced. LOCKED, passing variant proposed.
+4. **The four screens** — the pull · the grid · the love · it carries on. LOCKED.
+5. **The writing** — name, story, privacy, birthday, the registration itself. NOT YET WORKED.
 
-**Reading order.** The artwork, its name and series, the story, materials and year, the public
-spine of its history, then the two doors. The doors come last because looking must feel
-complete on its own.
-
-**Wording.**
-- Headline: the piece's name. Earth's Breath.
-- Eyebrow above it: UNIVERSAL LANGUAGE 1
-- The two doors, nobody pushed: brass pill "Register and certify this piece" and plain link
-  "Begin your dream."
-- One line above the doors: This piece keeps a living record.
-
-**States.** Empty: a piece whose public history has not begun: "Its record begins with its next
-holder." Error: "We could not reach its record."
+The same code-entry door serves first registration, transfer, and dispute; the system routes
+behind it. There is no separate transfer entrance: the piece carries its own door on its body,
+forever.
 
 ---
 
-## 3. Privacy — the four rings on one page
+## 2. Code entry — LOCKED
 
-**Concept.** Decided once, on one screen, in plain words. Everything starts private; each ring
-opens on its own and none opens because another did.
+**Drawing.** The piece turned over, the code on its underside.
 
-**Drawing.** Four concentric rings around a small piece, drawn as orbits.
+> **Turn the piece over**
+>
+> On its underside is a code only its caretaker can see. It is the key to everything this
+> piece will hold.
+>
+> *[ code field ]*
+>
+> Whoever holds the code holds access. Keep it safe.
+>
+> **[ Unlock ]**
+>
+> I don't have the code
 
-**Wording.**
+**The motion.** On entry the characters resolve one at a time, like tumblers finding their
+places, a pause, one soft click as it locks in, and the screen advances on its own. No button
+press after the click; being carried forward is the reward. Two or three seconds, never
+longer. Plays gently for anyone with motion turned down.
+
+**Why the warning lives here.** "Whoever holds the code holds access" was cut from the opening
+sequence; it belongs on the one screen where the code is in the person's hand.
+
+---
+
+## 3. Code confirmed — LOCKED (first caretaker); passing variant PROPOSED
+
+**Drawing.** The piece, face on, whole again: they just saw its underside, turning it back
+over completes the gesture the entry screen opened.
+
+**First caretaker:**
+
+> **The code is true**
+>
+> Earth's Breath is real, and it is in your hands. It is one light in the Resonant Grid: a
+> living artwork spread across the world. The next few minutes register it as authentic and
+> as yours, and give it its place.
+>
+> **[ Continue ]**
+
+**The passing (piece already has a caretaker on record):**
+
+> **The code is true**
+>
+> Earth's Breath is real, and it is in your hands. It has been held before you, and its story
+> comes with it. We will ask its current caretaker to confirm the passing; then it becomes
+> yours to carry.
+
+**Dispute (both claim, nobody confirms):** one honest line, no pretending: "This needs a
+person. Adrian will be in touch."
+
+**Sacred rule.** The code alone never transfers ownership. The screens may say "it is in your
+hands" because that is physically true, but becoming caretaker of a held piece always waits
+for the current one to let go. Silence is never consent; no copy may imply the piece can be
+taken.
+
+**Why this screen exists.** Adrian split the code moment in two: entry stays ritual,
+confirmation introduces the project. "The code is true" is the one thing that just happened,
+stated bare. Then the project gets its name, the scale gets stated, the time gets promised:
+three jobs, three sentences.
+
+---
+
+## 4. The four screens — LOCKED, Adrian's words, verbatim
+
+One idea per screen, nearly empty, walked in fifteen seconds. A welcome to a confirmed
+caretaker, never a pitch: by this point the code has already proven the piece is in their
+hands.
+
+**One · the pull** (drawing: the piece, face on; no eyebrow, no label)
+
+> **You felt the pull**
+>
+> Perhaps it was beauty. Or the story. Or just a feeling beyond words. There was a connection.
+
+**Two · the grid** (drawing: the globe, lights across it)
+
+> **The resonant grid**
+>
+> The ones who hold these creations feel it too. They weave a grid across the planet. And you
+> are a part of that.
+
+**Three · the love** (drawing: open call, possibly none)
+
+> **When you focus your love, it grows**
+>
+> Place your love into this art and its light shines brighter.
+
+**Four · it carries on** (no drawing: the only screen without one, the words alone)
+
+> **It carries on**
+>
+> Hundreds of years from now, whoever is fortunate enough to caretake this art will feel the
+> love you have infused it with today. Everything you enter now will live with it forever.
+>
+> So take a moment, and write your story.
+>
+> **[ Begin ]**
+
+**Attention mechanics, analyzed and settled:**
+- Fifteen words per screen defeats skimming: the glance is the read, there is nothing to skip past.
+- The headlines alone tell the whole story for the fast reader: *You felt the pull · The
+  resonant grid · When you focus your love, it grows · It carries on.*
+- Nothing is asked on any of the four: pure receiving. People abandon forms, not stories.
+- **No skip link. Tap anywhere advances.** The fast lane is built in: four taps in four
+  seconds still delivers the arc. A skip link would cost more attention than it saves and
+  teach everyone the screens are optional filler.
+- The button is **Begin**, not "Write your story": the press must deliver exactly what it
+  promises. The body sets the heart; the button stays honest.
+- No consent language anywhere in the sequence. "If you choose to be seen" was cut; the
+  privacy screen makes that offer on its own terms, without implying the light glows more if
+  you go public.
+
+---
+
+## Vocabulary — decisions carried by every screen
+
+- **Caretaker / caretake.** The word for the person. Arrived unprompted in Adrian's most
+  emotional sentence and stays. Not holder, not keeper, not steward. PENDING Adrian's final
+  confirm, in use throughout meanwhile.
+- **The Resonant Grid.** The proper name of the living artwork, elevated from Adrian's own
+  phrase. Named twice before it is unfolded: once on arrival, once on code confirmed; screen
+  two of the four is then recognition, not surprise. PENDING Adrian's final confirm. Becomes
+  permanent public vocabulary the moment it ships.
+- **Outcomes, never mechanics.** Screens name what the journey does (certify, register, give
+  it its place), never the steps (privacy settings, birthday, email). Each screen explains
+  only itself when it arrives.
+- **"Forever" is permitted.** It is Adrian's voice and the record travels with the piece. The
+  one bound honored: never promise permanent hosting of heavy media in copy; that constraint
+  bites at the video step, not here.
+
+---
+
+## 1. Arrival — PROPOSED, next to close
+
+The piece's public page: what a person sees the moment they scan the code, before any
+sign-in. Not a setup screen. A gallery label they can walk away from satisfied; the short
+path must feel complete on its own.
+
+Top to bottom:
+
+> *(photograph of the piece, leading the page: the one place photography lives, the flow
+> screens stay line-drawn)*
+>
+> UNIVERSAL LANGUAGE 1
+>
+> **Earth's Breath**
+>
+> Its story, a few sentences.
+>
+> Laser cut wood and acrylic · its year
+>
+> **Part of the Resonant Grid**
+> Every piece Adrian has released into the world belongs to one living artwork. Each piece is
+> a light. Each caretaker feeds it. This one is waiting to take its place.
+>
+> **Its record**: the public spine. Created · First registered · Passed on. Each line one
+> event, dated.
+>
+> This piece keeps a living record.
+>
+> **[ Register and certify this piece ]**
+> A few minutes. It stays with the piece forever.
+
+**Open calls on arrival, awaiting Adrian:**
+- Doors come last, after the story and the record, so looking feels complete without them.
+- "This piece keeps a living record" as the single quiet line above the door.
+- **The dream door: cut from arrival** (lean). A stranger does not yet know what a dream is
+  here; the dream belongs to a registered caretaker. It appears after registration where it
+  means something. The spec's two-door reading of step 3 would be satisfied inside the flow
+  instead.
+
+---
+
+## 5. The writing — NOT YET WORKED
+
+The registration steps themselves: name, the first words placed in the piece, privacy, birth
+details. The screens below are early proposals from before the conversation reshaped the
+opening; they need the same line-by-line pass with Adrian before any design. Vocabulary
+updated to caretaker/grid; nothing here is locked.
+
+### Privacy — the four rings on one page
+
+Decided once, one page, plain words. Everything starts private; each ring opens on its own
+and none opens because another did.
+
+Drawing: four concentric rings around a small piece, drawn as orbits.
+
 - Eyebrow: YOUR PRIVACY
 - Headline: You choose what shows
 - Body: Everything is private until you open it. Each choice stands alone, and you can change
   any of them later.
-- The four rings as a hairline list, top of the content area, plainest possible words:
-  - Your private record. What you write for yourself and whoever inherits the piece. Always
-    private. This row has no switch; it states itself.
-  - A dot on the map. Your city, never an address. Off until you open it.
-  - Your chart. What your birth details produce, never the details themselves. Off.
-  - You. Name, face, intention, business, mission. Five separate switches, each off.
+- The four rings as a hairline list, plainest words: your private record (always private, no
+  switch, the row states itself) · a dot on the map (your city, never an address, off until
+  you open it) · your chart (what your birth details produce, never the details, off) · you
+  (name, face, intention, business, mission: five switches, each off).
 - Primary: Keep these choices
-- No skip link. The defaults are safe, so there is nothing to skip: continuing with everything
-  closed is the skip.
+- No skip link: continuing with everything closed is the skip.
+- Open call: whether ring four's five switches sit on this page or one tap deeper. Lean: one
+  tap deeper, the page stays four calm rows.
 
-**Open call.** Whether ring four's five switches sit on this page or one tap deeper. Leaning
-one tap deeper so the page stays four calm rows.
+### Birth details
 
----
+Asked during registration, framed as connection to the wider system, never displayed,
+skippable, addable later. Adrian's rule overrides all earlier positions. Wording not yet
+worked; it must follow the four screens' emotional case, which is what earns the ask.
 
-## 4. The invitation
+### The invitation (door two, no printed code)
 
-**Concept.** Door two. Someone who bought a piece years ago is invited to bring it onto the
-system. The invitation itself carries the proof, since they have no printed code. It should
-read as a letter from Adrian, not a form.
+Reads as a letter from Adrian, not a form. Drawing: the sealed letter.
 
-**Drawing.** The sealed letter.
-
-**Wording.**
 - Eyebrow: AN INVITATION FROM ADRIAN
 - Headline: Earth's Breath is waiting
-- Body: You have held this piece since before its record began. This invitation brings it onto
-  the registry, with its history yours to complete.
-- Primary: Accept the invitation
-- Secondary: This is not my piece
+- Body: You have held this piece since before its record began. This invitation brings it
+  onto the registry, with its history yours to complete.
+- Primary: Accept the invitation · Secondary: This is not my piece
+- Error includes expired or already used: "This invitation has already been answered. If that
+  was not you, contact Adrian."
+- Open call: what proof the invitation carries. Blocks the build, not the wording.
 
-**States.** Error includes an expired or already-used invitation: "This invitation has already
-been answered. If that was not you, contact Adrian."
+### The piece page after registration
 
-**Open call.** What proof the invitation carries. Blocks the build, not the wording.
+The room the flow opens into; the densest screen; locks the look for everything outside the
+setup flow. Reading order: the artwork, the certificate block, the public history spine, your
+private record, what shows (the rings, changeable here), your dream, letters from the piece,
+the ordinal with its map dot. Section titles one or two words: Certificate · History · Your
+record · What shows · Your dream · Letters. Empty sections carry one quiet line: "Nothing
+written yet."
 
----
+### The dream
 
-## 5. The piece page after registration
+One dream at registration, planted, not filled in. Never work, always a gift. Skippable
+without cost. No approval gate ever; nothing counts, scores, or ranks it.
 
-**Concept.** The room the flow opens into: the piece's home with its holder. The densest screen
-in the system and the one that locks the look for everything outside the setup flow. Not a
-setup screen; it is lived in, not walked through.
-
-**Reading order.** The artwork, the certificate block, the public history spine, your private
-record, what shows (the rings, changeable here), your dream, letters from the piece, and the
-ordinal with its map dot.
-
-**Wording.** Section titles in the label face, one or two words each: Certificate · History ·
-Your record · What shows · Your dream · Letters. No section explains itself in a paragraph;
-each row says what it is.
-
-**States.** The interesting one is early life: a freshly registered piece with an empty private
-record should feel inviting, not blank. Each empty section carries one quiet line, in the
-piece's voice where it fits: "Nothing written yet."
-
----
-
-## 6. The dream
-
-**Concept.** One dream at registration, planted, not filled in. Never work, always a gift.
-Skippable without cost. No approval gate ever; nothing counts, scores, or ranks it.
-
-**Drawing.** Open call. Every drawing so far is a real object; the dream is the first screen
-that wants a metaphor. Two candidates: a seed drawn as a technical drawing, or the piece with
-an empty inscription line beneath it. Adrian's pick.
-
-**Wording.**
-- Eyebrow: EARTH'S BREATH
 - Headline: Plant a dream in it
-- Body: One dream, held by the piece. Yours alone unless you choose to share it, in words with
-  no name.
-- Where it lives: a hairline list of the four scopes. Their final names are Adrian's call; the
-  proposal: For me · For someone I love · For my work · For the world.
-- Primary: Plant it
-- Secondary: Not yet
+- Body: One dream, held by the piece. Yours alone unless you choose to share it, in words
+  with no name.
+- The four scopes as a hairline list; names are Adrian's call. Proposal: For me · For someone
+  I love · For my work · For the world.
+- Primary: Plant it · Secondary: Not yet
+- Sorting, not rejection: words about a business, a place, or a person are offered their
+  right home, never refused.
+- Drawing: open call. Everything else is a real object; the dream is the first screen that
+  wants a metaphor. Candidates: a seed drawn as a technical drawing, or the piece with an
+  empty inscription line beneath. Adrian's pick.
 
-**Sorting, not rejection.** If the words are about a business, a place, or a person, the flow
-offers them their right home instead of refusing them. The form's framing does the editorial
-work: it asks for the dream held for the piece and names what does not belong in that space.
+### The globe
 
----
+The moment the piece becomes a light. A confirmation, not a map to browse. Two loaded states:
 
-## 7. The globe
+- Map ring open: headline "You are Light 47" · body: Earth's Breath now shines at city level
+  from where you are. Never an address, never your name unless you opened them.
+- Map ring closed: same headline · body: Earth's Breath is registered to you and recorded. No
+  light shows on the map; that choice stays yours.
+- The ordinal is permanent and belongs to the claim order across all pieces and all series.
+- Drawing: the globe as a wireframe, one point lit. The lit point is ink, not brass; it is
+  not something you act on.
 
-**Concept.** The moment the piece becomes a light. A confirmation, not a map to browse; the
-browsable map is a later surface. Two loaded states, depending on whether the map ring is open.
+### The yearly ritual
 
-**Drawing.** The globe as a wireframe of latitude and longitude lines, one point lit. The lit
-point is ink, not brass; it is not something you act on.
+Once a year, near the caretaker's birthday. Three choices, never a blank form. No counts, no
+streaks, nothing accumulates in public.
 
-**Wording, map ring open.**
-- Eyebrow: FOUNDING LIGHTS
-- Headline: You are Light 47
-- Body: Earth's Breath now shines at city level from where you are. Never an address, never
-  your name unless you opened them.
-- Primary: Continue
-
-**Wording, map ring closed.**
-- Headline: You are Light 47
-- Body: Earth's Breath is registered to you and recorded. No light shows on the map; that
-  choice stays yours.
-- Primary: Continue
-
-**The ordinal is permanent** and belongs to the claim order across all pieces and all series.
-
----
-
-## 8. The yearly ritual
-
-**Concept.** Once a year, near the holder's birthday. Three choices, never a blank form. Once a
-year is what makes it ceremony rather than a feed. No counts, no streaks, nothing accumulates
-in public.
-
-**Drawing.** The piece with a single orbit line around it: one year, drawn.
-
-**Wording.**
 - Eyebrow: A YEAR WITH EARTH'S BREATH
 - Headline: The year turns
 - Body: Near your birthday, the piece asks once. Three ways to answer, none required.
-- The three choices as a hairline list: Reinforce the dream it holds · Plant a new dream ·
-  Mark it fulfilled
+- The three choices: Reinforce the dream it holds · Plant a new dream · Mark it fulfilled
 - Secondary: Not this year
+- Drawing: the piece with a single orbit line around it: one year, drawn.
 
 ---
 
-## Light mode
+## Design rules shared by every screen
 
-Dark is designed first on every screen; it is the mode with the specific character, metallic
-and meditative. Light follows once dark is locked, as its own pass with a gallery character:
-paper grounds, the same drawings in a darker ink, brass unchanged as the single accent. Light
-is not an inversion; it is the same screen hung in a lit room.
+- **Shape:** one line drawing in the upper third, headline short, body brief, one brass pill
+  in the lower third, skips as plain text links, no navigation beyond a quiet back link.
+  Choice screens use a hairline-divided list, not buttons.
+- **Brass only on the thing you can act on.** Everywhere else is espresso and black.
+- **The drawing is a real object from this system**, drawn as a technical line drawing:
+  outline only, uniform thin stroke, no fill, no shading, one motif per screen.
+- **Every screen carries three states:** loaded, empty, error.
+- **Walking example:** Earth's Breath, Universal Language 1. Every screen swaps in the real
+  piece at runtime. Ordinals shown are samples.
+- **Dark first, light follows.** Dark is metallic and meditative; light is the same screen
+  hung in a lit room: paper grounds, the same drawings in darker ink, brass unchanged.
+
+---
+
+## Status of the visual round
+
+Round 1 in the Claude Design project (four options of the old single-screen opening) predates
+the conversation that produced this flow. It is the visual-direction reference only: espresso
+grounds, CAD line drawing, brass pill, type scale. The next design session builds the locked
+screens above in whichever direction Adrian picks, one screen per session.
