@@ -1,7 +1,7 @@
 # Collector Phase 1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
-> (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development`
+> (recommended) or `executing-plans` to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver artwork-first registration, invitations, editable certificate templates,
@@ -156,7 +156,10 @@ Ownership Code through the existing key-versioned implementation and return plai
 - [ ] **Step 4: Add idempotency tests and implementation**
 
 Test exact replay for the same key and input, conflict for a reused key with changed identity, and
-rollback when backup persistence fails.
+rollback when backup persistence fails. At rest, the Ownership Code remains encrypted only. An
+exact retry may reveal the same code only to the same administrator while the registry step-up is
+still active, and every replay reveal is audited. After step-up expiry, replay returns the stored
+identity without plaintext and directs the administrator through the existing audited reveal path.
 
 - [ ] **Step 5: Add public resolution tests and implementation**
 
@@ -192,7 +195,13 @@ git diff --check
 - [ ] **Step 9: Commit the registration seam**
 
 ```bash
-git add migrations/025_artwork_registration.sql functions/api utils tests
+git add migrations/025_artwork_registration.sql functions/api/_lib/artworkRegistration.js \
+  functions/api/_lib/keeperClaim.js functions/api/admin/registrations.js \
+  functions/api/_lib/registryPlateIssuance.js functions/api/keeper/bind.js \
+  functions/api/registry/[publicCode].js functions/qr/[number].js utils/publicRegistry.ts \
+  tests/artwork-registration.test.ts tests/admin-plate-wizard.test.ts \
+  tests/admin-registry-ui.test.ts tests/registry-artworks.test.ts \
+  tests/registry-commerce-neutral.test.ts tests/public-registry-identity.test.ts
 git commit -m "feat(collector): register artwork before optional plates"
 ```
 
@@ -219,6 +228,10 @@ applyCatalogMembership(env, plan): Promise<{
   conflicts: number;
 }>
 ```
+
+Migration `025` also owns `registry_catalog_membership`. Each row contains an artwork ID, a
+deterministic catalog digest, and the first seed time. It contains no edition claim, ownership code,
+keeper, person data, or public identity. Task 2 creates the table and Task 3 is its only writer.
 
 - [ ] **Step 1: Write the failing dry-run test**
 
@@ -329,7 +342,8 @@ npx tsx --test --experimental-test-module-mocks \
   tests/customer-account-security.test.ts
 npm run typecheck
 git diff --check
-git add migrations/026_artwork_invitations.sql functions/api/invitations \
+git add migrations/026_artwork_invitations.sql functions/api/invitations/[token].js \
+  functions/api/invitations/redeem.js \
   functions/api/admin/invitations.js functions/api/_lib/artworkInvitations.js \
   utils/artworkInvitations.ts components/collector/InvitationDoor.tsx \
   components/admin/ArtworkInvitations.tsx tests/artwork-invitations.test.ts \
@@ -369,6 +383,16 @@ type EffectiveCertificate = {
   certificateWording?: string;
   openingWording?: string;
 };
+
+resolveArtworkCertificate(env, artworkId): Promise<EffectiveCertificate>
+
+resolveInstanceCertificate(env, {
+  keeperPieceId,
+}): Promise<EffectiveCertificate & {
+  artworkId: string;
+  edition: { kind: 'unique' } | { kind: 'numbered'; number: number; size: number | null };
+  publicCode: string;
+}>
 ```
 
 - [ ] **Step 1: Write the failing template-resolution tests**
@@ -378,9 +402,10 @@ multiple makers with roles, and omission of missing values.
 
 - [ ] **Step 2: Implement the effective resolver as the single read seam**
 
-```ts
-resolveEffectiveCertificate(env, artworkId): Promise<EffectiveCertificate>
-```
+`resolveArtworkCertificate` handles reusable facts and wording. `resolveInstanceCertificate`
+composes those facts with the exact registered instance, edition, and public code. Public instance
+routes resolve the keeper-piece ID server-side from the public code rather than accepting it as
+browser authority.
 
 Public output must not expose template IDs, version numbers, inheritance modes, editor history, or
 suppressed values.
@@ -409,7 +434,7 @@ npx tsx --test --experimental-test-module-mocks \
   tests/public-registry-identity.test.ts
 npm run typecheck
 git diff --check
-git add migrations/027_certificate_templates.sql functions/api/certificates \
+git add migrations/027_certificate_templates.sql functions/api/certificates/[artworkId].js \
   functions/api/admin/certificate-templates.js functions/api/admin/certificate-assignments.js \
   functions/api/admin/certificate-overrides.js functions/api/_lib/certificateContent.js \
   utils/certificateContent.ts components/admin/CertificateEditor.tsx \
@@ -430,9 +455,15 @@ git commit -m "feat(collector): add reusable certificate templates"
 - Modify: `functions/api/profile/delete.js`
 - Create: `utils/collectorPrivacy.ts`
 - Create: `utils/collectorOnboarding.ts`
+- Create: `lib/astrology/types.ts`
+- Create: `lib/astrology/ephemeris.ts`
+- Create: `lib/astrology/gates.ts`
+- Create: `lib/astrology/places.ts`
+- Create: `lib/astrology/profile.ts`
 - Create: `components/collector/PrivacyAndBirth.tsx`
 - Create: `tests/collector-privacy.test.ts`
 - Create: `tests/collector-onboarding.test.ts`
+- Create: `tests/hologenetic-profile.test.ts`
 
 The storage split is fixed:
 
@@ -448,9 +479,13 @@ fields. Skip performs no write and never blocks completion.
 
 - [ ] **Step 2: Implement the onboarding reader and birth adapter**
 
-Birth saving must call a verified Hologenetic-profile computation adapter and persist through the
-existing shared profile writer. It must never create a second birth-profile store or save fake
-computed data.
+Port the pure astrology modules from the verified Mandala implementation into `lib/astrology/`.
+The parity test uses the official chart fixture for 15 January 1982 at 23:39 in Santa Cruz and must
+produce these exact gate and line values: life's work 61.6, evolution 62.6, radiance 50.2, purpose
+3.2, attraction 33.6, IQ 41.3, EQ 48.4, SQ 5.3, core 59.1, culture 32.2, and pearl 44.1. Also test
+timezone conversion across daylight-saving and date-boundary cases. Birth saving calls this local
+verified adapter and persists through the existing shared profile writer. It must never create a
+second birth-profile store or save fake computed data.
 
 - [ ] **Step 3: Write privacy-default tests**
 
@@ -459,8 +494,9 @@ text and accepts only curated city IDs that meet the population rule.
 
 - [ ] **Step 4: Implement current privacy state and append-only history**
 
-Every change writes current state and a timestamped policy-version record atomically. Revocation
-must immediately disappear from public projection.
+Every change writes current state and a timestamped policy-version record atomically. This lane
+publishes and tests `projectPublicCollectorVisibility`; Phase 2's Atlas integration must consume
+that interface. Revocation must disappear immediately from the safe projection.
 
 - [ ] **Step 5: Write independence and minor-protection tests**
 
@@ -479,16 +515,21 @@ present, and offers enter, update, or skip without a login-loop or blank re-entr
 npx tsx --test --experimental-test-module-mocks \
   tests/collector-privacy.test.ts \
   tests/collector-onboarding.test.ts \
+  tests/hologenetic-profile.test.ts \
   tests/account-auth.test.ts \
   tests/customer-account-security.test.ts \
   tests/collector-phase-zero.test.ts
 npm run typecheck
 git diff --check
-git add migrations/028_collector_privacy.sql functions/api/collector \
+git add migrations/028_collector_privacy.sql functions/api/collector/onboarding.js \
+  functions/api/collector/privacy.js \
   functions/api/_lib/collectorPrivacy.js functions/api/_lib/collectorOnboarding.js \
-  functions/api/profile utils/collectorPrivacy.ts utils/collectorOnboarding.ts \
+  functions/api/profile/get.js functions/api/profile/put.js functions/api/profile/delete.js \
+  utils/collectorPrivacy.ts utils/collectorOnboarding.ts lib/astrology/types.ts \
+  lib/astrology/ephemeris.ts lib/astrology/gates.ts lib/astrology/places.ts \
+  lib/astrology/profile.ts \
   components/collector/PrivacyAndBirth.tsx tests/collector-privacy.test.ts \
-  tests/collector-onboarding.test.ts
+  tests/collector-onboarding.test.ts tests/hologenetic-profile.test.ts
 git commit -m "feat(collector): add privacy and birth onboarding"
 ```
 
@@ -546,10 +587,13 @@ Plate fabrication remains a later optional action.
 
 - [ ] **Step 7: Extend encrypted recovery for every new table**
 
-Add registration membership, invitations, certificate templates and assignments, artwork
-overrides, current consent, and consent history to the private archive and clean-restore boundary.
-Referenced-account discovery includes invitation creators and redeemers plus consent authors, while
-unrelated accounts remain excluded. Older supported archives upgrade with empty new tables.
+Advance the encrypted archive schema from 3 to 4 exactly once after all Phase 1 migrations merge.
+Add catalog membership, invitations, certificate templates and assignments, artwork overrides,
+current consent, and consent history to the exact table and column manifest. Referenced-account
+discovery includes invitation creators and redeemers plus consent authors, while unrelated accounts remain excluded.
+Add export, decrypt, clean restore, row-count, digest, and dependency-closure assertions for every
+new table. Every older supported archive version upgrades with empty new tables and the same
+verified legacy rows.
 
 - [ ] **Step 8: Run the Phase 1 gate**
 
@@ -572,8 +616,14 @@ catalog seed write mode or issue a production identity.
 - [ ] **Step 10: Commit integration and update the standing progress record**
 
 ```bash
-git add App.tsx components launchFlags.ts src/index.css functions/api/_lib/registryRecoveryExport.js \
-  utils/registryRecoveryArchive.ts tests \
+git add App.tsx components/WorksPage.tsx components/legacy/ArrivalGate.tsx \
+  components/legacy/KeeperPanel.tsx components/collector/CollectorFlow.tsx \
+  components/collector/OpeningScreen.tsx components/collector/ArrivalScreen.tsx \
+  components/collector/CertificateScreen.tsx components/admin/AdminNavigation.ts \
+  launchFlags.ts src/index.css functions/api/_lib/registryRecoveryExport.js \
+  utils/registryRecoveryArchive.ts tests/registry-recovery.test.ts \
+  tests/public-registry-ui.spec.ts tests/steward-registration.spec.ts \
+  tests/admin-studio-navigation.spec.ts \
   todo/plans/the-collector-execution.md TODO.md
 git commit -m "feat(collector): make artwork registration walkable"
 ```

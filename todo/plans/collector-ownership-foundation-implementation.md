@@ -1,7 +1,7 @@
 # Collector Ownership Foundation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
-> (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development`
+> (recommended) or `executing-plans` to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make every previously claimed artwork permanently governed, store contested claims in
@@ -74,9 +74,9 @@ UPDATE keeper_pieces
  WHERE id = 'kp-ever-claimed';
 ```
 
-aborts after the row has a non-null claim time, while a direct non-null steward-to-steward transfer
-remains possible. Through the administrator endpoint, assert `reset_steward` returns
-`invalid_action` and performs no write.
+aborts after the row has a non-null claim time. A raw direct non-null steward-to-steward update must
+also abort. Only the authorized atomic transfer operation may change the keeper. Through the
+administrator endpoint, assert `reset_steward` returns `invalid_action` and performs no write.
 
 - [ ] **Step 2: Run the focused red test**
 
@@ -90,13 +90,23 @@ Expected: FAIL because reset is accepted and no database trigger prevents it.
 
 - [ ] **Step 3: Add the database guard**
 
-The migration adds a trigger equivalent to:
+The migration adds `last_transfer_id` to the keeper record plus append-only `artwork_transfers`,
+`artwork_transfer_parties`, and `artwork_transfer_commits` tables. A keeper-update trigger requires
+the exact pending transfer intent and values. A final commit-receipt trigger verifies the keeper,
+maintenance event, party mappings, lineage event, and lineage anchor before accepting the receipt.
+Any missing or stale component raises `ABORT`, rolling back the complete D1 batch.
+
+The irreversible-state guard remains equivalent to:
 
 ```sql
 CREATE TRIGGER keeper_piece_ever_claimed_governed
 BEFORE UPDATE OF keeper_user_id, claimed_at ON keeper_pieces
 WHEN OLD.claimed_at IS NOT NULL
- AND (NEW.claimed_at IS NULL OR NEW.keeper_user_id IS NULL)
+ AND (
+   NEW.claimed_at IS NULL
+   OR NEW.keeper_user_id IS NULL
+   OR NEW.last_transfer_id IS OLD.last_transfer_id
+ )
 BEGIN
   SELECT RAISE(ABORT, 'ever-claimed artwork requires governed transfer');
 END;
@@ -186,7 +196,9 @@ npm run typecheck
 git diff --check
 git add migrations/024_ownership_foundation.sql functions/api/_lib/claimRequests.js \
   functions/api/keeper/bind.js functions/api/_lib/claimBridge.js \
-  utils/registryRecoveryArchive.ts functions/api/_lib/registryRecoveryExport.js tests
+  utils/registryRecoveryArchive.ts functions/api/_lib/registryRecoveryExport.js \
+  tests/living-legacy.test.ts tests/registry-recovery.test.ts \
+  tests/steward-registration.spec.ts
 git commit -m "feat(registry): store contested claims in canonical D1"
 ```
 
@@ -219,9 +231,11 @@ It contains no email, name, reason, note, code, administrator ID, or stable cros
 
 - [ ] **Step 2: Add rollback and replay tests**
 
-Force failure at keeper update, maintenance insert, party mapping insert, lineage insert, and anchor
-update. Each failure must leave all five surfaces unchanged. Replay the same idempotency key after
-a simulated lost response and assert exactly one private and one public event.
+Force failure at keeper update, maintenance insert, party mapping insert, lineage insert, anchor
+update, and final commit receipt. Also force a zero-row keeper update with stale version and a
+zero-row anchor update with stale lineage state. Each case must raise inside the transaction and
+leave every surface unchanged. Replay the same idempotency key after a simulated lost response and
+assert exactly one private and one public event.
 
 - [ ] **Step 3: Run the focused red tests**
 
@@ -241,15 +255,17 @@ only the exact payload above and the four allowed transfer kinds.
 
 - [ ] **Step 5: Add private transfer-party mapping**
 
-The migration creates an append-only private table mapping each random party reference to its
-transfer event, keeper piece, role, and account ID. Add it to encrypted recovery and referenced
-account discovery. It is never included in public registry or ledger exports.
+The migration creates an append-only private transfer intent, party mapping, and commit receipt.
+Each random party reference maps to its transfer, keeper piece, role, and account ID. Add all three
+tables to encrypted recovery and referenced-account discovery. None are included in public registry
+or ledger exports.
 
 - [ ] **Step 6: Extend the atomic maintenance primitive**
 
 The transfer path prepares the next lineage event before writing. One D1 batch contains the guarded
-keeper update, private maintenance event, two party mappings, public lineage insert, and lineage
-anchor update. Each statement must affect exactly the intended row count or the result fails closed.
+transfer intent, two party mappings, keeper update, private maintenance event, public lineage insert,
+lineage anchor update, and final commit receipt. The receipt trigger performs the in-database final
+assertion, so a zero-row intermediate statement cannot be mistaken for a successful transaction.
 
 - [ ] **Step 7: Update administrator transfer UI**
 
@@ -268,9 +284,12 @@ npx playwright test tests/admin-studio-navigation.spec.ts --project=chromium
 npm run typecheck
 git diff --check
 git add migrations/024_ownership_foundation.sql functions/api/_lib/lineage.js \
-  functions/api/_lib/registryMaintenance.js functions/api/admin/maintenance \
+  functions/api/_lib/registryMaintenance.js functions/api/admin/maintenance/[id]/actions.js \
   utils/publicLineage.ts utils/adminRegistryMaintenance.ts components/AdminMaintenance.tsx \
-  utils/registryRecoveryArchive.ts functions/api/_lib/registryRecoveryExport.js tests
+  utils/registryRecoveryArchive.ts functions/api/_lib/registryRecoveryExport.js \
+  tests/registry-maintenance.test.ts tests/public-lineage-history.test.ts \
+  tests/registry-recovery.test.ts tests/admin-maintenance-ui.test.ts \
+  tests/admin-studio-navigation.spec.ts
 git commit -m "fix(registry): make stewardship transfer permanent and atomic"
 ```
 
