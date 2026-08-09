@@ -4,11 +4,13 @@ import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Artwork, BookContent, ProvenanceEvent } from '../types';
 import { FULL_ARCHIVE } from '../data/mockData';
 import { img as cldImg } from '../utils/cloudinary';
+import { ulAltText, ulCardNumber } from '../utils/universalLanguage';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { LAUNCH_FLAGS } from '../launchFlags';
 import ArrivalGate from './legacy/ArrivalGate';
 import PieceConstellation from './legacy/PieceConstellation';
 import KeeperPanel from './legacy/KeeperPanel';
+import CertificateScreen from './collector/CertificateScreen';
 import {
     isPublicRegistryCode,
     validatePublicPlateIdentity,
@@ -117,6 +119,7 @@ const WorksPage: React.FC = () => {
             identityState={identityState}
             publicCode={publicCode}
             onRetry={retryIdentity}
+            headingLevel={artwork && legacyOn && arrivedByScan ? 2 : 1}
         />
     ) : null;
 
@@ -164,10 +167,10 @@ const WorksPage: React.FC = () => {
     // on this flag, so the public identity stays outside the legacy arrival.
     if (artwork && legacyOn && arrivedByScan) {
         return (
-            <>
+            <ArrivalGate artwork={artwork} identity={verifiedIdentity} headingLevel={1}>
                 {publicIdentityRecord}
-                <ArrivalGate artwork={artwork} headingLevel={publicCode ? 2 : 1}>{record}</ArrivalGate>
-            </>
+                {record}
+            </ArrivalGate>
         );
     }
     return <>{publicIdentityRecord}{record}</>;
@@ -257,8 +260,18 @@ function DraftArtworkRecord({
                             )}
                         </div>
                         <OrnamentalDivider />
-                        {draftEdition && <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>}
+                        {!identity && draftEdition && <p className="font-sans text-sm text-wood-600 text-center mb-4">{draftEdition}</p>}
                         <p className="font-sans text-[13px] text-wood-400 text-center">Registered artwork record</p>
+                        {identity && (
+                            <div className="mt-10">
+                                <CertificateScreen
+                                    artworkId={identity.artworkId}
+                                    publicCode={identity.publicCode}
+                                    title={identity.title}
+                                    editionLabel={identity.edition.label}
+                                />
+                            </div>
+                        )}
                         {showPublicLineage && identity && (
                             <div className="mt-10">
                                 <PublicLineageHistory publicCode={identity.publicCode} state={lineage} />
@@ -318,6 +331,9 @@ function CatalogArtworkRecord({
 }) {
     const editionDisplay = getEditionLine(artwork);
     const imageUrl = artwork.coverImage ? cldImg(artwork.coverImage, { w: 800 }) : null;
+    const imageAlt = artwork.series === 'Universal Language'
+        ? ulAltText(artwork, ulCardNumber(artwork.coverImage))
+        : artwork.title;
     const provenance = artwork.provenance || [];
 
     return (
@@ -364,16 +380,18 @@ function CatalogArtworkRecord({
                         </div>
 
                         {/* Certificate label */}
-                        <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
-                            Certificate of Authenticity
-                        </p>
+                        {!identity && (
+                            <p className="text-center font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 mb-10 font-semibold">
+                                Certificate of Authenticity
+                            </p>
+                        )}
 
                         {/* Image */}
                         {imageUrl && (
                             <div className="mb-10 flex justify-center">
                                 <img
                                     src={imageUrl}
-                                    alt={artwork.title}
+                                    alt={imageAlt}
                                     className="max-w-sm w-full shadow-sm"
                                     loading="eager"
                                 />
@@ -381,18 +399,29 @@ function CatalogArtworkRecord({
                         )}
 
                         {/* Details grid */}
-                        <div className="max-w-md mx-auto mb-10">
-                            <div className="space-y-4">
-                                <DetailRow label="Artist" value="Adrian Rasmussen" />
-                                <DetailRow label="Year" value={artwork.year} />
-                                {artwork.material && <DetailRow label="Materials" value={artwork.material} />}
-                                {artwork.dimensions && <DetailRow label="Dimensions" value={artwork.dimensions} />}
-                                {editionDisplay && <DetailRow label="Edition" value={editionDisplay} />}
-                                {artwork.finish && <DetailRow label="Finish" value={artwork.finish} />}
-                                {artwork.createdLocation && <DetailRow label="Origin" value={artwork.createdLocation} />}
-                                <DetailRow label="Identifier" value={artwork.id} />
+                        {!identity && (
+                            <div className="max-w-md mx-auto mb-10">
+                                <div className="space-y-4">
+                                    <DetailRow label="Artist" value="Adrian Rasmussen" />
+                                    <DetailRow label="Year" value={artwork.year} />
+                                    {artwork.material && <DetailRow label="Materials" value={artwork.material} />}
+                                    {artwork.dimensions && <DetailRow label="Dimensions" value={artwork.dimensions} />}
+                                    {editionDisplay && <DetailRow label="Edition" value={editionDisplay} />}
+                                    {artwork.finish && <DetailRow label="Finish" value={artwork.finish} />}
+                                    {artwork.createdLocation && <DetailRow label="Origin" value={artwork.createdLocation} />}
+                                    <DetailRow label="Identifier" value={artwork.id} />
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {identity && (
+                            <CertificateScreen
+                                artworkId={identity.artworkId}
+                                publicCode={identity.publicCode}
+                                title={identity.title}
+                                editionLabel={identity.edition.label}
+                            />
+                        )}
 
                         {/* Description */}
                         {artwork.description && (
@@ -409,7 +438,7 @@ function CatalogArtworkRecord({
                         )}
 
                         {/* Provenance timeline */}
-                        {provenance.length > 0 && (
+                        {!identity && provenance.length > 0 && (
                             <div className="max-w-md mx-auto mb-10">
                                 <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold mb-5 text-center">
                                     Provenance
@@ -442,20 +471,24 @@ function CatalogArtworkRecord({
                         )}
 
                         {/* Signature line */}
-                        <div className="flex items-center justify-center gap-4 mb-8 mt-10">
-                            <div className="h-px w-12 bg-bronze-300" />
-                            <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
-                            <div className="h-px w-12 bg-bronze-300" />
-                        </div>
+                        {!identity && (
+                            <>
+                                <div className="flex items-center justify-center gap-4 mb-8 mt-10">
+                                    <div className="h-px w-12 bg-bronze-300" />
+                                    <div className="w-1.5 h-1.5 rotate-45 border border-bronze-300" />
+                                    <div className="h-px w-12 bg-bronze-300" />
+                                </div>
 
-                        <div className="text-center">
-                            <p className="font-serif text-lg text-wood-700 italic mb-1">
-                                Adrian Rasmussen
-                            </p>
-                            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
-                                Artist
-                            </p>
-                        </div>
+                                <div className="text-center">
+                                    <p className="font-serif text-lg text-wood-700 italic mb-1">
+                                        Adrian Rasmussen
+                                    </p>
+                                    <p className="font-label text-[10px] uppercase tracking-[0.2em] text-wood-400 font-semibold">
+                                        Artist
+                                    </p>
+                                </div>
+                            </>
+                        )}
 
                     </div>{/* inner border */}
                 </div>{/* outer border */}
@@ -494,7 +527,7 @@ function CatalogArtworkRecord({
                             </BookSection>
                         )}
 
-                        {book.materialsStory && (
+                        {!identity && book.materialsStory && (
                             <BookSection label="Materials">
                                 <p className="font-serif text-[17px] italic text-wood-600 leading-[1.8]">
                                     {book.materialsStory}
@@ -605,10 +638,12 @@ function PublicIdentityRecord({
     identityState,
     publicCode,
     onRetry,
+    headingLevel,
 }: {
     identityState: PublicIdentityState;
     publicCode: string;
     onRetry: () => void;
+    headingLevel: 1 | 2;
 }) {
     if (
         identityState.status === 'idle'
@@ -676,9 +711,15 @@ function PublicIdentityRecord({
                         <p className="font-label text-[11px] uppercase tracking-[0.3em] text-wood-400 mb-7 font-semibold">
                             {identity.artistName}
                         </p>
-                        <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight break-words">
-                            {identity.title}
-                        </h1>
+                        {headingLevel === 1 ? (
+                            <h1 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight break-words">
+                                {identity.title}
+                            </h1>
+                        ) : (
+                            <h2 className="font-serif text-3xl md:text-4xl text-wood-900 font-medium mb-3 leading-tight break-words">
+                                {identity.title}
+                            </h2>
+                        )}
                         {identity.series && (
                             <p className="font-sans text-[13px] text-wood-400 tracking-wide break-words">
                                 {identity.series} Series
@@ -776,7 +817,10 @@ function OrnamentalDivider() {
 }
 
 function formatPlateStatus(status: PublicPlateIdentity['plateStatus']): string {
-    return status === 'active' ? 'Active' : 'Generated';
+    if (status === 'registered') return 'Registered artwork record';
+    if (status === 'active') return 'Active';
+    if (status === 'superseded') return 'Superseded';
+    return 'Generated';
 }
 
 /** Fetch the authored book page for a piece. Returns null until loaded or

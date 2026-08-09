@@ -4,12 +4,13 @@ import { LAUNCH_FLAGS } from '../../launchFlags';
 import { useAccount } from '../../lib/account/useAccount';
 import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
 import type { PublicCreatorHistoryEntry, PublicPlateIdentity } from '../../utils/publicRegistry';
-import SignInTrigger from '../account/SignInTrigger';
+import CollectorFlow from '../collector/CollectorFlow';
 import IntentionRitual from './IntentionRitual';
 
 interface StewardStatus {
   kept: boolean;
   byYou: boolean;
+  keeperPieceId?: string;
   currentDisplayLocation?: string | null;
   stewardHistory?: PublicCreatorHistoryEntry[];
 }
@@ -52,14 +53,15 @@ export function classifyStewardBindResult(status: number, payload: BindPayload):
 }
 
 export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({ publicIdentity }) => {
-  const { isSignedIn, isLoaded, available, fetchAuthed } = useAccount();
+  const { isSignedIn, isLoaded, available, userId, fetchAuthed } = useAccount();
   const [searchParams] = useSearchParams();
   const publicCode = publicIdentity.publicCode;
   const [status, setStatus] = useState<StewardStatus | null>(null);
   const [statusPublicCode, setStatusPublicCode] = useState(publicCode);
+  const [statusUserId, setStatusUserId] = useState(userId);
   const [statusLoaded, setStatusLoaded] = useState(false);
   const [statusError, setStatusError] = useState(false);
-  const [door, setDoor] = useState<'closed' | 'register' | 'intention'>('closed');
+  const [collectorJourneyUserId, setCollectorJourneyUserId] = useState<string | null>(null);
   const statusRequest = useRef<{ id: number; controller: AbortController } | null>(null);
   const statusRequestId = useRef(0);
   const claimReturn = searchParams.get('claim') === '1';
@@ -70,13 +72,12 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
     const id = ++statusRequestId.current;
     statusRequest.current = { id, controller };
     setStatusPublicCode(publicCode);
+    setStatusUserId(userId);
     setStatus(null);
     setStatusLoaded(false);
     setStatusError(false);
 
-    if (!isSignedIn) {
-      return;
-    }
+    if (!isSignedIn) return null;
     const params = new URLSearchParams({ publicCode });
     const response = await fetchAuthed(`/api/keeper/piece?${params.toString()}`, {
       signal: controller.signal,
@@ -85,43 +86,49 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
     if (!response?.ok) {
       setStatusError(true);
       setStatusLoaded(false);
-      return;
+      return null;
     }
     const data = await response.json().catch(() => null);
     if (controller.signal.aborted || statusRequest.current?.id !== id) return;
     if (!data) {
       setStatusError(true);
-      return;
+      return null;
     }
-    setStatus({
+    const nextStatus: StewardStatus = {
       kept: data.kept === true,
       byYou: data.byYou === true,
+      ...(data.byYou === true && typeof data.keeperPieceId === 'string'
+        ? { keeperPieceId: data.keeperPieceId }
+        : {}),
       currentDisplayLocation: data.currentDisplayLocation,
       stewardHistory: Array.isArray(data.stewardHistory) ? data.stewardHistory : [],
-    });
+    };
+    setStatus(nextStatus);
     setStatusLoaded(true);
-  }, [fetchAuthed, isSignedIn, publicCode]);
+    if (!nextStatus.kept) setCollectorJourneyUserId(userId);
+    return nextStatus;
+  }, [fetchAuthed, isSignedIn, publicCode, userId]);
 
   useEffect(() => {
     statusRequest.current?.controller.abort();
     setStatusPublicCode(publicCode);
+    setStatusUserId(userId);
     setStatus(null);
     setStatusLoaded(false);
     setStatusError(false);
-    setDoor(isSignedIn && claimReturn ? 'register' : 'closed');
+    setCollectorJourneyUserId(null);
     if (isLoaded && isSignedIn) void loadStatus();
     return () => statusRequest.current?.controller.abort();
-  }, [claimReturn, isLoaded, isSignedIn, loadStatus, publicCode]);
+  }, [claimReturn, isLoaded, isSignedIn, loadStatus, publicCode, userId]);
 
   if (!LAUNCH_FLAGS.livingLegacy || !available) return null;
 
-  const statusMatches = statusPublicCode === publicCode;
+  const statusMatches = statusPublicCode === publicCode && statusUserId === userId;
   const currentStatus = statusMatches ? status : null;
   const currentStatusLoaded = statusMatches && statusLoaded;
   const currentStatusError = statusMatches && statusError;
   const youKeep = currentStatusLoaded && currentStatus?.byYou === true;
   const keptByOther = currentStatusLoaded && currentStatus?.kept === true && !youKeep;
-  const unclaimed = currentStatusLoaded && currentStatus?.kept === false;
 
   return (
     <section className="mt-20 print:hidden" aria-labelledby="stewardship-heading">
@@ -132,21 +139,24 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
       </div>
       <h2 id="stewardship-heading" className="sr-only">Artwork stewardship</h2>
 
-      {!isSignedIn && (
-        <div className="max-w-md mx-auto text-center">
-          <p className="font-serif text-[17px] text-wood-700 leading-[1.9] mb-6">
-            If you hold this piece, you can register as its steward and, when you wish, fuse a
-            yearly intention into it.
-          </p>
-          <SignInTrigger destination={stewardClaimDestination(publicIdentity)}>
-            <button
-              type="button"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-wood-900 text-paper-50 font-label text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-bronze-600 transition-colors"
-            >
-              Sign in to begin
-            </button>
-          </SignInTrigger>
-        </div>
+      {(!isSignedIn || collectorJourneyUserId === userId) && (
+        <CollectorFlow
+          key={`${publicCode}:${userId ?? 'guest'}`}
+          identity={publicIdentity}
+          isSignedIn={isSignedIn}
+          initialProof={Boolean(isSignedIn && claimReturn && !youKeep)}
+          renderOwnershipProof={(onBound, onCancel) => (
+            <OwnershipCodeForm
+              key={`register-${publicCode}`}
+              publicCode={publicCode}
+              title={publicIdentity.title}
+              variant="register"
+              onBound={onBound}
+              onCancel={onCancel}
+            />
+          )}
+          onProofComplete={loadStatus}
+        />
       )}
 
       {isSignedIn && !currentStatusLoaded && !currentStatusError && (
@@ -164,40 +174,6 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
         </div>
       )}
 
-      {isSignedIn && unclaimed && (
-        <div className="max-w-lg mx-auto">
-          {door !== 'register' ? (
-            <div className="grid sm:grid-cols-2 gap-5">
-              <DoorCard
-                title="Register this piece"
-                body="Register as its steward with the Ownership Code on the underside of the art."
-                cta="Register as the steward"
-                onClick={() => setDoor('register')}
-              />
-              <DoorCard
-                title="Begin your intention"
-                body="The deeper door. Set a yearly intention into the piece around your birthday. Opens once you are its steward."
-                cta="About this"
-                muted
-                onClick={() => setDoor('register')}
-              />
-            </div>
-          ) : (
-            <OwnershipCodeForm
-              key={`register-${publicCode}`}
-              publicCode={publicCode}
-              title={publicIdentity.title}
-              variant="register"
-              onBound={async () => {
-                await loadStatus();
-                setDoor('intention');
-              }}
-              onCancel={() => setDoor('closed')}
-            />
-          )}
-        </div>
-      )}
-
       {keptByOther && (
         <div className="max-w-md mx-auto">
           <p className="text-center font-serif text-[16px] text-wood-600 leading-[1.9] mb-8">
@@ -208,7 +184,7 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
             publicCode={publicCode}
             title={publicIdentity.title}
             variant="request"
-            onBound={loadStatus}
+            onBound={async () => { await loadStatus(); }}
           />
         </div>
       )}
@@ -251,38 +227,6 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
     </section>
   );
 };
-
-function DoorCard({
-  title,
-  body,
-  cta,
-  onClick,
-  muted,
-}: {
-  title: string;
-  body: string;
-  cta: string;
-  onClick: () => void;
-  muted?: boolean;
-}) {
-  return (
-    <div className="border border-wood-200 p-6 flex flex-col text-center">
-      <h3 className="font-serif text-xl text-wood-900 mb-3">{title}</h3>
-      <p className="font-sans text-[13px] text-wood-500 leading-[1.8] mb-6 flex-1">{body}</p>
-      <button
-        type="button"
-        onClick={onClick}
-        className={`font-label text-[11px] uppercase tracking-[0.15em] font-semibold pb-1 border-b transition-colors ${
-          muted
-            ? 'text-wood-400 border-wood-200 hover:text-bronze-700 hover:border-bronze-300'
-            : 'text-bronze-600 border-bronze-300 hover:text-bronze-800'
-        }`}
-      >
-        {cta}
-      </button>
-    </div>
-  );
-}
 
 function OwnershipCodeForm({
   publicCode,
@@ -347,6 +291,8 @@ function OwnershipCodeForm({
         setError(result.message);
         return;
       }
+      setCode('');
+      setNote('');
       await onBound();
     } catch {
       if (controller.signal.aborted || bindRequest.current !== controller) return;

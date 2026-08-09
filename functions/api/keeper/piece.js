@@ -96,6 +96,7 @@ async function handleGet(context, auth) {
     byYou,
     // Display location is the steward's own data; only surface it to them.
     ...(byYou ? {
+      keeperPieceId: row.id,
       currentDisplayLocation: row.current_display_location ?? null,
       stewardHistory,
     } : {}),

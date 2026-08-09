@@ -289,27 +289,27 @@ Migration `025` also owns `registry_catalog_membership`. Each row contains an ar
 deterministic catalog digest, and the first seed time. It contains no edition claim, ownership code,
 keeper, person data, or public identity. Task 2 creates the table and Task 3 is its only writer.
 
-- [ ] **Step 1: Write the failing dry-run test**
+- [x] **Step 1: Write the failing dry-run test**
 
 Assert an exact catalog count of 173, deterministic ordering, zero writes, and no generated public
 codes or keeper-piece rows.
 
-- [ ] **Step 2: Implement deterministic membership planning**
+- [x] **Step 2: Implement deterministic membership planning**
 
 Membership is artwork-level discoverability only. It records no edition claim and issues no
 physical-instance identity.
 
-- [ ] **Step 3: Write replay and preservation tests**
+- [x] **Step 3: Write replay and preservation tests**
 
 Assert that apply is idempotent, preserves the existing live keeper identity and lineage, and
 reports conflicts instead of overwriting divergent membership.
 
-- [ ] **Step 4: Implement apply behind an explicit write flag**
+- [x] **Step 4: Implement apply behind an explicit write flag**
 
 The command defaults to dry-run. A write requires `--write` and aborts when the plan contains a
 conflict.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 ```bash
 npx tsx --test tests/registry-membership-seed.test.ts
@@ -360,36 +360,36 @@ redeemArtworkInvitation(env, {
 }): Promise<KeeperBindResult>
 ```
 
-- [ ] **Step 1: Write the failing token-storage test**
+- [x] **Step 1: Write the failing token-storage test**
 
 Assert that creation returns plaintext once and persistence contains only its SHA-256 hash.
 
-- [ ] **Step 2: Implement invitation creation and safe inspection**
+- [x] **Step 2: Implement invitation creation and safe inspection**
 
 Inspection may reveal the artwork and invitation status. It must not reveal recipient email, token
 hash, creator identity, or audit history.
 
-- [ ] **Step 3: Write recipient, expiry, revoke, and reuse tests**
+- [x] **Step 3: Write recipient, expiry, revoke, and reuse tests**
 
 Wrong verified recipients must not consume the invitation. Used, expired, and revoked invitations
 must never bind.
 
-- [ ] **Step 4: Implement atomic redemption through `prepareFirstKeeperBind`**
+- [x] **Step 4: Implement atomic redemption through `prepareFirstKeeperBind`**
 
 Invitation consumption and first bind execute in one database batch. The browser never submits an
 artwork ID or edition as authority.
 
-- [ ] **Step 5: Add race and already-held tests**
+- [x] **Step 5: Add race and already-held tests**
 
 Exactly one concurrent redemption succeeds. An already-held piece stays governed and the
 invitation is not treated as a transfer.
 
-- [ ] **Step 6: Add privacy tests**
+- [x] **Step 6: Add privacy tests**
 
 Lineage and public claim evidence contain only opaque proof references. Email and token material
 remain outside permanent history.
 
-- [ ] **Step 7: Verify and commit**
+- [x] **Step 7: Verify and commit**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -451,12 +451,12 @@ resolveInstanceCertificate(env, {
 }>
 ```
 
-- [ ] **Step 1: Write the failing template-resolution tests**
+- [x] **Step 1: Write the failing template-resolution tests**
 
 Cover template inheritance, one-field override, explicit suppression, return to inheritance,
 multiple makers with roles, and omission of missing values.
 
-- [ ] **Step 2: Implement the effective resolver as the single read seam**
+- [x] **Step 2: Implement the effective resolver as the single read seam**
 
 `resolveArtworkCertificate` handles reusable facts and wording. `resolveInstanceCertificate`
 composes those facts with the exact registered instance, edition, and public code. Public instance
@@ -466,21 +466,21 @@ browser authority.
 Public output must not expose template IDs, version numbers, inheritance modes, editor history, or
 suppressed values.
 
-- [ ] **Step 3: Write and implement bulk assignment tests**
+- [x] **Step 3: Write and implement bulk assignment tests**
 
 Bulk assignment must update every selected artwork, preserve individual overrides, reject unknown
 artwork IDs, and replay safely after an ambiguous response.
 
-- [ ] **Step 4: Write and implement optimistic override tests**
+- [x] **Step 4: Write and implement optimistic override tests**
 
 Stale versions conflict without partial writes. An override changes only its named field.
 
-- [ ] **Step 5: Build the admin editor against the tested contracts**
+- [x] **Step 5: Build the admin editor against the tested contracts**
 
 The editor supports template creation, artwork selection, bulk assignment, per-field inherit,
 override, suppress, and an effective preview.
 
-- [ ] **Step 6: Verify and commit**
+- [x] **Step 6: Verify and commit**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -528,12 +528,12 @@ The storage split is fixed:
 - append-only consent history records safe before and after decisions and policy version;
 - Ring 1 is an invariant and has no stored switch.
 
-- [ ] **Step 1: Write shared-profile onboarding tests**
+- [x] **Step 1: Write shared-profile onboarding tests**
 
 Missing profiles return `missing`. Existing shared profiles return current inputs rather than blank
 fields. Skip performs no write and never blocks completion.
 
-- [ ] **Step 2: Implement the onboarding reader and birth adapter**
+- [x] **Step 2: Implement the onboarding reader and birth adapter**
 
 Port the pure astrology modules from the verified Mandala implementation into `lib/astrology/`.
 The parity test uses the official chart fixture for 15 January 1982 at 23:39 in Santa Cruz and must
@@ -543,29 +543,29 @@ timezone conversion across daylight-saving and date-boundary cases. Birth saving
 verified adapter and persists through the existing shared profile writer. It must never create a
 second birth-profile store or save fake computed data.
 
-- [ ] **Step 3: Write privacy-default tests**
+- [x] **Step 3: Write privacy-default tests**
 
 All optional switches default off. Ring 1 cannot be submitted or disabled. Ring 2 rejects free
 text and accepts only curated city IDs that meet the population rule.
 
-- [ ] **Step 4: Implement current privacy state and append-only history**
+- [x] **Step 4: Implement current privacy state and append-only history**
 
 Every change writes current state and a timestamped policy-version record atomically. This lane
 publishes and tests `projectPublicCollectorVisibility`; Phase 2's Atlas integration must consume
 that interface. Revocation must disappear immediately from the safe projection.
 
-- [ ] **Step 5: Write independence and minor-protection tests**
+- [x] **Step 5: Write independence and minor-protection tests**
 
 City and identity require separate explicit choices. Content by or about a minor cannot be made
 public. Birth input must not appear in consent history, invitation records, public output, or
 lineage.
 
-- [ ] **Step 6: Build the combined privacy and birth step**
+- [x] **Step 6: Build the combined privacy and birth step**
 
 The UI explains the four rings, keeps optional choices off, shows existing birth details as already
 present, and offers enter, update, or skip without a login-loop or blank re-entry.
 
-- [ ] **Step 7: Verify and commit**
+- [x] **Step 7: Verify and commit**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks \
@@ -610,38 +610,38 @@ git commit -m "feat(collector): add privacy and birth onboarding"
 - Modify: `tests/steward-registration.spec.ts`
 - Modify: `tests/admin-studio-navigation.spec.ts`
 
-- [ ] **Step 1: Write the failing browser walk**
+- [x] **Step 1: Write the failing browser walk**
 
 Cover public arrival, neutral register and dream doors, opening promise, code or invitation proof,
 privacy, existing or skipped birth details, certificate, and completion. Assert keyboard access,
 mobile layout, reduced motion, and no private data in requests or page text.
 
-- [ ] **Step 2: Build the collector state machine against lane fixtures**
+- [x] **Step 2: Build the collector state machine against lane fixtures**
 
 The flow owns navigation only. It calls the registration, invitation, certificate, privacy, and
 onboarding contracts without duplicating their validation.
 
-- [ ] **Step 3: Merge arrival and certificate projections**
+- [x] **Step 3: Merge arrival and certificate projections**
 
 Public arrival must remain complete without sign-in. Remove the timed inert gate. Render only
 effective recorded facts, the exact issued identity, and public history.
 
-- [ ] **Step 4: Add opening and invitation screens**
+- [x] **Step 4: Add opening and invitation screens**
 
 Opening wording comes from the effective certificate contract. Default wording promises a durable,
 exportable record and optional attached video, never permanent hosting.
 
-- [ ] **Step 5: Connect privacy and birth onboarding**
+- [x] **Step 5: Connect privacy and birth onboarding**
 
 Existing birth details are recognized. Skipping remains possible. Consent choices stay off until
 the person acts.
 
-- [ ] **Step 6: Connect admin surfaces**
+- [x] **Step 6: Connect admin surfaces**
 
 Add registration, invitations, and certificate editing to the existing authenticated admin shell.
 Plate fabrication remains a later optional action.
 
-- [ ] **Step 7: Extend encrypted recovery for every new table**
+- [x] **Step 7: Extend encrypted recovery for every new table**
 
 Advance the encrypted archive schema from 3 to 4 exactly once after all Phase 1 migrations merge.
 Add catalog membership, invitations, certificate templates and assignments, artwork overrides,
@@ -654,7 +654,7 @@ Add export, decrypt, clean restore, row-count, digest, and dependency-closure as
 new table. Every older supported archive version upgrades with empty new tables and the same
 verified legacy rows.
 
-- [ ] **Step 8: Run the Phase 1 gate**
+- [x] **Step 8: Run the Phase 1 gate**
 
 ```bash
 npm run test:unit
@@ -666,13 +666,25 @@ git diff --check
 
 Expected: all commands exit 0. Existing keeper identity and lineage fixtures remain unchanged.
 
-- [ ] **Step 9: Perform recovery and canary checks**
+The pre-acceptance gate passed before the final UI review. Acceptance gaps were then repaired:
+the certificate now renders only the endpoint's exact server-resolved instance identity and fails
+closed on mismatches, every Universal Language image on the record uses the required alt text, the
+collector typography follows the site's readability guardrails, and invariant opening copy now
+protects Ownership Code access independently of editable wording. Invitation proof also freezes its
+memory-only token during irreversible redemption so an in-flight edit cannot discard a successful
+single-use result. The final stable snapshot passes 540 unit tests, 84 browser tests with 10
+intentional skips, typecheck, and the production build.
+
+- [x] **Step 9: Perform recovery and canary checks**
 
 Generate an encrypted registry export, restore it into a clean local database, and walk one clearly
 marked non-production artwork through both ownership-code and invitation registration. Do not run
 catalog seed write mode or issue a production identity.
 
-- [ ] **Step 10: Commit integration and update the standing progress record**
+- [x] **Step 10: Commit integration and update the standing progress record**
+
+The standing record is updated and this integration commit closes the local Phase 1 boundary. No
+deployment, production seed, or launch-flag enable is part of this step.
 
 ```bash
 git add App.tsx components/WorksPage.tsx components/legacy/ArrivalGate.tsx \

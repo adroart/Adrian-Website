@@ -41,7 +41,8 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /<PublicIdentityRecord[\s\S]*?identityState/);
     assert.match(source, /draft\.status === ['"]found['"][\s\S]*?<DraftArtworkRecord/);
     assert.match(source, /<PublicIdentityRecord[\s\S]*?<CatalogArtworkRecord/);
-    assert.match(source, /\{publicIdentityRecord\}[\s\S]*?<ArrivalGate/);
+    assert.match(source, /<ArrivalGate[\s\S]*?>[\s\S]*?\{publicIdentityRecord\}[\s\S]*?\{record\}/);
+    assert.match(source, /return <>\{publicIdentityRecord\}\{record\}<\/>/);
   });
 
   it('replaces a mismatched route with the canonical verified artwork route', () => {
@@ -61,12 +62,14 @@ describe('public scanned-identity UI wiring', () => {
     assert.match(source, /data-testid="public-registry-invalid"/);
   });
 
-  it('gives scanned identity the only h1 when the legacy arrival is enabled', () => {
+  it('gives the scanned arrival the only h1 before the verified identity details', () => {
     const worksPage = readSource('components/WorksPage.tsx');
     const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
+    const arrivalScreen = readSource('components/collector/ArrivalScreen.tsx');
 
     assert.match(arrivalGate, /headingLevel\?:\s*1\s*\|\s*2/);
-    assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} headingLevel=\{publicCode \? 2 : 1\}>/);
+    assert.match(worksPage, /<ArrivalGate artwork=\{artwork\} identity=\{verifiedIdentity\} headingLevel=\{1\}>/);
+    assert.match(arrivalScreen, /headingLevel === 1[\s\S]*?<h1 id="collector-arrival-title"[\s\S]*?<h2 id="collector-arrival-title"/);
   });
 
   it('gives not-found and temporary failures different states with retry only for temporary failures', () => {
@@ -153,9 +156,34 @@ describe('public scanned-identity UI wiring', () => {
     assert.doesNotMatch(source, /notified|silence|patient window|response window/i);
   });
 
-  it('makes the unrevealed arrival content inert as well as aria-hidden', () => {
+  it('keeps the complete arrival record immediately available without a timed inert gate', () => {
     const arrivalGate = readSource('components/legacy/ArrivalGate.tsx');
-    assert.match(arrivalGate, /!opened[\s\S]*?inert:\s*['"]['"]/);
-    assert.match(arrivalGate, /aria-hidden=\{!opened\}/);
+    assert.match(arrivalGate, /data-testid="arrival-record"/);
+    assert.doesNotMatch(arrivalGate, /setTimeout|\binert\b|aria-hidden/);
+  });
+
+  it('keeps a failed certificate recoverable and renders only exact instance identity facts', () => {
+    const certificate = readSource('components/collector/CertificateScreen.tsx');
+
+    assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onClick=\{retry\}[\s\S]*?>Try again</);
+    assert.match(certificate, /state\.status === ['"]error['"][\s\S]*?onComplete[\s\S]*?Complete registration/);
+    assert.match(certificate, /projectInstanceCertificate\(body\?\.certificate, artworkId, publicCode\)/);
+    assert.match(certificate, /<Fact label="Identifier">\{state\.certificate\.artworkId\}<\/Fact>/);
+    assert.match(certificate, /<Fact label="Edition">\{certificateEditionLabel\(state\.certificate\.edition\)\}<\/Fact>/);
+    assert.match(certificate, /<Fact label="Public code">\{state\.certificate\.publicCode\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Edition">\{editionLabel\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Public code">\{publicCode\}<\/Fact>/);
+    assert.doesNotMatch(certificate, /<Fact label="Edition">\{state\.certificate\.editionWording\}/);
+  });
+
+  it('uses the mandated Universal Language alt-text contract for every scanned-record artwork image', () => {
+    const arrival = readSource('components/collector/ArrivalScreen.tsx');
+    const worksPage = readSource('components/WorksPage.tsx');
+
+    assert.match(arrival, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/\.\.\/utils\/universalLanguage['"]/);
+    assert.match(arrival, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);
+    assert.match(worksPage, /import \{ ulAltText, ulCardNumber \} from ['"]\.\.\/utils\/universalLanguage['"]/);
+    assert.match(worksPage, /artwork\.series === ['"]Universal Language['"][\s\S]*?ulAltText\(artwork, ulCardNumber\(artwork\.coverImage\)\)/);
+    assert.match(worksPage, /alt=\{imageAlt\}/);
   });
 });

@@ -11,7 +11,16 @@ describe('admin studio shell', () => {
       ADMIN_NAVIGATION.map(group => [group.label, group.items.map(item => item.label)]),
       [
         ['Home', ['Studio overview']],
-        ['Artwork', ['Guided plate wizard', 'Registry and plates', 'Maintenance', 'Private viewings', 'Artwork stories']],
+        ['Artwork', [
+          'Artwork registration',
+          'Collector invitations',
+          'Certificate editor',
+          'Optional plate wizard',
+          'Registry and plates',
+          'Maintenance',
+          'Private viewings',
+          'Artwork stories',
+        ]],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
         ['Sales', ['Pricing', 'Invoices']],
       ],
@@ -29,6 +38,14 @@ describe('admin studio shell', () => {
     ]) {
       assert.doesNotMatch(source(`components/${file}`), /<AdminLayout>/);
     }
+  });
+
+  it('keeps a registered instance associated with its one-time Ownership Code until an explicit reset', () => {
+    const app = source('App.tsx');
+    assert.match(app, /artworkTitle:\s*string/);
+    assert.match(app, /editionLabel:\s*string/);
+    assert.match(app, /Register another artwork/);
+    assert.match(app, /!result\s*\?\s*\(/);
   });
 
   it('uses one page and control vocabulary across every admin tool', () => {

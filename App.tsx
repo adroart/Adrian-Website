@@ -1,5 +1,5 @@
 
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams, Link } from 'react-router-dom';
 
 const KeystaticRoute = lazy(() => import('./components/KeystaticRoute'));
@@ -34,6 +34,8 @@ const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const AdminPieces = lazy(() => import('./components/AdminPieces'));
 const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
+const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
+const CertificateEditor = lazy(() => import('./components/admin/CertificateEditor'));
 const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
 const Viewing = lazy(() => import('./components/viewing/Viewing'));
@@ -56,6 +58,7 @@ import { CollectionsProvider } from './lib/collections/context';
 import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
+import { FULL_ARCHIVE } from './data/mockData';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -166,6 +169,9 @@ const SiteShell: React.FC = () => {
               {/* Private registry staging remains reachable to authenticated
                   admins while the public Living Legacy surface is disabled. */}
               <Route path="pieces" element={<AdminPieces />} />
+              <Route path="registrations" element={<AdminArtworkRegistration />} />
+              <Route path="invitations" element={<ArtworkInvitations />} />
+              <Route path="certificates" element={<CertificateEditor artworks={FULL_ARCHIVE.map(({ id: artworkId, title }) => ({ id: artworkId, title }))} />} />
               <Route path="maintenance" element={<AdminMaintenance />} />
               <Route path="pieces/wizard" element={<AdminPlateWizard />} />
               <Route path="pricing" element={<PricingCalculator />} />
@@ -207,6 +213,171 @@ const App: React.FC = () => (
     </DarkModeProvider>
   </AccountProvider>
 );
+
+function AdminArtworkRegistration() {
+  const [artworkId, setArtworkId] = useState(FULL_ARCHIVE[0]?.id || '');
+  const [editionKind, setEditionKind] = useState<'' | 'unique' | 'numbered'>('');
+  const [editionNumber, setEditionNumber] = useState('1');
+  const [editionSize, setEditionSize] = useState('');
+  const [secret, setSecret] = useState('');
+  const [unlocked, setUnlocked] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<{
+    artworkId: string;
+    artworkTitle: string;
+    editionLabel: string;
+    publicCode: string;
+    ownershipCode?: string;
+    keeperPieceId: string;
+  } | null>(null);
+  const attemptKey = useRef<string | null>(null);
+
+  const unlock = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/registry-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret }),
+      });
+      if (!response.ok) throw new Error('unlock_failed');
+      setUnlocked(true);
+      setSecret('');
+    } catch {
+      setError('The private registry could not be unlocked.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const register = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      attemptKey.current ||= crypto.randomUUID();
+      if (!editionKind) throw new Error('edition_required');
+      const edition = editionKind === 'unique'
+        ? { kind: 'unique' as const }
+        : {
+            kind: 'numbered' as const,
+            number: Number(editionNumber),
+            size: editionSize ? Number(editionSize) : null,
+          };
+      const submittedArtwork = FULL_ARCHIVE.find((artwork) => artwork.id === artworkId);
+      if (!submittedArtwork) throw new Error('artwork_required');
+      const editionLabel = edition.kind === 'unique'
+        ? 'Unique work'
+        : edition.size
+          ? `Number ${edition.number} of ${edition.size}`
+          : `Number ${edition.number}`;
+      const response = await fetch('/api/admin/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artworkId, edition, idempotencyKey: attemptKey.current }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error('registration_failed');
+      setResult({
+        artworkId,
+        artworkTitle: submittedArtwork.title,
+        editionLabel,
+        publicCode: body.publicCode,
+        ownershipCode: body.ownershipCode,
+        keeperPieceId: body.keeperPieceId,
+      });
+      attemptKey.current = null;
+    } catch {
+      setError('This artwork could not be registered. The same attempt can be retried safely.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resetRegistration = () => {
+    setResult(null);
+    setEditionKind('');
+    setEditionNumber('1');
+    setEditionSize('');
+    setError('');
+    attemptKey.current = null;
+  };
+
+  return (
+    <div className="admin-page admin-page-narrow">
+      <header className="admin-page-header">
+        <div>
+          <p className="admin-eyebrow">Collector registry</p>
+          <h1 className="admin-page-title">Artwork registration</h1>
+          <p className="admin-page-description">
+            Create the permanent digital identity first. A physical plate is an optional later step.
+          </p>
+        </div>
+      </header>
+
+      {error && <p className="admin-alert admin-alert-error" role="alert">{error}</p>}
+      {!unlocked ? (
+        <form onSubmit={unlock} className="admin-section space-y-4">
+          <h2 className="admin-section-title">Unlock the private registry</h2>
+          <label className="block font-label text-xs uppercase tracking-[0.12em] text-wood-700">
+            Registry secret
+            <input type="password" required value={secret} onChange={(event) => setSecret(event.target.value)} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base normal-case tracking-normal" />
+          </label>
+          <button type="submit" disabled={busy} className="collector-button-primary">{busy ? 'Unlocking' : 'Unlock registry'}</button>
+        </form>
+      ) : !result ? (
+        <form onSubmit={register} className="admin-section space-y-5">
+          <h2 className="admin-section-title">Register one artwork instance</h2>
+          <label className="block font-label text-xs uppercase tracking-[0.12em] text-wood-700">
+            Artwork
+            <select value={artworkId} onChange={(event) => { setArtworkId(event.target.value); setEditionKind(''); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base normal-case tracking-normal">
+              {FULL_ARCHIVE.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}</option>)}
+            </select>
+          </label>
+          <fieldset className="space-y-3">
+            <legend className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition</legend>
+            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" checked={editionKind === 'unique'} onChange={() => { setEditionKind('unique'); attemptKey.current = null; }} /> Unique work</label>
+            <label className="flex gap-2 font-sans text-sm text-wood-800"><input type="radio" name="edition-kind" checked={editionKind === 'numbered'} onChange={() => { setEditionKind('numbered'); attemptKey.current = null; }} /> Numbered edition</label>
+          </fieldset>
+          {editionKind === 'numbered' && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Number<input type="number" min="1" required value={editionNumber} onChange={(event) => { setEditionNumber(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
+              <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition size, optional<input type="number" min={editionNumber || '1'} value={editionSize} onChange={(event) => { setEditionSize(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
+            </div>
+          )}
+          <button type="submit" disabled={busy || !editionKind} className="collector-button-primary">{busy ? 'Registering' : 'Register artwork'}</button>
+        </form>
+      ) : null}
+
+      {result && (
+        <section className="admin-section space-y-4" aria-labelledby="registration-created-title">
+          <h2 id="registration-created-title" className="admin-section-title">Artwork registered</h2>
+          <p className="font-sans text-sm text-wood-700">
+            Artwork: <strong>{result.artworkTitle} · {result.artworkId}</strong>
+          </p>
+          <p className="font-sans text-sm text-wood-700">Edition: <strong>{result.editionLabel}</strong></p>
+          <p className="font-sans text-sm text-wood-700">Public code: <strong>{result.publicCode}</strong></p>
+          <p className="font-sans text-sm text-wood-700">Invitation reference: <strong>{result.keeperPieceId}</strong></p>
+          {result.ownershipCode ? (
+            <>
+              <p className="font-sans text-sm text-wood-700">Copy the Ownership Code now. It cannot be shown here again.</p>
+              <p className="font-mono text-lg break-all select-all">{result.ownershipCode}</p>
+              <button type="button" className="collector-button-secondary" onClick={() => setResult({ ...result, ownershipCode: undefined })}>Dismiss Ownership Code</button>
+            </>
+          ) : (
+            <>
+              <p className="font-sans text-sm text-wood-600">The identity is ready. Plate preparation remains optional.</p>
+              <button type="button" className="collector-button-secondary" onClick={resetRegistration}>Register another artwork</button>
+            </>
+          )}
+        </section>
+      )}
+    </div>
+  );
+}
 
 /** The atlas moved to mandalacodes.com. Anyone hitting an old /atlas* URL
  *  on adrianrasmussen.com is sent across with a hard browser redirect. */

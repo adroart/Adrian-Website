@@ -3224,7 +3224,11 @@ describe('steward status and display location by public identity', () => {
       });
       assert.equal(response.status, 200);
       assert.deepEqual(await response.json(), {
-        ok: true, kept: true, byYou: true, currentDisplayLocation: 'Ubud studio',
+        ok: true,
+        kept: true,
+        byYou: true,
+        keeperPieceId: row.id,
+        currentDisplayLocation: 'Ubud studio',
         stewardHistory: [{
           entryType: 'intention', title: 'For the steward',
           detail: 'Keep the work where changing light can reach it.',

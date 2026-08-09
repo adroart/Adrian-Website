@@ -280,3 +280,42 @@ replay defects.
 **Next: Phase 1 items 1.2 through 1.7 can build in parallel behind the published registration and
 first-bind seams.** No additional Adrian content is needed for invitation proof, template editing,
 privacy and shared birth onboarding, or dry-run catalog membership.
+
+**2026-08-09: Phase 1 items 1.2 through 1.8 are complete locally and have not been deployed.** The
+public arrival is now a complete artwork record without a sign-in wall or timed gate. A collector
+can enter through a neutral registration door, read the opening promise, sign in, prove the artwork
+with either its Ownership Code or a single-use invitation, choose privacy, review or skip shared
+birth information, see the effective certificate facts, and complete the journey. Invitation proof
+is restricted to its intended verified recipient, expires or revokes safely, cannot be reused, and
+does not enter public history, browser storage, or the page address.
+The token remains editable while an invitation is inspected, then freezes during irreversible
+redemption so a successful single-use result cannot be discarded by an in-flight edit.
+
+The opening promises a durable, exportable ownership record. It always explains that the Ownership
+Code remains with the artwork, grants registration access to whoever holds it, and must be kept safe
+and private. Editable wording can supplement but cannot replace those truths. Video remains an
+optional attachment and does not promise permanent hosting. Privacy defaults closed. Existing birth
+information can be kept or updated, and missing information can be added or skipped. Public
+certificate facts resolve from reusable templates plus individual artwork overrides, render the
+exact server-resolved artwork instance, and omit blank values. A mismatched certificate response
+fails closed. Administrator surfaces now expose artwork registration, collector invitations, and
+certificate editing, while
+physical plate preparation remains optional and later.
+
+Catalog-wide membership planning completed as a dry run only. Encrypted recovery now carries every
+new Phase 1 record, restores invitation redemption in its valid sequence, preserves private account
+references, and upgrades older archives without inventing proof. The local non-production canary
+passed 127 focused ownership, invitation, and encrypted clean-restore checks. After the final
+acceptance repairs, the stable full gate passed 540 unit tests, 84 browser tests with 10 intentional
+skips, typecheck, the production build, and clean-diff checks. No production data was seeded or
+changed, no launch flag was enabled, and no deployment was performed.
+
+Adrian can add materials, makers, origins, and final wording gradually through the certificate
+editor; missing facts stay hidden and do not block the next phase. Before production rollout, run
+the ownership damage detector against a fresh read-only production copy, rehearse migration and
+encrypted restore on copies, and stop on any damaged ownership state. Real sale-to-artwork mapping
+also remains an Adrian input before the later sale door can be connected.
+
+**Next: Phase 2 makes the piece feel alive.** Build the dream, globe-light, equal-brightness, and
+yearly-ritual experience behind the closed launch flag. Do not seed production or enable the
+journey before the production-copy preflight succeeds.

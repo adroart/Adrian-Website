@@ -59,6 +59,99 @@ test('mobile admin menu fits the viewport and closes after navigation', async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 
+test('admin artwork navigation exposes registration, invitations, certificates, and optional plates', async ({ page }) => {
+  const registrationBodies: Array<Record<string, unknown>> = [];
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/overview', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, attention: null }),
+  }));
+  await page.route('/api/admin/registry-unlock', async route => route.fulfill({
+    status: route.request().postDataJSON()?.secret === 'local-development-secret' ? 200 : 401,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true }),
+  }));
+  await page.route('/api/admin/registrations', async route => {
+    registrationBodies.push(route.request().postDataJSON());
+    const registrationNumber = registrationBodies.length;
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        keeperPieceId: `kp-admin-registration-${registrationNumber}`,
+        publicCode: registrationNumber === 1 ? 'AR-BCDEFGHJ' : 'AR-CDEFGHJK',
+        ownershipCode: registrationNumber === 1 ? 'BCDE-FGHJ-KMNP-QRST' : 'CDEF-GHJK-MNPQ-RSTU',
+        codeAccess: 'created',
+        registrationStatus: 'registered',
+        backupStatus: 'verified',
+      }),
+    });
+  });
+  await page.goto('/admin');
+  const navigation = page.getByRole('navigation', { name: 'Admin navigation' });
+  await expect(navigation.getByRole('link', { name: 'Artwork registration' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Collector invitations' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Certificate editor' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Optional plate wizard' })).toBeVisible();
+
+  if ((page.viewportSize()?.width || 0) < 768) {
+    await page.getByRole('button', { name: 'Menu' }).click();
+  }
+  await navigation.getByRole('link', { name: 'Artwork registration' }).click();
+  await expect(page.getByRole('heading', { name: 'Artwork registration' })).toBeVisible();
+  await expect(page.getByText(/physical plate is an optional later step/i)).toBeVisible();
+  await page.getByLabel('Registry secret').fill('local-development-secret');
+  await page.getByRole('button', { name: 'Unlock registry' }).click();
+  const firstArtworkLabel = await page.getByRole('combobox', { name: 'Artwork' }).locator('option:checked').textContent();
+  await page.getByLabel('Unique work').check();
+  await page.getByRole('button', { name: 'Register artwork' }).click();
+  await expect(page.getByRole('heading', { name: 'Artwork registered' })).toBeVisible();
+  await expect(page.getByText(firstArtworkLabel || '', { exact: true })).toBeVisible();
+  await expect(page.getByText('Unique work', { exact: true })).toBeVisible();
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Register artwork' })).toHaveCount(0);
+  expect(registrationBodies[0]).toEqual({
+    artworkId: expect.any(String),
+    edition: { kind: 'unique' },
+    idempotencyKey: expect.any(String),
+  });
+  await page.getByRole('button', { name: 'Dismiss Ownership Code' }).click();
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toHaveCount(0);
+  await expect(page.getByText(/plate preparation remains optional/i)).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Register artwork' })).toHaveCount(0);
+  expect(registrationBodies).toHaveLength(1);
+
+  await page.getByRole('button', { name: 'Register another artwork' }).click();
+  const artworkSelect = page.getByRole('combobox', { name: 'Artwork' });
+  await expect(artworkSelect).toBeVisible();
+  await artworkSelect.selectOption({ index: 1 });
+  const secondArtworkLabel = await artworkSelect.locator('option:checked').textContent();
+  await page.getByLabel('Numbered edition').check();
+  await page.getByRole('spinbutton', { name: 'Number', exact: true }).fill('2');
+  await page.getByRole('spinbutton', { name: 'Edition size, optional' }).fill('5');
+  await page.getByRole('button', { name: 'Register artwork' }).click();
+
+  await expect(page.getByText(secondArtworkLabel || '', { exact: true })).toBeVisible();
+  await expect(page.getByText('Number 2 of 5', { exact: true })).toBeVisible();
+  await expect(page.getByText('CDEF-GHJK-MNPQ-RSTU')).toBeVisible();
+  expect(registrationBodies).toHaveLength(2);
+  expect(registrationBodies[1]).toEqual({
+    artworkId: expect.any(String),
+    edition: { kind: 'numbered', number: 2, size: 5 },
+    idempotencyKey: expect.any(String),
+  });
+  expect(registrationBodies[1].artworkId).not.toBe(registrationBodies[0].artworkId);
+  expect(registrationBodies[1].idempotencyKey).not.toBe(registrationBodies[0].idempotencyKey);
+});
+
 test('opens Maintenance from Artwork and renders the private five-section detail accessibly', async ({ page }) => {
   await page.goto('/admin');
   if ((page.viewportSize()?.width || 0) < 768) {

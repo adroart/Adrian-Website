@@ -94,10 +94,10 @@ export const LAUNCH_FLAGS = {
 
   /**
    * LIVING LEGACY — Adrian-Website is the canonical registry for permanent
-   * physical artwork identities and steward binding. Each plate has a public QR
-   * identity and a permanent Ownership Code. D1 stores its verifier plus an
+   * artwork identities and steward binding. A registered artwork has a public
+   * identity and a permanent Ownership Code before any optional plate work. D1 stores its verifier plus an
    * encrypted recoverable envelope; R2 mirrors only that encrypted envelope.
-   * Public QR history and steward binding stay behind this flag. Private admin
+   * Public arrival, collector registration, history, privacy, and steward binding stay behind this flag. Private admin
    * issuance/recovery can be staged first with the runtime-only
    * ARTWORK_REGISTRY_ADMIN_ENABLED variable, without exposing collector claims.
    *
