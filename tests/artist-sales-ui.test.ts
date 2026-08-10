@@ -48,7 +48,8 @@ describe('verified sales admin workspace', () => {
   it('renders durable detail actions without automatic ownership side effects', () => {
     const component = source('components/admin/CollectorSales.tsx');
     for (const phrase of [
-      'Original sale facts', 'Correction reason', 'Identify artwork',
+      'Originally recorded', 'Current corrected record', 'Correction history',
+      'Correction reason', 'Identify artwork',
       'Identification evidence', 'Certificate image', 'Select as certificate image',
       'Shared sealed message', 'Artwork-specific sealed message',
       'Register artwork', 'Create invitation', 'Dismiss Ownership Code',
@@ -57,6 +58,23 @@ describe('verified sales admin workspace', () => {
     ]) assert.match(component, new RegExp(phrase, 'i'), phrase);
     assert.doesNotMatch(component, /useEffect[\s\S]{0,500}(?:\/api\/admin\/registrations|createInvitation)/);
     assert.match(component, /only when that artwork is claimed/i);
+  });
+
+  it('renders verified correction snapshots without replacing the immutable base sale', () => {
+    const component = source('components/admin/CollectorSales.tsx');
+    assert.match(component, /detail\.originalSale/);
+    assert.match(component, /detail\.effectiveSale/);
+    assert.match(component, /detail\.corrections/);
+    assert.match(component, /Originally recorded/);
+    assert.match(component, /Current corrected record/);
+    assert.match(component, /Correction history/);
+    assert.match(component, /Buyer, private/);
+    assert.match(component, /Total, private/);
+    assert.match(component, /Private reference/);
+    assert.match(component, /Private notes/);
+    assert.match(component, /No unverified facts are shown/);
+    assert.doesNotMatch(component, /JSON\.stringify\(.*correction|actor|digest|storage key|event hash/i);
+    assert.doesNotMatch(component, /const \[originalSale, setOriginalSale\]/);
   });
 
   it('includes accessible loading, error, empty, success, and one-heading states', () => {

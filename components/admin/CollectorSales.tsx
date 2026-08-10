@@ -15,6 +15,7 @@ import {
   type ArtistSaleDetailResponse,
   type ArtistSaleEdition,
   type ArtistSaleItem,
+  type ArtistSaleCorrection,
   type ArtistLedgerMutation,
   type ArtistSaleMoney,
   type ArtistSaleOccurrence,
@@ -96,10 +97,10 @@ function occurrenceLabel(value: ArtistSaleOccurrence): string {
   if (value.precision === 'unknown') return 'Date unknown';
   if (value.precision === 'year') return value.value;
   if (value.precision === 'month') {
-    return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
       .format(new Date(`${value.value}-01T00:00:00.000Z`));
   }
-  return new Intl.DateTimeFormat('en', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
     .format(new Date(`${value.value}T00:00:00.000Z`));
 }
 
@@ -148,16 +149,66 @@ function recoveryMessage(error: unknown): string {
   return 'The response was not definitive. Editing is frozen so this exact attempt can be retried safely.';
 }
 
+function detailRecoveryMessage(error: unknown): string {
+  if (error instanceof WorkspaceRequestError) return recoveryMessage(error);
+  return 'This sale record could not be verified. No unverified facts are shown. Retry the record or return to the records list.';
+}
+
 function saleDraftFrom(detail: ArtistSaleDetailResponse) {
+  const sale = detail.effectiveSale;
   return {
-    precision: detail.sale.occurrence.precision,
-    occurrenceValue: detail.sale.occurrence.value || '',
-    buyerEmail: detail.sale.buyerEmail || '',
-    totalAmount: detail.sale.total ? String(detail.sale.total.amountMinor / 100) : '',
-    totalCurrency: detail.sale.total?.currency || 'USD',
-    privateReference: detail.sale.privateReference || '',
-    privateNotes: detail.sale.privateNotes || '',
+    precision: sale.occurrence.precision,
+    occurrenceValue: sale.occurrence.value || '',
+    buyerEmail: sale.buyerEmail || '',
+    totalAmount: sale.total ? String(sale.total.amountMinor / 100) : '',
+    totalCurrency: sale.total?.currency || 'USD',
+    privateReference: sale.privateReference || '',
+    privateNotes: sale.privateNotes || '',
   };
+}
+
+function sameMoney(left: ArtistSaleMoney | null, right: ArtistSaleMoney | null): boolean {
+  return left?.amountMinor === right?.amountMinor && left?.currency === right?.currency;
+}
+
+function sameOccurrence(left: ArtistSaleOccurrence, right: ArtistSaleOccurrence): boolean {
+  return left.precision === right.precision && left.value === right.value;
+}
+
+function sameSaleFacts(
+  left: ArtistSaleDetailResponse['originalSale'],
+  right: ArtistSaleDetailResponse['effectiveSale'],
+): boolean {
+  return left.reconnectionCaseId === right.reconnectionCaseId
+    && sameOccurrence(left.occurrence, right.occurrence)
+    && left.buyerEmail === right.buyerEmail
+    && sameMoney(left.total, right.total)
+    && left.privateReference === right.privateReference
+    && left.privateNotes === right.privateNotes;
+}
+
+function privateText(value: string | null): string {
+  return value || 'Not recorded';
+}
+
+function reconnectionLabel(value: string | null): string {
+  return value ? 'Linked to a private reconnection record' : 'Not linked';
+}
+
+function correctionChanges(correction: ArtistSaleCorrection): Array<{
+  label: string; before: string; after: string;
+}> {
+  const changes: Array<{ label: string; before: string; after: string }> = [];
+  const add = (label: string, before: string, after: string) => {
+    if (before !== after) changes.push({ label, before, after });
+  };
+  add('Occurrence', occurrenceLabel(correction.before.occurrence), occurrenceLabel(correction.after.occurrence));
+  add('Buyer, private', privateText(correction.before.buyerEmail), privateText(correction.after.buyerEmail));
+  add('Total, private', moneyLabel(correction.before.total), moneyLabel(correction.after.total));
+  add('Private reference', privateText(correction.before.privateReference), privateText(correction.after.privateReference));
+  add('Private notes', privateText(correction.before.privateNotes), privateText(correction.after.privateNotes));
+  add('Reconnection', reconnectionLabel(correction.before.reconnectionCaseId), reconnectionLabel(correction.after.reconnectionCaseId));
+  return changes;
 }
 
 const CollectorSales: React.FC = () => {
@@ -167,7 +218,7 @@ const CollectorSales: React.FC = () => {
   const [mode, setMode] = useState<StartMode>('records');
   const [selection, setSelection] = useState<RecordSelection | null>(null);
   const [detail, setDetail] = useState<ArtistSaleDetailResponse | null>(null);
-  const [originalSale, setOriginalSale] = useState<ArtistSaleDetailResponse['sale'] | null>(null);
+  const [detailLoadError, setDetailLoadError] = useState('');
   const [ledgers, setLedgers] = useState<Record<string, ArtistLedgerDetailResponse>>({});
   const [detailLoading, setDetailLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | ReconnectionStatus>('all');
@@ -219,17 +270,16 @@ const CollectorSales: React.FC = () => {
     return () => controller.abort();
   }, [loadWorkspace]);
 
-  const loadSale = useCallback(async (saleId: string, signal?: AbortSignal, preserveOriginal = true) => {
+  const loadSale = useCallback(async (saleId: string, signal?: AbortSignal) => {
     setDetailLoading(true);
-    setActionError('');
+    setDetailLoadError('');
     try {
       const value = await jsonRequest(`/api/admin/collector-sales/${saleId}`, { signal });
       const parsed = parseArtistSaleDetailResponse(value);
       setDetail(parsed);
-      if (preserveOriginal) setOriginalSale(current => current?.saleId === saleId ? current : parsed.sale);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
-      setActionError(recoveryMessage(error));
+      setDetailLoadError(detailRecoveryMessage(error));
       setDetail(null);
     } finally {
       if (!signal?.aborted) setDetailLoading(false);
@@ -240,8 +290,9 @@ const CollectorSales: React.FC = () => {
     setOwnershipSecret(null);
     setInvitationSecret(null);
     setActionError('');
+    setDetailLoadError('');
     setLedgers({});
-    if (selection?.kind !== 'sale') { setDetail(null); setOriginalSale(null); return; }
+    if (selection?.kind !== 'sale') { setDetail(null); return; }
     const controller = new AbortController();
     void loadSale(selection.id, controller.signal);
     return () => controller.abort();
@@ -386,14 +437,14 @@ const CollectorSales: React.FC = () => {
       parseArtistSaleMutationResponse(value);
       setDetailAttempt(finishArtistSaleAttempt(attempt, { kind: 'success' }));
       setNotice(success);
-      if (selection?.kind === 'sale') await loadSale(selection.id, undefined, false);
+      if (selection?.kind === 'sale') await loadSale(selection.id);
       await loadWorkspace();
       return true;
     } catch (error) {
       setDetailAttempt(finishArtistSaleAttempt(attempt, outcome(error)));
       setActionError(recoveryMessage(error));
       if (error instanceof WorkspaceRequestError && error.status === 409 && selection?.kind === 'sale') {
-        await loadSale(selection.id, undefined, false);
+        await loadSale(selection.id);
         await loadWorkspace();
       }
       return false;
@@ -414,7 +465,7 @@ const CollectorSales: React.FC = () => {
       parseArtistSaleMutationResponse(value);
       setDetailAttempt(finishArtistSaleAttempt(detailAttempt, { kind: 'success' }));
       setNotice('The frozen action completed with its original request and key.');
-      if (selection.kind === 'sale') await loadSale(selection.id, undefined, false);
+      if (selection.kind === 'sale') await loadSale(selection.id);
       await loadWorkspace();
     } catch (error) {
       setDetailAttempt(finishArtistSaleAttempt(detailAttempt, outcome(error)));
@@ -550,8 +601,9 @@ const CollectorSales: React.FC = () => {
                 if (success && draft.action === 'changeReconnectionStatus') await loadWorkspace();
               }} onRecordSale={() => { setLinkedCaseId(selectedCase.reconnectionCaseId); setBuyerEmail(selectedCase.recipientEmail); setMode('sale'); setSelection(null); }} />}
               {selection?.kind === 'sale' && detailLoading && <div role="status" aria-label="Loading sale detail" className="h-40 animate-pulse bg-wood-100 motion-reduce:animate-none" />}
+              {selection?.kind === 'sale' && detailLoadError && !detailLoading && <AdminAlert tone="error" live><p>{detailLoadError}</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} onClick={() => void loadSale(selection.id)}>Retry record</button><button type="button" className={buttonSecondary} onClick={() => { setDetailLoadError(''); setSelection(null); }}>Back to records</button></div></AdminAlert>}
               {selection?.kind === 'sale' && detail && <SaleDetail
-                detail={detail} originalSale={originalSale || detail.sale} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
+                detail={detail} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
                 invitations={invitations}
                 registrationAttempts={registrationAttempts} invitationAttempts={invitationAttempts}
                 pendingLinks={pendingLinks}
@@ -590,7 +642,7 @@ const CollectorSales: React.FC = () => {
                     setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
                     setPendingLinks(value => ({ ...value, [item.artworkRecordId]: registration.keeperPieceId! }));
                     if (registration.ownershipCode) setOwnershipSecret({ code: registration.ownershipCode, artworkRecordId: item.artworkRecordId });
-                    const linked = await postDetail(detail.sale.saleId, {
+                    const linked = await postDetail(detail.effectiveSale.saleId, {
                       action: 'linkIdentity', artworkRecordId: item.artworkRecordId,
                       keeperPieceId: registration.keeperPieceId, expectedVersion: item.recordVersion,
                     }, 'Artwork registered and linked to this sale record.');
@@ -630,7 +682,7 @@ const CollectorSales: React.FC = () => {
                 onRetryLink={async item => {
                   const keeperPieceId = pendingLinks[item.artworkRecordId];
                   if (!keeperPieceId) return;
-                  const linked = await postDetail(detail.sale.saleId, { action: 'linkIdentity', artworkRecordId: item.artworkRecordId, keeperPieceId, expectedVersion: item.recordVersion }, 'Artwork identity linked to this sale record.');
+                  const linked = await postDetail(detail.effectiveSale.saleId, { action: 'linkIdentity', artworkRecordId: item.artworkRecordId, keeperPieceId, expectedVersion: item.recordVersion }, 'Artwork identity linked to this sale record.');
                   if (linked) setPendingLinks(value => { const next = { ...value }; delete next[item.artworkRecordId]; return next; });
                 }}
               />}
@@ -660,8 +712,43 @@ const ReconnectionDetail: React.FC<{
   </div>;
 };
 
+const SaleFactsPanel: React.FC<{
+  title: string;
+  sale: ArtistSaleDetailResponse['originalSale'];
+}> = ({ title, sale }) => <section className="border-y border-wood-200 py-5">
+  <h4 className="font-serif text-xl text-wood-900">{title}</h4>
+  <p className="mt-1 font-sans text-base text-wood-600">Private studio facts. Buyer details, prices, references, and notes are not public.</p>
+  <dl className="mt-4 grid min-w-0 gap-4 font-sans text-base text-wood-700 sm:grid-cols-2">
+    <div className="min-w-0"><dt className="font-semibold text-wood-800">Occurrence</dt><dd className="break-words">{occurrenceLabel(sale.occurrence)}</dd></div>
+    <div className="min-w-0"><dt className="font-semibold text-wood-800">Buyer, private</dt><dd className="break-words">{privateText(sale.buyerEmail)}</dd></div>
+    <div className="min-w-0"><dt className="font-semibold text-wood-800">Total, private</dt><dd>{moneyLabel(sale.total)}</dd></div>
+    <div className="min-w-0"><dt className="font-semibold text-wood-800">Private reference</dt><dd className="break-words">{privateText(sale.privateReference)}</dd></div>
+    <div className="min-w-0 sm:col-span-2"><dt className="font-semibold text-wood-800">Private notes</dt><dd className="whitespace-pre-wrap break-words">{privateText(sale.privateNotes)}</dd></div>
+  </dl>
+</section>;
+
+const CorrectionHistory: React.FC<{ corrections: ArtistSaleCorrection[] }> = ({ corrections }) => {
+  if (corrections.length === 0) return null;
+  return <section>
+    <h4 className="font-serif text-xl text-wood-900">Correction history</h4>
+    <p className="mt-1 font-sans text-base text-wood-600">Each correction is appended in order. The originally recorded facts above remain unchanged.</p>
+    <ol aria-label="Correction history" className="mt-4 border-t border-wood-200">
+      {corrections.map((correction, index) => {
+        const changes = correctionChanges(correction);
+        return <li key={correction.saleEventId} className="min-w-0 border-b border-wood-200 py-4 font-sans text-base text-wood-700">
+          <p><strong className="text-wood-900">Correction {index + 1}</strong> · <time dateTime={correction.createdAt}>{new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(correction.createdAt))}</time></p>
+          <p className="mt-2 break-words"><span className="font-semibold text-wood-800">Reason:</span> {correction.reason}</p>
+          <ul className="mt-3 space-y-2" aria-label={`Changed facts for correction ${index + 1}`}>
+            {changes.map(change => <li key={change.label} className="break-words"><span className="font-semibold text-wood-800">{change.label}:</span> {change.before} → {change.after}</li>)}
+          </ul>
+        </li>;
+      })}
+    </ol>
+  </section>;
+};
+
 const SaleDetail: React.FC<{
-  detail: ArtistSaleDetailResponse; originalSale: ArtistSaleDetailResponse['sale'];
+  detail: ArtistSaleDetailResponse;
   ledgers: Record<string, ArtistLedgerDetailResponse>; invitations: AdminInvitation[];
   registrationAttempts: Record<string, FrozenArtistSaleAttempt<RegistrationRequest> | null>;
   invitationAttempts: Record<string, InvitationCreateAttempt | null>; busy: string;
@@ -677,25 +764,28 @@ const SaleDetail: React.FC<{
   onCancelRegistration: (artworkRecordId: string) => void;
   onCancelInvitation: (artworkRecordId: string) => void;
   onRetryLink: (item: ArtistSaleItem) => Promise<void>;
-}> = ({ detail, originalSale, ledgers, invitations, registrationAttempts, invitationAttempts, pendingLinks, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+}> = ({ detail, ledgers, invitations, registrationAttempts, invitationAttempts, pendingLinks, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
   const [sharedMessage, setSharedMessage] = useState('');
   const [showCorrection, setShowCorrection] = useState(false);
   const initial = saleDraftFrom(detail);
   const [correction, setCorrection] = useState(initial);
   const [correctionReason, setCorrectionReason] = useState('');
 
-  useEffect(() => { setCorrection(saleDraftFrom(detail)); }, [detail.sale.sequence]);
+  useEffect(() => { setCorrection(saleDraftFrom(detail)); }, [detail.effectiveSale.sequence]);
+
+  const hasCorrections = !sameSaleFacts(detail.originalSale, detail.effectiveSale);
 
   return <div className="space-y-8" aria-labelledby="sale-detail-title">
-    <div><h3 id="sale-detail-title" className="font-serif text-3xl text-wood-900">Sale from {occurrenceLabel(detail.sale.occurrence)}</h3><p className="mt-2 font-sans text-base text-wood-700">{detail.items.length} artwork{detail.items.length === 1 ? '' : 's'} · {detail.items.filter(item => item.identificationStatus === 'unresolved').length} unresolved</p></div>
-    <div className="border-y border-wood-200 py-5"><h4 className="font-serif text-xl text-wood-900">Original sale facts</h4><dl className="mt-3 grid gap-3 font-sans text-base text-wood-700 sm:grid-cols-2"><div><dt className="font-semibold">Occurrence</dt><dd>{occurrenceLabel(originalSale.occurrence)}</dd></div><div><dt className="font-semibold">Buyer</dt><dd>{originalSale.buyerEmail || 'Not recorded'}</dd></div><div><dt className="font-semibold">Total, private</dt><dd>{moneyLabel(originalSale.total)}</dd></div><div><dt className="font-semibold">Private reference</dt><dd>{originalSale.privateReference || 'Not recorded'}</dd></div>{originalSale.privateNotes && <div className="sm:col-span-2"><dt className="font-semibold">Private notes</dt><dd>{originalSale.privateNotes}</dd></div>}</dl></div>
-    {detail.events.length > 0 && <div><h4 className="font-serif text-xl text-wood-900">Additive history</h4><ol className="mt-3 border-t border-wood-200">{detail.events.map(event => <li key={event.saleEventId} className="border-b border-wood-200 py-3 font-sans text-base text-wood-700"><strong>{event.eventType === 'sale_corrected' ? 'Sale correction' : event.eventType}</strong>{event.reason && <> · Correction reason: {event.reason}</>}</li>)}</ol></div>}
-    <div><button type="button" className={buttonSecondary} onClick={() => setShowCorrection(value => !value)}>Correct sale facts</button>{showCorrection && <form className="mt-5 space-y-4 border-l-2 border-bronze-500 pl-4" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.sale.saleId, { action: 'correctSale', expectedSequence: detail.sale.sequence, occurrence: occurrence(correction.precision, correction.occurrenceValue), buyerEmail: correction.buyerEmail.trim().toLowerCase() || null, total: money(correction.totalAmount, correction.totalCurrency), privateReference: correction.privateReference.trim() || null, privateNotes: correction.privateNotes.trim() || null, reason: correctionReason }, 'Correction appended. Original sale facts remain above.'); if (ok) { setShowCorrection(false); setCorrectionReason(''); } }}><p className="font-sans text-base text-wood-700">Corrections append history. They do not erase the original record.</p><fieldset><legend className="font-sans text-base font-semibold text-wood-800">Corrected occurrence precision</legend><div className="grid gap-2 sm:grid-cols-4">{([['unknown', 'Unknown'], ['year', 'Year'], ['month', 'Month'], ['exact', 'Exact date']] as const).map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 font-sans text-base"><input className="h-5 w-5" type="radio" name="correction-precision" checked={correction.precision === value} onChange={() => setCorrection(current => ({ ...current, precision: value, occurrenceValue: '' }))} />{label}</label>)}</div></fieldset>{correction.precision === 'year' && <label className={labelClass}>Corrected sale year<input className={inputClass} type="number" min="1000" max="9999" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'month' && <label className={labelClass}>Corrected sale month<input className={inputClass} type="month" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'exact' && <label className={labelClass}>Corrected sale date<input className={inputClass} type="date" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}<label className={labelClass}>Corrected buyer email<input className={inputClass} type="email" value={correction.buyerEmail} onChange={event => setCorrection(value => ({ ...value, buyerEmail: event.target.value }))} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Corrected total<input className={inputClass} type="number" min="0" step="0.01" value={correction.totalAmount} onChange={event => setCorrection(value => ({ ...value, totalAmount: event.target.value }))} /></label><label className={labelClass}>Corrected currency<select className={inputClass} value={correction.totalCurrency} onChange={event => setCorrection(value => ({ ...value, totalCurrency: event.target.value }))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label></div><label className={labelClass}>Corrected private reference<input className={inputClass} value={correction.privateReference} onChange={event => setCorrection(value => ({ ...value, privateReference: event.target.value }))} /></label><label className={labelClass}>Corrected private notes<textarea className={`${inputClass} min-h-24`} value={correction.privateNotes} onChange={event => setCorrection(value => ({ ...value, privateNotes: event.target.value }))} /></label><label className={labelClass}>Correction reason<input className={inputClass} required value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label><button type="submit" className={buttonPrimary} disabled={Boolean(busy)}>Save correction</button></form>}</div>
+    <div><h3 id="sale-detail-title" className="font-serif text-3xl text-wood-900">Sale from {occurrenceLabel(detail.effectiveSale.occurrence)}</h3><p className="mt-2 font-sans text-base text-wood-700">{detail.items.length} artwork{detail.items.length === 1 ? '' : 's'} · {detail.items.filter(item => item.identificationStatus === 'unresolved').length} unresolved</p></div>
+    <SaleFactsPanel title="Originally recorded" sale={detail.originalSale} />
+    {hasCorrections && <SaleFactsPanel title="Current corrected record" sale={detail.effectiveSale} />}
+    <CorrectionHistory corrections={detail.corrections} />
+    <div><button type="button" className={buttonSecondary} onClick={() => setShowCorrection(value => !value)}>Correct sale facts</button>{showCorrection && <form className="mt-5 space-y-4 border-t border-bronze-500 pt-5" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'correctSale', expectedSequence: detail.effectiveSale.sequence, occurrence: occurrence(correction.precision, correction.occurrenceValue), buyerEmail: correction.buyerEmail.trim().toLowerCase() || null, total: money(correction.totalAmount, correction.totalCurrency), privateReference: correction.privateReference.trim() || null, privateNotes: correction.privateNotes.trim() || null, reason: correctionReason }, 'Correction appended. Originally recorded facts remain unchanged.'); if (ok) { setShowCorrection(false); setCorrectionReason(''); } }}><p className="font-sans text-base text-wood-700">Corrections append history. They do not erase the originally recorded facts.</p><fieldset><legend className="font-sans text-base font-semibold text-wood-800">Corrected occurrence precision</legend><div className="grid gap-2 sm:grid-cols-4">{([['unknown', 'Unknown'], ['year', 'Year'], ['month', 'Month'], ['exact', 'Exact date']] as const).map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 font-sans text-base"><input className="h-5 w-5" type="radio" name="correction-precision" checked={correction.precision === value} onChange={() => setCorrection(current => ({ ...current, precision: value, occurrenceValue: '' }))} />{label}</label>)}</div></fieldset>{correction.precision === 'year' && <label className={labelClass}>Corrected sale year<input className={inputClass} type="number" min="1000" max="9999" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'month' && <label className={labelClass}>Corrected sale month<input className={inputClass} type="month" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'exact' && <label className={labelClass}>Corrected sale date<input className={inputClass} type="date" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}<label className={labelClass}>Corrected buyer email<input className={inputClass} type="email" value={correction.buyerEmail} onChange={event => setCorrection(value => ({ ...value, buyerEmail: event.target.value }))} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Corrected total<input className={inputClass} type="number" min="0" step="0.01" value={correction.totalAmount} onChange={event => setCorrection(value => ({ ...value, totalAmount: event.target.value }))} /></label><label className={labelClass}>Corrected currency<select className={inputClass} value={correction.totalCurrency} onChange={event => setCorrection(value => ({ ...value, totalCurrency: event.target.value }))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label></div><label className={labelClass}>Corrected private reference<input className={inputClass} value={correction.privateReference} onChange={event => setCorrection(value => ({ ...value, privateReference: event.target.value }))} /></label><label className={labelClass}>Corrected private notes<textarea className={`${inputClass} min-h-24`} value={correction.privateNotes} onChange={event => setCorrection(value => ({ ...value, privateNotes: event.target.value }))} /></label><label className={labelClass}>Correction reason<input className={inputClass} required value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label><button type="submit" className={buttonPrimary} disabled={Boolean(busy)}>Save correction</button></form>}</div>
 
-    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.sale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.sale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
+    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
 
     <div className="border-t border-wood-200">
-      {detail.items.map((item, index) => <ArtworkActions key={item.artworkRecordId} index={index} item={item} sale={detail.sale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[item.artworkRecordId])} invitationFrozen={Boolean(invitationAttempts[item.artworkRecordId])} linkPending={Boolean(pendingLinks[item.artworkRecordId])} busy={busy} ownershipSecret={ownershipSecret?.artworkRecordId === item.artworkRecordId ? ownershipSecret.code : null} invitationSecret={invitationSecret?.artworkRecordId === item.artworkRecordId ? invitationSecret.token : null} onDismissOwnership={onDismissOwnership} onDismissInvitation={onDismissInvitation} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />)}
+      {detail.items.map((item, index) => <ArtworkActions key={item.artworkRecordId} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[item.artworkRecordId])} invitationFrozen={Boolean(invitationAttempts[item.artworkRecordId])} linkPending={Boolean(pendingLinks[item.artworkRecordId])} busy={busy} ownershipSecret={ownershipSecret?.artworkRecordId === item.artworkRecordId ? ownershipSecret.code : null} invitationSecret={invitationSecret?.artworkRecordId === item.artworkRecordId ? invitationSecret.token : null} onDismissOwnership={onDismissOwnership} onDismissInvitation={onDismissInvitation} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />)}
     </div>
   </div>;
 };

@@ -16,11 +16,47 @@ type Artwork = {
   ledgerEntries: Array<{ ledgerEntryId: string; message: string | null; mediaId: string | null; createdAt: string; media: null | { role: string; contentType: string; byteLength: number } }>;
 };
 
+type SaleFacts = {
+  reconnectionCaseId: string | null;
+  occurrence: { precision: string; value: string | null };
+  buyerEmail: string | null;
+  total: { amountMinor: number; currency: string } | null;
+  privateReference: string | null;
+  privateNotes: string | null;
+  recordedAt: string;
+};
+
+type SaleDetailState = {
+  sale: Record<string, any>;
+  originalSale: Record<string, any>;
+  effectiveSale: Record<string, any>;
+  corrections: Array<{
+    saleEventId: string;
+    sequence: number;
+    reason: string;
+    createdAt: string;
+    before: SaleFacts;
+    after: SaleFacts;
+  }>;
+  items: Artwork[];
+  events: Array<Record<string, unknown>>;
+};
+
+const saleFacts = (sale: Record<string, any>): SaleFacts => ({
+  reconnectionCaseId: sale.reconnectionCaseId,
+  occurrence: sale.occurrence,
+  buyerEmail: sale.buyerEmail,
+  total: sale.total,
+  privateReference: sale.privateReference,
+  privateNotes: sale.privateNotes,
+  recordedAt: sale.recordedAt,
+});
+
 async function installSalesMock(page: Page) {
   const state: {
     cases: Array<Record<string, unknown>>;
     sales: Array<Record<string, any>>;
-    details: Map<string, { sale: Record<string, any>; items: Artwork[]; events: Array<Record<string, unknown>> }>;
+    details: Map<string, SaleDetailState>;
     media: Map<string, Array<Record<string, unknown>>>;
     selected: Map<string, string>;
     invitations: Array<Record<string, unknown>>;
@@ -65,7 +101,10 @@ async function installSalesMock(page: Page) {
         recordVersion: 1, price: item.price, priceEntries: [], ledgerEntries: [],
       }));
       state.sales.push({ ...sale, identificationStatuses: items.map(item => item.identificationStatus) });
-      state.details.set(saleId, { sale, items, events: [] });
+      state.details.set(saleId, {
+        sale, originalSale: { ...sale }, effectiveSale: sale,
+        corrections: [], items, events: [],
+      });
       return reply(route, { ok: true, result: { saleId, itemIds: items.map(item => item.saleItemId), artworkRecordIds: items.map(item => item.artworkRecordId), priceEntryIds: [], replayed: false } }, 201);
     }
     const detail = state.details.get(match![1])!;
@@ -77,10 +116,24 @@ async function installSalesMock(page: Page) {
       return reply(route, { ok: true, result: { artworkRecordId: item.artworkRecordId, identificationStatus: item.identificationStatus, artworkId: item.artworkId, edition: item.edition, keeperPieceId: item.keeperPieceId, recordVersion: item.recordVersion, replayed: false } }, 201);
     }
     if (body.action === 'correctSale') {
-      detail.sale.sequence += 1;
-      detail.events.push({ saleEventId: 'event-correction', sequence: detail.sale.sequence, eventType: 'sale_corrected', reason: body.reason, createdAt: now });
-      Object.assign(detail.sale, { occurrence: body.occurrence, buyerEmail: body.buyerEmail, total: body.total, privateReference: body.privateReference, privateNotes: body.privateNotes });
-      return reply(route, { ok: true, result: { saleEventId: 'event-correction', saleId: match![1], sequence: detail.sale.sequence, reason: body.reason, replayed: false } }, 201);
+      const sequence = detail.effectiveSale.sequence + 1;
+      const saleEventId = `event-correction-${sequence}`;
+      const before = saleFacts(detail.effectiveSale);
+      const after = {
+        ...before,
+        occurrence: body.occurrence,
+        buyerEmail: body.buyerEmail,
+        total: body.total,
+        privateReference: body.privateReference,
+        privateNotes: body.privateNotes,
+      };
+      detail.corrections.push({ saleEventId, sequence, reason: body.reason, createdAt: now, before, after });
+      detail.events.push({ saleEventId, sequence, eventType: 'corrected', reason: body.reason, createdAt: now });
+      detail.effectiveSale = { ...detail.effectiveSale, ...after, sequence };
+      detail.sale = detail.effectiveSale;
+      const summary = state.sales.find(value => value.saleId === match![1]);
+      if (summary) Object.assign(summary, detail.effectiveSale);
+      return reply(route, { ok: true, result: { saleEventId, saleId: match![1], sequence, reason: body.reason, replayed: false } }, 201);
     }
     return reply(route, { ok: true, result: { reconnectionEventId: 'case-event', eventType: body.action === 'recordReconnectionEmail' ? 'email_sent' : body.action === 'changeReconnectionStatus' ? 'status_changed' : 'note_added', ...(body.newStatus ? { status: body.newStatus } : {}), replayed: false } }, 201);
   });
@@ -158,6 +211,9 @@ test('records and reconnects through the complete private verified-sale journey'
   await page.getByLabel('Year', { exact: true }).check();
   await page.getByLabel('Sale year').fill('2018');
   await page.getByLabel('Buyer email').fill('collector@example.com');
+  await page.getByLabel('Total, optional').fill('1500');
+  await page.getByLabel('Private reference, optional').fill('Receipt 2018-A');
+  await page.getByLabel('Private notes, optional').fill('Recorded after the original studio visit.');
   await page.getByLabel('Artwork 1').selectOption('UL-100');
   await page.getByRole('button', { name: 'Add another artwork' }).click();
   await page.getByLabel('Artwork 2').selectOption('UL-101');
@@ -199,13 +255,47 @@ test('records and reconnects through the complete private verified-sale journey'
 
   await page.getByRole('button', { name: 'Correct sale facts' }).click();
   await page.getByLabel('Correction reason').fill('Corrected from the paper receipt.');
+  await page.getByLabel('Corrected total').fill('1750');
+  await page.getByLabel('Corrected private reference').fill('Receipt 2018-B');
   await page.getByLabel('Corrected private notes').fill('Verified against the original receipt.');
   await page.getByRole('button', { name: 'Save correction' }).click();
-  await expect(page.getByRole('heading', { name: 'Original sale facts' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Originally recorded' })).toBeVisible();
   await expect(page.getByText('Corrected from the paper receipt.')).toBeVisible();
 
+  await page.getByRole('button', { name: 'Correct sale facts' }).click();
+  await page.getByLabel('Exact date', { exact: true }).check();
+  await page.getByLabel('Corrected sale date').fill('2018-11-03');
+  await page.getByLabel('Corrected buyer email').fill('collector.updated@example.com');
+  await page.getByLabel('Corrected total').fill('1850');
+  await page.getByLabel('Corrected private reference').fill('Receipt 2018-Final');
+  await page.getByLabel('Corrected private notes').fill('Collector confirmed the final private details.');
+  await page.getByLabel('Correction reason').fill('Collector confirmed the details.');
+  await page.getByRole('button', { name: 'Save correction' }).click();
+  await expect(page.getByText('Collector confirmed the details.')).toBeVisible();
+
   await page.reload();
-  await page.getByRole('button', { name: /Sale from 2018/ }).click();
+  await page.getByRole('button', { name: /Sale from 3 November 2018/ }).click();
+  const original = page.getByRole('heading', { name: 'Originally recorded' }).locator('..');
+  await expect(original).toContainText('2018');
+  await expect(original).toContainText('collector@example.com');
+  await expect(original).toContainText('USD 1,500.00');
+  await expect(original).toContainText('Receipt 2018-A');
+  await expect(original).toContainText('Recorded after the original studio visit.');
+  const corrected = page.getByRole('heading', { name: 'Current corrected record' }).locator('..');
+  await expect(corrected).toContainText('3 November 2018');
+  await expect(corrected).toContainText('collector.updated@example.com');
+  await expect(corrected).toContainText('USD 1,850.00');
+  await expect(corrected).toContainText('Receipt 2018-Final');
+  await expect(corrected).toContainText('Collector confirmed the final private details.');
+  const correctionHistory = page.getByRole('list', { name: 'Correction history' });
+  const correctionItems = correctionHistory.locator(':scope > li');
+  await expect(correctionItems).toHaveCount(2);
+  await expect(correctionItems.nth(0)).toContainText('Corrected from the paper receipt.');
+  await expect(correctionItems.nth(0)).toContainText('Total, private: USD 1,500.00 → USD 1,750.00');
+  await expect(correctionItems.nth(1)).toContainText('Collector confirmed the details.');
+  await expect(correctionItems.nth(1)).toContainText('Occurrence: 2018 → 3 November 2018');
+  await expect(correctionItems.nth(1)).toContainText('Buyer, private: collector@example.com → collector.updated@example.com');
+  await expect(page.getByText(/event-correction|record-1|sale-one/)).toHaveCount(0);
   await expect(page.getByText('Artwork not identified yet')).toHaveCount(0);
   const reloadedArtwork = page.getByRole('group', { name: 'Artwork 1 actions' });
   await expect(reloadedArtwork.getByText(/Identification evidence · Immutable/)).toBeVisible();
