@@ -155,6 +155,7 @@ Review only for P0 and P1 defects in identity, claim, transfer, privacy projecti
 - Modify: `utils/adminRegistryMaintenance.ts`
 - Modify: `tests/registry-maintenance.test.ts`
 - Modify: `tests/admin-maintenance-ui.test.ts`
+- Modify: `tests/admin-studio-navigation.spec.ts` (guarded legacy-sale navigation)
 - Reuse: `functions/api/_lib/artistSales.js`
 - Reuse: `components/admin/CollectorSales.tsx`
 
