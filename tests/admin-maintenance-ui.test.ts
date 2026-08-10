@@ -33,6 +33,28 @@ describe('registry Maintenance client contract', () => {
     assert.doesNotMatch(path, /private|acquired|amount|currency|notes|hasAcquisition|987654321|XTS/i);
   });
 
+  it('builds a legacy sale handoff URL from stable identifiers only', async () => {
+    const { buildLegacyAcquisitionSalesPath } = await import('../utils/adminRegistryMaintenance.ts');
+    const path = buildLegacyAcquisitionSalesPath({
+      acquisitionId: ' acq-legacy-1 ',
+      artworkId: ' UL-100 ',
+      keeperPieceId: ' kp-1 ',
+      collectorReference: 'private@example.com',
+      privateNotes: 'never in the URL',
+      amountMinor: 125000,
+    } as never);
+
+    const url = new URL(path, 'https://adrianrasmussen.com');
+    assert.equal(url.pathname, '/admin/collector-sales');
+    assert.deepEqual(Object.fromEntries(url.searchParams), {
+      source: 'legacy_acquisition',
+      acquisitionId: 'acq-legacy-1',
+      artworkId: 'UL-100',
+      keeperPieceId: 'kp-1',
+    });
+    assert.doesNotMatch(path, /private|example|notes|125000/i);
+  });
+
   it('projects search responses onto the public-only result shape', async () => {
     mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({
       ok: true,
@@ -94,7 +116,7 @@ describe('registry Maintenance client contract', () => {
       shouldRetainMaintenanceSaveAttempt,
     } = await import('../utils/adminRegistryMaintenance.ts');
     const acquisition = {
-      acquisitionType: 'sale' as const,
+      acquisitionType: 'consignment' as const,
       acquiredAt: '2026-07-30',
       amountMinor: 125000,
       currency: 'IDR',
@@ -480,6 +502,20 @@ describe('registry Maintenance workspace wiring', () => {
     assert.match(component, /verified account email/i);
     assert.match(component, /Unclaimed/);
     assert.match(component, /display location.*clear/i);
+  });
+
+  it('shows legacy sale history as read-only with an exact verified-sales handoff', () => {
+    const component = source('components/AdminMaintenance.tsx');
+    const acquisitionOptions = component.slice(
+      component.indexOf('const acquisitionTypes'),
+      component.indexOf('const inputClass'),
+    );
+
+    assert.match(component, /Legacy sale record/);
+    assert.doesNotMatch(acquisitionOptions, /value:\s*['"]sale['"]/);
+    assert.match(component, /acquisition\.acquisitionType === ['"]sale['"]/);
+    assert.match(component, /<Link[\s\S]*buildLegacyAcquisitionSalesPath/);
+    assert.match(component, /Open verified sales/);
   });
 
   it('keeps private state in memory, gates writes on unlock, and reloads stale detail', () => {

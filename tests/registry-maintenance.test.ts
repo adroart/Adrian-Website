@@ -469,7 +469,7 @@ describe('maintenance input normalization', () => {
 
   it('normalizes an allowlisted acquisition and rejects unknown or oversized input', () => {
     assert.deepEqual(normalizeAcquisitionInput({
-      acquisitionType: 'sale',
+      acquisitionType: 'consignment',
       acquiredAt: '2026-07-29T12:30:00Z',
       amountMinor: 125000,
       currency: ' idr ',
@@ -480,7 +480,7 @@ describe('maintenance input normalization', () => {
     }), {
       ok: true,
       acquisition: {
-        acquisitionType: 'sale',
+        acquisitionType: 'consignment',
         acquiredAt: '2026-07-29T12:30:00.000Z',
         amountMinor: 125000,
         currency: 'IDR',
@@ -525,18 +525,44 @@ describe('maintenance input normalization', () => {
     for (const [input, error] of [
       [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', extra: true }, 'unknown_field'],
       [{ acquisitionType: 'purchase', acquiredAt: '2026-01-01' }, 'invalid_acquisition_type'],
-      [{ acquisitionType: 'sale', acquiredAt: 'not-a-date' }, 'invalid_acquired_at'],
-      [{ acquisitionType: 'sale', acquiredAt: '2026-02-30' }, 'invalid_acquired_at'],
-      [{ acquisitionType: 'sale', acquiredAt: '0' }, 'invalid_acquired_at'],
-      [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', amountMinor: 10 }, 'currency_required'],
-      [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', currency: 'USD' }, 'amount_required'],
-      [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', amountMinor: -1, currency: 'USD' }, 'invalid_amount'],
-      [{ acquisitionType: 'sale', acquiredAt: '2026-01-01', privateNotes: 'x'.repeat(5001) }, 'private_notes_too_long'],
+      [{ acquisitionType: 'gift', acquiredAt: 'not-a-date' }, 'invalid_acquired_at'],
+      [{ acquisitionType: 'gift', acquiredAt: '2026-02-30' }, 'invalid_acquired_at'],
+      [{ acquisitionType: 'gift', acquiredAt: '0' }, 'invalid_acquired_at'],
+      [{ acquisitionType: 'gift', acquiredAt: '2026-01-01', amountMinor: 10 }, 'currency_required'],
+      [{ acquisitionType: 'gift', acquiredAt: '2026-01-01', currency: 'USD' }, 'amount_required'],
+      [{ acquisitionType: 'gift', acquiredAt: '2026-01-01', amountMinor: -1, currency: 'USD' }, 'invalid_amount'],
+      [{ acquisitionType: 'gift', acquiredAt: '2026-01-01', privateNotes: 'x'.repeat(5001) }, 'private_notes_too_long'],
     ] as const) {
       const result = normalizeAcquisitionInput(input);
       assert.equal(result.ok, false);
       assert.equal(result.error, error);
     }
+  });
+
+  it('rejects new sale acquisitions while preserving every custody type', () => {
+    assert.deepEqual(normalizeAcquisitionInput({ acquisitionType: 'sale' }), {
+      ok: false,
+      error: 'verified_sale_required',
+    });
+    for (const acquisitionType of [
+      'retained', 'loan', 'consignment', 'gift', 'inheritance', 'other',
+    ]) {
+      assert.equal(normalizeAcquisitionInput({ acquisitionType }).ok, true);
+    }
+  });
+
+  it('keeps maintenance acquisition code outside verified sales and price history', () => {
+    const maintenanceSource = [
+      '../functions/api/_lib/registryMaintenance.js',
+      '../functions/api/admin/maintenance/[id]/acquisitions.js',
+      '../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js',
+      '../functions/api/admin/maintenance/[id]/actions.js',
+      '../utils/adminRegistryMaintenance.ts',
+      '../components/AdminMaintenance.tsx',
+    ].map(path => readFileSync(new URL(path, import.meta.url), 'utf8')).join('\n');
+
+    assert.doesNotMatch(maintenanceSource, /from\s+['"][^'"]*artistSales(?:\.js)?['"]/);
+    assert.doesNotMatch(maintenanceSource, /artist_verified_sales|artist_artwork_price_entries/);
   });
 
   it('normalizes typed creator history and preserves partial date precision', () => {
@@ -814,6 +840,51 @@ describe('governed steward transfer boundary', () => {
 });
 
 describe('maintenance idempotency and atomic writes', () => {
+  it('keeps a stored legacy sale acquisition read-only instead of converting it', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`${registryMigrations}\n${keeperInsert}\n
+        INSERT INTO artwork_acquisitions
+          (id, keeper_piece_id, acquisition_type, acquired_at, amount_minor, currency,
+           record_version, created_at, updated_at)
+        VALUES ('acq-legacy', 'kp-maint', 'sale', '2026-01-01', 125000, 'IDR', 1,
+          '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+      `);
+      const before = {
+        acquisitionId: 'acq-legacy', keeperPieceId: 'kp-maint', acquisitionType: 'sale',
+        acquiredAt: '2026-01-01', amountMinor: 125000, currency: 'IDR',
+        acquirerReference: null, privateNotes: null, documentReference: null,
+        publicProvenance: null, updatedAt: '2026-01-01T00:00:00.000Z', recordVersion: 1,
+      };
+      const after = {
+        ...before, acquisitionType: 'gift', amountMinor: null, currency: null,
+        updatedAt: '2026-08-10T00:00:00.000Z', recordVersion: 2,
+      };
+      const changes = Object.fromEntries(
+        Object.entries(after).filter(([key]) => ![
+          'acquisitionId', 'keeperPieceId', 'recordVersion',
+        ].includes(key)),
+      );
+
+      assert.deepEqual(await commitMaintenanceMutation(env, {
+        target: { type: 'acquisition', id: 'acq-legacy', keeperPieceId: 'kp-maint' },
+        changes,
+        event: {
+          idempotencyKey: 'legacy-sale-conversion', eventType: 'acquisition_corrected',
+          keeperPieceId: 'kp-maint', artworkId: null, authorization: adminIdentity,
+          reason: 'Convert old sale.', before, after, outcome: 'succeeded',
+          relatedRecordId: 'acq-legacy', createdAt: '2026-08-10T00:00:00.000Z',
+        },
+        expectedVersion: 1,
+      }), { ok: false, error: 'legacy_sale_read_only' });
+      assert.equal(database.prepare(
+        "SELECT acquisition_type FROM artwork_acquisitions WHERE id = 'acq-legacy'",
+      ).get().acquisition_type, 'sale');
+    } finally {
+      database.close();
+    }
+  });
+
   it('looks up a bounded idempotency key without exposing private values', async () => {
     const calls: Array<{ sql: string; values: unknown[] }> = [];
     const row = storedEvent();
@@ -1457,7 +1528,7 @@ const adminIdentity = {
 
 function acquisitionInput(overrides: Record<string, unknown> = {}) {
   return {
-    acquisitionType: 'sale',
+    acquisitionType: 'consignment',
     acquiredAt: '2026-07-29T12:30:00Z',
     amountMinor: 125000,
     currency: 'IDR',
@@ -1753,6 +1824,7 @@ describe('private maintenance APIs', () => {
         backupAt: '2026-07-21T00:00:00.000Z',
       });
       assert.equal(detailed.piece.acquisitions[0].amountMinor, 125000);
+      assert.equal(detailed.piece.acquisitions[0].acquisitionType, 'sale');
       assert.equal(detailed.piece.maintenanceHistory[0].reason, 'Record acquisition.');
       const redactedHistory = detailed.piece.maintenanceHistory.find(
         (event: { id: string }) => event.id === 'rme-malicious',
@@ -1796,6 +1868,16 @@ describe('private maintenance APIs', () => {
       const cookie = await unlockedCookie(env);
       const { onRequest: create } = await import('../functions/api/admin/maintenance/[id]/acquisitions.js');
       const { onRequest: correct } = await import('../functions/api/admin/maintenance/[id]/acquisitions/[acquisitionId].js');
+      const rejectedSale = await create({
+        request: adminRequest('/api/admin/maintenance/kp-maint/acquisitions', 'POST', {
+          idempotencyKey: 'api-reject-sale', reason: 'Attempt a maintenance sale.',
+          acquisition: acquisitionInput({ acquisitionType: 'sale' }),
+        }, cookie),
+        env, params: { id: 'kp-maint' },
+      });
+      assert.equal(rejectedSale.status, 400);
+      assert.deepEqual(await rejectedSale.json(), { ok: false, error: 'verified_sale_required' });
+      assert.equal(database.prepare('SELECT count(*) AS count FROM artwork_acquisitions').get().count, 0);
       const createBody = {
         idempotencyKey: 'api-create-acq', reason: 'Record the acquisition.',
         acquisition: acquisitionInput(),

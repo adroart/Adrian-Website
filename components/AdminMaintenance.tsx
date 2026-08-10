@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AdminAlert,
   AdminEmptyState,
@@ -11,6 +12,7 @@ import {
   beginMaintenancePlateActionAttempt,
   beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
+  buildLegacyAcquisitionSalesPath,
   createMaintenanceRequestGate,
   discardMaintenanceSaveAttempt,
   formatMaintenanceCurrencyAmount,
@@ -112,7 +114,7 @@ const EMPTY_SEARCH: SearchDraft = {
 };
 
 const EMPTY_ACQUISITION: AcquisitionDraft = {
-  acquisitionType: 'sale',
+  acquisitionType: 'retained',
   acquiredAt: '',
   amount: '',
   currency: '',
@@ -142,7 +144,6 @@ const provenanceTypes: Array<{ value: MaintenanceProvenanceType; label: string }
 ];
 
 const acquisitionTypes: Array<{ value: MaintenanceAcquisitionType; label: string }> = [
-  { value: 'sale', label: 'Sale' },
   { value: 'gift', label: 'Gift' },
   { value: 'retained', label: 'Retained' },
   { value: 'loan', label: 'Loan' },
@@ -162,6 +163,8 @@ function messageFor(error: unknown, fallback: string): string {
     registry_locked: 'Private registry access expired. Unlock it again before saving.',
     idempotency_conflict: 'That save could not be safely retried. Review the current record and try again.',
     version_conflict: 'This record changed after you opened it.',
+    verified_sale_required: 'Record sales in the verified-sales workspace.',
+    legacy_sale_read_only: 'Legacy sale records stay read-only. Continue in verified sales.',
   };
   return messages[error.message] || fallback;
 }
@@ -592,6 +595,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
+    if (acquisition?.acquisitionType === 'sale') return;
     if (!clearMaintenanceAttempts()) return;
     setStewardEditor(null);
     setStewardReview(null);
@@ -1493,17 +1497,30 @@ const AdminMaintenance: React.FC = () => {
               <button type="button" className={primaryButtonClass} onClick={() => openEditor(null)} disabled={transitionBusy}>Record acquisition</button>
             </div>
             {selected.acquisitions.length === 0 ? (
-              <AdminEmptyState title="No acquisition recorded" description="Record a sale, gift, retained work, loan, or other acquisition event." />
+              <AdminEmptyState title="No acquisition recorded" description="Record retained work, a loan, consignment, gift, inheritance, or other custody event." />
             ) : (
               <div className="maintenance-acquisitions">
                 {selected.acquisitions.map(acquisition => (
                   <article key={acquisition.acquisitionId} className="maintenance-acquisition-row">
                     <div>
-                      <strong>{acquisition.acquisitionType}</strong>
+                      <strong>{acquisition.acquisitionType === 'sale' ? 'Legacy sale record' : acquisition.acquisitionType}</strong>
                       <span>{displayDate(acquisition.acquiredAt)} · {displayPrivateAmount(acquisition)}</span>
                       {acquisition.acquirerReference && <span>Reference: {acquisition.acquirerReference}</span>}
                     </div>
-                    <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={transitionBusy} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
+                    {acquisition.acquisitionType === 'sale' ? (
+                      <Link
+                        className={quietButtonClass}
+                        to={buildLegacyAcquisitionSalesPath({
+                          acquisitionId: acquisition.acquisitionId,
+                          artworkId: selected.public.artworkId,
+                          keeperPieceId: acquisition.keeperPieceId,
+                        })}
+                      >
+                        Open verified sales
+                      </Link>
+                    ) : (
+                      <button type="button" className={quietButtonClass} onClick={() => openEditor(acquisition)} disabled={transitionBusy} aria-label={`Correct acquisition ${acquisition.acquisitionId}`}>Correct record</button>
+                    )}
                   </article>
                 ))}
               </div>

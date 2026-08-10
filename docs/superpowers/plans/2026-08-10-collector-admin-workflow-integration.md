@@ -158,19 +158,19 @@ Review only for P0 and P1 defects in identity, claim, transfer, privacy projecti
 - Reuse: `functions/api/_lib/artistSales.js`
 - Reuse: `components/admin/CollectorSales.tsx`
 
-- [ ] **Step 1: Write the failing maintenance contract tests**
+- [x] **Step 1: Write the failing maintenance contract tests**
 
 Prove that a new maintenance acquisition cannot write `acquisition_type = 'sale'`, while retained work, loan, consignment, gift, inheritance, and other custody records still work.
 
-- [ ] **Step 2: Preserve legacy sale records as read-only**
+- [x] **Step 2: Preserve legacy sale records as read-only**
 
 The maintenance reader continues to show existing `sale` acquisitions with a “Legacy sale record” label. The editor does not offer `sale` for new entries and does not silently convert old records.
 
-- [ ] **Step 3: Hand sale work to the verified-sales workspace**
+- [x] **Step 3: Hand sale work to the verified-sales workspace**
 
 Add an exact link from a legacy sale record or paid invoice to `/admin/collector-sales` with stable source context. Adrian must confirm the artwork and facts before the verified-sale writer runs.
 
-- [ ] **Step 4: Verify no dual writes**
+- [x] **Step 4: Verify no dual writes**
 
 Test that creating or correcting a verified sale never writes `artwork_acquisitions`, and maintenance acquisition changes never write `artist_verified_sales` or the private price ledger.
 

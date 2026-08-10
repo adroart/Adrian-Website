@@ -2,7 +2,6 @@ export const MAINTENANCE_REASON_MAX = 500;
 export const MAINTENANCE_IDEMPOTENCY_KEY_MAX = 128;
 
 const ACQUISITION_TYPES = new Set([
-  'sale',
   'gift',
   'retained',
   'loan',
@@ -364,6 +363,10 @@ function validateEventMutation(normalizedTarget, event, expectedVersion) {
   const before = normalizeEventSnapshot(eventType, event?.before);
   const after = normalizeEventSnapshot(eventType, event?.after);
   if (!isPlainRecord(before) || !isPlainRecord(after)) return null;
+  if (normalizedTarget.targetType === 'acquisition'
+    && before.acquisitionType === 'sale') {
+    return { error: 'legacy_sale_read_only' };
+  }
 
   const expectedSnapshotKeys = [...policy.identityFields, ...changeKeys];
   if (!sameKeys(Object.keys(before), expectedSnapshotKeys)
@@ -599,6 +602,9 @@ export function normalizeAcquisitionInput(input) {
   const acquisitionType = typeof input.acquisitionType === 'string'
     ? input.acquisitionType.trim().toLowerCase()
     : '';
+  if (acquisitionType === 'sale') {
+    return { ok: false, error: 'verified_sale_required' };
+  }
   if (!ACQUISITION_TYPES.has(acquisitionType)) {
     return { ok: false, error: 'invalid_acquisition_type' };
   }

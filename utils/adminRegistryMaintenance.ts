@@ -44,6 +44,12 @@ export type MaintenanceSearchFilters = {
   editionNumber?: number;
 };
 
+export type LegacyAcquisitionSalesContext = {
+  acquisitionId: string;
+  artworkId: string;
+  keeperPieceId: string;
+};
+
 export type MaintenanceListItem = {
   id: string;
   artworkId: string;
@@ -277,6 +283,17 @@ export function buildMaintenanceSearchPath(filters: MaintenanceSearchFilters = {
   }
   const query = params.toString();
   return `/api/admin/maintenance${query ? `?${query}` : ''}`;
+}
+
+/** Carry only stable record identity into the verified-sales workspace. */
+export function buildLegacyAcquisitionSalesPath(
+  context: LegacyAcquisitionSalesContext,
+): string {
+  const params = new URLSearchParams({ source: 'legacy_acquisition' });
+  appendText(params, 'acquisitionId', context.acquisitionId);
+  appendText(params, 'artworkId', context.artworkId);
+  appendText(params, 'keeperPieceId', context.keeperPieceId);
+  return `/admin/collector-sales?${params.toString()}`;
 }
 
 async function readMaintenanceJson<T>(response: Response): Promise<T> {
