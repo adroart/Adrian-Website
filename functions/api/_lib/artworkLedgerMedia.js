@@ -111,27 +111,40 @@ function parseLease(object) {
       || object.etag.length < 1 || object.etag.length > 256) throw new TypeError();
     const metadata = object.customMetadata;
     if (!metadata || typeof metadata !== 'object') throw new TypeError();
-    if (Object.keys(metadata).sort().join(',') !== 'expiresAt,ownerToken,state') throw new TypeError();
-    const { state, ownerToken, expiresAt } = metadata;
+    if (Object.keys(metadata).sort().join(',') !== 'expiresAt,ownerToken,state,versionNonce') throw new TypeError();
+    const { state, ownerToken, expiresAt, versionNonce } = metadata;
     if (state !== 'active' && state !== 'released') throw new TypeError();
     if (typeof ownerToken !== 'string'
       || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(ownerToken)) {
       throw new TypeError();
     }
     if (typeof expiresAt !== 'string' || !/^[0-9]{13}$/.test(expiresAt)) throw new TypeError();
+    if (typeof versionNonce !== 'string'
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(versionNonce)) {
+      throw new TypeError();
+    }
     const expiry = Number(expiresAt);
     if (!Number.isSafeInteger(expiry) || String(expiry) !== expiresAt) throw new TypeError();
-    return { etag: object.etag, state, ownerToken, expiresAt: expiry };
+    return { etag: object.etag, state, ownerToken, expiresAt: expiry, versionNonce };
   } catch { throw codedError('media_backup_failed'); }
 }
-function leaseMetadata(state, ownerToken, expiresAt) {
-  return { state, ownerToken, expiresAt: String(expiresAt) };
+function leaseRecord(state, ownerToken, expiresAt) {
+  const metadata = {
+    state, ownerToken, expiresAt: String(expiresAt), versionNonce: randomUUID(),
+  };
+  const body = new TextEncoder().encode(JSON.stringify({
+    ownerToken: metadata.ownerToken,
+    state: metadata.state,
+    expiresAt: metadata.expiresAt,
+    versionNonce: metadata.versionNonce,
+  }));
+  return { metadata, body };
 }
-async function putLease(bucket, onlyIf, metadata, signal, deadline) {
+async function putLease(bucket, onlyIf, record, signal, deadline) {
   let result;
   try {
-    result = await waitFor(bucket.put(ADMISSION_KEY, new Uint8Array(), {
-      onlyIf, customMetadata: metadata,
+    result = await waitFor(bucket.put(ADMISSION_KEY, record.body, {
+      onlyIf, customMetadata: record.metadata,
     }), signal, deadline);
   } catch (error) {
     if (isLocalCodedError(error)) throw error;
@@ -140,15 +153,17 @@ async function putLease(bucket, onlyIf, metadata, signal, deadline) {
   }
   if (result === null) return null;
   const parsed = parseLease(result);
+  const metadata = record.metadata;
   if (parsed.state !== metadata.state || parsed.ownerToken !== metadata.ownerToken
-    || parsed.expiresAt !== Number(metadata.expiresAt)) throw codedError('media_backup_failed');
+    || parsed.expiresAt !== Number(metadata.expiresAt)
+    || parsed.versionNonce !== metadata.versionNonce) throw codedError('media_backup_failed');
   return parsed;
 }
 async function acquireAdmission(bucket, signal, deadline) {
   const ownerToken = randomUUID();
   const expiresAt = Date.now() + ADMISSION_LEASE_MS;
-  const metadata = leaseMetadata('active', ownerToken, expiresAt);
-  const initial = await putLease(bucket, { etagDoesNotMatch: '*' }, metadata, signal, deadline);
+  const record = leaseRecord('active', ownerToken, expiresAt);
+  const initial = await putLease(bucket, { etagDoesNotMatch: '*' }, record, signal, deadline);
   if (initial) return initial;
   let observed;
   try { observed = await waitFor(bucket.head(ADMISSION_KEY), signal, deadline); }
@@ -160,7 +175,7 @@ async function acquireAdmission(bucket, signal, deadline) {
   if (current.state === 'active' && current.expiresAt > Date.now()) {
     throw codedError('media_upload_busy');
   }
-  const takeover = await putLease(bucket, { etagMatches: current.etag }, metadata, signal, deadline);
+  const takeover = await putLease(bucket, { etagMatches: current.etag }, record, signal, deadline);
   if (!takeover) throw codedError('media_upload_busy');
   return takeover;
 }
@@ -173,7 +188,7 @@ async function releaseAdmission(bucket, lease) {
   if (current.ownerToken !== lease.ownerToken || current.state !== 'active') {
     throw codedError('media_backup_failed');
   }
-  const released = leaseMetadata('released', lease.ownerToken, Date.now());
+  const released = leaseRecord('released', lease.ownerToken, Date.now());
   const result = await putLease(bucket, { etagMatches: current.etag }, released, null, deadline);
   if (!result) throw codedError('media_backup_failed');
 }
@@ -220,21 +235,45 @@ async function consumeSource(reader, contentLength, signal, deadline) {
   if (failure) throw failure;
   return aggregate;
 }
-function aggregateStream(aggregate) {
+function aggregateUpload(aggregate) {
   let offset = 0;
-  return new ReadableStream({
+  let retained = aggregate;
+  aggregate = null;
+  let controllerReference;
+  const drop = (error) => {
+    retained = null;
+    if (error && controllerReference) {
+      try { controllerReference.error(error); } catch { /* already closed or errored */ }
+    }
+  };
+  const stream = new ReadableStream({
+    start(controller) { controllerReference = controller; },
     pull(controller) {
-      if (offset === aggregate.byteLength) { controller.close(); return; }
-      const end = Math.min(offset + STREAM_CHUNK_BYTES, aggregate.byteLength);
-      controller.enqueue(aggregate.subarray(offset, end));
+      if (!retained) return;
+      if (offset === retained.byteLength) {
+        drop();
+        controller.close();
+        return;
+      }
+      const end = Math.min(offset + STREAM_CHUNK_BYTES, retained.byteLength);
+      const chunk = new Uint8Array(end - offset);
+      Reflect.apply(Uint8Array.prototype.set, chunk, [retained.subarray(offset, end)]);
+      controller.enqueue(chunk);
       offset = end;
+      if (offset === retained.byteLength) {
+        drop();
+        controller.close();
+      }
     },
+    cancel() { drop(); },
   }, { highWaterMark: 0 });
+  return { stream, drop };
 }
-async function verifyBody(body, aggregate, mismatchCode, signal, deadline) {
+async function verifyBody(body, expected, mismatchCode, signal, deadline) {
   let reader;
   let ended = false;
   let offset = 0;
+  const hash = createHash('sha256');
   let failure;
   try {
     if (!body || typeof body.getReader !== 'function') throw codedError('media_backup_failed');
@@ -244,15 +283,13 @@ async function verifyBody(body, aggregate, mismatchCode, signal, deadline) {
       if (!read || typeof read !== 'object') throw codedError('media_backup_failed');
       if (read.done === true) {
         ended = true;
-        if (offset !== aggregate.byteLength) throw codedError(mismatchCode);
+        if (offset !== expected.byteLength) throw codedError(mismatchCode);
         break;
       }
       let chunk;
       try { chunk = binaryView(read.value); } catch { throw codedError('media_backup_failed'); }
-      if (offset + chunk.byteLength > aggregate.byteLength) throw codedError(mismatchCode);
-      for (let index = 0; index < chunk.byteLength; index += 1) {
-        if (chunk[index] !== aggregate[offset + index]) throw codedError(mismatchCode);
-      }
+      if (offset + chunk.byteLength > expected.byteLength) throw codedError(mismatchCode);
+      hash.update(chunk);
       offset += chunk.byteLength;
     }
   } catch (error) { failure = isLocalCodedError(error) ? error : codedError('media_backup_failed'); }
@@ -264,6 +301,7 @@ async function verifyBody(body, aggregate, mismatchCode, signal, deadline) {
     }
   }
   if (failure) throw failure;
+  if (hash.digest('hex') !== expected.sha256) throw codedError(mismatchCode);
 }
 async function verifyStored(bucket, expected, conflict, signal, deadline) {
   const mismatchCode = conflict ? 'media_backup_conflict' : 'media_backup_failed';
@@ -284,7 +322,7 @@ async function verifyStored(bucket, expected, conflict, signal, deadline) {
   if (key !== expected.reference || size !== expected.byteLength
     || storedContentType !== expected.contentType) throw codedError(mismatchCode);
   if (!body) throw codedError('media_backup_failed');
-  await verifyBody(body, expected.aggregate, mismatchCode, signal, deadline);
+  await verifyBody(body, expected, mismatchCode, signal, deadline);
 }
 
 export async function storeArtworkLedgerMedia(bucket, {
@@ -307,17 +345,20 @@ export async function storeArtworkLedgerMedia(bucket, {
   const lease = await acquireAdmission(bucket, signal, deadline);
   let result;
   let operationError;
+  let upload;
   try {
     const reader = sourceReader(source);
-    const aggregate = await consumeSource(reader, contentLength, signal, deadline);
+    let aggregate = await consumeSource(reader, contentLength, signal, deadline);
     const sha256 = createHash('sha256').update(aggregate).digest('hex');
     const reference = `artwork-ledger/${artworkRecordId}/${sha256}.${extension}`;
     result = { reference, sha256, contentType, byteLength: aggregate.byteLength };
-    const expected = { ...result, aggregate };
+    const expected = { ...result };
+    upload = aggregateUpload(aggregate);
+    aggregate = null;
     let putResult;
     let replay = false;
     try {
-      putResult = await waitFor(bucket.put(reference, aggregateStream(aggregate), {
+      putResult = await waitFor(bucket.put(reference, upload.stream, {
         onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType },
       }), signal, deadline);
       replay = putResult === null;
@@ -327,8 +368,12 @@ export async function storeArtworkLedgerMedia(bucket, {
       if (!isConditionalPutError(error)) throw codedError('media_backup_failed');
       replay = true;
     }
+    upload.drop();
     await verifyStored(bucket, expected, replay, signal, deadline);
-  } catch (error) { operationError = isLocalCodedError(error) ? error : codedError('media_backup_failed'); }
+  } catch (error) {
+    upload?.drop(isLocalCodedError(error) ? error : codedError('media_backup_failed'));
+    operationError = isLocalCodedError(error) ? error : codedError('media_backup_failed');
+  }
 
   try { await releaseAdmission(bucket, lease); }
   catch { throw codedError('media_backup_failed'); }
