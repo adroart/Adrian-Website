@@ -67,7 +67,7 @@ function fixture() {
     VALUES
       ('kp-one', 'UL-100', 0, 'keeper-one', '${'a'.repeat(64)}',
        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'),
-      ('kp-two', 'UL-101', 0, 'keeper-one', '${'b'.repeat(64)}',
+      ('kp-two', 'UL-101', 2, 'keeper-one', '${'b'.repeat(64)}',
        '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z');
   `);
   const DB = {
@@ -318,15 +318,40 @@ describe('artwork contributor access foundation', () => {
       });
       assert.deepEqual(inspection, {
         invitationId: created.invitationId,
-        artwork: { keeperPieceId: 'kp-one', artworkId: 'UL-100', publicCode: null },
+        artwork: {
+          artworkId: 'UL-100',
+          publicCode: null,
+          edition: { kind: 'unique' },
+        },
         status: 'available',
       });
-      assert.doesNotMatch(JSON.stringify(inspection), /keeper-one|contributor@|token_hash|steward/i);
+      assert.equal('keeperPieceId' in inspection.artwork, false);
+      assert.doesNotMatch(JSON.stringify(inspection), /kp-one|keeper-one|contributor@|token_hash|steward/i);
       await expectCode(inspectArtworkContributorInvitation(env, {
         token: created.token,
         claimant: { userId: 'contributor-two', verifiedEmail: 'second@example.com' },
         inspectedAt: acceptedAt,
       }), 'contributor_invitation_not_available');
+    } finally { database.close(); }
+  });
+
+  it('projects a numbered edition with unknown size without inventing a value', async () => {
+    const { database, env } = fixture();
+    try {
+      const created = await inviteArtworkContributor(env, inviteInput({
+        keeperPieceId: 'kp-two',
+        idempotencyKey: 'invite-numbered-piece',
+      }));
+      const inspection = await inspectArtworkContributorInvitation(env, {
+        token: created.token,
+        claimant: verifiedContributor,
+        inspectedAt: acceptedAt,
+      });
+      assert.deepEqual(inspection.artwork, {
+        artworkId: 'UL-101',
+        publicCode: null,
+        edition: { kind: 'numbered', number: 2, size: null },
+      });
     } finally { database.close(); }
   });
 
@@ -416,15 +441,23 @@ describe('artwork contributor access foundation', () => {
   });
 
   it('lists current access privately and current keeper can revoke it append-only', async () => {
-    const { database, env } = await acceptedAccess();
+    const { database, env, invitation } = await acceptedAccess();
     try {
       assert.deepEqual(await listArtworkContributors(env, {
-        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
-      }), [{
-        contributorUserId: 'contributor-one',
-        grantedAt: acceptedAt,
-        status: 'active',
-      }]);
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one', at: acceptedAt,
+      }), {
+        invitations: [{
+          invitationId: invitation.invitationId,
+          invitedAt,
+          expiresAt,
+          status: 'accepted',
+        }],
+        contributors: [{
+          contributorUserId: 'contributor-one',
+          grantedAt: acceptedAt,
+          status: 'active',
+        }],
+      });
       const revoked = await revokeArtworkContributor(env, {
         keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
         contributorUserId: 'contributor-one', idempotencyKey: 'revoke-access',
@@ -437,6 +470,66 @@ describe('artwork contributor access foundation', () => {
       assert.throws(() => database.prepare(
         'DELETE FROM artwork_contributor_revocations',
       ).run(), /append-only|may not be deleted/i);
+    } finally { database.close(); }
+  });
+
+  it('lists current-epoch invitation ids and statuses so a lost proof can be revoked', async () => {
+    const { database, env } = fixture();
+    try {
+      await inviteArtworkContributor(env, inviteInput());
+      const before = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one', at: acceptedAt,
+      });
+      assert.equal(before.contributors.length, 0);
+      assert.deepEqual(before.invitations.map((invitation: Record<string, unknown>) => ({
+        ...invitation,
+        invitationId: typeof invitation.invitationId === 'string'
+          ? 'safe-id'
+          : invitation.invitationId,
+      })), [{
+        invitationId: 'safe-id', invitedAt, expiresAt, status: 'available',
+      }]);
+      assert.deepEqual(Object.keys(before.invitations[0]).sort(), [
+        'expiresAt', 'invitationId', 'invitedAt', 'status',
+      ]);
+
+      await revokeArtworkContributor(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        invitationId: before.invitations[0].invitationId,
+        idempotencyKey: 'revoke-listed-invitation', revokedAt: acceptedAt,
+      });
+      const after = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        at: '2026-08-10T12:00:00.000Z',
+      });
+      assert.equal(after.invitations[0].status, 'revoked');
+    } finally { database.close(); }
+  });
+
+  it('keeps expired invitations stably expired and rejects app and database revocation', async () => {
+    const { database, env } = fixture();
+    try {
+      const created = await inviteArtworkContributor(env, inviteInput());
+      const expired = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one', at: expiresAt,
+      });
+      assert.equal(expired.invitations[0].status, 'expired');
+      await expectCode(revokeArtworkContributor(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        invitationId: created.invitationId,
+        idempotencyKey: 'revoke-expired', revokedAt: expiresAt,
+      }), 'contributor_invitation_expired');
+      assert.throws(() => database.prepare(`
+        INSERT INTO artwork_contributor_revocations
+          (revocation_kind, invitation_id, revoked_by_keeper_user_id,
+           steward_version, idempotency_key, request_fingerprint, revoked_at)
+        VALUES ('invitation', ?, 'keeper-one', 0, 'raw-revoke-expired', ?, ?)
+      `).run(created.invitationId, '4'.repeat(64), expiresAt), /cannot be revoked/i);
+      const stable = await listArtworkContributors(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        at: '2026-08-18T00:00:00.000Z',
+      });
+      assert.equal(stable.invitations[0].status, 'expired');
     } finally { database.close(); }
   });
 
@@ -463,6 +556,36 @@ describe('artwork contributor access foundation', () => {
       assert.equal(database.prepare(
         'SELECT COUNT(*) AS n FROM artwork_contributor_access_grants',
       ).get().n, 2);
+    } finally { database.close(); }
+  });
+
+  it('does not let an older outstanding invitation restore explicitly revoked access', async () => {
+    const { database, env } = fixture();
+    try {
+      const first = await inviteArtworkContributor(env, inviteInput());
+      const second = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-contributor-second-proof',
+        invitedAt: '2026-08-10T10:05:00.000Z',
+      }));
+      await acceptArtworkContributorInvitation(env, acceptInput(first.token));
+      await revokeArtworkContributor(env, {
+        keeperPieceId: 'kp-one', keeperUserId: 'keeper-one',
+        contributorUserId: 'contributor-one', idempotencyKey: 'revoke-first-grant',
+        revokedAt: '2026-08-10T12:00:00.000Z',
+      });
+      await expectCode(acceptArtworkContributorInvitation(env, acceptInput(second.token, {
+        idempotencyKey: 'accept-second-old-proof',
+        acceptedAt: '2026-08-10T13:00:00.000Z',
+      })), 'contributor_invitation_revoked');
+
+      const fresh = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-after-revocation',
+        invitedAt: '2026-08-10T13:30:00.000Z',
+      }));
+      assert.equal((await acceptArtworkContributorInvitation(env, acceptInput(fresh.token, {
+        idempotencyKey: 'accept-after-revocation',
+        acceptedAt: '2026-08-10T14:00:00.000Z',
+      }))).status, 'accepted');
     } finally { database.close(); }
   });
 

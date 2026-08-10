@@ -198,7 +198,8 @@ async function invitationByProof(env, { token, claimant }) {
             invitation.keeper_user_id, invitation.steward_version,
             invitation.intended_recipient_user_id, invitation.token_hash,
             invitation.invited_at, invitation.expires_at,
-            piece.piece_id, piece.public_code,
+            piece.piece_id, piece.public_code, piece.edition_number,
+            artwork.edition_size AS artwork_edition_size,
             piece.keeper_user_id AS current_keeper_user_id,
             piece.steward_version AS current_steward_version,
             piece.claimed_at, piece.released_at,
@@ -211,9 +212,22 @@ async function invitationByProof(env, { token, claimant }) {
                WHERE claim.keeper_piece_id = invitation.keeper_piece_id
                  AND claim.requester_user_id = invitation.intended_recipient_user_id
                  AND claim.status = 'pending'
-            ) AS has_pending_claim
+            ) AS has_pending_claim,
+            EXISTS (
+              SELECT 1
+                FROM artwork_contributor_access_grants AS prior_grant
+                JOIN artwork_contributor_revocations AS prior_revocation
+                  ON prior_revocation.invitation_id = prior_grant.invitation_id
+                 AND prior_revocation.revocation_kind = 'access'
+               WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+                 AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+                 AND prior_grant.keeper_user_id = invitation.keeper_user_id
+                 AND prior_grant.steward_version = invitation.steward_version
+                 AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+            ) AS relationship_revoked
        FROM artwork_contributor_invitations AS invitation
        JOIN keeper_pieces AS piece ON piece.id = invitation.keeper_piece_id
+       LEFT JOIN registry_artworks AS artwork ON artwork.id = piece.piece_id
        LEFT JOIN artwork_contributor_revocations AS revocation
          ON revocation.invitation_id = invitation.id
         AND revocation.revocation_kind = 'invitation'
@@ -236,6 +250,7 @@ function invitationStatus(invitation, at) {
     || !invitation.claimed_at
     || invitation.released_at
   ) return 'stale';
+  if (Number(invitation.relationship_revoked) === 1) return 'revoked';
   if (Number(invitation.has_pending_claim) === 1) return 'claim_pending';
   return 'available';
 }
@@ -249,9 +264,19 @@ export async function inspectArtworkContributorInvitation(env, input) {
   return {
     invitationId: invitation.id,
     artwork: {
-      keeperPieceId: invitation.keeper_piece_id,
       artworkId: invitation.piece_id,
       publicCode: invitation.public_code || null,
+      edition: Number(invitation.edition_number) === 0
+        ? { kind: 'unique' }
+        : {
+            kind: 'numbered',
+            number: Number(invitation.edition_number),
+            size: invitation.artwork_edition_size !== null
+              && invitation.artwork_edition_size !== undefined
+              && Number.isSafeInteger(Number(invitation.artwork_edition_size))
+              ? Number(invitation.artwork_edition_size)
+              : null,
+          },
     },
     status,
   };
@@ -336,7 +361,43 @@ export async function listArtworkContributors(env, input) {
     userId: input?.keeperUserId,
     ...(input?.stewardVersion === undefined ? {} : { stewardVersion: input.stewardVersion }),
   });
-  const result = await env.DB.prepare(
+  const at = isoInstant(input?.at, 'invalid_inspection_time');
+  const [invitationResult, contributorResult] = await Promise.all([
+    env.DB.prepare(
+      `SELECT invitation.id, invitation.invited_at, invitation.expires_at,
+              acceptance.accepted_at, invitation_revocation.revoked_at,
+              EXISTS (
+                SELECT 1
+                  FROM artwork_contributor_access_grants AS prior_grant
+                  JOIN artwork_contributor_revocations AS prior_revocation
+                    ON prior_revocation.invitation_id = prior_grant.invitation_id
+                   AND prior_revocation.revocation_kind = 'access'
+                 WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+                   AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+                   AND prior_grant.keeper_user_id = invitation.keeper_user_id
+                   AND prior_grant.steward_version = invitation.steward_version
+                   AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+              ) AS relationship_revoked
+         FROM artwork_contributor_invitations AS invitation
+         JOIN keeper_pieces AS current_piece
+           ON current_piece.id = invitation.keeper_piece_id
+          AND current_piece.keeper_user_id = invitation.keeper_user_id
+          AND current_piece.steward_version = invitation.steward_version
+          AND current_piece.claimed_at IS NOT NULL
+          AND current_piece.released_at IS NULL
+         LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
+           ON acceptance.invitation_id = invitation.id
+         LEFT JOIN artwork_contributor_revocations AS invitation_revocation
+           ON invitation_revocation.invitation_id = invitation.id
+          AND invitation_revocation.revocation_kind = 'invitation'
+        WHERE invitation.keeper_piece_id = ?1
+          AND invitation.keeper_user_id = ?2
+          AND invitation.steward_version = ?3
+        ORDER BY invitation.invited_at, invitation.id`,
+    ).bind(
+      authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
+    ).all(),
+    env.DB.prepare(
     `SELECT contributor_user_id, granted_at
        FROM artwork_contributor_current_access
       WHERE keeper_piece_id = ?1
@@ -345,12 +406,27 @@ export async function listArtworkContributors(env, input) {
       ORDER BY granted_at, contributor_user_id`,
   ).bind(
     authority.keeperPieceId, authority.keeperUserId, authority.stewardVersion,
-  ).all();
-  return (result?.results || []).map((row) => ({
-    contributorUserId: row.contributor_user_id,
-    grantedAt: row.granted_at,
-    status: 'active',
-  }));
+    ).all(),
+  ]);
+  return {
+    invitations: (invitationResult?.results || []).map((row) => ({
+      invitationId: row.id,
+      invitedAt: row.invited_at,
+      expiresAt: row.expires_at,
+      status: row.accepted_at
+        ? 'accepted'
+        : row.revoked_at || Number(row.relationship_revoked) === 1
+          ? 'revoked'
+          : Date.parse(row.expires_at) <= Date.parse(at)
+            ? 'expired'
+            : 'available',
+    })),
+    contributors: (contributorResult?.results || []).map((row) => ({
+      contributorUserId: row.contributor_user_id,
+      grantedAt: row.granted_at,
+      status: 'active',
+    })),
+  };
 }
 
 async function revocationReplay(env, key) {
@@ -444,7 +520,7 @@ export async function revokeArtworkContributor(env, input) {
     const invitation = await env.DB.prepare(
       `SELECT invitation.id, invitation.keeper_piece_id,
               invitation.keeper_user_id, invitation.steward_version,
-              invitation.invited_at, acceptance.accepted_at,
+              invitation.invited_at, invitation.expires_at, acceptance.accepted_at,
               revocation.revoked_at
          FROM artwork_contributor_invitations AS invitation
          LEFT JOIN artwork_contributor_invitation_acceptances AS acceptance
@@ -461,6 +537,9 @@ export async function revokeArtworkContributor(env, input) {
     ) throw contributorError('stale_keeper_authority');
     if (invitation.accepted_at) throw contributorError('contributor_invitation_used');
     if (invitation.revoked_at) throw contributorError('contributor_invitation_revoked');
+    if (Date.parse(invitation.expires_at) <= Date.parse(revokedAt)) {
+      throw contributorError('contributor_invitation_expired');
+    }
     const status = await insertRevocation(env, {
       kind, invitationId, keeperUserId,
       stewardVersion: authority.stewardVersion,

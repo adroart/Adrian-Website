@@ -178,6 +178,18 @@ BEGIN
             AND claim.requester_user_id = NEW.accepted_by_user_id
             AND claim.status = 'pending'
        )
+       AND NOT EXISTS (
+         SELECT 1
+           FROM artwork_contributor_access_grants AS prior_grant
+           JOIN artwork_contributor_revocations AS prior_revocation
+             ON prior_revocation.invitation_id = prior_grant.invitation_id
+            AND prior_revocation.revocation_kind = 'access'
+          WHERE prior_grant.keeper_piece_id = invitation.keeper_piece_id
+            AND prior_grant.contributor_user_id = invitation.intended_recipient_user_id
+            AND prior_grant.keeper_user_id = invitation.keeper_user_id
+            AND prior_grant.steward_version = invitation.steward_version
+            AND julianday(prior_revocation.revoked_at) >= julianday(invitation.invited_at)
+       )
        AND julianday(invitation.invited_at) <= julianday(NEW.accepted_at)
        AND julianday(invitation.expires_at) > julianday(NEW.accepted_at)
   ) THEN RAISE(ABORT, 'contributor invitation is not available') END;
@@ -236,6 +248,7 @@ BEGIN
        AND piece.claimed_at IS NOT NULL
        AND piece.released_at IS NULL
        AND julianday(NEW.revoked_at) >= julianday(invitation.invited_at)
+       AND julianday(NEW.revoked_at) < julianday(invitation.expires_at)
        AND NOT EXISTS (
          SELECT 1 FROM artwork_contributor_invitation_acceptances AS acceptance
           WHERE acceptance.invitation_id = invitation.id
