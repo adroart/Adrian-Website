@@ -67,6 +67,11 @@ const emptyArtwork = (index = 0): ArtworkDraft => ({
   price: '', currency: 'USD',
 });
 
+function invitationExpiryValue(): string {
+  const date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  return date.toISOString().slice(0, 16);
+}
+
 function money(amount: string, currency: string): ArtistSaleMoney | null {
   const normalized = amount.trim();
   if (!normalized) return null;
@@ -167,26 +172,6 @@ function saleDraftFrom(detail: ArtistSaleDetailResponse) {
   };
 }
 
-function sameMoney(left: ArtistSaleMoney | null, right: ArtistSaleMoney | null): boolean {
-  return left?.amountMinor === right?.amountMinor && left?.currency === right?.currency;
-}
-
-function sameOccurrence(left: ArtistSaleOccurrence, right: ArtistSaleOccurrence): boolean {
-  return left.precision === right.precision && left.value === right.value;
-}
-
-function sameSaleFacts(
-  left: ArtistSaleDetailResponse['originalSale'],
-  right: ArtistSaleDetailResponse['effectiveSale'],
-): boolean {
-  return left.reconnectionCaseId === right.reconnectionCaseId
-    && sameOccurrence(left.occurrence, right.occurrence)
-    && left.buyerEmail === right.buyerEmail
-    && sameMoney(left.total, right.total)
-    && left.privateReference === right.privateReference
-    && left.privateNotes === right.privateNotes;
-}
-
 function privateText(value: string | null): string {
   return value || 'Not recorded';
 }
@@ -236,6 +221,8 @@ const CollectorSales: React.FC = () => {
   const [pendingLinks, setPendingLinks] = useState<Record<string, string>>({});
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
   const statusRef = useRef<HTMLDivElement>(null);
+  const activeSaleIdRef = useRef<string | null>(null);
+  const previousSaleIdRef = useRef<string | null>(null);
 
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
@@ -249,6 +236,7 @@ const CollectorSales: React.FC = () => {
   const [privateNotes, setPrivateNotes] = useState('');
   const [linkedCaseId, setLinkedCaseId] = useState('');
   const [artworks, setArtworks] = useState<ArtworkDraft[]>([emptyArtwork()]);
+  activeSaleIdRef.current = selection?.kind === 'sale' ? selection.id : null;
 
   const loadWorkspace = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -276,23 +264,34 @@ const CollectorSales: React.FC = () => {
     try {
       const value = await jsonRequest(`/api/admin/collector-sales/${saleId}`, { signal });
       const parsed = parseArtistSaleDetailResponse(value);
+      if (activeSaleIdRef.current !== saleId) return;
       setDetail(parsed);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
+      if (activeSaleIdRef.current !== saleId) return;
       setDetailLoadError(detailRecoveryMessage(error));
       setDetail(null);
     } finally {
-      if (!signal?.aborted) setDetailLoading(false);
+      if (!signal?.aborted && activeSaleIdRef.current === saleId) setDetailLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    const nextSaleId = selection?.kind === 'sale' ? selection.id : null;
+    if (previousSaleIdRef.current && previousSaleIdRef.current !== nextSaleId) setNotice('');
+    previousSaleIdRef.current = nextSaleId;
+    setDetail(null);
+    setDetailAttempt(null);
     setOwnershipSecret(null);
     setInvitationSecret(null);
+    setRegistrationAttempts({});
+    setInvitationAttempts({});
+    setPendingLinks({});
+    setInvitations([]);
     setActionError('');
     setDetailLoadError('');
     setLedgers({});
-    if (selection?.kind !== 'sale') { setDetail(null); return; }
+    if (selection?.kind !== 'sale') { setDetailLoading(false); return; }
     const controller = new AbortController();
     void loadSale(selection.id, controller.signal);
     return () => controller.abort();
@@ -425,6 +424,8 @@ const CollectorSales: React.FC = () => {
     draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>,
     success: string,
   ) => {
+    const scopedSaleId = selection?.kind === 'sale' ? selection.id : null;
+    const scopeIsActive = () => !scopedSaleId || activeSaleIdRef.current === scopedSaleId;
     setBusy(draft.action); setActionError(''); setNotice('');
     const url = ['append', 'appendSharedSaleMessage', 'selectCertificateImage'].includes(draft.action)
       ? '/api/admin/collector-ledger' : `/api/admin/collector-sales/${pathId}`;
@@ -435,16 +436,18 @@ const CollectorSales: React.FC = () => {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(attempt.request),
       });
       parseArtistSaleMutationResponse(value);
+      if (!scopeIsActive()) return false;
       setDetailAttempt(finishArtistSaleAttempt(attempt, { kind: 'success' }));
       setNotice(success);
-      if (selection?.kind === 'sale') await loadSale(selection.id);
+      if (scopedSaleId) await loadSale(scopedSaleId);
       await loadWorkspace();
       return true;
     } catch (error) {
+      if (!scopeIsActive()) return false;
       setDetailAttempt(finishArtistSaleAttempt(attempt, outcome(error)));
       setActionError(recoveryMessage(error));
-      if (error instanceof WorkspaceRequestError && error.status === 409 && selection?.kind === 'sale') {
-        await loadSale(selection.id);
+      if (error instanceof WorkspaceRequestError && error.status === 409 && scopedSaleId) {
+        await loadSale(scopedSaleId);
         await loadWorkspace();
       }
       return false;
@@ -453,6 +456,8 @@ const CollectorSales: React.FC = () => {
 
   const retryDetail = async () => {
     if (!detailAttempt || !selection) return;
+    const scopedSaleId = selection.kind === 'sale' ? selection.id : null;
+    const scopeIsActive = () => !scopedSaleId || activeSaleIdRef.current === scopedSaleId;
     setBusy('retry-detail'); setActionError(''); setNotice('');
     const action = detailAttempt.request.action;
     const url = ['append', 'appendSharedSaleMessage', 'selectCertificateImage'].includes(action)
@@ -463,11 +468,13 @@ const CollectorSales: React.FC = () => {
         body: JSON.stringify(detailAttempt.request),
       });
       parseArtistSaleMutationResponse(value);
+      if (!scopeIsActive()) return;
       setDetailAttempt(finishArtistSaleAttempt(detailAttempt, { kind: 'success' }));
       setNotice('The frozen action completed with its original request and key.');
-      if (selection.kind === 'sale') await loadSale(selection.id);
+      if (scopedSaleId) await loadSale(scopedSaleId);
       await loadWorkspace();
     } catch (error) {
+      if (!scopeIsActive()) return;
       setDetailAttempt(finishArtistSaleAttempt(detailAttempt, outcome(error)));
       setActionError(recoveryMessage(error));
     } finally { setBusy(''); }
@@ -593,7 +600,7 @@ const CollectorSales: React.FC = () => {
               )}
             </div>
 
-            <div className={selection ? 'block min-w-0' : 'hidden md:block'}>
+            <div role="region" aria-label="Selected record workspace" className={selection ? 'block min-w-0' : 'hidden md:block'}>
               {selection && <button type="button" className={`${buttonSecondary} mb-5 md:hidden`} onClick={() => setSelection(null)}>Back to records</button>}
               {!selection ? <AdminEmptyState title="Choose a record" description="Select a sale or reconnection to continue its private history." /> : null}
               {selectedCase && <ReconnectionDetail value={selectedCase} busy={busy || (detailAttempt ? 'frozen' : '')} onAction={async draft => {
@@ -602,31 +609,36 @@ const CollectorSales: React.FC = () => {
               }} onRecordSale={() => { setLinkedCaseId(selectedCase.reconnectionCaseId); setBuyerEmail(selectedCase.recipientEmail); setMode('sale'); setSelection(null); }} />}
               {selection?.kind === 'sale' && detailLoading && <div role="status" aria-label="Loading sale detail" className="h-40 animate-pulse bg-wood-100 motion-reduce:animate-none" />}
               {selection?.kind === 'sale' && detailLoadError && !detailLoading && <AdminAlert tone="error" live><p>{detailLoadError}</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} onClick={() => void loadSale(selection.id)}>Retry record</button><button type="button" className={buttonSecondary} onClick={() => { setDetailLoadError(''); setSelection(null); }}>Back to records</button></div></AdminAlert>}
-              {selection?.kind === 'sale' && detail && <SaleDetail
-                detail={detail} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
+              {selection?.kind === 'sale' && detail?.effectiveSale.saleId === selection.id && <SaleDetail
+                key={detail.effectiveSale.saleId} detail={detail} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
                 invitations={invitations}
                 registrationAttempts={registrationAttempts} invitationAttempts={invitationAttempts}
                 pendingLinks={pendingLinks}
                 ownershipSecret={ownershipSecret} invitationSecret={invitationSecret}
                 onDismissOwnership={() => setOwnershipSecret(null)} onDismissInvitation={() => setInvitationSecret(null)}
                 onRefreshLedger={async artworkRecordId => {
+                  const saleId = detail.effectiveSale.saleId;
                   const value = await jsonRequest(`/api/admin/collector-ledger?artworkRecordId=${encodeURIComponent(artworkRecordId)}`);
                   const parsed = parseArtistLedgerDetailResponse(value);
+                  if (activeSaleIdRef.current !== saleId) return;
                   setLedgers(current => ({ ...current, [artworkRecordId]: parsed }));
                 }}
                 onPost={postDetail}
                 onUpload={async (item, role, file) => {
+                  const saleId = detail.effectiveSale.saleId;
                   setBusy(`upload-${item.artworkRecordId}`); setActionError('');
                   try {
                     await uploadArtistLedgerMedia({ artworkRecordId: item.artworkRecordId, role, file, idempotencyKey: crypto.randomUUID() });
                     const value = await jsonRequest(`/api/admin/collector-ledger?artworkRecordId=${encodeURIComponent(item.artworkRecordId)}`);
+                    if (activeSaleIdRef.current !== saleId) return;
                     setLedgers(current => ({ ...current, [item.artworkRecordId]: parseArtistLedgerDetailResponse(value) }));
                     setNotice(`${role === 'certificate_image' ? 'Certificate image' : 'Identification evidence'} uploaded as an immutable media item.`);
-                  } catch (error) { setActionError(recoveryMessage(error)); }
+                  } catch (error) { if (activeSaleIdRef.current === saleId) setActionError(recoveryMessage(error)); }
                   finally { setBusy(''); }
                 }}
                 onRegister={async item => {
                   if (!item.artworkId || !item.edition) return;
+                  const saleId = detail.effectiveSale.saleId;
                   setBusy(`register-${item.artworkRecordId}`); setActionError('');
                   const registrationDraft = {
                     artworkId: item.artworkId,
@@ -639,16 +651,18 @@ const CollectorSales: React.FC = () => {
                       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(attempt.request),
                     }) as { keeperPieceId?: string; ownershipCode?: string };
                     if (!registration.keeperPieceId) throw new Error('invalid_response');
+                    if (activeSaleIdRef.current !== saleId) return;
                     setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
                     setPendingLinks(value => ({ ...value, [item.artworkRecordId]: registration.keeperPieceId! }));
                     if (registration.ownershipCode) setOwnershipSecret({ code: registration.ownershipCode, artworkRecordId: item.artworkRecordId });
-                    const linked = await postDetail(detail.effectiveSale.saleId, {
+                    const linked = await postDetail(saleId, {
                       action: 'linkIdentity', artworkRecordId: item.artworkRecordId,
                       keeperPieceId: registration.keeperPieceId, expectedVersion: item.recordVersion,
                     }, 'Artwork registered and linked to this sale record.');
                     if (linked) setPendingLinks(value => { const next = { ...value }; delete next[item.artworkRecordId]; return next; });
                     else setActionError('Registration completed, but identity linking is unresolved. Retry the identity link before creating an invitation.');
                   } catch (error) {
+                    if (activeSaleIdRef.current !== saleId) return;
                     setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: finishArtistSaleAttempt(attempt, outcome(error)) }));
                     setActionError(recoveryMessage(error));
                   }
@@ -656,6 +670,7 @@ const CollectorSales: React.FC = () => {
                 }}
                 onInvite={async (item, email, expiresAt) => {
                   if (!item.keeperPieceId) return;
+                  const saleId = detail.effectiveSale.saleId;
                   setBusy(`invite-${item.artworkRecordId}`); setActionError('');
                   const current = invitationAttempts[item.artworkRecordId] || null;
                   const attempt = beginInvitationCreateAttempt(current, { keeperPieceId: item.keeperPieceId, intendedRecipientEmail: email, expiresAt });
@@ -666,12 +681,15 @@ const CollectorSales: React.FC = () => {
                       body: JSON.stringify(attempt.request),
                     }) as { invitationId?: string; token?: string | null };
                     if (!value.invitationId) throw new Error('invalid_response');
+                    if (activeSaleIdRef.current !== saleId) return;
                     setInvitationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
                     if (value.token) setInvitationSecret({ token: value.token, artworkRecordId: item.artworkRecordId });
                     const listed = await jsonRequest('/api/admin/invitations') as { invitations?: AdminInvitation[] };
+                    if (activeSaleIdRef.current !== saleId) return;
                     if (Array.isArray(listed.invitations)) setInvitations(listed.invitations);
                     setNotice('Invitation created but not redeemed. The token exists only in this screen memory.');
                   } catch (error) {
+                    if (activeSaleIdRef.current !== saleId) return;
                     const status = error && typeof error === 'object' && 'status' in error ? Number(error.status) : 0;
                     if (status >= 400 && status < 500) setInvitationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
                     setActionError(recoveryMessage(error));
@@ -771,9 +789,15 @@ const SaleDetail: React.FC<{
   const [correction, setCorrection] = useState(initial);
   const [correctionReason, setCorrectionReason] = useState('');
 
+  useEffect(() => {
+    setSharedMessage('');
+    setShowCorrection(false);
+    setCorrection(saleDraftFrom(detail));
+    setCorrectionReason('');
+  }, [detail.effectiveSale.saleId]);
   useEffect(() => { setCorrection(saleDraftFrom(detail)); }, [detail.effectiveSale.sequence]);
 
-  const hasCorrections = !sameSaleFacts(detail.originalSale, detail.effectiveSale);
+  const hasCorrections = detail.corrections.length > 0;
 
   return <div className="space-y-8" aria-labelledby="sale-detail-title">
     <div><h3 id="sale-detail-title" className="font-serif text-3xl text-wood-900">Sale from {occurrenceLabel(detail.effectiveSale.occurrence)}</h3><p className="mt-2 font-sans text-base text-wood-700">{detail.items.length} artwork{detail.items.length === 1 ? '' : 's'} · {detail.items.filter(item => item.identificationStatus === 'unresolved').length} unresolved</p></div>
@@ -785,7 +809,7 @@ const SaleDetail: React.FC<{
     <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
 
     <div className="border-t border-wood-200">
-      {detail.items.map((item, index) => <ArtworkActions key={item.artworkRecordId} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[item.artworkRecordId])} invitationFrozen={Boolean(invitationAttempts[item.artworkRecordId])} linkPending={Boolean(pendingLinks[item.artworkRecordId])} busy={busy} ownershipSecret={ownershipSecret?.artworkRecordId === item.artworkRecordId ? ownershipSecret.code : null} invitationSecret={invitationSecret?.artworkRecordId === item.artworkRecordId ? invitationSecret.token : null} onDismissOwnership={onDismissOwnership} onDismissInvitation={onDismissInvitation} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />)}
+      {detail.items.map((item, index) => <ArtworkActions key={`${detail.effectiveSale.saleId}:${item.artworkRecordId}`} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[item.artworkRecordId])} invitationFrozen={Boolean(invitationAttempts[item.artworkRecordId])} linkPending={Boolean(pendingLinks[item.artworkRecordId])} busy={busy} ownershipSecret={ownershipSecret?.artworkRecordId === item.artworkRecordId ? ownershipSecret.code : null} invitationSecret={invitationSecret?.artworkRecordId === item.artworkRecordId ? invitationSecret.token : null} onDismissOwnership={onDismissOwnership} onDismissInvitation={onDismissInvitation} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />)}
     </div>
   </div>;
 };
@@ -808,10 +832,18 @@ const ArtworkActions: React.FC<{
   const [file, setFile] = useState<File | null>(null);
   const [specificMessage, setSpecificMessage] = useState('');
   const [invitationEmail, setInvitationEmail] = useState(sale.buyerEmail || '');
-  const [expiresAt, setExpiresAt] = useState(() => {
-    const date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    return date.toISOString().slice(0, 16);
-  });
+  const [expiresAt, setExpiresAt] = useState(invitationExpiryValue);
+  useEffect(() => {
+    setIdentifyId('');
+    setEditionKind('unique');
+    setEditionNumber('1');
+    setEditionSize('');
+    setMediaRole('identification_evidence');
+    setFile(null);
+    setSpecificMessage('');
+    setInvitationEmail(sale.buyerEmail || '');
+    setExpiresAt(invitationExpiryValue());
+  }, [sale.saleId]);
   return <fieldset className="space-y-5 border-b border-wood-200 py-7" aria-label={`Artwork ${index + 1} actions`}>
     <legend className="font-serif text-2xl text-wood-900">Artwork {index + 1}</legend>
     <div><p className="font-sans text-base font-semibold text-wood-900">{artworkTitle(item.artworkId)}</p><p className="mt-1 font-sans text-base text-wood-600">{editionLabel(item.edition)} · {item.identificationStatus === 'unresolved' ? 'Unresolved identification' : item.identificationStatus === 'identity_linked' ? 'Identity linked' : 'Identified'}</p><p className="mt-1 font-sans text-base text-wood-600">Private price: {moneyLabel(item.price)}</p></div>

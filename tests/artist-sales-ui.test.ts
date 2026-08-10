@@ -65,6 +65,8 @@ describe('verified sales admin workspace', () => {
     assert.match(component, /detail\.originalSale/);
     assert.match(component, /detail\.effectiveSale/);
     assert.match(component, /detail\.corrections/);
+    assert.match(component, /detail\.corrections\.length\s*>\s*0/);
+    assert.match(component, /<SaleDetail\s+key=\{detail\.effectiveSale\.saleId\}/);
     assert.match(component, /Originally recorded/);
     assert.match(component, /Current corrected record/);
     assert.match(component, /Correction history/);
@@ -75,6 +77,22 @@ describe('verified sales admin workspace', () => {
     assert.match(component, /No unverified facts are shown/);
     assert.doesNotMatch(component, /JSON\.stringify\(.*correction|actor|digest|storage key|event hash/i);
     assert.doesNotMatch(component, /const \[originalSale, setOriginalSale\]/);
+  });
+
+  it('clears every record-scoped private state before loading another sale', () => {
+    const component = source('components/admin/CollectorSales.tsx');
+    for (const reset of [
+      /setDetail\(null\)/,
+      /setDetailAttempt\(null\)/,
+      /setOwnershipSecret\(null\)/,
+      /setInvitationSecret\(null\)/,
+      /setRegistrationAttempts\(\{\}\)/,
+      /setInvitationAttempts\(\{\}\)/,
+      /setPendingLinks\(\{\}\)/,
+      /setInvitations\(\[\]\)/,
+      /setLedgers\(\{\}\)/,
+    ]) assert.match(component, reset);
+    assert.match(component, /detail\?\.effectiveSale\.saleId\s*===\s*selection\.id/);
   });
 
   it('includes accessible loading, error, empty, success, and one-heading states', () => {
