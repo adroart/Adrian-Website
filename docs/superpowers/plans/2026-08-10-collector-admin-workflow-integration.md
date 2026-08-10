@@ -189,7 +189,7 @@ Test that creating or correcting a verified sale never writes `artwork_acquisiti
 - Reuse: `functions/api/_lib/artworkInvitations.js`
 - Reuse: `functions/api/_lib/registryMaintenance.js`
 
-- [ ] **Step 1: Define the response contract in a failing test**
+- [x] **Step 1: Define the response contract in a failing test**
 
 The endpoint accepts one or more stable selectors:
 
@@ -218,15 +218,15 @@ type ArtworkWorkspace = {
 };
 ```
 
-- [ ] **Step 2: Resolve identifiers without inventing identity**
+- [x] **Step 2: Resolve identifiers without inventing identity**
 
 An unresolved sales record may have no `artworkId`. An identified record may have no `keeperPieceId`. Only `identity_linked` may expose all three identifiers. Conflicting selectors return a 409 response instead of merging two artworks.
 
-- [ ] **Step 3: Reuse existing projections**
+- [x] **Step 3: Reuse existing projections**
 
 Call the effective certificate, invitation, verified-sale, identity, and maintenance readers. Do not copy their mutation rules into `artworkWorkspace.js`.
 
-- [ ] **Step 4: Derive one next action**
+- [x] **Step 4: Derive one next action**
 
 Use an ordered rule set, beginning with data integrity and moving toward optional work:
 
@@ -238,11 +238,11 @@ Use an ordered rule set, beginning with data integrity and moving toward optiona
 6. Verify a paid invoice or legacy sale candidate.
 7. Open the public or caretaker experience for review.
 
-- [ ] **Step 5: Prove privacy and secret exclusion**
+- [x] **Step 5: Prove privacy and secret exclusion**
 
 The response may include private admin facts needed for the workspace, but it must never contain plaintext ownership codes, invitation tokens, code verifiers, ciphertext, nonces, recovery keys, raw media storage keys, or birth data.
 
-- [ ] **Step 6: Run focused verification**
+- [x] **Step 6: Run focused verification**
 
 ```bash
 npx tsx --test --experimental-test-module-mocks tests/artwork-workspace.test.ts tests/artist-sales.test.ts tests/certificate-content.test.ts tests/registry-maintenance.test.ts
