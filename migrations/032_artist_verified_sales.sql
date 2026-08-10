@@ -294,7 +294,7 @@ CREATE TABLE artist_artwork_price_entries (
   id TEXT PRIMARY KEY,
   artwork_record_id TEXT NOT NULL
     REFERENCES artist_artwork_records(id) ON DELETE RESTRICT,
-  sale_item_id TEXT UNIQUE
+  sale_item_id TEXT NOT NULL UNIQUE
     REFERENCES artist_verified_sale_items(id) ON DELETE RESTRICT,
   amount_minor INTEGER NOT NULL CHECK (
     typeof(amount_minor) = 'integer' AND amount_minor >= 0
@@ -655,6 +655,258 @@ BEGIN
     AND json_type(NEW.after_json, '$.privateNotes') = 'text'
     AND json_extract(NEW.after_json, '$.privateNotes') IS NOT json_extract(NEW.before_json, '$.privateNotes')
   ) THEN RAISE(ABORT, 'shared message event may change only private notes') END;
+END;
+
+-- SQLite's REPLACE conflict handler deletes the conflicting row before
+-- inserting its replacement. BEFORE INSERT collision guards preserve every
+-- permanent identity even when recursive_triggers is disabled.
+CREATE TRIGGER artist_reconnection_cases_insert_collision
+BEFORE INSERT ON artist_reconnection_cases
+WHEN EXISTS (
+  SELECT 1 FROM artist_reconnection_cases prior
+   WHERE prior.id = NEW.id OR prior.idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist reconnection case identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_records_insert_collision
+BEFORE INSERT ON artist_artwork_records
+WHEN EXISTS (
+  SELECT 1 FROM artist_artwork_records prior
+   WHERE prior.id = NEW.id
+      OR (NEW.keeper_piece_id IS NOT NULL AND prior.keeper_piece_id = NEW.keeper_piece_id)
+      OR (NEW.last_event_id IS NOT NULL AND prior.last_event_id = NEW.last_event_id)
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork record identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_record_events_insert_collision
+BEFORE INSERT ON artist_artwork_record_events
+WHEN EXISTS (
+  SELECT 1 FROM artist_artwork_record_events prior
+   WHERE prior.id = NEW.id
+      OR prior.idempotency_key = NEW.idempotency_key
+      OR (
+        prior.artwork_record_id = NEW.artwork_record_id
+        AND prior.resulting_version = NEW.resulting_version
+      )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork record event identity collision');
+END;
+
+CREATE TRIGGER artist_verified_sales_insert_collision
+BEFORE INSERT ON artist_verified_sales
+WHEN EXISTS (
+  SELECT 1 FROM artist_verified_sales prior
+   WHERE prior.id = NEW.id OR prior.idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist verified sale identity collision');
+END;
+
+CREATE TRIGGER artist_verified_sale_events_insert_collision
+BEFORE INSERT ON artist_verified_sale_events
+WHEN EXISTS (
+  SELECT 1 FROM artist_verified_sale_events prior
+   WHERE prior.id = NEW.id
+      OR prior.idempotency_key = NEW.idempotency_key
+      OR (prior.sale_id = NEW.sale_id AND prior.sequence = NEW.sequence)
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist verified sale event identity collision');
+END;
+
+CREATE TRIGGER artist_verified_sale_items_insert_collision
+BEFORE INSERT ON artist_verified_sale_items
+WHEN EXISTS (
+  SELECT 1 FROM artist_verified_sale_items prior
+   WHERE prior.id = NEW.id
+      OR (
+        prior.sale_id = NEW.sale_id
+        AND prior.artwork_record_id = NEW.artwork_record_id
+      )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist verified sale item identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_media_insert_collision
+BEFORE INSERT ON artist_artwork_media
+WHEN EXISTS (
+  SELECT 1 FROM artist_artwork_media prior
+   WHERE prior.id = NEW.id OR prior.storage_reference = NEW.storage_reference
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork media identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_ledger_entries_insert_collision
+BEFORE INSERT ON artist_artwork_ledger_entries
+WHEN EXISTS (
+  SELECT 1 FROM artist_artwork_ledger_entries prior
+   WHERE prior.id = NEW.id OR prior.idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork ledger identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_price_entries_insert_collision
+BEFORE INSERT ON artist_artwork_price_entries
+WHEN EXISTS (
+  SELECT 1 FROM artist_artwork_price_entries prior
+   WHERE prior.id = NEW.id OR prior.sale_item_id = NEW.sale_item_id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork price identity collision');
+END;
+
+CREATE TRIGGER artist_reconnection_events_insert_collision
+BEFORE INSERT ON artist_reconnection_events
+WHEN EXISTS (
+  SELECT 1 FROM artist_reconnection_events prior
+   WHERE prior.id = NEW.id OR prior.idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist reconnection event identity collision');
+END;
+
+-- Public lineage payloads use a deliberately tiny, flat vocabulary. The
+-- vocabulary admits every canonical payload and the safe grandfathered
+-- subsets restored by older archives, while recursively rejecting private
+-- aliases and private-looking values before they can enter the public chain.
+CREATE TRIGGER artwork_lineage_public_payload_privacy
+BEFORE INSERT ON artwork_lineage_events
+BEGIN
+  SELECT CASE WHEN json_valid(NEW.public_payload_json) = 0
+  THEN RAISE(ABORT, 'public lineage payload must be valid JSON') END;
+
+  SELECT CASE WHEN json_type(NEW.public_payload_json) <> 'object'
+  THEN RAISE(ABORT, 'public lineage payload must be an object') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE node.fullkey <> '$'
+       AND node.type IN ('array', 'object')
+  ) THEN RAISE(ABORT, 'public lineage payload must remain flat') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE node.key IS NOT NULL
+       AND lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', ''))
+         NOT IN (
+           'pieceid', 'editionnumber', 'publiccode', 'platestatus',
+           'fromref', 'toref', 'transferkind'
+         )
+  ) THEN RAISE(ABORT, 'private lineage payload key is forbidden') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE node.atom IS NOT NULL
+       AND typeof(node.atom) = 'text'
+       AND (
+         CAST(node.atom AS TEXT) GLOB '*@*'
+         OR CAST(node.atom AS TEXT) GLOB '*/*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'record-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'sale-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'item-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'media-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'ledger-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'price-*'
+         OR lower(CAST(node.atom AS TEXT)) GLOB 'case-*'
+       )
+  ) THEN RAISE(ABORT, 'private lineage payload value is forbidden') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'pieceid'
+       AND NOT (
+         node.type = 'text'
+         AND length(CAST(node.atom AS TEXT)) BETWEEN 6 AND 7
+         AND CAST(node.atom AS TEXT) GLOB '[A-Z][A-Z]*-[0-9][0-9][0-9]'
+       )
+  ) THEN RAISE(ABORT, 'invalid public lineage piece id') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'editionnumber'
+       AND NOT (node.type = 'integer' AND CAST(node.atom AS INTEGER) >= 0)
+  ) THEN RAISE(ABORT, 'invalid public lineage edition number') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'publiccode'
+       AND NOT (
+         node.type = 'text'
+         AND length(CAST(node.atom AS TEXT)) = 11
+         AND substr(CAST(node.atom AS TEXT), 1, 3) = 'AR-'
+         AND substr(CAST(node.atom AS TEXT), 4) NOT GLOB '*[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]*'
+       )
+  ) THEN RAISE(ABORT, 'invalid public lineage public code') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'platestatus'
+       AND NOT (node.type = 'text' AND node.atom IN ('active', 'void', 'superseded'))
+  ) THEN RAISE(ABORT, 'invalid public lineage plate status') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', ''))
+         IN ('fromref', 'toref')
+       AND NOT (
+         node.type = 'text'
+         AND length(CAST(node.atom AS TEXT)) = 39
+         AND substr(CAST(node.atom AS TEXT), 1, 3) = 'tp-'
+         AND substr(CAST(node.atom AS TEXT), 12, 1) = '-'
+         AND substr(CAST(node.atom AS TEXT), 17, 1) = '-'
+         AND substr(CAST(node.atom AS TEXT), 18, 1) = '4'
+         AND substr(CAST(node.atom AS TEXT), 22, 1) = '-'
+         AND substr(CAST(node.atom AS TEXT), 23, 1) IN ('8', '9', 'a', 'b')
+         AND substr(CAST(node.atom AS TEXT), 27, 1) = '-'
+         AND substr(CAST(node.atom AS TEXT), 4) NOT GLOB '*[^0-9a-f-]*'
+       )
+  ) THEN RAISE(ABORT, 'invalid public lineage transfer reference') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+      FROM json_tree(NEW.public_payload_json) node
+     WHERE lower(replace(replace(replace(CAST(node.key AS TEXT), '_', ''), '-', ''), ' ', '')) = 'transferkind'
+       AND NOT (
+         node.type = 'text'
+         AND node.atom IN ('sale', 'gift', 'inheritance', 'artist-rebind')
+       )
+  ) THEN RAISE(ABORT, 'invalid public lineage transfer kind') END;
+END;
+
+CREATE TRIGGER artwork_lineage_events_insert_collision
+BEFORE INSERT ON artwork_lineage_events
+WHEN EXISTS (
+  SELECT 1 FROM artwork_lineage_events prior
+   WHERE prior.id = NEW.id
+      OR prior.event_hash = NEW.event_hash
+      OR (
+        prior.keeper_piece_id = NEW.keeper_piece_id
+        AND prior.sequence = NEW.sequence
+      )
+      OR (
+        NEW.previous_hash IS NOT NULL
+        AND prior.keeper_piece_id = NEW.keeper_piece_id
+        AND prior.previous_hash = NEW.previous_hash
+      )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artwork lineage event identity collision');
 END;
 
 CREATE TRIGGER artist_reconnection_cases_no_update
