@@ -284,6 +284,17 @@ body{
 .screen.promoted .row:not(.is-open){position:absolute;left:0;right:0;height:0;
   padding:0;border:0;overflow:hidden}
 
+/* the household: adding someone, and the quiet line inside them */
+.q-person .q-m{color:var(--brass)}
+.q-person .q-quiet{color:var(--cream-3);opacity:.6}
+.addp{
+  width:100%;margin-top:12px;padding:11px 2px;cursor:pointer;
+  background:none;border:1px dashed var(--hair);border-radius:10px;
+  font-family:var(--body);font-size:13.5px;color:var(--cream-3);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.addp:hover{border-color:var(--brass);color:var(--brass)}
+
 /* ── the garden ──
    A list of questions, not a form. Each is its own door. An unanswered question
    is waiting, never overdue, so nothing here reads as incomplete. */
@@ -1662,21 +1673,21 @@ tbody tr:hover td{color:var(--cream)}
       '</div>'+
       '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
       'The code alone never transfers a piece. Silence is never consent.</p>',
-    family:'<p>Invite the people who share this piece with you to place their love in '+
-      'it too. They are known by name and relation.</p>'+
-      '<div class="facts">'+
-      '<div class="fact"><dt>Sara</dt><dd>Wife · has written twice</dd></div>'+
-      '<div class="fact"><dt>Ines</dt><dd>Daughter · her words shine without her name</dd></div>'+
-      '<div class="fact"><dt>Invite</dt><dd>By name and relation</dd></div>'+
+    family:'<p>The people whose love is in this piece. They live on it, named, with '+
+      'their words beside yours.</p>'+
+      '<div class="qlist">'+
+        P('Sara','wife','two things placed \u00b7 both shining','first')+
+        P('Ines','daughter','one waiting for you to pass','second')+
+        P('Tomas','brother','asked again in March',null)+
       '</div>'+
-      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
-      'Placing love is never ownership. An invited person gains no code, no transfer '+
-      'right, no inheritance. A child&rsquo;s words shine nameless, and the switch passes '+
-      'to them when they are grown.</p>'+
-      '<p style="margin-top:12px;font-size:13px;color:var(--cream-3)">'+
-      'An invited person gets an account of their own, with their own birthday, so the '+
-      'piece asks each of them at their own moment. The account is not per piece: it is '+
-      'the same one that opens their readings on Mandala Codes.</p>',
+      '<button class="addp">Add someone</button>'+
+      '<p class="ghint">Being on this list is not a promise of anything. It is an '+
+      'invitation to place your love in the piece, and most people on it will never '+
+      'carry it. Where it goes next is set quietly inside a person, and only you see '+
+      'it.</p>'+
+      '<p class="ghint">Placing love is never ownership: no code, no transfer right, no '+
+      'inheritance. Their words pass through you once before they shine, for typos and '+
+      'judgement, never for permission. A child\u2019s words never carry a name.</p>',
     video:'<p>The capsule: short, rare, sealed with the piece. Possibly one at purchase, '+
       'another at the yearly ritual.</p>'+
       '<div class="facts">'+
@@ -1712,6 +1723,11 @@ tbody tr:hover td{color:var(--cream)}
     dreams:'The dreams',garden:'The garden',account:'Your account',
     signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
     ritual:'The year turns',ritualfamily:'The people you love',question:'A question',
+    person:'Sara',
+    passfork:'Passing it on',passname:'It stays in the house',passsell:'What travels',
+    passready:'Let it go',passdone:'It is waiting',
+    inherit:'What he kept',inheritread:'In his own words',
+    joinhello:'You have been added',joinwho:'Who you are',
     video:'Record a video',info:'Piece information',family:'The people you love'};
 
   /* ── row promotion ── */
@@ -1744,6 +1760,10 @@ tbody tr:hover td{color:var(--cream)}
     if(e.target.closest('[data-question]')){
       screen.classList.remove('promoted');
       startWalk('question');
+    }
+    if(e.target.closest('[data-person]')){
+      screen.classList.remove('promoted');
+      startWalk('person');
     }
   });
 
@@ -2144,6 +2164,111 @@ tbody tr:hover td{color:var(--cream)}
         'waits. A child\u2019s words never carry a name, whatever is chosen.',
       cap:'The year turns \u00b7 each person at their own birthday' },
 
+    /* ── THE PASSING ──
+       Two exits that look alike and are not: naming someone is private and can
+       be undone, selling is neither. The fork is first because everything after
+       it differs. */
+    passfork:{ h:'Passing it on', art:'none',
+      b:'Two ways a piece moves, and they are not the same act.',
+      rows:[
+        ['To someone you love','they are already on the piece, and it stays inside the house','passname'],
+        ['To someone buying it','a stranger receives it, and what travels is decided now','passsell']
+      ],
+      link:'Not now', linkTo:'__home',
+      cap:'The passing \u00b7 two exits, one is undoable' },
+
+    passname:{ h:'It stays in the house', art:'piece',
+      b:'They already place their love in this piece, so nothing about it is new to '+
+        'them. What changes is that it becomes theirs to carry.',
+      rows:[
+        ['Sara','wife \u00b7 first in line','passready'],
+        ['Ines','daughter \u00b7 second','passready'],
+        ['Tomas','brother \u00b7 not in line','passready']
+      ],
+      note:'The order is yours and it is private. Nobody on this list is told where they '+
+        'stand, or that they were moved.',
+      cap:'Passing it on \u00b7 the line you already set' },
+
+    passsell:{ h:'What travels with it', art:'none',
+      b:'Everything you let shine stays shining, always. What you kept private travels '+
+        'with the piece, and only whoever holds it can open it.',
+      note:'Anything you sealed stays sealed, from them and from everyone after them. '+
+        'If there is something you meant to let shine first, the garden is still open.',
+      pill:'Continue', to:'passready',
+      link:'Back to the garden', linkTo:'__garden',
+      cap:'The passing \u00b7 one line, never a triage' },
+
+    passready:{ h:'Let it go', art:'none',
+      b:'When they accept, your hold ends and theirs begins. Everything you placed in it '+
+        'stays with the piece forever, as its story.',
+      fields:[['their email']],
+      note:'They receive an invitation carrying the proof. Until they accept, nothing '+
+        'has moved and you can stop this at any point.',
+      pill:'Begin the passing', to:'passdone',
+      link:'Not now', linkTo:'__home',
+      cap:'The passing \u00b7 grave, and it does not soften' },
+
+    passdone:{ h:'It is waiting for them', art:'letter',
+      b:'The piece has written to them. When they accept it, you will be told, and this '+
+        'page will no longer be yours.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The passing \u00b7 nothing has moved yet' },
+
+    person:{ h:'Sara', art:'none',
+      b:'Wife. On the piece since 2024, and two of her things are shining.',
+      rows:[
+        ['Approve what is waiting','one thing she wrote, not yet shining','ritualfamily'],
+        ['Where she stands','first in line \u00b7 private to you, and she is not told','person'],
+        ['Take her off the piece','her access ends, and her words stop shining','person']
+      ],
+      note:'Removing someone takes them out of the line as well. Anything of hers that '+
+        'already shines stays shining, because it always does, and her name is on it. '+
+        'She keeps her own copy of what she wrote; it simply leaves the piece.',
+      cap:'One person \u00b7 the line is private, the removal is total' },
+
+    /* ── THE HEIR ARRIVES ──
+       The emotional payoff of the three tiers. Someone opens what they inherited
+       for the first time and decides what the world learns. */
+    inherit:{ h:'What he kept', art:'piece',
+      b:'Earth\u2019s Breath is yours to carry now. He wrote things into it that nobody '+
+        'has read, and they are yours to open.',
+      note:'You can let any of it shine, and once it shines it stays shining. What he '+
+        'sealed is sealed, and you will not see it: that was his to decide, and he did.',
+      pill:'Open what he left', to:'inheritread',
+      link:'Not yet', linkTo:'__home',
+      cap:'The heir arrives \u00b7 what he kept is now readable' },
+
+    inheritread:{ h:'In his own words', art:'none',
+      b:'Three things he kept with the piece. Nobody but you has read them.',
+      rows:[
+        ['\u201cI bought it the week your mother got well.\u201d','1998 \u00b7 he never let this shine','__home'],
+        ['\u201cI have looked at it every morning since.\u201d','2004 \u00b7 he never let this shine','__home'],
+        ['\u201cIf you are reading this it went to you, which is what I wanted.\u201d','2019 \u00b7 he marked this one for you','__home']
+      ],
+      note:'Each of these can be left as it is, or let shine so anyone who meets the '+
+        'piece reads it. Neither is owed.',
+      cap:'The heir reads \u00b7 and decides what the world learns' },
+
+    /* ── THE COLLABORATOR ──
+       Not a stranger, not the caretaker. She places her love in it and nothing
+       else, and the piece asks her at her own birthday. */
+    joinhello:{ h:'You have been added to a piece', art:'piece',
+      b:'Sara has placed Earth\u2019s Breath in your hands to write into. The piece is '+
+        'hers to carry; what you put in it is yours.',
+      note:'You are not registering it and you are not receiving it. You are being asked '+
+        'to add your love to something she holds.',
+      pill:'Begin', to:'joinwho',
+      cap:'A collaborator arrives \u00b7 not a stranger, not the caretaker' },
+
+    joinwho:{ h:'Who you are', art:'none',
+      b:'Your name, so the piece knows whose words these are. Your birthday, so it asks '+
+        'you at your own moment rather than hers.',
+      fields:[['your name'],['born']],
+      note:'This is the whole of it. Where the art lives, what shows, and the record '+
+        'itself belong to whoever carries the piece.',
+      pill:'Place me on it', to:'__home',
+      cap:'A collaborator arrives \u00b7 two things, never five' },
+
     /* ── returning ── */
     welcome:{ h:'Welcome back', art:'none',
       b:'Sign in and every piece you caretake opens to you. No code needed; the code '+
@@ -2185,6 +2310,26 @@ tbody tr:hover td{color:var(--cream)}
   /* a garden question. Three states, and no state is a failure:
      answered (readable, still editable), open (waiting, never overdue),
      shared (answered and shining publicly, words with no name). */
+  /* a person on the piece. The succession mark is PRIVATE to the caretaker and
+     sits one tap deeper, inside the person, never on the row: adding someone is
+     warm, and marking them first in line is a will. Those two acts must not
+     share a styling. */
+  function note2(n){
+    return n==='Sara' ? 'on the piece since 2024'
+         : n==='Ines' ? 'added last spring'
+         : 'added last spring';
+  }
+  function P(name,rel,note,line){
+    return '<button class="q q-person" data-person>'+
+      '<span class="wr-t">'+esc(name)+'</span>'+
+      '<span class="q-b">'+esc(rel)+' \u00b7 '+esc(note)+'</span>'+
+      /* deliberately NOT the succession mark: that lives one tap deeper,
+         inside the person, because adding someone is warm and naming them
+         next is a will, and the two must not share a styling. */
+      '<span class="q-m q-quiet">'+esc(note2(name))+'</span>'+
+      '</button>';
+  }
+
   function Q(state,title,body){
     var mark = state==='answered' ? 'answered'
              : state==='shared'   ? 'answered · shining'
@@ -2439,7 +2584,13 @@ tbody tr:hover td{color:var(--cream)}
     ['Home', [['You are Light 47','light47'],['Home','@home'],
       ['The garden','@garden'],['A question','question'],
       ['The year turns','ritual'],['The people you love','ritualfamily'],
-      ['Welcome back','welcome'],['A way back in','forgot']]]
+      ['One person','person'],
+      ['Welcome back','welcome'],['A way back in','forgot']]],
+    ['The passing', [['Two exits','passfork'],['It stays in the house','passname'],
+      ['What travels','passsell'],['Let it go','passready'],
+      ['It is waiting','passdone']]],
+    ['After', [['The heir arrives','inherit'],['In his own words','inheritread'],
+      ['A collaborator arrives','joinhello'],['Who you are (theirs)','joinwho']]]
   ];
   (function buildJump(){
     var host=document.getElementById('jump'), html='';

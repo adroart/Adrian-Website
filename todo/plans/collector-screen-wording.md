@@ -892,6 +892,44 @@ don't want to be hit with ten questions on your birthday."** So whatever it beco
 yearly moment cannot be a queue of everything at once. The screen is built with the lock
 as a single line so the mechanic can change without touching anything else.
 
+### The passing, the household, the collaborator, the heir. STRUCTURE BUILT 2026-08-10
+
+All four are built in `collector-primitives.html` with placeholder wording in Adrian's
+register. **None of the copy below is locked**; it exists so the structure can be seen.
+
+**The passing forks first, because the two exits are not the same act.**
+
+- **To someone you love** — they are already on the piece, and it stays inside the house.
+  The line the caretaker set privately is what this reads from.
+- **To someone buying it** — a stranger receives it, and what travels is stated in one
+  line rather than triaged: what shines stays shining, what was kept private travels
+  holder-only, what was sealed stays sealed. A way back to the garden for anyone who meant
+  to publish something first.
+
+Then *Let it go* (their email, and nothing moves until they accept) and *It is waiting for
+them*.
+
+**The household is the people whose love is in the piece**, not an invite list. They live
+on it, named, with their words beside the caretaker's. **Being on it promises nothing** and
+most people on it will never carry the piece.
+
+**The succession mark is private and sits one tap deeper, inside a person, never on the
+row.** Adding someone is warm; naming them next is a will, and the two must not share a
+styling. Nobody is told where they stand or that they were moved.
+
+**Removing someone is total**: access ends, their unshone words stop shining, and they come
+out of the line. Anything of theirs that already shines stays shining, because it always
+does, with their name on it. They keep their own copy; it simply leaves the piece.
+
+**The collaborator's arrival is two screens, never five.** She is not registering the piece
+and not receiving it. Name, so the piece knows whose words these are, and birthday, so it
+asks her at her own moment rather than the caretaker's. Where the art lives, what shows,
+and the record itself belong to whoever carries it.
+
+**The heir's arrival is the payoff of the three tiers.** They open what was kept with the
+piece, read it, and decide what the world learns. What was sealed stays sealed and is never
+shown to them: that was the writer's to decide, and they did.
+
 ### The install, and one account across everything. SETTLED 2026-08-10
 
 **Registration is binary. Incomplete means not registered.** There is no half-registered
