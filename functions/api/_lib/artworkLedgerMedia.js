@@ -64,7 +64,8 @@ function inputBytes(value) {
 function readBackBytes(value) {
   if (value instanceof ArrayBuffer) return new Uint8Array(value);
   if (ArrayBuffer.isView(value)) {
-    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    const { buffer, byteOffset, byteLength } = viewDetails(value);
+    return new Uint8Array(buffer, byteOffset, byteLength);
   }
   throw new TypeError('unreadable media body');
 }
@@ -101,37 +102,80 @@ function isConditionalPutError(error) {
     || property('name') === 'PreconditionFailed';
 }
 
+async function verifyStreamBody(body, expectedBytes, failureCode) {
+  let reader;
+  let streamEnded = false;
+  try {
+    if (!body || typeof body.getReader !== 'function') throw codedError(failureCode);
+    reader = body.getReader();
+    let offset = 0;
+    while (true) {
+      const read = await reader.read();
+      if (!read || read.done === true) {
+        streamEnded = true;
+        if (offset !== expectedBytes.byteLength) throw codedError(failureCode);
+        return;
+      }
+      const chunk = readBackBytes(read.value);
+      if (offset + chunk.byteLength > expectedBytes.byteLength) {
+        throw codedError(failureCode);
+      }
+      for (let index = 0; index < chunk.byteLength; index += 1) {
+        if (chunk[index] !== expectedBytes[offset + index]) throw codedError(failureCode);
+      }
+      offset += chunk.byteLength;
+    }
+  } catch (error) {
+    if (isLocalCodedError(error)) throw error;
+    throw codedError(failureCode);
+  } finally {
+    if (reader) {
+      if (!streamEnded) {
+        try {
+          await reader.cancel();
+        } catch {
+          // Preserve the stable verification error rather than exposing cancellation details.
+        }
+      }
+      try {
+        reader.releaseLock();
+      } catch {
+        // A hostile or already-released reader must not replace the verification result.
+      }
+    }
+  }
+}
+
 async function verifyStoredObject(bucket, expected, conflict) {
+  const failureCode = conflict ? 'media_backup_conflict' : 'media_backup_failed';
   let stored;
   try {
     stored = await bucket.get(expected.reference);
   } catch {
-    throw codedError('media_backup_failed');
+    throw codedError(failureCode);
   }
 
   try {
-    if (!stored || typeof stored.arrayBuffer !== 'function') {
-      throw codedError('media_backup_failed');
-    }
-    if (typeof stored.key === 'string' && stored.key !== expected.reference) {
-      throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
-    }
-    if (typeof stored.size === 'number' && stored.size !== expected.byteLength) {
-      throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
-    }
+    if (!stored) throw codedError(failureCode);
+    if (stored.key !== expected.reference) throw codedError(failureCode);
+    if (stored.size !== expected.byteLength) throw codedError(failureCode);
     const storedContentType = stored.httpMetadata?.contentType;
     if (storedContentType !== expected.contentType) {
-      throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
+      throw codedError(failureCode);
     }
+    const body = stored.body;
+    if (body !== undefined && body !== null) {
+      await verifyStreamBody(body, expected.bytes, failureCode);
+      return;
+    }
+    if (typeof stored.arrayBuffer !== 'function') throw codedError(failureCode);
     const actual = readBackBytes(await stored.arrayBuffer());
-    if (actual.byteLength !== expected.byteLength
-      || !bytesEqual(actual, expected.bytes)
-      || await sha256Hex(actual) !== expected.sha256) {
-      throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
+    if (actual.byteLength !== expected.byteLength || !bytesEqual(actual, expected.bytes)) {
+      throw codedError(failureCode);
     }
   } catch (error) {
     if (isLocalCodedError(error)) throw error;
-    throw codedError('media_backup_failed');
+    throw codedError(failureCode);
   }
 }
 

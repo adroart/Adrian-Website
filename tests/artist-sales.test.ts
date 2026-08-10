@@ -221,6 +221,10 @@ type FakeMediaObject = {
   bytes: Uint8Array;
   contentType?: string;
   arrayBufferFailure?: Error;
+  reportedSize?: number;
+  streamBytes?: Uint8Array;
+  streamFailure?: Error;
+  streamFailureAtRead?: number;
 };
 
 function mediaBucket(options: {
@@ -228,19 +232,89 @@ function mediaBucket(options: {
   getFailure?: Error;
   missingReadBack?: boolean;
   mutateStored?: (stored: FakeMediaObject, key: string, putNumber: number) => void;
+  omitBody?: boolean;
+  recordPutBytes?: boolean;
+  streamChunkSize?: number;
 } = {}) {
   const objects = new Map<string, FakeMediaObject>();
   const puts: Array<{ key: string; bytes: Uint8Array; options: any }> = [];
+  const streamMetrics = {
+    activeChunkBytes: 0,
+    arrayBufferCalls: 0,
+    cancelCalls: 0,
+    cancelRequests: 0,
+    maxActiveChunkBytes: 0,
+    maxChunkBytes: 0,
+  };
   let putNumber = 0;
   let gets = 0;
+  const streamBody = (stored: FakeMediaObject) => {
+    const bytes = stored.streamBytes ?? stored.bytes;
+    const chunkSize = options.streamChunkSize ?? (64 * 1024);
+    let offset = 0;
+    let readNumber = 0;
+    let outstanding = 0;
+    const releaseOutstanding = () => {
+      streamMetrics.activeChunkBytes -= outstanding;
+      outstanding = 0;
+    };
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        releaseOutstanding();
+        readNumber += 1;
+        if (stored.streamFailureAtRead === readNumber) {
+          controller.error(stored.streamFailure ?? new Error('simulated stream failure'));
+          return;
+        }
+        if (offset >= bytes.byteLength) {
+          controller.close();
+          return;
+        }
+        const end = Math.min(offset + chunkSize, bytes.byteLength);
+        const chunk = new Uint8Array(bytes.subarray(offset, end));
+        offset = end;
+        outstanding = chunk.byteLength;
+        streamMetrics.activeChunkBytes += outstanding;
+        streamMetrics.maxActiveChunkBytes = Math.max(
+          streamMetrics.maxActiveChunkBytes, streamMetrics.activeChunkBytes,
+        );
+        streamMetrics.maxChunkBytes = Math.max(streamMetrics.maxChunkBytes, chunk.byteLength);
+        controller.enqueue(chunk);
+      },
+      cancel() {
+        releaseOutstanding();
+        streamMetrics.cancelCalls += 1;
+      },
+    }, { highWaterMark: 0 });
+    const getReader = stream.getReader.bind(stream);
+    Object.defineProperty(stream, 'getReader', {
+      value() {
+        const reader = getReader();
+        return {
+          read: () => reader.read(),
+          cancel: (reason?: unknown) => {
+            streamMetrics.cancelRequests += 1;
+            return reader.cancel(reason);
+          },
+          releaseLock: () => reader.releaseLock(),
+        };
+      },
+    });
+    return stream;
+  };
   return {
     objects,
     puts,
+    streamMetrics,
     get gets() { return gets; },
     bucket: {
       async put(key: string, value: Uint8Array, putOptions: any) {
         putNumber += 1;
-        puts.push({ key, bytes: new Uint8Array(value), options: structuredClone(putOptions) });
+        puts.push({
+          key,
+          bytes: options.recordPutBytes === false ? new Uint8Array() : new Uint8Array(value),
+          options: structuredClone(putOptions),
+        });
         if (options.putFailure) throw options.putFailure;
         if (objects.has(key)) return null;
         const stored = {
@@ -259,10 +333,12 @@ function mediaBucket(options: {
         if (!stored) return null;
         return {
           key,
-          size: stored.bytes.byteLength,
+          size: stored.reportedSize ?? stored.bytes.byteLength,
           httpMetadata: stored.contentType === undefined
             ? undefined : { contentType: stored.contentType },
+          ...(!options.omitBody ? { body: streamBody(stored) } : {}),
           async arrayBuffer() {
+            streamMetrics.arrayBufferCalls += 1;
             if (stored.arrayBufferFailure) throw stored.arrayBufferFailure;
             return stored.bytes.slice().buffer;
           },
@@ -354,12 +430,45 @@ describe('authenticity media immutable R2 storage', () => {
     const bytes = new Uint8Array(15 * 1024 * 1024);
     bytes[0] = 17;
     bytes[bytes.length - 1] = 29;
-    const fake = mediaBucket();
+    const fake = mediaBucket({ streamChunkSize: 64 * 1024 });
     const result = await storeArtworkLedgerMedia(fake.bucket, {
       artworkRecordId: 'record-max', bytes: bytes.buffer, contentType: 'image/png',
     });
     assert.equal(result.byteLength, 15 * 1024 * 1024);
     assert.deepEqual(fake.puts[0].bytes, bytes);
+    assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
+    assert.ok(fake.streamMetrics.maxChunkBytes <= 64 * 1024);
+    assert.ok(fake.streamMetrics.maxActiveChunkBytes <= 64 * 1024);
+    assert.equal(fake.streamMetrics.activeChunkBytes, 0);
+  });
+
+  it('bounds the body-less arrayBuffer fallback with exact R2 size metadata', async () => {
+    const compatible = mediaBucket({ omitBody: true });
+    const input = {
+      artworkRecordId: 'record-compatibility',
+      bytes: new Uint8Array([7, 8, 9]),
+      contentType: 'image/jpeg',
+    };
+    await storeArtworkLedgerMedia(compatible.bucket, input);
+    assert.equal(compatible.streamMetrics.arrayBufferCalls, 1);
+
+    let unboundedFallbackCalls = 0;
+    const missingSizeBucket = {
+      async put(key: string) { return { key }; },
+      async get(key: string) {
+        return {
+          key,
+          httpMetadata: { contentType: input.contentType },
+          async arrayBuffer() {
+            unboundedFallbackCalls += 1;
+            return input.bytes.slice().buffer;
+          },
+        };
+      },
+    };
+    await assert.rejects(storeArtworkLedgerMedia(missingSizeBucket, input),
+      mediaErrorCode('media_backup_failed'));
+    assert.equal(unboundedFallbackCalls, 0);
   });
 
   it('snapshots Buffer and Uint8Array subclass inputs before the first await without polymorphic sharing', async () => {
@@ -453,6 +562,8 @@ describe('authenticity media immutable R2 storage', () => {
           gets += 1;
           const stored = objects.get(key);
           return stored && {
+            key,
+            size: stored.bytes.byteLength,
             httpMetadata: { contentType: stored.contentType },
             arrayBuffer: async () => stored.bytes.slice().buffer,
           };
@@ -475,7 +586,10 @@ describe('authenticity media immutable R2 storage', () => {
     const scenarios = [
       mediaBucket({ getFailure: new Error('private get outage') }),
       mediaBucket({ missingReadBack: true }),
-      mediaBucket({ mutateStored(stored) { stored.arrayBufferFailure = new Error('private read failure'); } }),
+      mediaBucket({
+        omitBody: true,
+        mutateStored(stored) { stored.arrayBufferFailure = new Error('private read failure'); },
+      }),
       mediaBucket({ mutateStored(stored) { stored.bytes = new Uint8Array(); } }),
       mediaBucket({ mutateStored(stored) { stored.bytes = new Uint8Array([9, 9, 9]); } }),
       mediaBucket({ mutateStored(stored) { stored.contentType = 'image/webp'; } }),
@@ -519,6 +633,95 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(differentFake.objects.size, 2);
   });
 
+  it('streams three concurrent maximum-size read-backs without full-body fallback copies', async () => {
+    const bytes = new Uint8Array(15 * 1024 * 1024);
+    bytes[0] = 3;
+    bytes[bytes.byteLength - 1] = 7;
+    const chunkSize = 64 * 1024;
+    const fake = mediaBucket({ streamChunkSize: chunkSize, recordPutBytes: false });
+    const input = {
+      artworkRecordId: 'record-max-concurrent', bytes, contentType: 'image/webp',
+    };
+    const results = await Promise.all([
+      storeArtworkLedgerMedia(fake.bucket, input),
+      storeArtworkLedgerMedia(fake.bucket, input),
+      storeArtworkLedgerMedia(fake.bucket, input),
+    ]);
+    assert.deepEqual(results[1], results[0]);
+    assert.deepEqual(results[2], results[0]);
+    assert.equal(fake.objects.size, 1);
+    assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
+    assert.ok(fake.streamMetrics.maxChunkBytes <= chunkSize);
+    assert.ok(fake.streamMetrics.maxActiveChunkBytes <= 3 * chunkSize);
+    assert.ok(fake.streamMetrics.maxActiveChunkBytes < bytes.byteLength / 10);
+    assert.equal(fake.streamMetrics.activeChunkBytes, 0);
+  });
+
+  it('rejects truncated, extra, wrong, and throwing streams and cancels unfinished readers', async () => {
+    const expected = new Uint8Array([1, 2, 3, 4]);
+    for (const [name, streamBytes, shouldCancel] of [
+      ['truncated', new Uint8Array([1, 2, 3]), false],
+      ['extra', new Uint8Array([1, 2, 3, 4, 5]), true],
+      ['wrong', new Uint8Array([1, 9, 3, 4]), true],
+    ] as const) {
+      const fake = mediaBucket({
+        streamChunkSize: 2,
+        mutateStored(stored) {
+          stored.reportedSize = expected.byteLength;
+          stored.streamBytes = streamBytes;
+        },
+      });
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: `record-stream-${name}`,
+        bytes: expected,
+        contentType: 'image/png',
+      }), mediaErrorCode('media_backup_failed'));
+      assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
+      assert.equal(fake.streamMetrics.cancelCalls, shouldCancel ? 1 : 0);
+      assert.equal(fake.streamMetrics.cancelRequests, shouldCancel ? 1 : 0);
+      assert.equal(fake.streamMetrics.activeChunkBytes, 0);
+    }
+
+    const streamFailure = mediaBucket({
+      streamChunkSize: 2,
+      mutateStored(stored) {
+        stored.streamFailureAtRead = 2;
+        stored.streamFailure = Object.assign(new Error('private stream bytes'), {
+          code: 'media_backup_conflict', bytes: 'private stream bytes',
+        });
+      },
+    });
+    await assert.rejects(storeArtworkLedgerMedia(streamFailure.bucket, {
+      artworkRecordId: 'record-stream-throw', bytes: expected, contentType: 'image/png',
+    }), (error: Error & { code?: string; bytes?: unknown }) => {
+      assertSanitizedMediaError(error, 'media_backup_failed', ['private stream bytes']);
+      return true;
+    });
+    assert.equal(streamFailure.streamMetrics.arrayBufferCalls, 0);
+    assert.equal(streamFailure.streamMetrics.cancelRequests, 1);
+    assert.equal(streamFailure.streamMetrics.activeChunkBytes, 0);
+
+    const replayFailure = mediaBucket({ streamChunkSize: 2 });
+    const replayInput = {
+      artworkRecordId: 'record-stream-replay', bytes: expected, contentType: 'image/png',
+    };
+    const first = await storeArtworkLedgerMedia(replayFailure.bucket, replayInput);
+    const replayObject = replayFailure.objects.get(first.reference)!;
+    replayObject.streamFailureAtRead = 1;
+    replayObject.streamFailure = Object.assign(new Error('private replay stream'), {
+      code: 'media_backup_failed', reference: first.reference,
+    });
+    await assert.rejects(storeArtworkLedgerMedia(replayFailure.bucket, replayInput),
+      (error: Error & { code?: string; reference?: unknown }) => {
+        assertSanitizedMediaError(error, 'media_backup_conflict', [
+          'private replay stream', first.reference,
+        ]);
+        return true;
+      });
+    assert.equal(replayFailure.streamMetrics.arrayBufferCalls, 0);
+    assert.equal(replayFailure.streamMetrics.cancelRequests, 1);
+  });
+
   it('never exposes private ids, bytes, or R2 details in thrown errors', async () => {
     const privateId = 'record-private-secret';
     const privateText = 'collector-private-image';
@@ -551,6 +754,7 @@ describe('authenticity media immutable R2 storage', () => {
       mediaBucket({ putFailure: spoofed('media_backup_failed') }),
       mediaBucket({ getFailure: spoofed('media_backup_conflict') }),
       mediaBucket({
+        omitBody: true,
         mutateStored(stored) {
           stored.arrayBufferFailure = spoofed('media_backup_conflict');
         },
