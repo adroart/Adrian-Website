@@ -718,7 +718,8 @@ body{
 .screen.caretaker .head .name{font-size:22px}
 .screen.caretaker .head .ul{margin-bottom:6px}
 .screen.caretaker .head .status{display:none}
-.screen.caretaker .placed{margin-top:8px;font-size:11.5px;line-height:1.55}
+.screen.caretaker .placed{display:none}
+.screen.caretaker .dream{display:none}
 .screen.caretaker .meter-label{margin-top:9px;font-size:11.5px}
 .screen.caretaker .meter{height:22px}
 /* the meter survives promotion: it shrinks to a small lit anchor beside the
@@ -778,6 +779,24 @@ body{
   margin-top:14px;font-size:12px;color:var(--cream-3);text-align:center;
   line-height:1.45;align-self:center;max-width:26ch
 }
+/* the jump list: every surface one press away. A designer should never have to
+   walk eleven screens to inspect the twelfth. */
+.jump{align-items:stretch}
+.jgrid{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.jgrid .jsec{
+  width:100%;margin-top:6px;
+  font-family:var(--label);font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cream-3);text-align:center
+}
+.jgrid .jsec:first-child{margin-top:0}
+.jgrid button{
+  background:none;border:1px solid var(--hair);color:var(--cream-2);
+  font-family:var(--body);font-size:11.5px;
+  padding:5px 9px;border-radius:999px;cursor:pointer;
+  transition:border-color .2s var(--ease),color .2s var(--ease)
+}
+.jgrid button:hover{border-color:var(--brass);color:var(--brass)}
+
 /* demo controls: outside the phone, they are not part of any screen */
 .controls{
   margin-top:20px;padding-top:16px;border-top:1px solid var(--hair-soft);
@@ -1091,6 +1110,7 @@ tbody tr:hover td{color:var(--cream)}
         <div class="meter-steps">
           <button data-arrive="unclaimed">Nobody holds it</button>
           <button data-arrive="claimed">Someone else holds it</button>
+          <button data-arrive="signedin">Signed in, not yours</button>
         </div>
       </div>
       <div class="controls">
@@ -1134,6 +1154,10 @@ tbody tr:hover td{color:var(--cream)}
       <p class="phone-caption" style="margin-top:12px;text-transform:none;
          letter-spacing:0;font-family:var(--body);font-size:12.5px;font-style:italic">
         This piece&rsquo;s code is sixteen ones</p>
+      <div class="controls jump">
+        <span class="ctl-label">Go straight to any screen</span>
+        <div class="jgrid" id="jump"></div>
+      </div>
       <p style="text-align:center;margin-top:10px">
         <button class="tlink" id="resetBtn" hidden>Back to the door, and run it again</button>
       </p>
@@ -2287,7 +2311,19 @@ tbody tr:hover td{color:var(--cream)}
       doors.hidden=false;
       setDream(true); setYears(3);
       cap.textContent='Registered \u00b7 two doors, neither above the other';
+    } else if(state==='signedin'){
+      /* signed in, but this piece is not theirs. Having an account is not the
+         same as holding this piece, so they see what a stranger sees, minus the
+         sign-in they no longer need. */
+      screen.classList.add('claimed');
+      unlockBtn.hidden=true;
+      statusLine.textContent='Registered \u00b7 a light in the Resonant Grid';
+      doors.hidden=false;
+      document.getElementById('tendDoor').textContent='I hold this piece';
+      setDream(true); setYears(3);
+      cap.textContent='Signed in, not yours \u00b7 an account is not a claim';
     }
+    if(state!=='signedin') document.getElementById('tendDoor').textContent='Sign in to tend it';
     setGlow(state==='unclaimed'?0:7);
   }
   document.querySelectorAll('[data-arrive]').forEach(function(btn){
@@ -2299,6 +2335,52 @@ tbody tr:hover td{color:var(--cream)}
     });
   });
 
+  /* the jump list, built from the screens that actually exist */
+  var JUMP=[
+    ['The door', [['Unclaimed','@unclaimed'],['Registered','@claimed'],
+      ['Signed in, not yours','@signedin'],['The code page','@code'],
+      ['Wrong code','@wrong']]],
+    ['The threshold', [['The code is true','codetrue'],['For someone else','fork'],
+      ['Leave your wishes','gift'],['Something was left','sealed'],
+      ['Passing it on','transfer'],['A passing begins','receiving'],
+      ['We have written','written']]],
+    ['The four', [['You felt the pull','pull'],['The resonant grid','grid'],
+      ['When you focus your love','love'],['It carries on','carries']]],
+    ['The gathering', [['Sign its record','sign'],['Who you are','born'],
+      ['Where it lives','lives'],['Your links','links'],
+      ['What this is for','explain'],['Your piece shines','shows']]],
+    ['Home', [['You are Light 47','light47'],['Home','@home'],
+      ['The garden','@garden'],['A question','question'],
+      ['The year turns','ritual'],['The people you love','ritualfamily'],
+      ['Welcome back','welcome'],['A way back in','forgot']]]
+  ];
+  (function buildJump(){
+    var host=document.getElementById('jump'), html='';
+    JUMP.forEach(function(sec){
+      html+='<span class="jsec">'+sec[0]+'</span>';
+      sec[1].forEach(function(it){
+        html+='<button data-jump="'+it[1]+'">'+it[0]+'</button>';
+      });
+    });
+    host.innerHTML=html;
+    host.addEventListener('click',function(e){
+      var b=e.target.closest('[data-jump]'); if(!b) return;
+      var k=b.getAttribute('data-jump');
+      if(k[0]!=='@'){ window.__go(k); return; }
+      var w=k.slice(1);
+      screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
+      walk.hidden=true; step=null; opened.innerHTML=''; gardenHead.hidden=true;
+      resetBtn.hidden=true; document.getElementById('meterCtl').hidden=true;
+      if(w==='unclaimed'||w==='claimed'||w==='signedin'){ setArrival(w); return; }
+      if(w==='code'){ setArrival('unclaimed'); openCodePage(); return; }
+      if(w==='wrong'){ setArrival('unclaimed'); openCodePage(); wrongCode(); return; }
+      if(w==='home'){ setArrival('claimed'); enterHome(); return; }
+      if(w==='garden'){ setArrival('claimed'); enterHome();
+        openRow('garden',null);
+        cap.textContent='The garden \u00b7 opened by the light'; return; }
+    });
+  })();
+
   /* jump to any screen by name, for review and for testing */
   window.__go=function(key){
     screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode');
@@ -2307,8 +2389,11 @@ tbody tr:hover td{color:var(--cream)}
   };
 
   function enterHome(){
-    screen.classList.remove('walking');
+    screen.classList.remove('walking','claimed');
     walk.hidden=true;
+    /* the two doors are for a page whose owner is unknown. On your own piece
+       there is nothing to claim and nothing to sign into. */
+    document.getElementById('doors').hidden=true;
     screen.classList.add('caretaker');
     cap.textContent='Home · the same piece page, now yours';
     lite('meter',true);

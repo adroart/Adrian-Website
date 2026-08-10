@@ -838,8 +838,11 @@ everyone:
   sign-in link, because nobody has an account for an unregistered piece.
 - **Registered, not you** — no brass anywhere. The code door drops to a quiet line and
   *Sign in to tend it* becomes the obvious move.
-- **Registered to you, signed in** — no pill, because there is nothing left to claim. The
-  light and your doors.
+- **Registered, and you are signed in but it is not yours** — the same as above, minus the
+  sign-in they no longer need. The code door reads *I hold this piece*. **Having an account
+  is not the same as holding this piece**, so an account-holder sees what a stranger sees.
+- **Registered to you, signed in** — no pill and no doors, because there is nothing left to
+  claim and nothing to sign into. The light and your rows.
 
 **Begin replaces Unlock as the first-arrival label.** Unlock names the mechanism; Begin
 names what happens. It also covers both openings honestly, because behind it sits
