@@ -787,7 +787,10 @@ body{
 }
 .screen.caretaker.promoted .meter{height:16px}
 .screen.caretaker.promoted .meter .halo{filter:blur(6px)}
-.screen.caretaker.promoted .meter-label{display:none}
+.screen.caretaker.promoted .ritual-due{
+  margin-top:10px;color:var(--brass);font-size:12.5px;font-style:italic
+}
+.meter-label{display:none}
 .screen.caretaker.promoted .meter-wrap{padding-bottom:0}
 /* with the meter as the anchor, the drawing steps aside */
 .screen.caretaker.promoted .piece-slot{grid-template-rows:0;opacity:0;margin:0}
@@ -831,6 +834,9 @@ body{
      with it, so the light would distort instead of lengthen. One element,
      once a year, is worth the layout pass. */
   transition:width 1s var(--ease-out), box-shadow .85s var(--ease)
+}
+.ritual-due{
+  margin-top:10px;color:var(--brass);font-size:12.5px;font-style:italic
 }
 .meter-label{
   margin-top:14px;font-size:12px;color:var(--cream-3);text-align:center;
@@ -1075,7 +1081,7 @@ tbody tr:hover td{color:var(--cream)}
             <button class="row care-only" data-row="family" data-prim="row">
               <span>The people you love</span><span class="chev">&rsaquo;</span>
             </button>
-            <button class="row care-only" data-row="passing" data-prim="row">
+            <button class="row care-only" data-walkrow="passfork" data-prim="row">
               <span>Passing it on</span><span class="chev">&rsaquo;</span>
             </button>
             <button class="row care-only" data-row="account" data-prim="row">
@@ -1145,6 +1151,7 @@ tbody tr:hover td{color:var(--cream)}
                 <span class="bar"><span class="bar-fill" id="mfill"></span></span>
               </button>
               <p class="meter-label" id="meterLabel">Seven answers placed.<br>Tap the light to open the garden.</p>
+              <button class="tlink ritual-due" id="ritualLink" hidden>The year has turned</button>
             </div>
 
             <button class="pill" id="unlockBtn" data-prim="pill">Begin</button>
@@ -1752,6 +1759,9 @@ tbody tr:hover td{color:var(--cream)}
 
   rows.addEventListener('click',function(e){
     var btn=e.target.closest('.row'); if(!btn) return;
+    /* some doors open a screen rather than a surface: the passing is a flow */
+    var wr=btn.getAttribute('data-walkrow');
+    if(wr){ startWalk(wr); return; }
     if(btn.classList.contains('is-open')){ closeRow(); return; }
     openRow(btn.dataset.row,btn);
   });
@@ -2229,6 +2239,9 @@ tbody tr:hover td{color:var(--cream)}
     /* ── THE HEIR ARRIVES ──
        The emotional payoff of the three tiers. Someone opens what they inherited
        for the first time and decides what the world learns. */
+    /* reached from the letter the piece sends when a passing completes, never
+       from inside the app: there is no door to it because the person did not
+       have one until the piece became theirs. */
     inherit:{ h:'What he kept', art:'piece',
       b:'Earth\u2019s Breath is yours to carry now. He wrote things into it that nobody '+
         'has read, and they are yours to open.',
@@ -2252,6 +2265,8 @@ tbody tr:hover td{color:var(--cream)}
     /* ── THE COLLABORATOR ──
        Not a stranger, not the caretaker. She places her love in it and nothing
        else, and the piece asks her at her own birthday. */
+    /* reached from the invitation the caretaker sends, never from inside the
+       app: she has no account and no piece until she accepts. */
     joinhello:{ h:'You have been added to a piece', art:'piece',
       b:'Sara has placed Earth\u2019s Breath in your hands to write into. The piece is '+
         'hers to carry; what you put in it is yours.',
@@ -2507,6 +2522,8 @@ tbody tr:hover td{color:var(--cream)}
       var t=TINTS[b.dataset.tint]||[32,0];
       screen.style.setProperty('--tint-h',t[0]);
       screen.style.setProperty('--tint-a',t[1]);
+      /* the yearly door only exists in the birthday month */
+      document.getElementById('ritualLink').hidden = (b.dataset.tint!=='birthday');
       cap.textContent=b.dataset.tint==='birthday'
         ? 'The birthday month \u00b7 the warmest the piece ever gets'
         : b.dataset.tint+' \u00b7 the ground shifts, the brass never does';
@@ -2589,7 +2606,8 @@ tbody tr:hover td{color:var(--cream)}
     ['The passing', [['Two exits','passfork'],['It stays in the house','passname'],
       ['What travels','passsell'],['Let it go','passready'],
       ['It is waiting','passdone']]],
-    ['After', [['The heir arrives','inherit'],['In his own words','inheritread'],
+    ['After \u00b7 arrives by letter, no door inside the app',
+      [['The heir arrives','inherit'],['In his own words','inheritread'],
       ['A collaborator arrives','joinhello'],['Who you are (theirs)','joinwho']]]
   ];
   (function buildJump(){
@@ -2677,6 +2695,11 @@ tbody tr:hover td{color:var(--cream)}
       : (words[n]||n)+' answer'+(n===1?'':'s')+' placed.<br>Tap the light to open the garden.';
     lite('meter',true);
   }
+  /* near the birthday, the piece's one yearly moment has its own quiet door */
+  document.getElementById('ritualLink').addEventListener('click',function(){
+    startWalk('ritual');
+  });
+
   /* the meter is a door, not a readout: it opens the garden */
   meter.addEventListener('click',function(){
     if(screen.classList.contains('promoted')){ closeRow(); return; }
