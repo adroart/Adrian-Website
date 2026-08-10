@@ -11,7 +11,19 @@
 
 ---
 
-## Working rule
+## Status — 2026-08-09
+
+**The wording outranks this file's screen list now.** Adrian worked the opening line by line
+in conversation: the single opening screen became a locked sequence (code entry → code
+confirmed → four introduction screens), with the project publicly named and the copy settled
+in his voice. **`collector-screen-wording.md` (same folder) is the ongoing record**: every
+screen in walking order, marked locked or proposed, exact wording. Design sessions take the
+locked copy verbatim; do not redesign the old single-screen opening.
+
+**Round 1 in the Claude Design project** (four options of the old single-screen opening,
+verified clean) survives as the visual-direction reference only: espresso grounds, CAD line
+drawing, brass pill, type scale. Adrian still picks a direction among 1a to 1d; the chosen
+look then dresses the locked sequence.
 
 **Adrian does not want to interact with Claude Design in the early rounds.** Drive it yourself,
 including the verify loop, and bring him finished screens to look at. He looks at results, not
