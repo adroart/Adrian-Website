@@ -1,4 +1,4 @@
-# Collector journey — the manual
+# Collector journey: the manual
 
 > **For the next session, human or AI.** Everything about the collector flow: where it
 > lives, what is settled, and what is still open. Rewritten 2026-08-10 at the close of the
@@ -18,20 +18,20 @@ What remains is wording and two research questions.
 
 ## The documents, in reading order
 
-1. **[The interactive spec](todo/plans/collector-primitives.html)** — START HERE. Six
+1. **[The interactive spec](todo/plans/collector-primitives.html)** START HERE. Six
    interaction primitives rendered live and touchable, plus all 46 screens walkable. A jump
    list under the phone reaches any screen in one press. This is the thing to open.
-2. **[The wording record](todo/plans/collector-screen-wording.md)** — THE MASTER. Every
+2. **[The wording record](todo/plans/collector-screen-wording.md)** THE MASTER. Every
    locked line, plus **section 6**, which carries everything decided 2026-08-10 and wins
    wherever it disagrees with anything earlier in the file.
-3. **[The flow chart](todo/plans/collector-flow-chart.html)** — the whole journey with its
+3. **[The flow chart](todo/plans/collector-flow-chart.html)**, the whole journey with its
    branches, rebuilt from the verified graph.
-4. **[The screen cards](todo/plans/collector-flow-preview.html)** — the original 23 screens
+4. **[The screen cards](todo/plans/collector-flow-preview.html)**, the original 23 screens
    as phone cards. Still the source of truth for the locked copy.
-5. **[The design handoff](todo/plans/collector-design-handoff.md)** — how to brief Claude
+5. **[The design handoff](todo/plans/collector-design-handoff.md)**, how to brief Claude
    Design: the Apple setup shape, the real tokens, the CAD line-drawing rule.
 6. **[The journey spec](todo/plans/the-collector-journey.md)** and
-   **[the build plan](todo/plans/the-collector-build.md)** — the original acceptance spec
+   **[the build plan](todo/plans/the-collector-build.md)**, the original acceptance spec
    and ordered work. Both predate the 2026-08-10 sessions.
 
 ## The flow in one breath
@@ -65,7 +65,7 @@ Then it accumulates for as long as it is held, and passes on.
 
 **Privacy**
 - **Three tiers:** *Let it shine* (public, and once it shines it always shines) · *Keep it
-  with the piece* (holder-only, **and they may publish it one day** — that clause is on the
+  with the piece* (holder-only, **and they may publish it one day**, that clause is on the
   control) · *Seal it* (nobody, ever). Shining is the default.
 - **The heirs' right is ON by default**, hidden when sealed. The writer decides in advance,
   because only the writer knows which thing is which.
@@ -77,7 +77,7 @@ Then it accumulates for as long as it is held, and passes on.
 **Registration and people**
 - **Registration is binary.** Two required screens: your name, and where it lives.
   Everything else is an add-on reachable forever.
-- **One account across the ecosystem** — Mandala Codes, the ledger, ordering already signed
+- **One account across the ecosystem**, Mandala Codes, the ledger, ordering already signed
   in.
 - **The household is the people whose love is in the piece**, not an invite list. Being on
   it promises nothing.

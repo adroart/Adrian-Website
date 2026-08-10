@@ -1,4 +1,4 @@
-# The prompt — paste this to start building
+# The prompt: paste this to start building
 
 > Copy everything inside the block below into a fresh session, in this repo.
 
