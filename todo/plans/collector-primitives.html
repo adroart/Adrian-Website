@@ -533,34 +533,59 @@ body{
    Only the resting-page links step aside. */
 .screen.unlocking .foot > .tlink,
 .screen.unlocking .foot > br{display:none}
-.screen.unlocking .foot > .pill{margin-top:18px}
+.screen.unlocking .foot > .pill{display:none}
 .screen.wrongcode .foot > .pill{display:none}
-/* the code page is its OWN page: the rows and the status give way,
-   the field sits in the middle with room to breathe */
+/* the code page is its OWN page: everything that is not the field gives way,
+   and sixteen characters over two rows need the room. */
 .screen.unlocking .rows{display:none}
 .screen.unlocking .head .status{display:none}
-.screen.unlocking .piece-slot{grid-template-rows:96px;margin-bottom:16px}
-.screen.unlocking .piece-slot svg{transform:scale(.8)}
+.screen.unlocking .head .ul{margin-bottom:6px}
+.screen.unlocking .head .name{font-size:23px}
+.screen.unlocking .dream{display:none}
+.screen.unlocking .placed{display:none}
+.screen.unlocking .piece-slot{grid-template-rows:62px;margin-bottom:12px}
+.screen.unlocking .piece-slot svg{transform:scale(.52)}
 .screen.unlocking .foot{padding-top:0}
-.screen.unlocking .spacer{flex:0 0 26px;min-height:0}
-.screen.unlocking .codefield{margin-top:10px}
+.screen.unlocking .spacer{flex:0 1 auto;min-height:0}
+.screen.unlocking .codefield{margin-top:14px}
+.screen.unlocking .code-help{margin-bottom:6px;font-size:12px}
+.screen.unlocking .code-warn{margin-bottom:2px;font-size:11.5px}
+.screen.unlocking .code-nocode{margin-top:6px}
+.screen.unlocking .code-nocode .tlink{padding:6px 4px;font-size:13px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
+:root{--cell:26px}
+/* sixteen characters as two rows of eight. An unbroken run of sixteen is
+   unreadable and unproofable against the underside of a piece; two rows of
+   eight are checkable by eye, and two rows are shorter than four groups. */
 .code-in{
-  display:flex;gap:7px;margin-bottom:16px;position:relative
+  display:flex;flex-direction:column;align-items:center;
+  gap:11px;margin-bottom:14px;position:relative;
+  width:100%;flex:none
 }
-/* a real input, invisible over the six cells: you type, they fill */
-.code-in input{
-  position:absolute;inset:0;width:100%;height:100%;
-  background:none;border:0;outline:0;color:transparent;caret-color:transparent;
-  font-family:var(--label);font-size:19px;letter-spacing:2.05em;
-  text-indent:.6em;padding:0;cursor:text;-webkit-text-fill-color:transparent
+.cg{display:flex;gap:4px;flex:none;justify-content:center}
+.cg i{
+  width:var(--cell);flex:none;height:28px;display:flex;align-items:flex-end;
+  justify-content:center;padding-bottom:3px;
+  border-bottom:1px solid var(--hair);
+  font-family:var(--label);font-size:15px;font-style:normal;color:var(--cream);
+  transition:border-color .3s var(--ease)
 }
-.code-in span.cursor::after{
-  content:'';display:block;width:11px;height:1px;background:var(--brass);
+.cg i.seated{border-bottom-color:var(--brass)}
+.cg i.seat-in{animation:seat .3s var(--ease-out)}
+.cg i.cursor::after{
+  content:'';display:block;width:9px;height:1px;background:var(--brass);
   animation:blink 1.1s steps(2,start) infinite
 }
 @keyframes blink{to{opacity:0}}
+/* the real input sits over the whole grid, invisible and text-free */
+.code-in input{
+  position:absolute;inset:0;width:100%;height:100%;
+  background:none;border:0;outline:0;color:transparent;caret-color:transparent;
+  padding:0;cursor:text;-webkit-text-fill-color:transparent;font-size:16px;
+  text-indent:-9999px;overflow:hidden
+}
+@media(max-width:420px){:root{--cell:24px}.code-in{gap:10px}}
 .code-in span{
   width:32px;height:44px;display:flex;align-items:center;justify-content:center;
   border-bottom:1px solid var(--hair);
@@ -961,9 +986,10 @@ tbody tr:hover td{color:var(--cream)}
 
             <div class="codefield" id="codefield">
               <div class="code-in" id="codeIn">
-                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span class="cg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="cg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
                 <input id="codeInput" inputmode="text" autocomplete="off"
-                       spellcheck="false" maxlength="6" aria-label="The code">
+                       spellcheck="false" maxlength="16" aria-label="The code">
               </div>
               <p class="code-help" id="codeHelp">Turn the piece over. The code is written on
               its underside, and only its caretaker can see it.</p>
@@ -1034,8 +1060,8 @@ tbody tr:hover td{color:var(--cream)}
       <div class="controls">
         <span class="ctl-label">Run a state · or type the code yourself</span>
         <div class="meter-steps">
-          <button id="wrongBtn">A code that is not true · 999999</button>
-          <button id="heldBtn">A piece already held · 222222</button>
+          <button id="wrongBtn">A code that is not true · sixteen nines</button>
+          <button id="heldBtn">A piece already held · sixteen twos</button>
           <button onclick="window.__go('ritual')">The year turns</button>
         </div>
       </div>
@@ -1051,7 +1077,7 @@ tbody tr:hover td{color:var(--cream)}
       </div>
       <p class="phone-caption" style="margin-top:12px;text-transform:none;
          letter-spacing:0;font-family:var(--body);font-size:12.5px;font-style:italic">
-        This piece&rsquo;s code is 111111</p>
+        This piece&rsquo;s code is sixteen ones</p>
       <p style="text-align:center;margin-top:10px">
         <button class="tlink" id="resetBtn" hidden>Back to the door, and run it again</button>
       </p>
@@ -1574,7 +1600,8 @@ tbody tr:hover td{color:var(--cream)}
   });
 
   /* ── the code field + vault ── */
-  var CODE='111111', WRONG='999999', HELD='222222', running=false,
+  var CODE='1111111111111111', WRONG='9999999999999999',
+      HELD='2222222222222222', running=false,
       codeHelp=document.getElementById('codeHelp'),
       codeWarn=document.getElementById('codeWarn'),
       codeActions=document.getElementById('codeActions'),
@@ -1593,30 +1620,34 @@ tbody tr:hover td{color:var(--cream)}
     screen.classList.add('unlocking');
     unlockBtn.disabled=true;
     cap.textContent=label;
-    var cells=codeIn.children, i=0;
-    Array.prototype.forEach.call(cells,function(c){c.textContent='';c.classList.remove('seated')});
+    var cells=codeIn.querySelectorAll('.cg i'), i=0;
+    cells.forEach(function(c){
+      c.textContent=''; c.classList.remove('seated','cursor','seat-in');
+    });
     setTimeout(function(){ lite('code'); },260);
 
     if(reduce){
-      Array.prototype.forEach.call(cells,function(c,n){
-        c.textContent=chars[n]; c.classList.add('seated');
-      });
+      cells.forEach(function(c,n){ c.textContent=chars[n]; c.classList.add('seated'); });
       setTimeout(done,300);
       return;
     }
+    /* sixteen tumblers at the six-character pace would run two and a half
+       seconds before the vault even starts, which breaks the two-to-four second
+       bound on the whole passage. They resolve faster and accelerate, so the
+       run reads as one gesture finding its place rather than sixteen events. */
     (function seat(){
-      if(i>=cells.length){ setTimeout(done,400); return; }
+      if(i>=cells.length){ setTimeout(done,420); return; }
       cells[i].textContent=chars[i];
-      cells[i].classList.add('seated');
+      cells[i].classList.add('seated','seat-in');
       i++;
-      setTimeout(seat,150);
+      setTimeout(seat, i<4 ? 90 : (i<10 ? 62 : 44));
     })();
   }
 
   /* TWO PRESSES, per the flow.
      One: Unlock opens the code page, the field empty and waiting.
      Two: you enter the code and press Unlock again. Then the tumblers. */
-  var codeInput=document.getElementById('codeInput');
+  var codeInput=document.getElementById('codeInput'), autoTimer=null;
 
   function openCodePage(){
     screen.classList.remove('wrongcode');
@@ -1630,35 +1661,47 @@ tbody tr:hover td{color:var(--cream)}
     setTimeout(function(){ codeInput.focus(); },260);
   }
 
-  /* the six cells mirror what is typed */
+  /* the sixteen cells mirror what is typed */
+  var CODELEN=16;
   function paintCode(){
-    var v=(codeInput.value||'').toUpperCase(), cells=codeIn.querySelectorAll('span');
+    var v=(codeInput.value||'').toUpperCase(), cells=codeIn.querySelectorAll('.cg i');
     for(var i=0;i<cells.length;i++){
       var had=cells[i].textContent;
       cells[i].textContent=v[i]||'';
       cells[i].classList.toggle('seated', !!v[i]);
-      cells[i].classList.toggle('cursor', i===v.length && v.length<6);
+      cells[i].classList.toggle('cursor', i===v.length && v.length<CODELEN);
       if(v[i] && !had){
         cells[i].classList.remove('seat-in'); void cells[i].offsetWidth;
         cells[i].classList.add('seat-in');
       }
     }
-    unlockBtn.disabled = v.length<6;
+    unlockBtn.disabled = v.length<CODELEN;
   }
 
   codeInput.addEventListener('input',function(){
     codeInput.value=codeInput.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
     paintCode();
+    /* the last character is the press: nothing to confirm, the code is either
+       true or it is not. The pause before it fires is deliberate. At sixteen
+       characters a mistype is likely, and firing the instant the last one lands
+       would reject someone mid-correction, before they had seen what they typed. */
+    clearTimeout(autoTimer);
+    if(codeInput.value.length===CODELEN && !running){
+      autoTimer=setTimeout(function(){
+        if(codeInput.value.length===CODELEN && !running){ codeInput.blur(); submitCode(); }
+      }, 700);
+    }
   });
   codeInput.addEventListener('keydown',function(e){
-    if(e.key==='Enter' && codeInput.value.length===6){ e.preventDefault(); submitCode(); }
+    if(e.key==='Enter' && codeInput.value.length===CODELEN){
+      e.preventDefault(); clearTimeout(autoTimer); submitCode(); }
   });
   codeIn.addEventListener('click',function(){ codeInput.focus(); });
 
   /* what the code you typed actually opens */
   function submitCode(){
     var v=(codeInput.value||'').toUpperCase();
-    if(v.length<6) return;
+    if(v.length<CODELEN) return;
     if(v===HELD){ runCode(v, function(){
         screen.classList.remove('unlocking'); startWalk('receiving'); running=false;
       }, 'The unlock · a piece already held'); return; }
@@ -1715,7 +1758,7 @@ tbody tr:hover td{color:var(--cream)}
   /* the wrong code: no shake, no red. The field clears, the copy changes. */
   /* the wrong code: no shake, no red. The field clears, the copy changes. */
   function wrongCode(){
-    codeIn.querySelectorAll('span').forEach(function(c){
+    codeIn.querySelectorAll('.cg i').forEach(function(c){
       c.textContent=''; c.classList.remove('seated','cursor','seat-in');
     });
     if(codeInput) codeInput.value='';
@@ -2191,7 +2234,7 @@ tbody tr:hover td{color:var(--cream)}
     screen.classList.remove('caretaker','promoted','unlocking','vaulting','wrongcode','walking');
     walk.hidden=true; step=null;
     Array.prototype.forEach.call(rows.children,function(b){b.classList.remove('is-open')});
-    codeIn.querySelectorAll('span').forEach(function(c){
+    codeIn.querySelectorAll('.cg i').forEach(function(c){
       c.textContent=''; c.classList.remove('seated','cursor','seat-in');
     });
     if(codeInput) codeInput.value='';
