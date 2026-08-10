@@ -276,6 +276,22 @@ function mediaErrorCode(code: string) {
   return (error: Error & { code?: string }) => error.code === code && error.message === code;
 }
 
+function assertSanitizedMediaError(
+  error: Error & { code?: string; cause?: unknown; reference?: unknown; bytes?: unknown },
+  code: string,
+  privateValues: string[],
+) {
+  assert.equal(error.code, code);
+  assert.equal(error.message, code);
+  assert.equal(error.cause, undefined);
+  assert.equal(error.reference, undefined);
+  assert.equal(error.bytes, undefined);
+  assert.deepEqual(Object.keys(error), ['code']);
+  assert.equal(JSON.stringify(error), JSON.stringify({ code }));
+  const exposed = `${error.message}\n${error.stack}\n${JSON.stringify(error)}`;
+  for (const privateValue of privateValues) assert.doesNotMatch(exposed, new RegExp(privateValue));
+}
+
 describe('authenticity media immutable R2 storage', () => {
   it('stores JPEG, PNG, and WebP bytes exactly with content-addressed keys and immutable options', async () => {
     for (const [contentType, extension, input] of [
@@ -346,6 +362,28 @@ describe('authenticity media immutable R2 storage', () => {
     assert.deepEqual(fake.puts[0].bytes, bytes);
   });
 
+  it('snapshots Buffer and Uint8Array subclass inputs before the first await without polymorphic sharing', async () => {
+    class SharingBytes extends Uint8Array {
+      slice() { return this; }
+    }
+    for (const input of [
+      Buffer.from([91, 10, 20, 30, 92]).subarray(1, 4),
+      new SharingBytes([10, 20, 30]),
+    ]) {
+      const expected = new Uint8Array([10, 20, 30]);
+      const expectedSha256 = createHash('sha256').update(expected).digest('hex');
+      const fake = mediaBucket();
+      const pending = storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-snapshot', bytes: input, contentType: 'image/png',
+      });
+      input.fill(255);
+      const result = await pending;
+      assert.equal(result.sha256, expectedSha256);
+      assert.deepEqual(fake.puts[0].bytes, expected);
+      assert.deepEqual(fake.objects.get(result.reference)?.bytes, expected);
+    }
+  });
+
   it('replays an exact content-addressed object without overwriting or multiplying objects', async () => {
     const fake = mediaBucket();
     const input = { artworkRecordId: 'record-replay', bytes: new Uint8Array([3, 1, 4]), contentType: 'image/webp' };
@@ -369,6 +407,30 @@ describe('authenticity media immutable R2 storage', () => {
         mediaErrorCode('media_backup_conflict'));
       assert.equal(fake.objects.size, 1);
       assert.deepEqual(fake.objects.get(first.reference), stored);
+    }
+  });
+
+  it('requires exact content metadata on new writes and existing-object replays', async () => {
+    for (const storedContentType of [undefined, 'image/jpeg']) {
+      const newWrite = mediaBucket({
+        mutateStored(stored) { stored.contentType = storedContentType; },
+      });
+      await assert.rejects(storeArtworkLedgerMedia(newWrite.bucket, {
+        artworkRecordId: 'record-new-metadata',
+        bytes: new Uint8Array([4, 2]),
+        contentType: 'image/png',
+      }), mediaErrorCode('media_backup_failed'));
+
+      const replay = mediaBucket();
+      const input = {
+        artworkRecordId: 'record-replay-metadata',
+        bytes: new Uint8Array([4, 2]),
+        contentType: 'image/png',
+      };
+      const first = await storeArtworkLedgerMedia(replay.bucket, input);
+      replay.objects.get(first.reference)!.contentType = storedContentType;
+      await assert.rejects(storeArtworkLedgerMedia(replay.bucket, input),
+        mediaErrorCode('media_backup_conflict'));
     }
   });
 
@@ -470,6 +532,40 @@ describe('authenticity media immutable R2 storage', () => {
       assert.doesNotMatch(String(error.stack), new RegExp(`${privateId}|${privateText}`));
       return true;
     });
+  });
+
+  it('replaces spoofed external R2 errors with fresh constant coded errors', async () => {
+    const privateId = 'record-spoof-private';
+    const privateText = 'private-byte-payload-8675309';
+    const privateReference = `artwork-ledger/${privateId}/private-reference`;
+    const spoofed = (code: string) => Object.assign(
+      new Error(`${privateText} at ${privateReference}`),
+      { code, cause: privateText, reference: privateReference, bytes: privateText },
+    );
+    const input = {
+      artworkRecordId: privateId,
+      bytes: new TextEncoder().encode(privateText),
+      contentType: 'image/jpeg',
+    };
+    const scenarios = [
+      mediaBucket({ putFailure: spoofed('media_backup_failed') }),
+      mediaBucket({ getFailure: spoofed('media_backup_conflict') }),
+      mediaBucket({
+        mutateStored(stored) {
+          stored.arrayBufferFailure = spoofed('media_backup_conflict');
+        },
+      }),
+    ];
+    for (const fake of scenarios) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, input), (error: Error & {
+        code?: string; cause?: unknown; reference?: unknown; bytes?: unknown;
+      }) => {
+        assertSanitizedMediaError(error, 'media_backup_failed', [
+          privateId, privateText, privateReference,
+        ]);
+        return true;
+      });
+    }
   });
 });
 

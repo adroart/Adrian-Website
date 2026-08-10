@@ -6,25 +6,56 @@ const MEDIA_EXTENSIONS = new Map([
   ['image/webp', 'webp'],
 ]);
 
+const LOCAL_CODED_ERRORS = new WeakSet();
+const TYPED_ARRAY_PROTOTYPE = Object.getPrototypeOf(Uint8Array.prototype);
+const typedArrayBuffer = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'buffer').get;
+const typedArrayByteOffset = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'byteOffset').get;
+const typedArrayByteLength = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'byteLength').get;
+const dataViewBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
+const dataViewByteOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
+const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
+
 function codedError(code) {
   const error = new Error(code);
   error.code = code;
+  LOCAL_CODED_ERRORS.add(error);
   return error;
+}
+
+function isLocalCodedError(error) {
+  return (typeof error === 'object' && error !== null) && LOCAL_CODED_ERRORS.has(error);
+}
+
+function viewDetails(value) {
+  try {
+    return {
+      buffer: Reflect.apply(typedArrayBuffer, value, []),
+      byteOffset: Reflect.apply(typedArrayByteOffset, value, []),
+      byteLength: Reflect.apply(typedArrayByteLength, value, []),
+    };
+  } catch {
+    return {
+      buffer: Reflect.apply(dataViewBuffer, value, []),
+      byteOffset: Reflect.apply(dataViewByteOffset, value, []),
+      byteLength: Reflect.apply(dataViewByteLength, value, []),
+    };
+  }
 }
 
 function inputBytes(value) {
   try {
-    let bytes;
-    if (value instanceof Uint8Array) {
-      bytes = value;
-    } else if (value instanceof ArrayBuffer) {
-      bytes = new Uint8Array(value);
+    let source;
+    if (value instanceof ArrayBuffer) {
+      source = new Uint8Array(value);
     } else if (ArrayBuffer.isView(value)) {
-      bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+      const { buffer, byteOffset, byteLength } = viewDetails(value);
+      source = new Uint8Array(buffer, byteOffset, byteLength);
     } else {
       throw codedError('invalid_media_bytes');
     }
-    return bytes.slice();
+    const snapshot = new Uint8Array(source.byteLength);
+    Reflect.apply(Uint8Array.prototype.set, snapshot, [source]);
+    return snapshot;
   } catch {
     throw codedError('invalid_media_bytes');
   }
@@ -55,12 +86,19 @@ async function sha256Hex(bytes) {
 }
 
 function isConditionalPutError(error) {
-  return error?.status === 412
-    || error?.statusCode === 412
-    || error?.code === 10031
-    || error?.code === '10031'
-    || error?.code === 'PreconditionFailed'
-    || error?.name === 'PreconditionFailed';
+  const property = (key) => {
+    try {
+      return error?.[key];
+    } catch {
+      return undefined;
+    }
+  };
+  return property('status') === 412
+    || property('statusCode') === 412
+    || property('code') === 10031
+    || property('code') === '10031'
+    || property('code') === 'PreconditionFailed'
+    || property('name') === 'PreconditionFailed';
 }
 
 async function verifyStoredObject(bucket, expected, conflict) {
@@ -70,11 +108,11 @@ async function verifyStoredObject(bucket, expected, conflict) {
   } catch {
     throw codedError('media_backup_failed');
   }
-  if (!stored || typeof stored.arrayBuffer !== 'function') {
-    throw codedError('media_backup_failed');
-  }
 
   try {
+    if (!stored || typeof stored.arrayBuffer !== 'function') {
+      throw codedError('media_backup_failed');
+    }
     if (typeof stored.key === 'string' && stored.key !== expected.reference) {
       throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
     }
@@ -82,7 +120,7 @@ async function verifyStoredObject(bucket, expected, conflict) {
       throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
     }
     const storedContentType = stored.httpMetadata?.contentType;
-    if (storedContentType !== undefined && storedContentType !== expected.contentType) {
+    if (storedContentType !== expected.contentType) {
       throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
     }
     const actual = readBackBytes(await stored.arrayBuffer());
@@ -92,7 +130,7 @@ async function verifyStoredObject(bucket, expected, conflict) {
       throw codedError(conflict ? 'media_backup_conflict' : 'media_backup_failed');
     }
   } catch (error) {
-    if (error?.code === 'media_backup_conflict' || error?.code === 'media_backup_failed') throw error;
+    if (isLocalCodedError(error)) throw error;
     throw codedError('media_backup_failed');
   }
 }
@@ -127,7 +165,7 @@ export async function storeArtworkLedgerMedia(bucket, {
     conditionalReplay = putResult === null;
     if (putResult === undefined) throw codedError('media_backup_failed');
   } catch (error) {
-    if (error?.code === 'media_backup_failed') throw error;
+    if (isLocalCodedError(error)) throw error;
     if (!isConditionalPutError(error)) throw codedError('media_backup_failed');
     conditionalReplay = true;
   }
