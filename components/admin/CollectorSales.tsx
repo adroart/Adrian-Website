@@ -47,6 +47,12 @@ type RegistrationRequest = {
   edition: ArtistSaleEdition;
   idempotencyKey: string;
 };
+type MediaUploadRequest = {
+  artworkRecordId: string;
+  role: ArtistLedgerMediaRole;
+  file: File;
+  idempotencyKey: string;
+};
 
 class WorkspaceRequestError extends Error {
   constructor(public status: number, public code: string) { super(code); }
@@ -70,6 +76,24 @@ const emptyArtwork = (index = 0): ArtworkDraft => ({
 function invitationExpiryValue(): string {
   const date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   return date.toISOString().slice(0, 16);
+}
+
+function recordScopeKey(selection: RecordSelection): string {
+  return `${selection.kind}:${selection.id}`;
+}
+
+function saleArtworkScopeKey(saleId: string, artworkRecordId: string): string {
+  return `${saleId}:${artworkRecordId}`;
+}
+
+function setScopedValue<T>(current: Record<string, T>, key: string, value: T | null): Record<string, T> {
+  if (value === null) {
+    if (!Object.hasOwn(current, key)) return current;
+    const next = { ...current };
+    delete next[key];
+    return next;
+  }
+  return { ...current, [key]: value };
 }
 
 function money(amount: string, currency: string): ArtistSaleMoney | null {
@@ -138,9 +162,11 @@ async function jsonRequest(url: string, init: RequestInit = {}): Promise<unknown
 }
 
 function outcome(error: unknown) {
-  return error instanceof WorkspaceRequestError
-    ? { kind: 'http' as const, status: error.status }
-    : { kind: 'network_error' as const };
+  if (error instanceof WorkspaceRequestError) return { kind: 'http' as const, status: error.status };
+  if (error && typeof error === 'object' && 'status' in error && Number.isInteger(Number(error.status))) {
+    return { kind: 'http' as const, status: Number(error.status) };
+  }
+  return { kind: 'network_error' as const };
 }
 
 function recoveryMessage(error: unknown): string {
@@ -213,15 +239,17 @@ const CollectorSales: React.FC = () => {
   const [busy, setBusy] = useState('');
   const [reconnectionAttempt, setReconnectionAttempt] = useState<FrozenArtistSaleAttempt<ArtistSaleCollectionMutation> | null>(null);
   const [saleAttempt, setSaleAttempt] = useState<FrozenArtistSaleAttempt<ArtistSaleCollectionMutation> | null>(null);
-  const [detailAttempt, setDetailAttempt] = useState<FrozenArtistSaleAttempt<ArtistSaleDetailMutation | ArtistLedgerMutation> | null>(null);
-  const [ownershipSecret, setOwnershipSecret] = useState<{ code: string; artworkRecordId: string } | null>(null);
-  const [invitationSecret, setInvitationSecret] = useState<{ token: string; artworkRecordId: string } | null>(null);
-  const [invitationAttempts, setInvitationAttempts] = useState<Record<string, InvitationCreateAttempt | null>>({});
-  const [registrationAttempts, setRegistrationAttempts] = useState<Record<string, FrozenArtistSaleAttempt<RegistrationRequest> | null>>({});
+  const [detailAttempts, setDetailAttempts] = useState<Record<string, FrozenArtistSaleAttempt<ArtistSaleDetailMutation | ArtistLedgerMutation>>>({});
+  const [ownershipSecrets, setOwnershipSecrets] = useState<Record<string, string>>({});
+  const [invitationSecrets, setInvitationSecrets] = useState<Record<string, string>>({});
+  const [invitationAttempts, setInvitationAttempts] = useState<Record<string, InvitationCreateAttempt>>({});
+  const [registrationAttempts, setRegistrationAttempts] = useState<Record<string, FrozenArtistSaleAttempt<RegistrationRequest>>>({});
+  const [uploadAttempts, setUploadAttempts] = useState<Record<string, FrozenArtistSaleAttempt<MediaUploadRequest>>>({});
   const [pendingLinks, setPendingLinks] = useState<Record<string, string>>({});
   const [invitations, setInvitations] = useState<AdminInvitation[]>([]);
   const statusRef = useRef<HTMLDivElement>(null);
   const activeSaleIdRef = useRef<string | null>(null);
+  const activeSelectionRef = useRef<RecordSelection | null>(null);
   const previousSaleIdRef = useRef<string | null>(null);
 
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -237,6 +265,9 @@ const CollectorSales: React.FC = () => {
   const [linkedCaseId, setLinkedCaseId] = useState('');
   const [artworks, setArtworks] = useState<ArtworkDraft[]>([emptyArtwork()]);
   activeSaleIdRef.current = selection?.kind === 'sale' ? selection.id : null;
+  activeSelectionRef.current = selection;
+  const activeRecordScope = selection ? recordScopeKey(selection) : null;
+  const detailAttempt = selection ? detailAttempts[recordScopeKey(selection)] || null : null;
 
   const loadWorkspace = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -281,12 +312,6 @@ const CollectorSales: React.FC = () => {
     if (previousSaleIdRef.current && previousSaleIdRef.current !== nextSaleId) setNotice('');
     previousSaleIdRef.current = nextSaleId;
     setDetail(null);
-    setDetailAttempt(null);
-    setOwnershipSecret(null);
-    setInvitationSecret(null);
-    setRegistrationAttempts({});
-    setInvitationAttempts({});
-    setPendingLinks({});
     setInvitations([]);
     setActionError('');
     setDetailLoadError('');
@@ -419,34 +444,37 @@ const CollectorSales: React.FC = () => {
     } finally { setBusy(''); }
   };
 
-  const postDetail = async (
+  const postDetailForScope = async (
+    scopedSelection: RecordSelection,
     pathId: string,
     draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>,
     success: string,
   ) => {
-    const scopedSaleId = selection?.kind === 'sale' ? selection.id : null;
-    const scopeIsActive = () => !scopedSaleId || activeSaleIdRef.current === scopedSaleId;
+    const scopeKey = recordScopeKey(scopedSelection);
+    const scopedSaleId = scopedSelection.kind === 'sale' ? scopedSelection.id : null;
+    const scopeIsActive = () => activeSelectionRef.current?.kind === scopedSelection.kind
+      && activeSelectionRef.current.id === scopedSelection.id;
     setBusy(draft.action); setActionError(''); setNotice('');
     const url = ['append', 'appendSharedSaleMessage', 'selectCertificateImage'].includes(draft.action)
       ? '/api/admin/collector-ledger' : `/api/admin/collector-sales/${pathId}`;
-    const attempt = beginArtistSaleAttempt(detailAttempt, draft);
-    setDetailAttempt(attempt);
+    const attempt = beginArtistSaleAttempt(detailAttempts[scopeKey] || null, draft);
+    setDetailAttempts(value => setScopedValue(value, scopeKey, attempt));
     try {
       const value = await jsonRequest(url, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(attempt.request),
       });
       parseArtistSaleMutationResponse(value);
-      if (!scopeIsActive()) return false;
-      setDetailAttempt(finishArtistSaleAttempt(attempt, { kind: 'success' }));
-      setNotice(success);
-      if (scopedSaleId) await loadSale(scopedSaleId);
+      setDetailAttempts(current => setScopedValue(current, scopeKey, finishArtistSaleAttempt(attempt, { kind: 'success' })));
+      if (scopeIsActive()) {
+        setNotice(success);
+        if (scopedSaleId) await loadSale(scopedSaleId);
+      }
       await loadWorkspace();
       return true;
     } catch (error) {
-      if (!scopeIsActive()) return false;
-      setDetailAttempt(finishArtistSaleAttempt(attempt, outcome(error)));
-      setActionError(recoveryMessage(error));
-      if (error instanceof WorkspaceRequestError && error.status === 409 && scopedSaleId) {
+      setDetailAttempts(current => setScopedValue(current, scopeKey, finishArtistSaleAttempt(attempt, outcome(error))));
+      if (scopeIsActive()) setActionError(recoveryMessage(error));
+      if (scopeIsActive() && error instanceof WorkspaceRequestError && error.status === 409 && scopedSaleId) {
         await loadSale(scopedSaleId);
         await loadWorkspace();
       }
@@ -454,29 +482,41 @@ const CollectorSales: React.FC = () => {
     } finally { setBusy(''); }
   };
 
+  const postDetail = async (
+    pathId: string,
+    draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>,
+    success: string,
+  ) => {
+    if (!selection) return false;
+    return postDetailForScope(selection, pathId, draft, success);
+  };
+
   const retryDetail = async () => {
     if (!detailAttempt || !selection) return;
-    const scopedSaleId = selection.kind === 'sale' ? selection.id : null;
-    const scopeIsActive = () => !scopedSaleId || activeSaleIdRef.current === scopedSaleId;
+    const scopedSelection = selection;
+    const scopeKey = recordScopeKey(scopedSelection);
+    const scopedSaleId = scopedSelection.kind === 'sale' ? scopedSelection.id : null;
+    const scopeIsActive = () => activeSelectionRef.current?.kind === scopedSelection.kind
+      && activeSelectionRef.current.id === scopedSelection.id;
     setBusy('retry-detail'); setActionError(''); setNotice('');
     const action = detailAttempt.request.action;
     const url = ['append', 'appendSharedSaleMessage', 'selectCertificateImage'].includes(action)
-      ? '/api/admin/collector-ledger' : `/api/admin/collector-sales/${selection.id}`;
+      ? '/api/admin/collector-ledger' : `/api/admin/collector-sales/${scopedSelection.id}`;
     try {
       const value = await jsonRequest(url, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(detailAttempt.request),
       });
       parseArtistSaleMutationResponse(value);
-      if (!scopeIsActive()) return;
-      setDetailAttempt(finishArtistSaleAttempt(detailAttempt, { kind: 'success' }));
-      setNotice('The frozen action completed with its original request and key.');
-      if (scopedSaleId) await loadSale(scopedSaleId);
+      setDetailAttempts(current => setScopedValue(current, scopeKey, finishArtistSaleAttempt(detailAttempt, { kind: 'success' })));
+      if (scopeIsActive()) {
+        setNotice('The frozen action completed with its original request and key.');
+        if (scopedSaleId) await loadSale(scopedSaleId);
+      }
       await loadWorkspace();
     } catch (error) {
-      if (!scopeIsActive()) return;
-      setDetailAttempt(finishArtistSaleAttempt(detailAttempt, outcome(error)));
-      setActionError(recoveryMessage(error));
+      setDetailAttempts(current => setScopedValue(current, scopeKey, finishArtistSaleAttempt(detailAttempt, outcome(error))));
+      if (scopeIsActive()) setActionError(recoveryMessage(error));
     } finally { setBusy(''); }
   };
 
@@ -494,7 +534,7 @@ const CollectorSales: React.FC = () => {
         {notice && <AdminAlert tone="success" live>{notice}</AdminAlert>}
         {actionError && <AdminAlert tone="error" live>{actionError}</AdminAlert>}
       </div>
-      {detailAttempt && <AdminAlert tone="warning"><p>A detail action has an uncertain response. Every other record action is frozen until this exact body and key are retried, or you explicitly cancel after checking the record.</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} disabled={Boolean(busy)} onClick={() => void retryDetail()}>Retry exact action</button><button type="button" className={buttonSecondary} disabled={Boolean(busy)} onClick={() => { setDetailAttempt(null); setActionError('Frozen action cancelled. Refresh and verify the record before making a new change.'); }}>Cancel frozen action</button></div></AdminAlert>}
+      {detailAttempt && activeRecordScope && <AdminAlert tone="warning"><p>A detail action has an uncertain response. Every other record action is frozen until this exact body and key are retried, or you explicitly cancel after checking the record.</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} disabled={Boolean(busy)} onClick={() => void retryDetail()}>Retry exact action</button><button type="button" className={buttonSecondary} disabled={Boolean(busy)} onClick={() => { setDetailAttempts(value => setScopedValue(value, activeRecordScope, null)); setActionError('Frozen action cancelled. Refresh and verify the record before making a new change.'); }}>Cancel frozen action</button></div></AdminAlert>}
 
       <div className="grid gap-3 sm:grid-cols-2" aria-label="Start a record">
         <button type="button" className={`${buttonSecondary} w-full text-left`} onClick={() => { setMode('reconnection'); setSelection(null); setNotice(''); setActionError(''); }}>
@@ -613,9 +653,10 @@ const CollectorSales: React.FC = () => {
                 key={detail.effectiveSale.saleId} detail={detail} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
                 invitations={invitations}
                 registrationAttempts={registrationAttempts} invitationAttempts={invitationAttempts}
-                pendingLinks={pendingLinks}
-                ownershipSecret={ownershipSecret} invitationSecret={invitationSecret}
-                onDismissOwnership={() => setOwnershipSecret(null)} onDismissInvitation={() => setInvitationSecret(null)}
+                uploadAttempts={uploadAttempts} pendingLinks={pendingLinks}
+                ownershipSecrets={ownershipSecrets} invitationSecrets={invitationSecrets}
+                onDismissOwnership={artworkRecordId => setOwnershipSecrets(value => setScopedValue(value, saleArtworkScopeKey(detail.effectiveSale.saleId, artworkRecordId), null))}
+                onDismissInvitation={artworkRecordId => setInvitationSecrets(value => setScopedValue(value, saleArtworkScopeKey(detail.effectiveSale.saleId, artworkRecordId), null))}
                 onRefreshLedger={async artworkRecordId => {
                   const saleId = detail.effectiveSale.saleId;
                   const value = await jsonRequest(`/api/admin/collector-ledger?artworkRecordId=${encodeURIComponent(artworkRecordId)}`);
@@ -626,82 +667,94 @@ const CollectorSales: React.FC = () => {
                 onPost={postDetail}
                 onUpload={async (item, role, file) => {
                   const saleId = detail.effectiveSale.saleId;
+                  const scopeKey = saleArtworkScopeKey(saleId, item.artworkRecordId);
+                  const current = uploadAttempts[scopeKey] || null;
+                  if (!current && !file) return;
+                  const attempt = beginArtistSaleAttempt(current, { artworkRecordId: item.artworkRecordId, role, file: file! });
+                  setUploadAttempts(value => setScopedValue(value, scopeKey, attempt));
                   setBusy(`upload-${item.artworkRecordId}`); setActionError('');
                   try {
-                    await uploadArtistLedgerMedia({ artworkRecordId: item.artworkRecordId, role, file, idempotencyKey: crypto.randomUUID() });
+                    await uploadArtistLedgerMedia(attempt.request);
+                    setUploadAttempts(value => setScopedValue(value, scopeKey, finishArtistSaleAttempt(attempt, { kind: 'success' })));
                     const value = await jsonRequest(`/api/admin/collector-ledger?artworkRecordId=${encodeURIComponent(item.artworkRecordId)}`);
                     if (activeSaleIdRef.current !== saleId) return;
                     setLedgers(current => ({ ...current, [item.artworkRecordId]: parseArtistLedgerDetailResponse(value) }));
-                    setNotice(`${role === 'certificate_image' ? 'Certificate image' : 'Identification evidence'} uploaded as an immutable media item.`);
-                  } catch (error) { if (activeSaleIdRef.current === saleId) setActionError(recoveryMessage(error)); }
+                    setNotice(`${attempt.request.role === 'certificate_image' ? 'Certificate image' : 'Identification evidence'} uploaded as an immutable media item.`);
+                  } catch (error) {
+                    setUploadAttempts(value => setScopedValue(value, scopeKey, finishArtistSaleAttempt(attempt, outcome(error))));
+                    if (activeSaleIdRef.current === saleId) setActionError(recoveryMessage(error));
+                  }
                   finally { setBusy(''); }
+                }}
+                onCancelUpload={artworkRecordId => {
+                  setUploadAttempts(value => setScopedValue(value, saleArtworkScopeKey(detail.effectiveSale.saleId, artworkRecordId), null));
+                  setActionError('Frozen upload cancelled. Check private media before trying again.');
                 }}
                 onRegister={async item => {
                   if (!item.artworkId || !item.edition) return;
                   const saleId = detail.effectiveSale.saleId;
+                  const scopeKey = saleArtworkScopeKey(saleId, item.artworkRecordId);
                   setBusy(`register-${item.artworkRecordId}`); setActionError('');
                   const registrationDraft = {
                     artworkId: item.artworkId,
                     edition: item.edition.kind === 'unique' ? { kind: 'unique' as const } : { kind: 'numbered' as const, number: item.edition.number, size: item.edition.size },
                   };
-                  const attempt = beginArtistSaleAttempt(registrationAttempts[item.artworkRecordId] || null, registrationDraft);
-                  setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: attempt }));
+                  const attempt = beginArtistSaleAttempt(registrationAttempts[scopeKey] || null, registrationDraft);
+                  setRegistrationAttempts(value => setScopedValue(value, scopeKey, attempt));
                   try {
                     const registration = await jsonRequest('/api/admin/registrations', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(attempt.request),
                     }) as { keeperPieceId?: string; ownershipCode?: string };
                     if (!registration.keeperPieceId) throw new Error('invalid_response');
-                    if (activeSaleIdRef.current !== saleId) return;
-                    setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
-                    setPendingLinks(value => ({ ...value, [item.artworkRecordId]: registration.keeperPieceId! }));
-                    if (registration.ownershipCode) setOwnershipSecret({ code: registration.ownershipCode, artworkRecordId: item.artworkRecordId });
-                    const linked = await postDetail(saleId, {
+                    setRegistrationAttempts(value => setScopedValue(value, scopeKey, finishArtistSaleAttempt(attempt, { kind: 'success' })));
+                    setPendingLinks(value => setScopedValue(value, scopeKey, registration.keeperPieceId!));
+                    if (registration.ownershipCode) setOwnershipSecrets(value => setScopedValue(value, scopeKey, registration.ownershipCode!));
+                    const linked = await postDetailForScope({ kind: 'sale', id: saleId }, saleId, {
                       action: 'linkIdentity', artworkRecordId: item.artworkRecordId,
                       keeperPieceId: registration.keeperPieceId, expectedVersion: item.recordVersion,
                     }, 'Artwork registered and linked to this sale record.');
-                    if (linked) setPendingLinks(value => { const next = { ...value }; delete next[item.artworkRecordId]; return next; });
-                    else setActionError('Registration completed, but identity linking is unresolved. Retry the identity link before creating an invitation.');
+                    if (linked) setPendingLinks(value => setScopedValue(value, scopeKey, null));
+                    else if (activeSaleIdRef.current === saleId) setActionError('Registration completed, but identity linking is unresolved. Retry the identity link before creating an invitation.');
                   } catch (error) {
-                    if (activeSaleIdRef.current !== saleId) return;
-                    setRegistrationAttempts(value => ({ ...value, [item.artworkRecordId]: finishArtistSaleAttempt(attempt, outcome(error)) }));
-                    setActionError(recoveryMessage(error));
+                    setRegistrationAttempts(value => setScopedValue(value, scopeKey, finishArtistSaleAttempt(attempt, outcome(error))));
+                    if (activeSaleIdRef.current === saleId) setActionError(recoveryMessage(error));
                   }
                   finally { setBusy(''); }
                 }}
                 onInvite={async (item, email, expiresAt) => {
                   if (!item.keeperPieceId) return;
                   const saleId = detail.effectiveSale.saleId;
+                  const scopeKey = saleArtworkScopeKey(saleId, item.artworkRecordId);
                   setBusy(`invite-${item.artworkRecordId}`); setActionError('');
-                  const current = invitationAttempts[item.artworkRecordId] || null;
+                  const current = invitationAttempts[scopeKey] || null;
                   const attempt = beginInvitationCreateAttempt(current, { keeperPieceId: item.keeperPieceId, intendedRecipientEmail: email, expiresAt });
-                  setInvitationAttempts(value => ({ ...value, [item.artworkRecordId]: attempt }));
+                  setInvitationAttempts(value => setScopedValue(value, scopeKey, attempt));
                   try {
                     const value = await jsonRequest('/api/admin/invitations', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(attempt.request),
                     }) as { invitationId?: string; token?: string | null };
                     if (!value.invitationId) throw new Error('invalid_response');
-                    if (activeSaleIdRef.current !== saleId) return;
-                    setInvitationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
-                    if (value.token) setInvitationSecret({ token: value.token, artworkRecordId: item.artworkRecordId });
+                    setInvitationAttempts(currentValue => setScopedValue(currentValue, scopeKey, null));
+                    if (value.token) setInvitationSecrets(currentValue => setScopedValue(currentValue, scopeKey, value.token!));
                     const listed = await jsonRequest('/api/admin/invitations') as { invitations?: AdminInvitation[] };
                     if (activeSaleIdRef.current !== saleId) return;
                     if (Array.isArray(listed.invitations)) setInvitations(listed.invitations);
                     setNotice('Invitation created but not redeemed. The token exists only in this screen memory.');
                   } catch (error) {
-                    if (activeSaleIdRef.current !== saleId) return;
                     const status = error && typeof error === 'object' && 'status' in error ? Number(error.status) : 0;
-                    if (status >= 400 && status < 500) setInvitationAttempts(value => ({ ...value, [item.artworkRecordId]: null }));
-                    setActionError(recoveryMessage(error));
+                    if (status >= 400 && status < 500) setInvitationAttempts(value => setScopedValue(value, scopeKey, null));
+                    if (activeSaleIdRef.current === saleId) setActionError(recoveryMessage(error));
                   } finally { setBusy(''); }
                 }}
-                onCancelRegistration={artworkRecordId => { setRegistrationAttempts(value => ({ ...value, [artworkRecordId]: null })); setActionError('Frozen registration cancelled. Check registration records before trying again.'); }}
-                onCancelInvitation={artworkRecordId => { setInvitationAttempts(value => ({ ...value, [artworkRecordId]: null })); setActionError('Frozen invitation cancelled. Check invitation records before trying again.'); }}
+                onCancelRegistration={artworkRecordId => { setRegistrationAttempts(value => setScopedValue(value, saleArtworkScopeKey(detail.effectiveSale.saleId, artworkRecordId), null)); setActionError('Frozen registration cancelled. Check registration records before trying again.'); }}
+                onCancelInvitation={artworkRecordId => { setInvitationAttempts(value => setScopedValue(value, saleArtworkScopeKey(detail.effectiveSale.saleId, artworkRecordId), null)); setActionError('Frozen invitation cancelled. Check invitation records before trying again.'); }}
                 onRetryLink={async item => {
-                  const keeperPieceId = pendingLinks[item.artworkRecordId];
+                  const scopeKey = saleArtworkScopeKey(detail.effectiveSale.saleId, item.artworkRecordId);
+                  const keeperPieceId = pendingLinks[scopeKey];
                   if (!keeperPieceId) return;
-                  const linked = await postDetail(detail.effectiveSale.saleId, { action: 'linkIdentity', artworkRecordId: item.artworkRecordId, keeperPieceId, expectedVersion: item.recordVersion }, 'Artwork identity linked to this sale record.');
-                  if (linked) setPendingLinks(value => { const next = { ...value }; delete next[item.artworkRecordId]; return next; });
+                  const linked = await postDetailForScope({ kind: 'sale', id: detail.effectiveSale.saleId }, detail.effectiveSale.saleId, { action: 'linkIdentity', artworkRecordId: item.artworkRecordId, keeperPieceId, expectedVersion: item.recordVersion }, 'Artwork identity linked to this sale record.');
+                  if (linked) setPendingLinks(value => setScopedValue(value, scopeKey, null));
                 }}
               />}
             </div>
@@ -768,21 +821,23 @@ const CorrectionHistory: React.FC<{ corrections: ArtistSaleCorrection[] }> = ({ 
 const SaleDetail: React.FC<{
   detail: ArtistSaleDetailResponse;
   ledgers: Record<string, ArtistLedgerDetailResponse>; invitations: AdminInvitation[];
-  registrationAttempts: Record<string, FrozenArtistSaleAttempt<RegistrationRequest> | null>;
-  invitationAttempts: Record<string, InvitationCreateAttempt | null>; busy: string;
+  registrationAttempts: Record<string, FrozenArtistSaleAttempt<RegistrationRequest>>;
+  invitationAttempts: Record<string, InvitationCreateAttempt>;
+  uploadAttempts: Record<string, FrozenArtistSaleAttempt<MediaUploadRequest>>; busy: string;
   pendingLinks: Record<string, string>;
-  ownershipSecret: { code: string; artworkRecordId: string } | null;
-  invitationSecret: { token: string; artworkRecordId: string } | null;
-  onDismissOwnership: () => void; onDismissInvitation: () => void;
+  ownershipSecrets: Record<string, string>;
+  invitationSecrets: Record<string, string>;
+  onDismissOwnership: (artworkRecordId: string) => void; onDismissInvitation: (artworkRecordId: string) => void;
   onRefreshLedger: (artworkRecordId: string) => Promise<void>;
   onPost: (pathId: string, draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>, success: string) => Promise<boolean>;
-  onUpload: (item: ArtistSaleItem, role: ArtistLedgerMediaRole, file: File) => Promise<void>;
+  onUpload: (item: ArtistSaleItem, role: ArtistLedgerMediaRole, file: File | null) => Promise<void>;
+  onCancelUpload: (artworkRecordId: string) => void;
   onRegister: (item: ArtistSaleItem) => Promise<void>;
   onInvite: (item: ArtistSaleItem, email: string, expiresAt: string) => Promise<void>;
   onCancelRegistration: (artworkRecordId: string) => void;
   onCancelInvitation: (artworkRecordId: string) => void;
   onRetryLink: (item: ArtistSaleItem) => Promise<void>;
-}> = ({ detail, ledgers, invitations, registrationAttempts, invitationAttempts, pendingLinks, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+}> = ({ detail, ledgers, invitations, registrationAttempts, invitationAttempts, uploadAttempts, pendingLinks, busy, ownershipSecrets, invitationSecrets, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
   const [sharedMessage, setSharedMessage] = useState('');
   const [showCorrection, setShowCorrection] = useState(false);
   const initial = saleDraftFrom(detail);
@@ -804,26 +859,30 @@ const SaleDetail: React.FC<{
     <SaleFactsPanel title="Originally recorded" sale={detail.originalSale} />
     {hasCorrections && <SaleFactsPanel title="Current corrected record" sale={detail.effectiveSale} />}
     <CorrectionHistory corrections={detail.corrections} />
-    <div><button type="button" className={buttonSecondary} onClick={() => setShowCorrection(value => !value)}>Correct sale facts</button>{showCorrection && <form className="mt-5 space-y-4 border-t border-bronze-500 pt-5" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'correctSale', expectedSequence: detail.effectiveSale.sequence, occurrence: occurrence(correction.precision, correction.occurrenceValue), buyerEmail: correction.buyerEmail.trim().toLowerCase() || null, total: money(correction.totalAmount, correction.totalCurrency), privateReference: correction.privateReference.trim() || null, privateNotes: correction.privateNotes.trim() || null, reason: correctionReason }, 'Correction appended. Originally recorded facts remain unchanged.'); if (ok) { setShowCorrection(false); setCorrectionReason(''); } }}><p className="font-sans text-base text-wood-700">Corrections append history. They do not erase the originally recorded facts.</p><fieldset><legend className="font-sans text-base font-semibold text-wood-800">Corrected occurrence precision</legend><div className="grid gap-2 sm:grid-cols-4">{([['unknown', 'Unknown'], ['year', 'Year'], ['month', 'Month'], ['exact', 'Exact date']] as const).map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 font-sans text-base"><input className="h-5 w-5" type="radio" name="correction-precision" checked={correction.precision === value} onChange={() => setCorrection(current => ({ ...current, precision: value, occurrenceValue: '' }))} />{label}</label>)}</div></fieldset>{correction.precision === 'year' && <label className={labelClass}>Corrected sale year<input className={inputClass} type="number" min="1000" max="9999" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'month' && <label className={labelClass}>Corrected sale month<input className={inputClass} type="month" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'exact' && <label className={labelClass}>Corrected sale date<input className={inputClass} type="date" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}<label className={labelClass}>Corrected buyer email<input className={inputClass} type="email" value={correction.buyerEmail} onChange={event => setCorrection(value => ({ ...value, buyerEmail: event.target.value }))} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Corrected total<input className={inputClass} type="number" min="0" step="0.01" value={correction.totalAmount} onChange={event => setCorrection(value => ({ ...value, totalAmount: event.target.value }))} /></label><label className={labelClass}>Corrected currency<select className={inputClass} value={correction.totalCurrency} onChange={event => setCorrection(value => ({ ...value, totalCurrency: event.target.value }))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label></div><label className={labelClass}>Corrected private reference<input className={inputClass} value={correction.privateReference} onChange={event => setCorrection(value => ({ ...value, privateReference: event.target.value }))} /></label><label className={labelClass}>Corrected private notes<textarea className={`${inputClass} min-h-24`} value={correction.privateNotes} onChange={event => setCorrection(value => ({ ...value, privateNotes: event.target.value }))} /></label><label className={labelClass}>Correction reason<input className={inputClass} required value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label><button type="submit" className={buttonPrimary} disabled={Boolean(busy)}>Save correction</button></form>}</div>
+    <div><button type="button" className={buttonSecondary} onClick={() => setShowCorrection(value => !value)}>Correct sale facts</button>{showCorrection && <form className="mt-5 space-y-4 border-t border-bronze-500 pt-5" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'correctSale', expectedSequence: detail.effectiveSale.sequence, occurrence: occurrence(correction.precision, correction.occurrenceValue), buyerEmail: correction.buyerEmail.trim().toLowerCase() || null, total: money(correction.totalAmount, correction.totalCurrency), privateReference: correction.privateReference.trim() || null, privateNotes: correction.privateNotes.trim() || null, reason: correctionReason }, 'Correction appended. Originally recorded facts remain unchanged.'); if (ok) { setShowCorrection(false); setCorrectionReason(''); } }}><fieldset disabled={Boolean(busy)} className="contents"><p className="font-sans text-base text-wood-700">Corrections append history. They do not erase the originally recorded facts.</p><fieldset><legend className="font-sans text-base font-semibold text-wood-800">Corrected occurrence precision</legend><div className="grid gap-2 sm:grid-cols-4">{([['unknown', 'Unknown'], ['year', 'Year'], ['month', 'Month'], ['exact', 'Exact date']] as const).map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 font-sans text-base"><input className="h-5 w-5" type="radio" name="correction-precision" checked={correction.precision === value} onChange={() => setCorrection(current => ({ ...current, precision: value, occurrenceValue: '' }))} />{label}</label>)}</div></fieldset>{correction.precision === 'year' && <label className={labelClass}>Corrected sale year<input className={inputClass} type="number" min="1000" max="9999" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'month' && <label className={labelClass}>Corrected sale month<input className={inputClass} type="month" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'exact' && <label className={labelClass}>Corrected sale date<input className={inputClass} type="date" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}<label className={labelClass}>Corrected buyer email<input className={inputClass} type="email" value={correction.buyerEmail} onChange={event => setCorrection(value => ({ ...value, buyerEmail: event.target.value }))} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Corrected total<input className={inputClass} type="number" min="0" step="0.01" value={correction.totalAmount} onChange={event => setCorrection(value => ({ ...value, totalAmount: event.target.value }))} /></label><label className={labelClass}>Corrected currency<select className={inputClass} value={correction.totalCurrency} onChange={event => setCorrection(value => ({ ...value, totalCurrency: event.target.value }))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label></div><label className={labelClass}>Corrected private reference<input className={inputClass} value={correction.privateReference} onChange={event => setCorrection(value => ({ ...value, privateReference: event.target.value }))} /></label><label className={labelClass}>Corrected private notes<textarea className={`${inputClass} min-h-24`} value={correction.privateNotes} onChange={event => setCorrection(value => ({ ...value, privateNotes: event.target.value }))} /></label><label className={labelClass}>Correction reason<input className={inputClass} required value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label><button type="submit" className={buttonPrimary}>Save correction</button></fieldset></form>}</div>
 
-    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
+    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required disabled={Boolean(busy)} value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
 
     <div className="border-t border-wood-200">
-      {detail.items.map((item, index) => <ArtworkActions key={`${detail.effectiveSale.saleId}:${item.artworkRecordId}`} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[item.artworkRecordId])} invitationFrozen={Boolean(invitationAttempts[item.artworkRecordId])} linkPending={Boolean(pendingLinks[item.artworkRecordId])} busy={busy} ownershipSecret={ownershipSecret?.artworkRecordId === item.artworkRecordId ? ownershipSecret.code : null} invitationSecret={invitationSecret?.artworkRecordId === item.artworkRecordId ? invitationSecret.token : null} onDismissOwnership={onDismissOwnership} onDismissInvitation={onDismissInvitation} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />)}
+      {detail.items.map((item, index) => {
+        const scopeKey = saleArtworkScopeKey(detail.effectiveSale.saleId, item.artworkRecordId);
+        return <ArtworkActions key={scopeKey} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[scopeKey])} invitationFrozen={Boolean(invitationAttempts[scopeKey])} uploadFrozen={Boolean(uploadAttempts[scopeKey])} linkPending={Boolean(pendingLinks[scopeKey])} busy={busy} ownershipSecret={ownershipSecrets[scopeKey] || null} invitationSecret={invitationSecrets[scopeKey] || null} onDismissOwnership={() => onDismissOwnership(item.artworkRecordId)} onDismissInvitation={() => onDismissInvitation(item.artworkRecordId)} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onCancelUpload={onCancelUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />;
+      })}
     </div>
   </div>;
 };
 
 const ArtworkActions: React.FC<{
-  index: number; item: ArtistSaleItem; sale: ArtistSaleDetailResponse['sale']; ledger?: ArtistLedgerDetailResponse; invitation?: AdminInvitation; registrationFrozen: boolean; invitationFrozen: boolean; linkPending: boolean; busy: string;
+  index: number; item: ArtistSaleItem; sale: ArtistSaleDetailResponse['sale']; ledger?: ArtistLedgerDetailResponse; invitation?: AdminInvitation; registrationFrozen: boolean; invitationFrozen: boolean; uploadFrozen: boolean; linkPending: boolean; busy: string;
   ownershipSecret: string | null; invitationSecret: string | null;
   onDismissOwnership: () => void; onDismissInvitation: () => void; onRefreshLedger: (id: string) => Promise<void>;
   onPost: (pathId: string, draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>, success: string) => Promise<boolean>;
-  onUpload: (item: ArtistSaleItem, role: ArtistLedgerMediaRole, file: File) => Promise<void>;
+  onUpload: (item: ArtistSaleItem, role: ArtistLedgerMediaRole, file: File | null) => Promise<void>;
+  onCancelUpload: (artworkRecordId: string) => void;
   onRegister: (item: ArtistSaleItem) => Promise<void>; onInvite: (item: ArtistSaleItem, email: string, expiresAt: string) => Promise<void>;
   onCancelRegistration: (artworkRecordId: string) => void; onCancelInvitation: (artworkRecordId: string) => void;
   onRetryLink: (item: ArtistSaleItem) => Promise<void>;
-}> = ({ index, item, sale, ledger, invitation, registrationFrozen, invitationFrozen, linkPending, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+}> = ({ index, item, sale, ledger, invitation, registrationFrozen, invitationFrozen, uploadFrozen, linkPending, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
   const [identifyId, setIdentifyId] = useState('');
   const [editionKind, setEditionKind] = useState<'unique' | 'numbered'>('unique');
   const [editionNumber, setEditionNumber] = useState('1');
@@ -844,11 +903,11 @@ const ArtworkActions: React.FC<{
     setInvitationEmail(sale.buyerEmail || '');
     setExpiresAt(invitationExpiryValue());
   }, [sale.saleId]);
-  return <fieldset className="space-y-5 border-b border-wood-200 py-7" aria-label={`Artwork ${index + 1} actions`}>
+  return <fieldset className="space-y-5 border-b border-wood-200 py-7" aria-label={`Artwork ${index + 1} actions`} disabled={busy === 'frozen'}>
     <legend className="font-serif text-2xl text-wood-900">Artwork {index + 1}</legend>
     <div><p className="font-sans text-base font-semibold text-wood-900">{artworkTitle(item.artworkId)}</p><p className="mt-1 font-sans text-base text-wood-600">{editionLabel(item.edition)} · {item.identificationStatus === 'unresolved' ? 'Unresolved identification' : item.identificationStatus === 'identity_linked' ? 'Identity linked' : 'Identified'}</p><p className="mt-1 font-sans text-base text-wood-600">Private price: {moneyLabel(item.price)}</p></div>
     {item.identificationStatus === 'unresolved' && <form className="grid gap-4 sm:grid-cols-2" onSubmit={async event => { event.preventDefault(); const selectedEdition: ArtistSaleEdition = editionKind === 'unique' ? { kind: 'unique' } : { kind: 'numbered', number: Number(editionNumber), size: editionSize ? Number(editionSize) : null }; await onPost(sale.saleId, { action: 'identifyArtwork', artworkRecordId: item.artworkRecordId, artworkId: identifyId, edition: selectedEdition, expectedVersion: item.recordVersion }, 'Artwork identification appended.'); }}><label className={labelClass}>Identify artwork<select className={inputClass} required value={identifyId} onChange={event => setIdentifyId(event.target.value)}><option value="">Choose exact catalog artwork</option>{FULL_ARCHIVE.map(value => <option key={value.id} value={value.id}>{value.title} · {value.id}</option>)}</select></label><label className={labelClass}>Edition<select className={inputClass} value={editionKind} onChange={event => setEditionKind(event.target.value as typeof editionKind)}><option value="unique">Unique work</option><option value="numbered">Numbered edition</option></select></label>{editionKind === 'numbered' && <><label className={labelClass}>Edition number<input className={inputClass} type="number" min="1" value={editionNumber} onChange={event => setEditionNumber(event.target.value)} /></label><label className={labelClass}>Edition size, optional<input className={inputClass} type="number" min={editionNumber || '1'} value={editionSize} onChange={event => setEditionSize(event.target.value)} /></label></>}<button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Confirm identification</button></form>}
-    <form className="space-y-4 border-l-2 border-wood-200 pl-4" onSubmit={event => { event.preventDefault(); if (file) void onUpload(item, mediaRole, file).then(() => setFile(null)); }}><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Media role<select className={inputClass} value={mediaRole} onChange={event => setMediaRole(event.target.value as ArtistLedgerMediaRole)}><option value="identification_evidence">Identification evidence</option><option value="certificate_image">Certificate image</option></select></label><label className={labelClass}>Evidence image<input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp" required onChange={event => setFile(event.target.files?.[0] || null)} /></label></div><p className="font-sans text-base text-wood-700">Uploads are immutable collector evidence. Existing evidence is never overwritten or deleted.</p><button className={buttonSecondary} type="submit" disabled={!file || Boolean(busy)}>Upload evidence</button></form>
+    {uploadFrozen ? <AdminAlert tone="warning"><p>The exact media upload and key are frozen after an uncertain response.</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} disabled={Boolean(busy)} onClick={() => void onUpload(item, mediaRole, null)}>Retry exact upload</button><button type="button" className={buttonSecondary} disabled={Boolean(busy)} onClick={() => onCancelUpload(item.artworkRecordId)}>Cancel frozen upload</button></div></AdminAlert> : <form className="space-y-4 border-l-2 border-wood-200 pl-4" onSubmit={event => { event.preventDefault(); if (file) void onUpload(item, mediaRole, file).then(() => setFile(null)); }}><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Media role<select className={inputClass} value={mediaRole} onChange={event => setMediaRole(event.target.value as ArtistLedgerMediaRole)}><option value="identification_evidence">Identification evidence</option><option value="certificate_image">Certificate image</option></select></label><label className={labelClass}>Evidence image<input className={inputClass} type="file" accept="image/jpeg,image/png,image/webp" required onChange={event => setFile(event.target.files?.[0] || null)} /></label></div><p className="font-sans text-base text-wood-700">Uploads are immutable collector evidence. Existing evidence is never overwritten or deleted.</p><button className={buttonSecondary} type="submit" disabled={!file || Boolean(busy)}>Upload evidence</button></form>}
     {ledger?.media.length ? <div><h5 className="font-serif text-xl text-wood-900">Private media</h5><div className="mt-2 border-t border-wood-200">{ledger.media.map(media => <div key={media.id} className="flex flex-col gap-2 border-b border-wood-200 py-3 sm:flex-row sm:items-center sm:justify-between"><p className="font-sans text-base text-wood-700">{media.role === 'certificate_image' ? 'Certificate image' : 'Identification evidence'} · Immutable · {Math.ceil(media.byteLength / 1024)} KB {ledger.selectedCertificateImage?.mediaId === media.id && <strong>· Selected certificate image</strong>}</p>{media.role === 'certificate_image' && ledger.selectedCertificateImage?.mediaId !== media.id && <button type="button" className={quietButton} onClick={async () => { const ok = await onPost(sale.saleId, { action: 'selectCertificateImage', artworkRecordId: item.artworkRecordId, mediaId: media.id }, 'Certificate image selection appended.'); if (ok) await onRefreshLedger(item.artworkRecordId); }}>Select as certificate image</button>}</div>)}</div></div> : null}
     <form className="space-y-3" onSubmit={async event => { event.preventDefault(); const ok = await onPost(sale.saleId, { action: 'append', artworkRecordId: item.artworkRecordId, saleId: sale.saleId, message: specificMessage, mediaId: null }, 'Artwork-specific sealed message appended.'); if (ok) setSpecificMessage(''); }}><label className={labelClass}>Artwork-specific sealed message<textarea className={`${inputClass} min-h-24`} required value={specificMessage} onChange={event => setSpecificMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonSecondary} type="submit" disabled={Boolean(busy)}>Seal artwork message</button></form>
     {item.ledgerEntries.some(entry => entry.message) && <div><h5 className="font-serif text-xl text-wood-900">Sealed creator messages</h5>{item.ledgerEntries.filter(entry => entry.message).map(entry => <p key={entry.ledgerEntryId} className="mt-2 border-l-2 border-bronze-400 pl-3 font-sans text-base text-wood-700">{entry.message}</p>)}</div>}

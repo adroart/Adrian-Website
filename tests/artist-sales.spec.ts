@@ -46,7 +46,15 @@ type SalesMockOptions = {
   seedDetails?: SaleDetailState[];
   malformedSaleIds?: string[];
   failCorrectionReason?: string;
+  deferRegistration?: boolean;
+  deferInvitation?: boolean;
 };
+
+function deferredResponse() {
+  let resolve!: () => void;
+  const promise = new Promise<void>(done => { resolve = done; });
+  return { promise, resolve };
+}
 
 const saleFacts = (sale: Record<string, any>): SaleFacts => ({
   reconnectionCaseId: sale.reconnectionCaseId,
@@ -105,6 +113,8 @@ const seededDetail = (
 };
 
 async function installSalesMock(page: Page, options: SalesMockOptions = {}) {
+  const registrationResponse = deferredResponse();
+  const invitationResponse = deferredResponse();
   const state: {
     cases: Array<Record<string, unknown>>;
     sales: Array<Record<string, any>>;
@@ -244,20 +254,26 @@ async function installSalesMock(page: Page, options: SalesMockOptions = {}) {
     return reply(route, { ok: true, result: { ledgerEntryId: 'ledger-new', artworkRecordId: body.artworkRecordId, saleId: body.saleId ?? null, message: body.message ?? null, mediaId: body.mediaId ?? null, replayed: false } }, 201);
   });
 
-  await page.route('/api/admin/registrations', route => {
+  await page.route('/api/admin/registrations', async route => {
     const request = route.request();
     state.requests.push({ url: request.url(), method: request.method(), body: request.postDataJSON(), headers: request.headers() });
+    if (options.deferRegistration) await registrationResponse.promise;
     return reply(route, { ok: true, keeperPieceId: 'keeper-one', publicCode: 'AR-BCDEFGHJ', ownershipCode: 'BCDE-FGHJ-KMNP-QRST', codeAccess: 'created', registrationStatus: 'registered', backupStatus: 'verified' }, 201);
   });
-  await page.route('/api/admin/invitations', route => {
+  await page.route('/api/admin/invitations', async route => {
     const request = route.request();
     const body = request.method() === 'POST' ? request.postDataJSON() : null;
     state.requests.push({ url: request.url(), method: request.method(), body, headers: request.headers() });
     if (request.method() === 'GET') return reply(route, { ok: true, invitations: state.invitations });
+    if (options.deferInvitation) await invitationResponse.promise;
     state.invitations.push({ invitationId: 'invite-one', keeperPieceId: body.keeperPieceId, intendedRecipientEmail: body.intendedRecipientEmail, createdAt: now, expiresAt: body.expiresAt, status: 'available', artwork: { artworkId: 'UL-102', title: 'Doorways Of The Unknown - 48', publicCode: 'AR-BCDEFGHJ', edition: { kind: 'unique' } } });
     return reply(route, { ok: true, invitationId: 'invite-one', token: 'private-invitation-token' }, 201);
   });
   await page.exposeFunction('__salesTestState', () => ({ requests: state.requests, persisted: { sales: state.sales, details: [...state.details.entries()], media: [...state.media.entries()], selected: [...state.selected.entries()] } }));
+  return {
+    resolveRegistration: registrationResponse.resolve,
+    resolveInvitation: invitationResponse.resolve,
+  };
 }
 
 test('records and reconnects through the complete private verified-sale journey', async ({ page }, testInfo) => {
@@ -448,6 +464,11 @@ test('isolates every private draft, attempt, and one-time secret between same-ve
   await aLinked.getByRole('button', { name: 'Create invitation' }).click();
   await expect(page.getByText('private-invitation-token')).toBeVisible();
 
+  await page.getByLabel('Shared sealed message').fill('A unsaved shared sealed message');
+  const aUnresolved = page.getByRole('group', { name: 'Artwork 1 actions' });
+  await aUnresolved.getByLabel('Identify artwork').selectOption('UL-102');
+  await aUnresolved.getByLabel('Media role').selectOption('certificate_image');
+  await aUnresolved.getByLabel('Artwork-specific sealed message').fill('A unsaved artwork sealed message');
   await page.getByRole('button', { name: 'Correct sale facts' }).click();
   await page.getByLabel('Corrected buyer email').fill('a-unsaved-buyer@example.com');
   await page.getByLabel('Corrected private reference').fill('A unsaved private reference');
@@ -455,11 +476,6 @@ test('isolates every private draft, attempt, and one-time secret between same-ve
   await page.getByLabel('Correction reason').fill('Freeze A private correction');
   await page.getByRole('button', { name: 'Save correction' }).click();
   await expect(page.getByText(/detail action has an uncertain response/i)).toBeVisible();
-  await page.getByLabel('Shared sealed message').fill('A unsaved shared sealed message');
-  const aUnresolved = page.getByRole('group', { name: 'Artwork 1 actions' });
-  await aUnresolved.getByLabel('Identify artwork').selectOption('UL-102');
-  await aUnresolved.getByLabel('Media role').selectOption('certificate_image');
-  await aUnresolved.getByLabel('Artwork-specific sealed message').fill('A unsaved artwork sealed message');
 
   await switchSelectedSale(page, testInfo.project.name, /Sale from 2019/);
   await expect(page.getByRole('heading', { name: 'Sale from 2019' })).toBeVisible();
@@ -504,6 +520,79 @@ test('isolates every private draft, attempt, and one-time secret between same-ve
     idempotencyKey: expect.any(String),
   });
   expect(JSON.stringify(bCorrection.body)).not.toContain('A unsaved');
+
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2017/);
+  await expect(page.getByText(/detail action has an uncertain response/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Correct sale facts' }).click();
+  await expect(page.getByLabel('Corrected buyer email')).toBeDisabled();
+  await page.getByRole('button', { name: 'Retry exact action' }).click();
+  await expect(page.getByText(/detail action has an uncertain response/i)).toBeVisible();
+  let retried = await page.evaluate(async () => (window as any).__salesTestState());
+  const frozenCorrections = retried.requests.filter((item: any) => item.body?.reason === 'Freeze A private correction');
+  expect(frozenCorrections).toHaveLength(2);
+  expect(frozenCorrections[1].body).toEqual(frozenCorrections[0].body);
+
+  await page.getByRole('button', { name: 'Cancel frozen action' }).click();
+  await expect(page.getByText(/detail action has an uncertain response/i)).toHaveCount(0);
+  await expect(page.getByLabel('Corrected buyer email')).toBeEnabled();
+  await page.getByLabel('Corrected buyer email').fill('a-after-cancel@example.com');
+  await page.getByLabel('Correction reason').fill('A correction after explicit cancel');
+  await page.getByRole('button', { name: 'Save correction' }).click();
+  await expect(page.getByText('A correction after explicit cancel')).toBeVisible();
+  retried = await page.evaluate(async () => (window as any).__salesTestState());
+  const afterCancel = retried.requests.find((item: any) => item.body?.reason === 'A correction after explicit cancel');
+  expect(afterCancel.body.idempotencyKey).not.toBe(frozenCorrections[0].body.idempotencyKey);
+});
+
+test('routes delayed registration and invitation secrets back to their sale and artwork', async ({ page }, testInfo) => {
+  const saleA = seededDetail(
+    'sale-secret-a', '2015', 'secret-a@example.com', 'Secret A reference', 'Secret A note',
+    [seededArtwork('secret-a', 1, 'identified'), seededArtwork('secret-a', 2, 'identity_linked')],
+  );
+  const saleB = seededDetail(
+    'sale-secret-b', '2021', 'secret-b@example.com', 'Secret B reference', 'Secret B note',
+    [seededArtwork('secret-b', 1, 'identified')],
+  );
+  const controls = await installSalesMock(page, {
+    seedDetails: [saleA, saleB], deferRegistration: true, deferInvitation: true,
+  });
+  const browserDiagnostics: string[] = [];
+  page.on('console', message => browserDiagnostics.push(message.text()));
+  page.on('pageerror', error => browserDiagnostics.push(error.message));
+  await page.goto('/admin/collector-sales');
+  await page.getByRole('button', { name: /Sale from 2015/ }).click();
+
+  await page.getByRole('group', { name: 'Artwork 1 actions' }).getByRole('button', { name: 'Register artwork' }).click();
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2021/);
+  controls.resolveRegistration();
+  await expect(page.getByRole('heading', { name: 'Sale from 2021' })).toBeVisible();
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toHaveCount(0);
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2015/);
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toBeVisible();
+  await page.getByRole('button', { name: 'Dismiss Ownership Code' }).click();
+
+  const linkedArtwork = page.getByRole('group', { name: 'Artwork 2 actions' });
+  await linkedArtwork.getByLabel('Invitation recipient').fill('delayed-invite@example.com');
+  await linkedArtwork.getByRole('button', { name: 'Create invitation' }).click();
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2021/);
+  controls.resolveInvitation();
+  await expect(page.getByText('private-invitation-token')).toHaveCount(0);
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2015/);
+  await expect(page.getByText('private-invitation-token')).toBeVisible();
+  await page.getByRole('button', { name: 'Dismiss invitation token' }).click();
+
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2021/);
+  await switchSelectedSale(page, testInfo.project.name, /Sale from 2015/);
+  await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toHaveCount(0);
+  await expect(page.getByText('private-invitation-token')).toHaveCount(0);
+
+  const captured = await page.evaluate(async () => (window as any).__salesTestState());
+  expect(captured.requests.filter((item: any) => item.method === 'POST' && item.url.includes('/registrations'))).toHaveLength(1);
+  expect(captured.requests.filter((item: any) => item.method === 'POST' && item.url.endsWith('/invitations'))).toHaveLength(1);
+  const browserStorage = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
+  const privacyObservation = [page.url(), browserStorage, ...browserDiagnostics].join('\n');
+  expect(privacyObservation).not.toContain('BCDE-FGHJ-KMNP-QRST');
+  expect(privacyObservation).not.toContain('private-invitation-token');
 });
 
 test('fails closed after a valid sale when the next detail response is inconsistent', async ({ page }, testInfo) => {

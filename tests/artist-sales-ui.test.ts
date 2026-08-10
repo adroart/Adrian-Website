@@ -79,19 +79,19 @@ describe('verified sales admin workspace', () => {
     assert.doesNotMatch(component, /const \[originalSale, setOriginalSale\]/);
   });
 
-  it('clears every record-scoped private state before loading another sale', () => {
+  it('clears visible record detail while preserving attempts and secrets in scoped memory maps', () => {
     const component = source('components/admin/CollectorSales.tsx');
     for (const reset of [
       /setDetail\(null\)/,
-      /setDetailAttempt\(null\)/,
-      /setOwnershipSecret\(null\)/,
-      /setInvitationSecret\(null\)/,
-      /setRegistrationAttempts\(\{\}\)/,
-      /setInvitationAttempts\(\{\}\)/,
-      /setPendingLinks\(\{\}\)/,
       /setInvitations\(\[\]\)/,
       /setLedgers\(\{\}\)/,
     ]) assert.match(component, reset);
+    assert.match(component, /detailAttempts\[recordScopeKey\(/);
+    assert.match(component, /saleArtworkScopeKey\(saleId, item\.artworkRecordId\)/);
+    assert.match(component, /ownershipSecrets/);
+    assert.match(component, /invitationSecrets/);
+    assert.match(component, /uploadAttempts/);
+    assert.doesNotMatch(component, /setDetailAttempts\(\{\}\)|setOwnershipSecrets\(\{\}\)|setInvitationSecrets\(\{\}\)|setRegistrationAttempts\(\{\}\)|setInvitationAttempts\(\{\}\)|setUploadAttempts\(\{\}\)/);
     assert.match(component, /detail\?\.effectiveSale\.saleId\s*===\s*selection\.id/);
   });
 
