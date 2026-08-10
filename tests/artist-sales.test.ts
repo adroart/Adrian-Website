@@ -31,6 +31,9 @@ const migrationsThroughArtistSales = [
 
 const now = '2026-08-10T12:00:00.000Z';
 const digest = (character: string) => character.repeat(64);
+const uniqueEdition = '{"kind":"unique","number":null,"size":null}';
+const numberedEdition = (number: number, size: number | null) =>
+  JSON.stringify({ kind: 'numbered', number, size });
 
 function database() {
   const db = new DatabaseSync(':memory:');
@@ -45,7 +48,8 @@ function database() {
       (id, piece_id, edition_number, recovery_code_hash, registered_at)
     VALUES
       ('kp-sale-one', 'UL-100', 1, '${digest('a')}', '${now}'),
-      ('kp-sale-two', 'UL-101', 2, '${digest('b')}', '${now}');
+      ('kp-sale-two', 'UL-101', 2, '${digest('b')}', '${now}'),
+      ('kp-sale-unique', 'SIG-200', 0, '${digest('c')}', '${now}');
   `);
   return db;
 }
@@ -111,9 +115,9 @@ function seedCaseAndRecords(db: DatabaseSync) {
     VALUES
       ('record-unresolved', NULL, NULL, NULL, 'unresolved',
        'artist-admin', '${now}', '${now}'),
-      ('record-identified', 'UL-102', '{"editionNumber":0}', NULL, 'identified',
+      ('record-identified', 'UL-102', '${uniqueEdition}', NULL, 'identified',
        'artist-admin', '${now}', '${now}'),
-      ('record-linked', 'UL-100', '{"editionNumber":1}', 'kp-sale-one', 'identity_linked',
+      ('record-linked', 'UL-100', '${numberedEdition(1, 64)}', 'kp-sale-one', 'identity_linked',
        'artist-admin', '${now}', '${now}');
   `);
 }
@@ -363,6 +367,82 @@ describe('artist verified sale records', () => {
     }
   });
 
+  it('rejects ledger and price references whose redundant facts belong to another artwork', () => {
+    const db = database();
+    try {
+      db.exec('PRAGMA recursive_triggers = OFF');
+      seedCaseAndRecords(db);
+      insertPrimarySale(db);
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, identification_status,
+           created_by_user_id, created_at, updated_at)
+        VALUES ('record-outside-sale', NULL, NULL, 'unresolved',
+          'artist-admin', '${now}', '${now}');
+        INSERT INTO artist_artwork_media
+          (id, artwork_record_id, media_role, storage_reference, sha256,
+           content_type, byte_length, uploaded_by_user_id, created_at)
+        VALUES ('media-cross-check', 'record-unresolved', 'identification_evidence',
+          'artist-sales/cross-check.webp', '${digest('d')}', 'image/webp', 100,
+          'artist-admin', '${now}')
+      `);
+      const before = {
+        ledger: count(db, 'artist_artwork_ledger_entries'),
+        price: count(db, 'artist_artwork_price_entries'),
+        media: { ...db.prepare(`SELECT * FROM artist_artwork_media WHERE id = 'media-cross-check'`).get() },
+        item: { ...db.prepare(`SELECT * FROM artist_verified_sale_items WHERE id = 'item-one'`).get() },
+      };
+
+      const invalidLedgerSql = [
+        `INSERT INTO artist_artwork_ledger_entries
+          (id, artwork_record_id, media_id, created_by_user_id,
+           idempotency_key, request_digest, created_at)
+         VALUES ('ledger-wrong-media', 'record-identified', 'media-cross-check',
+           'artist-admin', 'ledger-wrong-media-key', '${digest('e')}', '${now}')`,
+        `INSERT INTO artist_artwork_ledger_entries
+          (id, artwork_record_id, sale_id, message, created_by_user_id,
+           idempotency_key, request_digest, created_at)
+         VALUES ('ledger-wrong-sale', 'record-outside-sale', 'sale-one', 'Wrong sale.',
+           'artist-admin', 'ledger-wrong-sale-key', '${digest('f')}', '${now}')`,
+      ];
+      for (const sql of invalidLedgerSql) {
+        assert.throws(() => db.exec(sql), /artwork|media|sale/i);
+      }
+
+      const invalidPriceValues = [
+        ['price-wrong-artwork', 'record-identified', 100000, 'USD', '2026-08-01', 'exact'],
+        ['price-wrong-amount', 'record-unresolved', 99999, 'USD', '2026-08-01', 'exact'],
+        ['price-wrong-currency', 'record-unresolved', 100000, 'EUR', '2026-08-01', 'exact'],
+        ['price-wrong-occurrence', 'record-unresolved', 100000, 'USD', '2026-08-02', 'exact'],
+      ] as const;
+      for (const values of invalidPriceValues) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_artwork_price_entries
+            (id, artwork_record_id, sale_item_id, amount_minor, currency,
+             occurred_on, occurrence_precision, recorded_at)
+          VALUES (?1, ?2, 'item-one', ?3, ?4, ?5, ?6, ?7)
+        `).run(...values, now), /artwork|price|sale|fact/i, values[0]);
+      }
+      assert.throws(() => db.exec(`
+        INSERT INTO artist_artwork_price_entries
+          (id, artwork_record_id, sale_item_id, amount_minor, currency,
+           occurred_on, occurrence_precision, recorded_at)
+        VALUES ('price-item-without-price', 'record-identified', 'item-two', 1, 'USD',
+          '2026-08-01', 'exact', '${now}')
+      `), /price|sale|fact/i);
+
+      assert.deepEqual({
+        ledger: count(db, 'artist_artwork_ledger_entries'),
+        price: count(db, 'artist_artwork_price_entries'),
+        media: { ...db.prepare(`SELECT * FROM artist_artwork_media WHERE id = 'media-cross-check'`).get() },
+        item: { ...db.prepare(`SELECT * FROM artist_verified_sale_items WHERE id = 'item-one'`).get() },
+      }, before);
+      assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+    } finally {
+      db.close();
+    }
+  });
+
   it('normalizes private contact facts and rejects malformed states, JSON, digests, and money pairs', () => {
     const db = database();
     try {
@@ -384,7 +464,7 @@ describe('artist verified sale records', () => {
       for (const values of [
         `'bad-unresolved', 'UL-100', NULL, NULL, 'unresolved'`,
         `'bad-identified', 'UL-100', NULL, NULL, 'identified'`,
-        `'bad-linked', 'UL-100', '{"editionNumber":1}', NULL, 'identity_linked'`,
+        `'bad-linked', 'UL-100', '${numberedEdition(1, 64)}', NULL, 'identity_linked'`,
         `'bad-json', 'UL-100', '{not-json}', NULL, 'identified'`,
         `'bad-json-null', 'UL-100', 'null', NULL, 'identified'`,
       ]) {
@@ -393,7 +473,7 @@ describe('artist verified sale records', () => {
             (id, artwork_id, edition_json, keeper_piece_id, identification_status,
              created_by_user_id, created_at, updated_at)
           VALUES (${values}, 'artist-admin', '${now}', '${now}')
-        `), /constraint/i);
+        `), /constraint|identity/i);
       }
 
       assert.throws(() => db.exec(`
@@ -431,6 +511,78 @@ describe('artist verified sale records', () => {
         VALUES ('bad-media', 'record-unresolved', 'certificate_image', 'media/ref',
           '${'F'.repeat(64)}', 'image/gif', 0, 'artist-admin', '${now}')
       `), /constraint/i);
+    } finally {
+      db.close();
+    }
+  });
+
+  it('binds canonical unique and numbered edition identities to the exact keeper piece', () => {
+    const db = database();
+    try {
+      seedCaseAndRecords(db);
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, keeper_piece_id, identification_status,
+           created_by_user_id, created_at, updated_at)
+        VALUES ('record-linked-unique', 'SIG-200', '${uniqueEdition}', 'kp-sale-unique',
+          'identity_linked', 'artist-admin', '${now}', '${now}')
+      `);
+      assert.equal(count(db, 'artist_artwork_records'), 4);
+
+      for (const [id, artworkId, editionJson, keeperPieceId] of [
+        ['noncanonical-edition', 'SIG-201', '{"editionNumber":0}', null],
+        ['mismatched-artwork', 'UL-999', numberedEdition(2, 64), 'kp-sale-two'],
+        ['mismatched-numbered-edition', 'UL-101', numberedEdition(1, 64), 'kp-sale-two'],
+        ['mismatched-unique-edition', 'SIG-200', numberedEdition(1, 1), 'kp-sale-unique'],
+      ] as const) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_artwork_records
+            (id, artwork_id, edition_json, keeper_piece_id, identification_status,
+             created_by_user_id, created_at, updated_at)
+          VALUES (?1, ?2, ?3, ?4, ?5, 'artist-admin', ?6, ?6)
+        `).run(
+          id, artworkId, editionJson, keeperPieceId,
+          keeperPieceId === null ? 'identified' : 'identity_linked', now,
+        ), /constraint|identity|edition|keeper/i, id);
+      }
+      assert.equal(count(db, 'artist_artwork_records'), 4);
+
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, identification_status,
+           created_by_user_id, created_at, updated_at)
+        VALUES
+          ('record-link-wrong-artwork', 'UL-999', '${numberedEdition(2, 64)}', 'identified',
+           'artist-admin', '${now}', '${now}'),
+          ('record-link-wrong-edition', 'UL-101', '${numberedEdition(1, 64)}', 'identified',
+           'artist-admin', '${now}', '${now}')
+      `);
+      for (const [id, artworkRecordId, artworkId, editionJson] of [
+        ['event-link-wrong-artwork', 'record-link-wrong-artwork', 'UL-999', numberedEdition(2, 64)],
+        ['event-link-wrong-edition', 'record-link-wrong-edition', 'UL-101', numberedEdition(1, 64)],
+      ] as const) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_artwork_record_events
+            (id, artwork_record_id, action, before_json, after_json,
+             resulting_version, actor_user_id, idempotency_key, request_digest, created_at)
+          VALUES (?1, ?2, 'identity_linked', ?3, ?4, 2,
+            'artist-admin', ?5, ?6, ?7)
+        `).run(
+          id,
+          artworkRecordId,
+          recordSnapshot({
+            artworkId, editionJson, keeperPieceId: null,
+            identificationStatus: 'identified', recordVersion: 1,
+          }),
+          recordSnapshot({
+            artworkId, editionJson, keeperPieceId: 'kp-sale-two',
+            identificationStatus: 'identity_linked', recordVersion: 2,
+          }),
+          `${id}-key`, digest('0'), now,
+        ), /snapshot|identity|edition|keeper/i, id);
+      }
+      assert.equal(count(db, 'artist_artwork_record_events'), 0);
+      assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
     }
@@ -474,8 +626,117 @@ describe('artist verified sale records', () => {
             (id, artwork_record_id, sale_item_id, amount_minor, currency, occurred_on,
              occurrence_precision, recorded_at)
           VALUES (?1, 'record-unresolved', 'item-invalid-price', 100, 'USD', ?2, ?3, ?4)
-        `).run(`invalid-price-date-${index}`, occurredOn, precision, now), /constraint/i);
+        `).run(`invalid-price-date-${index}`, occurredOn, precision, now), /constraint|sale facts/i);
       }
+    } finally {
+      db.close();
+    }
+  });
+
+  it('requires canonical UTC millisecond timestamps on every permanent private record', () => {
+    const db = database();
+    try {
+      const invalidTimestamps = [
+        '2026-02-30T12:00:00.000Z',
+        '2026-08-10T24:00:00.000Z',
+        ' 2026-08-10T12:00:00.000Z',
+        '2026-08-10T12:00:00.000Z ',
+        '2026-08-10T12:00:00Z',
+        '2026-08-10T12:00:00.000+00:00',
+        '2025-02-29T12:00:00.000Z',
+      ];
+      for (const [index, timestamp] of invalidTimestamps.entries()) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_reconnection_cases
+            (id, recipient_email, status, created_by_user_id, idempotency_key,
+             request_digest, created_at, updated_at)
+          VALUES (?1, 'timestamp@example.com', 'open', 'artist-admin', ?2, ?3, ?4, ?5)
+        `).run(`bad-timestamp-${index}`, `bad-timestamp-key-${index}`,
+          digest('1'), timestamp, now), /constraint/i, timestamp);
+      }
+
+      seedCaseAndRecords(db);
+      insertPrimarySale(db);
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, identification_status, created_by_user_id, created_at, updated_at)
+        VALUES ('record-timestamp', 'unresolved', 'artist-admin', '${now}', '${now}')
+      `);
+      const shortTimestamp = '2026-08-10T12:00:00Z';
+      const invalidSql = [
+        `INSERT INTO artist_reconnection_cases
+          (id, recipient_email, status, created_by_user_id, idempotency_key,
+           request_digest, created_at, updated_at)
+         VALUES ('bad-updated-at', 'updated@example.com', 'open', 'artist-admin',
+           'bad-updated-at-key', '${digest('2')}', '${now}', '${shortTimestamp}')`,
+        `INSERT INTO artist_artwork_records
+          (id, identification_status, created_by_user_id, created_at, updated_at)
+         VALUES ('bad-record-created-at', 'unresolved', 'artist-admin',
+           '${shortTimestamp}', '${now}')`,
+        `INSERT INTO artist_artwork_records
+          (id, identification_status, created_by_user_id, created_at, updated_at)
+         VALUES ('bad-record-updated-at', 'unresolved', 'artist-admin',
+           '${now}', '${shortTimestamp}')`,
+        `INSERT INTO artist_verified_sales
+          (id, occurrence_precision, verified_by_user_id, idempotency_key,
+           request_digest, recorded_at)
+         VALUES ('bad-sale-recorded-at', 'unknown', 'artist-admin',
+           'bad-sale-recorded-at-key', '${digest('3')}', '${shortTimestamp}')`,
+        `INSERT INTO artist_verified_sale_items
+          (id, sale_id, artwork_record_id, created_at)
+         VALUES ('bad-item-created-at', 'sale-one', 'record-timestamp', '${shortTimestamp}')`,
+        `INSERT INTO artist_artwork_media
+          (id, artwork_record_id, media_role, storage_reference, sha256,
+           content_type, byte_length, uploaded_by_user_id, created_at)
+         VALUES ('bad-media-created-at', 'record-unresolved', 'certificate_image',
+           'artist-sales/bad-timestamp.jpg', '${digest('4')}', 'image/jpeg', 10,
+           'artist-admin', '${shortTimestamp}')`,
+        `INSERT INTO artist_artwork_ledger_entries
+          (id, artwork_record_id, message, created_by_user_id,
+           idempotency_key, request_digest, created_at)
+         VALUES ('bad-ledger-created-at', 'record-unresolved', 'Timestamp check.',
+           'artist-admin', 'bad-ledger-created-at-key', '${digest('5')}', '${shortTimestamp}')`,
+        `INSERT INTO artist_artwork_price_entries
+          (id, artwork_record_id, sale_item_id, amount_minor, currency,
+           occurred_on, occurrence_precision, recorded_at)
+         VALUES ('bad-price-recorded-at', 'record-unresolved', 'item-one', 100000, 'USD',
+           '2026-08-01', 'exact', '${shortTimestamp}')`,
+        `INSERT INTO artist_reconnection_events
+          (id, reconnection_case_id, event_type, private_note, actor_user_id,
+           idempotency_key, request_digest, created_at)
+         VALUES ('bad-reconnect-created-at', 'case-one', 'note_added', 'Timestamp check.',
+           'artist-admin', 'bad-reconnect-created-at-key', '${digest('6')}', '${shortTimestamp}')`,
+      ];
+      for (const sql of invalidSql) {
+        assert.throws(() => db.exec(sql), /constraint/i);
+      }
+
+      const beforeRecord = recordSnapshot({
+        artworkId: null, editionJson: null, keeperPieceId: null,
+        identificationStatus: 'unresolved', recordVersion: 1,
+      });
+      const afterRecord = recordSnapshot({
+        artworkId: 'SIG-201', editionJson: uniqueEdition, keeperPieceId: null,
+        identificationStatus: 'identified', recordVersion: 2,
+      });
+      assert.throws(() => db.prepare(`
+        INSERT INTO artist_artwork_record_events
+          (id, artwork_record_id, action, before_json, after_json, resulting_version,
+           actor_user_id, idempotency_key, request_digest, created_at)
+        VALUES ('bad-record-event-created-at', 'record-unresolved', 'identified', ?1, ?2, 2,
+          'artist-admin', 'bad-record-event-created-at-key', ?3, ?4)
+      `).run(beforeRecord, afterRecord, digest('7'), shortTimestamp), /constraint/i);
+      assert.throws(() => db.prepare(`
+        INSERT INTO artist_verified_sale_events
+          (id, sale_id, sequence, event_type, before_json, after_json,
+           actor_user_id, idempotency_key, request_digest, created_at)
+        VALUES ('bad-sale-event-created-at', 'sale-one', 1, 'corrected', ?1, ?2,
+          'artist-admin', 'bad-sale-event-created-at-key', ?3, ?4)
+      `).run(
+        saleSnapshot(), saleSnapshot({ totalMinor: 300001 }), digest('8'), shortTimestamp,
+      ), /constraint/i);
+
+      assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
     }
@@ -487,7 +748,7 @@ describe('artist verified sale records', () => {
       seedCaseAndRecords(db);
       assert.throws(() => db.exec(`
         UPDATE artist_artwork_records
-           SET artwork_id = 'UL-103', edition_json = '{"editionNumber":0}',
+           SET artwork_id = 'UL-103', edition_json = '${uniqueEdition}',
                identification_status = 'identified', record_version = 2,
                updated_at = '${now}'
          WHERE id = 'record-unresolved'
@@ -498,7 +759,7 @@ describe('artist verified sale records', () => {
         identificationStatus: 'unresolved', recordVersion: 1,
       });
       const after = recordSnapshot({
-        artworkId: 'UL-103', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+        artworkId: 'UL-103', editionJson: uniqueEdition, keeperPieceId: null,
         identificationStatus: 'identified', recordVersion: 2,
       });
       db.prepare(`
@@ -511,7 +772,7 @@ describe('artist verified sale records', () => {
       `).run(before, after, digest('6'), now);
       db.exec(`
         UPDATE artist_artwork_records
-           SET artwork_id = 'UL-103', edition_json = '{"editionNumber":0}',
+           SET artwork_id = 'UL-103', edition_json = '${uniqueEdition}',
                keeper_piece_id = NULL, identification_status = 'identified',
                record_version = 2, last_event_id = 'record-event-one',
                updated_at = '${now}'
@@ -535,11 +796,11 @@ describe('artist verified sale records', () => {
           ?1, ?2, 7, 'artist-admin', 'bad-version-event-key', ?3, ?4)
       `).run(
         recordSnapshot({
-          artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+          artworkId: 'UL-102', editionJson: uniqueEdition, keeperPieceId: null,
           identificationStatus: 'identified', recordVersion: 1,
         }),
         recordSnapshot({
-          artworkId: 'UL-104', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+          artworkId: 'UL-104', editionJson: uniqueEdition, keeperPieceId: null,
           identificationStatus: 'identified', recordVersion: 7,
         }), digest('7'), now,
       ), /snapshot|version|event/i);
@@ -552,17 +813,17 @@ describe('artist verified sale records', () => {
           ?1, ?2, 2, 'artist-admin', 'bad-action-event-key', ?3, ?4)
       `).run(
         recordSnapshot({
-          artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+          artworkId: 'UL-102', editionJson: uniqueEdition, keeperPieceId: null,
           identificationStatus: 'identified', recordVersion: 1,
         }),
         recordSnapshot({
-          artworkId: 'UL-104', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+          artworkId: 'UL-104', editionJson: uniqueEdition, keeperPieceId: null,
           identificationStatus: 'identified', recordVersion: 2,
         }), digest('8'), now,
       ), /snapshot|action|event/i);
 
       const pendingAfter = recordSnapshot({
-        artworkId: 'UL-105', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+        artworkId: 'UL-101', editionJson: numberedEdition(2, 64), keeperPieceId: null,
         identificationStatus: 'identified', recordVersion: 2,
       });
       db.prepare(`
@@ -573,7 +834,7 @@ describe('artist verified sale records', () => {
           ?1, ?2, 2, 'artist-admin', 'pending-record-event-key', ?3, ?4)
       `).run(
         recordSnapshot({
-          artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+          artworkId: 'UL-102', editionJson: uniqueEdition, keeperPieceId: null,
           identificationStatus: 'identified', recordVersion: 1,
         }), pendingAfter, digest('9'), now,
       );
@@ -581,24 +842,24 @@ describe('artist verified sale records', () => {
         INSERT INTO artist_artwork_records
           (id, artwork_id, edition_json, keeper_piece_id, identification_status,
            record_version, last_event_id, created_by_user_id, created_at, updated_at)
-        VALUES ('forged-version', 'UL-105', '{"editionNumber":0}', NULL, 'identified',
+        VALUES ('forged-version', 'UL-101', '${numberedEdition(2, 64)}', NULL, 'identified',
           2, 'pending-record-event', 'artist-admin', '${now}', '${now}')
       `), /initial|version|event/i);
 
       db.exec(`
         UPDATE artist_artwork_records
-           SET artwork_id = 'UL-105', edition_json = '{"editionNumber":0}',
+           SET artwork_id = 'UL-101', edition_json = '${numberedEdition(2, 64)}',
                keeper_piece_id = NULL, identification_status = 'identified',
                record_version = 2, last_event_id = 'pending-record-event',
                updated_at = '${now}'
          WHERE id = 'record-identified'
       `);
       const linkBefore = recordSnapshot({
-        artworkId: 'UL-105', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+        artworkId: 'UL-101', editionJson: numberedEdition(2, 64), keeperPieceId: null,
         identificationStatus: 'identified', recordVersion: 2,
       });
       const linkAfter = recordSnapshot({
-        artworkId: 'UL-105', editionJson: '{"editionNumber":0}', keeperPieceId: 'kp-sale-two',
+        artworkId: 'UL-101', editionJson: numberedEdition(2, 64), keeperPieceId: 'kp-sale-two',
         identificationStatus: 'identity_linked', recordVersion: 3,
       });
       db.prepare(`
@@ -638,26 +899,33 @@ describe('artist verified sale records', () => {
     try {
       db.exec('PRAGMA recursive_triggers = OFF');
       seedCaseAndRecords(db);
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, identification_status,
+           created_by_user_id, created_at, updated_at)
+        VALUES ('record-link-target', 'UL-101', '${numberedEdition(2, 64)}', 'identified',
+          'artist-admin', '${now}', '${now}')
+      `);
       const before = recordSnapshot({
-        artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+        artworkId: 'UL-101', editionJson: numberedEdition(2, 64), keeperPieceId: null,
         identificationStatus: 'identified', recordVersion: 1,
       });
       const after = recordSnapshot({
-        artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: 'kp-sale-two',
+        artworkId: 'UL-101', editionJson: numberedEdition(2, 64), keeperPieceId: 'kp-sale-two',
         identificationStatus: 'identity_linked', recordVersion: 2,
       });
       db.prepare(`
         INSERT INTO artist_artwork_record_events
           (id, artwork_record_id, action, before_json, after_json,
            resulting_version, actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('pending-link-event', 'record-identified', 'identity_linked',
+        VALUES ('pending-link-event', 'record-link-target', 'identity_linked',
           ?1, ?2, 2, 'artist-admin', 'pending-link-event-key', ?3, ?4)
       `).run(before, after, digest('b'), now);
       db.exec(`
         INSERT INTO artist_artwork_records
           (id, artwork_id, edition_json, keeper_piece_id, identification_status,
            created_by_user_id, created_at, updated_at)
-        VALUES ('record-later-owner', 'UL-101', '{"editionNumber":2}', 'kp-sale-two',
+        VALUES ('record-later-owner', 'UL-101', '${numberedEdition(2, 64)}', 'kp-sale-two',
           'identity_linked', 'artist-admin', '${now}', '${now}')
       `);
 
@@ -667,7 +935,7 @@ describe('artist verified sale records', () => {
                  identification_status, record_version, last_event_id,
                  created_by_user_id, created_at, updated_at
             FROM artist_artwork_records
-           WHERE id IN ('record-identified', 'record-later-owner') ORDER BY id
+           WHERE id IN ('record-link-target', 'record-later-owner') ORDER BY id
         `).all().map((row) => ({ ...row })),
         events: db.prepare(`
           SELECT * FROM artist_artwork_record_events
@@ -682,7 +950,7 @@ describe('artist verified sale records', () => {
                record_version = 2,
                last_event_id = 'pending-link-event',
                updated_at = '${now}'
-         WHERE id = 'record-identified'
+         WHERE id = 'record-link-target'
       `), /collision|keeper|identity/i);
 
       assert.deepEqual({
@@ -691,7 +959,7 @@ describe('artist verified sale records', () => {
                  identification_status, record_version, last_event_id,
                  created_by_user_id, created_at, updated_at
             FROM artist_artwork_records
-           WHERE id IN ('record-identified', 'record-later-owner') ORDER BY id
+           WHERE id IN ('record-link-target', 'record-later-owner') ORDER BY id
         `).all().map((row) => ({ ...row })),
         events: db.prepare(`
           SELECT * FROM artist_artwork_record_events
@@ -712,7 +980,7 @@ describe('artist verified sale records', () => {
         INSERT INTO artist_artwork_records
           (id, artwork_id, edition_json, keeper_piece_id, identification_status,
            created_by_user_id, created_at, updated_at)
-        VALUES ('duplicate-link', 'UL-100', '{"editionNumber":1}', 'kp-sale-one',
+        VALUES ('duplicate-link', 'UL-100', '${numberedEdition(1, 64)}', 'kp-sale-one',
           'identity_linked', 'artist-admin', '${now}', '${now}')
       `), /unique|constraint|collision/i);
       assert.equal(count(db, 'artist_artwork_records'), 3);
@@ -874,7 +1142,7 @@ describe('artist verified sale records', () => {
         `INSERT OR REPLACE INTO artist_artwork_records
           (id, artwork_id, edition_json, keeper_piece_id, identification_status,
            created_by_user_id, created_at, updated_at)
-         VALUES ('record-standalone', 'UL-101', '{"editionNumber":2}', 'kp-sale-two',
+         VALUES ('record-standalone', 'UL-101', '${numberedEdition(2, 64)}', 'kp-sale-two',
            'identity_linked', 'artist-second', '${now}', '${now}')`,
         `INSERT OR REPLACE INTO artist_verified_sales
           (id, occurrence_precision, occurred_on, buyer_email, verified_by_user_id,
@@ -895,7 +1163,7 @@ describe('artist verified sale records', () => {
         `INSERT OR REPLACE INTO artist_artwork_price_entries
           (id, artwork_record_id, sale_item_id, amount_minor, currency,
            occurred_on, occurrence_precision, recorded_at)
-         VALUES ('price-one', 'record-unresolved', 'item-one', 1, 'USD',
+         VALUES ('price-one', 'record-unresolved', 'item-one', 100000, 'USD',
            '2026-08-01', 'exact', '${now}')`,
       ];
       for (const sql of replacementSql) {

@@ -29,12 +29,24 @@ CREATE TABLE artist_reconnection_cases (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   updated_at TEXT NOT NULL CHECK (
-    typeof(updated_at) = 'text' AND updated_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(updated_at) IS NOT NULL
+    typeof(updated_at) = 'text'
+    AND length(updated_at) = 24
+    AND updated_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      updated_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(updated_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at
   )
 );
 
@@ -46,7 +58,25 @@ CREATE TABLE artist_artwork_records (
   ),
   edition_json TEXT CHECK (
     edition_json IS NULL
-    OR (json_valid(edition_json) AND json_type(edition_json) <> 'null')
+    OR (
+      json_valid(edition_json)
+      AND json_type(edition_json) = 'object'
+      AND COALESCE(json_remove(edition_json, '$.kind', '$.number', '$.size') = '{}', 0)
+      AND COALESCE((
+        (json_extract(edition_json, '$.kind') = 'unique'
+          AND json_type(edition_json, '$.number') = 'null'
+          AND json_type(edition_json, '$.size') = 'null')
+        OR (json_extract(edition_json, '$.kind') = 'numbered'
+          AND json_type(edition_json, '$.number') = 'integer'
+          AND json_extract(edition_json, '$.number') BETWEEN 1 AND 9999
+          AND (
+            json_type(edition_json, '$.size') = 'null'
+            OR (json_type(edition_json, '$.size') = 'integer'
+              AND json_extract(edition_json, '$.size')
+                BETWEEN json_extract(edition_json, '$.number') AND 9999)
+          ))
+      ), 0)
+    )
   ),
   keeper_piece_id TEXT UNIQUE REFERENCES keeper_pieces(id) ON DELETE RESTRICT,
   identification_status TEXT NOT NULL CHECK (
@@ -60,12 +90,24 @@ CREATE TABLE artist_artwork_records (
     DEFERRABLE INITIALLY DEFERRED,
   created_by_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT,
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   updated_at TEXT NOT NULL CHECK (
-    typeof(updated_at) = 'text' AND updated_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(updated_at) IS NOT NULL
+    typeof(updated_at) = 'text'
+    AND length(updated_at) = 24
+    AND updated_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      updated_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(updated_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at
   ),
   CHECK (
     (identification_status = 'unresolved'
@@ -108,8 +150,14 @@ CREATE TABLE artist_artwork_record_events (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   UNIQUE (artwork_record_id, resulting_version)
 );
@@ -151,8 +199,14 @@ CREATE TABLE artist_verified_sales (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   recorded_at TEXT NOT NULL CHECK (
-    typeof(recorded_at) = 'text' AND recorded_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(recorded_at) IS NOT NULL
+    typeof(recorded_at) = 'text'
+    AND length(recorded_at) = 24
+    AND recorded_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      recorded_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(recorded_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at
   ),
   CHECK (
     (currency IS NULL AND total_minor IS NULL)
@@ -205,8 +259,14 @@ CREATE TABLE artist_verified_sale_events (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   UNIQUE (sale_id, sequence)
 );
@@ -219,8 +279,14 @@ CREATE TABLE artist_verified_sale_items (
   amount_minor INTEGER,
   currency TEXT,
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   UNIQUE (sale_id, artwork_record_id),
   CHECK (
@@ -258,8 +324,14 @@ CREATE TABLE artist_artwork_media (
   ),
   uploaded_by_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT,
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   )
 );
 
@@ -284,8 +356,14 @@ CREATE TABLE artist_artwork_ledger_entries (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   ),
   CHECK (message IS NOT NULL OR media_id IS NOT NULL)
 );
@@ -308,8 +386,14 @@ CREATE TABLE artist_artwork_price_entries (
     occurrence_precision IN ('exact', 'month', 'year', 'unknown')
   ),
   recorded_at TEXT NOT NULL CHECK (
-    typeof(recorded_at) = 'text' AND recorded_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(recorded_at) IS NOT NULL
+    typeof(recorded_at) = 'text'
+    AND length(recorded_at) = 24
+    AND recorded_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      recorded_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(recorded_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at
   ),
   CHECK (
     (occurrence_precision = 'exact'
@@ -356,8 +440,14 @@ CREATE TABLE artist_reconnection_events (
     AND request_digest NOT GLOB '*[^0-9a-f]*'
   ),
   created_at TEXT NOT NULL CHECK (
-    typeof(created_at) = 'text' AND created_at GLOB '????-??-??T??:??:??*Z'
-    AND julianday(created_at) IS NOT NULL
+    typeof(created_at) = 'text'
+    AND length(created_at) = 24
+    AND created_at GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
+      NOT GLOB '*[^0-9]*'
+    AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
+    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
   )
 );
 
@@ -383,6 +473,23 @@ BEGIN
   SELECT RAISE(ABORT, 'artist artwork records require initial version one without an event');
 END;
 
+CREATE TRIGGER artist_artwork_records_initial_identity_match
+BEFORE INSERT ON artist_artwork_records
+WHEN NEW.identification_status = 'identity_linked' AND NOT EXISTS (
+  SELECT 1 FROM keeper_pieces piece
+   WHERE piece.id = NEW.keeper_piece_id
+     AND piece.piece_id = NEW.artwork_id
+     AND (
+       (json_extract(NEW.edition_json, '$.kind') = 'unique'
+         AND piece.edition_number = 0)
+       OR (json_extract(NEW.edition_json, '$.kind') = 'numbered'
+         AND piece.edition_number = json_extract(NEW.edition_json, '$.number'))
+     )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork record identity must match its keeper piece');
+END;
+
 -- A record event is valid only when both snapshots are complete identity
 -- snapshots, the before snapshot exactly describes the current record, and
 -- the action describes one permitted state transition.
@@ -405,6 +512,30 @@ BEGIN
     OR json_type(NEW.before_json, '$.identificationStatus') <> 'text'
     OR json_type(NEW.after_json, '$.identificationStatus') <> 'text'
   THEN RAISE(ABORT, 'artwork record event requires complete snapshots') END;
+
+  SELECT CASE WHEN NOT (
+    json_type(NEW.after_json, '$.editionJson') = 'object'
+    AND (SELECT COUNT(*)
+           FROM json_each(json_extract(NEW.after_json, '$.editionJson'))) = 3
+    AND NOT EXISTS (
+      SELECT 1 FROM json_each(json_extract(NEW.after_json, '$.editionJson')) member
+       WHERE member.key NOT IN ('kind', 'number', 'size')
+    )
+    AND COALESCE((
+      (json_extract(NEW.after_json, '$.editionJson.kind') = 'unique'
+        AND json_type(NEW.after_json, '$.editionJson.number') = 'null'
+        AND json_type(NEW.after_json, '$.editionJson.size') = 'null')
+      OR (json_extract(NEW.after_json, '$.editionJson.kind') = 'numbered'
+        AND json_type(NEW.after_json, '$.editionJson.number') = 'integer'
+        AND json_extract(NEW.after_json, '$.editionJson.number') BETWEEN 1 AND 9999
+        AND (
+          json_type(NEW.after_json, '$.editionJson.size') = 'null'
+          OR (json_type(NEW.after_json, '$.editionJson.size') = 'integer'
+            AND json_extract(NEW.after_json, '$.editionJson.size') BETWEEN
+              json_extract(NEW.after_json, '$.editionJson.number') AND 9999)
+        ))
+    ), 0)
+  ) THEN RAISE(ABORT, 'artwork record event requires canonical edition identity') END;
 
   SELECT CASE WHEN NOT EXISTS (
     SELECT 1 FROM artist_artwork_records record
@@ -454,6 +585,14 @@ BEGIN
            AND EXISTS (
              SELECT 1 FROM keeper_pieces piece
               WHERE piece.id = json_extract(NEW.after_json, '$.keeperPieceId')
+                AND piece.piece_id = json_extract(NEW.after_json, '$.artworkId')
+                AND (
+                  (json_extract(NEW.after_json, '$.editionJson.kind') = 'unique'
+                    AND piece.edition_number = 0)
+                  OR (json_extract(NEW.after_json, '$.editionJson.kind') = 'numbered'
+                    AND piece.edition_number =
+                      json_extract(NEW.after_json, '$.editionJson.number'))
+                )
            )
            AND NOT EXISTS (
              SELECT 1 FROM artist_artwork_records linked
@@ -614,8 +753,15 @@ BEGIN
        WHERE actor.id = json_extract(NEW.after_json, '$.verifiedByUserId')
     )
     AND json_type(NEW.after_json, '$.recordedAt') = 'text'
-    AND json_extract(NEW.after_json, '$.recordedAt') GLOB '????-??-??T??:??:??*Z'
-    AND julianday(json_extract(NEW.after_json, '$.recordedAt')) IS NOT NULL
+    AND length(json_extract(NEW.after_json, '$.recordedAt')) = 24
+    AND json_extract(NEW.after_json, '$.recordedAt') GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      json_extract(NEW.after_json, '$.recordedAt'), '-', ''), ':', ''),
+      'T', ''), '.', ''), 'Z', '') NOT GLOB '*[^0-9]*'
+    AND substr(json_extract(NEW.after_json, '$.recordedAt'), 12, 2) BETWEEN '00' AND '23'
+    AND strftime(
+      '%Y-%m-%dT%H:%M:%fZ', json_extract(NEW.after_json, '$.recordedAt')
+    ) = json_extract(NEW.after_json, '$.recordedAt')
   ) THEN RAISE(ABORT, 'sale event replacement snapshot is invalid') END;
 
   SELECT CASE WHEN NEW.sequence = 1 AND NOT EXISTS (
@@ -763,6 +909,25 @@ BEGIN
   SELECT RAISE(ABORT, 'artist artwork ledger identity collision');
 END;
 
+CREATE TRIGGER artist_artwork_ledger_entries_reference_match
+BEFORE INSERT ON artist_artwork_ledger_entries
+WHEN (
+  NEW.media_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM artist_artwork_media media
+     WHERE media.id = NEW.media_id
+       AND media.artwork_record_id = NEW.artwork_record_id
+  )
+) OR (
+  NEW.sale_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM artist_verified_sale_items item
+     WHERE item.sale_id = NEW.sale_id
+       AND item.artwork_record_id = NEW.artwork_record_id
+  )
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork ledger references must belong to the same artwork');
+END;
+
 CREATE TRIGGER artist_artwork_price_entries_insert_collision
 BEFORE INSERT ON artist_artwork_price_entries
 WHEN EXISTS (
@@ -771,6 +936,25 @@ WHEN EXISTS (
 )
 BEGIN
   SELECT RAISE(ABORT, 'artist artwork price identity collision');
+END;
+
+CREATE TRIGGER artist_artwork_price_entries_exact_sale_facts
+BEFORE INSERT ON artist_artwork_price_entries
+WHEN NOT EXISTS (
+  SELECT 1
+    FROM artist_verified_sale_items item
+    JOIN artist_verified_sales sale ON sale.id = item.sale_id
+   WHERE item.id = NEW.sale_item_id
+     AND item.artwork_record_id = NEW.artwork_record_id
+     AND item.amount_minor IS NOT NULL
+     AND item.currency IS NOT NULL
+     AND item.amount_minor = NEW.amount_minor
+     AND item.currency = NEW.currency
+     AND sale.occurred_on IS NEW.occurred_on
+     AND sale.occurrence_precision = NEW.occurrence_precision
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork price must match its sale item and immutable base sale facts');
 END;
 
 CREATE TRIGGER artist_reconnection_events_insert_collision
