@@ -57,6 +57,13 @@ with them.**
 
 ## 1. The piece page — the QR landing. SHAPE LOCKED, row wording proposed
 
+> **Superseded in part by section 6 (2026-08-10).** The resting state below still holds for
+> a registered piece's public face, but the foot of the page has changed: the single Unlock
+> pill is replaced by state-dependent arrival (a lit **Begin** when unclaimed, two peer
+> doors when registered, neither when it is yours), and the main dream now leads the page
+> above the rows. The fifth row, *Into the artist's website*, is a text link below the list
+> rather than a row, because rows open in place and links travel.
+
 One page for everyone who scans or types the piece's address. The piece shows itself
 publicly; the code is the deeper door on the same page. Replaces the separate arrival and
 code-entry screens (Adrian, 2026-08-09: "I like this better").
@@ -108,7 +115,12 @@ the unlock.
   way. Closing returns to the page. One motion vocabulary for all five rows; simple React,
   nothing heavier.
 
-## 2. The unlock — same page, morphed. Copy LOCKED
+## 2. The unlock — its own page. Copy LOCKED, shape revised 2026-08-10
+
+> **Revised by section 6 (2026-08-10).** The code entry is no longer the same page morphed;
+> it is **its own page**, reached by pressing Begin, and the code is **sixteen characters in
+> two rows of eight**. There is no Unlock button on it: the last character is the press. The
+> copy below is unchanged and still locked.
 
 Tapping Unlock melts the pill into the code field; the keyboard rises; the instruction
 appears. The locked "Turn the piece over" copy lives here, compressed to the moment it
@@ -599,6 +611,12 @@ written yet."
 
 ### The dream
 
+> **Superseded by section 6 (2026-08-10).** The dream is no longer one quiet thing planted
+> at registration and kept private by default. It **leads the piece page as the first thing
+> every guest reads**, placing it is itself the choice to show it (no switch, ever), and it
+> can be changed once a year on the birthday. The four scopes and the drawing question below
+> are still open; everything about its privacy and placement is not.
+
 One dream at registration, planted, not filled in. Never work, always a gift. Skippable
 without cost. No approval gate ever; nothing counts, scores, or ranks it.
 
@@ -626,7 +644,12 @@ The moment the piece becomes a light. A confirmation, not a map to browse. Two l
 - Drawing: the globe as a wireframe, one point lit. The lit point is ink, not brass; it is
   not something you act on.
 
-### Inviting loved ones — the family of the piece. DECIDED 2026-08-09
+### Inviting loved ones — the family of the piece. DECIDED 2026-08-09, extended 2026-08-10
+
+> **Extended by section 6 (2026-08-10).** An invited person now **gets an account of their
+> own** and supplies **their own birthday**, so the piece asks each of them at their own
+> moment. The account is not per piece: it is the same one that opens their readings on
+> Mandala Codes. Everything below about ownership still holds without change.
 
 The caretaker can invite others, a spouse, children, to place their love into the piece.
 
@@ -645,6 +668,11 @@ The caretaker can invite others, a spouse, children, to place their love into th
 
 ### The yearly ritual
 
+> **Extended by section 6 (2026-08-10).** The ritual is now the same occasion as the
+> dream's yearly unlock, and it is not only the caretaker's: **every invited person has
+> their own birthday window** and places their own words for the year. The three choices
+> below still hold for the dream itself.
+
 Once a year, near the caretaker's birthday. Three choices, never a blank form. No counts, no
 streaks, nothing accumulates in public.
 
@@ -654,6 +682,211 @@ streaks, nothing accumulates in public.
 - The three choices: Reinforce the dream it holds · Plant a new dream · Mark it fulfilled
 - Secondary: Not this year
 - Drawing: the piece with a single orbit line around it: one year, drawn.
+
+---
+
+---
+
+## 6. The living page — decided 2026-08-10
+
+Everything below was worked in conversation with Adrian on 2026-08-10 and is built in
+`collector-primitives.html`. It changes the shape of section 1 and section 2; where it
+disagrees with anything earlier in this file, this section wins.
+
+### What the public sees, and what belongs to the account. SETTLED 2026-08-10
+
+One page, one address, forever. What differs is not the page but which rows are on it. The
+split is the answer to "what was paid lives behind the code, always."
+
+**The public face — anyone who scans, including a guest looking at it on a wall:**
+
+> *the piece, and the ground and light it has earned*
+>
+> **the main dream** *(the first thing read, words with no name)*
+>
+> The story
+> The certificate *(made when, materials, year, series. NOT what was paid)*
+> The history *(the public spine; names only where a caretaker opened them)*
+> The dreams *(what caretakers chose to share, words with no name)*
+>
+> *Into the artist's website* — a text link, not a row
+>
+> **the way in, by state:** a lit **Begin** if unclaimed · two peer doors if registered
+
+A visitor with no code gets a complete experience and never sees a locked door, an empty
+slot, or a prompt to sign in. **Nothing on the public face is a teaser for the private one.**
+
+**The caretaker's face — the same page, signed in as the person who holds it:**
+
+Everything above, still public and still first, plus these rows, which **exist only when
+signed in** and are never visible, greyed, or hinted at otherwise:
+
+> Add to your piece *(the garden, also opened by the light)*
+> Record a video *(when the cost research clears it)*
+> Piece information *(the full record, including **what was paid**)*
+> The people you love *(invite, and approve what shines)*
+> Passing it on *(the transfer, from the inside)*
+> Your account *(name, email, password, where it lives, links, what shows)*
+
+And the Unlock door is **gone** for them, because unlocking is about whose hands hold the
+piece, and theirs do.
+
+**The rules that keep the split honest:**
+
+- **Price and the private record are caretaker-only, always.** The certificate shows
+  materials and making to everyone; what was paid is inside Piece information.
+- **Birth details are shown to nobody, ever.** Not to the public, not on the caretaker's own
+  page. Only what they produce can be shown, and only by choice.
+- **A caretaker door reached while signed out** goes to sign-in and then straight back to
+  where the person was headed. Never a dead end, and never a locked-door message.
+- **Someone signed in who is not this piece's caretaker** sees the public face with the way
+  in, exactly like a stranger. Having an account is not the same as holding this piece.
+- **The light and the ground are public.** A guest scanning a loved piece sees that it has
+  been loved. That visibility is the point, and it is why nothing about the light is behind
+  the account.
+
+### The invitation is the page itself, never a prompt. SETTLED
+
+An earlier proposal put a line on the page reading "one more thing it would like to hold."
+**Rejected, and the reasoning matters more than the line.** It makes the piece a creditor
+and the caretaker a debtor. Adrian: *"You feel something with your love, not because it
+wants something from you. This is something that I never want in my wording. Feeding your
+love into it is not any management thing."*
+
+The correct frame is his: **you feel something, you place it in the piece, it glows
+brighter.** Cause and effect, never a request. So there is no prompt anywhere. The
+invitation is that the page visibly becomes more alive, and a person wants to add to that.
+
+**What that rules out permanently:** counts, bars, streaks, badges, percentages, "x of y
+complete," notification marks, and any line that asks. Adrian: *"the person should never
+feel less than others that glow brighter."*
+
+### Growth has no ceiling, and runs on two axes. SETTLED
+
+A finite ceiling would mean the piece is eventually finished, which contradicts an object
+meant to outlive everyone who holds it. There is no full, no completion, and no way to
+fall behind.
+
+Two axes, deliberately different materials so they can never combine into one score:
+
+- **Years held — the GROUND.** Patina, settling, the frame warming, hairlines softening.
+  It accrues to everyone at the same rate simply by holding the piece. Nobody can buy it,
+  rush it, or fall behind on it.
+- **What is placed — the LIGHT.** Brightness, the words, their presence on the page.
+
+A ten-year-old piece with little written reads *old and quiet*. A new piece written into
+deeply reads *bright and new*. Both are obviously good and neither is ahead, because
+there is no shared scale on which one beats the other. Adrian's test, which any future
+threshold must pass: could two caretakers compare pieces and one feel behind? If yes, it
+is a level, and it is wrong.
+
+**Deep in, the interface inverts.** Early on the page is the piece with a little of the
+person in it. Far along, the page is the person and everyone who has loved it, with the
+piece as the frame: the words become the body and the rows recede. This is unbounded and
+qualitative; **no stage is ever named or numbered on screen.**
+
+### Season, hour, and the birthday month. SETTLED
+
+The page carries a tint so the piece belongs to the time it is being looked at: the ground
+warms toward amber in autumn, cools in winter, darkens at night. **The birthday month is
+the warmest the piece ever gets.**
+
+**Hard rule: the tint moves the GROUND ONLY. Brass never shifts.** "Brass means you can
+act on this" is what keeps every screen legible, and an accent that drifts stops being a
+signal. Season is a tint over the whole surface; years are a depth in the ground. Different
+properties, so they compose instead of muddying.
+
+### The dream leads the page. SETTLED
+
+The main dream is **the first thing any guest reads**, above the rows, in the piece's voice.
+
+- **Placing it IS the choice to show it.** There is no switch for it anywhere, and none is
+  ever added. The screen must say so before the field, not after.
+- **The words show; who wrote them does not.** Identity stays opt-in tick by tick, exactly
+  as the privacy model already holds. This keeps the rule intact rather than punching a
+  hole in it.
+- **It can be changed once a year, on the birthday.** The lock is what makes it worth
+  reading: a line anyone can edit at any time carries no weight, and knowing the date is
+  coming is what produces the intentionality.
+- **Caretakers with no birth details** fall back to the registration anniversary, silently.
+  They never see a difference.
+- **A transfer moves the date** to the new caretaker's birthday. The old dream stays with
+  the piece as its story, per the locked transfer rule.
+
+The prompt wording is **NOT YET WRITTEN** and is the highest-stakes line in the flow: every
+guest reads it, and it is locked for a year once placed.
+
+### Two doors, neither above the other. SETTLED
+
+A guest is here to look. The caretaker is here to tend. Both scan the same code and land on
+the same page, and Adrian's rule is that neither path is diminished by the other's.
+
+**On a registered piece there is no pill at all** — two peers at the foot, equal weight,
+differing only in what they say: *Look through it* · *Sign in to tend it*.
+
+This is the one screen in the flow with two peer actions. It is bent here and nowhere else,
+because it is the only screen where the system genuinely does not know who is holding the
+phone. Any hierarchy would pick a winner, and on a registered piece the loser would be the
+caretaker, on their own piece.
+
+### Arrival, dressed by relationship. SETTLED
+
+One page, three states, and the page reads its own state rather than showing everything to
+everyone:
+
+- **Unclaimed** — a lit **Begin**, the only bright thing on an otherwise quiet page. No
+  sign-in link, because nobody has an account for an unregistered piece.
+- **Registered, not you** — no brass anywhere. The code door drops to a quiet line and
+  *Sign in to tend it* becomes the obvious move.
+- **Registered to you, signed in** — no pill, because there is nothing left to claim. The
+  light and your doors.
+
+**Begin replaces Unlock as the first-arrival label.** Unlock names the mechanism; Begin
+names what happens. It also covers both openings honestly, because behind it sits
+registering it to yourself **or** leaving sealed words for whoever you bought it for.
+
+### The code: sixteen characters, and it checks itself. SETTLED
+
+- **Sixteen characters, shown as two rows of eight.** An unbroken run of sixteen is
+  unreadable and, more importantly, unproofable: a person is copying it off the underside
+  of a physical object and needs to check their work by eye.
+- **The unlock is its own page**, reached by pressing Begin. The rows, the dream, and the
+  status give way; the field is what the page is for.
+- **The last character is the press.** No second button. The code is either true or it is
+  not, so there is nothing to confirm; the piece answers the moment it has enough to know.
+- **A deliberate pause before it fires.** At sixteen characters a mistype is likely, and
+  firing the instant the last character lands would reject someone mid-correction, before
+  they had seen what they typed.
+- **The tumblers accelerate.** Sixteen at the six-character pace would spend two and a half
+  seconds before the vault even started, breaking the two-to-four-second bound on the whole
+  passage.
+
+### The year turns: one occasion, each person at their own birthday. SETTLED
+
+The yearly ritual and the dream's unlock are **one occasion, not two**. Near the birthday
+the piece asks once, and both the caretaker's dream and each invited person's words open
+for placing.
+
+- **Every person has their own birthday window.** The piece asks each of them at their own
+  moment, not all at the caretaker's. Which means **each invited person supplies their own
+  birthday.**
+- **Family words pass through the caretaker once** before they show, for typos and
+  judgement, never for permission. Because a line now displays publicly for a whole year,
+  this approval matters more, not less, and it happens inside the same yearly window.
+- **Anything not passed simply does not show that year.** Nothing is lost; it waits.
+- **A child's words never carry a name**, whatever else is chosen.
+
+### The account is not per piece. DECIDED, and larger than this flow
+
+**Each invited family member gets an account of their own.** And the account is not scoped
+to a piece or to this site: **it is the same account that opens their readings on Mandala
+Codes.**
+
+This reaches past the collector flow into the identity layer across all of Adrian's
+properties, and it should be decided there rather than here. See
+`i64os/substrate/directions/identity.md`. **It carries a real clock:** moving real customer
+accounts off a vendor after launch is risky; doing it now while the sites are still on test
+accounts is clean.
 
 ---
 
