@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, it } from 'node:test';
@@ -15,6 +16,7 @@ import {
   linkArtworkIdentity,
   listArtistSaleWorkspace,
 } from '../functions/api/_lib/artistSales.js';
+import { storeArtworkLedgerMedia } from '../functions/api/_lib/artworkLedgerMedia.js';
 
 const readMigration = (name: string) => readFileSync(
   new URL(`../migrations/${name}`, import.meta.url), 'utf8',
@@ -214,6 +216,262 @@ function serviceEnvironment(options: {
 }
 
 const administrator = { userId: 'artist-admin', email: 'artist@example.com' };
+
+type FakeMediaObject = {
+  bytes: Uint8Array;
+  contentType?: string;
+  arrayBufferFailure?: Error;
+};
+
+function mediaBucket(options: {
+  putFailure?: Error;
+  getFailure?: Error;
+  missingReadBack?: boolean;
+  mutateStored?: (stored: FakeMediaObject, key: string, putNumber: number) => void;
+} = {}) {
+  const objects = new Map<string, FakeMediaObject>();
+  const puts: Array<{ key: string; bytes: Uint8Array; options: any }> = [];
+  let putNumber = 0;
+  let gets = 0;
+  return {
+    objects,
+    puts,
+    get gets() { return gets; },
+    bucket: {
+      async put(key: string, value: Uint8Array, putOptions: any) {
+        putNumber += 1;
+        puts.push({ key, bytes: new Uint8Array(value), options: structuredClone(putOptions) });
+        if (options.putFailure) throw options.putFailure;
+        if (objects.has(key)) return null;
+        const stored = {
+          bytes: new Uint8Array(value),
+          contentType: putOptions?.httpMetadata?.contentType,
+        };
+        objects.set(key, stored);
+        options.mutateStored?.(stored, key, putNumber);
+        return { key, httpMetadata: { contentType: stored.contentType } };
+      },
+      async get(key: string) {
+        gets += 1;
+        if (options.getFailure) throw options.getFailure;
+        if (options.missingReadBack) return null;
+        const stored = objects.get(key);
+        if (!stored) return null;
+        return {
+          key,
+          size: stored.bytes.byteLength,
+          httpMetadata: stored.contentType === undefined
+            ? undefined : { contentType: stored.contentType },
+          async arrayBuffer() {
+            if (stored.arrayBufferFailure) throw stored.arrayBufferFailure;
+            return stored.bytes.slice().buffer;
+          },
+        };
+      },
+    },
+  };
+}
+
+function mediaErrorCode(code: string) {
+  return (error: Error & { code?: string }) => error.code === code && error.message === code;
+}
+
+describe('authenticity media immutable R2 storage', () => {
+  it('stores JPEG, PNG, and WebP bytes exactly with content-addressed keys and immutable options', async () => {
+    for (const [contentType, extension, input] of [
+      ['image/jpeg', 'jpg', new Uint8Array([0xff, 0xd8, 0xff, 0x01])],
+      ['image/png', 'png', new Uint8Array([0x89, 0x50, 0x4e, 0x47])],
+      ['image/webp', 'webp', new Uint8Array([0x52, 0x49, 0x46, 0x46])],
+    ] as const) {
+      const fake = mediaBucket();
+      const offsetBacking = new Uint8Array([99, ...input, 88]);
+      const offsetView = new DataView(offsetBacking.buffer, 1, input.byteLength);
+      const sha256 = createHash('sha256').update(input).digest('hex');
+      const result = await storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record_private-01', bytes: offsetView, contentType,
+      });
+
+      assert.deepEqual(result, {
+        reference: `artwork-ledger/record_private-01/${sha256}.${extension}`,
+        sha256, contentType, byteLength: input.byteLength,
+      });
+      assert.equal(fake.puts.length, 1);
+      assert.equal(fake.puts[0].key, result.reference);
+      assert.deepEqual(fake.puts[0].bytes, input);
+      assert.deepEqual(fake.puts[0].options, {
+        onlyIf: { etagDoesNotMatch: '*' }, httpMetadata: { contentType },
+      });
+    }
+  });
+
+  it('validates the exact media type, byte boundaries, binary input, and private record id', async () => {
+    const fake = mediaBucket();
+    const valid = { artworkRecordId: 'record-1', bytes: new Uint8Array([1]), contentType: 'image/jpeg' };
+    for (const contentType of ['image/gif', 'Image/JPEG', 'image/jpeg ', '', null]) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, { ...valid, contentType } as any),
+        mediaErrorCode('unsupported_media_type'));
+    }
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, { ...valid, bytes: new Uint8Array() }),
+      mediaErrorCode('invalid_media_size'));
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+      ...valid, bytes: new Uint8Array((15 * 1024 * 1024) + 1),
+    }), mediaErrorCode('invalid_media_size'));
+    for (const bytes of [null, 'secret picture', [1, 2], { 0: 1, length: 1 }]) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, { ...valid, bytes } as any),
+        mediaErrorCode('invalid_media_bytes'));
+    }
+    const detached = new ArrayBuffer(1);
+    structuredClone(detached, { transfer: [detached] });
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, { ...valid, bytes: detached }),
+      mediaErrorCode('invalid_media_bytes'));
+    for (const artworkRecordId of [
+      '', ' record-1', 'record 1', 'record/1', '.', '..', 'record..1',
+      'record?one', 'record#one', 'record%2Fone', 'record@example', 'x'.repeat(129), null,
+    ]) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, { ...valid, artworkRecordId } as any),
+        mediaErrorCode('invalid_artwork_record_id'));
+    }
+    assert.equal(fake.puts.length, 0);
+  });
+
+  it('accepts an exactly 15 MiB ArrayBuffer without changing its bytes', async () => {
+    const bytes = new Uint8Array(15 * 1024 * 1024);
+    bytes[0] = 17;
+    bytes[bytes.length - 1] = 29;
+    const fake = mediaBucket();
+    const result = await storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-max', bytes: bytes.buffer, contentType: 'image/png',
+    });
+    assert.equal(result.byteLength, 15 * 1024 * 1024);
+    assert.deepEqual(fake.puts[0].bytes, bytes);
+  });
+
+  it('replays an exact content-addressed object without overwriting or multiplying objects', async () => {
+    const fake = mediaBucket();
+    const input = { artworkRecordId: 'record-replay', bytes: new Uint8Array([3, 1, 4]), contentType: 'image/webp' };
+    const first = await storeArtworkLedgerMedia(fake.bucket, input);
+    const second = await storeArtworkLedgerMedia(fake.bucket, input);
+    assert.deepEqual(second, first);
+    assert.equal(fake.objects.size, 1);
+    assert.equal(fake.puts.length, 2);
+    assert.deepEqual(fake.objects.get(first.reference)?.bytes, input.bytes);
+  });
+
+  it('rejects conflicting existing bytes or content type and never overwrites them', async () => {
+    for (const conflict of ['bytes', 'content-type'] as const) {
+      const fake = mediaBucket();
+      const input = { artworkRecordId: `record-${conflict}`, bytes: new Uint8Array([8, 6, 7]), contentType: 'image/png' };
+      const first = await storeArtworkLedgerMedia(fake.bucket, input);
+      const stored = fake.objects.get(first.reference)!;
+      if (conflict === 'bytes') stored.bytes = new Uint8Array([5, 3, 0]);
+      else stored.contentType = 'image/jpeg';
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, input),
+        mediaErrorCode('media_backup_conflict'));
+      assert.equal(fake.objects.size, 1);
+      assert.deepEqual(fake.objects.get(first.reference), stored);
+    }
+  });
+
+  it('handles R2 conditional null and precondition exceptions as verification-only replays', async () => {
+    const bytes = new Uint8Array([2, 7, 1, 8]);
+    const input = { artworkRecordId: 'record-conditional', bytes, contentType: 'image/jpeg' };
+    const nullFake = mediaBucket();
+    const first = await storeArtworkLedgerMedia(nullFake.bucket, input);
+    assert.deepEqual(await storeArtworkLedgerMedia(nullFake.bucket, input), first);
+
+    for (const conditionError of [
+      Object.assign(new Error('condition rejected'), { status: 412 }),
+      Object.assign(new Error('condition rejected'), { code: 'PreconditionFailed' }),
+    ]) {
+      const objects = new Map(nullFake.objects);
+      let gets = 0;
+      const bucket = {
+        async put() { throw conditionError; },
+        async get(key: string) {
+          gets += 1;
+          const stored = objects.get(key);
+          return stored && {
+            httpMetadata: { contentType: stored.contentType },
+            arrayBuffer: async () => stored.bytes.slice().buffer,
+          };
+        },
+      };
+      assert.deepEqual(await storeArtworkLedgerMedia(bucket, input), first);
+      assert.equal(gets, 1);
+    }
+  });
+
+  it('does not mask arbitrary R2 put outages as replays', async () => {
+    const fake = mediaBucket({ putFailure: new Error('private upstream outage') });
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-outage', bytes: new Uint8Array([1]), contentType: 'image/jpeg',
+    }), mediaErrorCode('media_backup_failed'));
+    assert.equal(fake.gets, 0);
+  });
+
+  it('fails safely on get, missing read-back, unreadable bodies, and changed read-back bytes', async () => {
+    const scenarios = [
+      mediaBucket({ getFailure: new Error('private get outage') }),
+      mediaBucket({ missingReadBack: true }),
+      mediaBucket({ mutateStored(stored) { stored.arrayBufferFailure = new Error('private read failure'); } }),
+      mediaBucket({ mutateStored(stored) { stored.bytes = new Uint8Array(); } }),
+      mediaBucket({ mutateStored(stored) { stored.bytes = new Uint8Array([9, 9, 9]); } }),
+      mediaBucket({ mutateStored(stored) { stored.contentType = 'image/webp'; } }),
+    ];
+    for (const fake of scenarios) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-readback', bytes: new Uint8Array([1, 2, 3]), contentType: 'image/png',
+      }), mediaErrorCode('media_backup_failed'));
+    }
+  });
+
+  it('leaves one safe immutable orphan when later D1 work fails and reuses it on retry', async () => {
+    const fake = mediaBucket();
+    const input = { artworkRecordId: 'record-orphan', bytes: new Uint8Array([6, 2, 6]), contentType: 'image/jpeg' };
+    const stored = await storeArtworkLedgerMedia(fake.bucket, input);
+    await assert.rejects(async () => {
+      await Promise.resolve(stored);
+      throw new Error('simulated D1 insert failure');
+    }, /simulated D1 insert failure/);
+    assert.equal(fake.objects.size, 1);
+    assert.deepEqual(await storeArtworkLedgerMedia(fake.bucket, input), stored);
+    assert.equal(fake.objects.size, 1);
+  });
+
+  it('converges concurrent identical uploads and keeps different bytes as distinct immutable objects', async () => {
+    const sameFake = mediaBucket();
+    const sameInput = { artworkRecordId: 'record-race', bytes: new Uint8Array([1, 1, 2, 3]), contentType: 'image/webp' };
+    const [left, right] = await Promise.all([
+      storeArtworkLedgerMedia(sameFake.bucket, sameInput),
+      storeArtworkLedgerMedia(sameFake.bucket, sameInput),
+    ]);
+    assert.deepEqual(right, left);
+    assert.equal(sameFake.objects.size, 1);
+
+    const differentFake = mediaBucket();
+    const [first, second] = await Promise.all([
+      storeArtworkLedgerMedia(differentFake.bucket, { ...sameInput, bytes: new Uint8Array([1]) }),
+      storeArtworkLedgerMedia(differentFake.bucket, { ...sameInput, bytes: new Uint8Array([2]) }),
+    ]);
+    assert.notEqual(first.reference, second.reference);
+    assert.equal(differentFake.objects.size, 2);
+  });
+
+  it('never exposes private ids, bytes, or R2 details in thrown errors', async () => {
+    const privateId = 'record-private-secret';
+    const privateText = 'collector-private-image';
+    const bytes = new TextEncoder().encode(privateText);
+    const fake = mediaBucket({ putFailure: new Error(`R2 failed for ${privateId}: ${privateText}`) });
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: privateId, bytes, contentType: 'image/jpeg',
+    }), (error: Error & { code?: string }) => {
+      assert.equal(error.code, 'media_backup_failed');
+      assert.equal(error.message, 'media_backup_failed');
+      assert.doesNotMatch(String(error.stack), new RegExp(`${privateId}|${privateText}`));
+      return true;
+    });
+  });
+});
 
 function saleInput(overrides: Record<string, unknown> = {}) {
   return {
