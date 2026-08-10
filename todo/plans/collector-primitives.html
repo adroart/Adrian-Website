@@ -245,6 +245,15 @@ body{
   text-transform:uppercase;color:var(--cream-3)
 }
 .dream:empty,.dream[hidden]{display:none}
+/* the capsule lives WITH the dream, because it is the same act said aloud */
+.dream-voice{
+  display:none;margin:10px auto 0;background:none;border:1px solid var(--hair);
+  border-radius:999px;padding:6px 16px;cursor:pointer;
+  font-family:var(--body);font-size:12px;color:var(--cream-3);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.dream-voice:hover{border-color:var(--brass);color:var(--brass)}
+.screen.caretaker .dream-voice{display:inline-block}
 /* deep in, the words become the page's body and the interface recedes */
 .screen.deep .dream p{font-size:22px;line-height:1.38}
 .screen.deep .rows{opacity:.72}
@@ -1081,6 +1090,7 @@ tbody tr:hover td{color:var(--cream)}
           <blockquote class="dream" id="dream">
             <p id="dreamText"></p>
             <cite id="dreamCite">placed this year</cite>
+            <button class="dream-voice care-only" id="voiceBtn">Say it out loud</button>
           </blockquote>
 
           <!-- the rows -->
@@ -1096,9 +1106,6 @@ tbody tr:hover td{color:var(--cream)}
             </button>
             <button class="row" data-row="dreams" data-prim="row">
               <span>The dreams</span><span class="chev">&rsaquo;</span>
-            </button>
-            <button class="row care-only" data-row="video" data-prim="row">
-              <span>Record a video</span><span class="chev">&rsaquo;</span>
             </button>
             <button class="row care-only" data-row="info" data-prim="row">
               <span>Piece information</span><span class="chev">&rsaquo;</span>
@@ -1674,21 +1681,25 @@ tbody tr:hover td{color:var(--cream)}
       '</div>'+
       '<p class="ghint">Placeholder dreams. Words only, never a name, never a city '+
       'alongside them. Their empty state is one quiet line: nothing written yet.</p>',
-    garden:'<p>Answer one now, five next month, the rest across years. Nothing here '+
+    garden:'<p>Place one now, five next month, the rest across years. Nothing here '+
       'expires and nothing is required.</p>'+
       '<div class="qlist">'+
-        Q('answered','A question that has been answered',
-          'The answer sits here as the caretaker wrote it, and it can be opened and '+
-          'changed at any time.')+
-        Q('answered','A second answered question',
-          'Answered questions read as the piece\u2019s own record, not as completed tasks.')+
-        Q('open','A question still waiting')+
-        Q('open','Another question still waiting')+
-        Q('open','A question that only makes sense after some years')+
-        Q('shared','A question whose answer shines publicly')+
+        Q('answered','Why you brought it home',
+          'The answer sits here as it was written, and it can be opened and changed at '+
+          'any time.')+
+        Q('answered','Where it hangs, and what you see past it',
+          'Answered things read as the piece\u2019s own record, never as completed tasks.')+
+        Q('open','What was happening in your life the year it came to you')+
+        Q('open','What you want it to hold for you')+
+        Q('open','Who showed it to you, or how you found it')+
+        Q('shared','What you would tell whoever holds it after you')+
+        Q('open','What has changed since it arrived')+
+        Q('open','What you are grateful for, looking at it today')+
       '</div>'+
-      '<p class="ghint">Placeholder questions. The real set is a wording session with '+
-      'Adrian, and it is the last thing this flow is waiting on.</p>',
+      '<p class="ghint">Sample questions, and the shape is the point: some can be placed '+
+      'today, some only make sense after years, and some are asked again each birthday so '+
+      'the answer changes as you do. Which is which is a research question Adrian is '+
+      'taking on, into what gratitude and retrospective practices actually work.</p>',
     account:'<p>Nothing from setting up is frozen. Move house and the light moves with '+
       'you.</p>'+
       '<div class="qlist">'+
@@ -1744,8 +1755,11 @@ tbody tr:hover td{color:var(--cream)}
       '<p class="ghint">Placing love is never ownership: no code, no transfer right, no '+
       'inheritance. Their words pass through you once before they shine, for typos and '+
       'judgement, never for permission. A child\u2019s words never carry a name.</p>',
-    video:'<p>The capsule: short, rare, sealed with the piece. Possibly one at purchase, '+
-      'another at the yearly ritual.</p>'+
+    video:'<p>Say it out loud instead of writing it. What the piece means, what it is '+
+      'bringing into your life right now, what it is standing for. A capsule with a '+
+      'voice in it.</p>'+
+      '<p>It lives beside the dream and shows with it, so whoever meets the piece can '+
+      'hear you rather than only read you.</p>'+
       '<div class="facts">'+
       '<div class="fact"><dt>Status</dt><dd>Waiting on the cost research</dd></div>'+
       '<div class="fact"><dt>The bound</dt><dd>The video can always be exported and held. '+
@@ -1794,7 +1808,7 @@ tbody tr:hover td{color:var(--cream)}
     passready:'Let it go',passdone:'It is waiting',
     inherit:'What he kept',inheritread:'In his own words',
     joinhello:'You have been added',joinwho:'Who you are',
-    video:'Record a video',info:'Piece information',family:'The people you love'};
+    video:'Say it out loud',info:'Piece information',family:'The people you love'};
 
   /* ── row promotion ── */
   function openRow(key,btn){
@@ -2839,6 +2853,14 @@ tbody tr:hover td{color:var(--cream)}
   /* near the birthday, the piece's one yearly moment has its own quiet door */
   document.getElementById('ritualLink').addEventListener('click',function(){
     startWalk('ritual');
+  });
+
+  /* the capsule opens from the dream, because it is the same act said aloud */
+  document.getElementById('voiceBtn').addEventListener('click',function(e){
+    e.stopPropagation();
+    openRow('video',null);
+    cap.textContent='Say it out loud \u00b7 it shows beside the dream';
+    lite('surface',true);
   });
 
   /* the door says what you are going in to do */
