@@ -119,15 +119,15 @@ Expected: every authority reference resolves, locked files remain present, and o
 - Verify: `tests/artist-sales.test.ts`
 - Verify: `tests/registry-recovery.test.ts`
 
-- [ ] **Step 1: Create one integration branch from the finished collector branch**
+- [x] **Step 1: Create one integration branch from the finished collector branch**
 
 Bring current `main` into the finished collector branch. Resolve the planning-document overlap by preserving the August 10 authority files and the collector branch’s truthful progress record.
 
-- [ ] **Step 2: Keep production closed**
+- [x] **Step 2: Keep production closed**
 
 Assert `LAUNCH_FLAGS.livingLegacy === false`. Do not apply remote migrations, fabricate a plate, seed production membership, or change production bindings in this task.
 
-- [ ] **Step 3: Run the collector foundation gate**
+- [x] **Step 3: Run the collector foundation gate**
 
 Run the focused ownership, invitation, registration, certificate, privacy, field, letters, verified-sales, and recovery suites listed by the collector execution record, followed by:
 
@@ -141,7 +141,7 @@ git diff --check
 
 Expected: the collector branch is integrated locally, its recovery archive covers every new permanent table, and the collector launch flag remains false.
 
-- [ ] **Step 4: Review ownership boundaries once**
+- [x] **Step 4: Review ownership boundaries once**
 
 Review only for P0 and P1 defects in identity, claim, transfer, privacy projection, encrypted recovery, and media access. Fix those before adding workflow composition.
 
