@@ -132,10 +132,10 @@ export const REGISTRY_RECOVERY_V5_TABLES = [
 export const REGISTRY_RECOVERY_TABLES = [
   ...REGISTRY_RECOVERY_V5_TABLES,
   'artist_reconnection_cases',
-  'artist_artwork_records',
-  'artist_verified_sales',
   'artist_reconnection_events',
+  'artist_artwork_records',
   'artist_artwork_record_events',
+  'artist_verified_sales',
   'artist_verified_sale_events',
   'artist_verified_sale_items',
   'artist_artwork_media',
@@ -515,6 +515,27 @@ export const REGISTRY_RECOVERY_ORDER_COLUMNS: Record<RegistryRecoveryTable, read
   collector_letters: ['id'],
 };
 
+export type RegistryRecoveryOrderColumnType = 'text' | 'number' | 'dynamic';
+
+export const REGISTRY_RECOVERY_ORDER_COLUMN_TYPES: Record<
+  RegistryRecoveryTable,
+  readonly RegistryRecoveryOrderColumnType[]
+> = {
+  ...Object.fromEntries(REGISTRY_RECOVERY_TABLES.map((table) => [
+    table, REGISTRY_RECOVERY_ORDER_COLUMNS[table].map(() => 'text'),
+  ])) as unknown as Record<
+    RegistryRecoveryTable,
+    readonly RegistryRecoveryOrderColumnType[]
+  >,
+  users: ['number'],
+  profiles: ['number'],
+  collector_person_privacy: ['number'],
+  artwork_acquisitions: ['dynamic'],
+  artwork_provenance_entries: ['dynamic'],
+  registry_maintenance_events: ['dynamic'],
+  registry_recovery_qualifications: ['dynamic'],
+};
+
 function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[] {
   if (schemaVersion === 1) return REGISTRY_RECOVERY_V1_TABLES;
   if (schemaVersion === 2) return REGISTRY_RECOVERY_V2_TABLES;
@@ -532,19 +553,52 @@ function recoveryColumns(table: RegistryRecoveryTable, schemaVersion: number) {
   return REGISTRY_RECOVERY_COLUMNS[table];
 }
 
+function compareUtf8(left: string, right: string): number {
+  const leftBytes = new TextEncoder().encode(left);
+  const rightBytes = new TextEncoder().encode(right);
+  const length = Math.min(leftBytes.length, rightBytes.length);
+  for (let index = 0; index < length; index += 1) {
+    if (leftBytes[index] !== rightBytes[index]) return leftBytes[index] - rightBytes[index];
+  }
+  return leftBytes.length - rightBytes.length;
+}
+
+function compareRecoveryOrderValue(
+  left: RecoveryRow[string],
+  right: RecoveryRow[string],
+  type: RegistryRecoveryOrderColumnType,
+): number {
+  if (type === 'number') {
+    if (typeof left !== 'number' || typeof right !== 'number') {
+      throw new Error('recovery_payload_order_type');
+    }
+    return left - right;
+  }
+  if (type === 'text') {
+    if (typeof left !== 'string' || typeof right !== 'string') {
+      throw new Error('recovery_payload_order_type');
+    }
+    return compareUtf8(left, right);
+  }
+  const leftNumeric = typeof left === 'number';
+  const rightNumeric = typeof right === 'number';
+  if (leftNumeric !== rightNumeric) return leftNumeric ? -1 : 1;
+  if (leftNumeric && rightNumeric) return left - right;
+  if (typeof left === 'string' && typeof right === 'string') return compareUtf8(left, right);
+  throw new Error('recovery_payload_order_type');
+}
+
 function compareRecoveryRows(
   left: RecoveryRow,
   right: RecoveryRow,
   columns: readonly string[],
+  types: readonly RegistryRecoveryOrderColumnType[],
 ): number {
-  for (const column of columns) {
+  for (let index = 0; index < columns.length; index += 1) {
+    const column = columns[index];
     const leftValue = left[column];
     const rightValue = right[column];
-    if ((typeof leftValue !== 'string' && typeof leftValue !== 'number')
-      || (typeof rightValue !== 'string' && typeof rightValue !== 'number')) return 0;
-    const comparison = typeof leftValue === 'number' && typeof rightValue === 'number'
-      ? leftValue - rightValue
-      : String(leftValue).localeCompare(String(rightValue));
+    const comparison = compareRecoveryOrderValue(leftValue, rightValue, types[index]);
     if (comparison) return comparison;
   }
   return 0;
@@ -577,7 +631,8 @@ export function validatePrivateRecoveryPayload(
     }
     for (let index = 1; index < rows.length; index += 1) {
       if (compareRecoveryRows(rows[index - 1], rows[index],
-        REGISTRY_RECOVERY_ORDER_COLUMNS[table as RegistryRecoveryTable]) >= 0) {
+        REGISTRY_RECOVERY_ORDER_COLUMNS[table as RegistryRecoveryTable],
+        REGISTRY_RECOVERY_ORDER_COLUMN_TYPES[table as RegistryRecoveryTable]) >= 0) {
         throw new Error(`recovery_payload_order_${table}`);
       }
     }
@@ -654,16 +709,17 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
       ...(payload.schemaVersion < 5 ? {
         collector_claim_ordinals: [...payload.tables.artwork_lineage_events]
           .filter((row) => row.event_type === 'first_bound')
-          .sort((left, right) => String(left.event_at).localeCompare(String(right.event_at))
-            || String(left.event_hash).localeCompare(String(right.event_hash))
-            || String(left.keeper_piece_id).localeCompare(String(right.keeper_piece_id)))
+          .sort((left, right) => compareUtf8(String(left.event_at), String(right.event_at))
+            || compareUtf8(String(left.event_hash), String(right.event_hash))
+            || compareUtf8(String(left.keeper_piece_id), String(right.keeper_piece_id)))
           .map((row, index) => ({
             keeper_piece_id: row.keeper_piece_id,
             first_bound_event_id: row.id,
             claim_ordinal: index + 1,
           }))
-          .sort((left, right) => String(left.keeper_piece_id)
-            .localeCompare(String(right.keeper_piece_id))),
+          .sort((left, right) => compareUtf8(
+            String(left.keeper_piece_id), String(right.keeper_piece_id),
+          )),
         collector_dreams: [],
         collector_dream_markers: [],
         collector_dream_mutations: [],
@@ -840,7 +896,7 @@ function transferRestoreRows(payload: PrivateRecoveryPayload) {
     if (!leftIntent || !rightIntent) throw new Error('recovery_transfer_intent_missing');
     const lineageOrder = Number(leftIntent.expected_lineage_count)
       - Number(rightIntent.expected_lineage_count);
-    return lineageOrder || String(left.id).localeCompare(String(right.id));
+    return lineageOrder || compareUtf8(String(left.id), String(right.id));
   });
   const firstIntentByPiece = new Map<string | number, RecoveryRow>();
   for (const receipt of receipts) {
@@ -1581,9 +1637,9 @@ function buildRegistryRestoreSqlInternal(
     'artist_verified_sales', 'artist_reconnection_events',
   ]);
   for (const event of [...payload.tables.artist_verified_sale_events]
-    .sort((left, right) => String(left.sale_id).localeCompare(String(right.sale_id))
+    .sort((left, right) => compareUtf8(String(left.sale_id), String(right.sale_id))
       || Number(left.sequence) - Number(right.sequence)
-      || String(left.id).localeCompare(String(right.id)))) {
+      || compareUtf8(String(left.id), String(right.id)))) {
     statements.push(insertStatement('artist_verified_sale_events', event));
   }
   insertTables([

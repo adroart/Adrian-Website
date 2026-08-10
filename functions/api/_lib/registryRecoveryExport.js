@@ -3,6 +3,7 @@ import {
   PRIVATE_RECOVERY_PAYLOAD_KIND,
   PRIVATE_RECOVERY_SCHEMA_VERSION,
   REGISTRY_RECOVERY_ORDER_COLUMNS,
+  REGISTRY_RECOVERY_ORDER_COLUMN_TYPES,
   REGISTRY_RECOVERY_TABLES,
 } from '../../../utils/registryRecoveryArchive.ts';
 
@@ -56,6 +57,20 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
     WHERE actor_user_id IS NOT NULL
   UNION SELECT actor_user_id FROM artist_verified_sale_events
     WHERE actor_user_id IS NOT NULL
+  UNION SELECT json_extract(before_json, '$.verifiedByUserId')
+    FROM artist_verified_sale_events
+    WHERE json_valid(before_json)
+      AND json_type(before_json, '$.verifiedByUserId') = 'text'
+      AND length(json_extract(before_json, '$.verifiedByUserId')) BETWEEN 1 AND 256
+      AND json_extract(before_json, '$.verifiedByUserId') =
+        trim(json_extract(before_json, '$.verifiedByUserId'))
+  UNION SELECT json_extract(after_json, '$.verifiedByUserId')
+    FROM artist_verified_sale_events
+    WHERE json_valid(after_json)
+      AND json_type(after_json, '$.verifiedByUserId') = 'text'
+      AND length(json_extract(after_json, '$.verifiedByUserId')) BETWEEN 1 AND 256
+      AND json_extract(after_json, '$.verifiedByUserId') =
+        trim(json_extract(after_json, '$.verifiedByUserId'))
   UNION SELECT uploaded_by_user_id FROM artist_artwork_media
     WHERE uploaded_by_user_id IS NOT NULL
   UNION SELECT created_by_user_id FROM artist_artwork_ledger_entries
@@ -103,7 +118,7 @@ function tableStatement(env, table) {
       `WITH referenced_users(id) AS (${REFERENCED_AUTH_USER_IDS_SQL})
        SELECT auth_user.* FROM "user" AS auth_user
        JOIN referenced_users ON referenced_users.id = auth_user.id
-       ORDER BY auth_user.id ASC`,
+       ORDER BY CAST(auth_user.id AS BLOB) ASC`,
     );
   }
   if (table === 'account') {
@@ -111,7 +126,7 @@ function tableStatement(env, table) {
       `WITH referenced_users(id) AS (${REFERENCED_AUTH_USER_IDS_SQL})
        SELECT auth_account.* FROM "account" AS auth_account
        JOIN referenced_users ON referenced_users.id = auth_account.userId
-       ORDER BY auth_account.id ASC`,
+       ORDER BY CAST(auth_account.id AS BLOB) ASC`,
     );
   }
   if (table === 'users') {
@@ -131,7 +146,17 @@ function tableStatement(env, table) {
     );
   }
   const order = REGISTRY_RECOVERY_ORDER_COLUMNS[table]
-    .map((column) => `"${column}" ASC`).join(', ');
+    .flatMap((column, index) => {
+      const identifier = `"${column}"`;
+      const type = REGISTRY_RECOVERY_ORDER_COLUMN_TYPES[table][index];
+      if (type === 'number') return [`${identifier} ASC`];
+      if (type === 'text') return [`CAST(${identifier} AS BLOB) ASC`];
+      return [
+        `CASE WHEN typeof(${identifier}) IN ('integer', 'real') THEN 0 ELSE 1 END ASC`,
+        `CASE WHEN typeof(${identifier}) IN ('integer', 'real') THEN ${identifier} END ASC`,
+        `CASE WHEN typeof(${identifier}) = 'text' THEN CAST(${identifier} AS BLOB) END ASC`,
+      ];
+    }).join(', ');
   return env.DB.prepare(`SELECT * FROM "${table}" ORDER BY ${order}`);
 }
 
@@ -207,6 +232,22 @@ function collectReferencedAuthUserIds(tables) {
   ]) {
     for (const row of tables[table]) {
       if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const event of tables.artist_verified_sale_events) {
+    for (const field of ['before_json', 'after_json']) {
+      let snapshot;
+      try {
+        snapshot = JSON.parse(event[field]);
+      } catch {
+        throw new Error('registry_recovery_malformed_sale_event_verifier');
+      }
+      const verifierId = snapshot?.verifiedByUserId;
+      if (typeof verifierId !== 'string' || !verifierId
+        || verifierId !== verifierId.trim() || verifierId.length > 256) {
+        throw new Error('registry_recovery_malformed_sale_event_verifier');
+      }
+      ids.add(verifierId);
     }
   }
   for (const [table, field] of [

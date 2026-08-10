@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
@@ -610,6 +612,15 @@ function seedArtistSalesRecovery(database: DatabaseSync) {
        VALUES (?, ?, ?, 'credential', ?, 1, 1)`,
     ).run(`acct-${id}`, id, id, `${id}-password-hash`);
   }
+  database.exec(`
+    INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+    VALUES ('historical-verifier', 'Historical Verifier',
+      'historical-verifier@example.com', 1, 1, 1);
+    INSERT INTO account
+      (id, userId, accountId, providerId, password, createdAt, updatedAt)
+    VALUES ('acct-historical-verifier', 'historical-verifier', 'historical-verifier',
+      'credential', 'historical-verifier-password-hash', 1, 1);
+  `);
 
   const digest = (value: string) => value.repeat(64).slice(0, 64);
   const saleBase = {
@@ -619,7 +630,11 @@ function seedArtistSalesRecovery(database: DatabaseSync) {
     privateNotes: 'The first remembered note.', verifiedByUserId: 'sale-verifier',
     recordedAt: exportedAt,
   };
-  const saleCorrectionOne = { ...saleBase, privateNotes: 'Corrected from the studio notebook.' };
+  const saleCorrectionOne = {
+    ...saleBase,
+    privateNotes: 'Corrected from the studio notebook.',
+    verifiedByUserId: 'historical-verifier',
+  };
   const saleCorrectionTwo = { ...saleCorrectionOne, totalMinor: 610000 };
   database.exec(`
     INSERT INTO artist_reconnection_cases
@@ -630,6 +645,16 @@ function seedArtistSalesRecovery(database: DatabaseSync) {
        'Email-only reconnection without a complete artwork record.', 'open',
        'case-creator', 'reconnect-old-sale-create', '${digest('1')}',
        '${exportedAt}', '${exportedAt}');
+    INSERT INTO artist_reconnection_cases
+      (id, recipient_email, status, created_by_user_id, idempotency_key,
+       request_digest, created_at, updated_at)
+    VALUES
+      ('Z-case', 'z-case@example.com', 'open', 'case-creator', 'Z-case-create',
+       '${digest('e')}', '${exportedAt}', '${exportedAt}'),
+      ('a-case', 'a-case@example.com', 'open', 'case-creator', 'a-case-create',
+       '${digest('f')}', '${exportedAt}', '${exportedAt}'),
+      ('é-case', 'unicode-case@example.com', 'open', 'case-creator', 'unicode-case-create',
+       '${digest('0')}', '${exportedAt}', '${exportedAt}');
 
     INSERT INTO artist_artwork_records
       (id, artwork_id, edition_json, keeper_piece_id, identification_status,
@@ -919,10 +944,10 @@ describe('private registry recovery export', () => {
     ]);
     assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-10), [
       'artist_reconnection_cases',
-      'artist_artwork_records',
-      'artist_verified_sales',
       'artist_reconnection_events',
+      'artist_artwork_records',
       'artist_artwork_record_events',
+      'artist_verified_sales',
       'artist_verified_sale_events',
       'artist_verified_sale_items',
       'artist_artwork_media',
@@ -1020,6 +1045,14 @@ describe('private registry recovery export', () => {
         assert.equal(statements.length, REGISTRY_RECOVERY_TABLES.length);
         assert.equal(statements.some((statement) => /FROM "user"/i.test(statement.sql)), true);
         assert.equal(statements.some((statement) => /FROM "account"/i.test(statement.sql)), true);
+        assert.equal(statements.some((statement) =>
+          /FROM "artist_reconnection_cases" ORDER BY CAST\("id" AS BLOB\) ASC/.test(
+            statement.sql,
+          )), true);
+        assert.equal(statements.some((statement) =>
+          /FROM users AS collector_user[\s\S]*ORDER BY collector_user\.id ASC/.test(
+            statement.sql,
+          )), true);
         return statements.map(() => ({ results: [] }));
       },
     };
@@ -1052,6 +1085,9 @@ describe('private registry recovery export', () => {
       assert.deepEqual(payload.tables.artist_verified_sale_items.map((row: any) => row.id), [
         'sale-item-corrected', 'sale-item-identified', 'sale-item-linked',
       ]);
+      assert.deepEqual(payload.tables.artist_reconnection_cases.map((row: any) => row.id), [
+        'Z-case', 'a-case', 'reconnect-old-sale', 'é-case',
+      ]);
       assert.equal(payload.tables.artist_verified_sale_events.length, 2);
       assert.deepEqual(payload.tables.artist_verified_sale_events.map((row: any) => row.reason), [
         'The total included delivery.', 'Studio notebook clarified the note.',
@@ -1076,6 +1112,9 @@ describe('private registry recovery export', () => {
       assert.deepEqual(payload.tables.user
         .filter((row: any) => phase3Actors.some(([id]) => id === row.id))
         .map((row: any) => row.id), phase3Actors.map(([id]) => id).sort());
+      assert.equal(payload.tables.user.some((row: any) => row.id === 'historical-verifier'), true);
+      assert.equal(payload.tables.account.some((row: any) =>
+        row.userId === 'historical-verifier'), true);
       assert.equal(payload.tables.user.some((row: any) => row.id === 'unrelated-user'), false);
       assert.equal(JSON.stringify(archive).includes('artist-ledger/record-linked'), false);
     } finally {
@@ -1090,8 +1129,8 @@ describe('private registry recovery export', () => {
       seedCompleteRegistry(database);
       seedArtistSalesRecovery(database);
       database.exec('PRAGMA foreign_keys = OFF;');
-      database.exec(`DELETE FROM account WHERE userId = 'media-uploader';
-        DELETE FROM user WHERE id = 'media-uploader';`);
+      database.exec(`DELETE FROM account WHERE userId = 'historical-verifier';
+        DELETE FROM user WHERE id = 'historical-verifier';`);
       database.exec('PRAGMA foreign_keys = ON;');
 
       await assert.rejects(() => buildPrivateRecoveryExport({
@@ -1099,6 +1138,27 @@ describe('private registry recovery export', () => {
         REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
         REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
       }, { exportedAt }), /registry_recovery_missing_referenced_user/);
+    } finally {
+      database.close();
+    }
+  });
+
+  it('fails closed when a historical sale snapshot verifier is malformed', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      seedCompleteRegistry(database);
+      seedArtistSalesRecovery(database);
+      database.exec(`DROP TRIGGER artist_verified_sale_events_no_update;
+        UPDATE artist_verified_sale_events
+           SET after_json = '{"verifiedByUserId":null}'
+         WHERE id = 'z-sale-correction-one';`);
+
+      await assert.rejects(() => buildPrivateRecoveryExport({
+        ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt }), /registry_recovery_malformed_sale_event_verifier/);
     } finally {
       database.close();
     }
@@ -2089,6 +2149,91 @@ describe('clean-only private registry restore', () => {
       ], { cwd: process.cwd(), encoding: 'utf8' });
       assert.notEqual(refused.status, 0);
       assert.match(refused.stderr, /authentication|broken|invalid|refusing/i);
+    } finally {
+      database.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('creates V6 media-aware restore SQL only from an exact read-only local R2 copy', async () => {
+    const { database, env } = createSqliteD1();
+    const directory = mkdtempSync(join(tmpdir(), 'registry-media-recovery-'));
+    try {
+      database.exec(registryMigrations);
+      seedCompleteRegistry(database);
+      seedArtistSalesRecovery(database);
+      const archive = await buildPrivateRecoveryExport({
+        ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const archivePath = join(directory, 'recovery.json');
+      const keyPath = join(directory, 'recovery.key');
+      const mediaRoot = join(directory, 'media-copy');
+      const mediaManifestPath = join(directory, 'media-manifest.json');
+      mkdirSync(join(mediaRoot, 'record-linked'), { recursive: true });
+      writeFileSync(join(mediaRoot, 'record-linked', 'evidence.webp'), 'hello world');
+      writeFileSync(join(mediaRoot, 'record-linked', 'certificate.jpg'), 'certificate!!');
+      writeFileSync(archivePath, JSON.stringify(archive));
+      writeFileSync(keyPath, `${exportKeyId}\n${exportKey}\n`);
+      writeFileSync(mediaManifestPath, JSON.stringify({
+        version: 1,
+        objects: [{
+          reference: 'artist-ledger/record-linked/evidence.webp',
+          file: 'record-linked/evidence.webp',
+          contentType: 'image/webp',
+        }, {
+          reference: 'artist-ledger/record-linked/certificate.jpg',
+          file: 'record-linked/certificate.jpg',
+          contentType: 'image/jpeg',
+        }],
+      }));
+
+      const missingOutput = join(directory, 'missing-media.sql');
+      const missing = spawnSync('npx', [
+        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+        archivePath, keyPath, missingOutput,
+      ], { cwd: process.cwd(), encoding: 'utf8' });
+      assert.notEqual(missing.status, 0);
+      assert.equal(existsSync(missingOutput), false);
+
+      const validOutput = join(directory, 'media-restore.sql');
+      const valid = spawnSync('npx', [
+        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+        archivePath, keyPath, validOutput,
+        '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
+      ], { cwd: process.cwd(), encoding: 'utf8' });
+      assert.equal(valid.status, 0, valid.stderr);
+      assert.match(readFileSync(validOutput, 'utf8'), /artist_artwork_media/);
+      assert.equal(statSync(validOutput).mode & 0o777, 0o600);
+      assert.doesNotMatch(`${valid.stdout}\n${valid.stderr}`, /artist-ledger\//);
+
+      writeFileSync(join(mediaRoot, 'record-linked', 'evidence.webp'), 'HELLO WORLD');
+      const mismatchOutput = join(directory, 'mismatch.sql');
+      const mismatch = spawnSync('npx', [
+        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+        archivePath, keyPath, mismatchOutput,
+        '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
+      ], { cwd: process.cwd(), encoding: 'utf8' });
+      assert.notEqual(mismatch.status, 0);
+      assert.equal(existsSync(mismatchOutput), false);
+
+      writeFileSync(mediaManifestPath, JSON.stringify({
+        version: 1,
+        objects: [{
+          reference: 'artist-ledger/record-linked/evidence.webp',
+          file: '../outside.webp',
+          contentType: 'image/webp',
+        }],
+      }));
+      const traversalOutput = join(directory, 'traversal.sql');
+      const traversal = spawnSync('npx', [
+        'tsx', 'scripts/registry-ledger.ts', 'restore-sql',
+        archivePath, keyPath, traversalOutput,
+        '--media-dir', mediaRoot, '--media-manifest', mediaManifestPath,
+      ], { cwd: process.cwd(), encoding: 'utf8' });
+      assert.notEqual(traversal.status, 0);
+      assert.equal(existsSync(traversalOutput), false);
     } finally {
       database.close();
       rmSync(directory, { recursive: true, force: true });
