@@ -718,4 +718,94 @@ describe('private artist sales route modules', () => {
       assert.doesNotMatch(JSON.stringify(body), /storage_reference|sha256|private/);
     }
   });
+
+  it('resolves duplicate content under distinct keys as definitive private conflicts', async () => {
+    const mediaRoute = await import('../functions/api/admin/collector-ledger/media.js');
+    type Row = Record<string, unknown>;
+    const database = () => {
+      const byId = new Map<unknown, Row>();
+      const byReference = new Map<unknown, Row>();
+      let referenceRead: 'normal' | 'throw' | 'malformed' = 'normal';
+      return {
+        setReferenceRead(value: typeof referenceRead) { referenceRead = value; },
+        rowCount() { return byId.size; },
+        prepare(sql: string) {
+          let values: unknown[] = [];
+          return {
+            bind(...bound: unknown[]) { values = bound; return this; },
+            async first() {
+              if (sql.includes('FROM artist_artwork_media') && sql.includes('WHERE id = ?1')) {
+                return byId.get(values[0]) || null;
+              }
+              if (sql.includes('FROM artist_artwork_media')
+                && sql.includes('WHERE storage_reference = ?1')) {
+                assert.doesNotMatch(sql, /SELECT\s+\*/i);
+                assert.doesNotMatch(sql, /artwork-ledger\//);
+                if (referenceRead === 'throw') throw new Error('private reference read failure');
+                if (referenceRead === 'malformed') return { id: 'malformed-row' };
+                return byReference.get(values[0]) || null;
+              }
+              if (sql.includes('FROM artist_artwork_records')) return { id: values[0] };
+              return null;
+            },
+            async run() {
+              const row = {
+                id: values[0], artwork_record_id: values[1], media_role: values[2],
+                storage_reference: values[3], sha256: values[4], content_type: values[5],
+                byte_length: values[6], uploaded_by_user_id: values[7], created_at: values[8],
+              };
+              if (byReference.has(row.storage_reference)) {
+                throw new Error('UNIQUE constraint failed: artist_artwork_media.storage_reference');
+              }
+              byId.set(row.id, row);
+              byReference.set(row.storage_reference, row);
+              return { success: true, meta: { changes: 1 } };
+            },
+          };
+        },
+      };
+    };
+    const upload = (
+      DB: ReturnType<typeof database>, key: string,
+      role = 'certificate_image',
+    ) => mediaRoute.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-ledger/media`, {
+        method: 'POST',
+        headers: {
+          Origin: ORIGIN, 'Content-Type': 'image/png', 'X-Content-Length': '3',
+          'X-Artwork-Record-Id': 'record-one', 'X-Artwork-Media-Role': role,
+          'X-Idempotency-Key': key,
+        },
+        body: new Uint8Array([1, 2, 3]),
+      }),
+      env: { DB, ARTWORK_REGISTRY_BACKUP: {} },
+    });
+    const assertConflict = async (response: Response) => {
+      assert.equal(response.status, 409);
+      const body = await response.json();
+      assert.deepEqual(body, { ok: false, error: 'idempotency_conflict' });
+      assert.doesNotMatch(JSON.stringify(body), /storage_reference|sha256|artwork-ledger/);
+    };
+
+    const DB = database();
+    assert.equal((await upload(DB, 'first-key')).status, 201);
+    const exactReplay = await upload(DB, 'first-key');
+    assert.equal(exactReplay.status, 200);
+    assert.equal((await exactReplay.json()).replayed, true);
+
+    await assertConflict(await upload(DB, 'distinct-key'));
+    await assertConflict(await upload(DB, 'distinct-key'));
+    await assertConflict(await upload(DB, 'changed-role-key', 'identification_evidence'));
+    assert.equal(DB.rowCount(), 1);
+
+    for (const referenceRead of ['throw', 'malformed'] as const) {
+      const failingDb = database();
+      assert.equal((await upload(failingDb, `seed-${referenceRead}`)).status, 201);
+      failingDb.setReferenceRead(referenceRead);
+      const response = await upload(failingDb, `duplicate-${referenceRead}`);
+      assert.equal(response.status, 503);
+      assert.deepEqual(await response.json(), { ok: false, error: 'media_metadata_failed' });
+      assert.equal(failingDb.rowCount(), 1);
+    }
+  });
 });

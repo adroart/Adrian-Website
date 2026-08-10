@@ -112,6 +112,14 @@ async function findById(env, id) {
   `).bind(id).first();
 }
 
+async function findByStorageReference(env, reference) {
+  return env.DB.prepare(`
+    SELECT id, artwork_record_id, media_role, storage_reference, sha256,
+           content_type, byte_length, uploaded_by_user_id, created_at
+      FROM artist_artwork_media WHERE storage_reference = ?1 LIMIT 1
+  `).bind(reference).first();
+}
+
 function insertedExactlyOnce(result) {
   try {
     return result && typeof result === 'object' && !Array.isArray(result)
@@ -133,13 +141,27 @@ async function resolveMetadataRace(env, id, expected) {
   try { row = await findById(env, id); } catch {
     return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
   }
-  if (row === null || !validStoredMediaRow(row)) {
+  if (row !== null) {
+    if (!validStoredMediaRow(row)) {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+    }
+    if (!exactStored(row, expected)) {
+      return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+    }
+    return replayResponse(row);
+  }
+
+  let duplicate;
+  try { duplicate = await findByStorageReference(env, expected.reference); } catch {
     return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
   }
-  if (!exactStored(row, expected)) {
-    return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+  if (duplicate === null || !validStoredMediaRow(duplicate)) {
+    return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
   }
-  return replayResponse(row);
+  if (duplicate.id === id && exactStored(duplicate, expected)) {
+    return replayResponse(duplicate);
+  }
+  return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
 }
 
 export async function onRequest({ request, env }) {
