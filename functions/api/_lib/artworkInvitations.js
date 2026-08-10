@@ -329,5 +329,6 @@ export async function redeemArtworkInvitation(env, {
     }
     throw error;
   }
+  await prepared.afterCommit();
   return prepared.result;
 }

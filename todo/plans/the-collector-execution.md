@@ -319,3 +319,36 @@ also remains an Adrian input before the later sale door can be connected.
 **Next: Phase 2 makes the piece feel alive.** Build the dream, globe-light, equal-brightness, and
 yearly-ritual experience behind the closed launch flag. Do not seed production or enable the
 journey before the production-copy preflight succeeds.
+
+**2026-08-10: Phase 2 is complete locally and has not been deployed.** A current keeper can create
+one dream in the exact self, family, community, or planet scope, keep it private, share it
+anonymously, or attribute it only when adult and name consent remain current. Edits, sharing,
+revocation, transfer closure, and yearly ritual actions are request-bound, replay-safe, and tied to
+their exact database audit. There is no approval gate and no visible support count.
+
+The public collector field now includes the complete catalog without pretending that catalog rows
+are claimed identities. Unregistered pieces remain dim. Registered lights have equal resting
+brightness, permanent first-claim ordinals, neutral marker size, consent-safe place projection,
+and browsing by series, year, or place. Filters recede nonmatches instead of emptying the field, and
+the accessible list remains equivalent to the visual field on desktop, mobile, and reduced motion.
+
+Letters now arrive from committed first binds and transfers, and a replay-safe daily runner covers
+due anniversaries. Their wording is limited to current consent, trusted curated places, and current
+adult evidence. A disabled-by-default schedule calls a launch-gated, secret-protected runner, so no
+production ceremony starts before rollout. The yearly ritual offers reinforce, plant new, or mark
+fulfilled against the keeper's existing dream rather than opening a blank form.
+
+Encrypted recovery advanced to schema v5. It preserves permanent ordinals, dreams, audit markers,
+rituals, and letters, upgrades older archives, and recreates every runtime guard exactly after a
+clean restore. Final verification passed 619 unit tests and 88 browser journeys with 10 intentional
+mobile skips, plus typecheck, the production build, clean-diff checks, and a 57-test independent
+acceptance pass. No production data was read or changed, the `livingLegacy` flag remains false, and
+no deployment was performed.
+
+Adrian can continue adding materials, makers, origins, and final wording through the existing
+template editor. Those facts do not block the first three Phase 3 items. Exact sale-to-artwork
+mapping remains the one Adrian input required before the sale door can connect a purchase to the
+correct artwork record.
+
+**Next: Phase 3 begins with contributors around one canonical keeper.** Then build optional video,
+warning delivery, and the sale door. Stop here until a Phase 3 session begins.

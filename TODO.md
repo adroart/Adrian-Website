@@ -5,7 +5,7 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 ## Soon
 
 - [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: agent-runnable | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  Phase 0 is verified and Phase 1 is built locally, with its final complete gate pending. After that gate, Phase 2 is the dream, globe light, equal brightness, and yearly ritual. Bulk content entry can continue gradually and does not block that work.
+  Phases 0 through 2 are verified and built locally. Phase 3 is next: contributors around one keeper, optional video, warning delivery, and the sale door. Bulk content entry can continue gradually and does not block the first three items.
 - [ ] Record and refine what each artwork is made of, who made it, where it was made, and its wording _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
   The certificate editor now provides reusable templates with per-artwork overrides. Fill the desired factual fields gradually; incomplete entries stay hidden until then.
 - [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
@@ -23,9 +23,9 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 ### Adrian-only: blocks launch
 
 - [ ] **Collector registry rollout rehearsal.** _(band: you-required)_ Run the ownership damage detector against a fresh read-only production copy, then rehearse migration and encrypted restore on copies.
-  Phase 1 is built locally and its final complete gate is pending. It intentionally remains off. Done when the gate passes, the detector finds no damaged ownership state, migration and clean restore both succeed on copies, the required production bindings are confirmed, and the collector journey can be enabled without seeding or changing production during the rehearsal.
+  Phases 1 and 2 are built locally and their complete gates pass. The journey intentionally remains off. Done when the detector finds no damaged ownership state, migration and clean restore both succeed on copies, the required production bindings are confirmed, the letter runner secret and disabled-by-default schedule are configured, and a canary proves the journey can be enabled without seeding or changing production during rehearsal.
 - [ ] **Collector facts and sale mapping.** _(band: you-required)_ Add the real materials and wording for each artwork, and decide how completed sales map to exact artwork records.
-  Missing certificate facts stay hidden and can be filled gradually, so they do not block Phase 2. Exact sale mapping is required before the later sale door can issue or invite the correct collector.
+  Missing certificate facts stay hidden and can be filled gradually, so they do not block contributors, video, or warning delivery. Exact sale mapping is required before the sale door can issue or invite the correct collector.
 
 - [ ] **Commit Bali edits** — commit the staged Bali-to-studio wording change (8 files already edited, on their own branch) _(you · quick)_
   The edits exist on a branch but aren't committed, so they're invisible until you commit. Done when the branch is committed and merged.

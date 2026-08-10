@@ -86,7 +86,7 @@ describe('public scanned-identity UI wiring', () => {
     const keeperPanel = readSource('components/legacy/KeeperPanel.tsx');
 
     assert.match(worksPage, /const verifiedIdentity = identityState\.status === ['"]ready['"] && identityState\.publicCode === publicCode/);
-    assert.match(worksPage, /legacyOn && identity && <KeeperPanel publicIdentity=\{identity\}/);
+    assert.match(worksPage, /legacyOn && identity[\s\S]*?<KeeperPanel publicIdentity=\{identity\}/);
     assert.match(keeperPanel, /publicIdentity:\s*PublicPlateIdentity/);
     assert.doesNotMatch(keeperPanel, /React\.FC<\{ artwork: Artwork; editionNumber\?: number \}>/);
   });

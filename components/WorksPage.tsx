@@ -11,6 +11,7 @@ import ArrivalGate from './legacy/ArrivalGate';
 import PieceConstellation from './legacy/PieceConstellation';
 import KeeperPanel from './legacy/KeeperPanel';
 import CertificateScreen from './collector/CertificateScreen';
+import PublicDream from './collector/PublicDream';
 import {
     isPublicRegistryCode,
     validatePublicPlateIdentity,
@@ -279,7 +280,14 @@ function DraftArtworkRecord({
                         )}
                     </div>
                 </div>
-                {legacyOn && identity && <KeeperPanel publicIdentity={identity} />}
+                {legacyOn && identity && (
+                    <>
+                        <div className="mt-16 print:hidden">
+                            <PublicDream publicCode={identity.publicCode} />
+                        </div>
+                        <KeeperPanel publicIdentity={identity} />
+                    </>
+                )}
             </div>
         </section>
     );
@@ -562,7 +570,10 @@ function CatalogArtworkRecord({
                 {legacyOn && identity && (
                     <>
                         <div className="mt-20 print:hidden">
-                            <PieceConstellation artwork={artwork} />
+                            <PublicDream publicCode={identity.publicCode} />
+                        </div>
+                        <div className="mt-20 print:hidden">
+                            <PieceConstellation artwork={artwork} publicCode={identity.publicCode} />
                         </div>
                         <KeeperPanel publicIdentity={identity} />
                     </>

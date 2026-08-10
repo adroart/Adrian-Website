@@ -40,6 +40,10 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
     WHERE updated_by_user_id IS NOT NULL
   UNION SELECT changed_by_user_id FROM certificate_override_history
     WHERE changed_by_user_id IS NOT NULL
+  UNION SELECT author_user_id FROM collector_dreams WHERE author_user_id IS NOT NULL
+  UNION SELECT author_user_id FROM collector_dream_markers WHERE author_user_id IS NOT NULL
+  UNION SELECT author_user_id FROM collector_dream_mutations WHERE author_user_id IS NOT NULL
+  UNION SELECT keeper_user_id FROM collector_dream_rituals WHERE keeper_user_id IS NOT NULL
   UNION SELECT bridge.auth_user_id FROM users AS bridge
     WHERE bridge.id IN (
       SELECT user_id FROM collector_person_privacy
@@ -68,6 +72,13 @@ const REFERENCED_COLLECTOR_USER_IDS_SQL = `
   SELECT user_id AS id FROM collector_person_privacy
   UNION SELECT user_id FROM collector_piece_privacy
   UNION SELECT user_id FROM collector_consent_history
+  UNION SELECT person.id FROM users AS person
+    WHERE person.auth_user_id IN (
+      SELECT author_user_id FROM collector_dreams
+      UNION SELECT author_user_id FROM collector_dream_markers
+      UNION SELECT author_user_id FROM collector_dream_mutations
+      UNION SELECT keeper_user_id FROM collector_dream_rituals
+    )
 `;
 
 function tableStatement(env, table) {
@@ -182,6 +193,16 @@ function collectReferencedAuthUserIds(tables) {
       if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
     }
   }
+  for (const [table, field] of [
+    ['collector_dreams', 'author_user_id'],
+    ['collector_dream_markers', 'author_user_id'],
+    ['collector_dream_mutations', 'author_user_id'],
+    ['collector_dream_rituals', 'keeper_user_id'],
+  ]) {
+    for (const row of tables[table]) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
   for (const row of tables.users) {
     if (typeof row.auth_user_id === 'string' && row.auth_user_id) ids.add(row.auth_user_id);
   }
@@ -226,6 +247,14 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
     ...orderedTables.collector_person_privacy.map((row) => row.user_id),
     ...orderedTables.collector_piece_privacy.map((row) => row.user_id),
     ...orderedTables.collector_consent_history.map((row) => row.user_id),
+    ...orderedTables.users
+      .filter((row) => [
+        ...orderedTables.collector_dreams.map((dream) => dream.author_user_id),
+        ...orderedTables.collector_dream_markers.map((marker) => marker.author_user_id),
+        ...orderedTables.collector_dream_mutations.map((mutation) => mutation.author_user_id),
+        ...orderedTables.collector_dream_rituals.map((ritual) => ritual.keeper_user_id),
+      ].includes(row.auth_user_id))
+      .map((row) => row.id),
   ])].sort((left, right) => Number(left) - Number(right));
   const exportedCollectorIds = orderedTables.users.map((row) => row.id);
   if (referencedCollectorIds.length !== exportedCollectorIds.length
@@ -237,6 +266,16 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
     throw new Error('registry_recovery_missing_collector_auth_user');
   }
   const profiledIds = new Set(orderedTables.profiles.map((row) => row.user_id));
+  const publicDreamAuthors = new Set(orderedTables.collector_dreams
+    .filter((row) => row.visibility !== 'private'
+      && row.public_shared_at !== null && row.public_revoked_at === null)
+    .map((row) => row.author_user_id));
+  const publicDreamUserIds = orderedTables.users
+    .filter((row) => publicDreamAuthors.has(row.auth_user_id))
+    .map((row) => row.id);
+  if (publicDreamUserIds.length !== publicDreamAuthors.size) {
+    throw new Error('registry_recovery_missing_collector_profile');
+  }
   const openUserIds = new Set([
     ...orderedTables.collector_person_privacy
       .filter((row) => [
@@ -245,6 +284,7 @@ export async function buildPrivateRecoveryExport(env, options = {}) {
       ].some((value) => value === 1)).map((row) => row.user_id),
     ...orderedTables.collector_piece_privacy
       .filter((row) => row.share_city === 1).map((row) => row.user_id),
+    ...publicDreamUserIds,
   ]);
   if ([...openUserIds].some((id) => !profiledIds.has(id))) {
     throw new Error('registry_recovery_missing_collector_profile');

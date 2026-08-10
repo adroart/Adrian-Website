@@ -17,6 +17,7 @@ import { inspectInvitation, redeemInvitation, type InvitationInspection } from '
 import SignInTrigger from '../account/SignInTrigger';
 import PrivacyAndBirth from './PrivacyAndBirth';
 import CertificateScreen, { useEffectiveCertificate } from './CertificateScreen';
+import DreamScreen from './DreamScreen';
 import OpeningScreen from './OpeningScreen';
 
 type PrivateKeeperStatus = { byYou: boolean; keeperPieceId?: string };
@@ -120,13 +121,24 @@ export default function CollectorFlow({
   }
 
   if (stage === 'dream') {
+    if (keeperPieceId) {
+      return (
+        <DreamScreen
+          keeperPieceId={keeperPieceId}
+          onComplete={() => setStage('complete')}
+        />
+      );
+    }
     return (
       <section className="collector-screen" aria-labelledby="collector-dream-title">
         <p className="collector-eyebrow">Your dream</p>
-        <h3 id="collector-dream-title" className="collector-title">This door opens next</h3>
-        <p className="collector-copy">Dreams will arrive in the next phase. Nothing has been recorded.</p>
+        <h3 id="collector-dream-title" className="collector-title">A dream this piece can carry</h3>
+        <p className="collector-copy">
+          A sentence is enough. First connect the authentic record so these words can stay private and travel with the piece.
+        </p>
         <div className="collector-actions">
           <button type="button" className="collector-button-secondary" onClick={() => setStage('doors')}>Back to this piece</button>
+          <button type="button" className="collector-button-primary" onClick={() => setStage('proof')}>Connect this piece</button>
         </div>
       </section>
     );
@@ -268,7 +280,7 @@ export default function CollectorFlow({
         title={identity.title}
         editionLabel={identity.edition.label}
         testId="collector-certificate"
-        onComplete={() => setStage('complete')}
+        onComplete={() => setStage('dream')}
       />
     );
   }

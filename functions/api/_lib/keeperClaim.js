@@ -5,6 +5,7 @@ import {
   prepareNextLineageEvent,
 } from './lineage.js';
 import { plateBackupIsVerified } from './plateBackup.js';
+import { syncFirstBindCollectorLetters } from './collectorLetters.js';
 import {
   identityRecoveryDependenciesForRow,
   identityRecoveryQualificationStatus,
@@ -195,5 +196,9 @@ export async function prepareFirstKeeperBind(env, {
         claimedAt: boundAt,
       },
     },
+    afterCommit: () => syncFirstBindCollectorLetters(env, {
+      keeperPieceId: piece.id,
+      now: boundAt,
+    }),
   };
 }

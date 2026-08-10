@@ -53,6 +53,7 @@ import {
 import { openContestedClaim } from '../_lib/claimRequests.js';
 import { claimEvidenceStatement } from '../_lib/lineage.js';
 import { prepareFirstKeeperBind } from '../_lib/keeperClaim.js';
+import { syncFirstBindCollectorLetters } from '../_lib/collectorLetters.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -180,6 +181,10 @@ export async function onRequest(context) {
 
     // A current steward's re-scan is idempotent.
     if (existing.keeper_user_id === auth.userId && !existing.released_at) {
+      await syncFirstBindCollectorLetters(env, {
+        keeperPieceId: existing.id,
+        now: existing.claimed_at,
+      });
       return json({
         ok: true,
         keeper: { pieceId, editionNumber, claimedAt: existing.claimed_at },
@@ -327,6 +332,7 @@ export async function onRequest(context) {
       );
     }
 
+    await prepared.afterCommit();
     return json({ ok: true, ...prepared.result });
   } catch (err) {
     if (isMissingTableError(err)) return migrationNotApplied();

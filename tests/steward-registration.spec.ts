@@ -168,11 +168,64 @@ test('a current keeper never sees registration doors or a claim-return proof for
       stewardHistory: [],
     }),
   }));
+  await page.route('**/api/collector/dreams?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      keeperPieceId: 'kp-current',
+      current: {
+        id: 'dream-current', keeperPieceId: 'kp-current', body: 'Keep making room for wonder.',
+        scope: 'community', visibility: 'private', version: 1,
+        createdAt: '2025-08-10T00:00:00.000Z', updatedAt: '2025-08-10T00:00:00.000Z',
+        sharedAt: null, revokedAt: null, fulfilledAt: null, archivedAt: null,
+      },
+      history: [], markers: [],
+    }),
+  }));
+  await page.route('**/api/collector/ritual?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      eligible: false, reason: 'outside_birthday_window', birthdayYear: 2026,
+      actions: ['reinforce', 'plant-new', 'fulfilled'], currentDream: null,
+    }),
+  }));
+  await page.route(`**/api/collector/dreams/public/${PUBLIC_CODE}`, route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      dream: {
+        body: 'Keep making room for wonder.', scope: 'community', visibility: 'anonymous',
+        attribution: null, sharedAt: '2025-08-10T00:00:00.000Z',
+      },
+    }),
+  }));
+  await page.route('**/api/collector/letters?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      letters: [{
+        id: `letter-${'1'.repeat(64)}`,
+        kind: 'anniversary',
+        body: 'A year of keeping has gathered around this piece.',
+        createdAt: '2026-08-10T00:00:00.000Z',
+      }],
+    }),
+  }));
 
   await openWithLivingLegacy(page, CLAIM_PATH);
+  const publicDream = page.getByRole('region', { name: 'A dream shared through this piece' });
+  await expect(publicDream).toBeVisible();
+  await expect(publicDream.getByText('Keep making room for wonder.')).toBeVisible();
   await expect(page.getByText('You are the current steward')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Register and certify this piece' })).toHaveCount(0);
   await expect(page.getByRole('form', { name: 'Register Registry Draft Study' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Tend this dream' })).toBeVisible();
+  await page.getByRole('button', { name: 'Yearly return' }).click();
+  await expect(page.getByRole('heading', { name: 'A quiet annual moment' })).toBeVisible();
+  await page.getByRole('button', { name: 'Letters' }).click();
+  await expect(page.getByRole('heading', { name: 'Letters from this piece' })).toBeVisible();
+  await expect(page.getByText('A year of keeping has gathered around this piece.')).toBeVisible();
 });
 
 test('signing out clears private registration state before another account can use it', async ({ page }) => {
@@ -512,7 +565,7 @@ test('a late status response from the prior publicCode cannot overwrite the curr
   await expect(page.getByText('You are the current steward')).toHaveCount(0);
 });
 
-test('walks from a neutral registration door through proof, private choices, birth, and certificate', async ({ page }) => {
+test('walks from a neutral registration door through proof, private choices, certificate, and dream', async ({ page }) => {
   await mockWork(page);
   await page.route('**/api/auth/get-session', route => route.fulfill({
     status: 200,
@@ -613,6 +666,27 @@ test('walks from a neutral registration door through proof, private choices, bir
       },
     }),
   }));
+  let currentDream: Record<string, unknown> | null = null;
+  const dreamBodies: unknown[] = [];
+  await page.route('**/api/collector/dreams**', async route => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON();
+      dreamBodies.push(body);
+      currentDream = {
+        id: 'dream-private-1', keeperPieceId: 'kp-private-1', body: body.body,
+        scope: body.scope, visibility: 'private', version: 1,
+        createdAt: '2026-08-10T00:00:00.000Z', updatedAt: '2026-08-10T00:00:00.000Z',
+        sharedAt: null, revokedAt: null, fulfilledAt: null, archivedAt: null,
+      };
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        keeperPieceId: 'kp-private-1', current: currentDream, history: [], markers: [],
+      }),
+    });
+  });
 
   await openWithLivingLegacy(page, WORK_PATH);
   await expect(page.getByRole('button', { name: 'Register and certify this piece' })).toBeVisible();
@@ -653,11 +727,22 @@ test('walks from a neutral registration door through proof, private choices, bir
   await expect(certificate).toContainText('Bali, Indonesia');
   await expect(certificate).not.toContainText('Techniques');
   await certificate.getByRole('button', { name: 'Complete registration' }).click();
+  await expect(page.getByRole('heading', { name: 'Give this piece a dream' })).toBeVisible();
+  await page.getByLabel('Your dream').fill('May this work keep opening a more generous way to live.');
+  await expect(page.getByLabel('Yourself')).toBeChecked();
+  await page.getByRole('button', { name: 'Place the dream' }).click();
+  await expect(page.getByRole('heading', { name: 'Tend this dream' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByText('Your piece is registered')).toBeVisible();
 
   expect(page.url()).not.toContain(OWNERSHIP_CODE);
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(OWNERSHIP_CODE);
   expect(privateBodies[0]).toEqual({ publicCode: PUBLIC_CODE, ownershipCode: OWNERSHIP_CODE });
+  expect(dreamBodies).toHaveLength(1);
+  expect(dreamBodies[0]).toMatchObject({
+    action: 'create', keeperPieceId: 'kp-private-1', scope: 'self',
+    body: 'May this work keep opening a more generous way to live.',
+  });
 });
 
 test('saving a missing adult birth profile reloads privacy before the certificate', async ({ page }) => {

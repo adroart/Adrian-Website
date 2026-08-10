@@ -23,6 +23,7 @@ import {
   REGISTRY_RECOVERY_V1_TABLES,
   REGISTRY_RECOVERY_V2_TABLES,
   REGISTRY_RECOVERY_V3_TABLES,
+  REGISTRY_RECOVERY_V4_TABLES,
 } from '../utils/registryRecoveryArchive';
 
 const readMigration = (name: string) =>
@@ -53,7 +54,10 @@ const registryMigrationsThroughOwnership = `${registryMigrationsBeforeFulfillmen
 const phase1Migrations = `${readMigration('025_artwork_registration.sql')}
 \n${readMigration('026_artwork_invitations.sql')}\n${readMigration('027_certificate_templates.sql')}
 \n${readMigration('028_collector_privacy.sql')}`;
-const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}`;
+const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
+\n${readMigration('030_collector_field.sql')}\n${readMigration('031_collector_letters.sql')}`;
+const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
+\n${phase2Migrations}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -71,7 +75,9 @@ async function encryptLegacyPayload(payload: any) {
   const nonce = Buffer.alloc(12, 7);
   const tableNames = payload.schemaVersion === 1
     ? REGISTRY_RECOVERY_V1_TABLES
-    : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES : REGISTRY_RECOVERY_V3_TABLES;
+    : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES
+      : payload.schemaVersion === 3 ? REGISTRY_RECOVERY_V3_TABLES
+        : REGISTRY_RECOVERY_V4_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -268,6 +274,32 @@ function seedCompleteRegistry(database: DatabaseSync) {
        'build-recovery', 7, 'generator-v1', 'verifier-v1',
        'plates/AR-7KQ9M2WX/${'d'.repeat(64)}.json', '${'d'.repeat(64)}',
        'admin-user', 'admin@example.com', NULL, '${exportedAt}');
+
+    BEGIN IMMEDIATE;
+    INSERT INTO collector_dreams
+      (id, keeper_piece_id, author_user_id, body, scope, visibility,
+       idempotency_key, record_version, created_at, updated_at)
+    VALUES
+      ('dream-prior', 'kp-recovery', 'steward-prior',
+       'A first draft before the former keeper refined it.', 'self', 'private',
+       'dream-prior-create', 1, '2026-07-30T03:04:05.000Z',
+       '2026-07-30T03:04:05.000Z');
+    INSERT INTO collector_dream_markers
+      (id, dream_id, keeper_piece_id, author_user_id, marker_kind, body,
+       idempotency_key, created_at)
+    VALUES
+      ('marker-prior', 'dream-prior', 'kp-recovery', 'steward-prior', 'change',
+       'A private change before transfer.', 'marker-prior-create',
+       '2026-07-30T03:34:05.000Z');
+    INSERT INTO collector_dream_mutations
+      (id, dream_id, author_user_id, action, idempotency_key, request_json,
+       resulting_version, created_at)
+    VALUES
+      ('mutation-prior', 'dream-prior', 'steward-prior', 'edit',
+       'mutation-prior-edit',
+       '{"body":"A former keeper dream that travels with the piece.","scope":"community","expectedVersion":1}',
+       2, '2026-07-30T04:04:05.000Z');
+    COMMIT;
   `);
   database.exec(`
     BEGIN IMMEDIATE;
@@ -487,6 +519,67 @@ function seedCompleteRegistry(database: DatabaseSync) {
        '{"shareDerivedChart":false,"shareFace":false,"shareName":false,"shareIntention":false,"shareBusiness":false,"shareMission":false}',
        '{"shareDerivedChart":false,"shareFace":false,"shareName":false,"shareIntention":false,"shareBusiness":false,"shareMission":false}',
        'collector-privacy-v1', '${exportedAt}');
+
+    BEGIN IMMEDIATE;
+    INSERT INTO collector_dreams
+      (id, keeper_piece_id, author_user_id, body, scope, visibility,
+       idempotency_key, record_version, created_at, updated_at)
+    VALUES
+      ('dream-current', 'kp-recovery', 'steward-current',
+       'A current keeper dream shared by consent.', 'planet', 'private',
+       'dream-current-create', 1, '2026-08-03T02:04:05.000Z',
+       '2026-08-03T02:04:05.000Z');
+    INSERT INTO collector_dream_markers
+      (id, dream_id, keeper_piece_id, author_user_id, marker_kind, body,
+       idempotency_key, created_at)
+    VALUES
+      ('marker-current', 'dream-current', 'kp-recovery', 'steward-current',
+       'milestone', 'A current keeper milestone.', 'marker-current-create',
+       '2026-08-04T03:04:05.000Z');
+    INSERT INTO collector_dream_mutations
+      (id, dream_id, author_user_id, action, idempotency_key, request_json,
+       resulting_version, created_at)
+    VALUES
+      ('mutation-current', 'dream-current', 'steward-current', 'share',
+       'mutation-current-share', '{"visibility":"attributed"}',
+       2, '2026-08-03T03:04:05.000Z');
+    INSERT INTO collector_dream_rituals
+      (id, keeper_piece_id, keeper_user_id, birthday_year, action,
+       prior_dream_id, resulting_dream_id, idempotency_key, completed_at)
+    VALUES
+      ('ritual-current', 'kp-recovery', 'steward-current', 2026, 'fulfilled',
+       'dream-current', 'dream-current', 'ritual-current-fulfilled',
+       '2026-08-05T03:04:05.000Z');
+    COMMIT;
+
+    INSERT INTO registry_artworks (id, title, series, created_at) VALUES
+      ('UL-102', 'Ordinal First', 'Universal Language', '${exportedAt}'),
+      ('UL-103', 'Ordinal Second', 'Universal Language', '${exportedAt}');
+    INSERT INTO keeper_pieces
+      (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
+       claimed_at, lineage_head_hash, lineage_event_count)
+    VALUES
+      ('kp-ordinal-first', 'UL-102', 0, 'steward-current', '${'4'.repeat(64)}',
+       '2026-08-06T03:04:05.000Z', '${'5'.repeat(64)}', 1),
+      ('kp-ordinal-second', 'UL-103', 0, 'steward-current', '${'6'.repeat(64)}',
+       '2026-08-07T03:04:05.000Z', '${'7'.repeat(64)}', 1);
+    INSERT INTO artwork_lineage_events
+      (id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
+       event_hash, public_payload_json)
+    VALUES
+      ('zz-first-bound', 'kp-ordinal-first', 1, 'first_bound',
+       '2026-08-06T03:04:05.000Z', NULL, '${'5'.repeat(64)}', '{}'),
+      ('aa-second-bound', 'kp-ordinal-second', 1, 'first_bound',
+       '2026-08-07T03:04:05.000Z', NULL, '${'7'.repeat(64)}', '{}');
+    INSERT INTO collector_letters
+      (id, keeper_piece_id, kind, body, created_at, event_key)
+    VALUES
+      ('letter-${'8'.repeat(64)}', 'kp-recovery', 'transfer',
+       'This piece entered a new chapter with its keeper.',
+       '2026-08-02T03:04:05.000Z', 'transfer:transfer-recovery'),
+      ('letter-${'9'.repeat(64)}', 'kp-recovery', 'anniversary',
+       'A year with this piece invites a quiet reflection.',
+       '2026-08-05T03:04:05.000Z', 'anniversary:kp-recovery:2026');
   `);
 }
 
@@ -603,8 +696,24 @@ describe('registry-only legacy fulfillment migration', () => {
 });
 
 describe('private registry recovery export', () => {
-  it('uses one schema-v4 manifest covering every Phase 1 recovery table', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 4);
+  it('keeps the schema-v4 manifest immutable and adds the Phase 2 recovery boundary in v5', () => {
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 5);
+    assert.deepEqual(REGISTRY_RECOVERY_V4_TABLES, [
+      'user', 'account', 'users', 'profiles', 'registry_artworks',
+      'registry_catalog_membership', 'keeper_pieces', 'artwork_claim_requests',
+      'artwork_transfer_intents', 'artwork_transfer_parties', 'atlas_source_cities',
+      'atlas_source_chains', 'atlas_source_chain_events', 'keeper_intentions',
+      'piece_fulfillments', 'artwork_acquisitions', 'artwork_provenance_entries',
+      'artwork_claim_evidence', 'artwork_lineage_events', 'ownership_code_audit',
+      'registry_maintenance_events', 'registry_recovery_qualifications',
+      'artwork_identity_recovery_qualifications', 'artwork_invitations',
+      'artwork_invitation_redemptions', 'artwork_invitation_redemption_completions',
+      'certificate_templates', 'certificate_assignment_operations',
+      'certificate_artwork_assignments', 'certificate_artwork_overrides',
+      'certificate_override_history', 'collector_curated_cities',
+      'collector_person_privacy', 'collector_piece_privacy',
+      'collector_consent_history', 'artwork_transfer_receipts',
+    ]);
     for (const table of [
       'users',
       'profiles',
@@ -623,6 +732,21 @@ describe('private registry recovery export', () => {
       'collector_piece_privacy',
       'collector_consent_history',
     ]) assert.equal(REGISTRY_RECOVERY_TABLES.includes(table as any), true, table);
+    assert.equal(REGISTRY_RECOVERY_TABLES.includes('collector_letters'), true);
+    assert.deepEqual(
+      REGISTRY_RECOVERY_TABLES.slice(
+        REGISTRY_RECOVERY_TABLES.indexOf('artwork_lineage_events'),
+        REGISTRY_RECOVERY_TABLES.indexOf('collector_dream_rituals') + 1,
+      ),
+      [
+        'artwork_lineage_events',
+        'collector_claim_ordinals',
+        'collector_dreams',
+        'collector_dream_markers',
+        'collector_dream_mutations',
+        'collector_dream_rituals',
+      ],
+    );
   });
 
   it('reads the complete boundary in one database batch snapshot', async () => {
@@ -710,6 +834,41 @@ describe('private registry recovery export', () => {
       assert.equal(payload.tables.artwork_invitation_redemption_completions.length, 1);
       assert.equal(payload.tables.certificate_override_history.length, 2);
       assert.equal(payload.tables.collector_consent_history.length, 4);
+      assert.deepEqual(payload.tables.collector_claim_ordinals.map((row: any) => [
+        row.keeper_piece_id, row.first_bound_event_id, row.claim_ordinal,
+      ]), [
+        ['kp-invited', 'lineage-invited-bound', 1],
+        ['kp-ordinal-first', 'zz-first-bound', 2],
+        ['kp-ordinal-second', 'aa-second-bound', 3],
+      ]);
+      assert.deepEqual(payload.tables.collector_dreams.map((row: any) => [
+        row.id, row.author_user_id, row.archived_at, row.record_version,
+        row.last_mutation_id, row.fulfilled_at,
+      ]), [
+        [
+          'dream-current', 'steward-current', null, 3, 'mutation-current',
+          '2026-08-05T03:04:05.000Z',
+        ],
+        ['dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null],
+      ]);
+      assert.equal(payload.tables.collector_dream_markers.length, 2);
+      assert.equal(payload.tables.collector_dream_mutations.length, 2);
+      assert.deepEqual(payload.tables.collector_dream_mutations.map((row: any) => [
+        row.id, row.request_json,
+      ]), [
+        ['mutation-current', '{"visibility":"attributed"}'],
+        [
+          'mutation-prior',
+          '{"body":"A former keeper dream that travels with the piece.","scope":"community","expectedVersion":1}',
+        ],
+      ]);
+      assert.equal(payload.tables.collector_dream_rituals.length, 1);
+      assert.deepEqual(payload.tables.collector_letters.map((row: any) => [
+        row.kind, row.event_key,
+      ]), [
+        ['transfer', 'transfer:transfer-recovery'],
+        ['anniversary', 'anniversary:kp-recovery:2026'],
+      ]);
       assert.equal(serialized.includes('unrelated@example.com'), false);
       for (const table of REGISTRY_RECOVERY_TABLES) {
         const manifest = archive.manifest.tables.find((entry: any) => entry.name === table);
@@ -881,12 +1040,93 @@ describe('clean-only private registry restore', () => {
           canonicalRecoveryJson(v3Payload.tables[table]), table);
       }
       for (const table of REGISTRY_RECOVERY_TABLES.filter((name) =>
-        !REGISTRY_RECOVERY_V3_TABLES.includes(name as any))) {
+        !REGISTRY_RECOVERY_V3_TABLES.includes(name as any)
+        && name !== 'collector_claim_ordinals')) {
         assert.deepEqual(upgraded.tables[table], [], table);
       }
+      assert.deepEqual(upgraded.tables.collector_claim_ordinals, [{
+        keeper_piece_id: 'kp-invited',
+        first_bound_event_id: 'lineage-invited-bound',
+        claim_ordinal: 1,
+      }, {
+        keeper_piece_id: 'kp-ordinal-first',
+        first_bound_event_id: 'zz-first-bound',
+        claim_ordinal: 2,
+      }, {
+        keeper_piece_id: 'kp-ordinal-second',
+        first_bound_event_id: 'aa-second-bound',
+        claim_ordinal: 3,
+      }]);
       target.database.exec(buildRegistryRestoreSql(upgraded));
       assert.equal(tableCount(target.database, 'keeper_pieces'),
         upgraded.tables.keeper_pieces.length);
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('decrypts schema v4 without changing any Phase 1 row or digest input', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const v4Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 4,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V4_TABLES.map((name) => [
+          name, current.tables[name],
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v4Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      for (const table of REGISTRY_RECOVERY_V4_TABLES) {
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v4Payload.tables[table]), table);
+      }
+      assert.deepEqual(upgraded.tables.collector_claim_ordinals, [
+        {
+          keeper_piece_id: 'kp-invited',
+          first_bound_event_id: 'lineage-invited-bound',
+          claim_ordinal: 1,
+        },
+        {
+          keeper_piece_id: 'kp-ordinal-first',
+          first_bound_event_id: 'zz-first-bound',
+          claim_ordinal: 2,
+        },
+        {
+          keeper_piece_id: 'kp-ordinal-second',
+          first_bound_event_id: 'aa-second-bound',
+          claim_ordinal: 3,
+        },
+      ]);
+      for (const table of REGISTRY_RECOVERY_TABLES.filter((name) =>
+        !REGISTRY_RECOVERY_V4_TABLES.includes(name as any)
+        && name !== 'collector_claim_ordinals')) {
+        assert.deepEqual(upgraded.tables[table], [], table);
+      }
+
+      target.database.exec(buildRegistryRestoreSql(upgraded));
+      assert.deepEqual(target.database.prepare(
+        `SELECT keeper_piece_id, first_bound_event_id, claim_ordinal
+           FROM collector_claim_ordinals ORDER BY keeper_piece_id`,
+      ).all().map((row: any) => ({ ...row })), upgraded.tables.collector_claim_ordinals);
       assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       source.database.close();
@@ -921,6 +1161,7 @@ describe('clean-only private registry restore', () => {
            NULL, '${'3'.repeat(64)}', '{"publicCode":"AR-6KQ9M2WX"}');
       `);
       source.database.exec(phase1Migrations);
+      source.database.exec(phase2Migrations);
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference
@@ -982,6 +1223,22 @@ describe('clean-only private registry restore', () => {
       }, { exportedAt });
       const payload = await decryptPrivateRecoveryExport(archive, { key: exportKey, keyId: exportKeyId });
       const sql = buildRegistryRestoreSql(payload);
+      const temporarilyRemovedTriggers = [
+        'artwork_lineage_first_bound_assign_ordinal',
+        'collector_dreams_insert_current_keeper',
+        'collector_dream_markers_current_keeper',
+        'collector_dream_rituals_valid_completion',
+        'collector_dream_mutation_exact_application',
+        'collector_dream_mutation_apply_exactly',
+        'collector_dreams_runtime_update_guard',
+        'collector_dream_ritual_fulfill_exactly',
+      ];
+      const triggerSqlBefore = new Map(temporarilyRemovedTriggers.map((trigger) => [
+        trigger,
+        String(target.database.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        ).get(trigger)?.sql).replace(/\s+/g, ' ').trim(),
+      ]));
 
       assert.doesNotMatch(sql, /INSERT\s+OR\s+IGNORE/i);
       assert.match(sql, /BEGIN IMMEDIATE/i);
@@ -1016,6 +1273,47 @@ describe('clean-only private registry restore', () => {
       });
       assert.equal(tableCount(target.database, 'artwork_invitation_redemption_completions'), 1);
       assert.equal(tableCount(target.database, 'certificate_override_history'), 2);
+      assert.deepEqual(target.database.prepare(
+        `SELECT keeper_piece_id, first_bound_event_id, claim_ordinal
+           FROM collector_claim_ordinals ORDER BY keeper_piece_id`,
+      ).all().map((row: any) => [
+        row.keeper_piece_id, row.first_bound_event_id, row.claim_ordinal,
+      ]), [
+        ['kp-invited', 'lineage-invited-bound', 1],
+        ['kp-ordinal-first', 'zz-first-bound', 2],
+        ['kp-ordinal-second', 'aa-second-bound', 3],
+      ]);
+      assert.deepEqual(target.database.prepare(
+        `SELECT id, author_user_id, archived_at, record_version, last_mutation_id,
+                fulfilled_at
+           FROM collector_dreams ORDER BY id`,
+      ).all().map((row: any) => [
+        row.id, row.author_user_id, row.archived_at, row.record_version,
+        row.last_mutation_id, row.fulfilled_at,
+      ]), [
+        [
+          'dream-current', 'steward-current', null, 3, 'mutation-current',
+          '2026-08-05T03:04:05.000Z',
+        ],
+        ['dream-prior', 'steward-prior', exportedAt, 3, 'mutation-prior', null],
+      ]);
+      assert.deepEqual(target.database.prepare(
+        'SELECT id, request_json FROM collector_dream_mutations ORDER BY id',
+      ).all().map((row: any) => [row.id, row.request_json]), [
+        ['mutation-current', '{"visibility":"attributed"}'],
+        [
+          'mutation-prior',
+          '{"body":"A former keeper dream that travels with the piece.","scope":"community","expectedVersion":1}',
+        ],
+      ]);
+      for (const trigger of temporarilyRemovedTriggers) {
+        assert.equal(target.database.prepare(
+          "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        ).get(trigger)?.count, 1, trigger);
+        assert.equal(String(target.database.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        ).get(trigger)?.sql).replace(/\s+/g, ' ').trim(), triggerSqlBefore.get(trigger), trigger);
+      }
       assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
 
       const restoredArchive = await buildPrivateRecoveryExport({
@@ -1230,6 +1528,12 @@ describe('clean-only private registry restore', () => {
       assert.throws(
         () => buildRegistryRestoreSql(inconsistentCertificate),
         /recovery_certificate_history_invalid/i,
+      );
+      const renumberedOrdinal = structuredClone(payload) as any;
+      renumberedOrdinal.tables.collector_claim_ordinals[0].claim_ordinal = 99;
+      assert.throws(
+        () => buildRegistryRestoreSql(renumberedOrdinal),
+        /recovery_claim_ordinals_invalid/i,
       );
       assert.throws(
         () => buildRegistryRestoreSql({

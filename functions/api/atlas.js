@@ -1,5 +1,6 @@
 import { FULL_ARCHIVE } from '../../data/mockData.ts';
 import { buildLineageEvent } from './_lib/lineage.js';
+import { projectCollectorField } from './_lib/collectorField.js';
 import {
   canonicalizeAtlasSourceEvent,
   verifyAtlasSourceChains,
@@ -16,27 +17,9 @@ function rows(result) {
   return Array.isArray(result) ? result : result?.results;
 }
 
-function slug(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-function catalogMeta(pieceId) {
-  const artwork = FULL_ARCHIVE.find((candidate) => candidate.id === pieceId);
-  if (!artwork) return {};
-  return {
-    series: artwork.series,
-    category: artwork.category,
-    isSignaturePiece: artwork.isSignaturePiece === true,
-  };
-}
-
 async function verifyLocalLineage(env, pieces) {
   const result = await env.DB.prepare(
-    `SELECT keeper_piece_id, sequence, event_type, event_at, previous_hash,
+    `SELECT id, keeper_piece_id, sequence, event_type, event_at, previous_hash,
             event_hash, public_payload_json
        FROM artwork_lineage_events
       ORDER BY keeper_piece_id ASC, sequence ASC`,
@@ -49,6 +32,7 @@ async function verifyLocalLineage(env, pieces) {
     list.push(event);
     byPiece.set(event.keeper_piece_id, list);
   }
+  const seenOrdinals = new Set();
   for (const piece of pieces) {
     const events = byPiece.get(piece.id) || [];
     const count = Number(piece.lineage_event_count);
@@ -83,6 +67,18 @@ async function verifyLocalLineage(env, pieces) {
     if ((piece.lineage_head_hash || null) !== previousHash) {
       throw new Error('atlas_local_lineage_anchor');
     }
+    const firstBounds = events.filter((event) => event.event_type === 'first_bound');
+    const ordinal = Number(piece.claim_ordinal);
+    if (firstBounds.length > 1
+      || (firstBounds.length === 0
+        && (piece.claim_ordinal != null || piece.first_bound_event_id != null))
+      || (firstBounds.length === 1
+        && (!Number.isSafeInteger(ordinal) || ordinal <= 0
+          || piece.first_bound_event_id !== firstBounds[0].id
+          || seenOrdinals.has(ordinal)))) {
+      throw new Error('atlas_local_lineage_ordinal');
+    }
+    if (firstBounds.length === 1) seenOrdinals.add(ordinal);
   }
 }
 
@@ -176,112 +172,60 @@ async function loadAndVerifySourceChains(env, pieces) {
   return { sourceEventsByPiece: verified, cities };
 }
 
-function projectPiece(piece, events, claimOrdinal) {
-  const catalog = catalogMeta(piece.piece_id);
-  const genesis = (events || []).find((event) => event.type === 'created');
-  const meta = {
-    series: catalog.series || genesis?.series,
-    category: catalog.category || genesis?.category,
-    isSignaturePiece: catalog.isSignaturePiece === true,
-  };
-  let cityId = null;
-  let internalStatus = 'seeking';
-  let visible = true;
-  let claimedAt = null;
-  let placedAt;
-  for (const event of events || []) {
-    if (event.type === 'created') {
-      internalStatus = 'seeking';
-      if (event.cityId) cityId = event.cityId;
-    }
-    if (event.type === 'claimed' && !claimedAt) claimedAt = event.date;
-    if (event.type === 'placed' || event.type === 'moved') {
-      cityId = event.cityId ?? null;
-      internalStatus = 'placed';
-      placedAt = event.date;
-    }
-    if (event.type === 'withdrawn') visible = false;
-    if (event.type === 'revealed') visible = true;
-    if (event.type === 'retired') {
-      internalStatus = 'retired';
-      cityId = null;
-    }
-  }
-  if (!visible || internalStatus === 'retired') return null;
-  const status = internalStatus === 'placed'
-    ? (claimedAt ? 'placed' : 'unawakened')
-    : 'seeking';
-  const pieceType = genesis?.pieceType
-    || (meta.series === 'Universal Language' ? 'mandala' : 'other');
-  const kind = meta.series === 'Universal Language'
-    ? 'sixty-four'
-    : meta.series === 'Mandala' || pieceType === 'mandala'
-      ? 'mandala'
-      : meta.isSignaturePiece
-        ? 'signature'
-      : slug(meta.category) || 'other';
-  return {
-    pieceId: piece.piece_id,
-    editionNumber: Number(piece.edition_number ?? 0),
-    ...(meta.series ? { series: meta.series } : {}),
-    ...(meta.category ? { category: meta.category } : {}),
-    cityId,
-    status,
-    ...(placedAt ? { placedAt } : {}),
-    pieceType,
-    kind,
-    ...(claimOrdinal ? { claimOrdinal } : {}),
-    kinshipEligible: !claimedAt,
-  };
-}
-
 export async function buildPublicAtlasState(env, generatedAt = new Date().toISOString()) {
-  const pieceResult = await env.DB.prepare(
-    `SELECT id, piece_id, edition_number, lineage_head_hash, lineage_event_count
-       FROM keeper_pieces
-      WHERE plate_status IN ('legacy', 'generated', 'active')
-      ORDER BY piece_id ASC, edition_number ASC, id ASC`,
-  ).all();
+  const [pieceResult, catalogResult, consentResult] = await Promise.all([
+    env.DB.prepare(
+    `SELECT piece.id, piece.piece_id, piece.edition_number, piece.public_code,
+            piece.registration_status, piece.lineage_head_hash,
+            piece.lineage_event_count, ordinal.claim_ordinal,
+            ordinal.first_bound_event_id
+       FROM keeper_pieces AS piece
+       LEFT JOIN collector_claim_ordinals AS ordinal
+         ON ordinal.keeper_piece_id = piece.id
+      WHERE piece.plate_status IN ('legacy', 'generated', 'active')
+      ORDER BY piece.piece_id ASC, piece.edition_number ASC, piece.id ASC`,
+    ).all(),
+    env.DB.prepare(
+      `SELECT artwork_id, series, category
+         FROM registry_catalog_membership
+        ORDER BY artwork_id ASC`,
+    ).all(),
+    env.DB.prepare(
+      `SELECT privacy.keeper_piece_id, privacy.city_id, city.label AS city_label
+         FROM collector_piece_privacy AS privacy
+         JOIN keeper_pieces AS piece ON piece.id = privacy.keeper_piece_id
+         JOIN users AS account ON account.id = privacy.user_id
+         JOIN profiles AS profile ON profile.user_id = privacy.user_id
+         JOIN collector_curated_cities AS city ON city.id = privacy.city_id
+        WHERE privacy.share_city = 1
+          AND piece.plate_status IN ('legacy', 'generated', 'active')
+          AND piece.keeper_user_id = account.auth_user_id
+          AND piece.claimed_at IS NOT NULL
+          AND piece.released_at IS NULL
+          AND city.active = 1
+          AND city.population >= 50000
+          AND date(profile.birth_date) = profile.birth_date
+          AND date(profile.birth_date, '+18 years') <= date(?1)
+        ORDER BY privacy.keeper_piece_id ASC`,
+    ).bind(generatedAt).all(),
+  ]);
   const pieces = rows(pieceResult);
-  if (!Array.isArray(pieces)) throw new Error('atlas_registry_unavailable');
+  const catalogRows = rows(catalogResult);
+  const consentRows = rows(consentResult);
+  if (!Array.isArray(pieces) || !Array.isArray(catalogRows) || !Array.isArray(consentRows)) {
+    throw new Error('atlas_registry_unavailable');
+  }
   await verifyLocalLineage(env, pieces);
-  const { sourceEventsByPiece, cities } = await loadAndVerifySourceChains(env, pieces);
-
-  const claimed = [];
-  for (const piece of pieces) {
-    const firstClaim = (sourceEventsByPiece.get(piece.id) || []).find((event) => event.type === 'claimed');
-    if (firstClaim) claimed.push({ id: piece.id, at: firstClaim.date, eventId: firstClaim.id });
-  }
-  claimed.sort((a, b) => a.at.localeCompare(b.at) || a.eventId.localeCompare(b.eventId));
-  const ordinals = new Map(claimed.map((claim, index) => [claim.id, index + 1]));
-  const projected = [];
-  const chainTips = {};
-  for (const piece of pieces) {
-    const events = sourceEventsByPiece.get(piece.id) || [];
-    const publicPiece = projectPiece(piece, events, ordinals.get(piece.id));
-    if (!publicPiece) continue;
-    projected.push(publicPiece);
-    const tip = events.at(-1)?.hash;
-    if (tip) chainTips[`${piece.piece_id}:${Number(piece.edition_number ?? 0)}`] = tip;
-  }
-  const referencedCities = new Set(projected.map((piece) => piece.cityId).filter(Boolean));
-  return {
+  const { sourceEventsByPiece } = await loadAndVerifySourceChains(env, pieces);
+  const metadataByArtworkId = new Map(FULL_ARCHIVE.map((artwork) => [artwork.id, artwork]));
+  return projectCollectorField({
     generatedAt,
-    schemaVersion: 2,
-    pieces: projected,
-    cities: cities
-      .filter((city) => referencedCities.has(city.id))
-      .map((city) => ({
-        id: city.id,
-        city: city.city,
-        ...(city.region ? { region: city.region } : {}),
-        country: city.country,
-        countryCode: city.country_code,
-        lat: Number(city.lat),
-        lng: Number(city.lng),
-      })),
-    chainTips,
-  };
+    catalogRows,
+    identityRows: pieces,
+    consentRows,
+    metadataByArtworkId,
+    sourceEventsByPiece,
+  });
 }
 
 export async function onRequest({ request, env }) {
@@ -291,7 +235,7 @@ export async function onRequest({ request, env }) {
   if (!env?.DB) return json({ ok: false, error: 'atlas_unavailable' }, 503);
   try {
     const state = await buildPublicAtlasState(env);
-    return json({ ok: true, state }, 200, 'public, max-age=60');
+    return json({ ok: true, state });
   } catch (error) {
     if (error instanceof Error && /(?:integrity|lineage|source_|anchor|count)/.test(error.message)) {
       return json({ ok: false, error: 'atlas_integrity_error' }, 409);

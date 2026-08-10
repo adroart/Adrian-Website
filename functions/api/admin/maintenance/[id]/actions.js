@@ -14,6 +14,7 @@ import {
 } from '../../../_lib/registryMaintenance.js';
 import { handleRegistryPlateLifecycle } from '../../../_lib/registryPlateLifecycle.js';
 import { prepareNextLineageEvent } from '../../../_lib/lineage.js';
+import { syncTransferCollectorLetters } from '../../../_lib/collectorLetters.js';
 
 const REQUEST_FIELDS = new Set([
   'action', 'targetEmail', 'transferKind', 'reason', 'idempotencyKey', 'expectedStewardVersion',
@@ -133,7 +134,7 @@ async function exactReplay(existing, {
     return { ok: false, error: 'idempotency_conflict' };
   }
   const intent = await env.DB.prepare(
-    `SELECT target_user_id, target_email_commitment, transfer_kind
+    `SELECT id, target_user_id, target_email_commitment, transfer_kind
        FROM artwork_transfer_intents WHERE maintenance_event_id = ?1`,
   ).bind(existing.id).first();
   if (!intent
@@ -169,6 +170,7 @@ async function exactReplay(existing, {
     expectedVersion,
   });
   if (!fingerprintMatches) return { ok: false, error: 'idempotency_conflict' };
+  await syncTransferCollectorLetters(env, { transferIntentId: intent.id });
   return { ok: true, replayed: true, eventId: existing.id, steward: after };
 }
 
@@ -426,5 +428,6 @@ export async function onRequest({ request, env, params }) {
     }
     return jsonResponse(storedReplay);
   }
+  await syncTransferCollectorLetters(env, { transferIntentId });
   return jsonResponse({ ok: true, replayed: false, eventId: result.eventId, steward: after });
 }

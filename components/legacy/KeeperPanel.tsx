@@ -5,6 +5,7 @@ import { useAccount } from '../../lib/account/useAccount';
 import { isWellFormedRecoveryCode } from '../../utils/recoveryCode';
 import type { PublicCreatorHistoryEntry, PublicPlateIdentity } from '../../utils/publicRegistry';
 import CollectorFlow from '../collector/CollectorFlow';
+import CollectorLife from '../collector/CollectorLife';
 import IntentionRitual from './IntentionRitual';
 
 interface StewardStatus {
@@ -222,6 +223,9 @@ export const KeeperPanel: React.FC<{ publicIdentity: PublicPlateIdentity }> = ({
               editionNumber={publicIdentity.edition.number ?? 0}
             />
           </div>
+          {currentStatus?.keeperPieceId && collectorJourneyUserId !== userId && (
+            <CollectorLife keeperPieceId={currentStatus.keeperPieceId} />
+          )}
         </div>
       )}
     </section>

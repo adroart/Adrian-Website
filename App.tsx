@@ -47,6 +47,7 @@ const Footer = lazy(() => import('./components/Footer'));
 const GenerativeBackground = lazy(() => import('./components/GenerativeBackground'));
 const Poetry = lazy(() => import('./components/Poetry'));
 const PoetryTrack = lazy(() => import('./components/PoetryTrack'));
+const CollectorFieldPage = lazy(() => import('./components/collector/CollectorFieldPage'));
 
 import { useSeoMeta } from './useSeoMeta';
 import { LAUNCH_FLAGS } from './launchFlags';
@@ -180,8 +181,8 @@ const SiteShell: React.FC = () => {
             <Route path="/works/:id" element={<WorksPage />} />
             <Route path="/qr" element={<QRIndex />} />
             <Route path="/viewing/:token" element={<Viewing />} />
-            <Route path="/atlas" element={<AtlasExternalRedirect />} />
-            <Route path="/atlas/*" element={<AtlasExternalRedirect />} />
+            <Route path="/atlas" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />
+            <Route path="/atlas/*" element={LAUNCH_FLAGS.livingLegacy ? <CollectorFieldPage /> : <AtlasExternalRedirect />} />
             <Route path="/order-confirmed" element={<OrderConfirmed />} />
             <Route path="/account" element={<AccountDashboard />} />
             <Route path="/account/orders" element={<OrdersList />} />

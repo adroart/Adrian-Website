@@ -49,7 +49,17 @@ const registrySchema = [
   '022_registry_fulfillment_detachment.sql',
 ].map(migration).join('\n');
 
-const mergedSchema = `${registrySchema}\n${migration('023_collector_registry_merge.sql')}\n${migration('024_ownership_foundation.sql')}`;
+const mergedSchema = [
+  registrySchema,
+  '023_collector_registry_merge.sql',
+  '024_ownership_foundation.sql',
+  '025_artwork_registration.sql',
+  '026_artwork_invitations.sql',
+  '027_certificate_templates.sql',
+  '028_collector_privacy.sql',
+  '029_collector_dreams.sql',
+  '030_collector_field.sql',
+].map((entry, index) => index === 0 ? entry : migration(entry)).join('\n');
 
 function databaseWithSchema(includeMerge = true) {
   const database = new DatabaseSync(':memory:');
@@ -505,9 +515,10 @@ describe('Mandala Atlas source import', () => {
         env: { DB: d1(database) },
       });
       const body = await response.json() as any;
-      const piece = body.state.pieces.find((candidate: any) => candidate.pieceId === 'UL-101');
-      assert.equal(piece.cityId, denpasar.id);
-      assert.equal(piece.status, 'seeking');
+      const artwork = body.state.lights.find((candidate: any) => candidate.artworkId === 'UL-101');
+      assert.equal(artwork.identity[0].city, null);
+      assert.equal(artwork.identity[0].status, 'unregistered');
+      assert.deepEqual(body.state.facets.places, []);
     } finally {
       database.close();
     }
@@ -610,6 +621,43 @@ describe('Mandala Atlas source import', () => {
 });
 
 describe('canonical public Atlas reader', () => {
+  it('keeps withdrawn and retired source-only identities out of the public field', async () => {
+    for (const terminalType of ['withdrawn', 'retired'] as const) {
+      const created = await sourceEvent({
+        id: terminalType === 'withdrawn'
+          ? 'evt-m0abc130-00000000000000000010'
+          : 'evt-m0abc132-00000000000000000012',
+        pieceId: terminalType === 'withdrawn' ? 'UL-100' : 'UL-101',
+        editionNumber: 0, type: 'created', date: '2024-01-01T00:00:00.000Z',
+        actor: 'admin', prevHash: null,
+      });
+      const terminal = await sourceEvent({
+        id: terminalType === 'withdrawn'
+          ? 'evt-m0abc131-00000000000000000011'
+          : 'evt-m0abc133-00000000000000000013',
+        pieceId: created.pieceId, editionNumber: 0,
+        type: terminalType, date: '2024-01-02T00:00:00.000Z', actor: 'admin',
+        prevHash: created.hash,
+      });
+      const database = databaseWithSchema();
+      try {
+        database.exec(await buildAtlasSourceImportSql({
+          events: [created, terminal], cities: [], sourceReference: approvedSourceReference,
+        }));
+        const response = await atlasRequest({
+          request: new Request('https://adrianrasmussen.com/api/atlas'),
+          env: { DB: d1(database) },
+        });
+        assert.equal(response.status, 200);
+        const body = await response.json() as any;
+        assert.deepEqual(body.state.lights, []);
+        assert.deepEqual(body.state.chainTips, {});
+      } finally {
+        database.close();
+      }
+    }
+  });
+
   it('returns the public Mandala contract from D1 with no holder data', async () => {
     const input = await validSourceExport();
     const database = databaseWithSchema();
@@ -623,14 +671,16 @@ describe('canonical public Atlas reader', () => {
         env: { DB: d1(database) },
       });
       assert.equal(response.status, 200);
-      assert.equal(response.headers.get('Cache-Control'), 'public, max-age=60');
+      assert.equal(response.headers.get('Cache-Control'), 'no-store');
       const body = await response.json() as any;
       assert.equal(body.ok, true);
-      assert.equal(body.state.schemaVersion, 2);
-      assert.equal(body.state.pieces.length, 2);
-      assert.deepEqual(body.state.cities, [denpasar]);
-      assert.equal(body.state.pieces.find((piece: any) => piece.pieceId === 'UL-100').status, 'unawakened');
-      assert.equal(body.state.pieces.find((piece: any) => piece.pieceId === 'UL-101').status, 'seeking');
+      assert.equal(body.state.schemaVersion, 3);
+      assert.equal(body.state.lights.length, 2);
+      assert.deepEqual(body.state.facets.places, []);
+      assert.equal(body.state.lights.find((artwork: any) => artwork.artworkId === 'UL-100')
+        .identity[0].status, 'unregistered');
+      assert.equal(body.state.lights.find((artwork: any) => artwork.artworkId === 'UL-101')
+        .identity[0].status, 'unregistered');
       assert.deepEqual(body.state.chainTips, {
         'UL-100:0': input.events.find((event) => event.type === 'placed')!.hash,
         'UL-101:0': input.events.find((event) => event.pieceId === 'UL-101')!.hash,
@@ -653,8 +703,8 @@ describe('canonical public Atlas reader', () => {
       });
       assert.equal(response.status, 200);
       const body = await response.json() as any;
-      assert.deepEqual(body.state.pieces, []);
-      assert.deepEqual(body.state.cities, []);
+      assert.deepEqual(body.state.lights, []);
+      assert.deepEqual(body.state.facets, { series: [], years: [], places: [] });
     } finally {
       empty.close();
     }
@@ -768,13 +818,13 @@ describe('canonical public Atlas reader', () => {
         env: { DB: d1(database) },
       });
       const body = await response.json() as any;
-      const fallback = body.state.pieces.find((piece: any) => piece.pieceId === 'ZZ-999');
+      const fallback = body.state.lights.find((artwork: any) => artwork.artworkId === 'ZZ-999');
       assert.equal(fallback.series, 'Independent Study');
-      assert.equal(fallback.category, 'Dimensional Sculpture');
-      assert.equal(fallback.pieceType, 'mandala');
-      assert.equal(fallback.kind, 'mandala');
-      const catalogSignature = body.state.pieces.find((piece: any) => piece.pieceId === 'SIG-100');
-      assert.equal(catalogSignature.kind, 'signature');
+      assert.equal(fallback.title, 'ZZ-999');
+      assert.equal(fallback.identity[0].status, 'unregistered');
+      const catalogSignature = body.state.lights.find((artwork: any) => artwork.artworkId === 'SIG-100');
+      assert.equal(catalogSignature.title, 'Amphibian Dream');
+      assert.equal(catalogSignature.identity[0].status, 'unregistered');
     } finally {
       database.close();
     }

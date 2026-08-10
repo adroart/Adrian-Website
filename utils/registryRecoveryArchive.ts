@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 4 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 5 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -43,7 +43,8 @@ export const REGISTRY_RECOVERY_V1_TABLES = REGISTRY_RECOVERY_V2_TABLES.filter(
   (table) => !table.startsWith('atlas_source_'),
 );
 
-export const REGISTRY_RECOVERY_TABLES = [
+/** The exact Phase 1 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V4_TABLES = [
   'user',
   'account',
   'users',
@@ -80,6 +81,19 @@ export const REGISTRY_RECOVERY_TABLES = [
   'collector_piece_privacy',
   'collector_consent_history',
   'artwork_transfer_receipts',
+] as const;
+
+const V4_LINEAGE_INDEX = REGISTRY_RECOVERY_V4_TABLES.indexOf('artwork_lineage_events');
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V4_TABLES.slice(0, V4_LINEAGE_INDEX + 1),
+  'collector_claim_ordinals',
+  'collector_dreams',
+  'collector_dream_markers',
+  'collector_dream_mutations',
+  'collector_dream_rituals',
+  'collector_letters',
+  ...REGISTRY_RECOVERY_V4_TABLES.slice(V4_LINEAGE_INDEX + 1),
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -176,6 +190,30 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'id', 'keeper_piece_id', 'sequence', 'event_type', 'event_at',
     'previous_hash', 'event_hash', 'public_payload_json',
   ],
+  collector_claim_ordinals: [
+    'keeper_piece_id', 'first_bound_event_id', 'claim_ordinal',
+  ],
+  collector_dreams: [
+    'id', 'keeper_piece_id', 'author_user_id', 'body', 'scope', 'visibility',
+    'idempotency_key', 'record_version', 'created_at', 'updated_at',
+    'public_shared_at', 'public_revoked_at', 'fulfilled_at', 'archived_at',
+    'last_mutation_id',
+  ],
+  collector_dream_markers: [
+    'id', 'dream_id', 'keeper_piece_id', 'author_user_id', 'marker_kind', 'body',
+    'idempotency_key', 'created_at',
+  ],
+  collector_dream_mutations: [
+    'id', 'dream_id', 'author_user_id', 'action', 'idempotency_key',
+    'request_json', 'resulting_version', 'created_at',
+  ],
+  collector_dream_rituals: [
+    'id', 'keeper_piece_id', 'keeper_user_id', 'birthday_year', 'action',
+    'prior_dream_id', 'resulting_dream_id', 'idempotency_key', 'completed_at',
+  ],
+  collector_letters: [
+    'id', 'keeper_piece_id', 'kind', 'body', 'created_at', 'event_key',
+  ],
   ownership_code_audit: [
     'id', 'keeper_piece_id', 'action', 'request_id', 'outcome', 'created_at',
   ],
@@ -249,7 +287,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -277,7 +315,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -382,12 +420,19 @@ export const REGISTRY_RECOVERY_ORDER_COLUMNS: Record<RegistryRecoveryTable, read
   certificate_artwork_overrides: ['artwork_id', 'field'],
   collector_person_privacy: ['user_id'],
   collector_piece_privacy: ['keeper_piece_id'],
+  collector_claim_ordinals: ['keeper_piece_id'],
+  collector_dreams: ['id'],
+  collector_dream_markers: ['id'],
+  collector_dream_mutations: ['id'],
+  collector_dream_rituals: ['id'],
+  collector_letters: ['id'],
 };
 
 function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[] {
   if (schemaVersion === 1) return REGISTRY_RECOVERY_V1_TABLES;
   if (schemaVersion === 2) return REGISTRY_RECOVERY_V2_TABLES;
   if (schemaVersion === 3) return REGISTRY_RECOVERY_V3_TABLES;
+  if (schemaVersion === 4) return REGISTRY_RECOVERY_V4_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -425,7 +470,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -449,6 +494,23 @@ export function validatePrivateRecoveryPayload(
       }
     }
   }
+  if (payload.schemaVersion === PRIVATE_RECOVERY_SCHEMA_VERSION) {
+    const firstBoundRows = (payload.tables.artwork_lineage_events as RecoveryRow[])
+      .filter((row) => row.event_type === 'first_bound');
+    const firstBounds = new Map(firstBoundRows
+      .map((row) => [row.keeper_piece_id, row.id]));
+    const ordinals = payload.tables.collector_claim_ordinals as RecoveryRow[];
+    const ordinalNumbers = ordinals.map((row) => Number(row.claim_ordinal))
+      .sort((left, right) => left - right);
+    if (firstBoundRows.length !== firstBounds.size
+      || ordinals.length !== firstBounds.size
+      || ordinals.some((row) => !Number.isSafeInteger(row.claim_ordinal)
+        || Number(row.claim_ordinal) < 1)
+      || ordinals.some((row) => firstBounds.get(row.keeper_piece_id) !== row.first_bound_event_id)
+      || ordinalNumbers.some((ordinal, index) => ordinal !== index + 1)) {
+      throw new Error('recovery_claim_ordinals_invalid');
+    }
+  }
 }
 
 export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecoveryPayload {
@@ -463,12 +525,14 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
       keeper_pieces: payload.tables.keeper_pieces.map((row) => ({
         ...row,
         ...(payload.schemaVersion < 3 ? { last_transfer_id: null } : {}),
-        registration_status: row.public_code === null ? null : 'registered',
-        registered_by_user_id: null,
-        identity_backup_status: null,
-        identity_backup_reference: null,
-        identity_backup_sha256: null,
-        identity_backup_at: null,
+        ...(payload.schemaVersion < 4 ? {
+          registration_status: row.public_code === null ? null : 'registered',
+          registered_by_user_id: null,
+          identity_backup_status: null,
+          identity_backup_reference: null,
+          identity_backup_sha256: null,
+          identity_backup_at: null,
+        } : {}),
       })),
       ...(payload.schemaVersion === 1 ? {
         atlas_source_cities: [],
@@ -481,22 +545,41 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         artwork_transfer_parties: [],
         artwork_transfer_receipts: [],
       } : {}),
-      users: [],
-      profiles: [],
-      registry_catalog_membership: [],
-      artwork_identity_recovery_qualifications: [],
-      artwork_invitations: [],
-      artwork_invitation_redemptions: [],
-      artwork_invitation_redemption_completions: [],
-      certificate_templates: [],
-      certificate_assignment_operations: [],
-      certificate_artwork_assignments: [],
-      certificate_artwork_overrides: [],
-      certificate_override_history: [],
-      collector_curated_cities: [],
-      collector_person_privacy: [],
-      collector_piece_privacy: [],
-      collector_consent_history: [],
+      ...(payload.schemaVersion < 4 ? {
+        users: [],
+        profiles: [],
+        registry_catalog_membership: [],
+        artwork_identity_recovery_qualifications: [],
+        artwork_invitations: [],
+        artwork_invitation_redemptions: [],
+        artwork_invitation_redemption_completions: [],
+        certificate_templates: [],
+        certificate_assignment_operations: [],
+        certificate_artwork_assignments: [],
+        certificate_artwork_overrides: [],
+        certificate_override_history: [],
+        collector_curated_cities: [],
+        collector_person_privacy: [],
+        collector_piece_privacy: [],
+        collector_consent_history: [],
+      } : {}),
+      collector_claim_ordinals: [...payload.tables.artwork_lineage_events]
+        .filter((row) => row.event_type === 'first_bound')
+        .sort((left, right) => String(left.event_at).localeCompare(String(right.event_at))
+          || String(left.event_hash).localeCompare(String(right.event_hash))
+          || String(left.keeper_piece_id).localeCompare(String(right.keeper_piece_id)))
+        .map((row, index) => ({
+          keeper_piece_id: row.keeper_piece_id,
+          first_bound_event_id: row.id,
+          claim_ordinal: index + 1,
+        }))
+        .sort((left, right) => String(left.keeper_piece_id)
+          .localeCompare(String(right.keeper_piece_id))),
+      collector_dreams: [],
+      collector_dream_markers: [],
+      collector_dream_mutations: [],
+      collector_dream_rituals: [],
+      collector_letters: [],
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -517,7 +600,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -873,6 +956,313 @@ WHEN NEW.registration_status = 'registered' AND (
 )
 BEGIN SELECT RAISE(ABORT, 'registered artwork identity is incomplete'); END;`;
 
+const CLAIM_ORDINAL_ASSIGN_TRIGGER_SQL = `CREATE TRIGGER artwork_lineage_first_bound_assign_ordinal
+AFTER INSERT ON artwork_lineage_events
+WHEN NEW.event_type = 'first_bound'
+BEGIN
+  INSERT INTO collector_claim_ordinals
+    (keeper_piece_id, first_bound_event_id, claim_ordinal)
+  VALUES (
+    NEW.keeper_piece_id,
+    NEW.id,
+    (SELECT COALESCE(MAX(claim_ordinal), 0) + 1
+       FROM collector_claim_ordinals)
+  );
+END;`;
+
+const DREAM_INSERT_KEEPER_TRIGGER_SQL = `CREATE TRIGGER collector_dreams_insert_current_keeper
+BEFORE INSERT ON collector_dreams BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM keeper_pieces piece
+     WHERE piece.id = NEW.keeper_piece_id
+       AND piece.keeper_user_id = NEW.author_user_id
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND piece.plate_status NOT IN ('void', 'superseded')
+  ) THEN RAISE(ABORT, 'dream requires current keeper') END;
+  SELECT CASE WHEN NEW.visibility IN ('anonymous', 'attributed')
+    AND NOT EXISTS (
+      SELECT 1 FROM users person
+      JOIN profiles profile ON profile.user_id = person.id
+       WHERE person.auth_user_id = NEW.author_user_id
+         AND date(profile.birth_date, '+18 years') <= date(NEW.created_at)
+    ) THEN RAISE(ABORT, 'public dream requires established adult') END;
+  SELECT CASE WHEN NEW.visibility = 'attributed'
+    AND NOT EXISTS (
+      SELECT 1 FROM users person
+      JOIN collector_person_privacy privacy ON privacy.user_id = person.id
+       WHERE person.auth_user_id = NEW.author_user_id
+         AND privacy.share_name = 1
+    ) THEN RAISE(ABORT, 'attributed dream requires name consent') END;
+END;`;
+
+const DREAM_MARKER_KEEPER_TRIGGER_SQL = `CREATE TRIGGER collector_dream_markers_current_keeper
+BEFORE INSERT ON collector_dream_markers BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM collector_dreams dream
+    JOIN keeper_pieces piece ON piece.id = dream.keeper_piece_id
+     WHERE dream.id = NEW.dream_id
+       AND dream.keeper_piece_id = NEW.keeper_piece_id
+       AND dream.archived_at IS NULL
+       AND piece.keeper_user_id = NEW.author_user_id
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND piece.plate_status NOT IN ('void', 'superseded')
+  ) THEN RAISE(ABORT, 'dream marker requires current keeper') END;
+END;`;
+
+const DREAM_RITUAL_COMPLETION_TRIGGER_SQL = `CREATE TRIGGER collector_dream_rituals_valid_completion
+BEFORE INSERT ON collector_dream_rituals BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM collector_dreams prior
+    JOIN collector_dreams resulting ON resulting.id = NEW.resulting_dream_id
+    JOIN keeper_pieces piece ON piece.id = NEW.keeper_piece_id
+     WHERE prior.id = NEW.prior_dream_id
+       AND prior.keeper_piece_id = NEW.keeper_piece_id
+       AND resulting.keeper_piece_id = NEW.keeper_piece_id
+       AND piece.keeper_user_id = NEW.keeper_user_id
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND piece.plate_status NOT IN ('void', 'superseded')
+       AND (
+         (NEW.action = 'reinforce' AND prior.id = resulting.id
+           AND prior.archived_at IS NULL)
+         OR (NEW.action = 'fulfilled' AND prior.id = resulting.id
+           AND prior.fulfilled_at IS NULL AND prior.archived_at IS NULL)
+         OR (NEW.action = 'plant-new' AND prior.id <> resulting.id
+           AND prior.archived_at = NEW.completed_at
+           AND resulting.archived_at IS NULL
+           AND resulting.created_at = NEW.completed_at)
+       )
+  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+END;`;
+
+const DREAM_MUTATION_EXACT_TRIGGER_SQL = `CREATE TRIGGER collector_dream_mutation_exact_application
+BEFORE INSERT ON collector_dream_mutations
+BEGIN
+  SELECT CASE WHEN NEW.request_json IS NULL
+    OR json_valid(NEW.request_json) = 0
+    OR json_type(NEW.request_json) <> 'object'
+    OR NOT EXISTS (
+      SELECT 1
+        FROM collector_dreams dream
+        JOIN keeper_pieces piece ON piece.id = dream.keeper_piece_id
+       WHERE dream.id = NEW.dream_id
+         AND dream.author_user_id = NEW.author_user_id
+         AND dream.archived_at IS NULL
+         AND dream.record_version + 1 = NEW.resulting_version
+         AND piece.keeper_user_id = NEW.author_user_id
+         AND piece.claimed_at IS NOT NULL
+         AND piece.released_at IS NULL
+         AND piece.plate_status NOT IN ('void', 'superseded')
+         AND (
+           (
+             NEW.action = 'edit'
+             AND json_remove(
+               NEW.request_json, '$.body', '$.scope', '$.expectedVersion'
+             ) = '{}'
+             AND json_type(NEW.request_json, '$.body') = 'text'
+             AND json_type(NEW.request_json, '$.scope') = 'text'
+             AND json_type(NEW.request_json, '$.expectedVersion') = 'integer'
+             AND dream.record_version =
+               json_extract(NEW.request_json, '$.expectedVersion')
+           )
+           OR (
+             NEW.action = 'share'
+             AND json_remove(NEW.request_json, '$.visibility') = '{}'
+             AND json_extract(NEW.request_json, '$.visibility')
+               IN ('anonymous', 'attributed')
+           )
+           OR (
+             NEW.action = 'revoke'
+             AND json_remove(NEW.request_json, '$.visibility') = '{}'
+             AND json_extract(NEW.request_json, '$.visibility') = 'private'
+             AND dream.public_shared_at IS NOT NULL
+           )
+         )
+    ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+END;`;
+
+const DREAM_MUTATION_APPLY_TRIGGER_SQL = `CREATE TRIGGER collector_dream_mutation_apply_exactly
+AFTER INSERT ON collector_dream_mutations
+BEGIN
+  UPDATE collector_dreams
+     SET body = json_extract(NEW.request_json, '$.body'),
+         scope = json_extract(NEW.request_json, '$.scope'),
+         updated_at = NEW.created_at,
+         record_version = record_version + 1,
+         last_mutation_id = NEW.id
+   WHERE NEW.action = 'edit'
+     AND id = NEW.dream_id
+     AND author_user_id = NEW.author_user_id
+     AND archived_at IS NULL
+     AND record_version = json_extract(NEW.request_json, '$.expectedVersion');
+
+  UPDATE collector_dreams
+     SET visibility = json_extract(NEW.request_json, '$.visibility'),
+         public_shared_at = NEW.created_at,
+         public_revoked_at = NULL,
+         updated_at = NEW.created_at,
+         record_version = record_version + 1,
+         last_mutation_id = NEW.id
+   WHERE NEW.action = 'share'
+     AND id = NEW.dream_id
+     AND author_user_id = NEW.author_user_id
+     AND archived_at IS NULL
+     AND record_version + 1 = NEW.resulting_version;
+
+  UPDATE collector_dreams
+     SET visibility = 'private',
+         public_revoked_at = NEW.created_at,
+         updated_at = NEW.created_at,
+         record_version = record_version + 1,
+         last_mutation_id = NEW.id
+   WHERE NEW.action = 'revoke'
+     AND id = NEW.dream_id
+     AND author_user_id = NEW.author_user_id
+     AND archived_at IS NULL
+     AND public_shared_at IS NOT NULL
+     AND record_version + 1 = NEW.resulting_version;
+
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM collector_dreams dream
+     WHERE dream.id = NEW.dream_id
+       AND dream.last_mutation_id = NEW.id
+       AND dream.record_version = NEW.resulting_version
+       AND dream.updated_at = NEW.created_at
+       AND (
+         (NEW.action = 'edit'
+           AND dream.body = json_extract(NEW.request_json, '$.body')
+           AND dream.scope = json_extract(NEW.request_json, '$.scope'))
+         OR (NEW.action = 'share'
+           AND dream.visibility = json_extract(NEW.request_json, '$.visibility')
+           AND dream.public_shared_at = NEW.created_at
+           AND dream.public_revoked_at IS NULL)
+         OR (NEW.action = 'revoke'
+           AND dream.visibility = 'private'
+           AND dream.public_shared_at IS NOT NULL
+           AND dream.public_revoked_at = NEW.created_at)
+       )
+  ) THEN RAISE(ABORT, 'dream mutation did not apply exactly') END;
+END;`;
+
+const DREAM_RUNTIME_UPDATE_GUARD_SQL = `CREATE TRIGGER collector_dreams_runtime_update_guard
+BEFORE UPDATE ON collector_dreams
+BEGIN
+  SELECT CASE WHEN NOT (
+    EXISTS (
+      SELECT 1 FROM collector_dream_mutations mutation
+       WHERE mutation.id = NEW.last_mutation_id
+         AND mutation.dream_id = OLD.id
+         AND mutation.author_user_id = OLD.author_user_id
+         AND mutation.resulting_version = OLD.record_version + 1
+         AND NEW.record_version = mutation.resulting_version
+         AND NEW.updated_at = mutation.created_at
+         AND NEW.keeper_piece_id = OLD.keeper_piece_id
+         AND NEW.author_user_id = OLD.author_user_id
+         AND NEW.idempotency_key = OLD.idempotency_key
+         AND NEW.created_at = OLD.created_at
+         AND (
+           (mutation.action = 'edit'
+             AND NEW.body = json_extract(mutation.request_json, '$.body')
+             AND NEW.scope = json_extract(mutation.request_json, '$.scope')
+             AND NEW.visibility = OLD.visibility
+             AND NEW.public_shared_at IS OLD.public_shared_at
+             AND NEW.public_revoked_at IS OLD.public_revoked_at
+             AND NEW.fulfilled_at IS OLD.fulfilled_at
+             AND NEW.archived_at IS OLD.archived_at)
+           OR (mutation.action = 'share'
+             AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+             AND NEW.visibility = json_extract(mutation.request_json, '$.visibility')
+             AND NEW.public_shared_at = mutation.created_at
+             AND NEW.public_revoked_at IS NULL
+             AND NEW.fulfilled_at IS OLD.fulfilled_at
+             AND NEW.archived_at IS OLD.archived_at)
+           OR (mutation.action = 'revoke'
+             AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+             AND NEW.visibility = 'private'
+             AND NEW.public_shared_at IS OLD.public_shared_at
+             AND NEW.public_revoked_at = mutation.created_at
+             AND NEW.fulfilled_at IS OLD.fulfilled_at
+             AND NEW.archived_at IS OLD.archived_at)
+         )
+    )
+    OR EXISTS (
+      SELECT 1 FROM collector_dream_rituals ritual
+       WHERE ritual.action = 'fulfilled'
+         AND ritual.prior_dream_id = OLD.id
+         AND ritual.resulting_dream_id = OLD.id
+         AND ritual.completed_at = NEW.fulfilled_at
+         AND OLD.fulfilled_at IS NULL
+         AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+         AND NEW.visibility = OLD.visibility
+         AND NEW.public_shared_at IS OLD.public_shared_at
+         AND NEW.public_revoked_at IS OLD.public_revoked_at
+         AND NEW.archived_at IS OLD.archived_at
+         AND NEW.keeper_piece_id = OLD.keeper_piece_id
+         AND NEW.author_user_id = OLD.author_user_id
+         AND NEW.idempotency_key = OLD.idempotency_key
+         AND NEW.created_at = OLD.created_at
+         AND NEW.last_mutation_id IS OLD.last_mutation_id
+         AND NEW.updated_at = ritual.completed_at
+         AND NEW.record_version = OLD.record_version + 1
+    )
+    OR (
+      OLD.archived_at IS NULL AND NEW.archived_at IS NOT NULL
+      AND NEW.updated_at = NEW.archived_at
+      AND NEW.record_version = OLD.record_version + 1
+      AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+      AND NEW.visibility = OLD.visibility
+      AND NEW.public_shared_at IS OLD.public_shared_at
+      AND NEW.public_revoked_at IS (
+        CASE WHEN OLD.public_shared_at IS NOT NULL
+          THEN NEW.archived_at ELSE OLD.public_revoked_at END
+      )
+      AND NEW.fulfilled_at IS OLD.fulfilled_at
+      AND NEW.keeper_piece_id = OLD.keeper_piece_id
+      AND NEW.author_user_id = OLD.author_user_id
+      AND NEW.idempotency_key = OLD.idempotency_key
+      AND NEW.created_at = OLD.created_at
+      AND NEW.last_mutation_id IS OLD.last_mutation_id
+    )
+    OR (
+      OLD.public_revoked_at IS NULL AND NEW.public_revoked_at IS NOT NULL
+      AND NEW.updated_at = NEW.public_revoked_at
+      AND NEW.record_version = OLD.record_version + 1
+      AND NEW.body = OLD.body AND NEW.scope = OLD.scope
+      AND NEW.visibility IN (OLD.visibility, 'private')
+      AND NEW.public_shared_at IS OLD.public_shared_at
+      AND NEW.fulfilled_at IS OLD.fulfilled_at
+      AND NEW.archived_at IS OLD.archived_at
+      AND NEW.keeper_piece_id = OLD.keeper_piece_id
+      AND NEW.author_user_id = OLD.author_user_id
+      AND NEW.idempotency_key = OLD.idempotency_key
+      AND NEW.created_at = OLD.created_at
+      AND NEW.last_mutation_id IS OLD.last_mutation_id
+    )
+  ) THEN RAISE(ABORT, 'dream update requires exact authorization') END;
+END;`;
+
+const DREAM_RITUAL_FULFILL_TRIGGER_SQL = `CREATE TRIGGER collector_dream_ritual_fulfill_exactly
+AFTER INSERT ON collector_dream_rituals
+WHEN NEW.action = 'fulfilled'
+BEGIN
+  UPDATE collector_dreams
+     SET fulfilled_at = NEW.completed_at,
+         updated_at = NEW.completed_at,
+         record_version = record_version + 1
+   WHERE id = NEW.prior_dream_id
+     AND id = NEW.resulting_dream_id
+     AND keeper_piece_id = NEW.keeper_piece_id
+     AND archived_at IS NULL
+     AND fulfilled_at IS NULL;
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM collector_dreams
+     WHERE id = NEW.prior_dream_id
+       AND fulfilled_at = NEW.completed_at
+  ) THEN RAISE(ABORT, 'invalid dream ritual completion') END;
+END;`;
+
 /**
  * Generate offline-only SQL after the encrypted artifact has been fully
  * authenticated. Every insert is guarded, conflict-failing and transactional.
@@ -932,7 +1322,12 @@ export function buildRegistryRestoreSql(
     'artwork_claim_requests', 'artwork_transfer_intents', 'artwork_transfer_parties',
     'atlas_source_cities', 'atlas_source_chains', 'atlas_source_chain_events',
     'keeper_intentions', 'piece_fulfillments', 'artwork_acquisitions',
-    'artwork_provenance_entries', 'artwork_claim_evidence', 'artwork_lineage_events',
+    'artwork_provenance_entries', 'artwork_claim_evidence',
+  ]);
+  statements.push('DROP TRIGGER artwork_lineage_first_bound_assign_ordinal;');
+  insertTables(['artwork_lineage_events', 'collector_claim_ordinals']);
+  statements.push(CLAIM_ORDINAL_ASSIGN_TRIGGER_SQL);
+  insertTables([
     'ownership_code_audit', 'registry_maintenance_events',
     'registry_recovery_qualifications', 'artwork_identity_recovery_qualifications',
   ]);
@@ -961,6 +1356,25 @@ export function buildRegistryRestoreSql(
     'collector_curated_cities', 'collector_person_privacy',
     'collector_piece_privacy', 'collector_consent_history',
   ]);
+  statements.push('DROP TRIGGER collector_dreams_insert_current_keeper;');
+  statements.push('DROP TRIGGER collector_dream_markers_current_keeper;');
+  statements.push('DROP TRIGGER collector_dream_rituals_valid_completion;');
+  statements.push('DROP TRIGGER collector_dream_mutation_exact_application;');
+  statements.push('DROP TRIGGER collector_dream_mutation_apply_exactly;');
+  statements.push('DROP TRIGGER collector_dreams_runtime_update_guard;');
+  statements.push('DROP TRIGGER collector_dream_ritual_fulfill_exactly;');
+  insertTables([
+    'collector_dreams', 'collector_dream_markers', 'collector_dream_mutations',
+    'collector_dream_rituals',
+  ]);
+  statements.push(DREAM_INSERT_KEEPER_TRIGGER_SQL);
+  statements.push(DREAM_MARKER_KEEPER_TRIGGER_SQL);
+  statements.push(DREAM_RITUAL_COMPLETION_TRIGGER_SQL);
+  statements.push(DREAM_MUTATION_EXACT_TRIGGER_SQL);
+  statements.push(DREAM_MUTATION_APPLY_TRIGGER_SQL);
+  statements.push(DREAM_RUNTIME_UPDATE_GUARD_SQL);
+  statements.push(DREAM_RITUAL_FULFILL_TRIGGER_SQL);
+  insertTables(['collector_letters']);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);

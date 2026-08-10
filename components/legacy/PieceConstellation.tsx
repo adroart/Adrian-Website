@@ -1,105 +1,75 @@
 import React, { useEffect, useState } from 'react';
-import { Artwork } from '../../types';
+
 import { LAUNCH_FLAGS } from '../../launchFlags';
+import type { Artwork } from '../../types';
+import { fetchCollectorField, type CollectorFieldIdentity } from '../../utils/collectorField';
 
-/**
- * PieceConstellation — the PIECE-LENS scaffold (Decision A + D).
- *
- * One Atlas, two lenses, one shared source:
- *   - mandalacodes renders the MANDALA / codon lens (the 64 codons as rings on a
- *     globe) over the canonical public atlas state.
- *   - Adrian-Website renders the PIECE lens: a single physical artwork as one
- *     star in that same constellation, with a quiet link out to the full map.
- *
- * This is a deliberate SCAFFOLD, not the globe. It does not rebuild the Atlas.
- * It reads the shared public source through /api/atlas/mirror (which fetches
- * mandalacodes' /api/atlas and projects just this piece) and shows the piece as
- * one star. No lorem ipsum: every word here is the real piece's data. The full
- * constellation lives on the canonical lens and is linked, not duplicated.
- *
- * Gated behind the `livingLegacy` flag — renders nothing when off.
- */
+type PieceFieldState =
+  | { status: 'loading'; identity: null }
+  | { status: 'ready'; identity: CollectorFieldIdentity }
+  | { status: 'unavailable'; identity: null };
 
-interface MirrorResponse {
-  ok: boolean;
-  onMap: boolean;
-  star: Record<string, unknown> | null;
-  constellationUrl: string;
+function fieldCopy(identity: CollectorFieldIdentity | null, title: string) {
+  if (!identity) return `Finding ${title} in the collector field.`;
+  if (identity.status === 'registered' && identity.city) {
+    return `It rests in the field at ${identity.city.label}, with the same light as every registered work.`;
+  }
+  if (identity.status === 'private') {
+    return 'It is lit in the field. Its place remains private or unrecorded.';
+  }
+  return 'Its catalog record is present, waiting for its permanent registration.';
 }
 
-export const PieceConstellation: React.FC<{ artwork: Artwork; editionNumber?: number }> = ({
-  artwork,
-  editionNumber = 0,
-}) => {
-  const [mirror, setMirror] = useState<MirrorResponse | null>(null);
-  const [loaded, setLoaded] = useState(false);
+export const PieceConstellation: React.FC<{
+  artwork: Artwork;
+  publicCode: string;
+}> = ({ artwork, publicCode }) => {
+  const [state, setState] = useState<PieceFieldState>({ status: 'loading', identity: null });
 
   useEffect(() => {
     if (!LAUNCH_FLAGS.livingLegacy) return;
-    let active = true;
-    const params = new URLSearchParams({
-      pieceId: artwork.id,
-      editionNumber: String(editionNumber),
-    });
-    fetch(`/api/atlas/mirror?${params.toString()}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (active) {
-          setMirror(data);
-          setLoaded(true);
-        }
+    let current = true;
+    setState({ status: 'loading', identity: null });
+    void fetchCollectorField()
+      .then((field) => {
+        if (!current) return;
+        const entry = field.lights.find((candidate) => candidate.artworkId === artwork.id);
+        const identity = entry?.identity.find((candidate) => candidate.publicCode === publicCode);
+        setState(identity
+          ? { status: 'ready', identity }
+          : { status: 'unavailable', identity: null });
       })
       .catch(() => {
-        if (active) setLoaded(true);
+        if (current) setState({ status: 'unavailable', identity: null });
       });
-    return () => {
-      active = false;
-    };
-  }, [artwork.id, editionNumber]);
+    return () => { current = false; };
+  }, [artwork.id, publicCode]);
 
   if (!LAUNCH_FLAGS.livingLegacy) return null;
 
-  const constellationUrl = mirror?.constellationUrl || 'https://mandalacodes.com/atlas';
-  const onMap = Boolean(mirror?.onMap);
-
   return (
-    <section className="max-w-xl mx-auto mb-16 text-center">
-      <div className="flex items-center justify-center gap-4 mb-8">
+    <section className="mx-auto mb-16 max-w-xl text-center" aria-labelledby="piece-field-title">
+      <div className="mb-8 flex items-center justify-center gap-4" aria-hidden="true">
         <div className="h-px w-12 bg-bronze-300" />
-        <p className="font-label text-[10px] uppercase tracking-[0.25em] text-bronze-600 font-semibold">
-          The Constellation
-        </p>
+        <div className="h-2 w-2 rounded-full bg-bronze-500" />
         <div className="h-px w-12 bg-bronze-300" />
       </div>
-
-      {/* The single star — a quiet point of light, the piece itself. */}
-      <div className="flex justify-center mb-8" aria-hidden="true">
-        <span
-          className={`block w-2 h-2 rounded-full bg-bronze-500 ${
-            onMap ? 'animate-pulse-slow' : ''
-          }`}
-        />
-      </div>
-
-      <p className="font-serif text-[17px] md:text-lg text-wood-700 leading-[1.9] mb-3">
-        {artwork.title} is one light among many.
+      <p className="font-label text-[12px] font-semibold uppercase tracking-[0.12em] text-bronze-600">
+        The collector field
       </p>
-
-      <p className="font-sans text-[14px] text-wood-500 leading-[1.8] mb-8">
-        {loaded
-          ? onMap
-            ? 'It already shines on the shared constellation, beside every other piece that has woken up.'
-            : 'When its steward sets it on the map, it will join the constellation beside every other piece.'
-          : 'Finding this piece on the shared constellation.'}
+      <h3 id="piece-field-title" className="mt-3 font-serif text-2xl text-wood-900">
+        {artwork.title} is one light among the whole body of work.
+      </h3>
+      <p className="mb-8 mt-4 font-sans text-base leading-[1.8] text-wood-600" role="status">
+        {state.status === 'unavailable'
+          ? 'The field could not be reached right now. This artwork record remains available here.'
+          : fieldCopy(state.identity, artwork.title)}
       </p>
-
       <a
-        href={constellationUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block font-label text-[11px] uppercase tracking-[0.15em] text-bronze-600 hover:text-bronze-800 transition-colors font-semibold border-b border-bronze-300 pb-1"
+        href="/atlas"
+        className="inline-flex min-h-11 items-center border-b border-bronze-300 font-label text-[12px] font-semibold uppercase tracking-[0.12em] text-bronze-700 transition-colors hover:text-bronze-900"
       >
-        See the whole constellation
+        Browse the whole field
       </a>
     </section>
   );
