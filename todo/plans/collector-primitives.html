@@ -284,6 +284,12 @@ body{
 .screen.promoted .row:not(.is-open){position:absolute;left:0;right:0;height:0;
   padding:0;border:0;overflow:hidden}
 
+.cert-h{
+  margin-top:20px;margin-bottom:2px;
+  font-family:var(--label);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brass)
+}
+
 /* the household: adding someone, and the quiet line inside them */
 .q-person .q-m{color:var(--brass)}
 .q-person .q-quiet{color:var(--cream-3);opacity:.6}
@@ -797,6 +803,24 @@ body{
 .screen.caretaker .foot > .pill,
 .screen.caretaker .foot > .tlink,
 .screen.caretaker .foot > br{display:none}
+/* THE LIGHT HAS TWO PARTS.
+   --life  the long glow. Everything ever placed, and it NEVER fades. Twenty
+           years of love does not decay because this year was quiet.
+   --near  the near light. Brightens when something is placed and dims over
+           months of silence. A piece being tended right now reads awake.
+   So a long-loved piece that is quiet still reads deeply lit, and nobody who
+   was ever devoted ever looks abandoned. The decay is on attention, not love. */
+
+/* the door is a door. The light SHOWS the state; it does not also have to be
+   the only way in, which made one element do two jobs. */
+.feed{
+  margin-top:13px;align-self:center;background:none;border:1px solid var(--hair);
+  border-radius:999px;padding:8px 20px;cursor:pointer;
+  font-family:var(--body);font-size:13px;color:var(--cream-2);
+  transition:border-color .22s var(--ease),color .22s var(--ease)
+}
+.feed:hover{border-color:var(--brass);color:var(--brass)}
+
 /* a line of light that lengthens, not a number in a ring. It reads as
    brightness because it IS brightness: no score, no count, no total. */
 .meter{
@@ -828,6 +852,7 @@ body{
   position:absolute;left:0;top:50%;transform:translateY(-50%);
   height:1.5px;width:var(--w,29%);
   background:linear-gradient(90deg,var(--brass-2),var(--brass));
+  opacity:calc(.42 + var(--near,1) * .58);
   border-radius:99px;
   box-shadow:0 0 10px rgba(212,184,138,.55);
   /* width, deliberately: scaleX would stretch the glow and the rounded cap
@@ -1150,7 +1175,8 @@ tbody tr:hover td{color:var(--cream)}
                 <span class="halo" id="halo"></span>
                 <span class="bar"><span class="bar-fill" id="mfill"></span></span>
               </button>
-              <p class="meter-label" id="meterLabel">Seven answers placed.<br>Tap the light to open the garden.</p>
+              <p class="meter-label" id="meterLabel">Seven things placed.</p>
+              <button class="feed" id="feedBtn">Place something in it</button>
               <button class="tlink ritual-due" id="ritualLink" hidden>The year has turned</button>
             </div>
 
@@ -1175,6 +1201,14 @@ tbody tr:hover td{color:var(--cream)}
           <button data-arrive="unclaimed">Nobody holds it</button>
           <button data-arrive="claimed">Someone else holds it</button>
           <button data-arrive="signedin">Signed in, not yours</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="ctl-label">Lately tended · the near light</span>
+        <div class="meter-steps">
+          <button data-near="1">This month</button>
+          <button data-near="0.5">Some months ago</button>
+          <button data-near="0.15">A long while</button>
         </div>
       </div>
       <div class="controls">
@@ -1614,9 +1648,17 @@ tbody tr:hover td{color:var(--cream)}
       '<div class="fact"><dt>Series</dt><dd>Universal Language, 1 of 64</dd></div>'+
       '<div class="fact"><dt>Registered</dt><dd>Light 47</dd></div>'+
       '</div>'+
+      '<p class="cert-h">Where it has been</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024</dt><dd>From the studio &middot; Sonoma County</dd></div>'+
+      '<div class="fact"><dt>2031</dt><dd>Passed on &middot; Lisbon</dd></div>'+
+      '<div class="fact"><dt>2038</dt><dd>Sold &middot; Kyoto</dd></div>'+
+      '</div>'+
+      '<p class="ghint">The chain is public: how many hands, when, and where. What each '+
+      'one paid is not, and opens only for whoever holds the piece. Provenance is the '+
+      'sequence; the sums belong to the caretaker.</p>'+
       '<p class="ghint">Placeholder values. Real per piece materials data is still to '+
-      'come from Adrian; the certificate is empty without it. What was paid lives in '+
-      'Piece information, which only its caretaker can open.</p>',
+      'come from Adrian; the certificate is empty without it.</p>',
     hist:'<p>Two entries on the public spine. Names appear only where a caretaker '+
       'chose to be seen.</p>'+
       '<div class="facts">'+
@@ -1649,6 +1691,13 @@ tbody tr:hover td{color:var(--cream)}
       'Adrian, and it is the last thing this flow is waiting on.</p>',
     account:'<p>Nothing from setting up is frozen. Move house and the light moves with '+
       'you.</p>'+
+      '<div class="qlist">'+
+        Q('open','Your birth details')+
+        Q('open','Your links')+
+        Q('answered','What shows','Four choices, changeable any day.')+
+      '</div>'+
+      '<p class="ghint">These are add ons, not steps you missed. Your name and where it '+
+      'lives registered the piece; everything here can be placed any day, forever.</p>'+
       '<div class="facts">'+
       '<div class="fact"><dt>Where it lives</dt><dd>Sonoma County</dd></div>'+
       '<div class="fact"><dt>Your links</dt><dd>Two shown, one hidden</dd></div>'+
@@ -1687,7 +1736,7 @@ tbody tr:hover td{color:var(--cream)}
         P('Ines','daughter','one waiting for you to pass','second')+
         P('Tomas','brother','asked again in March',null)+
       '</div>'+
-      '<button class="addp">Add someone</button>'+
+      '<button class="addp" data-invite>Add someone</button>'+
       '<p class="ghint">Being on this list is not a promise of anything. It is an '+
       'invitation to place your love in the piece, and most people on it will never '+
       'carry it. Where it goes next is set quietly inside a person, and only you see '+
@@ -1710,11 +1759,18 @@ tbody tr:hover td{color:var(--cream)}
       '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
       '<div class="fact"><dt>Materials</dt><dd>Claro walnut, brass inlay</dd></div>'+
       '<div class="fact"><dt>Elements</dt><dd>Earth, air</dd></div>'+
-      '<div class="fact"><dt>What was paid</dt><dd>Caretaker only</dd></div>'+
       '</div>'+
-      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
-      'Illustrative. Real per piece materials data is still to come from Adrian; the '+
-      'certificate is empty without it.</p>',
+      '<p class="cert-h">What it has been worth</p>'+
+      '<div class="facts">'+
+      '<div class="fact"><dt>2024 &middot; from the studio</dt><dd>4,200 &middot; paid</dd></div>'+
+      '<div class="fact"><dt>2031 &middot; passed on</dt><dd>9,000 &middot; part trade, part paid</dd></div>'+
+      '<div class="fact"><dt>2038 &middot; sold</dt><dd>16,500 &middot; paid</dd></div>'+
+      '</div>'+
+      '<p class="ghint">Each line is what the piece was valued at and how it was settled: '+
+      'paid, traded, part traded, or given. A trade has a real value, and forcing it into '+
+      'a number paid would either falsify the ledger or leave a hole in it.</p>'+
+      '<p class="ghint">Declared by whoever passed it on. The record holds what they '+
+      'said; nothing here is confirmed by anyone else.</p>',
     fork:'<p>Two intentions, separated before either begins.</p>'+
       '<div class="facts">'+
       '<div class="fact"><dt>Giving it as a gift</dt><dd>Leave your wishes with the '+
@@ -1730,7 +1786,10 @@ tbody tr:hover td{color:var(--cream)}
     dreams:'The dreams',garden:'The garden',account:'Your account',
     signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
     ritual:'The year turns',ritualfamily:'The people you love',question:'A question',
-    person:'Sara',
+    person:'Sara',passvalue:'What it was worth',
+    invite:'Ask them onto the piece',invitesent:'The letter is sent',
+    joinletter:'A piece has asked for you',
+    inheritletter:'It has come to you',inheritaccept:'It is yours to carry',
     passfork:'Passing it on',passname:'It stays in the house',passsell:'What travels',
     passready:'Let it go',passdone:'It is waiting',
     inherit:'What he kept',inheritread:'In his own words',
@@ -1774,6 +1833,10 @@ tbody tr:hover td{color:var(--cream)}
     if(e.target.closest('[data-person]')){
       screen.classList.remove('promoted');
       startWalk('person');
+    }
+    if(e.target.closest('[data-invite]')){
+      screen.classList.remove('promoted');
+      startWalk('invite');
     }
   });
 
@@ -2057,7 +2120,7 @@ tbody tr:hover td{color:var(--cream)}
       pill:'Begin', to:'sign',
       cap:'Four of four · the only screen with no drawing' },
 
-    /* ── the gathering: five screens, none of them scroll ── */
+    /* ── the gathering: TWO required, the rest are add ons reachable forever ── */
     sign:{ h:'Sign its record', art:'none',
       b:'Earth’s Breath will carry your name from today. Your email is where the '+
         'piece will write to you.',
@@ -2065,9 +2128,9 @@ tbody tr:hover td{color:var(--cream)}
       note:'One account, and it is not only this piece’s. The same name and password '+
         'open your readings on Mandala Codes, the ledger, and anything you order from '+
         'Adrian, already signed in.',
-      pill:'Sign', to:'born',
+      pill:'Sign', to:'lives',
       req:true,
-      cap:'One of five · one account across everything' },
+      cap:'One of two required · one account across everything' },
 
     born:{ h:'Who you are', art:'none',
       b:'For the piece’s astrology, and for the ones who will find you through it.',
@@ -2075,10 +2138,10 @@ tbody tr:hover td{color:var(--cream)}
       fields:[['date','time'],['place of birth']],
       note:'A full reading needs all three. They are never shown to anyone; only what '+
         'they produce can be, and only if you choose.',
-      pill:'Continue', to:'lives',
-      link:'Skip for now', linkTo:'explain',
+      pill:'Continue', to:'__home',
+      link:'Skip for now', linkTo:'__home',
       why:'Why we ask',
-      cap:'Two of five · born only, one idea' },
+      cap:'An add on · reachable forever, never a gate' },
 
     lives:{ h:'Where it lives', art:'none',
       b:'The city Earth’s Breath calls home. Its light shows at city level at most, '+
@@ -2086,17 +2149,17 @@ tbody tr:hover td{color:var(--cream)}
       fields:[['city']],
       note:'If even the city feels close, widen it to the region: the light stays true '+
         'but cannot be pinpointed.',
-      pill:'Continue', to:'links',
-      req:true,
-      cap:'Three of five · the shortest screen in the flow' },
+      pill:'Continue', to:'light47',
+      req:true, last:true,
+      cap:'Two of two required · the shortest screen in the flow' },
 
     links:{ h:'Your links', art:'none',
       b:'For the people your piece moves, so they can find who holds it. Choose which '+
         'ones people see.',
       tiles:['Instagram','X','Your website','+ add another'],
-      pill:'Continue', to:'shows',
-      link:'Skip for now', linkTo:'explain',
-      cap:'Four of five · fully skippable, its own temperature' },
+      pill:'Continue', to:'__home',
+      link:'Skip for now', linkTo:'__home',
+      cap:'An add on · reachable forever, never a gate' },
 
     explain:{ h:'What this is for', art:'none', sheet:true,
       b:'Your birthday ties your piece to your astrology, and it lets the piece mark '+
@@ -2104,7 +2167,7 @@ tbody tr:hover td{color:var(--cream)}
         'links are for the people your piece moves, so they can find who holds it. '+
         'Nothing here is shown without your choice, and everything can be added later.',
       pill:'Add it now', to:'born',
-      link:'Skip anyway', linkTo:'shows',
+      link:'Skip anyway', linkTo:'__home',
       cap:'The explainer · one sheet, two doors' },
 
     shows:{ h:'Your piece shines', art:'none',
@@ -2117,9 +2180,9 @@ tbody tr:hover td{color:var(--cream)}
         'Your name · off until you open it',
         'Your face and links · off until you open them'
       ],
-      pill:'Keep these choices', to:'light47',
-      req:true,
-      cap:'Five of five · the piece shines, the person opts in' },
+      pill:'Keep these choices', to:'__home',
+      link:'Later', linkTo:'__home',
+      cap:'What shows · an add on, changeable any day' },
 
     /* ── ignition ── */
     light47:{ h:'You are Light 47', art:'globelit',
@@ -2204,7 +2267,7 @@ tbody tr:hover td{color:var(--cream)}
         'with the piece, and only whoever holds it can open it.',
       note:'Anything you sealed stays sealed, from them and from everyone after them. '+
         'If there is something you meant to let shine first, the garden is still open.',
-      pill:'Continue', to:'passready',
+      pill:'Continue', to:'passvalue',
       link:'Back to the garden', linkTo:'__garden',
       cap:'The passing \u00b7 one line, never a triage' },
 
@@ -2235,6 +2298,64 @@ tbody tr:hover td{color:var(--cream)}
         'already shines stays shining, because it always does, and her name is on it. '+
         'She keeps her own copy of what she wrote; it simply leaves the piece.',
       cap:'One person \u00b7 the line is private, the removal is total' },
+
+    /* ── THE SALE RECORDS ITS VALUE ──
+       The ledger is only provenance if the sequence is public. The sums are the
+       caretaker's, and a trade has a real value that a cash field would falsify. */
+    passvalue:{ h:'What it was worth', art:'none',
+      b:'The piece keeps its own record of what it has been worth. Anyone can see it has '+
+        'changed hands; only whoever holds it sees these numbers.',
+      fields:[['what it was valued at']],
+      rows:[
+        ['Paid','the whole of it in money','passready'],
+        ['Part trade, part paid','both, and the value is the two together','passready'],
+        ['Traded','another work, or something else entirely','passready'],
+        ['Given','no money moved, and it still has a value','passready']
+      ],
+      note:'This is what you declare. Nobody confirms it, and the record says so.',
+      cap:'The ledger \u00b7 the chain is public, the sums are not' },
+
+    /* ── THE INVITATION IS SENT ──
+       The caretaker's side of the collaborator's arrival. */
+    invite:{ h:'Ask them onto the piece', art:'none',
+      b:'They will be able to place their love in it, and nothing else. No code, no '+
+        'transfer, no inheritance.',
+      fields:[['their name'],['what they are to you'],['their email']],
+      note:'They receive a letter from the piece rather than from an app. What they place '+
+        'passes through you once before it shines, for typos and judgement, never for '+
+        'permission.',
+      pill:'Send it', to:'invitesent',
+      link:'Not now', linkTo:'__home',
+      cap:'The invitation \u00b7 the caretaker\u2019s side' },
+
+    invitesent:{ h:'The piece has written to them', art:'letter',
+      b:'When they answer, they appear on the piece and you will be told.',
+      link:'Return to the piece', linkTo:'__home',
+      cap:'The invitation \u00b7 nothing until they answer' },
+
+    /* ── THE COLLABORATOR ACCEPTS ── */
+    joinletter:{ h:'A piece has asked for you', art:'letter',
+      b:'Sara holds Earth\u2019s Breath, and she has asked you to place your love in it. '+
+        'The piece is hers to carry; what you put in it is yours.',
+      pill:'Open it', to:'joinhello',
+      link:'Not mine', linkTo:'__home',
+      cap:'Arrives by letter \u00b7 the collaborator\u2019s first screen' },
+
+    /* ── THE HEIR ACCEPTS ──
+       Nothing moves without their hand on it, which is why the letter is not
+       enough on its own. */
+    inheritletter:{ h:'Earth\u2019s Breath has come to you', art:'letter',
+      b:'It was his, and he set it to come to you. Nothing has moved yet: it waits for '+
+        'you to take it up.',
+      pill:'Take it up', to:'inheritaccept',
+      link:'Not now', linkTo:'__home',
+      cap:'Arrives by letter \u00b7 nothing has moved yet' },
+
+    inheritaccept:{ h:'It is yours to carry', art:'piece',
+      b:'From today the piece answers to you. Everything he placed in it stays with it, '+
+        'as its story, and what he kept is now yours to open.',
+      pill:'Continue', to:'inherit',
+      cap:'The passing completes \u00b7 by their hand, never by a timer' },
 
     /* ── THE HEIR ARRIVES ──
        The emotional payoff of the three tiers. Someone opens what they inherited
@@ -2421,8 +2542,9 @@ tbody tr:hover td{color:var(--cream)}
       '</button>';
     }
     if(s.lock) mid+='<p class="walk-lock">'+esc(s.lock)+'</p>';
-    if(s.req) mid+='<p class="walk-req">The piece is not registered until this is '+
-      'placed. Leaving now leaves it unregistered; nothing you have written is lost.</p>';
+    if(s.req) mid+='<p class="walk-req">Your name and where it lives are what registers '+
+      'the piece. '+(s.last?'This is the last of them.':'One more after this.')+
+      ' Everything else is an add on you can place any day, forever.</p>';
     if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
 
     walkB.innerHTML=body+mid;
@@ -2604,11 +2726,14 @@ tbody tr:hover td{color:var(--cream)}
       ['One person','person'],
       ['Welcome back','welcome'],['A way back in','forgot']]],
     ['The passing', [['Two exits','passfork'],['It stays in the house','passname'],
-      ['What travels','passsell'],['Let it go','passready'],
-      ['It is waiting','passdone']]],
-    ['After \u00b7 arrives by letter, no door inside the app',
-      [['The heir arrives','inherit'],['In his own words','inheritread'],
-      ['A collaborator arrives','joinhello'],['Who you are (theirs)','joinwho']]]
+      ['What travels','passsell'],['What it was worth','passvalue'],
+      ['Let it go','passready'],['It is waiting','passdone']]],
+    ['Asking someone on', [['Ask them onto the piece','invite'],
+      ['The letter is sent','invitesent']]],
+    ['Arriving by letter', [['A piece has asked for you','joinletter'],
+      ['A collaborator arrives','joinhello'],['Who you are (theirs)','joinwho'],
+      ['It has come to you','inheritletter'],['It is yours to carry','inheritaccept'],
+      ['What he kept','inherit'],['In his own words','inheritread']]]
   ];
   (function buildJump(){
     var host=document.getElementById('jump'), html='';
@@ -2681,6 +2806,22 @@ tbody tr:hover td{color:var(--cream)}
           '\u201cFor Ines, when she is old enough to hold it.\u201d'
       ];
 
+  function setNear(v){
+    screen.style.setProperty('--near', v.toFixed(2));
+    var l=document.getElementById('meterLabel');
+    l.innerHTML = v>0.75 ? l.innerHTML.split('<br>')[0]+'<br>Lately tended.'
+      : v>0.35 ? l.innerHTML.split('<br>')[0]+'<br>Quiet for a while.'
+      : l.innerHTML.split('<br>')[0]+'<br>It has been a long while.';
+  }
+  document.querySelectorAll('[data-near]').forEach(function(b){
+    b.addEventListener('click',function(){
+      setNear(parseFloat(b.dataset.near));
+      cap.textContent=b.dataset.near==='1'
+        ? 'Lately tended \u00b7 the near light is up'
+        : 'Quiet a long while \u00b7 the near light dims, the long glow does not';
+    });
+  });
+
   function setGlow(n){
     var frac=n/TOTAL;
     /* the page comes alive in proportion to what is in it */
@@ -2691,8 +2832,8 @@ tbody tr:hover td{color:var(--cream)}
     mfill.style.setProperty('--w', (6 + frac*94).toFixed(1)+'%');
     halo.style.setProperty('--g', String(0.16 + frac*0.5));
     meterLabel.innerHTML = n===0
-      ? 'The questions are waiting.<br>Tap the light to open the garden.'
-      : (words[n]||n)+' answer'+(n===1?'':'s')+' placed.<br>Tap the light to open the garden.';
+      ? 'Nothing placed in it yet.<br>The light is waiting.'
+      : (words[n]||n)+' thing'+(n===1?'':'s')+' placed.<br>Lately tended.';
     lite('meter',true);
   }
   /* near the birthday, the piece's one yearly moment has its own quiet door */
@@ -2700,7 +2841,14 @@ tbody tr:hover td{color:var(--cream)}
     startWalk('ritual');
   });
 
-  /* the meter is a door, not a readout: it opens the garden */
+  /* the door says what you are going in to do */
+  document.getElementById('feedBtn').addEventListener('click',function(){
+    openRow('garden',null);
+    cap.textContent='Place something in it \u00b7 the light follows, it never asks';
+    lite('meter',true);
+  });
+
+  /* the light is still a door, because it is the thing you look at */
   meter.addEventListener('click',function(){
     if(screen.classList.contains('promoted')){ closeRow(); return; }
     openRow('garden',null);
