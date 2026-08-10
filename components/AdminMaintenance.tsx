@@ -187,7 +187,9 @@ function displayEdition(number: number, size: number | null): string {
   return `${number} of ${size}`;
 }
 
-function displayPrivateAmount(acquisition: MaintenanceAcquisitionInput): string {
+function displayPrivateAmount(
+  acquisition: Pick<MaintenanceAcquisitionInput, 'amountMinor' | 'currency'>,
+): string {
   if (acquisition.amountMinor === null || !acquisition.currency) return 'Not recorded';
   try {
     return formatMaintenanceCurrencyAmount(acquisition.amountMinor, acquisition.currency);
@@ -210,11 +212,13 @@ function downloadText(filename: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-function draftFromAcquisition(acquisition?: MaintenanceAcquisition): AcquisitionDraft {
+function draftFromAcquisition(
+  acquisition?: MaintenanceAcquisition & { acquisitionType: MaintenanceCustodyAcquisitionType },
+): AcquisitionDraft {
   if (!acquisition) return { ...EMPTY_ACQUISITION };
   const amountDraft = maintenanceCurrencyAmountToDraft(acquisition.amountMinor, acquisition.currency);
   return {
-    acquisitionType: acquisition.acquisitionType as MaintenanceCustodyAcquisitionType,
+    acquisitionType: acquisition.acquisitionType,
     acquiredAt: acquisition.acquiredAt?.slice(0, 10) || '',
     ...amountDraft,
     acquirerReference: acquisition.acquirerReference || '',
@@ -293,7 +297,9 @@ const DefinitionList: React.FC<{ items: Array<[string, React.ReactNode]> }> = ({
   </dl>
 );
 
-const AcquisitionSnapshot: React.FC<{ acquisition: MaintenanceAcquisitionInput | null }> = ({ acquisition }) => {
+const AcquisitionSnapshot: React.FC<{
+  acquisition: MaintenanceAcquisitionInput | MaintenanceAcquisition | null;
+}> = ({ acquisition }) => {
   if (!acquisition) return <p className="maintenance-muted">No prior acquisition record.</p>;
   return (
     <DefinitionList items={[
@@ -451,6 +457,10 @@ const AdminMaintenance: React.FC = () => {
   const transitionBusy = saving || stewardSaving || plateSaving || provenanceSaving
     || Boolean(replacementPackage) || Boolean(ambiguousAttempt);
 
+  const guardMaintenanceNavigation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (transitionBusy || !clearMaintenanceAttempts()) event.preventDefault();
+  };
+
   useEffect(() => {
     if (!ambiguousAttempt) return;
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
@@ -598,7 +608,13 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
-    if (acquisition && !canCorrectMaintenanceAcquisition(acquisition)) return;
+    let nextDraft: AcquisitionDraft;
+    if (acquisition) {
+      if (!canCorrectMaintenanceAcquisition(acquisition)) return;
+      nextDraft = draftFromAcquisition(acquisition);
+    } else {
+      nextDraft = draftFromAcquisition();
+    }
     if (!clearMaintenanceAttempts()) return;
     setStewardEditor(null);
     setStewardReview(null);
@@ -607,7 +623,7 @@ const AdminMaintenance: React.FC = () => {
     setProvenanceEditor(undefined);
     setProvenanceReview(null);
     setEditor(acquisition);
-    setAcquisitionDraft(draftFromAcquisition(acquisition || undefined));
+    setAcquisitionDraft(nextDraft);
     setReview(null);
     setReason('');
     setFormError('');
@@ -1513,6 +1529,9 @@ const AdminMaintenance: React.FC = () => {
                     {isLegacySaleAcquisition(acquisition) ? (
                       <Link
                         className={quietButtonClass}
+                        aria-disabled={transitionBusy || undefined}
+                        tabIndex={transitionBusy ? -1 : undefined}
+                        onClick={guardMaintenanceNavigation}
                         to={buildLegacyAcquisitionSalesPath({
                           acquisitionId: acquisition.acquisitionId,
                           artworkId: selected.public.artworkId,

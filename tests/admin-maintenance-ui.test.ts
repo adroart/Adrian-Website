@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, it, mock } from 'node:test';
+import type { MaintenanceAcquisitionInput } from '../utils/adminRegistryMaintenance.ts';
 
 const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -8,6 +9,10 @@ describe('registry Maintenance client contract', () => {
   afterEach(() => mock.restoreAll());
 
   it('offers only custody defaults and keeps legacy sales out of correction flow', async () => {
+    const writeTypeContract: Record<MaintenanceAcquisitionInput['acquisitionType'], true> = {
+      retained: true, loan: true, consignment: true,
+      gift: true, inheritance: true, other: true,
+    };
     const {
       DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
       MAINTENANCE_CUSTODY_ACQUISITION_TYPES,
@@ -16,6 +21,7 @@ describe('registry Maintenance client contract', () => {
     } = await import('../utils/adminRegistryMaintenance.ts');
 
     assert.equal(DEFAULT_MAINTENANCE_ACQUISITION_TYPE, 'retained');
+    assert.deepEqual(Object.keys(writeTypeContract), MAINTENANCE_CUSTODY_ACQUISITION_TYPES);
     assert.deepEqual(MAINTENANCE_CUSTODY_ACQUISITION_TYPES, [
       'retained', 'loan', 'consignment', 'gift', 'inheritance', 'other',
     ]);

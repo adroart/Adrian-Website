@@ -183,6 +183,97 @@ test('opens Maintenance from Artwork and renders the private five-section detail
   await expect(page.getByRole('heading', { name: 'Current public truth' })).toBeHidden();
 });
 
+test('legacy sale handoff cannot abandon a busy or ambiguous maintenance save', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'The guarded retry interaction runs once.');
+  const legacySale = {
+    acquisitionId: 'acq-legacy-navigation', keeperPieceId: 'kp-legacy-navigation',
+    acquisitionType: 'sale', acquiredAt: '2019-01-01', amountMinor: 300000,
+    currency: 'USD', acquirerReference: null, privateNotes: null,
+    documentReference: null, publicProvenance: null, recordVersion: 1,
+    createdAt: '2019-01-01T00:00:00.000Z', updatedAt: '2019-01-01T00:00:00.000Z',
+  };
+  const detail = {
+    id: 'kp-legacy-navigation',
+    public: {
+      artworkId: 'UL-100', title: 'Legacy navigation work', series: 'Universal Language',
+      editionNumber: 1, editionSize: 64, publicCode: 'AR-LEGACY01', plateStatus: 'active',
+    },
+    physical: {
+      registeredAt: null, plateGeneratedAt: null, plateActivatedAt: null, recordVersion: 1,
+      recovery: { verifierPresent: false, envelopePresent: false, backupStatus: null, backupAt: null },
+    },
+    stewardVersion: 0, steward: null, acquisitions: [legacySale],
+    creatorHistory: [], maintenanceHistory: [],
+  };
+  let releaseFirstSave: (() => void) | undefined;
+  let saveAttempts = 0;
+  await page.route('**/api/admin/maintenance/kp-legacy-navigation/acquisitions', async route => {
+    saveAttempts += 1;
+    if (saveAttempts === 1) {
+      await new Promise<void>(resolve => { releaseFirstSave = resolve; });
+      await route.abort('failed');
+      return;
+    }
+    const body = route.request().postDataJSON();
+    await route.fulfill({
+      status: 201, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true, replayed: true,
+        acquisition: {
+          acquisitionId: 'acq-custody-navigation', keeperPieceId: detail.id,
+          ...body.acquisition, recordVersion: 1,
+          createdAt: '2026-08-10T00:00:00.000Z', updatedAt: '2026-08-10T00:00:00.000Z',
+        },
+      }),
+    });
+  });
+  await page.route('**/api/admin/maintenance**', async route => {
+    const url = new URL(route.request().url());
+    if (route.request().method() !== 'GET') return route.fallback();
+    if (url.pathname === '/api/admin/maintenance') {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, pieces: [{
+          id: detail.id, artworkId: detail.public.artworkId, title: detail.public.title,
+          editionNumber: detail.public.editionNumber, publicCode: detail.public.publicCode,
+          plateStatus: detail.public.plateStatus,
+        }] }),
+      });
+    }
+    if (url.pathname === `/api/admin/maintenance/${detail.id}`) {
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, piece: detail }),
+      });
+    }
+    return route.continue();
+  });
+
+  await page.goto('/admin/maintenance');
+  await page.getByRole('button', { name: /Legacy navigation work/ }).click();
+  const handoff = page.getByRole('link', { name: 'Open verified sales' });
+  await page.getByRole('button', { name: 'Record acquisition', exact: true }).click();
+  await page.getByRole('button', { name: 'Review acquisition' }).click();
+  await page.getByLabel('Reason for this change').fill('Exercise guarded navigation.');
+  await page.getByLabel('Registry secret').fill('local-development-secret');
+  await page.getByRole('button', { name: 'Unlock registry' }).click();
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+  await expect(page.getByRole('button', { name: 'Saving…' })).toBeVisible();
+  await expect(handoff).toHaveAttribute('aria-disabled', 'true');
+  await handoff.click({ force: true });
+  await expect(page).toHaveURL(/\/admin\/maintenance$/);
+
+  releaseFirstSave?.();
+  await expect(page.getByText(/Retry the unchanged request before editing/)).toBeVisible();
+  await handoff.click({ force: true });
+  await expect(page).toHaveURL(/\/admin\/maintenance$/);
+
+  await page.getByRole('button', { name: 'Confirm save' }).click();
+  await expect(page.getByText('Acquisition recorded.', { exact: true })).toBeVisible();
+  await handoff.click();
+  await expect(page).toHaveURL(/\/admin\/collector-sales\?source=legacy_acquisition&acquisitionId=acq-legacy-navigation&artworkId=UL-100&keeperPieceId=kp-legacy-navigation$/);
+});
+
 test('reviews, unlocks, creates, and corrects a private acquisition', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'Mutation flow runs once against the shared development mock.');
   const privateNote = `Private browser-flow ${Date.now()}-${Math.random()}`;
@@ -246,7 +337,7 @@ test('preserves a correction draft when version-conflict detail reload fails', a
         idempotencyKey: `conflict-reload-${suffix}`,
         reason: 'Create reload failure fixture.',
         acquisition: {
-          acquisitionType: 'sale', acquiredAt: null, amountMinor: 4200, currency: 'USD',
+          acquisitionType: 'consignment', acquiredAt: null, amountMinor: 4200, currency: 'USD',
           acquirerReference: null, privateNotes: `Reload failure ${suffix}`,
           documentReference: null, publicProvenance: null,
         },
@@ -356,7 +447,7 @@ test('development Maintenance API replays idempotent create and correction reque
     const createKey = `mock-create-${suffix}`;
     const note = `Mock replay ${suffix}`;
     const acquisition = {
-      acquisitionType: 'sale', acquiredAt: null, amountMinor: 10001, currency: 'USD',
+      acquisitionType: 'consignment', acquiredAt: null, amountMinor: 10001, currency: 'USD',
       acquirerReference: null, privateNotes: note, documentReference: null,
       publicProvenance: null,
     };

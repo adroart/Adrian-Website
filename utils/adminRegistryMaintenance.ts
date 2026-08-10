@@ -16,15 +16,17 @@ export type MaintenanceCustodyAcquisitionType =
   typeof MAINTENANCE_CUSTODY_ACQUISITION_TYPES[number];
 export const DEFAULT_MAINTENANCE_ACQUISITION_TYPE: MaintenanceCustodyAcquisitionType = 'retained';
 
-export function isLegacySaleAcquisition(
-  acquisition: Pick<MaintenanceAcquisitionInput, 'acquisitionType'>,
-): boolean {
+type MaintenanceAcquisitionTypeCarrier = { acquisitionType: MaintenanceAcquisitionType };
+
+export function isLegacySaleAcquisition<T extends MaintenanceAcquisitionTypeCarrier>(
+  acquisition: T,
+): acquisition is T & { acquisitionType: 'sale' } {
   return acquisition.acquisitionType === 'sale';
 }
 
-export function canCorrectMaintenanceAcquisition(
-  acquisition: Pick<MaintenanceAcquisitionInput, 'acquisitionType'>,
-): boolean {
+export function canCorrectMaintenanceAcquisition<T extends MaintenanceAcquisitionTypeCarrier>(
+  acquisition: T,
+): acquisition is T & { acquisitionType: MaintenanceCustodyAcquisitionType } {
   return !isLegacySaleAcquisition(acquisition);
 }
 
@@ -79,7 +81,7 @@ export type MaintenanceListItem = {
 };
 
 export type MaintenanceAcquisitionInput = {
-  acquisitionType: MaintenanceAcquisitionType;
+  acquisitionType: MaintenanceCustodyAcquisitionType;
   acquiredAt: string | null;
   amountMinor: number | null;
   currency: string | null;
@@ -89,7 +91,8 @@ export type MaintenanceAcquisitionInput = {
   publicProvenance: string | null;
 };
 
-export type MaintenanceAcquisition = MaintenanceAcquisitionInput & {
+export type MaintenanceAcquisition = Omit<MaintenanceAcquisitionInput, 'acquisitionType'> & {
+  acquisitionType: MaintenanceAcquisitionType;
   acquisitionId: string;
   keeperPieceId: string;
   recordVersion: number;
