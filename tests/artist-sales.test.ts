@@ -249,7 +249,7 @@ function mediaStream(chunks: unknown[]) {
   });
 }
 
-async function readMediaStream(source: ReadableStream<Uint8Array>) {
+async function readMediaStream(source: ReadableStream<Uint8Array>, onChunk?: (chunk: Uint8Array) => void) {
   const reader = source.getReader();
   const chunks: Uint8Array[] = [];
   let length = 0;
@@ -257,6 +257,7 @@ async function readMediaStream(source: ReadableStream<Uint8Array>) {
     const read = await reader.read();
     if (read.done) break;
     const chunk = new Uint8Array(read.value.buffer, read.value.byteOffset, read.value.byteLength);
+    onChunk?.(chunk);
     chunks.push(chunk);
     length += chunk.byteLength;
   }
@@ -296,7 +297,13 @@ function mediaBucket(options: {
   recordPutBytes?: boolean;
   streamChunkSize?: number;
   trackLifecycles?: boolean;
+  admissionHeadFailure?: Error;
+  admissionPutFailureAt?: number;
 } = {}) {
+  const admissionKey = 'artwork-ledger/_private/upload-admission';
+  let admission: { key: string; etag: string; customMetadata: Record<string, string> } | null = null;
+  let admissionPutNumber = 0;
+  let admissionEtag = 0;
   const objects = new Map<string, FakeMediaObject>();
   const puts: Array<{ key: string; bytes: Uint8Array; options: any }> = [];
   const streamMetrics = {
@@ -308,6 +315,8 @@ function mediaBucket(options: {
     maxActiveLifecycles: 0,
     maxActiveChunkBytes: 0,
     maxChunkBytes: 0,
+    putChunkCount: 0,
+    maxPutChunkBytes: 0,
   };
   let putNumber = 0;
   let gets = 0;
@@ -387,8 +396,27 @@ function mediaBucket(options: {
     puts,
     streamMetrics,
     get gets() { return gets; },
+    get admission() { return admission; },
+    setAdmission(value: typeof admission) { admission = value; },
     bucket: {
-      async put(key: string, value: ReadableStream<Uint8Array>, putOptions: any) {
+      async put(key: string, value: ReadableStream<Uint8Array> | Uint8Array, putOptions: any) {
+        if (key === admissionKey) {
+          admissionPutNumber += 1;
+          if (options.admissionPutFailureAt === admissionPutNumber) {
+            throw new Error('private admission put failure');
+          }
+          const onlyIf = putOptions?.onlyIf;
+          if (onlyIf?.etagDoesNotMatch === '*' && admission) return null;
+          if (onlyIf?.etagMatches !== undefined
+            && (!admission || admission.etag !== onlyIf.etagMatches)) return null;
+          admissionEtag += 1;
+          admission = {
+            key,
+            etag: `admission-etag-${admissionEtag}`,
+            customMetadata: structuredClone(putOptions?.customMetadata ?? {}),
+          };
+          return structuredClone(admission);
+        }
         putNumber += 1;
         const currentPut = putNumber;
         if (options.trackLifecycles) {
@@ -405,7 +433,10 @@ function mediaBucket(options: {
         puts.push(putRecord);
         try {
           await options.beforePut?.(currentPut);
-          const valueBytes = await readMediaStream(value);
+          const valueBytes = await readMediaStream(value as ReadableStream<Uint8Array>, (chunk) => {
+            streamMetrics.putChunkCount += 1;
+            streamMetrics.maxPutChunkBytes = Math.max(streamMetrics.maxPutChunkBytes, chunk.byteLength);
+          });
           if (options.recordPutBytes !== false) putRecord.bytes = valueBytes.slice();
           if (options.putFailure || options.failPutAt === currentPut) {
             throw options.putFailure ?? new Error('simulated put failure');
@@ -422,6 +453,11 @@ function mediaBucket(options: {
           if (options.trackLifecycles) streamMetrics.activeLifecycles -= 1;
           throw error;
         }
+      },
+      async head(key: string) {
+        if (options.admissionHeadFailure) throw options.admissionHeadFailure;
+        if (key === admissionKey) return admission && structuredClone(admission);
+        return null;
       },
       async get(key: string) {
         gets += 1;
@@ -475,7 +511,7 @@ describe('authenticity media immutable R2 storage', () => {
     const moduleState = source.slice(0, source.indexOf('function codedError'));
     assert.match(moduleState, /const LOCAL_CODED_ERRORS = new WeakSet\(\);/);
     assert.doesNotMatch(source,
-      /activeMediaUpload|nextMediaUploadGeneration|acquireMediaAdmission|media_upload_busy|waitUntil/);
+      /activeMediaUpload|nextMediaUploadGeneration|mediaAdmissionQueue|waitUntil/);
     const bytes = new Uint8Array([1, 2, 3]);
     const result = await storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
       artworkRecordId: 'record-stream-contract',
@@ -505,6 +541,66 @@ describe('authenticity media immutable R2 storage', () => {
     assert.match(wrangler,
       /compatibility_flags = \["nodejs_compat", "enable_request_signal"\]/);
     assert.doesNotMatch(wrangler, /handle_cross_request_promise_resolution/);
+  });
+
+  it('uses an active durable R2 lease to reject busy uploads before reading their source', async () => {
+    let sourceReads = 0;
+    let headCalls = 0;
+    const bucket = {
+      async put(key: string) {
+        assert.equal(key, 'artwork-ledger/_private/upload-admission');
+        return null;
+      },
+      async head(key: string) {
+        headCalls += 1;
+        return {
+          key,
+          etag: 'lease-etag-active',
+          customMetadata: {
+            state: 'active',
+            ownerToken: '123e4567-e89b-42d3-a456-426614174000',
+            expiresAt: String(Date.now() + 60_000),
+          },
+        };
+      },
+    };
+    const source = new ReadableStream({
+      pull(controller) {
+        sourceReads += 1;
+        controller.enqueue(new Uint8Array([1]));
+        controller.close();
+      },
+    }, { highWaterMark: 0 });
+    await assert.rejects(storeArtworkLedgerMediaRaw(bucket, {
+      artworkRecordId: 'record-durable-busy',
+      source,
+      contentLength: 1,
+      contentType: 'image/png',
+      signal: new AbortController().signal,
+    }), mediaErrorCode('media_upload_busy'));
+    assert.equal(headCalls, 1);
+    assert.equal(sourceReads, 0);
+  });
+
+  it('collapses 200,000 one-byte source chunks into one aggregate and fixed upload views', async () => {
+    const contentLength = 200_000;
+    let emitted = 0;
+    const source = new ReadableStream({
+      pull(controller) {
+        if (emitted === contentLength) { controller.close(); return; }
+        controller.enqueue(new Uint8Array([emitted % 251]));
+        emitted += 1;
+      },
+    }, { highWaterMark: 0 });
+    const fake = mediaBucket({ recordPutBytes: false });
+    const result = await storeArtworkLedgerMediaRaw(fake.bucket, {
+      artworkRecordId: 'record-one-byte-fragments', source, contentLength,
+      contentType: 'image/png', signal: new AbortController().signal,
+    });
+    assert.equal(result.byteLength, contentLength);
+    assert.equal(emitted, contentLength);
+    assert.equal(fake.streamMetrics.putChunkCount, Math.ceil(contentLength / (64 * 1024)));
+    assert.ok(fake.streamMetrics.maxPutChunkBytes <= 64 * 1024);
   });
 
   it('requires a genuine live AbortSignal and request body stream before any R2 work', async () => {
@@ -782,9 +878,16 @@ describe('authenticity media immutable R2 storage', () => {
       Object.assign(new Error('condition rejected'), { code: 'PreconditionFailed' }),
     ]) {
       const objects = new Map(nullFake.objects);
+      const leaseFake = mediaBucket();
       let gets = 0;
       const bucket = {
-        async put() { throw conditionError; },
+        async put(key: string, value: any, options: any) {
+          if (key === 'artwork-ledger/_private/upload-admission') {
+            return leaseFake.bucket.put(key, value, options);
+          }
+          throw conditionError;
+        },
+        head: leaseFake.bucket.head,
         async get(key: string) {
           gets += 1;
           const stored = objects.get(key);
@@ -889,34 +992,49 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(fake.objects.size, 1);
   });
 
-  it('lets overlapping streams converge conditionally while different bytes stay distinct', async () => {
-    const sameInput = { artworkRecordId: 'record-race', bytes: new Uint8Array([1, 1, 2, 3]), contentType: 'image/webp' };
+  it('returns distributed busy to overlap, then exact retry converges and releases immediately', async () => {
     let releaseFirstPut: (() => void) | undefined;
     let firstPutEnteredResolve: (() => void) | undefined;
     const firstPutEntered = new Promise<void>((resolve) => { firstPutEnteredResolve = resolve; });
     const firstPutGate = new Promise<void>((resolve) => { releaseFirstPut = resolve; });
-    const gatedFake = mediaBucket({
+    const fake = mediaBucket({
       async beforePut(putNumber) {
-        if (putNumber === 1) {
-          firstPutEnteredResolve?.();
-          await firstPutGate;
-        }
+        if (putNumber === 1) { firstPutEnteredResolve?.(); await firstPutGate; }
       },
     });
-    const firstPending = storeArtworkLedgerMedia(gatedFake.bucket, sameInput);
+    const input = {
+      artworkRecordId: 'record-race',
+      bytes: new Uint8Array([1, 1, 2, 3]),
+      contentType: 'image/webp',
+    };
+    const firstPending = storeArtworkLedgerMedia(fake.bucket, input);
     await firstPutEntered;
-    const overlapping = storeArtworkLedgerMedia(gatedFake.bucket, sameInput);
-    const differentInput = { ...sameInput, bytes: new Uint8Array([9, 9]) };
-    const differentPending = storeArtworkLedgerMedia(gatedFake.bucket, differentInput);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(gatedFake.puts.length, 3);
+    let busyReads = 0;
+    const busySource = new ReadableStream({
+      pull(controller) {
+        busyReads += 1;
+        controller.enqueue(input.bytes);
+        controller.close();
+      },
+    }, { highWaterMark: 0 });
+    await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+      artworkRecordId: input.artworkRecordId,
+      source: busySource,
+      contentLength: input.bytes.byteLength,
+      contentType: input.contentType,
+      signal: new AbortController().signal,
+    }), mediaErrorCode('media_upload_busy'));
+    assert.equal(busyReads, 0);
     releaseFirstPut?.();
-    const [first, exactRetry, different] = await Promise.all([
-      firstPending, overlapping, differentPending,
-    ]);
-    assert.deepEqual(exactRetry, first);
+    const first = await firstPending;
+    assert.equal(fake.admission?.customMetadata.state, 'released');
+    const retry = await storeArtworkLedgerMedia(fake.bucket, input);
+    assert.deepEqual(retry, first);
+    const different = await storeArtworkLedgerMedia(fake.bucket, {
+      ...input, bytes: new Uint8Array([9, 9]),
+    });
     assert.notEqual(different.reference, first.reference);
-    assert.equal(gatedFake.objects.size, 2);
+    assert.equal(fake.objects.size, 2);
   });
 
   it('cancels source, put, get, and read-back waits without blocking independent requests', async () => {
@@ -1064,100 +1182,161 @@ describe('authenticity media immutable R2 storage', () => {
     });
   });
 
-  it('streams six distinct maximum uploads concurrently with one owned aggregate per call', async () => {
+  it('admits one of twelve concurrent maximum streams and leaves busy sources unread', async () => {
     const contentLength = 15 * 1024 * 1024;
     const chunkSize = 64 * 1024;
-    const sourceChunks = new WeakSet<object>();
-    const copiedByPut = new Map<string, number>();
-    const markerByKey = new Map<string, number>();
-    let activePuts = 0;
-    let maxActivePuts = 0;
-    let maxSourceChunk = 0;
-    let maxPutChunk = 0;
-    let maxReadBackChunk = 0;
-
-    const patternedStream = (marker: number, trackSource: boolean) => {
+    let releasePut: (() => void) | undefined;
+    let putEnteredResolve: (() => void) | undefined;
+    const putEntered = new Promise<void>((resolve) => { putEnteredResolve = resolve; });
+    const putGate = new Promise<void>((resolve) => { releasePut = resolve; });
+    const fake = mediaBucket({
+      recordPutBytes: false,
+      async beforePut() { putEnteredResolve?.(); await putGate; },
+    });
+    const reads = Array.from({ length: 12 }, () => 0);
+    const sourceFor = (index: number) => {
       let remaining = contentLength;
-      return new ReadableStream<Uint8Array>({
+      return new ReadableStream({
         pull(controller) {
+          reads[index] += 1;
           if (remaining === 0) { controller.close(); return; }
           const length = Math.min(chunkSize, remaining);
           remaining -= length;
           const chunk = new Uint8Array(length);
-          chunk.fill(marker);
-          if (trackSource) {
-            sourceChunks.add(chunk);
-            maxSourceChunk = Math.max(maxSourceChunk, chunk.byteLength);
-          } else {
-            maxReadBackChunk = Math.max(maxReadBackChunk, chunk.byteLength);
-          }
+          chunk.fill(index + 1);
           controller.enqueue(chunk);
         },
       }, { highWaterMark: 0 });
     };
-
-    const bucket = {
-      async put(key: string, body: ReadableStream<Uint8Array>) {
-        activePuts += 1;
-        maxActivePuts = Math.max(maxActivePuts, activePuts);
-        const reader = body.getReader();
-        let total = 0;
-        let marker = 0;
-        while (true) {
-          const read = await reader.read();
-          if (read.done) break;
-          assert.equal(sourceChunks.has(read.value), false);
-          maxPutChunk = Math.max(maxPutChunk, read.value.byteLength);
-          total += read.value.byteLength;
-          marker ||= read.value[0];
-          await Promise.resolve();
-        }
-        activePuts -= 1;
-        copiedByPut.set(key, total);
-        markerByKey.set(key, marker);
-        return { key };
-      },
-      async get(key: string) {
-        const marker = markerByKey.get(key)!;
-        return {
-          key,
-          size: contentLength,
-          httpMetadata: { contentType: 'image/png' },
-          body: patternedStream(marker, false),
-        };
-      },
-    };
-
-    const expectedHashes = new Map<number, string>();
-    for (let marker = 1; marker <= 6; marker += 1) {
-      const hash = createHash('sha256');
-      const chunk = new Uint8Array(chunkSize);
-      chunk.fill(marker);
-      for (let offset = 0; offset < contentLength; offset += chunk.byteLength) hash.update(chunk);
-      expectedHashes.set(marker, hash.digest('hex'));
-    }
-    const pending = Array.from({ length: 6 }, (_, index) => {
-      const marker = index + 1;
-      return storeArtworkLedgerMediaRaw(bucket, {
-        artworkRecordId: `record-max-stream-${marker}`,
-        source: patternedStream(marker, true),
+    const first = storeArtworkLedgerMediaRaw(fake.bucket, {
+      artworkRecordId: 'record-max-owner',
+      source: sourceFor(0),
+      contentLength,
+      contentType: 'image/png',
+      signal: new AbortController().signal,
+    });
+    await putEntered;
+    const contenders = await Promise.allSettled(Array.from({ length: 11 }, (_, offset) => {
+      const index = offset + 1;
+      return storeArtworkLedgerMediaRaw(fake.bucket, {
+        artworkRecordId: `record-max-busy-${index}`,
+        source: sourceFor(index),
         contentLength,
         contentType: 'image/png',
         signal: new AbortController().signal,
       });
+    }));
+    assert.ok(contenders.every((entry) => entry.status === 'rejected'
+      && (entry.reason as { code?: string }).code === 'media_upload_busy'));
+    assert.ok(reads[0] > 0);
+    assert.ok(reads.slice(1).every((count) => count === 0));
+    assert.equal(fake.puts.length, 1);
+    releasePut?.();
+    await first;
+  });
+
+  it('takes over an expired crash lease once and prevents a stale owner release', async () => {
+    let releaseOld: (() => void) | undefined;
+    let oldEnteredResolve: (() => void) | undefined;
+    const oldEntered = new Promise<void>((resolve) => { oldEnteredResolve = resolve; });
+    const oldGate = new Promise<void>((resolve) => { releaseOld = resolve; });
+    const fake = mediaBucket({
+      async beforePut(putNumber) {
+        if (putNumber === 1) { oldEnteredResolve?.(); await oldGate; }
+      },
     });
-    const results = await Promise.all(pending);
-    assert.equal(maxActivePuts, 6);
-    assert.equal(copiedByPut.size, 6);
-    assert.ok([...copiedByPut.values()].every((length) => length === contentLength));
-    assert.equal(new Set(results.map((result) => result.reference)).size, 6);
-    for (let index = 0; index < results.length; index += 1) {
-      assert.equal(results[index].sha256, expectedHashes.get(index + 1));
-      assert.equal(results[index].byteLength, contentLength);
+    const old = storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-crashed-owner', bytes: new Uint8Array([1]), contentType: 'image/png',
+    });
+    const oldOutcome = old.then(() => null, (error) => error);
+    await oldEntered;
+    const crashedLease = fake.admission!;
+    crashedLease.customMetadata.expiresAt = String(Date.now() - 1);
+
+    const successor = await storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-expired-successor', bytes: new Uint8Array([2]), contentType: 'image/png',
+    });
+    assert.match(successor.reference, /^artwork-ledger\/record-expired-successor\//);
+    const successorToken = fake.admission!.customMetadata.ownerToken;
+    assert.equal(fake.admission!.customMetadata.state, 'released');
+    releaseOld?.();
+    const staleFailure = await oldOutcome;
+    assert.equal(staleFailure?.code, 'media_backup_failed');
+    assert.equal(fake.admission!.customMetadata.ownerToken, successorToken);
+  });
+
+  it('fails closed on malformed/head/release lease faults without leaking private facts', async () => {
+    const privateId = 'record-private-lock-fact';
+    const malformed = mediaBucket();
+    malformed.setAdmission({
+      key: 'artwork-ledger/_private/upload-admission', etag: 'bad-etag',
+      customMetadata: { state: 'active', ownerToken: privateId, expiresAt: 'not-a-time' },
+    });
+    let malformedReads = 0;
+    await assert.rejects(storeArtworkLedgerMediaRaw(malformed.bucket, {
+      artworkRecordId: privateId,
+      source: new ReadableStream({ pull() { malformedReads += 1; } }, { highWaterMark: 0 }),
+      contentLength: 1, contentType: 'image/png', signal: new AbortController().signal,
+    }), (error: Error & { code?: string }) => {
+      assertSanitizedMediaError(error, 'media_backup_failed', [privateId]);
+      return true;
+    });
+    assert.equal(malformedReads, 0);
+
+    const headOptions: any = {};
+    const headFailure = mediaBucket(headOptions);
+    await storeArtworkLedgerMedia(headFailure.bucket, {
+      artworkRecordId: 'record-prime-lock', bytes: new Uint8Array([1]), contentType: 'image/png',
+    });
+    headOptions.admissionHeadFailure = new Error(`private head ${privateId}`);
+    await assert.rejects(storeArtworkLedgerMedia(headFailure.bucket, {
+      artworkRecordId: privateId, bytes: new Uint8Array([2]), contentType: 'image/png',
+    }), mediaErrorCode('media_backup_failed'));
+
+    const releaseFailure = mediaBucket({ admissionPutFailureAt: 2 });
+    await assert.rejects(storeArtworkLedgerMedia(releaseFailure.bucket, {
+      artworkRecordId: privateId, bytes: new Uint8Array([3]), contentType: 'image/png',
+    }), mediaErrorCode('media_backup_failed'));
+    assert.equal(releaseFailure.objects.size, 1);
+    assert.doesNotMatch(JSON.stringify(releaseFailure.admission), new RegExp(privateId));
+  });
+
+  it('times out before lease expiry, releases safely, and permits immediate takeover', async () => {
+    const originalNow = Date.now;
+    let now = 1_800_000_000_000;
+    Date.now = () => now;
+    let releaseRead: (() => void) | undefined;
+    let readEnteredResolve: (() => void) | undefined;
+    const readEntered = new Promise<void>((resolve) => { readEnteredResolve = resolve; });
+    const readGate = new Promise<void>((resolve) => { releaseRead = resolve; });
+    const fake = mediaBucket();
+    try {
+      const pending = storeArtworkLedgerMediaRaw(fake.bucket, {
+        artworkRecordId: 'record-timeout',
+        source: new ReadableStream({
+          async pull(controller) {
+            readEnteredResolve?.();
+            await readGate;
+            controller.enqueue(new Uint8Array([1]));
+            controller.close();
+          },
+        }),
+        contentLength: 1, contentType: 'image/png', signal: new AbortController().signal,
+      });
+      await readEntered;
+      const leaseExpiry = Number(fake.admission!.customMetadata.expiresAt);
+      now += 30_001;
+      assert.ok(now < leaseExpiry);
+      releaseRead?.();
+      await assert.rejects(pending, mediaErrorCode('media_upload_timeout'));
+      assert.equal(fake.admission!.customMetadata.state, 'released');
+      await storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-after-timeout', bytes: new Uint8Array([2]), contentType: 'image/png',
+      });
+    } finally {
+      releaseRead?.();
+      Date.now = originalNow;
     }
-    assert.ok(maxSourceChunk <= chunkSize);
-    assert.ok(maxPutChunk <= chunkSize);
-    assert.ok(maxReadBackChunk <= chunkSize);
   });
 
   it('allows a second request to finish while another R2 put remains pending', async () => {
