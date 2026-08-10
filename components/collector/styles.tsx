@@ -60,6 +60,12 @@ export const CollectorStyles: React.FC = () => (
     .collector-root cite { font-style: normal }
     .collector-root h1, .collector-root h2, .collector-root h3 { margin: 0 }
 
+    /* unwritten copy, marked. Off unless the root asks for it. */
+    .collector-ph { border-bottom: 0; padding-bottom: 1px }
+    .collector-root[data-marks="1"] .collector-ph {
+      border-bottom: 1px dashed ${C.wrongEdge};
+    }
+
     .collector-row:hover { color: ${C.brass} !important }
     .collector-row:hover .collector-chev { color: ${C.brass} !important }
     .collector-scroll { scrollbar-width: none }

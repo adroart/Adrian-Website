@@ -26,6 +26,20 @@ person types is thrown away on the next screen.
 `/collector`, which is chromeless and off the site's navigation. `?screen=<key>`
 lands directly on one surface.
 
+It also builds into **one self contained HTML file** that opens by double
+clicking it, with React and the fonts inlined and no network request of any
+kind, so it can be handed to anyone without a repo or a server:
+
+```
+npm run collector:prototype                    # writes collector-prototype.html
+npm run collector:prototype -- out.html        # somewhere else
+npm run collector:prototype -- out.html --fragment   # for publishing as an artifact
+```
+
+The chips under the phone are the review harness. One of them switches the
+marking of unwritten copy on and off, so the same walk reads either as a
+worklist or as a visitor would see it.
+
 `components/WorksPage.tsx` at `/works/:code`, where the engraved QR actually
 lands, is **untouched**. Folding this body into it is the next pass; doing it
 before the look is settled would put an unfinished surface on live

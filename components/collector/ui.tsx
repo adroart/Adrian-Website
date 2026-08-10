@@ -119,16 +119,17 @@ export const Note: React.FC<{ children: React.ReactNode; top?: number }> = ({ ch
 );
 
 /**
- * Marks placeholder copy in dev with a hairline underline, so no unwritten line
- * can reach Adrian disguised as finished copy. Invisible in production.
+ * Marks unwritten copy with a hairline underline, so no placeholder can reach
+ * Adrian disguised as finished copy.
+ *
+ * The span is always rendered; whether the underline shows is decided by
+ * `data-marks` on the collector root, so a reviewer can switch it off mid walk
+ * and read the screens as a visitor would, at no re-render cost.
  */
 export const Flag: React.FC<{ text: React.ReactNode }> = ({ text }) => {
   if (typeof text !== 'string' || !isPlaceholder(text)) return <>{text}</>;
   return (
-    <span
-      title="Placeholder. Not Adrian's words yet."
-      style={{ borderBottom: `1px dashed ${C.wrongEdge}`, paddingBottom: 1 }}
-    >
+    <span className="collector-ph" title="Placeholder. Not Adrian's words yet.">
       {text}
     </span>
   );

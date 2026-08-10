@@ -16,18 +16,22 @@
  * checkable against the file rather than against a memory.
  */
 
-const IS_DEV = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+/** Whether unwritten copy is marked on screen. On in dev; a reviewer walking
+ *  the flow can turn it off to read the screens as a visitor would. */
+export const MARKS_DEFAULT =
+  typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 
 /** Adrian's words, settled. Used verbatim. */
 export const locked = (s: string): string => s;
 
 /**
- * Not yet written. Returns the string, and marks it in dev so it is impossible
- * to mistake for finished copy. Never ships unmarked.
+ * Not yet written. Returns the string, and registers it so it can be marked on
+ * screen. Never ships silently: a placeholder that nobody can see is a
+ * placeholder that reaches Adrian looking finished.
  */
 export const placeholder = (s: string): string => s;
 
-/** True when a string came from placeholder(). Drives the dev-only marker. */
+/** Every string that came from placeholder(). Drives the marker. */
 export const PLACEHOLDERS = new Set<string>();
 
 const ph = (s: string): string => {
@@ -35,7 +39,12 @@ const ph = (s: string): string => {
   return s;
 };
 
-export const isPlaceholder = (s: string): boolean => IS_DEV && PLACEHOLDERS.has(s);
+/**
+ * Whether this exact string is unwritten copy. Membership only: whether the
+ * mark is *visible* is a CSS matter, set by `data-marks` on the collector root,
+ * so toggling it costs no re-render.
+ */
+export const isPlaceholder = (s: string): boolean => PLACEHOLDERS.has(s);
 
 /* ------------------------------------------------------------------ *
  * The walking example. Every screen swaps in the real piece at runtime.

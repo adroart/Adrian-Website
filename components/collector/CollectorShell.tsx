@@ -21,6 +21,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { C, F } from './tokens';
+import { MARKS_DEFAULT } from './copy';
 import { CollectorStyles } from './styles';
 import { PiecePage, Relationship } from './PiecePage';
 import { CodePage } from './CodePage';
@@ -160,6 +161,7 @@ const CollectorShell: React.FC = () => {
   const [relationship, setRelationship] = useState<Relationship>('unclaimed');
   const [placed, setPlaced] = useState(7);
   const [near, setNear] = useState(1);
+  const [marks, setMarks] = useState(MARKS_DEFAULT);
 
   /* a screen can be reached directly, so a look can be shared as a link and a
      test can land on one surface without walking to it */
@@ -241,7 +243,11 @@ const CollectorShell: React.FC = () => {
   );
 
   return (
-    <div className="collector-root" style={{ background: C.void, color: C.ink, minHeight: '100vh' }}>
+    <div
+      className="collector-root"
+      data-marks={marks ? '1' : '0'}
+      style={{ background: C.void, color: C.ink, minHeight: '100vh' }}
+    >
       <CollectorStyles />
 
       {/* the phone, at 390 by 844. On a phone it is the viewport itself; on a
@@ -288,6 +294,8 @@ const CollectorShell: React.FC = () => {
           setPlaced={setPlaced}
           near={near}
           setNear={setNear}
+          marks={marks}
+          setMarks={setMarks}
           onJump={next => {
             if (next.kind === 'room') setRelationship('yours');
             setView(next);
@@ -311,8 +319,10 @@ const Controls: React.FC<{
   setPlaced: (n: number) => void;
   near: number;
   setNear: (n: number) => void;
+  marks: boolean;
+  setMarks: (b: boolean) => void;
   onJump: (v: View) => void;
-}> = ({ relationship, setRelationship, placed, setPlaced, near, setNear, onJump }) => (
+}> = ({ relationship, setRelationship, placed, setPlaced, near, setNear, marks, setMarks, onJump }) => (
   <div style={{ width: '100%', maxWidth: 860, paddingTop: 30 }}>
     <Group label="Who is looking">
       {(
@@ -350,6 +360,18 @@ const Controls: React.FC<{
           {label}
         </Btn>
       ))}
+    </Group>
+
+    {/* Copy nobody has written yet carries a dashed rule. Switch it off to read
+        the screens the way a visitor would; switch it on to see exactly how
+        much of this is still waiting on Adrian. */}
+    <Group label="Unwritten copy">
+      <Btn on={marks} onClick={() => setMarks(true)}>
+        Mark it
+      </Btn>
+      <Btn on={!marks} onClick={() => setMarks(false)}>
+        Read it as a visitor
+      </Btn>
     </Group>
 
     <p
