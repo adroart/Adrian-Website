@@ -13,14 +13,14 @@
 
 ## Current truth
 
-The active `codex/collector-phase-1` branch is the foundation, not a prototype branch to rebuild elsewhere. At the time of this plan it contains 51 commits from the shared merge base and changes roughly 186 production and planning files. Its verified-sales workspace is still being refined in a separate worktree.
+The integration snapshot is anchored to the clean final collector foundation commit `d5b10fa1cf7a05577c72a1a87e51f017b5e82b99` from `codex/collector-phase-1`. Any later external work on that branch must be merged into this integration branch before anyone touches overlapping collector files here.
 
 | Capability | Status | Decision |
 |---|---|---|
 | Permanent artwork identity and optional plate | Built locally on collector branch | Reuse |
 | Ownership Code, invitation, claim, governed transfer | Built locally on collector branch | Reuse as the only writers |
 | Certificate templates and effective certificate | Built locally on collector branch | Reuse |
-| Verified sales, reconnections, artwork ledger, price history | Built locally and actively refined | Reuse as canonical sale history |
+| Verified sales, reconnections, artwork ledger, price history | Built locally at the snapshot commit | Reuse as canonical sale history |
 | Registration, invitations, certificates, verified-sales admin pages | Built locally as separate tools | Compose inside an artwork workspace |
 | Plate, recovery, registry maintenance | Built on main and collector branch | Keep specialized and admin-only |
 | Pricing, private viewings, invoices | Built on main | Connect with persistent artwork context |
@@ -70,15 +70,15 @@ These rules prevent the integration from creating a second system.
 - Preserve: `todo/plans/collector-primitives.html`
 - Preserve: `todo/plans/collector-build-prompt.md`
 
-- [ ] **Step 1: Wait for the active sales workspace to reach a clean commit**
+- [x] **Step 1: Wait for the active sales workspace to reach a clean commit**
 
 Do not edit the active sales files from another worktree. Record the final collector commit and confirm its worktree is clean before integration begins.
 
-- [ ] **Step 2: Preserve the August 10 authority files**
+- [x] **Step 2: Preserve the August 10 authority files**
 
 The active branch currently removes several master and prototype documents while project instructions still identify them as authoritative. Keep the locked wording, flow chart, flow preview, primitives, and build prompt until a separate approved archival change updates every reference to them.
 
-- [ ] **Step 3: Add a semantic migration table to the collector progress record**
+- [x] **Step 3: Add a semantic migration table to the collector progress record**
 
 Mark each existing collector surface as one of:
 
@@ -87,11 +87,11 @@ Mark each existing collector surface as one of:
 - `replace`: the old Register-or-Dream fork, combined privacy and birth flow, legacy keeper panels, equal-brightness semantics where they conflict with the master.
 - `later`: garden, household, collaborators, heirs, gift wishes, passing UI, video.
 
-- [ ] **Step 4: Reconcile progress language without changing locked copy**
+- [x] **Step 4: Reconcile progress language without changing locked copy**
 
 Update `the-collector-build.md`, `the-collector-execution.md`, and `TODO.md` so they distinguish local implementation, active refinement, superseded presentation, and production rollout. Do not mark a surface complete merely because its earlier version exists.
 
-- [ ] **Step 5: Verify the truth pass**
+- [x] **Step 5: Verify the truth pass**
 
 Run:
 
