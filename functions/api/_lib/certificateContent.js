@@ -62,33 +62,6 @@ function exactClaimedIdentity(row, expected = {}) {
   } catch { return false; }
 }
 
-async function claimedArtworkRecord(db, expected) {
-  const clauses = [];
-  const values = [];
-  if (expected.keeperPieceId) {
-    clauses.push(`piece.id = ?${values.length + 1}`);
-    values.push(expected.keeperPieceId);
-  }
-  if (expected.publicCode) {
-    clauses.push(`piece.public_code = ?${values.length + 1}`);
-    values.push(expected.publicCode);
-  }
-  if (!clauses.length) throw codedError('invalid_certificate_identity');
-  const row = await first(db, `
-    SELECT record.id AS artwork_record_id, record.artwork_id,
-           record.edition_json, record.identification_status,
-           record.keeper_piece_id, piece.id AS piece_keeper_id,
-           piece.piece_id, piece.edition_number, piece.public_code,
-           piece.registration_status, piece.keeper_user_id, piece.claimed_at,
-           piece.released_at, piece.plate_status
-      FROM artist_artwork_records record
-      JOIN keeper_pieces piece ON piece.id = record.keeper_piece_id
-     WHERE ${clauses.join(' AND ')}
-     LIMIT 1
-  `, ...values);
-  return exactClaimedIdentity(row, expected) ? row : null;
-}
-
 function normalizeStringList(value, code) {
   if (!Array.isArray(value)) throw codedError(code);
   const normalized = value.map((item) => requiredText(item, code, 240));
@@ -456,25 +429,42 @@ export async function resolveInstanceCertificateByPublicCode(env, { artworkId, p
 
 export async function resolvePublicArtworkLedger(env, { keeperPieceId }) {
   const db = dbFor(env);
-  let claim;
+  const id = requiredText(keeperPieceId, 'invalid_keeper_piece', 128);
+  let rows;
   try {
-    claim = await claimedArtworkRecord(db, {
-      keeperPieceId: requiredText(keeperPieceId, 'invalid_keeper_piece', 128),
-    });
+    rows = await all(db, `
+      SELECT ledger.id, ledger.message, ledger.media_id, ledger.created_at,
+             media.id AS stored_media_id,
+             media.artwork_record_id AS media_artwork_record_id,
+             record.id AS artwork_record_id, record.artwork_id,
+             record.edition_json, record.identification_status,
+             record.keeper_piece_id, piece.id AS piece_keeper_id,
+             piece.piece_id, piece.edition_number, piece.public_code,
+             piece.registration_status, piece.keeper_user_id, piece.claimed_at,
+             piece.released_at, piece.plate_status
+        FROM artist_artwork_ledger_entries ledger
+        JOIN artist_artwork_records record
+          ON record.id = ledger.artwork_record_id
+        JOIN keeper_pieces piece
+          ON piece.id = record.keeper_piece_id
+        LEFT JOIN artist_artwork_media media
+          ON media.id = ledger.media_id
+       WHERE piece.id = ?1
+         AND record.identification_status = 'identity_linked'
+         AND record.artwork_id = piece.piece_id
+         AND record.keeper_piece_id = piece.id
+         AND piece.registration_status = 'registered'
+         AND piece.keeper_user_id IS NOT NULL
+         AND piece.claimed_at IS NOT NULL
+         AND piece.released_at IS NULL
+         AND piece.plate_status IN ('legacy', 'generated', 'active')
+       ORDER BY ledger.created_at, ledger.id
+    `, id);
   } catch (error) {
     if (/no such table/i.test(String(error?.message))) return [];
     throw error;
   }
-  if (!claim) return [];
-  const rows = await all(db, `
-    SELECT ledger.id, ledger.message, ledger.media_id, ledger.created_at,
-           media.id AS stored_media_id,
-           media.artwork_record_id AS media_artwork_record_id
-      FROM artist_artwork_ledger_entries ledger
-      LEFT JOIN artist_artwork_media media ON media.id = ledger.media_id
-     WHERE ledger.artwork_record_id = ?1
-     ORDER BY ledger.created_at, ledger.id
-  `, claim.artwork_record_id);
+  if (rows.some((row) => !exactClaimedIdentity(row, { keeperPieceId: id }))) return [];
   return rows.map((row) => {
     if (!publicLedgerId(row.id)
       || typeof row.created_at !== 'string'
@@ -493,7 +483,7 @@ export async function resolvePublicArtworkLedger(env, { keeperPieceId }) {
     }
     if (row.media_id !== null) {
       if (row.stored_media_id !== row.media_id
-        || row.media_artwork_record_id !== claim.artwork_record_id) {
+        || row.media_artwork_record_id !== row.artwork_record_id) {
         throw codedError('certificate_ledger_integrity');
       }
       entry.mediaUrl = `/api/artwork-ledger/media/${encodeURIComponent(row.id)}`;
@@ -511,17 +501,29 @@ export async function resolvePublicArtworkLedgerMedia(env, ledgerEntryId) {
     SELECT ledger.id, ledger.artwork_record_id, ledger.media_id,
            media.storage_reference, media.sha256, media.content_type,
            media.byte_length, media.artwork_record_id AS media_artwork_record_id,
-           record.keeper_piece_id
+           record.artwork_id, record.edition_json, record.identification_status,
+           record.keeper_piece_id, piece.id AS piece_keeper_id,
+           piece.piece_id, piece.edition_number, piece.public_code,
+           piece.registration_status, piece.keeper_user_id, piece.claimed_at,
+           piece.released_at, piece.plate_status
       FROM artist_artwork_ledger_entries ledger
       JOIN artist_artwork_media media ON media.id = ledger.media_id
       JOIN artist_artwork_records record ON record.id = ledger.artwork_record_id
+      JOIN keeper_pieces piece ON piece.id = record.keeper_piece_id
      WHERE ledger.id = ?1
+       AND record.identification_status = 'identity_linked'
+       AND record.artwork_id = piece.piece_id
+       AND record.keeper_piece_id = piece.id
+       AND piece.registration_status = 'registered'
+       AND piece.keeper_user_id IS NOT NULL
+       AND piece.claimed_at IS NOT NULL
+       AND piece.released_at IS NULL
+       AND piece.plate_status IN ('legacy', 'generated', 'active')
      LIMIT 1
   `, id);
   if (!selected || selected.id !== id || selected.media_id == null
-    || selected.media_artwork_record_id !== selected.artwork_record_id) return null;
-  const claim = await claimedArtworkRecord(db, { keeperPieceId: selected.keeper_piece_id });
-  if (!claim || claim.artwork_record_id !== selected.artwork_record_id) return null;
+    || selected.media_artwork_record_id !== selected.artwork_record_id
+    || !exactClaimedIdentity(selected, { keeperPieceId: selected.keeper_piece_id })) return null;
   const extension = new Map([
     ['image/jpeg', 'jpg'], ['image/png', 'png'], ['image/webp', 'webp'],
   ]).get(selected.content_type);
@@ -529,8 +531,15 @@ export async function resolvePublicArtworkLedgerMedia(env, ledgerEntryId) {
     || !/^[0-9a-f]{64}$/.test(selected.sha256)
     || selected.storage_reference
       !== `artwork-ledger/${selected.artwork_record_id}/${selected.sha256}.${extension}`
-    || !Number.isSafeInteger(selected.byte_length) || selected.byte_length < 1) return null;
+    || !Number.isSafeInteger(selected.byte_length) || selected.byte_length < 1
+    || selected.byte_length > 15 * 1024 * 1024) return null;
   return {
+    ledgerEntryId: selected.id,
+    mediaId: selected.media_id,
+    artworkRecordId: selected.artwork_record_id,
+    keeperPieceId: selected.keeper_piece_id,
+    keeperUserId: selected.keeper_user_id,
+    claimedAt: selected.claimed_at,
     storageReference: selected.storage_reference,
     sha256: selected.sha256,
     contentType: selected.content_type,
@@ -542,19 +551,54 @@ export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId
   const db = dbFor(env);
   const normalizedPublicCode = requiredText(publicCode, 'invalid_public_code', 80).toUpperCase();
   const normalizedUserId = requiredText(userId, 'invalid_user', 128);
-  const claim = await claimedArtworkRecord(db, {
-    publicCode: normalizedPublicCode, userId: normalizedUserId,
-  });
-  if (!claim) throw codedError('not_current_keeper');
+  if (!/^AR-[A-Z0-9]{8}$/.test(normalizedPublicCode)) throw codedError('invalid_public_code');
   try {
     const rows = await all(db, `
-      SELECT amount_minor, currency, occurred_on, occurrence_precision, recorded_at
-        FROM artist_artwork_price_entries
-       WHERE artwork_record_id = ?1
-       ORDER BY recorded_at, id
-    `, claim.artwork_record_id);
-    return rows.map((row) => {
-      if (!Number.isSafeInteger(row.amount_minor) || row.amount_minor < 0
+      WITH prices AS (
+        SELECT id, artwork_record_id, amount_minor, currency, occurred_on,
+               occurrence_precision, recorded_at
+          FROM artist_artwork_price_entries
+      )
+      SELECT price.id AS price_id, price.amount_minor, price.currency,
+             price.occurred_on, price.occurrence_precision, price.recorded_at,
+             record.id AS artwork_record_id, record.artwork_id,
+             record.edition_json, record.identification_status,
+             record.keeper_piece_id, piece.id AS piece_keeper_id,
+             piece.piece_id, piece.edition_number, piece.public_code,
+             piece.registration_status, piece.keeper_user_id, piece.claimed_at,
+             piece.released_at, piece.plate_status
+        FROM artist_artwork_records record
+        JOIN keeper_pieces piece ON piece.id = record.keeper_piece_id
+        LEFT JOIN prices price ON price.artwork_record_id = record.id
+       WHERE piece.public_code = ?1
+         AND piece.keeper_user_id = ?2
+         AND record.identification_status = 'identity_linked'
+         AND record.artwork_id = piece.piece_id
+         AND record.keeper_piece_id = piece.id
+         AND piece.registration_status = 'registered'
+         AND piece.claimed_at IS NOT NULL
+         AND piece.released_at IS NULL
+         AND piece.plate_status IN ('legacy', 'generated', 'active')
+       ORDER BY
+         CASE WHEN price.occurrence_precision = 'unknown' THEN 1 ELSE 0 END,
+         CASE price.occurrence_precision
+           WHEN 'exact' THEN price.occurred_on
+           WHEN 'month' THEN price.occurred_on || '-01'
+           WHEN 'year' THEN price.occurred_on || '-01-01'
+           ELSE NULL
+         END,
+         CASE price.occurrence_precision
+           WHEN 'exact' THEN 0 WHEN 'month' THEN 1 WHEN 'year' THEN 2 ELSE 3
+         END,
+         price.recorded_at, price.id
+    `, normalizedPublicCode, normalizedUserId);
+    if (rows.length === 0) throw codedError('not_current_keeper');
+    if (rows.some((row) => !exactClaimedIdentity(row, {
+      publicCode: normalizedPublicCode, userId: normalizedUserId,
+    }))) throw codedError('not_current_keeper');
+    return rows.filter((row) => row.price_id !== null).map((row) => {
+      if (typeof row.price_id !== 'string' || !row.price_id
+        || !Number.isSafeInteger(row.amount_minor) || row.amount_minor < 0
         || typeof row.currency !== 'string' || !/^[A-Z]{3}$/.test(row.currency)
         || !['exact', 'month', 'year', 'unknown'].includes(row.occurrence_precision)
         || typeof row.recorded_at !== 'string' || Number.isNaN(Date.parse(row.recorded_at))
@@ -570,7 +614,8 @@ export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId
         recordedAt: row.recorded_at,
       };
     });
-  } catch {
+  } catch (error) {
+    if (error?.code === 'not_current_keeper') throw error;
     throw codedError('current_keeper_ledger_unavailable');
   }
 }

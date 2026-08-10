@@ -3821,7 +3821,7 @@ describe('artist verified sale records', () => {
 });
 
 function seedCertificateLedger(fixture: ReturnType<typeof serviceEnvironment>) {
-  const selectedSha = digest('8');
+  const selectedSha = createHash('sha256').update(new Uint8Array([1, 2, 3, 4])).digest('hex');
   const evidenceSha = digest('9');
   seedCaseAndRecords(fixture.db);
   insertPrimarySale(fixture.db);
@@ -3881,6 +3881,16 @@ function seedCertificateLedger(fixture: ReturnType<typeof serviceEnvironment>) {
       '2028', 'year', '2028-06-01T12:00:00.000Z');
   `);
   return { selectedSha, evidenceSha };
+}
+
+function forceCertificateKeeperTransfer(db: DatabaseSync, keeperUserId: string) {
+  db.exec(`
+    DROP TRIGGER IF EXISTS keeper_pieces_governed_steward_update;
+    UPDATE keeper_pieces
+       SET keeper_user_id = '${keeperUserId}',
+           claimed_at = '2026-08-10T13:00:00.000Z'
+     WHERE id = 'kp-sale-one';
+  `);
 }
 
 describe('claimed artwork certificate ledger', () => {
@@ -3990,13 +4000,33 @@ describe('claimed artwork certificate ledger', () => {
     } finally { fixture.db.close(); }
   });
 
+  it('does not reveal ledger entries when release lands at the projection statement', async () => {
+    let released = false;
+    let fixture: ReturnType<typeof serviceEnvironment>;
+    fixture = serviceEnvironment({
+      onQuery(sql) {
+        if (!released && sql.includes('FROM artist_artwork_ledger_entries ledger')) {
+          released = true;
+          fixture.db.exec(`UPDATE keeper_pieces SET released_at = '${now}' WHERE id = 'kp-sale-one'`);
+        }
+      },
+    });
+    seedCertificateLedger(fixture);
+    try {
+      assert.deepEqual(await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      }), []);
+      assert.equal(released, true);
+    } finally { fixture.db.close(); }
+  });
+
   it('fails closed for retired, superseded, unregistered, or mismatched identity state', async () => {
     let fault: Record<string, unknown> = {};
     const fixture = serviceEnvironment({
-      overrideFirstResult(sql, result) {
-        return result && sql.includes('FROM artist_artwork_records record')
-          ? { ...result, ...fault }
-          : result;
+      overrideAllResults(sql, results) {
+        return sql.includes('FROM artist_artwork_ledger_entries ledger')
+          ? results.map((result) => ({ ...result, ...fault }))
+          : results;
       },
     });
     seedCertificateLedger(fixture);
@@ -4089,20 +4119,89 @@ describe('claimed artwork certificate ledger', () => {
       assert.equal((await request('GET', 'ledger-selected')).status, 502);
       object = { ...object, size: bytes.byteLength };
 
+      object = { ...object, body: new Uint8Array([4, 3, 2, 1]) };
+      const changedBytes = await request('GET', 'ledger-selected');
+      assert.equal(changedBytes.status, 502);
+      assert.equal(changedBytes.headers.get('ETag'), null);
+      object = { ...object, body: bytes };
+
       fixture.db.exec(`UPDATE keeper_pieces SET released_at = '${now}' WHERE id = 'kp-sale-one'`);
       assert.equal((await request('GET', 'ledger-selected')).status, 404);
     } finally { fixture.db.close(); }
   });
 
-  it('returns complete ordered prices only to the live current keeper', async () => {
-    let liveUserId = 'keeper-current';
-    const fixture = serviceEnvironment({
-      overrideFirstResult(sql, result) {
-        return result && sql.includes('FROM artist_artwork_records record')
-          ? { ...result, keeper_user_id: liveUserId }
-          : result;
+  it('rechecks live claim continuity and explicit media selection after the R2 read', async () => {
+    const scenarios = [
+      {
+        name: 'release', method: 'GET',
+        mutate(db: DatabaseSync) {
+          db.exec(`UPDATE keeper_pieces SET released_at = '${now}' WHERE id = 'kp-sale-one'`);
+        },
       },
-    });
+      {
+        name: 'transfer', method: 'GET',
+        mutate(db: DatabaseSync) {
+          forceCertificateKeeperTransfer(db, 'keeper-next');
+        },
+      },
+      {
+        name: 'retire', method: 'HEAD',
+        mutate(db: DatabaseSync) {
+          db.exec(`UPDATE keeper_pieces SET plate_status = 'void',
+            physical_disposition = 'Retired from registry.' WHERE id = 'kp-sale-one'`);
+        },
+      },
+      {
+        name: 'unselect', method: 'HEAD',
+        mutate(db: DatabaseSync) {
+          db.exec(`DROP TRIGGER artist_artwork_ledger_entries_no_update;
+            UPDATE artist_artwork_ledger_entries
+               SET message = 'No longer selected.', media_id = NULL
+             WHERE id = 'ledger-selected'`);
+        },
+      },
+    ];
+    for (const scenario of scenarios) {
+      const fixture = serviceEnvironment();
+      const { selectedSha } = seedCertificateLedger(fixture);
+      const bytes = new Uint8Array([1, 2, 3, 4]);
+      const selectedReference = `artwork-ledger/record-linked/${selectedSha}.jpg`;
+      let reads = 0;
+      const env = {
+        ...fixture.env,
+        ARTWORK_REGISTRY_BACKUP: {
+          get: async () => {
+            reads += 1;
+            scenario.mutate(fixture.db);
+            return {
+              key: selectedReference, size: bytes.byteLength,
+              httpMetadata: { contentType: 'image/jpeg' }, body: bytes,
+            };
+          },
+          head: async () => {
+            throw new Error('HEAD must verify the archived body, not metadata alone');
+          },
+        },
+      };
+      try {
+        const response = await publicLedgerMediaRequest({
+          request: new Request(
+            `https://adrianrasmussen.com/api/artwork-ledger/media/ledger-selected`,
+            { method: scenario.method },
+          ),
+          env, params: { id: 'ledger-selected' },
+        } as any);
+        assert.equal(response.status, 404, scenario.name);
+        assert.equal((await response.arrayBuffer()).byteLength, 0, scenario.name);
+        assert.equal(response.headers.get('ETag'), null, scenario.name);
+        assert.equal(response.headers.get('Cache-Control'), 'no-store', scenario.name);
+        assert.equal(reads, 1, scenario.name);
+      } finally { fixture.db.close(); }
+    }
+  });
+
+  it('returns complete ordered prices only to the live current keeper', async () => {
+    const fixture = serviceEnvironment();
     seedCertificateLedger(fixture);
     try {
       const expected = [
@@ -4124,7 +4223,7 @@ describe('claimed artwork certificate ledger', () => {
         publicCode: 'AR-7KQ9M2WX', userId: 'former-keeper',
       }), (error: Error & { code?: string }) => error.code === 'not_current_keeper');
 
-      liveUserId = 'keeper-next';
+      forceCertificateKeeperTransfer(fixture.db, 'keeper-next');
       await assert.rejects(resolveCurrentKeeperPriceHistory(fixture.env, {
         publicCode: 'AR-7KQ9M2WX', userId: 'keeper-current',
       }), (error: Error & { code?: string }) => error.code === 'not_current_keeper');
@@ -4134,15 +4233,81 @@ describe('claimed artwork certificate ledger', () => {
     } finally { fixture.db.close(); }
   });
 
-  it('authenticates the private price endpoint against the live keeper on every read', async () => {
-    let liveUserId = 'keeper-current';
-    const fixture = serviceEnvironment({
-      overrideFirstResult(sql, result) {
-        return result && sql.includes('FROM artist_artwork_records record')
-          ? { ...result, keeper_user_id: liveUserId }
-          : result;
+  it('orders mixed historic price precision by semantic occurrence with unknown last', async () => {
+    const fixture = serviceEnvironment();
+    seedCertificateLedger(fixture);
+    try {
+      fixture.db.exec(`
+        INSERT INTO artist_verified_sales
+          (id, occurrence_precision, occurred_on, buyer_email, verified_by_user_id,
+           idempotency_key, request_digest, recorded_at)
+        VALUES
+          ('sale-2018', 'exact', '2018-05-04', 'past@example.com', 'artist-admin',
+           'sale-2018-key', '${digest('1')}', '2030-01-01T00:00:00.000Z'),
+          ('sale-2019', 'month', '2019-06', 'past@example.com', 'artist-admin',
+           'sale-2019-key', '${digest('3')}', '2031-01-01T00:00:00.000Z'),
+          ('sale-2020', 'year', '2020', 'past@example.com', 'artist-admin',
+           'sale-2020-key', '${digest('4')}', '2032-01-01T00:00:00.000Z'),
+          ('sale-unknown', 'unknown', NULL, 'past@example.com', 'artist-admin',
+           'sale-unknown-key', '${digest('5')}', '2017-01-01T00:00:00.000Z');
+        INSERT INTO artist_verified_sale_items
+          (id, sale_id, artwork_record_id, amount_minor, currency, created_at)
+        VALUES
+          ('item-2018', 'sale-2018', 'record-linked', 120000, 'USD', '2030-01-01T00:00:00.000Z'),
+          ('item-2019', 'sale-2019', 'record-linked', 130000, 'USD', '2031-01-01T00:00:00.000Z'),
+          ('item-2020', 'sale-2020', 'record-linked', 140000, 'USD', '2032-01-01T00:00:00.000Z'),
+          ('item-unknown', 'sale-unknown', 'record-linked', 100000, 'USD', '2017-01-01T00:00:00.000Z');
+        INSERT INTO artist_artwork_price_entries
+          (id, artwork_record_id, sale_item_id, amount_minor, currency,
+           occurred_on, occurrence_precision, recorded_at)
+        VALUES
+          ('price-2018', 'record-linked', 'item-2018', 120000, 'USD',
+           '2018-05-04', 'exact', '2030-01-01T00:00:00.000Z'),
+          ('price-2019', 'record-linked', 'item-2019', 130000, 'USD',
+           '2019-06', 'month', '2031-01-01T00:00:00.000Z'),
+          ('price-2020', 'record-linked', 'item-2020', 140000, 'USD',
+           '2020', 'year', '2032-01-01T00:00:00.000Z'),
+          ('price-unknown', 'record-linked', 'item-unknown', 100000, 'USD',
+           NULL, 'unknown', '2017-01-01T00:00:00.000Z');
+      `);
+      const history = await resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'keeper-current',
+      });
+      assert.deepEqual(history.map((entry) => [
+        entry.occurrence.precision, entry.occurrence.value, entry.amountMinor,
+      ]), [
+        ['exact', '2018-05-04', 120000],
+        ['month', '2019-06', 130000],
+        ['year', '2020', 140000],
+        ['exact', '2026-08-01', 200000],
+        ['year', '2028', 350000],
+        ['unknown', null, 100000],
+      ]);
+    } finally { fixture.db.close(); }
+  });
+
+  it('does not return prices when transfer lands at the authorized projection statement', async () => {
+    let transferred = false;
+    let fixture: ReturnType<typeof serviceEnvironment>;
+    fixture = serviceEnvironment({
+      onQuery(sql) {
+        if (!transferred && sql.includes('FROM artist_artwork_price_entries')) {
+          transferred = true;
+          forceCertificateKeeperTransfer(fixture.db, 'keeper-next');
+        }
       },
     });
+    seedCertificateLedger(fixture);
+    try {
+      await assert.rejects(resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'keeper-current',
+      }), (error: Error & { code?: string }) => error.code === 'not_current_keeper');
+      assert.equal(transferred, true);
+    } finally { fixture.db.close(); }
+  });
+
+  it('authenticates the private price endpoint against the live keeper on every read', async () => {
+    const fixture = serviceEnvironment();
     seedCertificateLedger(fixture);
     const { onRequest } = await import('../functions/api/keeper/certificate-ledger.js');
     const request = (userId?: string, suffix = '?publicCode=AR-7KQ9M2WX') => onRequest({
@@ -4165,7 +4330,7 @@ describe('claimed artwork certificate ledger', () => {
       assert.equal((await request('keeper-current',
         '?publicCode=AR-7KQ9M2WX&artworkRecordId=record-linked')).status, 404);
 
-      liveUserId = 'keeper-next';
+      forceCertificateKeeperTransfer(fixture.db, 'keeper-next');
       assert.equal((await request('keeper-current')).status, 403);
       const next = await request('keeper-next');
       assert.equal(next.status, 200);
