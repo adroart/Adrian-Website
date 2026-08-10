@@ -36,7 +36,7 @@ CREATE TABLE artist_reconnection_cases (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   updated_at TEXT NOT NULL CHECK (
     typeof(updated_at) = 'text'
@@ -46,7 +46,7 @@ CREATE TABLE artist_reconnection_cases (
       updated_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(updated_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at, 0) = 1
   )
 );
 
@@ -97,7 +97,7 @@ CREATE TABLE artist_artwork_records (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   updated_at TEXT NOT NULL CHECK (
     typeof(updated_at) = 'text'
@@ -107,7 +107,7 @@ CREATE TABLE artist_artwork_records (
       updated_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(updated_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', updated_at) = updated_at, 0) = 1
   ),
   CHECK (
     (identification_status = 'unresolved'
@@ -157,7 +157,7 @@ CREATE TABLE artist_artwork_record_events (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   UNIQUE (artwork_record_id, resulting_version)
 );
@@ -206,7 +206,7 @@ CREATE TABLE artist_verified_sales (
       recorded_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(recorded_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at, 0) = 1
   ),
   CHECK (
     (currency IS NULL AND total_minor IS NULL)
@@ -221,18 +221,18 @@ CREATE TABLE artist_verified_sales (
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 10
       AND occurred_on GLOB '????-??-??'
       AND occurred_on NOT GLOB '*[^0-9-]*'
-      AND date(occurred_on) = occurred_on)
+      AND COALESCE(date(occurred_on) = occurred_on, 0) = 1)
     OR (occurrence_precision = 'month'
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 7
       AND occurred_on GLOB '????-??'
       AND occurred_on NOT GLOB '*[^0-9-]*'
       AND date(occurred_on || '-01') IS NOT NULL
-      AND date(occurred_on || '-01') = occurred_on || '-01')
+      AND COALESCE(date(occurred_on || '-01') = occurred_on || '-01', 0) = 1)
     OR (occurrence_precision = 'year'
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 4
       AND occurred_on NOT GLOB '*[^0-9]*'
       AND date(occurred_on || '-01-01') IS NOT NULL
-      AND date(occurred_on || '-01-01') = occurred_on || '-01-01')
+      AND COALESCE(date(occurred_on || '-01-01') = occurred_on || '-01-01', 0) = 1)
     OR (occurrence_precision = 'unknown' AND occurred_on IS NULL)
   )
 );
@@ -266,7 +266,7 @@ CREATE TABLE artist_verified_sale_events (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   UNIQUE (sale_id, sequence)
 );
@@ -286,7 +286,7 @@ CREATE TABLE artist_verified_sale_items (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   UNIQUE (sale_id, artwork_record_id),
   CHECK (
@@ -331,7 +331,7 @@ CREATE TABLE artist_artwork_media (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   )
 );
 
@@ -363,7 +363,7 @@ CREATE TABLE artist_artwork_ledger_entries (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
   CHECK (message IS NOT NULL OR media_id IS NOT NULL)
 );
@@ -393,25 +393,25 @@ CREATE TABLE artist_artwork_price_entries (
       recorded_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(recorded_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', recorded_at) = recorded_at, 0) = 1
   ),
   CHECK (
     (occurrence_precision = 'exact'
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 10
       AND occurred_on GLOB '????-??-??'
       AND occurred_on NOT GLOB '*[^0-9-]*'
-      AND date(occurred_on) = occurred_on)
+      AND COALESCE(date(occurred_on) = occurred_on, 0) = 1)
     OR (occurrence_precision = 'month'
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 7
       AND occurred_on GLOB '????-??'
       AND occurred_on NOT GLOB '*[^0-9-]*'
       AND date(occurred_on || '-01') IS NOT NULL
-      AND date(occurred_on || '-01') = occurred_on || '-01')
+      AND COALESCE(date(occurred_on || '-01') = occurred_on || '-01', 0) = 1)
     OR (occurrence_precision = 'year'
       AND typeof(occurred_on) = 'text' AND length(occurred_on) = 4
       AND occurred_on NOT GLOB '*[^0-9]*'
       AND date(occurred_on || '-01-01') IS NOT NULL
-      AND date(occurred_on || '-01-01') = occurred_on || '-01-01')
+      AND COALESCE(date(occurred_on || '-01-01') = occurred_on || '-01-01', 0) = 1)
     OR (occurrence_precision = 'unknown' AND occurred_on IS NULL)
   )
 );
@@ -447,7 +447,7 @@ CREATE TABLE artist_reconnection_events (
       created_at, '-', ''), ':', ''), 'T', ''), '.', ''), 'Z', '')
       NOT GLOB '*[^0-9]*'
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
-    AND strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at
+    AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   )
 );
 
@@ -685,7 +685,58 @@ BEGIN
     OR json_type(NEW.after_json, '$.occurrencePrecision') <> 'text'
   THEN RAISE(ABORT, 'sale event requires complete replacement snapshots') END;
 
-  SELECT CASE WHEN NOT (
+  SELECT CASE WHEN COALESCE((
+    json_extract(NEW.before_json, '$.occurrencePrecision') IN
+      ('exact', 'month', 'year', 'unknown')
+    AND (
+      (json_extract(NEW.before_json, '$.occurrencePrecision') = 'exact'
+        AND json_type(NEW.before_json, '$.occurredOn') = 'text'
+        AND length(json_extract(NEW.before_json, '$.occurredOn')) = 10
+        AND json_extract(NEW.before_json, '$.occurredOn') GLOB '????-??-??'
+        AND json_extract(NEW.before_json, '$.occurredOn') NOT GLOB '*[^0-9-]*'
+        AND COALESCE(
+          date(json_extract(NEW.before_json, '$.occurredOn')) =
+            json_extract(NEW.before_json, '$.occurredOn'),
+          0
+        ) = 1)
+      OR (json_extract(NEW.before_json, '$.occurrencePrecision') = 'month'
+        AND json_type(NEW.before_json, '$.occurredOn') = 'text'
+        AND length(json_extract(NEW.before_json, '$.occurredOn')) = 7
+        AND json_extract(NEW.before_json, '$.occurredOn') GLOB '????-??'
+        AND json_extract(NEW.before_json, '$.occurredOn') NOT GLOB '*[^0-9-]*'
+        AND COALESCE(
+          date(json_extract(NEW.before_json, '$.occurredOn') || '-01') =
+            json_extract(NEW.before_json, '$.occurredOn') || '-01',
+          0
+        ) = 1)
+      OR (json_extract(NEW.before_json, '$.occurrencePrecision') = 'year'
+        AND json_type(NEW.before_json, '$.occurredOn') = 'text'
+        AND length(json_extract(NEW.before_json, '$.occurredOn')) = 4
+        AND json_extract(NEW.before_json, '$.occurredOn') NOT GLOB '*[^0-9]*'
+        AND COALESCE(
+          date(json_extract(NEW.before_json, '$.occurredOn') || '-01-01') =
+            json_extract(NEW.before_json, '$.occurredOn') || '-01-01',
+          0
+        ) = 1)
+      OR (json_extract(NEW.before_json, '$.occurrencePrecision') = 'unknown'
+        AND json_type(NEW.before_json, '$.occurredOn') = 'null')
+    )
+    AND json_type(NEW.before_json, '$.recordedAt') = 'text'
+    AND length(json_extract(NEW.before_json, '$.recordedAt')) = 24
+    AND json_extract(NEW.before_json, '$.recordedAt') GLOB '????-??-??T??:??:??.???Z'
+    AND replace(replace(replace(replace(replace(
+      json_extract(NEW.before_json, '$.recordedAt'), '-', ''), ':', ''),
+      'T', ''), '.', ''), 'Z', '') NOT GLOB '*[^0-9]*'
+    AND substr(json_extract(NEW.before_json, '$.recordedAt'), 12, 2) BETWEEN '00' AND '23'
+    AND COALESCE(
+      strftime(
+        '%Y-%m-%dT%H:%M:%fZ', json_extract(NEW.before_json, '$.recordedAt')
+      ) = json_extract(NEW.before_json, '$.recordedAt'),
+      0
+    ) = 1
+  ), 0) <> 1 THEN RAISE(ABORT, 'sale event before snapshot date is invalid') END;
+
+  SELECT CASE WHEN COALESCE((
     json_extract(NEW.after_json, '$.occurrencePrecision') IN ('exact', 'month', 'year', 'unknown')
     AND (
       (json_extract(NEW.after_json, '$.occurrencePrecision') = 'exact'
@@ -694,22 +745,32 @@ BEGIN
         AND json_extract(NEW.after_json, '$.occurredOn') GLOB '????-??-??'
         AND json_extract(NEW.after_json, '$.occurredOn') NOT GLOB '*[^0-9-]*'
         AND date(json_extract(NEW.after_json, '$.occurredOn')) IS NOT NULL
-        AND date(json_extract(NEW.after_json, '$.occurredOn')) = json_extract(NEW.after_json, '$.occurredOn'))
+        AND COALESCE(
+          date(json_extract(NEW.after_json, '$.occurredOn')) =
+            json_extract(NEW.after_json, '$.occurredOn'),
+          0
+        ) = 1)
       OR (json_extract(NEW.after_json, '$.occurrencePrecision') = 'month'
         AND json_type(NEW.after_json, '$.occurredOn') = 'text'
         AND length(json_extract(NEW.after_json, '$.occurredOn')) = 7
         AND json_extract(NEW.after_json, '$.occurredOn') GLOB '????-??'
         AND json_extract(NEW.after_json, '$.occurredOn') NOT GLOB '*[^0-9-]*'
         AND date(json_extract(NEW.after_json, '$.occurredOn') || '-01') IS NOT NULL
-        AND date(json_extract(NEW.after_json, '$.occurredOn') || '-01') =
-          json_extract(NEW.after_json, '$.occurredOn') || '-01')
+        AND COALESCE(
+          date(json_extract(NEW.after_json, '$.occurredOn') || '-01') =
+            json_extract(NEW.after_json, '$.occurredOn') || '-01',
+          0
+        ) = 1)
       OR (json_extract(NEW.after_json, '$.occurrencePrecision') = 'year'
         AND json_type(NEW.after_json, '$.occurredOn') = 'text'
         AND length(json_extract(NEW.after_json, '$.occurredOn')) = 4
         AND json_extract(NEW.after_json, '$.occurredOn') NOT GLOB '*[^0-9]*'
         AND date(json_extract(NEW.after_json, '$.occurredOn') || '-01-01') IS NOT NULL
-        AND date(json_extract(NEW.after_json, '$.occurredOn') || '-01-01') =
-          json_extract(NEW.after_json, '$.occurredOn') || '-01-01')
+        AND COALESCE(
+          date(json_extract(NEW.after_json, '$.occurredOn') || '-01-01') =
+            json_extract(NEW.after_json, '$.occurredOn') || '-01-01',
+          0
+        ) = 1)
       OR (json_extract(NEW.after_json, '$.occurrencePrecision') = 'unknown'
         AND json_type(NEW.after_json, '$.occurredOn') = 'null')
     )
@@ -759,10 +820,13 @@ BEGIN
       json_extract(NEW.after_json, '$.recordedAt'), '-', ''), ':', ''),
       'T', ''), '.', ''), 'Z', '') NOT GLOB '*[^0-9]*'
     AND substr(json_extract(NEW.after_json, '$.recordedAt'), 12, 2) BETWEEN '00' AND '23'
-    AND strftime(
-      '%Y-%m-%dT%H:%M:%fZ', json_extract(NEW.after_json, '$.recordedAt')
-    ) = json_extract(NEW.after_json, '$.recordedAt')
-  ) THEN RAISE(ABORT, 'sale event replacement snapshot is invalid') END;
+    AND COALESCE(
+      strftime(
+        '%Y-%m-%dT%H:%M:%fZ', json_extract(NEW.after_json, '$.recordedAt')
+      ) = json_extract(NEW.after_json, '$.recordedAt'),
+      0
+    ) = 1
+  ), 0) <> 1 THEN RAISE(ABORT, 'sale event replacement snapshot is invalid') END;
 
   SELECT CASE WHEN NEW.sequence = 1 AND NOT EXISTS (
     SELECT 1 FROM artist_verified_sales sale

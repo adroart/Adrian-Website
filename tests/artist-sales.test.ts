@@ -593,6 +593,7 @@ describe('artist verified sale records', () => {
     try {
       const invalid = [
         ['exact', '2026-02-30'], ['exact', '2026-8-01'],
+        ['exact', '2026-08-32'],
         ['month', '2026-13'], ['month', '2026-8'],
         ['year', '26'], ['year', '2026-01'],
         ['unknown', '2026-08-01'],
@@ -608,6 +609,7 @@ describe('artist verified sale records', () => {
           `invalid-date-key-${index}`, digest('5'), now,
         ), /constraint/i, `${precision}:${occurredOn}`);
       }
+      assert.equal(count(db, 'artist_verified_sales'), 0);
       seedCaseAndRecords(db);
       db.exec(`
         INSERT INTO artist_verified_sales
@@ -628,6 +630,7 @@ describe('artist verified sale records', () => {
           VALUES (?1, 'record-unresolved', 'item-invalid-price', 100, 'USD', ?2, ?3, ?4)
         `).run(`invalid-price-date-${index}`, occurredOn, precision, now), /constraint|sale facts/i);
       }
+      assert.equal(count(db, 'artist_artwork_price_entries'), 0);
     } finally {
       db.close();
     }
@@ -638,6 +641,8 @@ describe('artist verified sale records', () => {
     try {
       const invalidTimestamps = [
         '2026-02-30T12:00:00.000Z',
+        '2026-08-32T12:00:00.000Z',
+        '2026-13-10T12:00:00.000Z',
         '2026-08-10T24:00:00.000Z',
         ' 2026-08-10T12:00:00.000Z',
         '2026-08-10T12:00:00.000Z ',
@@ -654,6 +659,7 @@ describe('artist verified sale records', () => {
         `).run(`bad-timestamp-${index}`, `bad-timestamp-key-${index}`,
           digest('1'), timestamp, now), /constraint/i, timestamp);
       }
+      assert.equal(count(db, 'artist_reconnection_cases'), 0);
 
       seedCaseAndRecords(db);
       insertPrimarySale(db);
@@ -662,50 +668,50 @@ describe('artist verified sale records', () => {
           (id, identification_status, created_by_user_id, created_at, updated_at)
         VALUES ('record-timestamp', 'unresolved', 'artist-admin', '${now}', '${now}')
       `);
-      const shortTimestamp = '2026-08-10T12:00:00Z';
+      const outOfRangeTimestamp = '2026-13-10T12:00:00.000Z';
       const invalidSql = [
         `INSERT INTO artist_reconnection_cases
           (id, recipient_email, status, created_by_user_id, idempotency_key,
            request_digest, created_at, updated_at)
          VALUES ('bad-updated-at', 'updated@example.com', 'open', 'artist-admin',
-           'bad-updated-at-key', '${digest('2')}', '${now}', '${shortTimestamp}')`,
+           'bad-updated-at-key', '${digest('2')}', '${now}', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_artwork_records
           (id, identification_status, created_by_user_id, created_at, updated_at)
          VALUES ('bad-record-created-at', 'unresolved', 'artist-admin',
-           '${shortTimestamp}', '${now}')`,
+           '${outOfRangeTimestamp}', '${now}')`,
         `INSERT INTO artist_artwork_records
           (id, identification_status, created_by_user_id, created_at, updated_at)
          VALUES ('bad-record-updated-at', 'unresolved', 'artist-admin',
-           '${now}', '${shortTimestamp}')`,
+           '${now}', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_verified_sales
           (id, occurrence_precision, verified_by_user_id, idempotency_key,
            request_digest, recorded_at)
          VALUES ('bad-sale-recorded-at', 'unknown', 'artist-admin',
-           'bad-sale-recorded-at-key', '${digest('3')}', '${shortTimestamp}')`,
+           'bad-sale-recorded-at-key', '${digest('3')}', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_verified_sale_items
           (id, sale_id, artwork_record_id, created_at)
-         VALUES ('bad-item-created-at', 'sale-one', 'record-timestamp', '${shortTimestamp}')`,
+         VALUES ('bad-item-created-at', 'sale-one', 'record-timestamp', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_artwork_media
           (id, artwork_record_id, media_role, storage_reference, sha256,
            content_type, byte_length, uploaded_by_user_id, created_at)
          VALUES ('bad-media-created-at', 'record-unresolved', 'certificate_image',
            'artist-sales/bad-timestamp.jpg', '${digest('4')}', 'image/jpeg', 10,
-           'artist-admin', '${shortTimestamp}')`,
+           'artist-admin', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_artwork_ledger_entries
           (id, artwork_record_id, message, created_by_user_id,
            idempotency_key, request_digest, created_at)
          VALUES ('bad-ledger-created-at', 'record-unresolved', 'Timestamp check.',
-           'artist-admin', 'bad-ledger-created-at-key', '${digest('5')}', '${shortTimestamp}')`,
+           'artist-admin', 'bad-ledger-created-at-key', '${digest('5')}', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_artwork_price_entries
           (id, artwork_record_id, sale_item_id, amount_minor, currency,
            occurred_on, occurrence_precision, recorded_at)
          VALUES ('bad-price-recorded-at', 'record-unresolved', 'item-one', 100000, 'USD',
-           '2026-08-01', 'exact', '${shortTimestamp}')`,
+           '2026-08-01', 'exact', '${outOfRangeTimestamp}')`,
         `INSERT INTO artist_reconnection_events
           (id, reconnection_case_id, event_type, private_note, actor_user_id,
            idempotency_key, request_digest, created_at)
          VALUES ('bad-reconnect-created-at', 'case-one', 'note_added', 'Timestamp check.',
-           'artist-admin', 'bad-reconnect-created-at-key', '${digest('6')}', '${shortTimestamp}')`,
+           'artist-admin', 'bad-reconnect-created-at-key', '${digest('6')}', '${outOfRangeTimestamp}')`,
       ];
       for (const sql of invalidSql) {
         assert.throws(() => db.exec(sql), /constraint/i);
@@ -725,7 +731,7 @@ describe('artist verified sale records', () => {
            actor_user_id, idempotency_key, request_digest, created_at)
         VALUES ('bad-record-event-created-at', 'record-unresolved', 'identified', ?1, ?2, 2,
           'artist-admin', 'bad-record-event-created-at-key', ?3, ?4)
-      `).run(beforeRecord, afterRecord, digest('7'), shortTimestamp), /constraint/i);
+      `).run(beforeRecord, afterRecord, digest('7'), outOfRangeTimestamp), /constraint/i);
       assert.throws(() => db.prepare(`
         INSERT INTO artist_verified_sale_events
           (id, sale_id, sequence, event_type, before_json, after_json,
@@ -733,9 +739,86 @@ describe('artist verified sale records', () => {
         VALUES ('bad-sale-event-created-at', 'sale-one', 1, 'corrected', ?1, ?2,
           'artist-admin', 'bad-sale-event-created-at-key', ?3, ?4)
       `).run(
-        saleSnapshot(), saleSnapshot({ totalMinor: 300001 }), digest('8'), shortTimestamp,
+        saleSnapshot(), saleSnapshot({ totalMinor: 300001 }), digest('8'), outOfRangeTimestamp,
       ), /constraint/i);
 
+      for (const id of [
+        'bad-updated-at', 'bad-record-created-at', 'bad-record-updated-at',
+        'bad-sale-recorded-at', 'bad-item-created-at', 'bad-media-created-at',
+        'bad-ledger-created-at', 'bad-price-recorded-at', 'bad-reconnect-created-at',
+        'bad-record-event-created-at', 'bad-sale-event-created-at',
+      ]) {
+        assert.equal(db.prepare(`
+          SELECT id FROM (
+            SELECT id FROM artist_reconnection_cases
+            UNION ALL SELECT id FROM artist_artwork_records
+            UNION ALL SELECT id FROM artist_artwork_record_events
+            UNION ALL SELECT id FROM artist_verified_sales
+            UNION ALL SELECT id FROM artist_verified_sale_events
+            UNION ALL SELECT id FROM artist_verified_sale_items
+            UNION ALL SELECT id FROM artist_artwork_media
+            UNION ALL SELECT id FROM artist_artwork_ledger_entries
+            UNION ALL SELECT id FROM artist_artwork_price_entries
+            UNION ALL SELECT id FROM artist_reconnection_events
+          ) WHERE id = ?1
+        `).get(id), undefined, id);
+      }
+
+      assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+    } finally {
+      db.close();
+    }
+  });
+
+  it('rejects corrected sale snapshots whose date functions normalize to NULL', () => {
+    const db = database();
+    try {
+      seedCaseAndRecords(db);
+      insertPrimarySale(db);
+      for (const [id, overrides] of [
+        ['bad-correction-date', { occurredOn: '2026-08-32', totalMinor: 300001 }],
+        ['bad-correction-month', {
+          occurrencePrecision: 'month', occurredOn: '2026-13', totalMinor: 300001,
+        }],
+        ['bad-correction-timestamp', {
+          recordedAt: '2026-13-10T12:00:00.000Z', totalMinor: 300001,
+        }],
+      ] as const) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_verified_sale_events
+            (id, sale_id, sequence, event_type, before_json, after_json,
+             actor_user_id, idempotency_key, request_digest, created_at)
+          VALUES (?1, 'sale-one', 1, 'corrected', ?2, ?3,
+            'artist-admin', ?4, ?5, ?6)
+        `).run(
+          id, saleSnapshot(), saleSnapshot(overrides), `${id}-key`, digest('9'), now,
+        ), /snapshot|date|invalid/i, id);
+      }
+      assert.equal(count(db, 'artist_verified_sale_events'), 0);
+
+      const monthSnapshot = saleSnapshot({
+        occurrencePrecision: 'month', occurredOn: '2026-08', totalMinor: 300001,
+      });
+      const yearSnapshot = saleSnapshot({
+        occurrencePrecision: 'year', occurredOn: '2026', totalMinor: 300002,
+      });
+      const unknownSnapshot = saleSnapshot({
+        occurrencePrecision: 'unknown', occurredOn: null, totalMinor: 300003,
+      });
+      for (const [id, sequence, before, after] of [
+        ['valid-correction-month', 1, saleSnapshot(), monthSnapshot],
+        ['valid-correction-year', 2, monthSnapshot, yearSnapshot],
+        ['valid-correction-unknown', 3, yearSnapshot, unknownSnapshot],
+      ] as const) {
+        db.prepare(`
+          INSERT INTO artist_verified_sale_events
+            (id, sale_id, sequence, event_type, before_json, after_json,
+             actor_user_id, idempotency_key, request_digest, created_at)
+          VALUES (?1, 'sale-one', ?2, 'corrected', ?3, ?4,
+            'artist-admin', ?5, ?6, ?7)
+        `).run(id, sequence, before, after, `${id}-key`, digest('a'), now);
+      }
+      assert.equal(count(db, 'artist_verified_sale_events'), 3);
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
