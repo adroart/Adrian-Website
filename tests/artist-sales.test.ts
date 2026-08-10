@@ -224,7 +224,22 @@ function storeArtworkLedgerMedia(bucket: any, input: Record<string, unknown>) {
   return storeArtworkLedgerMediaRaw(bucket, {
     ...input,
     signal: new AbortController().signal,
+    waitUntil(promise: Promise<unknown>) { void promise; },
   } as any);
+}
+
+function mediaExecutionContext(options: { throwOnWaitUntil?: boolean } = {}) {
+  const promises: Promise<unknown>[] = [];
+  return {
+    promises,
+    waitUntil(promise: Promise<unknown>) {
+      if (options.throwOnWaitUntil) throw new Error('private waitUntil failure');
+      promises.push(promise);
+    },
+    async drain() {
+      await Promise.all(promises);
+    },
+  };
 }
 
 type FakeMediaObject = {
@@ -432,7 +447,14 @@ describe('authenticity media immutable R2 storage', () => {
     assert.match(moduleState, /let activeMediaUploadGeneration = 0n;/);
   });
 
-  it('requires a genuine live AbortSignal before admission, snapshot, digest, or R2 work', async () => {
+  it('pins request cancellation and cross-request cleanup compatibility flags', () => {
+    const wrangler = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
+    assert.match(wrangler, /compatibility_date = "2024-09-23"/);
+    assert.match(wrangler,
+      /compatibility_flags = \["nodejs_compat", "enable_request_signal", "handle_cross_request_promise_resolution"\]/);
+  });
+
+  it('requires a genuine live AbortSignal and execution context before any media work', async () => {
     const source = readFileSync(
       new URL('../functions/api/_lib/artworkLedgerMedia.js', import.meta.url), 'utf8',
     );
@@ -451,14 +473,30 @@ describe('authenticity media immutable R2 storage', () => {
       { aborted: 'false', addEventListener() {}, removeEventListener() {} },
     ]) {
       await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
-        ...base, signal,
+        ...base, signal, waitUntil() {},
       } as any), mediaErrorCode('invalid_abort_signal'));
     }
+
+    for (const waitUntil of [undefined, null, {}, { waitUntil: null }]) {
+      await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+        ...base,
+        signal: new AbortController().signal,
+        waitUntil,
+      } as any), mediaErrorCode('invalid_execution_context'));
+    }
+
+    const objectContext = mediaExecutionContext();
+    await storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
+      ...base,
+      artworkRecordId: 'record-object-execution-context',
+      signal: new AbortController().signal,
+      waitUntil: objectContext,
+    });
 
     const controller = new AbortController();
     controller.abort('private cancellation reason');
     await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
-      ...base, signal: controller.signal,
+      ...base, signal: controller.signal, waitUntil() {},
     }), (error: Error & { code?: string }) => {
       assertSanitizedMediaError(error, 'media_upload_cancelled', [
         'private cancellation reason', base.artworkRecordId,
@@ -482,6 +520,7 @@ describe('authenticity media immutable R2 storage', () => {
         bytes: new Uint8Array([1]),
         contentType: 'image/jpeg',
         signal: controller.signal,
+        waitUntil() {},
       });
       if (failureCode) await assert.rejects(operation, mediaErrorCode(failureCode));
       else await operation;
@@ -824,44 +863,42 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(sameFake.objects.size, 1);
   });
 
-  it('aborts a pending put, admits a successor, and ignores late old resolve or reject', async () => {
+  it('holds admission through a cancelled maximum put and six retry attempts until cleanup settles', async () => {
     for (const latePutRejects of [false, true]) {
       let releaseOldPut: (() => void) | undefined;
       let oldPutEnteredResolve: (() => void) | undefined;
-      let releaseSuccessorPut: (() => void) | undefined;
-      let successorPutEnteredResolve: (() => void) | undefined;
       const oldPutEntered = new Promise<void>((resolve) => { oldPutEnteredResolve = resolve; });
       const oldPutGate = new Promise<void>((resolve) => { releaseOldPut = resolve; });
-      const successorPutEntered = new Promise<void>((resolve) => {
-        successorPutEnteredResolve = resolve;
-      });
-      const successorPutGate = new Promise<void>((resolve) => { releaseSuccessorPut = resolve; });
       const fake = mediaBucket({
         failPutAt: latePutRejects ? 1 : undefined,
+        recordPutBytes: false,
+        trackLifecycles: true,
         async beforePut(putNumber) {
           if (putNumber === 1) {
             oldPutEnteredResolve?.();
             await oldPutGate;
-          } else if (putNumber === 2) {
-            successorPutEnteredResolve?.();
-            await successorPutGate;
           }
         },
       });
+      const bytes = new Uint8Array(15 * 1024 * 1024);
+      bytes[0] = 1;
+      bytes[bytes.byteLength - 1] = 3;
       const input = {
         artworkRecordId: `record-abort-put-${latePutRejects ? 'reject' : 'resolve'}`,
-        bytes: new Uint8Array([1, 2, 3]),
+        bytes,
         contentType: 'image/png',
       };
+      const execution = mediaExecutionContext();
       const oldController = new AbortController();
       const oldPending = storeArtworkLedgerMediaRaw(fake.bucket, {
-        ...input, signal: oldController.signal,
+        ...input,
+        signal: oldController.signal,
+        waitUntil: execution.waitUntil,
       });
       const oldOutcome = oldPending.then(
         (value) => ({ status: 'fulfilled' as const, value }),
         (error) => ({ status: 'rejected' as const, error }),
       );
-      let successorPending: ReturnType<typeof storeArtworkLedgerMediaRaw> | undefined;
       try {
         await oldPutEntered;
         oldController.abort('private old put cancellation');
@@ -879,35 +916,42 @@ describe('authenticity media immutable R2 storage', () => {
           ]);
         }
         assert.equal(getEventListeners(oldController.signal, 'abort').length, 0);
+        assert.equal(execution.promises.length, 1);
 
-        const successorController = new AbortController();
-        successorPending = storeArtworkLedgerMediaRaw(fake.bucket, {
-          ...input, signal: successorController.signal,
-        });
-        await successorPutEntered;
+        for (let attempt = 1; attempt <= 6; attempt += 1) {
+          const retryController = new AbortController();
+          const retry = storeArtworkLedgerMediaRaw(fake.bucket, {
+            ...input,
+            artworkRecordId: `${input.artworkRecordId}-busy-${attempt}`,
+            signal: retryController.signal,
+            waitUntil: mediaExecutionContext().waitUntil,
+          });
+          retryController.abort(`private retry ${attempt}`);
+          await assert.rejects(retry, mediaErrorCode('media_upload_busy'));
+        }
+        assert.equal(fake.puts.length, 1);
+        assert.equal(fake.streamMetrics.maxActiveLifecycles, 1);
+        assert.equal(fake.streamMetrics.activeLifecycles, 1);
+
         releaseOldPut?.();
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await execution.drain();
 
-        await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+        const retry = await storeArtworkLedgerMediaRaw(fake.bucket, {
           ...input,
-          artworkRecordId: `${input.artworkRecordId}-busy`,
           signal: new AbortController().signal,
-        }), mediaErrorCode('media_upload_busy'));
-
-        releaseSuccessorPut?.();
-        const successor = await successorPending;
-        assert.match(successor.reference, new RegExp(`^artwork-ledger/${input.artworkRecordId}/`));
+          waitUntil: mediaExecutionContext().waitUntil,
+        });
+        assert.match(retry.reference, new RegExp(`^artwork-ledger/${input.artworkRecordId}/`));
         assert.equal(fake.objects.size, 1);
       } finally {
         releaseOldPut?.();
-        releaseSuccessorPut?.();
         await oldOutcome;
-        await successorPending?.catch(() => undefined);
+        await execution.drain();
       }
     }
   });
 
-  it('aborts pending get and stream reads, while late settlement cannot clear a successor', async () => {
+  it('holds admission while cancelled get and stream-read promises remain pending', async () => {
     for (const boundary of ['get', 'stream'] as const) {
       let storedKey = '';
       let storedBytes = new Uint8Array();
@@ -947,16 +991,7 @@ describe('authenticity media immutable R2 storage', () => {
           return stored;
         },
       };
-      let releaseSuccessor: (() => void) | undefined;
-      let successorEnteredResolve: (() => void) | undefined;
-      const successorEntered = new Promise<void>((resolve) => { successorEnteredResolve = resolve; });
-      const successorGate = new Promise<void>((resolve) => { releaseSuccessor = resolve; });
-      const successorFake = mediaBucket({
-        async beforePut() {
-          successorEnteredResolve?.();
-          await successorGate;
-        },
-      });
+      const execution = mediaExecutionContext();
       const oldController = new AbortController();
       const input = {
         artworkRecordId: `record-abort-${boundary}`,
@@ -964,13 +999,14 @@ describe('authenticity media immutable R2 storage', () => {
         contentType: 'image/png',
       };
       const oldPending = storeArtworkLedgerMediaRaw(oldBucket, {
-        ...input, signal: oldController.signal,
+        ...input,
+        signal: oldController.signal,
+        waitUntil: execution.waitUntil,
       });
       const oldOutcome = oldPending.then(
         (value) => ({ status: 'fulfilled' as const, value }),
         (error) => ({ status: 'rejected' as const, error }),
       );
-      let successorPending: ReturnType<typeof storeArtworkLedgerMediaRaw> | undefined;
       try {
         await boundaryEntered;
         oldController.abort(`private ${boundary} cancellation`);
@@ -987,14 +1023,16 @@ describe('authenticity media immutable R2 storage', () => {
             `private ${boundary} cancellation`, input.artworkRecordId,
           ]);
         }
+        assert.equal(execution.promises.length, 1);
 
-        successorPending = storeArtworkLedgerMediaRaw(successorFake.bucket, {
-          artworkRecordId: `record-${boundary}-successor`,
+        await assert.rejects(storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
+          artworkRecordId: `record-${boundary}-still-busy`,
           bytes: new Uint8Array([7]),
           contentType: 'image/png',
           signal: new AbortController().signal,
-        });
-        await successorEntered;
+          waitUntil: mediaExecutionContext().waitUntil,
+        }), mediaErrorCode('media_upload_busy'));
+
         if (boundary === 'get') {
           resolveBoundary?.({
             key: storedKey,
@@ -1010,24 +1048,119 @@ describe('authenticity media immutable R2 storage', () => {
         } else {
           resolveBoundary?.({ done: true });
         }
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        await assert.rejects(storeArtworkLedgerMediaRaw(successorFake.bucket, {
-          artworkRecordId: `record-${boundary}-still-busy`,
-          bytes: new Uint8Array([8]),
+        await execution.drain();
+        const retry = await storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
+          artworkRecordId: `record-${boundary}-after-cleanup`,
+          bytes: new Uint8Array([7]),
           contentType: 'image/png',
           signal: new AbortController().signal,
-        }), mediaErrorCode('media_upload_busy'));
-
-        releaseSuccessor?.();
-        await successorPending;
+          waitUntil: mediaExecutionContext().waitUntil,
+        });
+        assert.match(retry.reference, new RegExp(`^artwork-ledger/record-${boundary}-after-cleanup/`));
         assert.equal(getEventListeners(oldController.signal, 'abort').length, 0);
         if (boundary === 'stream') assert.equal(cancelCalls, 1);
       } finally {
         if (boundary === 'get') resolveBoundary?.(null);
         else resolveBoundary?.({ done: true });
-        releaseSuccessor?.();
         await oldOutcome;
-        await successorPending?.catch(() => undefined);
+        await execution.drain();
+      }
+    }
+  });
+
+  it('holds admission through a pending stream cancel and falls back safely when waitUntil throws', async () => {
+    for (const waitUntilThrows of [false, true]) {
+      let resolveCancel: (() => void) | undefined;
+      let cancelEnteredResolve: (() => void) | undefined;
+      const cancelEntered = new Promise<void>((resolve) => { cancelEnteredResolve = resolve; });
+      const cancelGate = new Promise<void>((resolve) => { resolveCancel = resolve; });
+      const bucket = {
+        async put(key: string) { return { key }; },
+        async get(key: string) {
+          return {
+            key,
+            size: 1,
+            httpMetadata: { contentType: 'image/png' },
+            body: {
+              getReader() {
+                let reads = 0;
+                return {
+                  async read() {
+                    reads += 1;
+                    return reads === 1
+                      ? { done: false, value: new Uint8Array([9]) }
+                      : { done: true };
+                  },
+                  async cancel() {
+                    cancelEnteredResolve?.();
+                    await cancelGate;
+                  },
+                  releaseLock() {},
+                };
+              },
+            },
+          };
+        },
+      };
+      const execution = mediaExecutionContext({ throwOnWaitUntil: waitUntilThrows });
+      const controller = new AbortController();
+      const pending = storeArtworkLedgerMediaRaw(bucket, {
+        artworkRecordId: `record-cancel-pending-${waitUntilThrows}`,
+        bytes: new Uint8Array([1]),
+        contentType: 'image/png',
+        signal: controller.signal,
+        waitUntil: execution.waitUntil,
+      });
+      const outcome = pending.then(
+        (value) => ({ status: 'fulfilled' as const, value }),
+        (error) => ({ status: 'rejected' as const, error }),
+      );
+      try {
+        await cancelEntered;
+        controller.abort('private cancel boundary');
+        if (!waitUntilThrows) {
+          const prompt = await Promise.race([
+            outcome,
+            new Promise<{ status: 'timeout' }>((resolve) => {
+              setTimeout(() => resolve({ status: 'timeout' }), 50);
+            }),
+          ]);
+          assert.equal(prompt.status, 'rejected');
+          await assert.rejects(storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
+            artworkRecordId: 'record-cancel-boundary-busy',
+            bytes: new Uint8Array([2]),
+            contentType: 'image/png',
+            signal: new AbortController().signal,
+            waitUntil: mediaExecutionContext().waitUntil,
+          }), mediaErrorCode('media_upload_busy'));
+        } else {
+          const beforeSettlement = await Promise.race([
+            outcome.then(() => 'settled'),
+            new Promise<'pending'>((resolve) => setTimeout(() => resolve('pending'), 25)),
+          ]);
+          assert.equal(beforeSettlement, 'pending');
+        }
+
+        resolveCancel?.();
+        const cancelled = await outcome;
+        assert.equal(cancelled.status, 'rejected');
+        if (cancelled.status === 'rejected') {
+          assertSanitizedMediaError(cancelled.error, 'media_upload_cancelled', [
+            'private cancel boundary', 'private waitUntil failure',
+          ]);
+        }
+        await execution.drain();
+        await storeArtworkLedgerMediaRaw(mediaBucket().bucket, {
+          artworkRecordId: `record-after-cancel-${waitUntilThrows}`,
+          bytes: new Uint8Array([3]),
+          contentType: 'image/png',
+          signal: new AbortController().signal,
+          waitUntil: mediaExecutionContext().waitUntil,
+        });
+      } finally {
+        resolveCancel?.();
+        await outcome;
+        await execution.drain();
       }
     }
   });
