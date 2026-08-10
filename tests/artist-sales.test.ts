@@ -4338,6 +4338,54 @@ describe('claimed artwork certificate ledger', () => {
     } finally { fixture.db.close(); }
   });
 
+  it('keeps projection outages authority-neutral until a live keeper row is proven', async () => {
+    const { onRequest } = await import('../functions/api/keeper/certificate-ledger.js');
+    const request = (
+      fixture: ReturnType<typeof serviceEnvironment>, userId?: string,
+    ) => onRequest({
+      request: new Request(
+        'https://adrianrasmussen.com/api/keeper/certificate-ledger?publicCode=AR-7KQ9M2WX',
+        { headers: userId ? { 'X-Test-User': userId } : {} },
+      ),
+      env: fixture.env,
+    } as any);
+
+    const neutralFixture = serviceEnvironment({
+      onQuery(sql) {
+        if (sql.includes('FROM artist_artwork_price_entries')) {
+          throw new Error('simulated projection outage before authority');
+        }
+      },
+    });
+    seedCertificateLedger(neutralFixture);
+    try {
+      const unknownAuthority = await request(neutralFixture, 'unrelated-account');
+      assert.equal(unknownAuthority.status, 503);
+      assert.deepEqual(await unknownAuthority.json(), {
+        ok: false, error: 'ledger_unavailable',
+      });
+      const guest = await request(neutralFixture);
+      assert.equal(guest.status, 401);
+      assert.doesNotMatch(await guest.text(), /currentKeeper|price|keeper-current/i);
+    } finally { neutralFixture.db.close(); }
+
+    const provenFixture = serviceEnvironment({
+      overrideAllResults(sql, results) {
+        return sql.includes('FROM artist_artwork_price_entries')
+          ? results.map((row) => row.price_id === null ? row : { ...row, amount_minor: 'corrupt' })
+          : results;
+      },
+    });
+    seedCertificateLedger(provenFixture);
+    try {
+      const provenKeeperFailure = await request(provenFixture, 'keeper-current');
+      assert.equal(provenKeeperFailure.status, 503);
+      assert.deepEqual(await provenKeeperFailure.json(), {
+        ok: false, error: 'ledger_unavailable', currentKeeper: true,
+      });
+    } finally { provenFixture.db.close(); }
+  });
+
   it('keeps the private endpoint GET-only and no-store before authentication', async () => {
     const { onRequest: privateCertificateLedgerRequest } = await import(
       '../functions/api/keeper/certificate-ledger.js'

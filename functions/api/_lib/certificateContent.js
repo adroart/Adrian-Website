@@ -552,8 +552,9 @@ export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId
   const normalizedPublicCode = requiredText(publicCode, 'invalid_public_code', 80).toUpperCase();
   const normalizedUserId = requiredText(userId, 'invalid_user', 128);
   if (!/^AR-[A-Z0-9]{8}$/.test(normalizedPublicCode)) throw codedError('invalid_public_code');
+  let rows;
   try {
-    const rows = await all(db, `
+    rows = await all(db, `
       WITH prices AS (
         SELECT id, artwork_record_id, amount_minor, currency, occurred_on,
                occurrence_precision, recorded_at
@@ -592,10 +593,15 @@ export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId
          END,
          price.recorded_at, price.id
     `, normalizedPublicCode, normalizedUserId);
-    if (rows.length === 0) throw codedError('not_current_keeper');
-    if (rows.some((row) => !exactClaimedIdentity(row, {
-      publicCode: normalizedPublicCode, userId: normalizedUserId,
-    }))) throw codedError('not_current_keeper');
+  } catch {
+    throw codedError('certificate_ledger_unavailable');
+  }
+  if (!Array.isArray(rows)) throw codedError('certificate_ledger_unavailable');
+  if (rows.length === 0) throw codedError('not_current_keeper');
+  if (rows.some((row) => !exactClaimedIdentity(row, {
+    publicCode: normalizedPublicCode, userId: normalizedUserId,
+  }))) throw codedError('not_current_keeper');
+  try {
     return rows.filter((row) => row.price_id !== null).map((row) => {
       if (typeof row.price_id !== 'string' || !row.price_id
         || !Number.isSafeInteger(row.amount_minor) || row.amount_minor < 0
@@ -614,8 +620,7 @@ export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId
         recordedAt: row.recorded_at,
       };
     });
-  } catch (error) {
-    if (error?.code === 'not_current_keeper') throw error;
+  } catch {
     throw codedError('current_keeper_ledger_unavailable');
   }
 }

@@ -750,6 +750,7 @@ test('reveals claimed creator notes publicly and keeps price history current-kee
   let signedIn = false;
   let currentKeeper = true;
   let transientPrivateFailure = false;
+  let neutralPrivateOutage = false;
   let privateReads = 0;
   await page.route('**/api/auth/get-session', route => route.fulfill({
     status: 200,
@@ -792,6 +793,13 @@ test('reveals claimed creator notes publicly and keeps price history current-kee
   }));
   await page.route('**/api/keeper/certificate-ledger?**', route => {
     privateReads += 1;
+    if (neutralPrivateOutage) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, error: 'ledger_unavailable' }),
+      });
+    }
     if (transientPrivateFailure && currentKeeper) {
       return route.fulfill({
         status: 503,
@@ -841,9 +849,12 @@ test('reveals claimed creator notes publicly and keeps price history current-kee
   expect(privateReads).toBeGreaterThan(0);
 
   currentKeeper = false;
+  neutralPrivateOutage = true;
   await page.reload();
   await openWithLivingLegacy(page, WORK_PATH);
   await expect(page.getByText('Price history')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Try price history again' })).toHaveCount(0);
+  await expect(page.getByText('Private to the current keeper')).toHaveCount(0);
   await expect(page.getByText(/locked|unlock|upgrade|price unavailable/i)).toHaveCount(0);
 });
 
