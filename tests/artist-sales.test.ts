@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { getEventListeners } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, it } from 'node:test';
@@ -16,7 +17,9 @@ import {
   linkArtworkIdentity,
   listArtistSaleWorkspace,
 } from '../functions/api/_lib/artistSales.js';
-import { storeArtworkLedgerMedia } from '../functions/api/_lib/artworkLedgerMedia.js';
+import {
+  storeArtworkLedgerMedia as storeArtworkLedgerMediaRaw,
+} from '../functions/api/_lib/artworkLedgerMedia.js';
 
 const readMigration = (name: string) => readFileSync(
   new URL(`../migrations/${name}`, import.meta.url), 'utf8',
@@ -217,6 +220,13 @@ function serviceEnvironment(options: {
 
 const administrator = { userId: 'artist-admin', email: 'artist@example.com' };
 
+function storeArtworkLedgerMedia(bucket: any, input: Record<string, unknown>) {
+  return storeArtworkLedgerMediaRaw(bucket, {
+    ...input,
+    signal: new AbortController().signal,
+  } as any);
+}
+
 type FakeMediaObject = {
   bytes: Uint8Array;
   contentType?: string;
@@ -415,10 +425,68 @@ describe('authenticity media immutable R2 storage', () => {
     );
     const moduleState = source.slice(0, source.indexOf('function codedError'));
     assert.match(moduleState, /const LOCAL_CODED_ERRORS = new WeakSet\(\);/);
-    assert.doesNotMatch(moduleState, /Symbol\(['"]localCodedError|Date\.now|LEASE_DURATION|Expires|Generation/);
+    assert.doesNotMatch(moduleState, /Symbol\(['"]localCodedError|Date\.now|LEASE_DURATION|Expires/);
     assert.doesNotMatch(moduleState, /Promise|resolver|Queue|\[\]/);
     assert.doesNotMatch(source, /Date\.now|mediaLeaseExpiresAt|mediaAdmissionQueue|withMediaAdmission/);
-    assert.match(moduleState, /let mediaUploadActive = false;/);
+    assert.match(moduleState, /let nextMediaUploadGeneration = 0n;/);
+    assert.match(moduleState, /let activeMediaUploadGeneration = 0n;/);
+  });
+
+  it('requires a genuine live AbortSignal before admission, snapshot, digest, or R2 work', async () => {
+    const source = readFileSync(
+      new URL('../functions/api/_lib/artworkLedgerMedia.js', import.meta.url), 'utf8',
+    );
+    const storeSource = source.slice(source.indexOf('export async function storeArtworkLedgerMedia'));
+    const fake = mediaBucket();
+    const base = {
+      artworkRecordId: 'record-signal-validation',
+      bytes: new Uint8Array([1, 2, 3]),
+      contentType: 'image/png',
+    };
+    for (const signal of [
+      undefined,
+      null,
+      {},
+      { aborted: false, addEventListener() {}, removeEventListener() {} },
+      { aborted: 'false', addEventListener() {}, removeEventListener() {} },
+    ]) {
+      await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+        ...base, signal,
+      } as any), mediaErrorCode('invalid_abort_signal'));
+    }
+
+    const controller = new AbortController();
+    controller.abort('private cancellation reason');
+    await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+      ...base, signal: controller.signal,
+    }), (error: Error & { code?: string }) => {
+      assertSanitizedMediaError(error, 'media_upload_cancelled', [
+        'private cancellation reason', base.artworkRecordId,
+      ]);
+      return true;
+    });
+    assert.equal(fake.puts.length, 0);
+    assert.equal(fake.gets, 0);
+    assert.ok(storeSource.indexOf('validateAbortSignal') < storeSource.indexOf('binaryByteLength'));
+    assert.ok(storeSource.indexOf('validateAbortSignal') < storeSource.indexOf('inputBytes(rawBytes)'));
+  });
+
+  it('removes its abort listener after owner success and failure', async () => {
+    for (const [fake, failureCode] of [
+      [mediaBucket(), null],
+      [mediaBucket({ putFailure: new Error('private put') }), 'media_backup_failed'],
+    ] as const) {
+      const controller = new AbortController();
+      const operation = storeArtworkLedgerMediaRaw(fake.bucket, {
+        artworkRecordId: 'record-listener-cleanup',
+        bytes: new Uint8Array([1]),
+        contentType: 'image/jpeg',
+        signal: controller.signal,
+      });
+      if (failureCode) await assert.rejects(operation, mediaErrorCode(failureCode));
+      else await operation;
+      assert.equal(getEventListeners(controller.signal, 'abort').length, 0);
+    }
   });
 
   it('stores JPEG, PNG, and WebP bytes exactly with content-addressed keys and immutable options', async () => {
@@ -754,6 +822,214 @@ describe('authenticity media immutable R2 storage', () => {
     const right = await storeArtworkLedgerMedia(sameFake.bucket, sameInput);
     assert.deepEqual(right, left);
     assert.equal(sameFake.objects.size, 1);
+  });
+
+  it('aborts a pending put, admits a successor, and ignores late old resolve or reject', async () => {
+    for (const latePutRejects of [false, true]) {
+      let releaseOldPut: (() => void) | undefined;
+      let oldPutEnteredResolve: (() => void) | undefined;
+      let releaseSuccessorPut: (() => void) | undefined;
+      let successorPutEnteredResolve: (() => void) | undefined;
+      const oldPutEntered = new Promise<void>((resolve) => { oldPutEnteredResolve = resolve; });
+      const oldPutGate = new Promise<void>((resolve) => { releaseOldPut = resolve; });
+      const successorPutEntered = new Promise<void>((resolve) => {
+        successorPutEnteredResolve = resolve;
+      });
+      const successorPutGate = new Promise<void>((resolve) => { releaseSuccessorPut = resolve; });
+      const fake = mediaBucket({
+        failPutAt: latePutRejects ? 1 : undefined,
+        async beforePut(putNumber) {
+          if (putNumber === 1) {
+            oldPutEnteredResolve?.();
+            await oldPutGate;
+          } else if (putNumber === 2) {
+            successorPutEnteredResolve?.();
+            await successorPutGate;
+          }
+        },
+      });
+      const input = {
+        artworkRecordId: `record-abort-put-${latePutRejects ? 'reject' : 'resolve'}`,
+        bytes: new Uint8Array([1, 2, 3]),
+        contentType: 'image/png',
+      };
+      const oldController = new AbortController();
+      const oldPending = storeArtworkLedgerMediaRaw(fake.bucket, {
+        ...input, signal: oldController.signal,
+      });
+      const oldOutcome = oldPending.then(
+        (value) => ({ status: 'fulfilled' as const, value }),
+        (error) => ({ status: 'rejected' as const, error }),
+      );
+      let successorPending: ReturnType<typeof storeArtworkLedgerMediaRaw> | undefined;
+      try {
+        await oldPutEntered;
+        oldController.abort('private old put cancellation');
+        const prompt = await Promise.race([
+          oldOutcome,
+          new Promise<{ status: 'timeout' }>((resolve) => {
+            setTimeout(() => resolve({ status: 'timeout' }), 50);
+          }),
+        ]);
+        assert.notEqual(prompt.status, 'timeout');
+        assert.equal(prompt.status, 'rejected');
+        if (prompt.status === 'rejected') {
+          assertSanitizedMediaError(prompt.error, 'media_upload_cancelled', [
+            'private old put cancellation', input.artworkRecordId,
+          ]);
+        }
+        assert.equal(getEventListeners(oldController.signal, 'abort').length, 0);
+
+        const successorController = new AbortController();
+        successorPending = storeArtworkLedgerMediaRaw(fake.bucket, {
+          ...input, signal: successorController.signal,
+        });
+        await successorPutEntered;
+        releaseOldPut?.();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        await assert.rejects(storeArtworkLedgerMediaRaw(fake.bucket, {
+          ...input,
+          artworkRecordId: `${input.artworkRecordId}-busy`,
+          signal: new AbortController().signal,
+        }), mediaErrorCode('media_upload_busy'));
+
+        releaseSuccessorPut?.();
+        const successor = await successorPending;
+        assert.match(successor.reference, new RegExp(`^artwork-ledger/${input.artworkRecordId}/`));
+        assert.equal(fake.objects.size, 1);
+      } finally {
+        releaseOldPut?.();
+        releaseSuccessorPut?.();
+        await oldOutcome;
+        await successorPending?.catch(() => undefined);
+      }
+    }
+  });
+
+  it('aborts pending get and stream reads, while late settlement cannot clear a successor', async () => {
+    for (const boundary of ['get', 'stream'] as const) {
+      let storedKey = '';
+      let storedBytes = new Uint8Array();
+      let resolveBoundary: ((value: any) => void) | undefined;
+      let boundaryEnteredResolve: (() => void) | undefined;
+      const boundaryEntered = new Promise<void>((resolve) => { boundaryEnteredResolve = resolve; });
+      const boundaryGate = new Promise<any>((resolve) => { resolveBoundary = resolve; });
+      let cancelCalls = 0;
+      const oldBucket = {
+        async put(key: string, value: Uint8Array) {
+          storedKey = key;
+          storedBytes = new Uint8Array(value);
+          return { key };
+        },
+        async get(key: string) {
+          const stored = {
+            key,
+            size: storedBytes.byteLength,
+            httpMetadata: { contentType: 'image/png' },
+            body: {
+              getReader() {
+                return {
+                  read() {
+                    boundaryEnteredResolve?.();
+                    return boundaryGate;
+                  },
+                  async cancel() { cancelCalls += 1; },
+                  releaseLock() {},
+                };
+              },
+            },
+          };
+          if (boundary === 'get') {
+            boundaryEnteredResolve?.();
+            return boundaryGate;
+          }
+          return stored;
+        },
+      };
+      let releaseSuccessor: (() => void) | undefined;
+      let successorEnteredResolve: (() => void) | undefined;
+      const successorEntered = new Promise<void>((resolve) => { successorEnteredResolve = resolve; });
+      const successorGate = new Promise<void>((resolve) => { releaseSuccessor = resolve; });
+      const successorFake = mediaBucket({
+        async beforePut() {
+          successorEnteredResolve?.();
+          await successorGate;
+        },
+      });
+      const oldController = new AbortController();
+      const input = {
+        artworkRecordId: `record-abort-${boundary}`,
+        bytes: new Uint8Array([4, 5, 6]),
+        contentType: 'image/png',
+      };
+      const oldPending = storeArtworkLedgerMediaRaw(oldBucket, {
+        ...input, signal: oldController.signal,
+      });
+      const oldOutcome = oldPending.then(
+        (value) => ({ status: 'fulfilled' as const, value }),
+        (error) => ({ status: 'rejected' as const, error }),
+      );
+      let successorPending: ReturnType<typeof storeArtworkLedgerMediaRaw> | undefined;
+      try {
+        await boundaryEntered;
+        oldController.abort(`private ${boundary} cancellation`);
+        const prompt = await Promise.race([
+          oldOutcome,
+          new Promise<{ status: 'timeout' }>((resolve) => {
+            setTimeout(() => resolve({ status: 'timeout' }), 50);
+          }),
+        ]);
+        assert.notEqual(prompt.status, 'timeout');
+        assert.equal(prompt.status, 'rejected');
+        if (prompt.status === 'rejected') {
+          assertSanitizedMediaError(prompt.error, 'media_upload_cancelled', [
+            `private ${boundary} cancellation`, input.artworkRecordId,
+          ]);
+        }
+
+        successorPending = storeArtworkLedgerMediaRaw(successorFake.bucket, {
+          artworkRecordId: `record-${boundary}-successor`,
+          bytes: new Uint8Array([7]),
+          contentType: 'image/png',
+          signal: new AbortController().signal,
+        });
+        await successorEntered;
+        if (boundary === 'get') {
+          resolveBoundary?.({
+            key: storedKey,
+            size: storedBytes.byteLength,
+            httpMetadata: { contentType: 'image/png' },
+            body: new ReadableStream({
+              start(controller) {
+                controller.enqueue(storedBytes);
+                controller.close();
+              },
+            }),
+          });
+        } else {
+          resolveBoundary?.({ done: true });
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        await assert.rejects(storeArtworkLedgerMediaRaw(successorFake.bucket, {
+          artworkRecordId: `record-${boundary}-still-busy`,
+          bytes: new Uint8Array([8]),
+          contentType: 'image/png',
+          signal: new AbortController().signal,
+        }), mediaErrorCode('media_upload_busy'));
+
+        releaseSuccessor?.();
+        await successorPending;
+        assert.equal(getEventListeners(oldController.signal, 'abort').length, 0);
+        if (boundary === 'stream') assert.equal(cancelCalls, 1);
+      } finally {
+        if (boundary === 'get') resolveBoundary?.(null);
+        else resolveBoundary?.({ done: true });
+        releaseSuccessor?.();
+        await oldOutcome;
+        await successorPending?.catch(() => undefined);
+      }
+    }
   });
 
   it('admits at most one of three distinct maximum-size attempts without copying busy inputs', async () => {

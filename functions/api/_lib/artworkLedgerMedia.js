@@ -14,7 +14,11 @@ const typedArrayByteLength = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTY
 const dataViewBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
 const dataViewByteOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
 const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
-let mediaUploadActive = false;
+const abortSignalAborted = Object.getOwnPropertyDescriptor(AbortSignal.prototype, 'aborted').get;
+const addEventListener = EventTarget.prototype.addEventListener;
+const removeEventListener = EventTarget.prototype.removeEventListener;
+let nextMediaUploadGeneration = 0n;
+let activeMediaUploadGeneration = 0n;
 
 function codedError(code) {
   const error = new Error(code);
@@ -80,13 +84,72 @@ function readBackBytes(value) {
   throw new TypeError('unreadable media body');
 }
 
-function acquireMediaAdmission() {
-  if (mediaUploadActive) throw codedError('media_upload_busy');
-  mediaUploadActive = true;
+function abortSignalState(signal) {
+  return Reflect.apply(abortSignalAborted, signal, []);
 }
 
-function releaseMediaAdmission() {
-  mediaUploadActive = false;
+function validateAbortSignal(signal) {
+  try {
+    if (!signal
+      || typeof signal.addEventListener !== 'function'
+      || typeof signal.removeEventListener !== 'function'
+      || typeof abortSignalState(signal) !== 'boolean') {
+      throw new TypeError('invalid abort signal');
+    }
+    return abortSignalState(signal);
+  } catch {
+    throw codedError('invalid_abort_signal');
+  }
+}
+
+function acquireMediaAdmission() {
+  if (activeMediaUploadGeneration !== 0n) throw codedError('media_upload_busy');
+  nextMediaUploadGeneration += 1n;
+  activeMediaUploadGeneration = nextMediaUploadGeneration;
+  return activeMediaUploadGeneration;
+}
+
+function releaseMediaAdmission(generation) {
+  if (activeMediaUploadGeneration === generation) activeMediaUploadGeneration = 0n;
+}
+
+function createAbortState(signal, generation) {
+  let cancelled = false;
+  let rejectAbort;
+  let resolveAbort;
+  const promise = new Promise((resolve, reject) => {
+    resolveAbort = resolve;
+    rejectAbort = reject;
+  });
+  promise.catch(() => undefined);
+  const onAbort = () => {
+    if (cancelled) return;
+    cancelled = true;
+    releaseMediaAdmission(generation);
+    rejectAbort(codedError('media_upload_cancelled'));
+  };
+  try {
+    Reflect.apply(addEventListener, signal, ['abort', onAbort, { once: true }]);
+  } catch {
+    releaseMediaAdmission(generation);
+    throw codedError('invalid_abort_signal');
+  }
+  if (abortSignalState(signal)) onAbort();
+  return {
+    promise,
+    finish() {
+      try {
+        Reflect.apply(removeEventListener, signal, ['abort', onAbort]);
+      } catch {
+        // The signal was branded before registration; never expose cleanup internals.
+      }
+      resolveAbort();
+    },
+  };
+}
+
+function awaitWithAbort(operation, abortPromise) {
+  return Promise.race([operation, abortPromise]);
 }
 
 async function sha256Hex(bytes) {
@@ -112,7 +175,7 @@ function isConditionalPutError(error) {
     || property('name') === 'PreconditionFailed';
 }
 
-async function verifyStreamBody(body, expectedBytes, mismatchCode) {
+async function verifyStreamBody(body, expectedBytes, mismatchCode, abortPromise) {
   let reader;
   let streamEnded = false;
   let verificationError;
@@ -123,7 +186,7 @@ async function verifyStreamBody(body, expectedBytes, mismatchCode) {
     reader = body.getReader();
     let offset = 0;
     while (true) {
-      const read = await reader.read();
+      const read = await awaitWithAbort(reader.read(), abortPromise);
       if (!read || typeof read !== 'object') throw codedError('media_backup_failed');
       if (read.done === true) {
         streamEnded = true;
@@ -151,12 +214,17 @@ async function verifyStreamBody(body, expectedBytes, mismatchCode) {
   }
 
   let cleanupFailed = false;
+  let cleanupCancellation;
   if (reader) {
     if (!streamEnded) {
       try {
-        await reader.cancel();
-      } catch {
-        cleanupFailed = true;
+        await awaitWithAbort(reader.cancel(), abortPromise);
+      } catch (error) {
+        if (isLocalCodedError(error) && error.code === 'media_upload_cancelled') {
+          cleanupCancellation = error;
+        } else {
+          cleanupFailed = true;
+        }
       }
     }
     try {
@@ -165,16 +233,20 @@ async function verifyStreamBody(body, expectedBytes, mismatchCode) {
       cleanupFailed = true;
     }
   }
+  if (isLocalCodedError(verificationError)
+    && verificationError.code === 'media_upload_cancelled') throw verificationError;
+  if (cleanupCancellation) throw cleanupCancellation;
   if (cleanupFailed) throw codedError('media_backup_failed');
   if (verificationError) throw verificationError;
 }
 
-async function verifyStoredObject(bucket, expected, conflict) {
+async function verifyStoredObject(bucket, expected, conflict, abortPromise) {
   const mismatchCode = conflict ? 'media_backup_conflict' : 'media_backup_failed';
   let stored;
   try {
-    stored = await bucket.get(expected.reference);
-  } catch {
+    stored = await awaitWithAbort(bucket.get(expected.reference), abortPromise);
+  } catch (error) {
+    if (isLocalCodedError(error) && error.code === 'media_upload_cancelled') throw error;
     throw codedError('media_backup_failed');
   }
 
@@ -199,12 +271,14 @@ async function verifyStoredObject(bucket, expected, conflict) {
   if (size !== expected.byteLength) throw codedError(mismatchCode);
   if (storedContentType !== expected.contentType) throw codedError(mismatchCode);
   if (body === undefined || body === null) throw codedError('media_backup_failed');
-  await verifyStreamBody(body, expected.bytes, mismatchCode);
+  await verifyStreamBody(body, expected.bytes, mismatchCode, abortPromise);
 }
 
 export async function storeArtworkLedgerMedia(bucket, {
-  artworkRecordId, bytes: rawBytes, contentType,
+  artworkRecordId, bytes: rawBytes, contentType, signal,
 }) {
+  const initiallyAborted = validateAbortSignal(signal);
+  if (initiallyAborted) throw codedError('media_upload_cancelled');
   if (typeof artworkRecordId !== 'string'
     || !/^[A-Za-z0-9_-]{1,128}$/.test(artworkRecordId)) {
     throw codedError('invalid_artwork_record_id');
@@ -216,13 +290,27 @@ export async function storeArtworkLedgerMedia(bucket, {
     throw codedError('invalid_media_size');
   }
 
-  acquireMediaAdmission();
+  const generation = acquireMediaAdmission();
+  let abortState;
+  try {
+    abortState = createAbortState(signal, generation);
+  } catch (error) {
+    releaseMediaAdmission(generation);
+    if (isLocalCodedError(error)) throw error;
+    throw codedError('invalid_abort_signal');
+  }
   try {
     const bytes = inputBytes(rawBytes);
     if (bytes.byteLength < 1 || bytes.byteLength > MAX_MEDIA_BYTES) {
       throw codedError('invalid_media_size');
     }
-    const sha256 = await sha256Hex(bytes);
+    let sha256;
+    try {
+      sha256 = await awaitWithAbort(sha256Hex(bytes), abortState.promise);
+    } catch (error) {
+      if (isLocalCodedError(error) && error.code === 'media_upload_cancelled') throw error;
+      throw codedError('media_backup_failed');
+    }
     const reference = `artwork-ledger/${artworkRecordId}/${sha256}.${extension}`;
     const result = { reference, sha256, contentType, byteLength: bytes.byteLength };
     const expected = { ...result, bytes };
@@ -230,10 +318,10 @@ export async function storeArtworkLedgerMedia(bucket, {
     let putResult;
     let conditionalReplay = false;
     try {
-      putResult = await bucket.put(reference, bytes, {
+      putResult = await awaitWithAbort(bucket.put(reference, bytes, {
         onlyIf: { etagDoesNotMatch: '*' },
         httpMetadata: { contentType },
-      });
+      }), abortState.promise);
       conditionalReplay = putResult === null;
       if (putResult === undefined) throw codedError('media_backup_failed');
     } catch (error) {
@@ -242,9 +330,10 @@ export async function storeArtworkLedgerMedia(bucket, {
       conditionalReplay = true;
     }
 
-    await verifyStoredObject(bucket, expected, conditionalReplay);
+    await verifyStoredObject(bucket, expected, conditionalReplay, abortState.promise);
     return result;
   } finally {
-    releaseMediaAdmission();
+    abortState.finish();
+    releaseMediaAdmission(generation);
   }
 }
