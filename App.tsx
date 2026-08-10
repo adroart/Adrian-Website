@@ -19,6 +19,7 @@ const OracleGateway = lazy(() => import('./components/OracleGateway'));
 const Welcome = lazy(() => import('./components/Welcome'));
 const NotFound = lazy(() => import('./components/NotFound'));
 const WorksPage = lazy(() => import('./components/WorksPage'));
+const CollectorShell = lazy(() => import('./components/collector/CollectorShell'));
 const QRIndex = lazy(() => import('./components/QRIndex'));
 const OrderConfirmed = lazy(() => import('./components/OrderConfirmed'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
@@ -104,7 +105,10 @@ const SiteShell: React.FC = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   const isInvoice = location.pathname.startsWith('/invoice/');
   const isViewing = location.pathname.startsWith('/viewing/');
-  const isChromeless = isInvoice || isViewing;
+  // The collector journey is its own dark room: no site nav, no footer, no
+  // generative background. It is drawn for a phone and reviewed at 390 wide.
+  const isCollector = location.pathname.startsWith('/collector');
+  const isChromeless = isInvoice || isViewing || isCollector;
   // Theme follows the user's dark-mode preference so the nav explicitly matches.
   // Home keeps DARK regardless because the hero is always dark (dark-preserve).
   // GenerativeBackground reads isDarkMode separately for canvas colors.
@@ -172,6 +176,10 @@ const SiteShell: React.FC = () => {
             </Route>
             <Route path="/invoice/:token" element={<PublicInvoice />} />
             <Route path="/works/:id" element={<WorksPage />} />
+            {/* The collector journey, as a look-and-navigation shell. Nothing
+                is wired to the registry: this is where the design is reviewed
+                before it is folded into /works/:code. */}
+            <Route path="/collector" element={<CollectorShell />} />
             <Route path="/qr" element={<QRIndex />} />
             <Route path="/viewing/:token" element={<Viewing />} />
             <Route path="/atlas" element={<AtlasExternalRedirect />} />
