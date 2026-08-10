@@ -36,14 +36,14 @@ export type CreateArtistSaleRequest = {
 export type ArtistSaleCollectionMutation = CreateReconnectionRequest | CreateArtistSaleRequest;
 
 export type AddReconnectionNoteRequest = {
-  action: 'addReconnectionNote'; reconnectionCaseId: string; note: string; idempotencyKey: string;
+  action: 'addReconnectionNote'; note: string; idempotencyKey: string;
 };
 export type RecordReconnectionEmailRequest = {
-  action: 'recordReconnectionEmail'; reconnectionCaseId: string; note: string | null;
+  action: 'recordReconnectionEmail'; note: string | null;
   idempotencyKey: string;
 };
 export type ChangeReconnectionStatusRequest = {
-  action: 'changeReconnectionStatus'; reconnectionCaseId: string;
+  action: 'changeReconnectionStatus';
   newStatus: 'open' | 'partially_resolved' | 'resolved' | 'closed'; idempotencyKey: string;
 };
 export type CorrectArtistSaleRequest = {
@@ -122,7 +122,7 @@ export type ArtistSaleStoredEdition =
   | { kind: 'numbered'; number: number; size: number | null };
 export type ArtistSalePrivateMedia = {
   role: ArtistLedgerMediaRole; contentType: ArtistLedgerMedia['contentType'];
-  byteLength: number; sha256: string;
+  byteLength: number;
 };
 export type ArtistSaleLedgerEntry = {
   ledgerEntryId: string; saleId?: string | null; message: string | null;
@@ -153,7 +153,7 @@ export type ArtistArtworkRecordDetail = {
   keeperPieceId: string | null; identificationStatus: string; recordVersion: number;
   createdAt: string; updatedAt: string;
 };
-export type ArtistLedgerStoredMedia = ArtistLedgerMedia & { sha256: string };
+export type ArtistLedgerStoredMedia = ArtistLedgerMedia;
 export type SelectedArtistCertificateImage = {
   ledgerEntryId: string; mediaId: string; selectedAt: string;
 };
@@ -391,17 +391,17 @@ export function parseArtistSaleWorkspaceResponse(value: unknown): ArtistSaleWork
 
 function parsePrivateMedia(value: unknown): ArtistSalePrivateMedia | null {
   if (value === null) return null;
-  const media = exact(value, ['role', 'contentType', 'byteLength', 'sha256']);
+  const media = exact(value, ['role', 'contentType', 'byteLength']);
   const role = string(media.role);
   const contentType = string(media.contentType);
-  const sha256 = string(media.sha256);
   if (!['identification_evidence', 'certificate_image'].includes(role)
-    || !['image/jpeg', 'image/png', 'image/webp'].includes(contentType)
-    || !/^[0-9a-f]{64}$/.test(sha256)) throw new Error('invalid_response');
+    || !['image/jpeg', 'image/png', 'image/webp'].includes(contentType)) {
+    throw new Error('invalid_response');
+  }
   return {
     role: role as ArtistLedgerMediaRole,
     contentType: contentType as ArtistLedgerMedia['contentType'],
-    byteLength: integer(media.byteLength, 1), sha256,
+    byteLength: integer(media.byteLength, 1),
   };
 }
 function parseLedgerEntry(value: unknown, includeSaleId: boolean): ArtistSaleLedgerEntry {
@@ -488,13 +488,13 @@ export function parseArtistLedgerDetailResponse(value: unknown): ArtistLedgerDet
     .includes(artworkRecord.identificationStatus)) throw new Error('invalid_response');
   const media = array(response.media).map((value) => {
     const item = exact(value, [
-      'id', 'artworkRecordId', 'role', 'contentType', 'byteLength', 'sha256', 'createdAt',
+      'id', 'artworkRecordId', 'role', 'contentType', 'byteLength', 'createdAt',
     ]);
     return {
       id: privateId(item.id), artworkRecordId: privateId(item.artworkRecordId),
       ...parsePrivateMedia({
         role: item.role, contentType: item.contentType,
-        byteLength: item.byteLength, sha256: item.sha256,
+        byteLength: item.byteLength,
       }) as ArtistSalePrivateMedia,
       createdAt: timestamp(item.createdAt),
     };

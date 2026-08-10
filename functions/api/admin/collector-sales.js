@@ -63,6 +63,7 @@ const VALIDATION_ERRORS = new Set([
 ]);
 const MISSING_ERRORS = new Set([
   'sale_not_found', 'artwork_record_not_found', 'artwork_not_found', 'keeper_identity_not_found',
+  'reconnection_case_not_found',
 ]);
 const CONFLICT_ERRORS = new Set([
   'idempotency_conflict', 'version_conflict', 'artwork_identity_mismatch',
@@ -111,7 +112,6 @@ export function safeLedgerEntry(entry) {
       role: entry.media.mediaRole,
       contentType: entry.media.contentType,
       byteLength: entry.media.byteLength,
-      sha256: entry.media.sha256,
     } : null,
   };
 }
@@ -226,6 +226,10 @@ async function authorized(request, env) {
   return administrator;
 }
 
+export function requireZeroSearchParams(url) {
+  return new URL(url).searchParams.size === 0;
+}
+
 function readFilters(url) {
   const params = new URL(url).searchParams;
   const allowed = new Set(['caseStatus', 'search', 'identificationStatus', 'limit', 'offset']);
@@ -283,6 +287,9 @@ function safeWorkspace(workspace) {
 export async function onRequest({ request, env }) {
   if (!['GET', 'POST'].includes(request.method)) {
     return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET, POST' });
+  }
+  if (request.method === 'POST' && !requireZeroSearchParams(request.url)) {
+    return jsonResponse({ ok: false, error: 'invalid_request' }, 400);
   }
   const administrator = await authorized(request, env);
   if (administrator instanceof Response) return administrator;

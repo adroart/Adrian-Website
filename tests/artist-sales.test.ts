@@ -3028,8 +3028,12 @@ describe('artist verified sale records', () => {
 
       const replay = await createVerifiedSale(fixture.env, saleInput({
         administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        recordedAt: '2026-08-10T01:00:01.000Z',
       }));
       assert.deepEqual(replay, { ...created, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT recorded_at FROM artist_verified_sales WHERE id = ?1
+      `).get(created.saleId)?.recorded_at, '2026-08-10T01:00:00.000Z');
       await assert.rejects(
         createVerifiedSale(fixture.env, saleInput({ buyerEmail: 'changed@example.com' })),
         (error: Error & { code?: string }) => error.code === 'idempotency_conflict',
@@ -3110,8 +3114,37 @@ describe('artist verified sale records', () => {
       assert.deepEqual(await createReconnectionCase(fixture.env, {
         recipientEmail: 'collector@example.com', recipientName: null,
         privateContext: 'Old address book.', idempotencyKey: 'reconnect-email-only',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        createdAt: '2026-08-10T12:00:01.000Z',
       }), { ...created, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_reconnection_cases WHERE id = ?1
+      `).get(created.reconnectionCaseId)?.created_at, now);
+
+      const email = await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'email_sent',
+        privateNote: null, artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'reconnect-email-null', administrator, createdAt: now,
+      });
+      assert.equal(email.eventType, 'email_sent');
+      assert.equal(fixture.db.prepare(`
+        SELECT private_note FROM artist_reconnection_events WHERE id = ?1
+      `).get(email.reconnectionEventId)?.private_note, null);
+      assert.deepEqual(await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'email_sent',
+        privateNote: null, artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'reconnect-email-null', administrator,
+        createdAt: '2026-08-10T12:00:02.000Z',
+      }), { ...email, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_reconnection_events WHERE id = ?1
+      `).get(email.reconnectionEventId)?.created_at, now);
+      await assert.rejects(appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'email_sent',
+        privateNote: 'Manual follow-up.', artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'reconnect-email-null', administrator,
+        createdAt: '2026-08-10T12:00:03.000Z',
+      }), (error: Error & { code?: string }) => error.code === 'idempotency_conflict');
 
       const note = await appendReconnectionEvent(fixture.env, {
         reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
@@ -3122,7 +3155,8 @@ describe('artist verified sale records', () => {
         reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
         privateNote: 'Try the gallery.', artworkRecordId: null, newStatus: null,
         idempotencyKey: 'reconnect-note',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        createdAt: '2026-08-10T12:00:03.000Z',
       }), { ...note, replayed: true });
       const progressed = await appendReconnectionEvent(fixture.env, {
         reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
@@ -3288,8 +3322,12 @@ describe('artist verified sale records', () => {
         artworkRecordId: unresolvedId, artworkId: 'UL-100',
         edition: { kind: 'numbered', number: 1, size: 64 }, expectedVersion: 1,
         idempotencyKey: 'identify-record',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, identifiedAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        identifiedAt: '2026-08-10T12:00:01.000Z',
       }), { ...identified, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_artwork_record_events WHERE idempotency_key = 'identify-record'
+      `).get()?.created_at, now);
       await assert.rejects(identifyArtworkRecord(fixture.env, {
         artworkRecordId: unresolvedId, artworkId: 'UL-101',
         edition: { kind: 'numbered', number: 2, size: 64 }, expectedVersion: 1,
@@ -3323,8 +3361,12 @@ describe('artist verified sale records', () => {
       assert.deepEqual(await linkArtworkIdentity(fixture.env, {
         artworkRecordId: unresolvedId, keeperPieceId: 'kp-sale-one', expectedVersion: 2,
         idempotencyKey: 'link-match',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, linkedAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        linkedAt: '2026-08-10T12:00:02.000Z',
       }), { ...linked, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_artwork_record_events WHERE idempotency_key = 'link-match'
+      `).get()?.created_at, now);
       await assert.rejects(linkArtworkIdentity(fixture.env, {
         artworkRecordId: sale.artworkRecordIds[0], keeperPieceId: 'kp-sale-one', expectedVersion: 1,
         idempotencyKey: 'link-duplicate-keeper', administrator, linkedAt: now,
@@ -3348,8 +3390,12 @@ describe('artist verified sale records', () => {
       assert.deepEqual(await appendArtworkLedgerEntry(fixture.env, {
         artworkRecordId: sale.artworkRecordIds[0], saleId: sale.saleId,
         message: 'Creator note.', mediaId: null, idempotencyKey: 'ledger-one',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        createdAt: '2026-08-10T12:00:01.000Z',
       }), { ...one, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_artwork_ledger_entries WHERE id = ?1
+      `).get(one.ledgerEntryId)?.created_at, now);
       const maximumParentKey = 'k'.repeat(256);
       const shared = await appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
@@ -3369,10 +3415,14 @@ describe('artist verified sale records', () => {
       ));
       assert.deepEqual(await appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
-        message: 'Thank you for keeping this work.', expectedSequence: 0,
+        message: 'Thank you for keeping this work.', expectedSequence: 1,
         idempotencyKey: maximumParentKey,
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        createdAt: '2026-08-10T12:00:02.000Z',
       }), { ...shared, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_verified_sale_events WHERE id = ?1
+      `).get(shared.saleEventId)?.created_at, now);
       await assert.rejects(appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(1),
         message: 'Thank you for keeping this work.', expectedSequence: 0,
@@ -3431,8 +3481,22 @@ describe('artist verified sale records', () => {
           privateReference: 'Corrected ledger reference', privateNotes: 'Corrected note.',
         },
         reason: 'Transcription correction.', idempotencyKey: 'correct-sale',
-        administrator: { ...administrator, email: 'renamed-artist@example.com' }, correctedAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+        correctedAt: '2026-08-10T12:00:01.000Z',
       }), { ...corrected, replayed: true });
+      assert.equal(fixture.db.prepare(`
+        SELECT created_at FROM artist_verified_sale_events WHERE id = ?1
+      `).get(corrected.saleEventId)?.created_at, now);
+      await assert.rejects(correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 1,
+        replacement: {
+          reconnectionCaseId: null, occurrence: { precision: 'year', value: '2019' },
+          buyerEmail: 'new@example.com', total: { amountMinor: 910000, currency: 'USD' },
+          privateReference: 'Corrected ledger reference', privateNotes: 'Corrected note.',
+        },
+        reason: 'Transcription correction.', idempotencyKey: 'correct-sale',
+        administrator, correctedAt: '2026-08-10T12:00:02.000Z',
+      }), (error: Error & { code?: string }) => error.code === 'idempotency_conflict');
       const detail = await getArtistSaleDetail(fixture.env, sale.saleId);
       assert.equal(detail.sale.occurrence.value, '2019');
       assert.equal(detail.sale.buyerEmail, 'new@example.com');

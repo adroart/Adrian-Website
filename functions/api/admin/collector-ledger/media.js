@@ -3,6 +3,7 @@ import { jsonResponse, requireDb, requireRegistryUnlock } from '../../_lib/admin
 import {
   mappedError,
   normalizeIdempotencyKey,
+  requireZeroSearchParams,
   validPrivateId,
 } from '../collector-sales.js';
 
@@ -23,6 +24,15 @@ async function digest(value) {
   const bytes = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function mediaIdentityId(userId, idempotencyKey) {
+  const mediaDigest = await digest(JSON.stringify({
+    namespace: 'artist-artwork-media-idempotency-v1',
+    userId,
+    idempotencyKey,
+  }));
+  return `media-${mediaDigest.slice(0, 32)}`;
 }
 
 function safeMedia(row) {
@@ -48,6 +58,24 @@ function exactStored(row, expected) {
     && row.uploaded_by_user_id === expected.userId;
 }
 
+function exactHeaders(row, expected) {
+  return row
+    && row.id === expected.id
+    && row.artwork_record_id === expected.artworkRecordId
+    && row.media_role === expected.role
+    && row.content_type === expected.contentType
+    && Number(row.byte_length) === expected.byteLength
+    && row.uploaded_by_user_id === expected.userId;
+}
+
+async function findById(env, id) {
+  return env.DB.prepare(`
+    SELECT id, artwork_record_id, media_role, storage_reference, sha256,
+           content_type, byte_length, uploaded_by_user_id, created_at
+      FROM artist_artwork_media WHERE id = ?1 LIMIT 1
+  `).bind(id).first();
+}
+
 async function findExisting(env, id, reference) {
   return env.DB.prepare(`
     SELECT id, artwork_record_id, media_role, storage_reference, sha256,
@@ -60,6 +88,9 @@ async function findExisting(env, id, reference) {
 export async function onRequest({ request, env }) {
   if (request.method !== 'POST') {
     return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'POST' });
+  }
+  if (!requireZeroSearchParams(request.url)) {
+    return jsonResponse({ ok: false, error: 'invalid_request' }, 400);
   }
   const administrator = await requireRegistryUnlock(request, env);
   if (administrator instanceof Response) return administrator;
@@ -87,6 +118,19 @@ export async function onRequest({ request, env }) {
   }
 
   try {
+    const id = await mediaIdentityId(administrator.userId, key);
+    const headerExpectation = {
+      id, artworkRecordId, role, contentType, byteLength: contentLength,
+      userId: administrator.userId,
+    };
+    let keyedExisting;
+    try { keyedExisting = await findById(env, id); } catch {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+    }
+    if (keyedExisting && !exactHeaders(keyedExisting, headerExpectation)) {
+      return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+    }
+
     const artwork = await env.DB.prepare(
       'SELECT id FROM artist_artwork_records WHERE id = ?1',
     ).bind(artworkRecordId).first();
@@ -99,22 +143,13 @@ export async function onRequest({ request, env }) {
       contentType,
       signal: request.signal,
     });
-    const mediaDigest = await digest(JSON.stringify({
-      namespace: 'artist-artwork-media-v1',
-      idempotencyKey: key,
-      artworkRecordId,
-      role,
-      sha256: verified.sha256,
-      userId: administrator.userId,
-    }));
-    const id = `media-${mediaDigest.slice(0, 32)}`;
     const expected = {
       id, artworkRecordId, role, reference: verified.reference,
       sha256: verified.sha256, contentType: verified.contentType,
       byteLength: verified.byteLength, userId: administrator.userId,
     };
     let existing;
-    try { existing = await findExisting(env, id, verified.reference); } catch {
+    try { existing = keyedExisting || await findExisting(env, id, verified.reference); } catch {
       return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
     }
     if (existing) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { describe, it } from 'node:test';
+import { after, beforeEach, describe, it, mock } from 'node:test';
 
 import {
   beginArtistSaleAttempt,
@@ -11,6 +11,116 @@ import {
   uploadArtistLedgerMedia,
   type CreateArtistSaleRequest,
 } from '../utils/artistSales.ts';
+
+const ORIGIN = 'https://adrianrasmussen.com';
+const administrator = {
+  userId: 'admin-user', email: 'artist@example.com',
+  user: { id: 'admin-user', email: 'artist@example.com', emailVerified: true },
+  session: { id: 'admin-session' },
+};
+let coreCalls: Array<{ operation: string; input: Record<string, unknown> }> = [];
+let mediaStoreCalls = 0;
+let detailSequence = 0;
+
+function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers },
+  });
+}
+
+mock.module('../functions/api/_lib/admin.js', {
+  namedExports: {
+    jsonResponse,
+    requireDb: (env: Record<string, unknown>) => env.DB
+      ? null : jsonResponse({ ok: false, error: 'db_not_configured' }, 503),
+    requireRegistryUnlock: async () => administrator,
+  },
+});
+
+function operation(name: string, result: Record<string, unknown>) {
+  return async (_env: unknown, input: Record<string, unknown>) => {
+    coreCalls.push({ operation: name, input });
+    return result;
+  };
+}
+
+mock.module('../functions/api/_lib/artistSales.js', {
+  namedExports: {
+    createReconnectionCase: operation('createReconnectionCase', {
+      reconnectionCaseId: 'case-one', recipientEmail: 'collector@example.com',
+      status: 'open', replayed: false,
+    }),
+    createVerifiedSale: operation('createVerifiedSale', {
+      saleId: 'sale-one', itemIds: ['item-one'], artworkRecordIds: ['record-one'],
+      priceEntryIds: [], replayed: false,
+    }),
+    listArtistSaleWorkspace: async () => ({
+      sales: [], reconnectionCases: [], pagination: {
+        limit: 25, offset: 0,
+        sales: { hasMore: false, nextOffset: null },
+        reconnectionCases: { hasMore: false, nextOffset: null },
+      },
+    }),
+    getArtistSaleDetail: async (_env: unknown, saleId: string) => {
+      coreCalls.push({ operation: 'getArtistSaleDetail', input: { saleId } });
+      return {
+        sale: { saleId, reconnectionCaseId: 'case-one', sequence: detailSequence },
+        items: [], events: [],
+      };
+    },
+    appendReconnectionEvent: operation('appendReconnectionEvent', {
+      reconnectionEventId: 'event-one', eventType: 'email_sent', replayed: false,
+    }),
+    correctVerifiedSale: operation('correctVerifiedSale', {
+      saleEventId: 'event-one', saleId: 'sale-one', sequence: 1,
+      reason: 'Correction', replayed: false,
+    }),
+    identifyArtworkRecord: operation('identifyArtworkRecord', {
+      artworkRecordId: 'record-one', identificationStatus: 'identified',
+      artworkId: 'UL-100', edition: { kind: 'unique', number: null, size: null },
+      keeperPieceId: null, recordVersion: 2, replayed: false,
+    }),
+    linkArtworkIdentity: operation('linkArtworkIdentity', {
+      artworkRecordId: 'record-one', identificationStatus: 'identity_linked',
+      artworkId: 'UL-100', edition: { kind: 'unique', number: null, size: null },
+      keeperPieceId: 'keeper-one', recordVersion: 3, replayed: false,
+    }),
+    appendArtworkLedgerEntry: operation('appendArtworkLedgerEntry', {
+      ledgerEntryId: 'ledger-one', artworkRecordId: 'record-one', saleId: null,
+      message: null, mediaId: 'media-one', replayed: false,
+    }),
+    appendSharedSaleMessage: operation('appendSharedSaleMessage', {
+      saleEventId: 'event-one', saleId: 'sale-one', sequence: 1,
+      entries: [{ ledgerEntryId: 'ledger-one', artworkRecordId: 'record-one' }],
+      replayed: false,
+    }),
+  },
+});
+
+mock.module('../functions/api/_lib/artworkLedgerMedia.js', {
+  namedExports: {
+    storeArtworkLedgerMedia: async (_bucket: unknown, input: Record<string, unknown>) => {
+      mediaStoreCalls += 1;
+      const reader = (input.source as ReadableStream<Uint8Array>).getReader();
+      const chunks: number[] = [];
+      while (true) {
+        const read = await reader.read();
+        if (read.done) break;
+        chunks.push(...read.value);
+      }
+      const seed = chunks.map((byte) => byte.toString(16).padStart(2, '0')).join('') || '00';
+      const sha256 = seed.repeat(Math.ceil(64 / seed.length)).slice(0, 64);
+      return {
+        reference: `artwork-ledger/${String(input.artworkRecordId)}/${sha256}.png`,
+        sha256, contentType: input.contentType, byteLength: chunks.length,
+      };
+    },
+  },
+});
+
+beforeEach(() => { coreCalls = []; mediaStoreCalls = 0; detailSequence = 0; });
+after(() => mock.reset());
 
 describe('artist sales frozen client attempts', () => {
   const input: Omit<CreateArtistSaleRequest, 'idempotencyKey'> = {
@@ -123,6 +233,10 @@ describe('artist sales frozen client attempts', () => {
       ...response,
       media: { ...response.media, storage_reference: 'private/key.webp' },
     }));
+    assert.throws(() => parseArtistLedgerMediaResponse({
+      ...response,
+      media: { ...response.media, sha256: 'a'.repeat(64) },
+    }));
   });
 });
 
@@ -135,6 +249,12 @@ describe('private artist sales route modules', () => {
       import('../functions/api/admin/collector-ledger/media.js'),
     ]);
     for (const route of modules) assert.equal(typeof route.onRequest, 'function');
+    assert.equal(typeof modules[1].resolveReconnectionCaseId, 'function');
+    assert.equal(typeof modules[3].mediaIdentityId, 'function');
+    const first = await modules[3].mediaIdentityId('admin-one', 'upload-key');
+    assert.equal(await modules[3].mediaIdentityId('admin-one', 'upload-key'), first);
+    assert.notEqual(await modules[3].mediaIdentityId('admin-two', 'upload-key'), first);
+    assert.notEqual(await modules[3].mediaIdentityId('admin-one', 'other-key'), first);
   });
 
   it('keeps uploads raw-streamed and private response projections explicit', () => {
@@ -153,5 +273,258 @@ describe('private artist sales route modules', () => {
     assert.match(sales, /safeMutationResult/);
     assert.doesNotMatch(sales.slice(sales.indexOf('export function safeDetail')),
       /storageReference:\s*entry\.media\.storageReference/);
+    assert.doesNotMatch(sales.slice(sales.indexOf('export function safeLedgerEntry')),
+      /sha256:\s*entry\.media\.sha256/);
+
+    const ledger = readFileSync(new URL(
+      '../functions/api/admin/collector-ledger.js', import.meta.url,
+    ), 'utf8');
+    assert.doesNotMatch(ledger, /media\.sha256|sha256:\s*item\.sha256/);
+
+    const client = readFileSync(new URL('../utils/artistSales.ts', import.meta.url), 'utf8');
+    assert.doesNotMatch(client, /sha256/);
+  });
+
+  it('rejects undocumented query strings on every non-filter route', () => {
+    const files = [
+      '../functions/api/admin/collector-sales.js',
+      '../functions/api/admin/collector-sales/[id].js',
+      '../functions/api/admin/collector-ledger.js',
+      '../functions/api/admin/collector-ledger/media.js',
+    ];
+    for (const file of files) {
+      const source = readFileSync(new URL(file, import.meta.url), 'utf8');
+      assert.match(source, /rejectUnexpectedSearch|requireZeroSearchParams/, file);
+    }
+  });
+
+  it('returns 400 for arbitrary queries before any private write', async () => {
+    const [sales, detail, ledger, media] = await Promise.all([
+      import('../functions/api/admin/collector-sales.js'),
+      import('../functions/api/admin/collector-sales/[id].js'),
+      import('../functions/api/admin/collector-ledger.js'),
+      import('../functions/api/admin/collector-ledger/media.js'),
+    ]);
+    const cases = [
+      [sales.onRequest, '/api/admin/collector-sales?actor=spoofed', {}, 'POST'],
+      [detail.onRequest, '/api/admin/collector-sales/sale-one?case=other', { id: 'sale-one' }, 'GET'],
+      [ledger.onRequest, '/api/admin/collector-ledger?artworkRecordId=record-one&extra=1', {}, 'GET'],
+      [media.onRequest, '/api/admin/collector-ledger/media?role=certificate_image', {}, 'POST'],
+    ] as const;
+    for (const [handler, path, params, method] of cases) {
+      const response = await handler({
+        request: new Request(`${ORIGIN}${path}`, { method }),
+        env: { DB: {}, ARTWORK_REGISTRY_BACKUP: {} }, params,
+      });
+      assert.equal(response.status, 400, path);
+      assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    }
+    assert.equal(coreCalls.length, 0);
+    assert.equal(mediaStoreCalls, 0);
+  });
+
+  it('derives reconnection context from a sale or an email-only case and rejects body overrides', async () => {
+    const detail = await import('../functions/api/admin/collector-sales/[id].js');
+    const database = (saleCase: string | null | undefined, directCases: string[] = []) => ({
+      prepare(sql: string) {
+        let value = '';
+        return {
+          bind(bound: string) { value = bound; return this; },
+          async first() {
+            if (sql.includes('artist_verified_sales')) {
+              return saleCase === undefined ? null : { reconnection_case_id: saleCase };
+            }
+            if (sql.includes('artist_reconnection_cases') && directCases.includes(value)) {
+              return { id: value };
+            }
+            return null;
+          },
+        };
+      },
+    });
+    const invoke = (pathId: string, body: unknown, DB: unknown) => detail.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-sales/${pathId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
+        body: JSON.stringify(body),
+      }),
+      env: { DB }, params: { id: pathId },
+    });
+
+    const sale = await invoke('sale-one', {
+      action: 'recordReconnectionEmail', note: null, idempotencyKey: 'email-sale',
+    }, database('case-one'));
+    assert.equal(sale.status, 201);
+    assert.equal(coreCalls.at(-1)?.input.reconnectionCaseId, 'case-one');
+    assert.equal(coreCalls.at(-1)?.input.privateNote, null);
+
+    const emailOnly = await invoke('case-email-only', {
+      action: 'addReconnectionNote', note: 'Called the gallery.', idempotencyKey: 'case-note',
+    }, database(undefined, ['case-email-only']));
+    assert.equal(emailOnly.status, 201);
+    assert.equal(coreCalls.at(-1)?.input.reconnectionCaseId, 'case-email-only');
+
+    const before = coreCalls.length;
+    const override = await invoke('sale-one', {
+      action: 'recordReconnectionEmail', reconnectionCaseId: 'case-other',
+      note: null, idempotencyKey: 'cross-case',
+    }, database('case-one'));
+    assert.equal(override.status, 400);
+    assert.equal(coreCalls.length, before);
+
+    const unassociated = await invoke('sale-one', {
+      action: 'recordReconnectionEmail', note: null, idempotencyKey: 'no-case',
+    }, database(null));
+    assert.equal(unassociated.status, 400);
+    assert.equal(coreCalls.length, before);
+  });
+
+  it('derives fresh server time and shared sequence without changing replay business bodies', async () => {
+    const [sales, detail, ledger] = await Promise.all([
+      import('../functions/api/admin/collector-sales.js'),
+      import('../functions/api/admin/collector-sales/[id].js'),
+      import('../functions/api/admin/collector-ledger.js'),
+    ]);
+    const NativeDate = Date;
+    let current = Date.parse('2026-08-10T00:00:00.000Z');
+    class ControlledDate extends NativeDate {
+      constructor(value?: string | number) { super(value === undefined ? current : value); }
+      static now() { return current; }
+    }
+    globalThis.Date = ControlledDate as DateConstructor;
+    const post = (path: string, body: unknown) => new Request(`${ORIGIN}${path}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Origin: ORIGIN },
+      body: JSON.stringify(body),
+    });
+    const pathDb = {
+      prepare(sql: string) {
+        return {
+          bind() { return this; },
+          async first() {
+            return sql.includes('artist_verified_sales')
+              ? { reconnection_case_id: 'case-one' } : null;
+          },
+        };
+      },
+    };
+    try {
+      const createBody = {
+        action: 'createReconnection', recipientEmail: 'collector@example.com',
+        recipientName: null, privateContext: null, idempotencyKey: 'case-retry',
+      };
+      await sales.onRequest({ request: post('/api/admin/collector-sales', createBody), env: { DB: {} } });
+      current += 1_000;
+      await sales.onRequest({ request: post('/api/admin/collector-sales', createBody), env: { DB: {} } });
+      const caseInputs = coreCalls.filter((call) => call.operation === 'createReconnectionCase');
+      assert.equal(caseInputs[0].input.createdAt, '2026-08-10T00:00:00.000Z');
+      assert.equal(caseInputs[1].input.createdAt, '2026-08-10T00:00:01.000Z');
+
+      const eventBody = { action: 'recordReconnectionEmail', note: null, idempotencyKey: 'email-retry' };
+      await detail.onRequest({
+        request: post('/api/admin/collector-sales/sale-one', eventBody),
+        env: { DB: pathDb }, params: { id: 'sale-one' },
+      });
+      current += 1_000;
+      await detail.onRequest({
+        request: post('/api/admin/collector-sales/sale-one', eventBody),
+        env: { DB: pathDb }, params: { id: 'sale-one' },
+      });
+      const eventInputs = coreCalls.filter((call) => call.operation === 'appendReconnectionEvent');
+      assert.notEqual(eventInputs[0].input.createdAt, eventInputs[1].input.createdAt);
+      assert.equal(eventInputs[1].input.privateNote, null);
+
+      const sharedBody = {
+        action: 'appendSharedSaleMessage', saleId: 'sale-one',
+        artworkRecordIds: ['record-one'], message: 'Shared note.', idempotencyKey: 'shared-retry',
+      };
+      detailSequence = 0;
+      await ledger.onRequest({ request: post('/api/admin/collector-ledger', sharedBody), env: { DB: {} } });
+      current += 1_000;
+      detailSequence = 1;
+      await ledger.onRequest({ request: post('/api/admin/collector-ledger', sharedBody), env: { DB: {} } });
+      const sharedInputs = coreCalls.filter((call) => call.operation === 'appendSharedSaleMessage');
+      assert.equal(sharedInputs[0].input.expectedSequence, 0);
+      assert.equal(sharedInputs[1].input.expectedSequence, 1);
+      assert.notEqual(sharedInputs[0].input.createdAt, sharedInputs[1].input.createdAt);
+      assert.deepEqual(
+        { ...sharedInputs[0].input, expectedSequence: 1, createdAt: sharedInputs[1].input.createdAt },
+        sharedInputs[1].input,
+      );
+    } finally {
+      globalThis.Date = NativeDate;
+    }
+  });
+
+  it('uses one media row per actor and key, preconflicts headers, and conflicts changed bytes', async () => {
+    const mediaRoute = await import('../functions/api/admin/collector-ledger/media.js');
+    type Row = Record<string, unknown>;
+    let row: Row | null = null;
+    const artworks = new Set(['record-one', 'record-two']);
+    const DB = {
+      prepare(sql: string) {
+        let values: unknown[] = [];
+        return {
+          bind(...bound: unknown[]) { values = bound; return this; },
+          async first() {
+            if (sql.includes('FROM artist_artwork_media WHERE id')) {
+              return row?.id === values[0] ? row : null;
+            }
+            if (sql.includes('WHERE id = ?1 OR storage_reference')) {
+              return row && (row.id === values[0] || row.storage_reference === values[1]) ? row : null;
+            }
+            if (sql.includes('FROM artist_artwork_records')) {
+              return artworks.has(String(values[0])) ? { id: values[0] } : null;
+            }
+            return null;
+          },
+          async run() {
+            row = {
+              id: values[0], artwork_record_id: values[1], media_role: values[2],
+              storage_reference: values[3], sha256: values[4], content_type: values[5],
+              byte_length: values[6], uploaded_by_user_id: values[7], created_at: values[8],
+            };
+            return { success: true, meta: { changes: 1 } };
+          },
+        };
+      },
+    };
+    const upload = (bytes: number[], overrides: Record<string, string> = {}) => mediaRoute.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-ledger/media`, {
+        method: 'POST',
+        headers: {
+          Origin: ORIGIN, 'Content-Type': 'image/png',
+          'X-Content-Length': String(bytes.length),
+          'X-Artwork-Record-Id': 'record-one',
+          'X-Artwork-Media-Role': 'certificate_image',
+          'X-Idempotency-Key': 'stable-upload', ...overrides,
+        },
+        body: new Uint8Array(bytes),
+      }),
+      env: { DB, ARTWORK_REGISTRY_BACKUP: {} },
+    });
+
+    const created = await upload([1, 2, 3]);
+    assert.equal(created.status, 201);
+    const mediaId = (await created.json()).media.id;
+    assert.equal(mediaStoreCalls, 1);
+    const replay = await upload([1, 2, 3]);
+    assert.equal(replay.status, 200);
+    assert.equal((await replay.json()).media.id, mediaId);
+    assert.equal(mediaStoreCalls, 2);
+
+    for (const headers of [
+      { 'X-Artwork-Record-Id': 'record-two' },
+      { 'X-Artwork-Media-Role': 'identification_evidence' },
+      { 'Content-Type': 'image/webp' },
+    ]) {
+      const conflict = await upload([1, 2, 3], headers);
+      assert.equal(conflict.status, 409);
+      assert.deepEqual(await conflict.json(), { ok: false, error: 'idempotency_conflict' });
+    }
+    assert.equal(mediaStoreCalls, 2);
+
+    const changedBytes = await upload([9, 9, 9]);
+    assert.equal(changedBytes.status, 409);
+    assert.equal(mediaStoreCalls, 3);
+    assert.equal(row?.id, mediaId);
   });
 });

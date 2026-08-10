@@ -11,6 +11,7 @@ import {
   mappedError,
   normalizeIdempotencyKey,
   readStrictJson,
+  requireZeroSearchParams,
   safeDetail,
   safeMutationResult,
   validPrivateId,
@@ -31,9 +32,27 @@ function ownsArtwork(detail, artworkRecordId) {
   return detail.items.some((item) => item.artworkRecordId === artworkRecordId);
 }
 
+export async function resolveReconnectionCaseId(env, pathId) {
+  const sale = await env.DB.prepare(`
+    SELECT reconnection_case_id FROM artist_verified_sales WHERE id = ?1
+  `).bind(pathId).first();
+  if (sale) {
+    if (!sale.reconnection_case_id) throw Object.assign(new Error(), { code: 'invalid_request' });
+    return sale.reconnection_case_id;
+  }
+  const reconnection = await env.DB.prepare(`
+    SELECT id FROM artist_reconnection_cases WHERE id = ?1
+  `).bind(pathId).first();
+  if (!reconnection) throw Object.assign(new Error(), { code: 'reconnection_case_not_found' });
+  return reconnection.id;
+}
+
 export async function onRequest({ request, env, params }) {
   if (!['GET', 'POST'].includes(request.method)) {
     return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET, POST' });
+  }
+  if (!requireZeroSearchParams(request.url)) {
+    return jsonResponse({ ok: false, error: 'invalid_request' }, 400);
   }
   const administrator = await authorize(request, env);
   if (administrator instanceof Response) return administrator;
@@ -57,27 +76,30 @@ export async function onRequest({ request, env, params }) {
   try {
     let result;
     if (body.action === 'addReconnectionNote' && exactKeys(body, [
-      'action', 'reconnectionCaseId', 'note', 'idempotencyKey',
+      'action', 'note', 'idempotencyKey',
     ])) {
+      const reconnectionCaseId = await resolveReconnectionCaseId(env, id);
       result = await appendReconnectionEvent(env, {
-        reconnectionCaseId: body.reconnectionCaseId, eventType: 'note_added',
+        reconnectionCaseId, eventType: 'note_added',
         privateNote: body.note, artworkRecordId: null, newStatus: null,
         idempotencyKey: key, administrator: administratorInput, createdAt: now,
       });
     } else if (body.action === 'recordReconnectionEmail' && exactKeys(body, [
-      'action', 'reconnectionCaseId', 'note', 'idempotencyKey',
+      'action', 'note', 'idempotencyKey',
     ])) {
+      const reconnectionCaseId = await resolveReconnectionCaseId(env, id);
       result = await appendReconnectionEvent(env, {
-        reconnectionCaseId: body.reconnectionCaseId, eventType: 'email_sent',
-        privateNote: body.note === null ? 'Manual email activity recorded.' : body.note,
+        reconnectionCaseId, eventType: 'email_sent',
+        privateNote: body.note,
         artworkRecordId: null, newStatus: null, idempotencyKey: key,
         administrator: administratorInput, createdAt: now,
       });
     } else if (body.action === 'changeReconnectionStatus' && exactKeys(body, [
-      'action', 'reconnectionCaseId', 'newStatus', 'idempotencyKey',
+      'action', 'newStatus', 'idempotencyKey',
     ])) {
+      const reconnectionCaseId = await resolveReconnectionCaseId(env, id);
       result = await appendReconnectionEvent(env, {
-        reconnectionCaseId: body.reconnectionCaseId, eventType: 'status_changed',
+        reconnectionCaseId, eventType: 'status_changed',
         privateNote: null, artworkRecordId: null, newStatus: body.newStatus,
         idempotencyKey: key, administrator: administratorInput, createdAt: now,
       });

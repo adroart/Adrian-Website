@@ -132,10 +132,11 @@ async function sha256(value) {
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function requestDigest(value) {
+async function requestDigest(value, excludedServerFields = []) {
   const durableValue = isObject(value) && isObject(value.administrator)
     ? { ...value, administrator: { userId: value.administrator.userId } }
     : value;
+  for (const field of excludedServerFields) delete durableValue[field];
   return sha256(JSON.stringify(durableValue));
 }
 
@@ -274,7 +275,7 @@ async function saleReplay(env, row, digest) {
 export async function createVerifiedSale(env, rawInput) {
   requireAtomic(env);
   const input = normalizeSaleInput(rawInput);
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['recordedAt']);
   const existing = await first(env, `
     SELECT id, request_digest FROM artist_verified_sales WHERE idempotency_key = ?1
   `, input.idempotencyKey);
@@ -404,7 +405,7 @@ function normalizeCaseInput(input) {
 export async function createReconnectionCase(env, rawInput) {
   requireAtomic(env);
   const input = normalizeCaseInput(rawInput);
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['createdAt']);
   const existing = await first(env, `
     SELECT id, recipient_email, status, request_digest
       FROM artist_reconnection_cases WHERE idempotency_key = ?1
@@ -473,13 +474,14 @@ export async function appendReconnectionEvent(env, rawInput) {
     createdAt: normalizedTimestamp(rawInput.createdAt),
   };
   if ((eventType === 'note_added' || eventType === 'email_sent')
-    ? (!input.privateNote || input.artworkRecordId || input.newStatus)
+    ? ((eventType === 'note_added' && !input.privateNote)
+      || input.artworkRecordId || input.newStatus)
     : eventType === 'artwork_added'
       ? (!input.artworkRecordId || input.privateNote || input.newStatus)
       : (!CASE_STATUSES.includes(input.newStatus) || input.privateNote || input.artworkRecordId)) {
     throw codedError('invalid_request');
   }
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['createdAt']);
   const replay = await first(env, `
     SELECT id, event_type, private_note, request_digest FROM artist_reconnection_events
      WHERE idempotency_key = ?1
@@ -643,7 +645,7 @@ async function mutateIdentity(env, input, row, action, after, digest) {
 export async function identifyArtworkRecord(env, rawInput) {
   requireAtomic(env);
   const input = normalizeIdentityInput(rawInput, 'identify');
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['at']);
   const replay = await identityReplay(env, input.idempotencyKey, digest);
   if (replay) return replay;
   await assertCatalogEdition(env, input.artworkId, input.edition);
@@ -674,7 +676,7 @@ export async function identifyArtworkRecord(env, rawInput) {
 export async function linkArtworkIdentity(env, rawInput) {
   requireAtomic(env);
   const input = normalizeIdentityInput(rawInput, 'link');
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['at']);
   const replay = await identityReplay(env, input.idempotencyKey, digest);
   if (replay) return replay;
   const row = await first(env, `
@@ -730,7 +732,7 @@ function normalizeLedgerInput(input) {
 export async function appendArtworkLedgerEntry(env, rawInput) {
   requireAtomic(env);
   const input = normalizeLedgerInput(rawInput);
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['createdAt']);
   const existing = await first(env, `
     SELECT id, artwork_record_id, sale_id, message, media_id, request_digest
       FROM artist_artwork_ledger_entries WHERE idempotency_key = ?1
@@ -830,7 +832,7 @@ export async function appendSharedSaleMessage(env, rawInput) {
     administrator: normalizedAdministrator(rawInput.administrator),
     createdAt: normalizedTimestamp(rawInput.createdAt),
   };
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['createdAt', 'expectedSequence']);
   const existing = await first(env, `
     SELECT id, sale_id, sequence, request_digest FROM artist_verified_sale_events
      WHERE idempotency_key = ?1
@@ -928,7 +930,7 @@ export async function correctVerifiedSale(env, rawInput) {
     administrator: normalizedAdministrator(rawInput.administrator),
     correctedAt: normalizedTimestamp(rawInput.correctedAt),
   };
-  const digest = await requestDigest(input);
+  const digest = await requestDigest(input, ['correctedAt']);
   const existing = await first(env, `
     SELECT id, sale_id, sequence, reason, request_digest FROM artist_verified_sale_events
      WHERE idempotency_key = ?1

@@ -9,6 +9,7 @@ import {
   mappedError,
   normalizeIdempotencyKey,
   readStrictJson,
+  requireZeroSearchParams,
   safeDetail,
   safeMutationResult,
   safeSale,
@@ -46,7 +47,7 @@ async function ledgerDetail(env, artworkRecordId) {
   }
   const ledger = rows(await env.DB.prepare(`
     SELECT entry.id, entry.sale_id, entry.message, entry.media_id, entry.created_at,
-           media.media_role, media.content_type, media.byte_length, media.sha256
+           media.media_role, media.content_type, media.byte_length
       FROM artist_artwork_ledger_entries entry
       LEFT JOIN artist_artwork_media media ON media.id = entry.media_id
      WHERE entry.artwork_record_id = ?1
@@ -61,11 +62,10 @@ async function ledgerDetail(env, artworkRecordId) {
       role: entry.media_role,
       contentType: entry.content_type,
       byteLength: Number(entry.byte_length),
-      sha256: entry.sha256,
     } : null,
   }));
   const media = rows(await env.DB.prepare(`
-    SELECT id, media_role, content_type, byte_length, sha256, created_at
+    SELECT id, media_role, content_type, byte_length, created_at
       FROM artist_artwork_media WHERE artwork_record_id = ?1
      ORDER BY created_at, id
   `).bind(artworkRecordId).all()).map((item) => ({
@@ -74,7 +74,6 @@ async function ledgerDetail(env, artworkRecordId) {
     role: item.media_role,
     contentType: item.content_type,
     byteLength: Number(item.byte_length),
-    sha256: item.sha256,
     createdAt: item.created_at,
   }));
   const selected = [...ledger].reverse().find((entry) => (
@@ -107,6 +106,9 @@ async function ledgerDetail(env, artworkRecordId) {
 export async function onRequest({ request, env }) {
   if (!['GET', 'POST'].includes(request.method)) {
     return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405, { Allow: 'GET, POST' });
+  }
+  if (request.method === 'POST' && !requireZeroSearchParams(request.url)) {
+    return jsonResponse({ ok: false, error: 'invalid_request' }, 400);
   }
   const administrator = await authorize(request, env);
   if (administrator instanceof Response) return administrator;
