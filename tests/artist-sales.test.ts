@@ -398,6 +398,17 @@ function assertSanitizedMediaError(
 }
 
 describe('authenticity media immutable R2 storage', () => {
+  it('keeps module admission state primitive and stores no cross-request continuation', () => {
+    const source = readFileSync(
+      new URL('../functions/api/_lib/artworkLedgerMedia.js', import.meta.url), 'utf8',
+    );
+    const moduleState = source.slice(0, source.indexOf('function codedError'));
+    assert.doesNotMatch(moduleState, /WeakSet|Promise|resolver|Queue|\[\]/);
+    assert.doesNotMatch(source, /mediaAdmissionQueue|withMediaAdmission/);
+    assert.match(moduleState, /let activeMediaLeaseGeneration = 0n;/);
+    assert.match(moduleState, /let mediaLeaseExpiresAt = 0;/);
+  });
+
   it('stores JPEG, PNG, and WebP bytes exactly with content-addressed keys and immutable options', async () => {
     for (const [contentType, extension, input] of [
       ['image/jpeg', 'jpg', new Uint8Array([0xff, 0xd8, 0xff, 0x01])],
@@ -646,50 +657,45 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(fake.objects.size, 1);
   });
 
-  it('converges concurrent identical uploads and keeps different bytes as distinct immutable objects', async () => {
+  it('returns busy to an overlapping upload, then exact retries converge and different bytes stay distinct', async () => {
     const sameFake = mediaBucket();
     const sameInput = { artworkRecordId: 'record-race', bytes: new Uint8Array([1, 1, 2, 3]), contentType: 'image/webp' };
-    const [left, right] = await Promise.all([
-      storeArtworkLedgerMedia(sameFake.bucket, sameInput),
-      storeArtworkLedgerMedia(sameFake.bucket, sameInput),
-    ]);
+    let releaseFirstPut: (() => void) | undefined;
+    let firstPutEnteredResolve: (() => void) | undefined;
+    const firstPutEntered = new Promise<void>((resolve) => { firstPutEnteredResolve = resolve; });
+    const firstPutGate = new Promise<void>((resolve) => { releaseFirstPut = resolve; });
+    const gatedFake = mediaBucket({
+      async beforePut(putNumber) {
+        if (putNumber === 1) {
+          firstPutEnteredResolve?.();
+          await firstPutGate;
+        }
+      },
+    });
+    const firstPending = storeArtworkLedgerMedia(gatedFake.bucket, sameInput);
+    await firstPutEntered;
+    const overlapping = storeArtworkLedgerMedia(gatedFake.bucket, sameInput);
+    const overlappingBusy = assert.rejects(overlapping, mediaErrorCode('media_upload_busy'));
+    assert.equal(gatedFake.puts.length, 1);
+    releaseFirstPut?.();
+    await overlappingBusy;
+    const first = await firstPending;
+    const exactRetry = await storeArtworkLedgerMedia(gatedFake.bucket, sameInput);
+    assert.deepEqual(exactRetry, first);
+    assert.equal(gatedFake.objects.size, 1);
+
+    const differentInput = { ...sameInput, bytes: new Uint8Array([9, 9]) };
+    const different = await storeArtworkLedgerMedia(gatedFake.bucket, differentInput);
+    assert.notEqual(different.reference, first.reference);
+    assert.equal(gatedFake.objects.size, 2);
+
+    const left = await storeArtworkLedgerMedia(sameFake.bucket, sameInput);
+    const right = await storeArtworkLedgerMedia(sameFake.bucket, sameInput);
     assert.deepEqual(right, left);
     assert.equal(sameFake.objects.size, 1);
-
-    const differentFake = mediaBucket();
-    const [first, second] = await Promise.all([
-      storeArtworkLedgerMedia(differentFake.bucket, { ...sameInput, bytes: new Uint8Array([1]) }),
-      storeArtworkLedgerMedia(differentFake.bucket, { ...sameInput, bytes: new Uint8Array([2]) }),
-    ]);
-    assert.notEqual(first.reference, second.reference);
-    assert.equal(differentFake.objects.size, 2);
   });
 
-  it('streams three concurrent maximum-size read-backs without full-body fallback copies', async () => {
-    const bytes = new Uint8Array(15 * 1024 * 1024);
-    bytes[0] = 3;
-    bytes[bytes.byteLength - 1] = 7;
-    const chunkSize = 64 * 1024;
-    const fake = mediaBucket({ streamChunkSize: chunkSize, recordPutBytes: false });
-    const input = {
-      artworkRecordId: 'record-max-concurrent', bytes, contentType: 'image/webp',
-    };
-    const results = await Promise.all([
-      storeArtworkLedgerMedia(fake.bucket, input),
-      storeArtworkLedgerMedia(fake.bucket, input),
-      storeArtworkLedgerMedia(fake.bucket, input),
-    ]);
-    assert.deepEqual(results[1], results[0]);
-    assert.deepEqual(results[2], results[0]);
-    assert.equal(fake.objects.size, 1);
-    assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
-    assert.ok(fake.streamMetrics.maxChunkBytes <= chunkSize);
-    assert.ok(fake.streamMetrics.maxActiveChunkBytes <= 3 * chunkSize);
-    assert.ok(fake.streamMetrics.maxActiveChunkBytes < bytes.byteLength / 10);
-    assert.equal(fake.streamMetrics.activeChunkBytes, 0);
-  });
-
-  it('admits only one distinct maximum-size snapshot-through-readback lifecycle at a time', async () => {
+  it('admits at most one of three distinct maximum-size attempts without copying busy inputs', async () => {
     let releaseFirstPut: (() => void) | undefined;
     let firstPutEnteredResolve: (() => void) | undefined;
     const firstPutEntered = new Promise<void>((resolve) => { firstPutEnteredResolve = resolve; });
@@ -716,41 +722,98 @@ describe('authenticity media immutable R2 storage', () => {
       };
     });
     const pending = inputs.map((input) => storeArtworkLedgerMedia(fake.bucket, input));
+    const busySettled = Promise.allSettled(pending.slice(1));
     await firstPutEntered;
     inputs[1].bytes[0] = 22;
     inputs[2].bytes[inputs[2].bytes.byteLength - 1] = 33;
-    await new Promise((resolve) => setTimeout(resolve, 25));
+    assert.equal(fake.puts.length, 1);
     releaseFirstPut?.();
-    const results = await Promise.all(pending);
+    const busy = await busySettled;
+    assert.deepEqual(busy.map((result) => result.status), ['rejected', 'rejected']);
+    for (const result of busy as PromiseRejectedResult[]) {
+      assertSanitizedMediaError(result.reason, 'media_upload_busy', []);
+    }
+    const result = await pending[0];
 
     assert.equal(fake.streamMetrics.maxActiveLifecycles, 1);
     assert.equal(fake.streamMetrics.activeLifecycles, 0);
     assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
-    assert.equal(results[1].sha256, createHash('sha256').update(inputs[1].bytes).digest('hex'));
-    assert.equal(results[2].sha256, createHash('sha256').update(inputs[2].bytes).digest('hex'));
-    assert.equal(fake.objects.size, 3);
+    assert.equal(result.sha256, createHash('sha256').update(inputs[0].bytes).digest('hex'));
+    assert.equal(fake.objects.size, 1);
+
+    const retriedSecond = await storeArtworkLedgerMedia(fake.bucket, inputs[1]);
+    assert.equal(retriedSecond.sha256,
+      createHash('sha256').update(inputs[1].bytes).digest('hex'));
   });
 
-  it('releases admission after the first operation fails so its queued follower completes', async () => {
+  it('releases admission immediately after an ordinary failure without starving a later request', async () => {
     const fake = mediaBucket({ failPutAt: 1, trackLifecycles: true });
-    const [first, second] = await Promise.allSettled([
-      storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-failing-admission',
-        bytes: new Uint8Array([1, 2, 3]),
-        contentType: 'image/jpeg',
-      }),
-      storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-after-failure',
-        bytes: new Uint8Array([4, 5, 6]),
-        contentType: 'image/jpeg',
-      }),
-    ]);
-    assert.equal(first.status, 'rejected');
-    assert.equal((first as PromiseRejectedResult).reason.code, 'media_backup_failed');
-    assert.equal(second.status, 'fulfilled');
+    await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-failing-admission',
+      bytes: new Uint8Array([1, 2, 3]),
+      contentType: 'image/jpeg',
+    }), mediaErrorCode('media_backup_failed'));
+    const second = await storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-after-failure',
+      bytes: new Uint8Array([4, 5, 6]),
+      contentType: 'image/jpeg',
+    });
+    assert.match(second.reference, /^artwork-ledger\/record-after-failure\//);
     assert.equal(fake.objects.size, 1);
     assert.equal(fake.streamMetrics.maxActiveLifecycles, 1);
     assert.equal(fake.streamMetrics.activeLifecycles, 0);
+  });
+
+  it('expires an abandoned lease and prevents its old completion from clearing the newer generation', async () => {
+    const originalNow = Date.now;
+    let now = 1_000_000;
+    Date.now = () => now;
+    try {
+      let releaseOld: (() => void) | undefined;
+      let oldEnteredResolve: (() => void) | undefined;
+      let releaseNew: (() => void) | undefined;
+      let newEnteredResolve: (() => void) | undefined;
+      const oldEntered = new Promise<void>((resolve) => { oldEnteredResolve = resolve; });
+      const oldGate = new Promise<void>((resolve) => { releaseOld = resolve; });
+      const newEntered = new Promise<void>((resolve) => { newEnteredResolve = resolve; });
+      const newGate = new Promise<void>((resolve) => { releaseNew = resolve; });
+      const fake = mediaBucket({
+        async beforePut(putNumber) {
+          if (putNumber === 1) {
+            oldEnteredResolve?.();
+            await oldGate;
+          } else if (putNumber === 2) {
+            newEnteredResolve?.();
+            await newGate;
+          }
+        },
+      });
+      const oldPending = storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-expired-old', bytes: new Uint8Array([1]), contentType: 'image/png',
+      });
+      await oldEntered;
+      now += 10 * 60 * 1000;
+      const newPending = storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-after-expiry', bytes: new Uint8Array([2]), contentType: 'image/png',
+      });
+      releaseOld?.();
+      await oldPending;
+      await newEntered;
+
+      const thirdPending = storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-must-stay-busy', bytes: new Uint8Array([3]), contentType: 'image/png',
+      });
+      const thirdBusy = assert.rejects(thirdPending, mediaErrorCode('media_upload_busy'));
+      releaseNew?.();
+      await thirdBusy;
+      await newPending;
+      const after = await storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-after-release', bytes: new Uint8Array([4]), contentType: 'image/png',
+      });
+      assert.match(after.reference, /^artwork-ledger\/record-after-release\//);
+    } finally {
+      Date.now = originalNow;
+    }
   });
 
   it('rejects truncated, extra, wrong, and throwing streams and cancels unfinished readers', async () => {

@@ -6,7 +6,8 @@ const MEDIA_EXTENSIONS = new Map([
   ['image/webp', 'webp'],
 ]);
 
-const LOCAL_CODED_ERRORS = new WeakSet();
+const LOCAL_CODED_ERROR = Symbol('localCodedError');
+const MEDIA_LEASE_DURATION_MS = 2 * 60 * 1000;
 const TYPED_ARRAY_PROTOTYPE = Object.getPrototypeOf(Uint8Array.prototype);
 const typedArrayBuffer = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'buffer').get;
 const typedArrayByteOffset = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'byteOffset').get;
@@ -14,18 +15,24 @@ const typedArrayByteLength = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTY
 const dataViewBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
 const dataViewByteOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
 const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
-let mediaAdmissionActive = false;
-const mediaAdmissionQueue = [];
+let nextMediaLeaseGeneration = 0n;
+let activeMediaLeaseGeneration = 0n;
+let mediaLeaseExpiresAt = 0;
 
 function codedError(code) {
   const error = new Error(code);
   error.code = code;
-  LOCAL_CODED_ERRORS.add(error);
+  Object.defineProperty(error, LOCAL_CODED_ERROR, { value: true });
   return error;
 }
 
 function isLocalCodedError(error) {
-  return (typeof error === 'object' && error !== null) && LOCAL_CODED_ERRORS.has(error);
+  try {
+    return (typeof error === 'object' && error !== null)
+      && error[LOCAL_CODED_ERROR] === true;
+  } catch {
+    return false;
+  }
 }
 
 function viewDetails(value) {
@@ -81,18 +88,22 @@ function readBackBytes(value) {
   throw new TypeError('unreadable media body');
 }
 
-async function withMediaAdmission(operation) {
-  if (mediaAdmissionActive) {
-    await new Promise((resolve) => mediaAdmissionQueue.push(resolve));
-  } else {
-    mediaAdmissionActive = true;
+function acquireMediaLease() {
+  const now = Date.now();
+  if (activeMediaLeaseGeneration !== 0n && now < mediaLeaseExpiresAt) {
+    throw codedError('media_upload_busy');
   }
-  try {
-    return await operation();
-  } finally {
-    const next = mediaAdmissionQueue.shift();
-    if (next) next();
-    else mediaAdmissionActive = false;
+
+  nextMediaLeaseGeneration += 1n;
+  activeMediaLeaseGeneration = nextMediaLeaseGeneration;
+  mediaLeaseExpiresAt = now + MEDIA_LEASE_DURATION_MS;
+  return activeMediaLeaseGeneration;
+}
+
+function releaseMediaLease(generation) {
+  if (activeMediaLeaseGeneration === generation) {
+    activeMediaLeaseGeneration = 0n;
+    mediaLeaseExpiresAt = 0;
   }
 }
 
@@ -203,7 +214,8 @@ export async function storeArtworkLedgerMedia(bucket, {
     throw codedError('invalid_media_size');
   }
 
-  return withMediaAdmission(async () => {
+  const leaseGeneration = acquireMediaLease();
+  try {
     const bytes = inputBytes(rawBytes);
     if (bytes.byteLength < 1 || bytes.byteLength > MAX_MEDIA_BYTES) {
       throw codedError('invalid_media_size');
@@ -230,5 +242,7 @@ export async function storeArtworkLedgerMedia(bucket, {
 
     await verifyStoredObject(bucket, expected, conditionalReplay);
     return result;
-  });
+  } finally {
+    releaseMediaLease(leaseGeneration);
+  }
 }
