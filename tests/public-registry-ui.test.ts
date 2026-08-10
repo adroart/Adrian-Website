@@ -1,11 +1,35 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 const readSource = (relativePath: string) =>
   readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8');
 
 describe('public scanned-identity UI wiring', () => {
+  it('has separate public artwork-ledger projection and private keeper price surfaces', () => {
+    for (const relativePath of [
+      'utils/artworkLedger.ts',
+      'functions/api/artwork-ledger/media/[id].js',
+      'functions/api/keeper/certificate-ledger.js',
+      'components/collector/CertificateLedger.tsx',
+    ]) {
+      assert.equal(existsSync(new URL(`../${relativePath}`, import.meta.url)), true, relativePath);
+    }
+
+    const projector = readSource('utils/artworkLedger.ts');
+    const publicMedia = readSource('functions/api/artwork-ledger/media/[id].js');
+    const privateLedger = readSource('functions/api/keeper/certificate-ledger.js');
+    const certificateLedger = readSource('components/collector/CertificateLedger.tsx');
+    const certificateService = readSource('functions/api/_lib/certificateContent.js');
+    assert.match(projector, /parsePublicArtworkLedger/);
+    assert.match(projector, /parseKeeperCertificateLedger/);
+    assert.match(publicMedia, /export async function onRequest/);
+    assert.match(privateLedger, /export async function onRequest/);
+    assert.match(certificateLedger, /export default function CertificateLedger/);
+    assert.match(certificateService, /resolvePublicArtworkLedger/);
+    assert.match(certificateService, /resolveCurrentKeeperPriceHistory/);
+  });
+
   it('loads only strict public instance codes from the no-store registry endpoint', () => {
     const source = readSource('components/WorksPage.tsx');
 
@@ -174,6 +198,28 @@ describe('public scanned-identity UI wiring', () => {
     assert.doesNotMatch(certificate, /<Fact label="Edition">\{editionLabel\}<\/Fact>/);
     assert.doesNotMatch(certificate, /<Fact label="Public code">\{publicCode\}<\/Fact>/);
     assert.doesNotMatch(certificate, /<Fact label="Edition">\{state\.certificate\.editionWording\}/);
+  });
+
+  it('renders claimed creator fortunes and probes private prices without guest affordances', () => {
+    const certificate = readSource('components/collector/CertificateScreen.tsx');
+    const ledger = readSource('components/collector/CertificateLedger.tsx');
+
+    assert.match(certificate, /parsePublicArtworkLedger\(source\.publicLedger\)/);
+    assert.match(certificate, /source\.title/);
+    assert.match(certificate, /<CertificateLedger[\s\S]*?publicLedger=\{state\.certificate\.publicLedger\}/);
+    assert.match(certificate, /title=\{state\.certificate\.title \|\| title\}/);
+    assert.match(ledger, /useAccount\(\)/);
+    assert.match(ledger, /\/api\/keeper\/certificate-ledger\?publicCode=/);
+    assert.match(ledger, /credentials:\s*['"]include['"]/);
+    assert.match(ledger, /cache:\s*['"]no-store['"]/);
+    assert.match(ledger, /parseKeeperCertificateLedger/);
+    assert.match(ledger, /entry\.message/);
+    assert.match(ledger, /entry\.mediaUrl/);
+    assert.match(ledger, /alt=\{`\$\{title\}, creator note from the artwork certificate`\}/);
+    assert.match(ledger, />Price history</);
+    assert.match(ledger, /!available \|\| !isLoaded \|\| !isSignedIn \|\| !userId[\s\S]*?return/);
+    assert.match(ledger, /errorBody\?\.currentKeeper === true[\s\S]*?state\.status === ['"]error['"]/);
+    assert.doesNotMatch(ledger, /locked|unlock|upgrade|price unavailable/i);
   });
 
   it('uses the mandated Universal Language alt-text contract for every scanned-record artwork image', () => {

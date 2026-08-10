@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { getEventListeners } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { describe, it } from 'node:test';
+import { after, describe, it, mock } from 'node:test';
 
 import {
   appendArtworkLedgerEntry,
@@ -20,6 +20,37 @@ import {
 import {
   storeArtworkLedgerMedia as storeArtworkLedgerMediaRaw,
 } from '../functions/api/_lib/artworkLedgerMedia.js';
+import {
+  resolveCurrentKeeperPriceHistory,
+  resolvePublicArtworkLedger,
+} from '../functions/api/_lib/certificateContent.js';
+import { onRequest as publicLedgerMediaRequest } from '../functions/api/artwork-ledger/media/[id].js';
+import { onRequest as publicCertificateRequest } from '../functions/api/certificates/[artworkId].js';
+import {
+  parseKeeperCertificateLedger,
+  parsePublicArtworkLedger,
+} from '../utils/artworkLedger.ts';
+
+mock.module('../functions/api/_lib/auth.js', {
+  namedExports: {
+    requireUser: async (request: Request) => {
+      const userId = request.headers.get('X-Test-User');
+      return userId
+        ? { userId }
+        : new Response(JSON.stringify({ error: 'unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+        });
+    },
+    privateJsonResponse: (body: unknown, status = 200, headers: HeadersInit = {}) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers },
+      }),
+  },
+});
+
+after(() => mock.reset());
 
 const readMigration = (name: string) => readFileSync(
   new URL(`../migrations/${name}`, import.meta.url), 'utf8',
@@ -170,6 +201,7 @@ function serviceEnvironment(options: {
   beforeBatch?: () => Promise<void>;
   skipBatchExecution?: boolean;
   overrideBatchResults?: (results: any[], batchNumber: number) => any;
+  overrideFirstResult?: (sql: string, result: any) => any;
   overrideAllResults?: (sql: string, results: any[]) => any[];
   onQuery?: (sql: string) => void;
 } = {}) {
@@ -180,7 +212,11 @@ function serviceEnvironment(options: {
       let values: SQLInputValue[] = [];
       const statement = {
         bind(...bound: SQLInputValue[]) { values = bound; return statement; },
-        first() { options.onQuery?.(sql); return db.prepare(sql).get(...values) ?? null; },
+        first() {
+          options.onQuery?.(sql);
+          const result = db.prepare(sql).get(...values) ?? null;
+          return options.overrideFirstResult?.(sql, result) ?? result;
+        },
         all() {
           options.onQuery?.(sql);
           const results = db.prepare(sql).all(...values);
@@ -3781,5 +3817,374 @@ describe('artist verified sale records', () => {
     } finally {
       fixture.db.close();
     }
+  });
+});
+
+function seedCertificateLedger(fixture: ReturnType<typeof serviceEnvironment>) {
+  const selectedSha = digest('8');
+  const evidenceSha = digest('9');
+  seedCaseAndRecords(fixture.db);
+  insertPrimarySale(fixture.db);
+  fixture.db.exec(`
+    UPDATE keeper_pieces
+       SET keeper_user_id = 'keeper-current',
+           claimed_at = '${now}', released_at = NULL,
+           public_code = 'AR-7KQ9M2WX', issuance_key = 'issue-ledger-one',
+           plate_status = 'active',
+           ownership_code_ciphertext = 'ciphertext',
+           ownership_code_nonce = 'nonce', ownership_code_key_version = 1,
+           registration_status = 'registered',
+           identity_backup_status = 'verified',
+           identity_backup_reference = 'identities/AR-7KQ9M2WX/${digest('b')}.json',
+           identity_backup_sha256 = '${digest('b')}', identity_backup_at = '${now}'
+     WHERE id = 'kp-sale-one';
+    INSERT INTO artist_artwork_media
+      (id, artwork_record_id, media_role, storage_reference, sha256,
+       content_type, byte_length, uploaded_by_user_id, created_at)
+    VALUES
+      ('media-selected', 'record-linked', 'certificate_image',
+       'artwork-ledger/record-linked/${selectedSha}.jpg', '${selectedSha}',
+       'image/jpeg', 4, 'artist-admin', '2026-08-10T12:01:00.000Z'),
+      ('media-evidence', 'record-linked', 'identification_evidence',
+       'artwork-ledger/record-linked/${evidenceSha}.png', '${evidenceSha}',
+       'image/png', 5, 'artist-admin', '2026-08-10T12:02:00.000Z');
+    INSERT INTO artist_artwork_ledger_entries
+      (id, artwork_record_id, sale_id, message, media_id, created_by_user_id,
+       idempotency_key, request_digest, created_at)
+    VALUES
+      ('ledger-message', 'record-linked', 'sale-one', 'A small door opens when you are ready.',
+       NULL, 'artist-admin', 'public-ledger-message', '${digest('c')}',
+       '2026-08-10T12:03:00.000Z'),
+      ('ledger-selected', 'record-linked', NULL, NULL, 'media-selected',
+       'artist-admin', 'public-ledger-selected', '${digest('d')}',
+       '2026-08-10T12:04:00.000Z');
+    INSERT INTO artist_artwork_price_entries
+      (id, artwork_record_id, sale_item_id, amount_minor, currency,
+       occurred_on, occurrence_precision, recorded_at)
+    VALUES
+      ('price-first', 'record-linked', 'item-three', 200000, 'USD',
+       '2026-08-01', 'exact', '2026-08-10T12:05:00.000Z');
+    INSERT INTO artist_verified_sales
+      (id, occurrence_precision, occurred_on, buyer_email, verified_by_user_id,
+       idempotency_key, request_digest, recorded_at)
+    VALUES
+      ('sale-resale', 'year', '2028', 'next@example.com', 'artist-admin',
+       'sale-resale-key', '${digest('e')}', '2028-06-01T12:00:00.000Z');
+    INSERT INTO artist_verified_sale_items
+      (id, sale_id, artwork_record_id, amount_minor, currency, created_at)
+    VALUES ('item-resale', 'sale-resale', 'record-linked', 350000, 'USD',
+      '2028-06-01T12:00:00.000Z');
+    INSERT INTO artist_artwork_price_entries
+      (id, artwork_record_id, sale_item_id, amount_minor, currency,
+       occurred_on, occurrence_precision, recorded_at)
+    VALUES ('price-resale', 'record-linked', 'item-resale', 350000, 'USD',
+      '2028', 'year', '2028-06-01T12:00:00.000Z');
+  `);
+  return { selectedSha, evidenceSha };
+}
+
+describe('claimed artwork certificate ledger', () => {
+  it('strictly projects only public fortune entries and private price history', () => {
+    assert.deepEqual(parsePublicArtworkLedger([{
+      id: 'ledger-one', message: 'For the road ahead.',
+      mediaUrl: '/api/artwork-ledger/media/ledger-one',
+      createdAt: now,
+    }]), [{
+      id: 'ledger-one', message: 'For the road ahead.',
+      mediaUrl: '/api/artwork-ledger/media/ledger-one',
+      createdAt: now,
+    }]);
+    assert.throws(() => parsePublicArtworkLedger([{
+      id: 'ledger-one', message: 'For the road ahead.', createdAt: now,
+      buyerEmail: 'private@example.com',
+    }]), /invalid_artwork_ledger/);
+    const privateProjection = {
+      ok: true,
+      priceHistory: [{
+        amountMinor: 200000, currency: 'USD',
+        occurrence: { precision: 'year', value: '2018' }, recordedAt: now,
+      }],
+    };
+    assert.deepEqual(parseKeeperCertificateLedger(privateProjection), privateProjection.priceHistory);
+    assert.throws(() => parseKeeperCertificateLedger({
+      ...privateProjection, privateReference: 'studio-ledger-18',
+    }), /invalid_certificate_ledger/);
+  });
+
+  it('keeps fortunes sealed until an exact linked identity is currently claimed', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      seedCaseAndRecords(fixture.db);
+      insertPrimarySale(fixture.db);
+      fixture.db.exec(`
+        INSERT INTO artist_artwork_ledger_entries
+          (id, artwork_record_id, message, created_by_user_id,
+           idempotency_key, request_digest, created_at)
+        VALUES ('ledger-unclaimed', 'record-linked', 'Still sealed.', 'artist-admin',
+          'ledger-unclaimed-key', '${digest('f')}', '${now}');
+      `);
+      assert.deepEqual(await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      }), []);
+    } finally { fixture.db.close(); }
+  });
+
+  it('adds only claimed public ledger entries to the no-store certificate response', async () => {
+    const fixture = serviceEnvironment();
+    seedCertificateLedger(fixture);
+    try {
+      const before = count(fixture.db, 'artist_artwork_ledger_entries');
+      const response = await publicCertificateRequest({
+        request: new Request(
+          'https://adrianrasmussen.com/api/certificates/UL-100?publicCode=AR-7KQ9M2WX',
+        ),
+        env: fixture.env,
+        params: { artworkId: 'UL-100' },
+      } as any);
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get('Cache-Control'), 'no-store');
+      const body = await response.json() as any;
+      assert.deepEqual(body.certificate.publicLedger, [
+        {
+          id: 'ledger-message', message: 'A small door opens when you are ready.',
+          createdAt: '2026-08-10T12:03:00.000Z',
+        },
+        {
+          id: 'ledger-selected', mediaUrl: '/api/artwork-ledger/media/ledger-selected',
+          createdAt: '2026-08-10T12:04:00.000Z',
+        },
+      ]);
+      assert.equal(body.certificate.title, 'Art of Living - 32');
+      assert.doesNotMatch(JSON.stringify(body), /price|amountMinor|buyerEmail|privateReference/i);
+      assert.equal(count(fixture.db, 'artist_artwork_ledger_entries'), before);
+    } finally { fixture.db.close(); }
+  });
+
+  it('reveals only selected messages and media, then revokes immediately on release', async () => {
+    const fixture = serviceEnvironment();
+    const { selectedSha } = seedCertificateLedger(fixture);
+    try {
+      const ledger = await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      });
+      assert.deepEqual(ledger, [
+        {
+          id: 'ledger-message', message: 'A small door opens when you are ready.',
+          createdAt: '2026-08-10T12:03:00.000Z',
+        },
+        {
+          id: 'ledger-selected', mediaUrl: '/api/artwork-ledger/media/ledger-selected',
+          createdAt: '2026-08-10T12:04:00.000Z',
+        },
+      ]);
+      const serialized = JSON.stringify(ledger);
+      for (const forbidden of [
+        'collector@example.com', 'Studio ledger page 18', 'Introduced by a mutual friend.',
+        selectedSha, 'storageReference', 'artworkRecordId', 'buyerEmail', 'amountMinor',
+      ]) assert.doesNotMatch(serialized, new RegExp(forbidden));
+
+      fixture.db.exec(`UPDATE keeper_pieces SET released_at = '${now}' WHERE id = 'kp-sale-one'`);
+      assert.deepEqual(await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      }), []);
+    } finally { fixture.db.close(); }
+  });
+
+  it('fails closed for retired, superseded, unregistered, or mismatched identity state', async () => {
+    let fault: Record<string, unknown> = {};
+    const fixture = serviceEnvironment({
+      overrideFirstResult(sql, result) {
+        return result && sql.includes('FROM artist_artwork_records record')
+          ? { ...result, ...fault }
+          : result;
+      },
+    });
+    seedCertificateLedger(fixture);
+    try {
+      for (fault of [
+        { plate_status: 'void' },
+        { plate_status: 'superseded' },
+        { registration_status: null },
+        { keeper_user_id: null },
+        { artwork_id: 'UL-999' },
+        { edition_json: numberedEdition(2, 64) },
+      ]) {
+        assert.deepEqual(await resolvePublicArtworkLedger(fixture.env, {
+          keeperPieceId: 'kp-sale-one',
+        }), [], JSON.stringify(fault));
+      }
+    } finally { fixture.db.close(); }
+  });
+
+  it('promotes evidence only through an immutable ledger selection', async () => {
+    const fixture = serviceEnvironment();
+    seedCertificateLedger(fixture);
+    try {
+      assert.equal((await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      })).some((entry: any) => entry.id === 'media-evidence'), false);
+      fixture.db.exec(`
+        INSERT INTO artist_artwork_ledger_entries
+          (id, artwork_record_id, media_id, created_by_user_id,
+           idempotency_key, request_digest, created_at)
+        VALUES ('ledger-evidence-promoted', 'record-linked', 'media-evidence',
+          'artist-admin', 'promote-evidence-key', '${digest('0')}',
+          '2026-08-10T12:06:00.000Z');
+      `);
+      const promoted = await resolvePublicArtworkLedger(fixture.env, {
+        keeperPieceId: 'kp-sale-one',
+      });
+      assert.deepEqual(promoted.at(-1), {
+        id: 'ledger-evidence-promoted',
+        mediaUrl: '/api/artwork-ledger/media/ledger-evidence-promoted',
+        createdAt: '2026-08-10T12:06:00.000Z',
+      });
+    } finally { fixture.db.close(); }
+  });
+
+  it('streams only selected immutable media after a fresh live claim check', async () => {
+    const fixture = serviceEnvironment();
+    const { selectedSha } = seedCertificateLedger(fixture);
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const selectedReference = `artwork-ledger/record-linked/${selectedSha}.jpg`;
+    let object = {
+      key: selectedReference, size: bytes.byteLength,
+      httpMetadata: { contentType: 'image/jpeg' }, body: bytes,
+    };
+    const env = {
+      ...fixture.env,
+      ARTWORK_REGISTRY_BACKUP: {
+        get: async (key: string) => key === selectedReference ? object : null,
+        head: async (key: string) => key === selectedReference ? object : null,
+      },
+    };
+    const request = (method: string, id: string, headers?: HeadersInit) => publicLedgerMediaRequest({
+      request: new Request(`https://adrianrasmussen.com/api/artwork-ledger/media/${id}`, {
+        method, headers,
+      }),
+      env, params: { id },
+    } as any);
+    try {
+      const get = await request('GET', 'ledger-selected');
+      assert.equal(get.status, 200);
+      assert.deepEqual(new Uint8Array(await get.arrayBuffer()), bytes);
+      assert.equal(get.headers.get('Content-Type'), 'image/jpeg');
+      assert.equal(get.headers.get('Content-Length'), '4');
+      assert.equal(get.headers.get('ETag'), `"${selectedSha}"`);
+      assert.equal(get.headers.get('X-Content-Type-Options'), 'nosniff');
+      assert.match(get.headers.get('Cache-Control') || '', /private/);
+      const head = await request('HEAD', 'ledger-selected');
+      assert.equal(head.status, 200);
+      assert.equal((await head.arrayBuffer()).byteLength, 0);
+      const unchanged = await request('GET', 'ledger-selected', {
+        'If-None-Match': `"${selectedSha}"`,
+      });
+      assert.equal(unchanged.status, 304);
+      assert.equal((await request('GET', 'media-evidence')).status, 404);
+      const method = await request('POST', 'ledger-selected');
+      assert.equal(method.status, 405);
+      assert.equal(method.headers.get('Allow'), 'GET, HEAD');
+
+      object = { ...object, size: 5 };
+      assert.equal((await request('GET', 'ledger-selected')).status, 502);
+      object = { ...object, size: bytes.byteLength };
+
+      fixture.db.exec(`UPDATE keeper_pieces SET released_at = '${now}' WHERE id = 'kp-sale-one'`);
+      assert.equal((await request('GET', 'ledger-selected')).status, 404);
+    } finally { fixture.db.close(); }
+  });
+
+  it('returns complete ordered prices only to the live current keeper', async () => {
+    let liveUserId = 'keeper-current';
+    const fixture = serviceEnvironment({
+      overrideFirstResult(sql, result) {
+        return result && sql.includes('FROM artist_artwork_records record')
+          ? { ...result, keeper_user_id: liveUserId }
+          : result;
+      },
+    });
+    seedCertificateLedger(fixture);
+    try {
+      const expected = [
+        {
+          amountMinor: 200000, currency: 'USD',
+          occurrence: { precision: 'exact', value: '2026-08-01' },
+          recordedAt: '2026-08-10T12:05:00.000Z',
+        },
+        {
+          amountMinor: 350000, currency: 'USD',
+          occurrence: { precision: 'year', value: '2028' },
+          recordedAt: '2028-06-01T12:00:00.000Z',
+        },
+      ];
+      assert.deepEqual(await resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'keeper-current',
+      }), expected);
+      await assert.rejects(resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'former-keeper',
+      }), (error: Error & { code?: string }) => error.code === 'not_current_keeper');
+
+      liveUserId = 'keeper-next';
+      await assert.rejects(resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'keeper-current',
+      }), (error: Error & { code?: string }) => error.code === 'not_current_keeper');
+      assert.deepEqual(await resolveCurrentKeeperPriceHistory(fixture.env, {
+        publicCode: 'AR-7KQ9M2WX', userId: 'keeper-next',
+      }), expected);
+    } finally { fixture.db.close(); }
+  });
+
+  it('authenticates the private price endpoint against the live keeper on every read', async () => {
+    let liveUserId = 'keeper-current';
+    const fixture = serviceEnvironment({
+      overrideFirstResult(sql, result) {
+        return result && sql.includes('FROM artist_artwork_records record')
+          ? { ...result, keeper_user_id: liveUserId }
+          : result;
+      },
+    });
+    seedCertificateLedger(fixture);
+    const { onRequest } = await import('../functions/api/keeper/certificate-ledger.js');
+    const request = (userId?: string, suffix = '?publicCode=AR-7KQ9M2WX') => onRequest({
+      request: new Request(
+        `https://adrianrasmussen.com/api/keeper/certificate-ledger${suffix}`,
+        { headers: userId ? { 'X-Test-User': userId } : {} },
+      ),
+      env: fixture.env,
+    } as any);
+    try {
+      assert.equal((await request()).status, 401);
+      const current = await request('keeper-current');
+      assert.equal(current.status, 200);
+      assert.equal(current.headers.get('Cache-Control'), 'no-store');
+      const body = await current.json() as any;
+      assert.equal(body.priceHistory.length, 2);
+      assert.doesNotMatch(JSON.stringify(body),
+        /collector@example|buyer|saleId|artworkRecord|storage|sha256|privateReference/i);
+      assert.equal((await request('former-keeper')).status, 403);
+      assert.equal((await request('keeper-current',
+        '?publicCode=AR-7KQ9M2WX&artworkRecordId=record-linked')).status, 404);
+
+      liveUserId = 'keeper-next';
+      assert.equal((await request('keeper-current')).status, 403);
+      const next = await request('keeper-next');
+      assert.equal(next.status, 200);
+      assert.deepEqual((await next.json() as any).priceHistory, body.priceHistory);
+    } finally { fixture.db.close(); }
+  });
+
+  it('keeps the private endpoint GET-only and no-store before authentication', async () => {
+    const { onRequest: privateCertificateLedgerRequest } = await import(
+      '../functions/api/keeper/certificate-ledger.js'
+    );
+    const response = await privateCertificateLedgerRequest({
+      request: new Request('https://adrianrasmussen.com/api/keeper/certificate-ledger', {
+        method: 'POST',
+      }),
+      env: {},
+    } as any);
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get('Allow'), 'GET');
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
   });
 });

@@ -37,6 +37,58 @@ function requiredText(value, code, maximum = 5000) {
   return normalized;
 }
 
+function publicLedgerId(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value);
+}
+
+function exactClaimedIdentity(row, expected = {}) {
+  if (!row || row.identification_status !== 'identity_linked'
+    || row.artwork_record_id == null || row.artwork_id !== row.piece_id
+    || row.keeper_piece_id !== row.piece_keeper_id
+    || row.registration_status !== 'registered'
+    || typeof row.public_code !== 'string' || !/^AR-[A-Z0-9]{8}$/.test(row.public_code)
+    || typeof row.keeper_user_id !== 'string' || !row.keeper_user_id
+    || typeof row.claimed_at !== 'string' || !row.claimed_at
+    || row.released_at !== null
+    || !['legacy', 'generated', 'active'].includes(row.plate_status)) return false;
+  if (expected.keeperPieceId && row.keeper_piece_id !== expected.keeperPieceId) return false;
+  if (expected.publicCode && row.public_code !== expected.publicCode) return false;
+  if (expected.userId && row.keeper_user_id !== expected.userId) return false;
+  try {
+    const edition = JSON.parse(row.edition_json);
+    return edition && typeof edition === 'object' && !Array.isArray(edition)
+      && ((edition.kind === 'unique' && row.edition_number === 0)
+        || (edition.kind === 'numbered' && edition.number === row.edition_number));
+  } catch { return false; }
+}
+
+async function claimedArtworkRecord(db, expected) {
+  const clauses = [];
+  const values = [];
+  if (expected.keeperPieceId) {
+    clauses.push(`piece.id = ?${values.length + 1}`);
+    values.push(expected.keeperPieceId);
+  }
+  if (expected.publicCode) {
+    clauses.push(`piece.public_code = ?${values.length + 1}`);
+    values.push(expected.publicCode);
+  }
+  if (!clauses.length) throw codedError('invalid_certificate_identity');
+  const row = await first(db, `
+    SELECT record.id AS artwork_record_id, record.artwork_id,
+           record.edition_json, record.identification_status,
+           record.keeper_piece_id, piece.id AS piece_keeper_id,
+           piece.piece_id, piece.edition_number, piece.public_code,
+           piece.registration_status, piece.keeper_user_id, piece.claimed_at,
+           piece.released_at, piece.plate_status
+      FROM artist_artwork_records record
+      JOIN keeper_pieces piece ON piece.id = record.keeper_piece_id
+     WHERE ${clauses.join(' AND ')}
+     LIMIT 1
+  `, ...values);
+  return exactClaimedIdentity(row, expected) ? row : null;
+}
+
 function normalizeStringList(value, code) {
   if (!Array.isArray(value)) throw codedError(code);
   const normalized = value.map((item) => requiredText(item, code, 240));
@@ -378,6 +430,7 @@ export async function resolveInstanceCertificate(env, { keeperPieceId }) {
   return {
     ...await resolveArtworkCertificate(env, piece.piece_id),
     artworkId: piece.piece_id,
+    title: artwork.title,
     edition: editionNumber === 0
       ? { kind: 'unique' }
       : {
@@ -385,6 +438,7 @@ export async function resolveInstanceCertificate(env, { keeperPieceId }) {
         size: artwork.editionSize === null ? null : Number(artwork.editionSize),
       },
     publicCode: piece.public_code,
+    publicLedger: await resolvePublicArtworkLedger(env, { keeperPieceId: piece.id }),
   };
 }
 
@@ -398,4 +452,125 @@ export async function resolveInstanceCertificateByPublicCode(env, { artworkId, p
   `, normalizedArtworkId, normalizedPublicCode);
   if (!piece) throw codedError('certificate_not_found');
   return resolveInstanceCertificate(env, { keeperPieceId: piece.id });
+}
+
+export async function resolvePublicArtworkLedger(env, { keeperPieceId }) {
+  const db = dbFor(env);
+  let claim;
+  try {
+    claim = await claimedArtworkRecord(db, {
+      keeperPieceId: requiredText(keeperPieceId, 'invalid_keeper_piece', 128),
+    });
+  } catch (error) {
+    if (/no such table/i.test(String(error?.message))) return [];
+    throw error;
+  }
+  if (!claim) return [];
+  const rows = await all(db, `
+    SELECT ledger.id, ledger.message, ledger.media_id, ledger.created_at,
+           media.id AS stored_media_id,
+           media.artwork_record_id AS media_artwork_record_id
+      FROM artist_artwork_ledger_entries ledger
+      LEFT JOIN artist_artwork_media media ON media.id = ledger.media_id
+     WHERE ledger.artwork_record_id = ?1
+     ORDER BY ledger.created_at, ledger.id
+  `, claim.artwork_record_id);
+  return rows.map((row) => {
+    if (!publicLedgerId(row.id)
+      || typeof row.created_at !== 'string'
+      || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.created_at)
+      || Number.isNaN(Date.parse(row.created_at))
+      || new Date(row.created_at).toISOString() !== row.created_at) {
+      throw codedError('certificate_ledger_integrity');
+    }
+    const entry = { id: row.id, createdAt: row.created_at };
+    if (row.message !== null) {
+      if (typeof row.message !== 'string' || row.message !== row.message.trim()
+        || row.message.length < 1 || row.message.length > 8000) {
+        throw codedError('certificate_ledger_integrity');
+      }
+      entry.message = row.message;
+    }
+    if (row.media_id !== null) {
+      if (row.stored_media_id !== row.media_id
+        || row.media_artwork_record_id !== claim.artwork_record_id) {
+        throw codedError('certificate_ledger_integrity');
+      }
+      entry.mediaUrl = `/api/artwork-ledger/media/${encodeURIComponent(row.id)}`;
+    }
+    if (!entry.message && !entry.mediaUrl) throw codedError('certificate_ledger_integrity');
+    return entry;
+  });
+}
+
+export async function resolvePublicArtworkLedgerMedia(env, ledgerEntryId) {
+  const db = dbFor(env);
+  const id = requiredText(ledgerEntryId, 'invalid_ledger_entry', 128);
+  if (!publicLedgerId(id)) return null;
+  const selected = await first(db, `
+    SELECT ledger.id, ledger.artwork_record_id, ledger.media_id,
+           media.storage_reference, media.sha256, media.content_type,
+           media.byte_length, media.artwork_record_id AS media_artwork_record_id,
+           record.keeper_piece_id
+      FROM artist_artwork_ledger_entries ledger
+      JOIN artist_artwork_media media ON media.id = ledger.media_id
+      JOIN artist_artwork_records record ON record.id = ledger.artwork_record_id
+     WHERE ledger.id = ?1
+     LIMIT 1
+  `, id);
+  if (!selected || selected.id !== id || selected.media_id == null
+    || selected.media_artwork_record_id !== selected.artwork_record_id) return null;
+  const claim = await claimedArtworkRecord(db, { keeperPieceId: selected.keeper_piece_id });
+  if (!claim || claim.artwork_record_id !== selected.artwork_record_id) return null;
+  const extension = new Map([
+    ['image/jpeg', 'jpg'], ['image/png', 'png'], ['image/webp', 'webp'],
+  ]).get(selected.content_type);
+  if (!extension || typeof selected.sha256 !== 'string'
+    || !/^[0-9a-f]{64}$/.test(selected.sha256)
+    || selected.storage_reference
+      !== `artwork-ledger/${selected.artwork_record_id}/${selected.sha256}.${extension}`
+    || !Number.isSafeInteger(selected.byte_length) || selected.byte_length < 1) return null;
+  return {
+    storageReference: selected.storage_reference,
+    sha256: selected.sha256,
+    contentType: selected.content_type,
+    byteLength: selected.byte_length,
+  };
+}
+
+export async function resolveCurrentKeeperPriceHistory(env, { publicCode, userId }) {
+  const db = dbFor(env);
+  const normalizedPublicCode = requiredText(publicCode, 'invalid_public_code', 80).toUpperCase();
+  const normalizedUserId = requiredText(userId, 'invalid_user', 128);
+  const claim = await claimedArtworkRecord(db, {
+    publicCode: normalizedPublicCode, userId: normalizedUserId,
+  });
+  if (!claim) throw codedError('not_current_keeper');
+  try {
+    const rows = await all(db, `
+      SELECT amount_minor, currency, occurred_on, occurrence_precision, recorded_at
+        FROM artist_artwork_price_entries
+       WHERE artwork_record_id = ?1
+       ORDER BY recorded_at, id
+    `, claim.artwork_record_id);
+    return rows.map((row) => {
+      if (!Number.isSafeInteger(row.amount_minor) || row.amount_minor < 0
+        || typeof row.currency !== 'string' || !/^[A-Z]{3}$/.test(row.currency)
+        || !['exact', 'month', 'year', 'unknown'].includes(row.occurrence_precision)
+        || typeof row.recorded_at !== 'string' || Number.isNaN(Date.parse(row.recorded_at))
+        || (row.occurrence_precision === 'unknown' ? row.occurred_on !== null
+          : typeof row.occurred_on !== 'string')) throw new Error('invalid_price_history');
+      return {
+        amountMinor: row.amount_minor,
+        currency: row.currency,
+        occurrence: {
+          precision: row.occurrence_precision,
+          value: row.occurred_on,
+        },
+        recordedAt: row.recorded_at,
+      };
+    });
+  } catch {
+    throw codedError('current_keeper_ledger_unavailable');
+  }
 }

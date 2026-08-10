@@ -269,7 +269,6 @@ function DraftArtworkRecord({
                                     artworkId={identity.artworkId}
                                     publicCode={identity.publicCode}
                                     title={identity.title}
-                                    editionLabel={identity.edition.label}
                                 />
                             </div>
                         )}
@@ -427,7 +426,6 @@ function CatalogArtworkRecord({
                                 artworkId={identity.artworkId}
                                 publicCode={identity.publicCode}
                                 title={identity.title}
-                                editionLabel={identity.edition.label}
                             />
                         )}
 

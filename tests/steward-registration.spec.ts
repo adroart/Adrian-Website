@@ -745,6 +745,108 @@ test('walks from a neutral registration door through proof, private choices, cer
   });
 });
 
+test('reveals claimed creator notes publicly and keeps price history current-keeper only', async ({ page }) => {
+  await mockWork(page);
+  let signedIn = false;
+  let currentKeeper = true;
+  let transientPrivateFailure = false;
+  let privateReads = 0;
+  await page.route('**/api/auth/get-session', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: signedIn ? JSON.stringify({
+      user: { id: 'collector-1', email: 'collector@example.com', emailVerified: true },
+      session: { id: 'session-one' },
+    }) : 'null',
+  }));
+  await page.route('**/api/auth/sync-user', route => route.fulfill({ status: 200, body: '{}' }));
+  await page.route('**/api/certificates/MD-905?**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'no-store' },
+    body: JSON.stringify({
+      ok: true,
+      certificate: {
+        artworkId: 'MD-905', title: 'Certificate Authority Title',
+        edition: { kind: 'numbered', number: 1, size: 3 },
+        publicCode: PUBLIC_CODE,
+        publicLedger: [
+          {
+            id: 'ledger-message', message: 'May this piece keep surprising you.',
+            createdAt: '2026-08-10T12:03:00.000Z',
+          },
+          {
+            id: 'ledger-image', mediaUrl: '/api/artwork-ledger/media/ledger-image',
+            createdAt: '2026-08-10T12:04:00.000Z',
+          },
+        ],
+      },
+    }),
+  }));
+  await page.route('**/api/artwork-ledger/media/ledger-image', route => route.fulfill({
+    status: 200,
+    contentType: 'image/png',
+    body: Buffer.from([
+      137, 80, 78, 71, 13, 10, 26, 10,
+    ]),
+  }));
+  await page.route('**/api/keeper/certificate-ledger?**', route => {
+    privateReads += 1;
+    if (transientPrivateFailure && currentKeeper) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, error: 'ledger_unavailable', currentKeeper: true }),
+      });
+    }
+    return route.fulfill({
+      status: currentKeeper ? 200 : 403,
+      contentType: 'application/json',
+      body: JSON.stringify(currentKeeper ? {
+        ok: true,
+        priceHistory: [
+          {
+            amountMinor: 200000, currency: 'USD',
+            occurrence: { precision: 'year', value: '2018' },
+            recordedAt: '2026-08-10T12:05:00.000Z',
+          },
+          {
+            amountMinor: 350000, currency: 'USD',
+            occurrence: { precision: 'exact', value: '2028-06-01' },
+            recordedAt: '2028-06-01T12:00:00.000Z',
+          },
+        ],
+      } : { ok: false, error: 'not_current_keeper' }),
+    });
+  });
+
+  await openWithLivingLegacy(page, WORK_PATH);
+  const ledger = page.getByTestId('certificate-ledger');
+  await expect(ledger).toContainText('May this piece keep surprising you.');
+  await expect(page.getByRole('heading', { name: 'Certificate Authority Title' })).toBeVisible();
+  await expect(ledger.getByAltText('Certificate Authority Title, creator note from the artwork certificate')).toBeVisible();
+  await expect(page.getByText('Price history')).toHaveCount(0);
+  expect(privateReads).toBe(0);
+
+  signedIn = true;
+  transientPrivateFailure = true;
+  await page.reload();
+  await openWithLivingLegacy(page, WORK_PATH);
+  await expect(page.getByRole('button', { name: 'Try price history again' })).toBeVisible();
+  transientPrivateFailure = false;
+  await page.getByRole('button', { name: 'Try price history again' }).click();
+  await expect(page.getByRole('heading', { name: 'Price history' })).toBeVisible();
+  await expect(page.getByText('$2,000.00')).toBeVisible();
+  await expect(page.getByText('$3,500.00')).toBeVisible();
+  expect(privateReads).toBeGreaterThan(0);
+
+  currentKeeper = false;
+  await page.reload();
+  await openWithLivingLegacy(page, WORK_PATH);
+  await expect(page.getByText('Price history')).toHaveCount(0);
+  await expect(page.getByText(/locked|unlock|upgrade|price unavailable/i)).toHaveCount(0);
+});
+
 test('saving a missing adult birth profile reloads privacy before the certificate', async ({ page }) => {
   await mockWork(page);
   await page.route('**/api/auth/get-session', route => route.fulfill({

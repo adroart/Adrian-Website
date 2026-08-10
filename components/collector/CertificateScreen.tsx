@@ -3,6 +3,11 @@ import {
   projectEffectiveCertificate,
   type EffectiveCertificate,
 } from '../../utils/certificateContent';
+import {
+  parsePublicArtworkLedger,
+  type PublicArtworkLedgerEntry,
+} from '../../utils/artworkLedger';
+import CertificateLedger from './CertificateLedger';
 
 type CertificateEdition =
   | { kind: 'unique' }
@@ -10,8 +15,10 @@ type CertificateEdition =
 
 type InstanceCertificate = EffectiveCertificate & {
   artworkId: string;
+  title: string;
   edition: CertificateEdition;
   publicCode: string;
+  publicLedger: PublicArtworkLedgerEntry[];
 };
 
 function projectInstanceCertificate(
@@ -37,11 +44,19 @@ function projectInstanceCertificate(
       && (edition.size === null || (Number.isInteger(edition.size) && Number(edition.size) >= Number(edition.number)))
         ? { kind: 'numbered', number: Number(edition.number), size: edition.size === null ? null : Number(edition.size) }
         : (() => { throw new Error('certificate_edition_invalid'); })();
+  const projectedTitle = typeof source.title === 'string' && source.title.trim()
+    ? source.title.trim()
+    : '';
+  const publicLedger = source.publicLedger === undefined
+    ? []
+    : parsePublicArtworkLedger(source.publicLedger);
   return {
     ...projectEffectiveCertificate(source),
     artworkId: expectedArtworkId,
+    title: projectedTitle,
     edition: projectedEdition,
     publicCode: expectedPublicCode,
+    publicLedger,
   };
 }
 
@@ -111,7 +126,9 @@ export default function CertificateScreen({
   return (
     <section className="collector-certificate" data-testid={testId} aria-labelledby={`${testId}-title`}>
       <p className="collector-eyebrow">Certificate of authenticity</p>
-      <h3 id={`${testId}-title`} className="collector-title">{title}</h3>
+      <h3 id={`${testId}-title`} className="collector-title">
+        {state.status === 'ready' && state.certificate.title ? state.certificate.title : title}
+      </h3>
       {state.status === 'loading' && <p className="collector-copy" role="status">Opening the recorded certificate</p>}
       {state.status === 'error' && (
         <>
@@ -141,6 +158,11 @@ export default function CertificateScreen({
             {state.certificate.techniques && <Fact label="Techniques">{state.certificate.techniques.join(' · ')}</Fact>}
             {state.certificate.yearWording && <Fact label="Year">{state.certificate.yearWording}</Fact>}
           </dl>
+          <CertificateLedger
+            publicCode={state.certificate.publicCode}
+            title={state.certificate.title || title}
+            publicLedger={state.certificate.publicLedger}
+          />
           {onComplete && (
             <div className="collector-actions">
               <button type="button" className="collector-button-primary" onClick={onComplete}>Complete registration</button>
