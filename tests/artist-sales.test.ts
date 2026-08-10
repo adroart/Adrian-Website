@@ -255,6 +255,14 @@ describe('artist verified sale records', () => {
           FROM pragma_table_info('artist_artwork_price_entries')
          WHERE name = 'sale_item_id'
       `).get()?.required, 1);
+      const uniqueArtworkRecordIndexes = db.prepare(`
+        SELECT name FROM pragma_index_list('artist_artwork_records')
+         WHERE "unique" = 1
+      `).all().map((row) => String(row.name));
+      assert.equal(uniqueArtworkRecordIndexes.some((indexName) =>
+        db.prepare('SELECT name FROM pragma_index_info(?)').all(indexName)
+          .some((column) => column.name === 'last_event_id')
+      ), false);
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
@@ -620,6 +628,77 @@ describe('artist verified sale records', () => {
         () => db.exec(`DELETE FROM artist_artwork_record_events WHERE id = 'record-event-one'`),
         /append-only/i,
       );
+    } finally {
+      db.close();
+    }
+  });
+
+  it('rejects UPDATE OR REPLACE when a pending identity event targets another artwork record keeper', () => {
+    const db = database();
+    try {
+      db.exec('PRAGMA recursive_triggers = OFF');
+      seedCaseAndRecords(db);
+      const before = recordSnapshot({
+        artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: null,
+        identificationStatus: 'identified', recordVersion: 1,
+      });
+      const after = recordSnapshot({
+        artworkId: 'UL-102', editionJson: '{"editionNumber":0}', keeperPieceId: 'kp-sale-two',
+        identificationStatus: 'identity_linked', recordVersion: 2,
+      });
+      db.prepare(`
+        INSERT INTO artist_artwork_record_events
+          (id, artwork_record_id, action, before_json, after_json,
+           resulting_version, actor_user_id, idempotency_key, request_digest, created_at)
+        VALUES ('pending-link-event', 'record-identified', 'identity_linked',
+          ?1, ?2, 2, 'artist-admin', 'pending-link-event-key', ?3, ?4)
+      `).run(before, after, digest('b'), now);
+      db.exec(`
+        INSERT INTO artist_artwork_records
+          (id, artwork_id, edition_json, keeper_piece_id, identification_status,
+           created_by_user_id, created_at, updated_at)
+        VALUES ('record-later-owner', 'UL-101', '{"editionNumber":2}', 'kp-sale-two',
+          'identity_linked', 'artist-admin', '${now}', '${now}')
+      `);
+
+      const stateBefore = {
+        records: db.prepare(`
+          SELECT id, artwork_id, edition_json, keeper_piece_id,
+                 identification_status, record_version, last_event_id,
+                 created_by_user_id, created_at, updated_at
+            FROM artist_artwork_records
+           WHERE id IN ('record-identified', 'record-later-owner') ORDER BY id
+        `).all().map((row) => ({ ...row })),
+        events: db.prepare(`
+          SELECT * FROM artist_artwork_record_events
+           WHERE id = 'pending-link-event'
+        `).all().map((row) => ({ ...row })),
+      };
+
+      assert.throws(() => db.exec(`
+        UPDATE OR REPLACE artist_artwork_records
+           SET keeper_piece_id = 'kp-sale-two',
+               identification_status = 'identity_linked',
+               record_version = 2,
+               last_event_id = 'pending-link-event',
+               updated_at = '${now}'
+         WHERE id = 'record-identified'
+      `), /collision|keeper|identity/i);
+
+      assert.deepEqual({
+        records: db.prepare(`
+          SELECT id, artwork_id, edition_json, keeper_piece_id,
+                 identification_status, record_version, last_event_id,
+                 created_by_user_id, created_at, updated_at
+            FROM artist_artwork_records
+           WHERE id IN ('record-identified', 'record-later-owner') ORDER BY id
+        `).all().map((row) => ({ ...row })),
+        events: db.prepare(`
+          SELECT * FROM artist_artwork_record_events
+           WHERE id = 'pending-link-event'
+        `).all().map((row) => ({ ...row })),
+      }, stateBefore);
+      assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
     }

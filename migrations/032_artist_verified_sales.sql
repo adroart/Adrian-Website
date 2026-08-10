@@ -55,7 +55,7 @@ CREATE TABLE artist_artwork_records (
   record_version INTEGER NOT NULL DEFAULT 1 CHECK (
     typeof(record_version) = 'integer' AND record_version >= 1
   ),
-  last_event_id TEXT UNIQUE
+  last_event_id TEXT
     REFERENCES artist_artwork_record_events(id) ON DELETE RESTRICT
     DEFERRABLE INITIALLY DEFERRED,
   created_by_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT,
@@ -506,6 +506,17 @@ BEGIN
   THEN RAISE(ABORT, 'artwork record update is not authorized by an exact event') END;
 END;
 
+CREATE TRIGGER artist_artwork_records_update_identity_collision
+BEFORE UPDATE ON artist_artwork_records
+WHEN NEW.keeper_piece_id IS NOT NULL AND EXISTS (
+  SELECT 1 FROM artist_artwork_records other
+   WHERE other.keeper_piece_id = NEW.keeper_piece_id
+     AND other.id <> OLD.id
+)
+BEGIN
+  SELECT RAISE(ABORT, 'artist artwork record keeper identity collision');
+END;
+
 CREATE TRIGGER artist_artwork_records_no_delete
 BEFORE DELETE ON artist_artwork_records
 BEGIN
@@ -676,7 +687,6 @@ WHEN EXISTS (
   SELECT 1 FROM artist_artwork_records prior
    WHERE prior.id = NEW.id
       OR (NEW.keeper_piece_id IS NOT NULL AND prior.keeper_piece_id = NEW.keeper_piece_id)
-      OR (NEW.last_event_id IS NOT NULL AND prior.last_event_id = NEW.last_event_id)
 )
 BEGIN
   SELECT RAISE(ABORT, 'artist artwork record identity collision');
