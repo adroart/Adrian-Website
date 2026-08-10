@@ -892,6 +892,62 @@ don't want to be hit with ten questions on your birthday."** So whatever it beco
 yearly moment cannot be a queue of everything at once. The screen is built with the lock
 as a single line so the mechanic can change without touching anything else.
 
+### Three tiers, and what outlives you. SETTLED 2026-08-10
+
+Every private thing placed in a piece needs a destination, because the piece travels and
+private things cannot float. There are **three tiers, named for what they actually do**:
+
+- **Let it shine** — anyone who meets the piece reads it, as words with no name. **Once it
+  shines it stays shining, always.** Other people have already read it; the piece's history
+  is a public record, and retroactive deletion would let someone rewrite what a hundred
+  people already saw.
+- **Keep it with the piece** — it travels forever and only whoever holds it can open it.
+  **They may choose to let it shine one day.** That clause must appear on the control. It
+  is not "private," and calling it private would be a lie that makes someone write a thing
+  they would never have written had they understood.
+- **Seal it** — nobody opens it again. Not the next caretaker, not family, not ever. The
+  piece still holds it; sealing is not deletion.
+
+**Shining is the default**, per the settled model: the piece shines, the person opts in.
+
+**Publishing is a per-item act, wherever the item already lives. There is NO triage screen
+at transfer.** Adrian asked directly whether this would ever be used. The honest answer:
+rarely, and it is still worth building, because the *rule* is doing the work rather than
+the interface. Publishing something private is a deliberate act needing a reason, and those
+reasons arrive on their own schedule, never at the moment of a sale. A triage screen would
+catch people at their least reflective and be skipped by everyone. So the share choice
+lives on the question's own screen, changeable on any ordinary day, and the passing screen
+carries one line naming what travels rather than a task list.
+
+### The heirs' right. SETTLED 2026-08-10
+
+**"Keep it with the piece" carries one quiet sub-choice: *the ones who come after may share
+this*, ON by default.** Hidden entirely when the tier is Seal it, which already answers the
+question.
+
+Adrian's frame, and the reason for the default: *"Wouldn't it be heartwarming if your child
+could post something you never shared, but it moved him to tears after he passed."* The
+father who wrote freely and never thought about it leaves his words openable to his
+children. That scene is what the piece exists to make possible, and it only happens by
+default.
+
+**The cost, accepted knowingly.** The same feature that lets a son publish his father's
+words lets a grieving son publish something the father wrote precisely because the box was
+closed. Both scenes come from one mechanism, so the question is only ever *who decides*,
+and there are two honest answers: the writer in advance, or the heir afterward. **The
+writer decides**, because the writer is the only person who knows which thing is which, and
+the only one who can be asked.
+
+Most people will never touch the control, which means most private writing becomes
+shareable by heirs. **That is the intended outcome, not a leak** — the same reason the light
+shines by default — and it is why the label at writing time must be plain.
+
+**Superseded:** an earlier position in this file held that no future caretaker could ever
+make a holder-only thing public. That is replaced by the three tiers above. The absolute
+protection now lives in **Seal it**, which is the tier that exists so there is somewhere to
+put a thing you truly do not want read. Without it people would write nothing rather than
+risk everything.
+
 ### The year turns: one occasion, each person at their own birthday. SETTLED
 
 The yearly ritual and the dream's unlock are **one occasion, not two**. Near the birthday

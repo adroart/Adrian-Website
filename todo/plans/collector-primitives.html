@@ -356,7 +356,11 @@ body{
   letter-spacing:-.015em;color:var(--cream);margin-bottom:18px;text-wrap:balance
 }
 /* #walkB is the container; .walk-b are the paragraphs inside it */
-#walkB{width:100%;display:flex;flex-direction:column;align-items:center;flex:none}
+#walkB{
+  width:100%;display:flex;flex-direction:column;align-items:center;
+  flex:0 1 auto;min-height:0;overflow-y:auto;scrollbar-width:none
+}
+#walkB::-webkit-scrollbar{display:none}
 .walk-b{
   font-size:15px;line-height:1.7;color:var(--cream-2);max-width:27ch;margin:0 auto
 }
@@ -407,25 +411,49 @@ body{
   padding:4px 2px;transition:color .22s var(--ease)
 }
 .walk-why:hover{color:var(--brass)}
-/* the share choice. Lit means it will shine; tapping is the act of withholding.
-   Sharing is the default because the piece shines and the person opts in, so the
-   button is never a permission request, only a way to keep something back. */
-.share{
+/* THREE TIERS, named for what they actually do.
+   The middle one must say that a future holder may publish it. Calling it
+   "private" would be a lie, and someone would write a thing they would never
+   have written had they understood. Shining is the default, per the settled
+   model: the piece shines, the person opts in. */
+.tiers{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:18px}
+.tier{
   display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;
-  margin-top:18px;padding:12px 14px;cursor:pointer;
+  padding:11px 13px;cursor:pointer;
   background:none;border:1px solid var(--hair);border-radius:10px;
   font-family:var(--body);
   transition:border-color .25s var(--ease),background .25s var(--ease)
 }
-.share-t{font-size:13.5px;color:var(--cream)}
-.share-s{font-size:12px;color:var(--cream-3);line-height:1.5}
-.share.is-on{border-color:var(--brass-deep);background:rgba(212,184,138,.05)}
-.share.is-on .share-t{color:var(--brass)}
-.share:not(.is-on) .share-t{color:var(--cream-2)}
+.tier-t{font-size:13.5px;color:var(--cream-2)}
+.tier-s{font-size:11.5px;color:var(--cream-3);line-height:1.5}
+.tier.is-on{border-color:var(--brass-deep);background:rgba(212,184,138,.05)}
+.tier.is-on .tier-t{color:var(--brass)}
+
+/* the heirs' right. On by default, because the father who never thought about
+   it should leave his words openable to his children: that is the whole reason
+   the piece outlives him. Off is there for the one thing meant to be taken
+   along. Hidden when the tier is Seal it, which already answers this. */
+.heirs{
+  display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;
+  margin-top:12px;padding:9px 2px;cursor:pointer;background:none;border:0;
+  border-top:1px solid var(--hair-soft);font-family:var(--body)
+}
+.heirs-t{font-size:12.5px;color:var(--cream-2)}
+.heirs-s{font-size:11.5px;color:var(--cream-3)}
+.heirs.is-on .heirs-t{color:var(--brass)}
+.heirs[hidden]{display:none}
 .walk-lock{
   margin-top:14px;width:100%;text-align:left;
   font-size:11.5px;line-height:1.6;color:var(--cream-3);font-style:italic
 }
+
+/* a question screen carries the most of any walk screen: the question, the
+   guidance, the field, three tiers and the heirs line. Its own middle scrolls,
+   the way every long surface in this flow does, and its art steps aside. */
+.walk.tall .walk-art{display:none}
+.walk.tall .walk-h{font-size:25px;margin-bottom:12px}
+.walk.tall{justify-content:flex-start;padding-top:4px}
+.walk.tall .walk-foot{margin-top:16px}
 
 /* the explainer is a sheet, it rises over the screen beneath it */
 .walk.sheet{justify-content:flex-end;padding-bottom:16px}
@@ -2196,10 +2224,27 @@ tbody tr:hover td{color:var(--cream)}
     }
     if(s.note) mid+='<p class="walk-note">'+esc(s.note)+'</p>';
     if(s.share){
-      mid+='<button class="share is-on" id="shareBtn">'+
-        '<span class="share-t">This will shine with the piece</span>'+
-        '<span class="share-s">Words with no name. Tap to keep it to yourself.</span>'+
-        '</button>';
+      mid+='<div class="tiers" id="tiers">'+
+        '<button class="tier is-on" data-tier="shining">'+
+          '<span class="tier-t">Let it shine</span>'+
+          '<span class="tier-s">Anyone who meets the piece reads it, as words with no '+
+          'name. Once it shines it stays shining, always.</span>'+
+        '</button>'+
+        '<button class="tier" data-tier="with">'+
+          '<span class="tier-t">Keep it with the piece</span>'+
+          '<span class="tier-s">It travels with the piece and only whoever holds it can '+
+          'open it. They may choose to let it shine one day.</span>'+
+        '</button>'+
+        '<button class="tier" data-tier="sealed">'+
+          '<span class="tier-t">Seal it</span>'+
+          '<span class="tier-s">Nobody opens it again. Not the next caretaker, not your '+
+          'family, not ever. The piece still holds it.</span>'+
+        '</button>'+
+      '</div>'+
+      '<button class="heirs is-on" id="heirsBtn">'+
+        '<span class="heirs-t">The ones who come after may share this</span>'+
+        '<span class="heirs-s">On, unless you turn it off for this one thing.</span>'+
+      '</button>';
     }
     if(s.lock) mid+='<p class="walk-lock">'+esc(s.lock)+'</p>';
     if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
@@ -2218,22 +2263,38 @@ tbody tr:hover td{color:var(--cream)}
 
     walk.classList.remove('enter','glow','lines');
     walk.classList.toggle('sheet', !!s.sheet);
+    walk.classList.toggle('tall', !!s.share);
     void walk.offsetWidth;
     walk.classList.add('enter');
     if(s.glow) walk.classList.add('glow');
     if(s.lines) walk.classList.add('lines');
-    var sb=document.getElementById('shareBtn');
-    if(sb) sb.addEventListener('click',function(){
-      var on=sb.classList.toggle('is-on');
-      sb.querySelector('.share-t').textContent = on
-        ? 'This will shine with the piece'
-        : 'This stays yours alone';
-      sb.querySelector('.share-s').textContent = on
-        ? 'Words with no name. Tap to keep it to yourself.'
-        : 'Nobody sees it but you. Tap to let it shine.';
+    var tiers=document.getElementById('tiers'),
+        heirs=document.getElementById('heirsBtn');
+    if(tiers) tiers.addEventListener('click',function(e){
+      var t=e.target.closest('[data-tier]'); if(!t) return;
+      tiers.querySelectorAll('.tier').forEach(function(x){x.classList.remove('is-on')});
+      t.classList.add('is-on');
+      var k=t.getAttribute('data-tier');
+      /* sealed already answers the heirs question, so the control goes away
+         rather than sitting there meaning nothing */
+      heirs.hidden = (k==='sealed');
+      cap.textContent = k==='shining'
+        ? 'Shining \u00b7 words with no name, and it stays shining'
+        : k==='with'
+        ? 'With the piece \u00b7 only whoever holds it can open it'
+        : 'Sealed \u00b7 nobody opens it again, not ever';
+    });
+    if(heirs) heirs.addEventListener('click',function(){
+      var on=heirs.classList.toggle('is-on');
+      heirs.querySelector('.heirs-t').textContent = on
+        ? 'The ones who come after may share this'
+        : 'This one goes no further than you';
+      heirs.querySelector('.heirs-s').textContent = on
+        ? 'On, unless you turn it off for this one thing.'
+        : 'Off. It stays with the piece, unopened by anyone after you.';
       cap.textContent = on
-        ? 'Shining \u00b7 words with no name'
-        : 'Withheld \u00b7 the piece still holds it';
+        ? 'Heirs may share it \u00b7 the default'
+        : 'Heirs may not \u00b7 you take this one with you';
     });
 
     cap.textContent=s.cap;
