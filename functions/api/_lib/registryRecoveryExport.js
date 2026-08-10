@@ -44,6 +44,22 @@ const REFERENCED_AUTH_USER_IDS_SQL = `
   UNION SELECT author_user_id FROM collector_dream_markers WHERE author_user_id IS NOT NULL
   UNION SELECT author_user_id FROM collector_dream_mutations WHERE author_user_id IS NOT NULL
   UNION SELECT keeper_user_id FROM collector_dream_rituals WHERE keeper_user_id IS NOT NULL
+  UNION SELECT created_by_user_id FROM artist_reconnection_cases
+    WHERE created_by_user_id IS NOT NULL
+  UNION SELECT created_by_user_id FROM artist_artwork_records
+    WHERE created_by_user_id IS NOT NULL
+  UNION SELECT verified_by_user_id FROM artist_verified_sales
+    WHERE verified_by_user_id IS NOT NULL
+  UNION SELECT actor_user_id FROM artist_reconnection_events
+    WHERE actor_user_id IS NOT NULL
+  UNION SELECT actor_user_id FROM artist_artwork_record_events
+    WHERE actor_user_id IS NOT NULL
+  UNION SELECT actor_user_id FROM artist_verified_sale_events
+    WHERE actor_user_id IS NOT NULL
+  UNION SELECT uploaded_by_user_id FROM artist_artwork_media
+    WHERE uploaded_by_user_id IS NOT NULL
+  UNION SELECT created_by_user_id FROM artist_artwork_ledger_entries
+    WHERE created_by_user_id IS NOT NULL
   UNION SELECT bridge.auth_user_id FROM users AS bridge
     WHERE bridge.id IN (
       SELECT user_id FROM collector_person_privacy
@@ -188,6 +204,20 @@ function collectReferencedAuthUserIds(tables) {
     ['certificate_assignment_operations', 'assigned_by_user_id'],
     ['certificate_artwork_overrides', 'updated_by_user_id'],
     ['certificate_override_history', 'changed_by_user_id'],
+  ]) {
+    for (const row of tables[table]) {
+      if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);
+    }
+  }
+  for (const [table, field] of [
+    ['artist_reconnection_cases', 'created_by_user_id'],
+    ['artist_artwork_records', 'created_by_user_id'],
+    ['artist_verified_sales', 'verified_by_user_id'],
+    ['artist_reconnection_events', 'actor_user_id'],
+    ['artist_artwork_record_events', 'actor_user_id'],
+    ['artist_verified_sale_events', 'actor_user_id'],
+    ['artist_artwork_media', 'uploaded_by_user_id'],
+    ['artist_artwork_ledger_entries', 'created_by_user_id'],
   ]) {
     for (const row of tables[table]) {
       if (typeof row[field] === 'string' && row[field]) ids.add(row[field]);

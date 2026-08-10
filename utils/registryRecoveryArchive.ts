@@ -8,7 +8,7 @@
  */
 
 export const PRIVATE_RECOVERY_ARCHIVE_VERSION = 1 as const;
-export const PRIVATE_RECOVERY_SCHEMA_VERSION = 5 as const;
+export const PRIVATE_RECOVERY_SCHEMA_VERSION = 6 as const;
 export const PRIVATE_RECOVERY_KIND = 'registry-private-recovery-encrypted' as const;
 export const PRIVATE_RECOVERY_PAYLOAD_KIND = 'registry-private-recovery-payload' as const;
 export const PRIVATE_RECOVERY_ALGORITHM = 'AES-GCM-256' as const;
@@ -83,17 +83,64 @@ export const REGISTRY_RECOVERY_V4_TABLES = [
   'artwork_transfer_receipts',
 ] as const;
 
-const V4_LINEAGE_INDEX = REGISTRY_RECOVERY_V4_TABLES.indexOf('artwork_lineage_events');
-
-export const REGISTRY_RECOVERY_TABLES = [
-  ...REGISTRY_RECOVERY_V4_TABLES.slice(0, V4_LINEAGE_INDEX + 1),
+/** The exact Phase 2 archive manifest. Never reorder or extend this list. */
+export const REGISTRY_RECOVERY_V5_TABLES = [
+  'user',
+  'account',
+  'users',
+  'profiles',
+  'registry_artworks',
+  'registry_catalog_membership',
+  'keeper_pieces',
+  'artwork_claim_requests',
+  'artwork_transfer_intents',
+  'artwork_transfer_parties',
+  'atlas_source_cities',
+  'atlas_source_chains',
+  'atlas_source_chain_events',
+  'keeper_intentions',
+  'piece_fulfillments',
+  'artwork_acquisitions',
+  'artwork_provenance_entries',
+  'artwork_claim_evidence',
+  'artwork_lineage_events',
   'collector_claim_ordinals',
   'collector_dreams',
   'collector_dream_markers',
   'collector_dream_mutations',
   'collector_dream_rituals',
   'collector_letters',
-  ...REGISTRY_RECOVERY_V4_TABLES.slice(V4_LINEAGE_INDEX + 1),
+  'ownership_code_audit',
+  'registry_maintenance_events',
+  'registry_recovery_qualifications',
+  'artwork_identity_recovery_qualifications',
+  'artwork_invitations',
+  'artwork_invitation_redemptions',
+  'artwork_invitation_redemption_completions',
+  'certificate_templates',
+  'certificate_assignment_operations',
+  'certificate_artwork_assignments',
+  'certificate_artwork_overrides',
+  'certificate_override_history',
+  'collector_curated_cities',
+  'collector_person_privacy',
+  'collector_piece_privacy',
+  'collector_consent_history',
+  'artwork_transfer_receipts',
+] as const;
+
+export const REGISTRY_RECOVERY_TABLES = [
+  ...REGISTRY_RECOVERY_V5_TABLES,
+  'artist_reconnection_cases',
+  'artist_artwork_records',
+  'artist_verified_sales',
+  'artist_reconnection_events',
+  'artist_artwork_record_events',
+  'artist_verified_sale_events',
+  'artist_verified_sale_items',
+  'artist_artwork_media',
+  'artist_artwork_ledger_entries',
+  'artist_artwork_price_entries',
 ] as const;
 
 const RECOVERY_CLEANLINESS_TABLES = [
@@ -276,6 +323,46 @@ export const REGISTRY_RECOVERY_COLUMNS: Record<RegistryRecoveryTable, readonly s
     'policy_version', 'changed_at',
   ],
   artwork_transfer_receipts: ['id', 'transfer_intent_id', 'committed_at'],
+  artist_reconnection_cases: [
+    'id', 'recipient_email', 'recipient_name', 'private_context', 'status',
+    'created_by_user_id', 'idempotency_key', 'request_digest', 'created_at', 'updated_at',
+  ],
+  artist_artwork_records: [
+    'id', 'artwork_id', 'edition_json', 'keeper_piece_id', 'identification_status',
+    'record_version', 'last_event_id', 'created_by_user_id', 'created_at', 'updated_at',
+  ],
+  artist_verified_sales: [
+    'id', 'reconnection_case_id', 'occurrence_precision', 'occurred_on', 'buyer_email',
+    'currency', 'total_minor', 'private_reference', 'private_notes',
+    'verified_by_user_id', 'idempotency_key', 'request_digest', 'recorded_at',
+  ],
+  artist_reconnection_events: [
+    'id', 'reconnection_case_id', 'event_type', 'private_note', 'artwork_record_id',
+    'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
+  ],
+  artist_artwork_record_events: [
+    'id', 'artwork_record_id', 'action', 'before_json', 'after_json',
+    'resulting_version', 'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
+  ],
+  artist_verified_sale_events: [
+    'id', 'sale_id', 'sequence', 'event_type', 'before_json', 'after_json', 'reason',
+    'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
+  ],
+  artist_verified_sale_items: [
+    'id', 'sale_id', 'artwork_record_id', 'amount_minor', 'currency', 'created_at',
+  ],
+  artist_artwork_media: [
+    'id', 'artwork_record_id', 'media_role', 'storage_reference', 'sha256',
+    'content_type', 'byte_length', 'uploaded_by_user_id', 'created_at',
+  ],
+  artist_artwork_ledger_entries: [
+    'id', 'artwork_record_id', 'sale_id', 'message', 'media_id', 'created_by_user_id',
+    'idempotency_key', 'request_digest', 'created_at',
+  ],
+  artist_artwork_price_entries: [
+    'id', 'artwork_record_id', 'sale_item_id', 'amount_minor', 'currency',
+    'occurred_on', 'occurrence_precision', 'recorded_at',
+  ],
 };
 
 export type PrivateRecoveryPayload = {
@@ -287,7 +374,7 @@ export type PrivateRecoveryPayload = {
 
 type LegacyPrivateRecoveryPayload = {
   kind: typeof PRIVATE_RECOVERY_PAYLOAD_KIND;
-  schemaVersion: 1 | 2 | 3 | 4;
+  schemaVersion: 1 | 2 | 3 | 4 | 5;
   exportedAt: string;
   tables: Record<string, RecoveryRow[]>;
 };
@@ -315,7 +402,7 @@ export type PrivateRecoveryArchive = {
 
 type SupportedPrivateRecoveryArchive = Omit<PrivateRecoveryArchive, 'manifest'> & {
   manifest: Omit<PrivateRecoveryArchive['manifest'], 'schemaVersion'> & {
-    schemaVersion: 1 | 2 | 3 | 4 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
+    schemaVersion: 1 | 2 | 3 | 4 | 5 | typeof PRIVATE_RECOVERY_SCHEMA_VERSION;
   };
 };
 
@@ -433,6 +520,7 @@ function recoveryTables(schemaVersion: number): readonly RegistryRecoveryTable[]
   if (schemaVersion === 2) return REGISTRY_RECOVERY_V2_TABLES;
   if (schemaVersion === 3) return REGISTRY_RECOVERY_V3_TABLES;
   if (schemaVersion === 4) return REGISTRY_RECOVERY_V4_TABLES;
+  if (schemaVersion === 5) return REGISTRY_RECOVERY_V5_TABLES;
   return REGISTRY_RECOVERY_TABLES;
 }
 
@@ -470,7 +558,7 @@ export function validatePrivateRecoveryPayload(
     throw new Error('recovery_payload_shape');
   }
   if (payload.kind !== PRIVATE_RECOVERY_PAYLOAD_KIND
-    || (![1, 2, 3, 4, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
+    || (![1, 2, 3, 4, 5, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(payload.schemaVersion as number))
     || typeof payload.exportedAt !== 'string') {
     throw new Error('recovery_payload_unsupported');
   }
@@ -494,7 +582,7 @@ export function validatePrivateRecoveryPayload(
       }
     }
   }
-  if (payload.schemaVersion === PRIVATE_RECOVERY_SCHEMA_VERSION) {
+  if (Number(payload.schemaVersion) >= 5) {
     const firstBoundRows = (payload.tables.artwork_lineage_events as RecoveryRow[])
       .filter((row) => row.event_type === 'first_bound');
     const firstBounds = new Map(firstBoundRows
@@ -563,23 +651,35 @@ export function upgradePrivateRecoveryPayload(payload: unknown): PrivateRecovery
         collector_piece_privacy: [],
         collector_consent_history: [],
       } : {}),
-      collector_claim_ordinals: [...payload.tables.artwork_lineage_events]
-        .filter((row) => row.event_type === 'first_bound')
-        .sort((left, right) => String(left.event_at).localeCompare(String(right.event_at))
-          || String(left.event_hash).localeCompare(String(right.event_hash))
-          || String(left.keeper_piece_id).localeCompare(String(right.keeper_piece_id)))
-        .map((row, index) => ({
-          keeper_piece_id: row.keeper_piece_id,
-          first_bound_event_id: row.id,
-          claim_ordinal: index + 1,
-        }))
-        .sort((left, right) => String(left.keeper_piece_id)
-          .localeCompare(String(right.keeper_piece_id))),
-      collector_dreams: [],
-      collector_dream_markers: [],
-      collector_dream_mutations: [],
-      collector_dream_rituals: [],
-      collector_letters: [],
+      ...(payload.schemaVersion < 5 ? {
+        collector_claim_ordinals: [...payload.tables.artwork_lineage_events]
+          .filter((row) => row.event_type === 'first_bound')
+          .sort((left, right) => String(left.event_at).localeCompare(String(right.event_at))
+            || String(left.event_hash).localeCompare(String(right.event_hash))
+            || String(left.keeper_piece_id).localeCompare(String(right.keeper_piece_id)))
+          .map((row, index) => ({
+            keeper_piece_id: row.keeper_piece_id,
+            first_bound_event_id: row.id,
+            claim_ordinal: index + 1,
+          }))
+          .sort((left, right) => String(left.keeper_piece_id)
+            .localeCompare(String(right.keeper_piece_id))),
+        collector_dreams: [],
+        collector_dream_markers: [],
+        collector_dream_mutations: [],
+        collector_dream_rituals: [],
+        collector_letters: [],
+      } : {}),
+      artist_reconnection_cases: [],
+      artist_artwork_records: [],
+      artist_verified_sales: [],
+      artist_reconnection_events: [],
+      artist_artwork_record_events: [],
+      artist_verified_sale_events: [],
+      artist_verified_sale_items: [],
+      artist_artwork_media: [],
+      artist_artwork_ledger_entries: [],
+      artist_artwork_price_entries: [],
     } as unknown as Record<RegistryRecoveryTable, RecoveryRow[]>,
   };
 }
@@ -600,7 +700,7 @@ function validateArchiveShape(value: unknown): asserts value is SupportedPrivate
     || !hasExactKeys(value.manifest, ['schemaVersion', 'exportedAt', 'payloadSha256', 'tables'])) {
     throw new Error('recovery_archive_shape');
   }
-  if ((![1, 2, 3, 4, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
+  if ((![1, 2, 3, 4, 5, PRIVATE_RECOVERY_SCHEMA_VERSION].includes(value.manifest.schemaVersion as number))
     || typeof value.manifest.exportedAt !== 'string'
     || typeof value.manifest.payloadSha256 !== 'string'
     || !/^[a-f0-9]{64}$/.test(value.manifest.payloadSha256)
@@ -860,6 +960,106 @@ function insertStatement(table: RegistryRecoveryTable, row: RecoveryRow): string
   if (!columns.length) throw new Error(`recovery_payload_columns_${table}`);
   return `INSERT INTO ${sqlIdentifier(table)} (${columns.map(sqlIdentifier).join(', ')}) VALUES (`
     + `${columns.map((column) => sqlValue(row[column])).join(', ')});`;
+}
+
+function parseArtworkRecordSnapshot(value: RecoveryRow[string]) {
+  let snapshot: Record<string, unknown>;
+  try {
+    snapshot = JSON.parse(String(value));
+  } catch {
+    throw new Error('recovery_artwork_record_event_invalid');
+  }
+  if (!hasExactKeys(snapshot, [
+    'artworkId', 'editionJson', 'keeperPieceId', 'identificationStatus', 'recordVersion',
+  ]) || !Number.isSafeInteger(snapshot.recordVersion)) {
+    throw new Error('recovery_artwork_record_event_invalid');
+  }
+  return snapshot;
+}
+
+function artworkRecordRestoreStatements(payload: PrivateRecoveryPayload): string[] {
+  const eventsByRecord = new Map<string | number, RecoveryRow[]>();
+  for (const event of payload.tables.artist_artwork_record_events) {
+    const events = eventsByRecord.get(event.artwork_record_id) ?? [];
+    events.push(event);
+    eventsByRecord.set(event.artwork_record_id, events);
+  }
+  const statements: string[] = [];
+  for (const current of payload.tables.artist_artwork_records) {
+    const events = [...(eventsByRecord.get(current.id) ?? [])]
+      .sort((left, right) => Number(left.resulting_version) - Number(right.resulting_version));
+    if (!events.length) {
+      if (current.record_version !== 1 || current.last_event_id !== null) {
+        throw new Error('recovery_artwork_record_event_invalid');
+      }
+      statements.push(insertStatement('artist_artwork_records', current));
+      continue;
+    }
+
+    const firstBefore = parseArtworkRecordSnapshot(events[0].before_json);
+    if (firstBefore.recordVersion !== 1) {
+      throw new Error('recovery_artwork_record_event_invalid');
+    }
+    const initialRow: RecoveryRow = {
+      id: current.id,
+      artwork_id: firstBefore.artworkId as string | null,
+      edition_json: firstBefore.editionJson === null
+        ? null : JSON.stringify(firstBefore.editionJson),
+      keeper_piece_id: firstBefore.keeperPieceId as string | null,
+      identification_status: String(firstBefore.identificationStatus),
+      record_version: 1,
+      last_event_id: null,
+      created_by_user_id: current.created_by_user_id,
+      created_at: current.created_at,
+      updated_at: current.created_at,
+    };
+    statements.push(insertStatement('artist_artwork_records', initialRow));
+
+    let prior = firstBefore;
+    events.forEach((event, index) => {
+      const before = parseArtworkRecordSnapshot(event.before_json);
+      const after = parseArtworkRecordSnapshot(event.after_json);
+      if (canonicalRecoveryJson(before) !== canonicalRecoveryJson(prior)
+        || event.resulting_version !== after.recordVersion
+        || Number(event.resulting_version) !== Number(before.recordVersion) + 1) {
+        throw new Error('recovery_artwork_record_event_invalid');
+      }
+      statements.push(insertStatement('artist_artwork_record_events', event));
+      const isFinal = index === events.length - 1;
+      const artworkId = isFinal ? current.artwork_id : after.artworkId as string | null;
+      const editionJson = isFinal ? current.edition_json
+        : after.editionJson === null ? null : JSON.stringify(after.editionJson);
+      const keeperPieceId = isFinal ? current.keeper_piece_id : after.keeperPieceId as string | null;
+      const identificationStatus = isFinal
+        ? current.identification_status : String(after.identificationStatus);
+      statements.push(
+        `UPDATE artist_artwork_records SET `
+        + `artwork_id = ${sqlValue(artworkId)}, edition_json = ${sqlValue(editionJson)}, `
+        + `keeper_piece_id = ${sqlValue(keeperPieceId)}, `
+        + `identification_status = ${sqlValue(identificationStatus)}, `
+        + `record_version = ${sqlValue(event.resulting_version)}, `
+        + `last_event_id = ${sqlValue(event.id)}, updated_at = ${sqlValue(event.created_at)} `
+        + `WHERE id = ${sqlValue(current.id)};`,
+      );
+      prior = after;
+    });
+    const finalAfter = prior;
+    const finalEdition = finalAfter.editionJson === null
+      ? null : JSON.stringify(finalAfter.editionJson);
+    if (current.record_version !== finalAfter.recordVersion
+      || current.last_event_id !== events.at(-1)?.id
+      || current.updated_at !== events.at(-1)?.created_at
+      || current.artwork_id !== finalAfter.artworkId
+      || current.keeper_piece_id !== finalAfter.keeperPieceId
+      || current.identification_status !== finalAfter.identificationStatus
+      || (current.edition_json === null ? finalEdition !== null
+        : finalEdition === null
+          || canonicalRecoveryJson(JSON.parse(String(current.edition_json)))
+            !== canonicalRecoveryJson(JSON.parse(String(finalEdition))))) {
+      throw new Error('recovery_artwork_record_event_invalid');
+    }
+  }
+  return statements;
 }
 
 function certificateRestoreStatements(payload: PrivateRecoveryPayload): string[] {
@@ -1271,7 +1471,7 @@ END;`;
  * SQL runner that continues after the first error. A final expected-count
  * trigger rolls back the whole transaction if any insert was skipped or failed.
  */
-export function buildRegistryRestoreSql(
+function buildRegistryRestoreSqlInternal(
   sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
 ): string {
   const payload = upgradePrivateRecoveryPayload(sourcePayload);
@@ -1375,6 +1575,21 @@ export function buildRegistryRestoreSql(
   statements.push(DREAM_RUNTIME_UPDATE_GUARD_SQL);
   statements.push(DREAM_RITUAL_FULFILL_TRIGGER_SQL);
   insertTables(['collector_letters']);
+  insertTables(['artist_reconnection_cases']);
+  statements.push(...artworkRecordRestoreStatements(payload));
+  insertTables([
+    'artist_verified_sales', 'artist_reconnection_events',
+  ]);
+  for (const event of [...payload.tables.artist_verified_sale_events]
+    .sort((left, right) => String(left.sale_id).localeCompare(String(right.sale_id))
+      || Number(left.sequence) - Number(right.sequence)
+      || String(left.id).localeCompare(String(right.id)))) {
+    statements.push(insertStatement('artist_verified_sale_events', event));
+  }
+  insertTables([
+    'artist_verified_sale_items', 'artist_artwork_media',
+    'artist_artwork_ledger_entries', 'artist_artwork_price_entries',
+  ]);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);
@@ -1385,4 +1600,119 @@ export function buildRegistryRestoreSql(
   statements.push(`DROP TABLE ${completionTable};`);
   statements.push(`DROP TABLE ${guardTable};`);
   return `${statements.join('\n')}\n`;
+}
+
+/**
+ * Synchronous restore generation remains available for archives without media.
+ * Archives that reference R2 objects must pass the asynchronous media preflight.
+ */
+export function buildRegistryRestoreSql(
+  sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
+): string {
+  const payload = upgradePrivateRecoveryPayload(sourcePayload);
+  if (payload.tables.artist_artwork_media.length) {
+    throw new Error('registry_recovery_media_verification_required');
+  }
+  return buildRegistryRestoreSqlInternal(payload);
+}
+
+type RecoveryMediaBucket = {
+  get(reference: string): Promise<unknown>;
+};
+
+function recoveryMediaContentType(object: Record<string, unknown>): string | null {
+  const metadata = object.httpMetadata;
+  if (isPlainObject(metadata) && typeof metadata.contentType === 'string') {
+    return metadata.contentType;
+  }
+  return typeof object.contentType === 'string' ? object.contentType : null;
+}
+
+async function readRecoveryMediaBytes(
+  object: Record<string, unknown>,
+  expectedLength: number,
+): Promise<Uint8Array> {
+  const body = object.body as {
+    getReader?: () => { read(): Promise<{ done: boolean; value?: Uint8Array }> };
+  } | undefined;
+  if (body && typeof body.getReader === 'function') {
+    const reader = body.getReader();
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    while (true) {
+      const result = await reader.read();
+      if (result.done) break;
+      if (!(result.value instanceof Uint8Array)) {
+        throw new Error('registry_recovery_media_unreadable');
+      }
+      length += result.value.byteLength;
+      if (length > expectedLength) {
+        throw new Error('registry_recovery_media_length_mismatch');
+      }
+      chunks.push(result.value);
+    }
+    if (length !== expectedLength) throw new Error('registry_recovery_media_length_mismatch');
+    const bytes = new Uint8Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return bytes;
+  }
+  if (typeof object.arrayBuffer === 'function') {
+    const bytes = new Uint8Array(await (object.arrayBuffer as () => Promise<ArrayBuffer>)());
+    if (bytes.byteLength !== expectedLength) {
+      throw new Error('registry_recovery_media_length_mismatch');
+    }
+    return bytes;
+  }
+  throw new Error('registry_recovery_media_unreadable');
+}
+
+async function verifyRecoveryMediaObjects(
+  payload: PrivateRecoveryPayload,
+  mediaBucket: RecoveryMediaBucket | undefined,
+) {
+  if (!payload.tables.artist_artwork_media.length) return;
+  if (!mediaBucket || typeof mediaBucket.get !== 'function') {
+    throw new Error('registry_recovery_media_bucket_required');
+  }
+  for (const media of payload.tables.artist_artwork_media) {
+    let object: unknown;
+    try {
+      object = await mediaBucket.get(String(media.storage_reference));
+    } catch {
+      throw new Error('registry_recovery_media_unreadable');
+    }
+    if (!isPlainObject(object)) throw new Error('registry_recovery_media_missing');
+    if (typeof object.size === 'number' && object.size !== media.byte_length) {
+      throw new Error('registry_recovery_media_length_mismatch');
+    }
+    if (recoveryMediaContentType(object) !== media.content_type) {
+      throw new Error('registry_recovery_media_content_type_mismatch');
+    }
+    let bytes: Uint8Array;
+    try {
+      bytes = await readRecoveryMediaBytes(object, Number(media.byte_length));
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('registry_recovery_media_')) {
+        throw error;
+      }
+      throw new Error('registry_recovery_media_unreadable');
+    }
+    if (await sha256(bytes) !== media.sha256) {
+      throw new Error('registry_recovery_media_digest_mismatch');
+    }
+  }
+}
+
+/** Verify every archived private media reference before any restore SQL exists. */
+export async function buildVerifiedRegistryRestoreSql(
+  sourcePayload: PrivateRecoveryPayload | LegacyPrivateRecoveryPayload,
+  options: { mediaBucket?: RecoveryMediaBucket } = {},
+): Promise<string> {
+  const payload = upgradePrivateRecoveryPayload(sourcePayload);
+  await verifyRecoveryMediaObjects(payload, options.mediaBucket);
+  return buildRegistryRestoreSqlInternal(payload);
 }

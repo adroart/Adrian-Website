@@ -13,6 +13,7 @@ import {
 } from '../functions/api/_lib/registryRecoveryExport.js';
 import {
   buildRegistryRestoreSql,
+  buildVerifiedRegistryRestoreSql,
   canonicalRecoveryJson,
   decryptPrivateRecoveryExport,
   PRIVATE_RECOVERY_ALGORITHM,
@@ -24,6 +25,8 @@ import {
   REGISTRY_RECOVERY_V2_TABLES,
   REGISTRY_RECOVERY_V3_TABLES,
   REGISTRY_RECOVERY_V4_TABLES,
+  REGISTRY_RECOVERY_V5_TABLES,
+  REGISTRY_RECOVERY_COLUMNS,
 } from '../utils/registryRecoveryArchive';
 
 const readMigration = (name: string) =>
@@ -57,7 +60,7 @@ const phase1Migrations = `${readMigration('025_artwork_registration.sql')}
 const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 \n${readMigration('030_collector_field.sql')}\n${readMigration('031_collector_letters.sql')}`;
 const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
-\n${phase2Migrations}`;
+\n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -77,7 +80,8 @@ async function encryptLegacyPayload(payload: any) {
     ? REGISTRY_RECOVERY_V1_TABLES
     : payload.schemaVersion === 2 ? REGISTRY_RECOVERY_V2_TABLES
       : payload.schemaVersion === 3 ? REGISTRY_RECOVERY_V3_TABLES
-        : REGISTRY_RECOVERY_V4_TABLES;
+        : payload.schemaVersion === 4 ? REGISTRY_RECOVERY_V4_TABLES
+          : REGISTRY_RECOVERY_V5_TABLES;
   const manifestTables = await Promise.all(tableNames.map(async (name) => ({
     name,
     count: payload.tables[name].length,
@@ -583,6 +587,170 @@ function seedCompleteRegistry(database: DatabaseSync) {
   `);
 }
 
+const phase3Actors = [
+  ['case-creator', 'Case Creator'],
+  ['record-creator', 'Record Creator'],
+  ['sale-verifier', 'Sale Verifier'],
+  ['reconnection-actor', 'Reconnection Actor'],
+  ['record-event-actor', 'Record Event Actor'],
+  ['sale-event-actor', 'Sale Event Actor'],
+  ['media-uploader', 'Media Uploader'],
+  ['ledger-creator', 'Ledger Creator'],
+] as const;
+
+function seedArtistSalesRecovery(database: DatabaseSync) {
+  for (const [id, name] of phase3Actors) {
+    database.prepare(
+      `INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+       VALUES (?, ?, ?, 1, 1, 1)`,
+    ).run(id, name, `${id}@example.com`);
+    database.prepare(
+      `INSERT INTO account
+        (id, userId, accountId, providerId, password, createdAt, updatedAt)
+       VALUES (?, ?, ?, 'credential', ?, 1, 1)`,
+    ).run(`acct-${id}`, id, id, `${id}-password-hash`);
+  }
+
+  const digest = (value: string) => value.repeat(64).slice(0, 64);
+  const saleBase = {
+    reconnectionCaseId: 'reconnect-old-sale', occurrencePrecision: 'year',
+    occurredOn: '2017', buyerEmail: 'collector@example.com', currency: 'USD',
+    totalMinor: 600000, privateReference: 'Studio notebook 2017',
+    privateNotes: 'The first remembered note.', verifiedByUserId: 'sale-verifier',
+    recordedAt: exportedAt,
+  };
+  const saleCorrectionOne = { ...saleBase, privateNotes: 'Corrected from the studio notebook.' };
+  const saleCorrectionTwo = { ...saleCorrectionOne, totalMinor: 610000 };
+  database.exec(`
+    INSERT INTO artist_reconnection_cases
+      (id, recipient_email, recipient_name, private_context, status,
+       created_by_user_id, idempotency_key, request_digest, created_at, updated_at)
+    VALUES
+      ('reconnect-old-sale', 'collector@example.com', 'Historical Collector',
+       'Email-only reconnection without a complete artwork record.', 'open',
+       'case-creator', 'reconnect-old-sale-create', '${digest('1')}',
+       '${exportedAt}', '${exportedAt}');
+
+    INSERT INTO artist_artwork_records
+      (id, artwork_id, edition_json, keeper_piece_id, identification_status,
+       created_by_user_id, created_at, updated_at)
+    VALUES
+      ('record-linked', 'UL-101', '{"kind":"unique","number":null,"size":null}',
+       'kp-invited', 'identity_linked', 'record-creator', '${exportedAt}', '${exportedAt}'),
+      ('record-identified', 'UL-100', '{"kind":"unique","number":null,"size":null}',
+       NULL, 'identified', 'record-creator', '${exportedAt}', '${exportedAt}'),
+      ('record-corrected', NULL, NULL, NULL, 'unresolved',
+       'record-creator', '${exportedAt}', '${exportedAt}');
+
+    BEGIN IMMEDIATE;
+    INSERT INTO artist_artwork_record_events
+      (id, artwork_record_id, action, before_json, after_json, resulting_version,
+       actor_user_id, idempotency_key, request_digest, created_at)
+    VALUES
+      ('record-event-identify', 'record-corrected', 'identified',
+       '{"artworkId":null,"editionJson":null,"keeperPieceId":null,"identificationStatus":"unresolved","recordVersion":1}',
+       '{"artworkId":"UL-102","editionJson":{"kind":"unique","number":null,"size":null},"keeperPieceId":null,"identificationStatus":"identified","recordVersion":2}',
+       2, 'record-event-actor', 'record-corrected-identify', '${digest('2')}',
+       '2026-08-01T03:04:05.000Z');
+    UPDATE artist_artwork_records
+       SET artwork_id = 'UL-102',
+           edition_json = '{"kind":"unique","number":null,"size":null}',
+           identification_status = 'identified', record_version = 2,
+           last_event_id = 'record-event-identify', updated_at = '2026-08-01T03:04:05.000Z'
+     WHERE id = 'record-corrected';
+    COMMIT;
+
+    INSERT INTO artist_verified_sales
+      (id, reconnection_case_id, occurrence_precision, occurred_on, buyer_email,
+       currency, total_minor, private_reference, private_notes, verified_by_user_id,
+       idempotency_key, request_digest, recorded_at)
+    VALUES
+      ('sale-three-artworks', 'reconnect-old-sale', 'year', '2017',
+       'collector@example.com', 'USD', 600000, 'Studio notebook 2017',
+       'The first remembered note.', 'sale-verifier', 'sale-three-artworks-create',
+       '${digest('3')}', '${exportedAt}');
+
+    INSERT INTO artist_verified_sale_items
+      (id, sale_id, artwork_record_id, amount_minor, currency, created_at)
+    VALUES
+      ('sale-item-linked', 'sale-three-artworks', 'record-linked', 100000, 'USD', '${exportedAt}'),
+      ('sale-item-identified', 'sale-three-artworks', 'record-identified', 200000, 'USD', '${exportedAt}'),
+      ('sale-item-corrected', 'sale-three-artworks', 'record-corrected', NULL, NULL, '${exportedAt}');
+
+    INSERT INTO artist_artwork_price_entries
+      (id, artwork_record_id, sale_item_id, amount_minor, currency, occurred_on,
+       occurrence_precision, recorded_at)
+    VALUES
+      ('price-linked', 'record-linked', 'sale-item-linked', 100000, 'USD', '2017', 'year', '${exportedAt}'),
+      ('price-identified', 'record-identified', 'sale-item-identified', 200000, 'USD', '2017', 'year', '${exportedAt}');
+
+    INSERT INTO artist_artwork_media
+      (id, artwork_record_id, media_role, storage_reference, sha256, content_type,
+       byte_length, uploaded_by_user_id, created_at)
+    VALUES
+      ('media-evidence', 'record-linked', 'identification_evidence',
+       'artist-ledger/record-linked/evidence.webp',
+       'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9',
+       'image/webp', 11,
+       'media-uploader', '${exportedAt}'),
+      ('media-certificate', 'record-linked', 'certificate_image',
+       'artist-ledger/record-linked/certificate.jpg',
+       '762d1fd3665f154d08cfd678ab966ab398415ba755f2ddb884fe4abd3bf57726',
+       'image/jpeg', 13,
+       'media-uploader', '${exportedAt}');
+
+    INSERT INTO artist_artwork_ledger_entries
+      (id, artwork_record_id, sale_id, message, media_id, created_by_user_id,
+       idempotency_key, request_digest, created_at)
+    VALUES
+      ('ledger-shared-linked', 'record-linked', 'sale-three-artworks',
+       'A message shared across the sale.', NULL, 'ledger-creator',
+       'ledger-shared-linked', '${digest('4')}', '${exportedAt}'),
+      ('ledger-shared-identified', 'record-identified', 'sale-three-artworks',
+       'A message shared across the sale.', NULL, 'ledger-creator',
+       'ledger-shared-identified', '${digest('5')}', '${exportedAt}'),
+      ('ledger-shared-corrected', 'record-corrected', 'sale-three-artworks',
+       'A message shared across the sale.', NULL, 'ledger-creator',
+       'ledger-shared-corrected', '${digest('6')}', '${exportedAt}'),
+      ('ledger-specific', 'record-linked', 'sale-three-artworks',
+       'A message for this artwork only.', 'media-certificate', 'ledger-creator',
+       'ledger-specific', '${digest('7')}', '2026-08-02T03:04:05.000Z');
+
+    INSERT INTO artist_reconnection_events
+      (id, reconnection_case_id, event_type, private_note, artwork_record_id,
+       actor_user_id, idempotency_key, request_digest, created_at)
+    VALUES
+      ('reconnect-event-note', 'reconnect-old-sale', 'note_added',
+       'Collector replied with a photograph.', NULL, 'reconnection-actor',
+       'reconnect-note', '${digest('8')}', '${exportedAt}'),
+      ('reconnect-event-artwork', 'reconnect-old-sale', 'artwork_added',
+       NULL, 'record-linked', 'reconnection-actor', 'reconnect-artwork',
+       '${digest('9')}', '2026-08-01T03:04:05.000Z');
+  `);
+  database.prepare(
+    `INSERT INTO artist_verified_sale_events
+      (id, sale_id, sequence, event_type, before_json, after_json, reason,
+       actor_user_id, idempotency_key, request_digest, created_at)
+     VALUES (?, 'sale-three-artworks', ?, 'corrected', ?, ?, ?,
+       'sale-event-actor', ?, ?, ?)`,
+  ).run(
+    'z-sale-correction-one', 1, JSON.stringify(saleBase), JSON.stringify(saleCorrectionOne),
+    'Studio notebook clarified the note.', 'sale-correction-one', digest('c'),
+    '2026-08-03T03:04:05.000Z',
+  );
+  database.prepare(
+    `INSERT INTO artist_verified_sale_events
+      (id, sale_id, sequence, event_type, before_json, after_json, reason,
+       actor_user_id, idempotency_key, request_digest, created_at)
+     VALUES (?, 'sale-three-artworks', ?, 'corrected', ?, ?, ?,
+       'sale-event-actor', ?, ?, ?)`,
+  ).run(
+    'a-sale-correction-two', 2, JSON.stringify(saleCorrectionOne), JSON.stringify(saleCorrectionTwo),
+    'The total included delivery.', 'sale-correction-two', digest('d'),
+    '2026-08-04T03:04:05.000Z',
+  );
+}
+
 function appendSecondTransfer(database: DatabaseSync) {
   const secondTransferAt = '2026-08-01T03:04:05.000Z';
   database.exec(`
@@ -630,6 +798,39 @@ function appendSecondTransfer(database: DatabaseSync) {
 
 function tableCount(database: DatabaseSync, table: string) {
   return Number((database.prepare(`SELECT COUNT(*) AS count FROM "${table}"`).get() as any).count);
+}
+
+function createMediaBackup(overrides: Record<string, {
+  body?: string;
+  contentType?: string;
+}> = {}) {
+  const defaults = {
+    'artist-ledger/record-linked/evidence.webp': {
+      body: 'hello world', contentType: 'image/webp',
+    },
+    'artist-ledger/record-linked/certificate.jpg': {
+      body: 'certificate!!', contentType: 'image/jpeg',
+    },
+  };
+  const objects = { ...defaults, ...overrides };
+  return {
+    async get(key: string) {
+      const object = objects[key as keyof typeof objects];
+      if (!object || object.body === undefined) return null;
+      const bytes = new TextEncoder().encode(object.body);
+      return {
+        size: bytes.byteLength,
+        httpMetadata: { contentType: object.contentType },
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(bytes.slice(0, Math.ceil(bytes.length / 2)));
+            controller.enqueue(bytes.slice(Math.ceil(bytes.length / 2)));
+            controller.close();
+          },
+        }),
+      };
+    },
+  };
 }
 
 const v4KeeperColumns = new Set([
@@ -696,8 +897,53 @@ describe('registry-only legacy fulfillment migration', () => {
 });
 
 describe('private registry recovery export', () => {
+  it('freezes the schema-v5 manifest and adds all private sale tables in schema v6', () => {
+    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 6);
+    assert.deepEqual(REGISTRY_RECOVERY_V5_TABLES, [
+      'user', 'account', 'users', 'profiles', 'registry_artworks',
+      'registry_catalog_membership', 'keeper_pieces', 'artwork_claim_requests',
+      'artwork_transfer_intents', 'artwork_transfer_parties', 'atlas_source_cities',
+      'atlas_source_chains', 'atlas_source_chain_events', 'keeper_intentions',
+      'piece_fulfillments', 'artwork_acquisitions', 'artwork_provenance_entries',
+      'artwork_claim_evidence', 'artwork_lineage_events', 'collector_claim_ordinals',
+      'collector_dreams', 'collector_dream_markers', 'collector_dream_mutations',
+      'collector_dream_rituals', 'collector_letters', 'ownership_code_audit',
+      'registry_maintenance_events', 'registry_recovery_qualifications',
+      'artwork_identity_recovery_qualifications', 'artwork_invitations',
+      'artwork_invitation_redemptions', 'artwork_invitation_redemption_completions',
+      'certificate_templates', 'certificate_assignment_operations',
+      'certificate_artwork_assignments', 'certificate_artwork_overrides',
+      'certificate_override_history', 'collector_curated_cities',
+      'collector_person_privacy', 'collector_piece_privacy',
+      'collector_consent_history', 'artwork_transfer_receipts',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_TABLES.slice(-10), [
+      'artist_reconnection_cases',
+      'artist_artwork_records',
+      'artist_verified_sales',
+      'artist_reconnection_events',
+      'artist_artwork_record_events',
+      'artist_verified_sale_events',
+      'artist_verified_sale_items',
+      'artist_artwork_media',
+      'artist_artwork_ledger_entries',
+      'artist_artwork_price_entries',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artist_verified_sale_events, [
+      'id', 'sale_id', 'sequence', 'event_type', 'before_json', 'after_json', 'reason',
+      'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artist_artwork_media, [
+      'id', 'artwork_record_id', 'media_role', 'storage_reference', 'sha256',
+      'content_type', 'byte_length', 'uploaded_by_user_id', 'created_at',
+    ]);
+    assert.deepEqual(REGISTRY_RECOVERY_COLUMNS.artist_artwork_price_entries, [
+      'id', 'artwork_record_id', 'sale_item_id', 'amount_minor', 'currency',
+      'occurred_on', 'occurrence_precision', 'recorded_at',
+    ]);
+  });
+
   it('keeps the schema-v4 manifest immutable and adds the Phase 2 recovery boundary in v5', () => {
-    assert.equal(PRIVATE_RECOVERY_SCHEMA_VERSION, 5);
     assert.deepEqual(REGISTRY_RECOVERY_V4_TABLES, [
       'user', 'account', 'users', 'profiles', 'registry_artworks',
       'registry_catalog_membership', 'keeper_pieces', 'artwork_claim_requests',
@@ -749,6 +995,20 @@ describe('private registry recovery export', () => {
     );
   });
 
+  it('archives every schema-v6 sale column exactly as migration 032 defines it', () => {
+    const database = new DatabaseSync(':memory:');
+    try {
+      database.exec('PRAGMA foreign_keys = ON;');
+      database.exec(registryMigrations);
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-10)) {
+        assert.deepEqual(database.prepare(`PRAGMA table_info("${table}")`).all()
+          .map((row: any) => row.name), REGISTRY_RECOVERY_COLUMNS[table], table);
+      }
+    } finally {
+      database.close();
+    }
+  });
+
   it('reads the complete boundary in one database batch snapshot', async () => {
     let batchCalls = 0;
     const DB = {
@@ -771,6 +1031,77 @@ describe('private registry recovery export', () => {
     assert.equal(batchCalls, 1);
     const payload = await decryptPrivateRecoveryExport(archive, { key: exportKey, keyId: exportKeyId });
     assert.equal(Object.values(payload.tables).every((rows) => rows.length === 0), true);
+  });
+
+  it('exports a complete verified sale boundary with exact actor closure and private media metadata', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      seedCompleteRegistry(database);
+      seedArtistSalesRecovery(database);
+
+      const archive = await buildPrivateRecoveryExport({
+        ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      assert.deepEqual(payload.tables.artist_verified_sale_items.map((row: any) => row.id), [
+        'sale-item-corrected', 'sale-item-identified', 'sale-item-linked',
+      ]);
+      assert.equal(payload.tables.artist_verified_sale_events.length, 2);
+      assert.deepEqual(payload.tables.artist_verified_sale_events.map((row: any) => row.reason), [
+        'The total included delivery.', 'Studio notebook clarified the note.',
+      ]);
+      assert.deepEqual(payload.tables.artist_artwork_media.map((row: any) => ({
+        storageReference: row.storage_reference,
+        sha256: row.sha256,
+        contentType: row.content_type,
+        byteLength: row.byte_length,
+        role: row.media_role,
+      })), [{
+        storageReference: 'artist-ledger/record-linked/certificate.jpg',
+        sha256: '762d1fd3665f154d08cfd678ab966ab398415ba755f2ddb884fe4abd3bf57726',
+        contentType: 'image/jpeg', byteLength: 13,
+        role: 'certificate_image',
+      }, {
+        storageReference: 'artist-ledger/record-linked/evidence.webp',
+        sha256: 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9',
+        contentType: 'image/webp', byteLength: 11,
+        role: 'identification_evidence',
+      }]);
+      assert.deepEqual(payload.tables.user
+        .filter((row: any) => phase3Actors.some(([id]) => id === row.id))
+        .map((row: any) => row.id), phase3Actors.map(([id]) => id).sort());
+      assert.equal(payload.tables.user.some((row: any) => row.id === 'unrelated-user'), false);
+      assert.equal(JSON.stringify(archive).includes('artist-ledger/record-linked'), false);
+    } finally {
+      database.close();
+    }
+  });
+
+  it('fails closed when a verified-sale actor is missing from Better Auth', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(registryMigrations);
+      seedCompleteRegistry(database);
+      seedArtistSalesRecovery(database);
+      database.exec('PRAGMA foreign_keys = OFF;');
+      database.exec(`DELETE FROM account WHERE userId = 'media-uploader';
+        DELETE FROM user WHERE id = 'media-uploader';`);
+      database.exec('PRAGMA foreign_keys = ON;');
+
+      await assert.rejects(() => buildPrivateRecoveryExport({
+        ...env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt }), /registry_recovery_missing_referenced_user/);
+    } finally {
+      database.close();
+    }
   });
 
   it('encrypts every registry table with counts, digests, deterministic rows, and only referenced auth accounts', async () => {
@@ -1134,6 +1465,44 @@ describe('clean-only private registry restore', () => {
     }
   });
 
+  it('decrypts schema v5 without changing any Phase 2 row or digest input', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      const currentArchive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const current = await decryptPrivateRecoveryExport(currentArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const v5Payload = {
+        kind: PRIVATE_RECOVERY_PAYLOAD_KIND,
+        schemaVersion: 5,
+        exportedAt,
+        tables: Object.fromEntries(REGISTRY_RECOVERY_V5_TABLES.map((name) => [
+          name, current.tables[name],
+        ])),
+      };
+      const archive = await encryptLegacyPayload(v5Payload);
+      const upgraded = await decryptPrivateRecoveryExport(archive as any, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      for (const table of REGISTRY_RECOVERY_V5_TABLES) {
+        assert.equal(canonicalRecoveryJson(upgraded.tables[table]),
+          canonicalRecoveryJson(v5Payload.tables[table]), table);
+      }
+      for (const table of REGISTRY_RECOVERY_TABLES.slice(-10)) {
+        assert.deepEqual(upgraded.tables[table], [], table);
+      }
+    } finally {
+      source.database.close();
+    }
+  });
+
   it('restores the exact grandfathered registration shape created by migration 025', async () => {
     const source = createSqliteD1();
     const target = createSqliteD1();
@@ -1162,6 +1531,7 @@ describe('clean-only private registry restore', () => {
       `);
       source.database.exec(phase1Migrations);
       source.database.exec(phase2Migrations);
+      source.database.exec(readMigration('032_artist_verified_sales.sql'));
       target.database.exec(registryMigrations);
       assert.deepEqual({ ...source.database.prepare(
         `SELECT registration_status, identity_backup_status, identity_backup_reference
@@ -1335,6 +1705,122 @@ describe('clean-only private registry restore', () => {
     } finally {
       source.database.close();
       target.database.close();
+    }
+  });
+
+  it('preflights R2 and restores exact verified-sale rows while preserving live guards', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      assert.throws(() => buildRegistryRestoreSql(payload),
+        /registry_recovery_media_verification_required/);
+
+      const guardedTriggers = [
+        'artist_artwork_records_initial_version',
+        'artist_artwork_record_events_exact_snapshot',
+        'artist_artwork_records_guarded_update',
+        'artist_artwork_records_no_delete',
+      ];
+      const triggerSqlBefore = new Map(guardedTriggers.map((trigger) => [trigger,
+        String(target.database.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        ).get(trigger)?.sql).replace(/\s+/g, ' ').trim(),
+      ]));
+      const sql = await buildVerifiedRegistryRestoreSql(payload, {
+        mediaBucket: createMediaBackup(),
+      });
+      target.database.exec(sql);
+
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(tableCount(target.database, table), payload.tables[table].length, table);
+      }
+      assert.deepEqual(target.database.prepare(
+        `SELECT id, artwork_id, identification_status, record_version, last_event_id
+           FROM artist_artwork_records ORDER BY id`,
+      ).all().map((row: any) => ({ ...row })), payload.tables.artist_artwork_records.map(
+        ({ id, artwork_id, identification_status, record_version, last_event_id }: any) => ({
+          id, artwork_id, identification_status, record_version, last_event_id,
+        }),
+      ));
+      assert.equal(tableCount(target.database, 'artist_verified_sale_items'), 3);
+      assert.equal(tableCount(target.database, 'artist_artwork_price_entries'), 2);
+      assert.equal(tableCount(target.database, 'artist_verified_sale_events'), 2);
+      assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
+      for (const trigger of guardedTriggers) {
+        assert.equal(String(target.database.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ?",
+        ).get(trigger)?.sql).replace(/\s+/g, ' ').trim(), triggerSqlBefore.get(trigger), trigger);
+      }
+
+      const restoredArchive = await buildPrivateRecoveryExport({
+        ...target.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const restored = await decryptPrivateRecoveryExport(restoredArchive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      for (const table of REGISTRY_RECOVERY_TABLES) {
+        assert.equal(canonicalRecoveryJson(restored.tables[table]),
+          canonicalRecoveryJson(payload.tables[table]), table);
+      }
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('rejects missing or mismatched R2 media before producing restore SQL', async () => {
+    const source = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedArtistSalesRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+
+      await assert.rejects(() => buildVerifiedRegistryRestoreSql(payload, {
+        mediaBucket: createMediaBackup({
+          'artist-ledger/record-linked/evidence.webp': { body: undefined },
+        }),
+      }), /registry_recovery_media_missing/);
+      await assert.rejects(() => buildVerifiedRegistryRestoreSql(payload, {
+        mediaBucket: createMediaBackup({
+          'artist-ledger/record-linked/evidence.webp': {
+            body: 'HELLO WORLD', contentType: 'image/webp',
+          },
+        }),
+      }), /registry_recovery_media_digest_mismatch/);
+      await assert.rejects(() => buildVerifiedRegistryRestoreSql(payload, {
+        mediaBucket: createMediaBackup({
+          'artist-ledger/record-linked/evidence.webp': {
+            body: 'hello world', contentType: 'image/png',
+          },
+        }),
+      }), /registry_recovery_media_content_type_mismatch/);
+      await assert.rejects(() => buildVerifiedRegistryRestoreSql(payload, {
+        mediaBucket: { async get() { throw new Error('R2 unavailable'); } },
+      }), /registry_recovery_media_unreadable/);
+    } finally {
+      source.database.close();
     }
   });
 
