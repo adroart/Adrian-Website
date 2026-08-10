@@ -233,8 +233,11 @@ function mediaBucket(options: {
   missingReadBack?: boolean;
   mutateStored?: (stored: FakeMediaObject, key: string, putNumber: number) => void;
   omitBody?: boolean;
+  beforePut?: (putNumber: number) => Promise<void>;
+  failPutAt?: number;
   recordPutBytes?: boolean;
   streamChunkSize?: number;
+  trackLifecycles?: boolean;
 } = {}) {
   const objects = new Map<string, FakeMediaObject>();
   const puts: Array<{ key: string; bytes: Uint8Array; options: any }> = [];
@@ -243,6 +246,8 @@ function mediaBucket(options: {
     arrayBufferCalls: 0,
     cancelCalls: 0,
     cancelRequests: 0,
+    activeLifecycles: 0,
+    maxActiveLifecycles: 0,
     maxActiveChunkBytes: 0,
     maxChunkBytes: 0,
   };
@@ -254,6 +259,12 @@ function mediaBucket(options: {
     let offset = 0;
     let readNumber = 0;
     let outstanding = 0;
+    let lifecycleFinished = false;
+    const finishLifecycle = () => {
+      if (!options.trackLifecycles || lifecycleFinished) return;
+      lifecycleFinished = true;
+      streamMetrics.activeLifecycles -= 1;
+    };
     const releaseOutstanding = () => {
       streamMetrics.activeChunkBytes -= outstanding;
       outstanding = 0;
@@ -263,10 +274,12 @@ function mediaBucket(options: {
         releaseOutstanding();
         readNumber += 1;
         if (stored.streamFailureAtRead === readNumber) {
+          finishLifecycle();
           controller.error(stored.streamFailure ?? new Error('simulated stream failure'));
           return;
         }
         if (offset >= bytes.byteLength) {
+          finishLifecycle();
           controller.close();
           return;
         }
@@ -283,6 +296,7 @@ function mediaBucket(options: {
       },
       cancel() {
         releaseOutstanding();
+        finishLifecycle();
         streamMetrics.cancelCalls += 1;
       },
     }, { highWaterMark: 0 });
@@ -310,12 +324,27 @@ function mediaBucket(options: {
     bucket: {
       async put(key: string, value: Uint8Array, putOptions: any) {
         putNumber += 1;
+        const currentPut = putNumber;
+        if (options.trackLifecycles) {
+          streamMetrics.activeLifecycles += 1;
+          streamMetrics.maxActiveLifecycles = Math.max(
+            streamMetrics.maxActiveLifecycles, streamMetrics.activeLifecycles,
+          );
+        }
         puts.push({
           key,
           bytes: options.recordPutBytes === false ? new Uint8Array() : new Uint8Array(value),
           options: structuredClone(putOptions),
         });
-        if (options.putFailure) throw options.putFailure;
+        try {
+          await options.beforePut?.(currentPut);
+          if (options.putFailure || options.failPutAt === currentPut) {
+            throw options.putFailure ?? new Error('simulated put failure');
+          }
+        } catch (error) {
+          if (options.trackLifecycles) streamMetrics.activeLifecycles -= 1;
+          throw error;
+        }
         if (objects.has(key)) return null;
         const stored = {
           bytes: new Uint8Array(value),
@@ -442,33 +471,31 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(fake.streamMetrics.activeChunkBytes, 0);
   });
 
-  it('bounds the body-less arrayBuffer fallback with exact R2 size metadata', async () => {
-    const compatible = mediaBucket({ omitBody: true });
+  it('rejects a body-null object without invoking its hostile arrayBuffer method', async () => {
     const input = {
       artworkRecordId: 'record-compatibility',
       bytes: new Uint8Array([7, 8, 9]),
       contentType: 'image/jpeg',
     };
-    await storeArtworkLedgerMedia(compatible.bucket, input);
-    assert.equal(compatible.streamMetrics.arrayBufferCalls, 1);
-
-    let unboundedFallbackCalls = 0;
-    const missingSizeBucket = {
+    let hostileArrayBufferCalls = 0;
+    const bodyNullBucket = {
       async put(key: string) { return { key }; },
       async get(key: string) {
         return {
           key,
+          size: input.bytes.byteLength,
           httpMetadata: { contentType: input.contentType },
+          body: null,
           async arrayBuffer() {
-            unboundedFallbackCalls += 1;
+            hostileArrayBufferCalls += 1;
             return input.bytes.slice().buffer;
           },
         };
       },
     };
-    await assert.rejects(storeArtworkLedgerMedia(missingSizeBucket, input),
+    await assert.rejects(storeArtworkLedgerMedia(bodyNullBucket, input),
       mediaErrorCode('media_backup_failed'));
-    assert.equal(unboundedFallbackCalls, 0);
+    assert.equal(hostileArrayBufferCalls, 0);
   });
 
   it('snapshots Buffer and Uint8Array subclass inputs before the first await without polymorphic sharing', async () => {
@@ -565,7 +592,12 @@ describe('authenticity media immutable R2 storage', () => {
             key,
             size: stored.bytes.byteLength,
             httpMetadata: { contentType: stored.contentType },
-            arrayBuffer: async () => stored.bytes.slice().buffer,
+            body: new ReadableStream({
+              start(controller) {
+                controller.enqueue(stored.bytes.slice());
+                controller.close();
+              },
+            }),
           };
         },
       };
@@ -655,6 +687,70 @@ describe('authenticity media immutable R2 storage', () => {
     assert.ok(fake.streamMetrics.maxActiveChunkBytes <= 3 * chunkSize);
     assert.ok(fake.streamMetrics.maxActiveChunkBytes < bytes.byteLength / 10);
     assert.equal(fake.streamMetrics.activeChunkBytes, 0);
+  });
+
+  it('admits only one distinct maximum-size snapshot-through-readback lifecycle at a time', async () => {
+    let releaseFirstPut: (() => void) | undefined;
+    let firstPutEnteredResolve: (() => void) | undefined;
+    const firstPutEntered = new Promise<void>((resolve) => { firstPutEnteredResolve = resolve; });
+    const firstPutGate = new Promise<void>((resolve) => { releaseFirstPut = resolve; });
+    const fake = mediaBucket({
+      recordPutBytes: false,
+      streamChunkSize: 64 * 1024,
+      trackLifecycles: true,
+      async beforePut(putNumber) {
+        if (putNumber === 1) {
+          firstPutEnteredResolve?.();
+          await firstPutGate;
+        }
+      },
+    });
+    const inputs = [1, 2, 3].map((marker) => {
+      const bytes = new Uint8Array(15 * 1024 * 1024);
+      bytes[0] = marker;
+      bytes[bytes.byteLength - 1] = marker;
+      return {
+        artworkRecordId: `record-max-distinct-${marker}`,
+        bytes,
+        contentType: 'image/png',
+      };
+    });
+    const pending = inputs.map((input) => storeArtworkLedgerMedia(fake.bucket, input));
+    await firstPutEntered;
+    inputs[1].bytes[0] = 22;
+    inputs[2].bytes[inputs[2].bytes.byteLength - 1] = 33;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    releaseFirstPut?.();
+    const results = await Promise.all(pending);
+
+    assert.equal(fake.streamMetrics.maxActiveLifecycles, 1);
+    assert.equal(fake.streamMetrics.activeLifecycles, 0);
+    assert.equal(fake.streamMetrics.arrayBufferCalls, 0);
+    assert.equal(results[1].sha256, createHash('sha256').update(inputs[1].bytes).digest('hex'));
+    assert.equal(results[2].sha256, createHash('sha256').update(inputs[2].bytes).digest('hex'));
+    assert.equal(fake.objects.size, 3);
+  });
+
+  it('releases admission after the first operation fails so its queued follower completes', async () => {
+    const fake = mediaBucket({ failPutAt: 1, trackLifecycles: true });
+    const [first, second] = await Promise.allSettled([
+      storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-failing-admission',
+        bytes: new Uint8Array([1, 2, 3]),
+        contentType: 'image/jpeg',
+      }),
+      storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: 'record-after-failure',
+        bytes: new Uint8Array([4, 5, 6]),
+        contentType: 'image/jpeg',
+      }),
+    ]);
+    assert.equal(first.status, 'rejected');
+    assert.equal((first as PromiseRejectedResult).reason.code, 'media_backup_failed');
+    assert.equal(second.status, 'fulfilled');
+    assert.equal(fake.objects.size, 1);
+    assert.equal(fake.streamMetrics.maxActiveLifecycles, 1);
+    assert.equal(fake.streamMetrics.activeLifecycles, 0);
   });
 
   it('rejects truncated, extra, wrong, and throwing streams and cancels unfinished readers', async () => {

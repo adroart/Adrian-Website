@@ -14,6 +14,8 @@ const typedArrayByteLength = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTY
 const dataViewBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
 const dataViewByteOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
 const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
+let mediaAdmissionActive = false;
+const mediaAdmissionQueue = [];
 
 function codedError(code) {
   const error = new Error(code);
@@ -42,17 +44,26 @@ function viewDetails(value) {
   }
 }
 
+function binarySource(value) {
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (ArrayBuffer.isView(value)) {
+    const { buffer, byteOffset, byteLength } = viewDetails(value);
+    return new Uint8Array(buffer, byteOffset, byteLength);
+  }
+  throw new TypeError('media input is not binary');
+}
+
+function binaryByteLength(value) {
+  try {
+    return binarySource(value).byteLength;
+  } catch {
+    throw codedError('invalid_media_bytes');
+  }
+}
+
 function inputBytes(value) {
   try {
-    let source;
-    if (value instanceof ArrayBuffer) {
-      source = new Uint8Array(value);
-    } else if (ArrayBuffer.isView(value)) {
-      const { buffer, byteOffset, byteLength } = viewDetails(value);
-      source = new Uint8Array(buffer, byteOffset, byteLength);
-    } else {
-      throw codedError('invalid_media_bytes');
-    }
+    const source = binarySource(value);
     const snapshot = new Uint8Array(source.byteLength);
     Reflect.apply(Uint8Array.prototype.set, snapshot, [source]);
     return snapshot;
@@ -70,13 +81,19 @@ function readBackBytes(value) {
   throw new TypeError('unreadable media body');
 }
 
-function bytesEqual(left, right) {
-  if (left.byteLength !== right.byteLength) return false;
-  let difference = 0;
-  for (let index = 0; index < left.byteLength; index += 1) {
-    difference |= left[index] ^ right[index];
+async function withMediaAdmission(operation) {
+  if (mediaAdmissionActive) {
+    await new Promise((resolve) => mediaAdmissionQueue.push(resolve));
+  } else {
+    mediaAdmissionActive = true;
   }
-  return difference === 0;
+  try {
+    return await operation();
+  } finally {
+    const next = mediaAdmissionQueue.shift();
+    if (next) next();
+    else mediaAdmissionActive = false;
+  }
 }
 
 async function sha256Hex(bytes) {
@@ -164,15 +181,8 @@ async function verifyStoredObject(bucket, expected, conflict) {
       throw codedError(failureCode);
     }
     const body = stored.body;
-    if (body !== undefined && body !== null) {
-      await verifyStreamBody(body, expected.bytes, failureCode);
-      return;
-    }
-    if (typeof stored.arrayBuffer !== 'function') throw codedError(failureCode);
-    const actual = readBackBytes(await stored.arrayBuffer());
-    if (actual.byteLength !== expected.byteLength || !bytesEqual(actual, expected.bytes)) {
-      throw codedError(failureCode);
-    }
+    if (body === undefined || body === null) throw codedError(failureCode);
+    await verifyStreamBody(body, expected.bytes, failureCode);
   } catch (error) {
     if (isLocalCodedError(error)) throw error;
     throw codedError(failureCode);
@@ -188,32 +198,37 @@ export async function storeArtworkLedgerMedia(bucket, {
   }
   const extension = MEDIA_EXTENSIONS.get(contentType);
   if (!extension) throw codedError('unsupported_media_type');
-
-  const bytes = inputBytes(rawBytes);
-  if (bytes.byteLength < 1 || bytes.byteLength > MAX_MEDIA_BYTES) {
+  const byteLength = binaryByteLength(rawBytes);
+  if (byteLength < 1 || byteLength > MAX_MEDIA_BYTES) {
     throw codedError('invalid_media_size');
   }
 
-  const sha256 = await sha256Hex(bytes);
-  const reference = `artwork-ledger/${artworkRecordId}/${sha256}.${extension}`;
-  const result = { reference, sha256, contentType, byteLength: bytes.byteLength };
-  const expected = { ...result, bytes };
+  return withMediaAdmission(async () => {
+    const bytes = inputBytes(rawBytes);
+    if (bytes.byteLength < 1 || bytes.byteLength > MAX_MEDIA_BYTES) {
+      throw codedError('invalid_media_size');
+    }
+    const sha256 = await sha256Hex(bytes);
+    const reference = `artwork-ledger/${artworkRecordId}/${sha256}.${extension}`;
+    const result = { reference, sha256, contentType, byteLength: bytes.byteLength };
+    const expected = { ...result, bytes };
 
-  let putResult;
-  let conditionalReplay = false;
-  try {
-    putResult = await bucket.put(reference, bytes, {
-      onlyIf: { etagDoesNotMatch: '*' },
-      httpMetadata: { contentType },
-    });
-    conditionalReplay = putResult === null;
-    if (putResult === undefined) throw codedError('media_backup_failed');
-  } catch (error) {
-    if (isLocalCodedError(error)) throw error;
-    if (!isConditionalPutError(error)) throw codedError('media_backup_failed');
-    conditionalReplay = true;
-  }
+    let putResult;
+    let conditionalReplay = false;
+    try {
+      putResult = await bucket.put(reference, bytes, {
+        onlyIf: { etagDoesNotMatch: '*' },
+        httpMetadata: { contentType },
+      });
+      conditionalReplay = putResult === null;
+      if (putResult === undefined) throw codedError('media_backup_failed');
+    } catch (error) {
+      if (isLocalCodedError(error)) throw error;
+      if (!isConditionalPutError(error)) throw codedError('media_backup_failed');
+      conditionalReplay = true;
+    }
 
-  await verifyStoredObject(bucket, expected, conditionalReplay);
-  return result;
+    await verifyStoredObject(bucket, expected, conditionalReplay);
+    return result;
+  });
 }
