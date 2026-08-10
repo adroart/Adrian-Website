@@ -1,86 +1,122 @@
 # Collector journey — the manual
 
-> **For the next session, human or AI.** Everything about the collector flow, where it
-> lives, what is locked, and what happens next. Written 2026-08-09 at the close of the
-> wording sessions. To start a fresh chat on this work, say: *"Read HANDOFF-COLLECTOR.md in
+> **For the next session, human or AI.** Everything about the collector flow: where it
+> lives, what is settled, and what is still open. Rewritten 2026-08-10 at the close of the
+> structure sessions. To start a fresh chat, say: *"Read HANDOFF-COLLECTOR.md in
 > Adrian-Website and pick up where it says."*
 
 ---
 
 ## What this is
 
-The collector journey: a person buys art, scans its code, registers it, and it becomes a
-light on the Resonant Grid, the living artwork spanning every piece Adrian has released.
-The entire flow is settled in wording, in Adrian's own voice, worked line by line on
-2026-08-09. The wording is locked; nobody paraphrases it.
+A person buys a piece of art, scans the code on its underside, and registers it. From then
+on the piece carries their intentions, their history, and eventually their family's, and it
+passes to whoever holds it next. It is one page, one address, forever.
+
+**The flow is fully structured: 46 screens, every one reachable, verified in a browser.**
+What remains is wording and two research questions.
 
 ## The documents, in reading order
 
-1. **[The wording record](todo/plans/collector-screen-wording.md)** — THE MASTER. Every
-   screen's locked copy, the pillar, the privacy model, the passing mechanic, every rule
-   with Adrian's words marked as his. Outranks every other document where they disagree.
-2. **[The screen cards](todo/plans/collector-flow-preview.html)** — every screen as a
-   phone card in walking order. Open in any browser, double-click works.
+1. **[The interactive spec](todo/plans/collector-primitives.html)** — START HERE. Six
+   interaction primitives rendered live and touchable, plus all 46 screens walkable. A jump
+   list under the phone reaches any screen in one press. This is the thing to open.
+2. **[The wording record](todo/plans/collector-screen-wording.md)** — THE MASTER. Every
+   locked line, plus **section 6**, which carries everything decided 2026-08-10 and wins
+   wherever it disagrees with anything earlier in the file.
 3. **[The flow chart](todo/plans/collector-flow-chart.html)** — the whole journey with its
-   branches on one page.
-4. **[The design handoff](todo/plans/collector-design-handoff.md)** — how to brief Claude
-   Design when making the screens beautiful: the Apple setup shape, the site's real tokens,
-   the CAD line-drawing rule, one screen per session.
-5. **[The journey spec](todo/plans/the-collector-journey.md)** — the original fifteen-step
-   acceptance spec. Still true for the deep system rules (the chain, transfer hardening,
-   the three boxes).
-6. **[The build plan](todo/plans/the-collector-build.md)** — the ordered work. Carries a
-   banner deferring to the wording record; a reconcile task exists in
-   [TODO.md](TODO.md).
+   branches, rebuilt from the verified graph.
+4. **[The screen cards](todo/plans/collector-flow-preview.html)** — the original 23 screens
+   as phone cards. Still the source of truth for the locked copy.
+5. **[The design handoff](todo/plans/collector-design-handoff.md)** — how to brief Claude
+   Design: the Apple setup shape, the real tokens, the CAD line-drawing rule.
+6. **[The journey spec](todo/plans/the-collector-journey.md)** and
+   **[the build plan](todo/plans/the-collector-build.md)** — the original acceptance spec
+   and ordered work. Both predate the 2026-08-10 sessions.
 
 ## The flow in one breath
 
-Scan → the piece page (public, one page ever) → Unlock morphs into the code field → the
-vault opens → The code is true (or: not true · a passing begins · the fork: gift or
-transfer) → the four screens (You felt the pull · The resonant grid · When you focus your
-love, it grows · It carries on) → Begin → five quick gathering screens (sign · born · where
-it lives · links · what shows) → You are Light 47 → the same piece page, now home: the
-glowing meter, the garden, your account.
+Scan → the piece page, dressed by relationship → Begin → the code page, sixteen characters
+in two rows of eight, and the last one is the press → the vault → the code is true → four
+screens → two required screens → You are Light 47 → home, which is the same page warmed.
+Then it accumulates for as long as it is held, and passes on.
 
-## The locked laws (do not relitigate)
+## The laws (do not relitigate)
 
-- **Caretaker / caretake** is the word for the person. **The Resonant Grid** is the name of
-  the artwork.
-- **The code claims and transfers, then sleeps.** Daily life is the account. Password
-  recovery by email; recovery never touches history.
-- **The piece shines by default; the person opts in.** Words with no name, city at most,
-  never an address; widen to region on request. Birth details never shown, ever.
-- **Brightness = questions answered.** The garden lives on the piece page forever, opened
-  by the glowing meter.
-- **No setup screen ever scrolls.** If it would scroll, it splits.
-- **One theatrical moment**: the vault. Everything else is subtle payoffs, additive, never
-  blocking.
-- **Brass only on the thing you can act on.** CAD line drawings, outline only. No icons, no
-  emoji, no em dashes. Dark mode first.
-- **The caretaker approves what shines from their piece.** The system approves nothing;
-  admin sweeps abuse after publication.
+**The page**
+- **One page, one body.** The body is identical for everyone; only the foot and which rows
+  exist change. Verified: the drawing, name and dream sit at identical positions in all
+  four relationships.
+- **Four relationships:** unclaimed (a lit *Begin*, the only bright thing) · registered
+  (two peer doors, neither above the other) · signed in but not yours (an account is not a
+  claim) · yours (no pill, no doors, nothing left to claim).
+- **Rows open in place, links travel.** Anything that leaves the page is a link.
+- **Brass only on what you can act on**, and brass never shifts with the season.
+
+**The light**
+- **Two parts.** The long glow holds everything ever placed and never fades. The near light
+  brightens when something is placed and dims over months of quiet. Nobody who was ever
+  devoted looks abandoned.
+- **Two axes that never combine into a score.** Years held deepen the ground; what is
+  placed brightens the light. A ten-year-old quiet piece reads old and quiet; a new
+  well-tended one reads bright and new. Neither is ahead.
+- **Never** a count, bar, streak, badge, or a line asking for anything. The invitation is
+  that the page visibly comes alive, never a prompt.
+
+**Privacy**
+- **Three tiers:** *Let it shine* (public, and once it shines it always shines) · *Keep it
+  with the piece* (holder-only, **and they may publish it one day** — that clause is on the
+  control) · *Seal it* (nobody, ever). Shining is the default.
+- **The heirs' right is ON by default**, hidden when sealed. The writer decides in advance,
+  because only the writer knows which thing is which.
+- **Publishing is a per-item act wherever the item lives.** There is no triage screen at
+  transfer, deliberately.
+- **Birth details are shown to nobody, ever.** Price is caretaker-only; the provenance
+  chain is public.
+
+**Registration and people**
+- **Registration is binary.** Two required screens: your name, and where it lives.
+  Everything else is an add-on reachable forever.
+- **One account across the ecosystem** — Mandala Codes, the ledger, ordering already signed
+  in.
+- **The household is the people whose love is in the piece**, not an invite list. Being on
+  it promises nothing.
+- **Succession is a private mark one tap inside a person**, never on the row: adding
+  someone is warm, naming them next is a will.
 - **Thirty silent days** with reminders passes a claimed piece; only active refusal reaches
   Adrian.
 
-## What happens next, in order
+## What is still open
 
-1. **Design the screens** — follow [the design handoff](todo/plans/collector-design-handoff.md).
-   Claude Design project exists (id in that file). Round 1 (four dark options of the old
-   single opening) is the visual direction reference; Adrian picks a direction, then the
-   locked screens get dressed in it, one screen per session.
-2. **Write the garden's questions** — the prompts people answer over years. A wording
-   session with Adrian, same method: propose, thumbs up or down. Not started.
-3. **Build** — after design. Start from the wording record and the build plan. The
-   reconcile task in TODO.md aligns the two first.
+**Wording, and it is all Adrian's**
+- **The dream's prompt.** The highest-stakes line in the flow: every guest reads it, and it
+  locks for a year once placed.
+- **The garden's questions.** Eight samples are in place showing the intended shape.
+- **Placeholder copy** across the screens built 2026-08-10 (the passing, the household, the
+  arrivals). None of it is locked.
 
-## Still needs Adrian (from the spec, unchanged)
+**Research, named by Adrian**
+- **Which garden questions wait for the birthday** and which stay open all year, and what
+  the birthday moment actually is (a rewrite, a check-in, an amendment). Constraint: *"You
+  don't want to be hit with ten questions on your birthday."* Depends on his study of
+  gratitude and retrospective practices.
+- **The video capsule's costs.** Storage per short recording, per-piece economics across
+  years, what a solo artist can underwrite. No promise appears in any wording until this
+  lands.
 
-- The per-piece materials data (the certificate is empty without it).
-- What proof the invitation carries (blocks the passing build, door two).
-- The video capsule waits on the cost research task in [TODO.md](TODO.md).
+**Two small calls**
+- The photograph shrinking to an anchor versus collapsing when a row promotes (built as
+  shrinking).
+- Three link services versus five (built as three plus an add-another tile).
+
+**Still needs Adrian from the original spec**
+- Per-piece materials data. The certificate is placeholder without it.
+- What proof the invitation carries, which blocks the pre-registry door.
 
 ## Where things run
 
-- Preview pages served locally during working sessions from the plans folder; the files
-  open directly in a browser regardless.
-- The site deploys from `main` via Cloudflare Pages: pushing is shipping.
+- The plan files open directly in any browser. During sessions they are served locally from
+  the plans folder.
+- The site deploys from `main` via Cloudflare Pages: pushing is shipping. These files live
+  under `todo/plans/` and are not routed pages, so they ride along without changing the
+  live site.
