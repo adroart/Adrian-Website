@@ -284,6 +284,40 @@ body{
 .screen.promoted .row:not(.is-open){position:absolute;left:0;right:0;height:0;
   padding:0;border:0;overflow:hidden}
 
+/* ── the garden ──
+   A list of questions, not a form. Each is its own door. An unanswered question
+   is waiting, never overdue, so nothing here reads as incomplete. */
+.qlist{display:flex;flex-direction:column;margin-top:4px}
+.q{
+  display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;
+  background:none;border:0;border-top:1px solid var(--hair-soft);
+  padding:12px 2px;cursor:pointer;font-family:var(--body);
+  transition:color .22s var(--ease)
+}
+.q:last-child{border-bottom:1px solid var(--hair-soft)}
+.q-t{font-size:14.5px;color:var(--cream);line-height:1.4}
+.q-b{font-size:12.5px;color:var(--cream-3);line-height:1.6}
+.q-m{
+  font-family:var(--label);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--cream-3);margin-top:2px
+}
+.q-answered .q-m,.q-shared .q-m{color:var(--brass)}
+.q-open .q-t{color:var(--cream-2)}
+.q:hover .q-t{color:var(--brass)}
+.ghint{
+  margin-top:16px;font-size:12.5px;line-height:1.6;color:var(--cream-3);font-style:italic
+}
+
+/* a promoted surface takes the page: the dream and the placed words belong to
+   the piece's own face, not inside a door that has been opened */
+.screen.promoted .dream,
+.screen.promoted .placed{display:none}
+
+/* the garden is the longest surface in the flow: it must scroll inside itself,
+   the way every promoted surface does, rather than pushing past the frame */
+.screen.promoted .opened{flex:1 1 auto;min-height:0;overflow-y:auto}
+.screen.caretaker.promoted .opened{min-height:0}
+
 /* a surface reached from something other than a row carries its own header */
 .ghead{
   display:none;align-items:center;justify-content:space-between;flex:none;
@@ -298,6 +332,8 @@ body{
 .screen.walking .head,
 .screen.walking .rows,
 .screen.walking .foot,
+.screen.walking .dream,
+.screen.walking .placed,
 .screen.walking .opened,
 .screen.walking .ghead,
 .screen.walking .backlink,
@@ -371,6 +407,26 @@ body{
   padding:4px 2px;transition:color .22s var(--ease)
 }
 .walk-why:hover{color:var(--brass)}
+/* the share choice. Lit means it will shine; tapping is the act of withholding.
+   Sharing is the default because the piece shines and the person opts in, so the
+   button is never a permission request, only a way to keep something back. */
+.share{
+  display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;
+  margin-top:18px;padding:12px 14px;cursor:pointer;
+  background:none;border:1px solid var(--hair);border-radius:10px;
+  font-family:var(--body);
+  transition:border-color .25s var(--ease),background .25s var(--ease)
+}
+.share-t{font-size:13.5px;color:var(--cream)}
+.share-s{font-size:12px;color:var(--cream-3);line-height:1.5}
+.share.is-on{border-color:var(--brass-deep);background:rgba(212,184,138,.05)}
+.share.is-on .share-t{color:var(--brass)}
+.share:not(.is-on) .share-t{color:var(--cream-2)}
+.walk-lock{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:11.5px;line-height:1.6;color:var(--cream-3);font-style:italic
+}
+
 /* the explainer is a sheet, it rises over the screen beneath it */
 .walk.sheet{justify-content:flex-end;padding-bottom:16px}
 
@@ -1451,40 +1507,58 @@ tbody tr:hover td{color:var(--cream)}
 
   /* ── content for promoted rows ── */
   var content={
-    story:'<p>Earth&rsquo;s Breath was carved from a single piece of claro walnut over '+
+    story:'<p>Placeholder. The piece&rsquo;s own story, written by Adrian, shown to '+
+      'everyone who scans it.</p>'+
+      '<p>Earth&rsquo;s Breath was carved from a single piece of claro walnut over '+
       'eleven months. The grain runs the full length of the form, so the piece reads '+
       'differently from either side.</p>'+
       '<p>It is the first of the sixty four. The geometry came before the wood did, and '+
       'the wood argued with it for most of a year.</p>'+
-      '<p class="empty">Loaded state. Long copy scrolls inside the surface; the page '+
-      'itself does not move.</p>',
-    cert:'<div class="facts">'+
+      '<p class="ghint">Long copy scrolls inside the surface; the page itself never '+
+      'moves. This is the longest public row, so it sets the scroll behaviour for all '+
+      'of them.</p>',
+    cert:'<p>What anyone who scans the piece can see. The authenticity is public; '+
+      'what was paid is not.</p>'+
+      '<div class="facts">'+
       '<div class="fact"><dt>Made</dt><dd>2024</dd></div>'+
       '<div class="fact"><dt>Material</dt><dd>Claro walnut, brass inlay</dd></div>'+
       '<div class="fact"><dt>Dimensions</dt><dd>420 &times; 420 &times; 90 mm</dd></div>'+
       '<div class="fact"><dt>Series</dt><dd>Universal Language, 1 of 64</dd></div>'+
       '<div class="fact"><dt>Registered</dt><dd>Light 47</dd></div>'+
-      '</div><p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
-      'Illustrative values. Real per piece materials data is still to come from Adrian.</p>',
+      '</div>'+
+      '<p class="ghint">Placeholder values. Real per piece materials data is still to '+
+      'come from Adrian; the certificate is empty without it. What was paid lives in '+
+      'Piece information, which only its caretaker can open.</p>',
     hist:'<p>Two entries on the public spine. Names appear only where a caretaker '+
       'chose to be seen.</p>'+
       '<div class="facts">'+
       '<div class="fact"><dt>2024</dt><dd>Released from the studio</dd></div>'+
       '<div class="fact"><dt>2024</dt><dd>Registered · Sonoma County</dd></div>'+
       '</div>',
-    dreams:'<p class="empty">Nothing written yet.</p>'+
-      '<p style="margin-top:18px;font-size:13px;color:var(--cream-3)">'+
-      'The empty state. A row always opens; it never refuses the tap.</p>',
-    garden:'<p>The questions you have answered, and the ones still waiting. Answer one '+
-      'now, five next month, the rest across years.</p>'+
-      '<div class="facts">'+
-      '<div class="fact"><dt>Answered</dt><dd>Why you brought it home</dd></div>'+
-      '<div class="fact"><dt>Answered</dt><dd>Where it hangs</dd></div>'+
-      '<div class="fact"><dt>Waiting</dt><dd>What you were carrying that year</dd></div>'+
-      '<div class="fact"><dt>Waiting</dt><dd>Who you would pass it to</dd></div>'+
+    dreams:'<p>What other caretakers chose to let shine, as words with no name. This '+
+      'is the room where the grid is felt rather than shown on a map.</p>'+
+      '<div class="qlist">'+
+        Q('shared','\u201cA dream another caretaker placed in their piece.\u201d')+
+        Q('shared','\u201cA second one, from a piece on the other side of the world.\u201d')+
+        Q('shared','\u201cA third, placed years ago and still here.\u201d')+
       '</div>'+
-      '<p style="margin-top:16px;font-size:13px;color:var(--cream-3)">'+
-      'Illustrative questions. The real set is a wording session still to come.</p>',
+      '<p class="ghint">Placeholder dreams. Words only, never a name, never a city '+
+      'alongside them. Their empty state is one quiet line: nothing written yet.</p>',
+    garden:'<p>Answer one now, five next month, the rest across years. Nothing here '+
+      'expires and nothing is required.</p>'+
+      '<div class="qlist">'+
+        Q('answered','A question that has been answered',
+          'The answer sits here as the caretaker wrote it, and it can be opened and '+
+          'changed at any time.')+
+        Q('answered','A second answered question',
+          'Answered questions read as the piece\u2019s own record, not as completed tasks.')+
+        Q('open','A question still waiting')+
+        Q('open','Another question still waiting')+
+        Q('open','A question that only makes sense after some years')+
+        Q('shared','A question whose answer shines publicly')+
+      '</div>'+
+      '<p class="ghint">Placeholder questions. The real set is a wording session with '+
+      'Adrian, and it is the last thing this flow is waiting on.</p>',
     account:'<p>Nothing from setting up is frozen. Move house and the light moves with '+
       'you.</p>'+
       '<div class="facts">'+
@@ -1567,7 +1641,7 @@ tbody tr:hover td{color:var(--cream)}
   var titles={story:'The story',cert:'The certificate',hist:'The history',
     dreams:'The dreams',garden:'The garden',account:'Your account',
     signin:'Welcome back',passing:'Passing it on',fork:'For someone else',
-    ritual:'The year turns',ritualfamily:'The people you love',
+    ritual:'The year turns',ritualfamily:'The people you love',question:'A question',
     video:'Record a video',info:'Piece information',family:'The people you love'};
 
   /* ── row promotion ── */
@@ -1597,6 +1671,10 @@ tbody tr:hover td{color:var(--cream)}
   });
   document.addEventListener('click',function(e){
     if(e.target.closest('[data-close]')) closeRow();
+    if(e.target.closest('[data-question]')){
+      screen.classList.remove('promoted');
+      startWalk('question');
+    }
   });
 
   /* ── the code field + vault ── */
@@ -1944,6 +2022,23 @@ tbody tr:hover td{color:var(--cream)}
       pill:'See your piece', to:'__home',
       cap:'Ignition · the light comes on for the first time' },
 
+    /* ── a question, opened ──
+       Every garden question is its own small screen: what it is asking, a little
+       guidance on how to answer it, the field, and the choice. Sharing is the
+       DEFAULT and the button is how you withhold, per the settled privacy model:
+       the piece shines, the person opts in. */
+    question:{ h:'A question, opened', art:'none',
+      b:'The question itself sits here, in the piece\u2019s voice, one line long.',
+      note:'A little guidance on how to answer it: what it is reaching for, and '+
+        'permission to answer it badly. Nothing here is required and nothing expires.',
+      fields:[['your answer']],
+      share:true,
+      pill:'Place it', to:'__garden',
+      link:'Not now', linkTo:'__garden',
+      lock:'Once placed it settles until your birthday, when it opens to be amended, '+
+        'added to, or left as it is. The exact mechanic is still being decided.',
+      cap:'A question opened \u00b7 shared by default, private by choice' },
+
     /* ── the year turns ──
        Once a year, near the birthday, one occasion rather than two: the dream
        opens for changing, and each invited person's words open for theirs.
@@ -2011,6 +2106,20 @@ tbody tr:hover td{color:var(--cream)}
 
   function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
+  /* a garden question. Three states, and no state is a failure:
+     answered (readable, still editable), open (waiting, never overdue),
+     shared (answered and shining publicly, words with no name). */
+  function Q(state,title,body){
+    var mark = state==='answered' ? 'answered'
+             : state==='shared'   ? 'answered · shining'
+             : 'waiting';
+    return '<button class="q q-'+state+'" data-question>'+
+      '<span class="q-t">'+esc(title)+'</span>'+
+      (body ? '<span class="q-b">'+esc(body)+'</span>' : '')+
+      '<span class="q-m">'+mark+'</span>'+
+      '</button>';
+  }
+
   function startWalk(key){ screen.classList.add('walking'); renderWalk(key||'codetrue'); }
 
   function renderWalk(key){
@@ -2024,7 +2133,7 @@ tbody tr:hover td{color:var(--cream)}
     var body='<p class="walk-b">'+esc(s.b)+'</p>';
     if(s.b2) body+='<p class="walk-b walk-b2">'+esc(s.b2)+'</p>';
 
-    /* the screen's own middle: rows, fields, tiles, or checks */
+    /* the screen's own middle: rows, fields, tiles, checks, or the share choice */
     var mid='';
     if(s.rows){
       mid='<div class="walk-rows">'+s.rows.map(function(r,i){
@@ -2052,6 +2161,13 @@ tbody tr:hover td{color:var(--cream)}
       }).join('')+'</div>';
     }
     if(s.note) mid+='<p class="walk-note">'+esc(s.note)+'</p>';
+    if(s.share){
+      mid+='<button class="share is-on" id="shareBtn">'+
+        '<span class="share-t">This will shine with the piece</span>'+
+        '<span class="share-s">Words with no name. Tap to keep it to yourself.</span>'+
+        '</button>';
+    }
+    if(s.lock) mid+='<p class="walk-lock">'+esc(s.lock)+'</p>';
     if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
 
     walkB.innerHTML=body+mid;
@@ -2072,6 +2188,20 @@ tbody tr:hover td{color:var(--cream)}
     walk.classList.add('enter');
     if(s.glow) walk.classList.add('glow');
     if(s.lines) walk.classList.add('lines');
+    var sb=document.getElementById('shareBtn');
+    if(sb) sb.addEventListener('click',function(){
+      var on=sb.classList.toggle('is-on');
+      sb.querySelector('.share-t').textContent = on
+        ? 'This will shine with the piece'
+        : 'This stays yours alone';
+      sb.querySelector('.share-s').textContent = on
+        ? 'Words with no name. Tap to keep it to yourself.'
+        : 'Nobody sees it but you. Tap to let it shine.';
+      cap.textContent = on
+        ? 'Shining \u00b7 words with no name'
+        : 'Withheld \u00b7 the piece still holds it';
+    });
+
     cap.textContent=s.cap;
     lite(s.pill?'pill':(s.rows?'row':'link'));
     resetBtn.hidden=false;
@@ -2079,6 +2209,13 @@ tbody tr:hover td{color:var(--cream)}
 
   function goWalk(key){
     if(key==='__home'){ enterHome(); return; }
+    if(key==='__garden'){
+      screen.classList.remove('walking'); walk.hidden=true;
+      screen.classList.add('caretaker');
+      openRow('garden',null);
+      cap.textContent='The garden \u00b7 nothing expires, nothing is required';
+      return;
+    }
     renderWalk(key);
   }
   /* ── the dream ── */

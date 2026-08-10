@@ -861,6 +861,34 @@ registering it to yourself **or** leaving sealed words for whoever you bought it
   seconds before the vault even started, breaking the two-to-four-second bound on the whole
   passage.
 
+### A question, opened. STRUCTURE SETTLED 2026-08-10, wording pending
+
+The garden is a list of questions, and **each question is its own small screen**, not a
+field in a form. Opening one gives:
+
+- **the question**, in the piece's voice, one line long
+- **a little guidance** on how to answer it: what it is reaching for, and permission to
+  answer it badly
+- **the field**
+- **the share choice**
+- **Place it** · *Not now*
+
+**Sharing is the default; the button is how you withhold.** This follows the settled
+privacy model exactly: the piece shines, the person opts in. So the control is never a
+permission request, only a way to keep something back. Lit reads *"This will shine with the
+piece · words with no name."* Tapped, it reads *"This stays yours alone · nobody sees it
+but you."*
+
+**Three states per question, and none of them is a failure:** answered (readable, still
+openable), waiting (never overdue, nothing expires), and answered-and-shining.
+
+**The lock — MECHANIC STILL OPEN (Adrian, 2026-08-10).** A placed answer settles until the
+birthday, when it opens again. What is genuinely undecided is *what that opening is*:
+a rewrite, a check-in, an amendment, or an addition. Adrian's constraint on it: **"You
+don't want to be hit with ten questions on your birthday."** So whatever it becomes, the
+yearly moment cannot be a queue of everything at once. The screen is built with the lock
+as a single line so the mechanic can change without touching anything else.
+
 ### The year turns: one occasion, each person at their own birthday. SETTLED
 
 The yearly ritual and the dream's unlock are **one occasion, not two**. Near the birthday
