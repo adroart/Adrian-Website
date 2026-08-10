@@ -22,6 +22,10 @@ import {
   lineageStatement,
 } from '../functions/api/_lib/lineage.js';
 import { openContestedClaim } from '../functions/api/_lib/claimRequests.js';
+import {
+  correctVerifiedSale,
+  createVerifiedSale,
+} from '../functions/api/_lib/artistSales.js';
 import { LAUNCH_FLAGS } from '../launchFlags.ts';
 
 let maintenanceSession: {
@@ -62,6 +66,24 @@ const registryMigrations = [
   '023_collector_registry_merge.sql',
   '024_ownership_foundation.sql',
   '025_artwork_registration.sql',
+].map(readMigration).join('\n');
+
+const migrationsThroughArtistSales = [
+  '001_init.sql', '002_invoices.sql', '003_atlas_legacy.sql', '003_viewings.sql',
+  '004_invoice_payment_choice.sql', '004_piece_content.sql', '005_atlas_legacy.sql',
+  '005_invoice_amount_paid.sql', '006_better_auth.sql', '007_pricing.sql',
+  '008_living_legacy.sql', '009_keeper_register.sql', '010_artwork_plate_identity.sql',
+  '011_piece_fulfillments.sql', '012_piece_fulfillment_guards.sql',
+  '013_artwork_lineage.sql', '014_artwork_lineage_anchor.sql',
+  '015_registry_artworks.sql', '016_keeper_piece_edition_kind_guard.sql',
+  '017_creator_registry_maintenance.sql', '018_registry_plate_lifecycle.sql',
+  '019_registry_creator_history.sql', '020_registry_recovery_qualification.sql',
+  '021_registry_plate_backup_digest.sql', '022_registry_fulfillment_detachment.sql',
+  '023_collector_registry_merge.sql', '024_ownership_foundation.sql',
+  '025_artwork_registration.sql', '026_artwork_invitations.sql',
+  '027_certificate_templates.sql', '028_collector_privacy.sql',
+  '029_collector_dreams.sql', '030_collector_field.sql',
+  '031_collector_letters.sql', '032_artist_verified_sales.sql',
 ].map(readMigration).join('\n');
 
 const keeperInsert = `
@@ -1666,6 +1688,104 @@ describe('dedicated acquisition creation', () => {
   });
 });
 
+describe('sale and maintenance writer isolation', () => {
+  it('keeps verified sales out of acquisitions and maintenance out of sale price history', async () => {
+    const { database, env } = createSqliteD1();
+    try {
+      database.exec(`
+        ${migrationsThroughArtistSales}
+        INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+        VALUES ('artist-admin', 'Artist', 'artist@example.com', 1, 1, 1);
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, registered_at)
+        VALUES ('kp-authority', 'UL-100', 1, '${'a'.repeat(64)}',
+          '2026-08-10T00:00:00.000Z');
+      `);
+      const sale = await createVerifiedSale(env, {
+        occurrence: { precision: 'exact', value: '2026-08-01' },
+        buyerEmail: 'collector@example.com',
+        total: { amountMinor: 300000, currency: 'USD' },
+        privateReference: 'studio-ledger-1', privateNotes: null,
+        reconnectionCaseId: null,
+        artworks: [{
+          artworkRecordId: null, artworkId: 'UL-100',
+          edition: { kind: 'numbered', number: 1, size: 64 },
+          price: { amountMinor: 300000, currency: 'USD' },
+        }],
+        idempotencyKey: 'authority-sale-create',
+        administrator: { userId: 'artist-admin', email: 'artist@example.com' },
+        recordedAt: '2026-08-10T01:00:00.000Z',
+      });
+      assert.equal(database.prepare(
+        'SELECT count(*) AS count FROM artwork_acquisitions',
+      ).get().count, 0);
+      await correctVerifiedSale(env, {
+        saleId: sale.saleId, expectedSequence: 0,
+        replacement: {
+          reconnectionCaseId: null,
+          occurrence: { precision: 'exact', value: '2026-08-01' },
+          buyerEmail: 'collector@example.com',
+          total: { amountMinor: 310000, currency: 'USD' },
+          privateReference: 'corrected-ledger-1', privateNotes: null,
+        },
+        reason: 'Correct the total.', idempotencyKey: 'authority-sale-correct',
+        administrator: { userId: 'artist-admin', email: 'artist@example.com' },
+        correctedAt: '2026-08-10T02:00:00.000Z',
+      });
+      assert.equal(database.prepare(
+        'SELECT count(*) AS count FROM artwork_acquisitions',
+      ).get().count, 0);
+
+      const salesBeforeMaintenance = database.prepare(
+        'SELECT * FROM artist_verified_sales ORDER BY id',
+      ).all().map(row => ({ ...row }));
+      const pricesBeforeMaintenance = database.prepare(
+        'SELECT * FROM artist_artwork_price_entries ORDER BY id',
+      ).all().map(row => ({ ...row }));
+      const created = await commitAcquisitionCreate(env, {
+        keeperPieceId: 'kp-authority',
+        acquisition: acquisitionInput({
+          acquisitionType: 'consignment', amountMinor: null, currency: null,
+        }),
+        authorization: { userId: 'artist-admin', email: 'artist@example.com' },
+        reason: 'Record custody context.', idempotencyKey: 'authority-maintenance-create',
+        acquisitionId: 'acq-authority', eventId: 'rme-authority-create',
+        createdAt: '2026-08-10T03:00:00.000Z',
+      });
+      assert.equal(created.ok, true);
+      const { createdAt: _createdAt, ...before } = created.acquisition;
+      const after = {
+        ...before, privateNotes: 'Corrected custody note.', recordVersion: 2,
+        updatedAt: '2026-08-10T04:00:00.000Z',
+      };
+      const changes = Object.fromEntries(Object.entries(after).filter(([key]) => ![
+        'acquisitionId', 'keeperPieceId', 'recordVersion',
+      ].includes(key)));
+      assert.equal((await commitMaintenanceMutation(env, {
+        target: { type: 'acquisition', id: 'acq-authority', keeperPieceId: 'kp-authority' },
+        changes,
+        event: {
+          idempotencyKey: 'authority-maintenance-correct',
+          eventType: 'acquisition_corrected', keeperPieceId: 'kp-authority', artworkId: null,
+          authorization: { userId: 'artist-admin', email: 'artist@example.com' },
+          reason: 'Correct custody context.', before, after, outcome: 'succeeded',
+          relatedRecordId: 'acq-authority', createdAt: '2026-08-10T04:00:00.000Z',
+        },
+        expectedVersion: 1,
+      })).ok, true);
+
+      assert.deepEqual(database.prepare(
+        'SELECT * FROM artist_verified_sales ORDER BY id',
+      ).all().map(row => ({ ...row })), salesBeforeMaintenance);
+      assert.deepEqual(database.prepare(
+        'SELECT * FROM artist_artwork_price_entries ORDER BY id',
+      ).all().map(row => ({ ...row })), pricesBeforeMaintenance);
+    } finally {
+      database.close();
+    }
+  });
+});
+
 describe('typed creator-history creation', () => {
   it('creates once with exact replay and keeps visibility explicit', async () => {
     const { database, env } = createSqliteD1();
@@ -1909,6 +2029,31 @@ describe('private maintenance APIs', () => {
         env, params: { id: 'kp-maint' },
       });
       assert.equal(conflictingCreate.status, 409);
+
+      const beforeRejectedSaleCorrection = { ...database.prepare(
+        'SELECT * FROM artwork_acquisitions WHERE id = ?1',
+      ).get(acquisitionId) };
+      const rejectedSaleCorrection = await correct({
+        request: adminRequest(
+          `/api/admin/maintenance/kp-maint/acquisitions/${acquisitionId}`,
+          'PUT',
+          {
+            idempotencyKey: 'api-reject-sale-correction',
+            reason: 'Attempt a maintenance sale correction.',
+            expectedVersion: 1,
+            acquisition: acquisitionInput({ acquisitionType: 'sale' }),
+          },
+          cookie,
+        ),
+        env, params: { id: 'kp-maint', acquisitionId },
+      });
+      assert.equal(rejectedSaleCorrection.status, 400);
+      assert.deepEqual(await rejectedSaleCorrection.json(), {
+        ok: false, error: 'verified_sale_required',
+      });
+      assert.deepEqual({ ...database.prepare(
+        'SELECT * FROM artwork_acquisitions WHERE id = ?1',
+      ).get(acquisitionId) }, beforeRejectedSaleCorrection);
 
       const correctionBody = {
         idempotencyKey: 'api-correct-acq', reason: 'Correct the private amount.', expectedVersion: 1,

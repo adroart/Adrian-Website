@@ -13,11 +13,15 @@ import {
   beginMaintenanceStewardActionAttempt,
   beginMaintenanceSaveRequestAttempt,
   buildLegacyAcquisitionSalesPath,
+  canCorrectMaintenanceAcquisition,
   createMaintenanceRequestGate,
+  DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
   discardMaintenanceSaveAttempt,
   formatMaintenanceCurrencyAmount,
   getMaintenanceDetail,
+  isLegacySaleAcquisition,
   MAINTENANCE_CURRENCY_CODES,
+  MAINTENANCE_CUSTODY_ACQUISITION_TYPES,
   maintenanceCurrencyAmountToDraft,
   MaintenanceRequestError,
   parseMaintenanceCurrencyAmount,
@@ -29,7 +33,7 @@ import {
   shouldRetainMaintenanceSaveAttempt,
   type MaintenanceAcquisition,
   type MaintenanceAcquisitionInput,
-  type MaintenanceAcquisitionType,
+  type MaintenanceCustodyAcquisitionType,
   type MaintenanceListItem,
   type MaintenancePieceDetail,
   type MaintenancePlateAction,
@@ -55,7 +59,7 @@ type SearchDraft = {
 };
 
 type AcquisitionDraft = {
-  acquisitionType: MaintenanceAcquisitionType;
+  acquisitionType: MaintenanceCustodyAcquisitionType;
   acquiredAt: string;
   amount: string;
   currency: string;
@@ -114,7 +118,7 @@ const EMPTY_SEARCH: SearchDraft = {
 };
 
 const EMPTY_ACQUISITION: AcquisitionDraft = {
-  acquisitionType: 'retained',
+  acquisitionType: DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
   acquiredAt: '',
   amount: '',
   currency: '',
@@ -143,14 +147,13 @@ const provenanceTypes: Array<{ value: MaintenanceProvenanceType; label: string }
   { value: 'note', label: 'Note' },
 ];
 
-const acquisitionTypes: Array<{ value: MaintenanceAcquisitionType; label: string }> = [
-  { value: 'gift', label: 'Gift' },
-  { value: 'retained', label: 'Retained' },
-  { value: 'loan', label: 'Loan' },
-  { value: 'consignment', label: 'Consignment' },
-  { value: 'inheritance', label: 'Inheritance' },
-  { value: 'other', label: 'Other' },
-];
+const acquisitionTypeLabels: Record<MaintenanceCustodyAcquisitionType, string> = {
+  retained: 'Retained', loan: 'Loan', consignment: 'Consignment',
+  gift: 'Gift', inheritance: 'Inheritance', other: 'Other',
+};
+const acquisitionTypes = MAINTENANCE_CUSTODY_ACQUISITION_TYPES.map(value => ({
+  value, label: acquisitionTypeLabels[value],
+}));
 
 const inputClass = 'maintenance-input';
 const labelClass = 'maintenance-label';
@@ -211,7 +214,7 @@ function draftFromAcquisition(acquisition?: MaintenanceAcquisition): Acquisition
   if (!acquisition) return { ...EMPTY_ACQUISITION };
   const amountDraft = maintenanceCurrencyAmountToDraft(acquisition.amountMinor, acquisition.currency);
   return {
-    acquisitionType: acquisition.acquisitionType,
+    acquisitionType: acquisition.acquisitionType as MaintenanceCustodyAcquisitionType,
     acquiredAt: acquisition.acquiredAt?.slice(0, 10) || '',
     ...amountDraft,
     acquirerReference: acquisition.acquirerReference || '',
@@ -595,7 +598,7 @@ const AdminMaintenance: React.FC = () => {
   };
 
   const openEditor = (acquisition: MaintenanceAcquisition | null) => {
-    if (acquisition?.acquisitionType === 'sale') return;
+    if (acquisition && !canCorrectMaintenanceAcquisition(acquisition)) return;
     if (!clearMaintenanceAttempts()) return;
     setStewardEditor(null);
     setStewardReview(null);
@@ -1503,11 +1506,11 @@ const AdminMaintenance: React.FC = () => {
                 {selected.acquisitions.map(acquisition => (
                   <article key={acquisition.acquisitionId} className="maintenance-acquisition-row">
                     <div>
-                      <strong>{acquisition.acquisitionType === 'sale' ? 'Legacy sale record' : acquisition.acquisitionType}</strong>
+                      <strong>{isLegacySaleAcquisition(acquisition) ? 'Legacy sale record' : acquisition.acquisitionType}</strong>
                       <span>{displayDate(acquisition.acquiredAt)} · {displayPrivateAmount(acquisition)}</span>
                       {acquisition.acquirerReference && <span>Reference: {acquisition.acquirerReference}</span>}
                     </div>
-                    {acquisition.acquisitionType === 'sale' ? (
+                    {isLegacySaleAcquisition(acquisition) ? (
                       <Link
                         className={quietButtonClass}
                         to={buildLegacyAcquisitionSalesPath({
@@ -1533,7 +1536,7 @@ const AdminMaintenance: React.FC = () => {
                 <div className="maintenance-form-grid">
                   <label htmlFor="maintenance-acquisition-type">
                     <span className={labelClass}>Acquisition type</span>
-                    <select id="maintenance-acquisition-type" className={inputClass} value={acquisitionDraft.acquisitionType} onChange={event => setAcquisitionDraft(draft => ({ ...draft, acquisitionType: event.target.value as MaintenanceAcquisitionType }))}>
+                    <select id="maintenance-acquisition-type" className={inputClass} value={acquisitionDraft.acquisitionType} onChange={event => setAcquisitionDraft(draft => ({ ...draft, acquisitionType: event.target.value as MaintenanceCustodyAcquisitionType }))}>
                       {acquisitionTypes.map(type => <option value={type.value} key={type.value}>{type.label}</option>)}
                     </select>
                   </label>

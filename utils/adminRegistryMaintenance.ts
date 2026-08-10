@@ -9,6 +9,25 @@ export type MaintenanceAcquisitionType =
   | 'inheritance'
   | 'other';
 
+export const MAINTENANCE_CUSTODY_ACQUISITION_TYPES = [
+  'retained', 'loan', 'consignment', 'gift', 'inheritance', 'other',
+] as const;
+export type MaintenanceCustodyAcquisitionType =
+  typeof MAINTENANCE_CUSTODY_ACQUISITION_TYPES[number];
+export const DEFAULT_MAINTENANCE_ACQUISITION_TYPE: MaintenanceCustodyAcquisitionType = 'retained';
+
+export function isLegacySaleAcquisition(
+  acquisition: Pick<MaintenanceAcquisitionInput, 'acquisitionType'>,
+): boolean {
+  return acquisition.acquisitionType === 'sale';
+}
+
+export function canCorrectMaintenanceAcquisition(
+  acquisition: Pick<MaintenanceAcquisitionInput, 'acquisitionType'>,
+): boolean {
+  return !isLegacySaleAcquisition(acquisition);
+}
+
 /**
  * Current tender currencies and standard display digits from Unicode CLDR 48.0.0.
  * Source: cldr-json/cldr-core/supplemental/currencyData.json, current region entries

@@ -7,6 +7,24 @@ const source = (path: string) => readFileSync(new URL(`../${path}`, import.meta.
 describe('registry Maintenance client contract', () => {
   afterEach(() => mock.restoreAll());
 
+  it('offers only custody defaults and keeps legacy sales out of correction flow', async () => {
+    const {
+      DEFAULT_MAINTENANCE_ACQUISITION_TYPE,
+      MAINTENANCE_CUSTODY_ACQUISITION_TYPES,
+      canCorrectMaintenanceAcquisition,
+      isLegacySaleAcquisition,
+    } = await import('../utils/adminRegistryMaintenance.ts');
+
+    assert.equal(DEFAULT_MAINTENANCE_ACQUISITION_TYPE, 'retained');
+    assert.deepEqual(MAINTENANCE_CUSTODY_ACQUISITION_TYPES, [
+      'retained', 'loan', 'consignment', 'gift', 'inheritance', 'other',
+    ]);
+    assert.equal(MAINTENANCE_CUSTODY_ACQUISITION_TYPES.includes('sale' as never), false);
+    assert.equal(isLegacySaleAcquisition({ acquisitionType: 'sale' }), true);
+    assert.equal(canCorrectMaintenanceAcquisition({ acquisitionType: 'sale' }), false);
+    assert.equal(canCorrectMaintenanceAcquisition({ acquisitionType: 'gift' }), true);
+  });
+
   it('puts only explicitly public search fields in the URL', async () => {
     const { buildMaintenanceSearchPath } = await import('../utils/adminRegistryMaintenance.ts');
     const path = buildMaintenanceSearchPath({
@@ -513,7 +531,8 @@ describe('registry Maintenance workspace wiring', () => {
 
     assert.match(component, /Legacy sale record/);
     assert.doesNotMatch(acquisitionOptions, /value:\s*['"]sale['"]/);
-    assert.match(component, /acquisition\.acquisitionType === ['"]sale['"]/);
+    assert.match(component, /isLegacySaleAcquisition/);
+    assert.match(component, /canCorrectMaintenanceAcquisition/);
     assert.match(component, /<Link[\s\S]*buildLegacyAcquisitionSalesPath/);
     assert.match(component, /Open verified sales/);
   });
