@@ -892,6 +892,37 @@ don't want to be hit with ten questions on your birthday."** So whatever it beco
 yearly moment cannot be a queue of everything at once. The screen is built with the lock
 as a single line so the mechanic can change without touching anything else.
 
+### The install, and one account across everything. SETTLED 2026-08-10
+
+**Registration is binary. Incomplete means not registered.** There is no half-registered
+state to design for, and therefore no resumable wizard and no progress to track.
+
+**Three of the five gathering screens are required**, and each says so plainly: *"The piece
+is not registered until this is placed. Leaving now leaves it unregistered; nothing you
+have written is lost."*
+
+- **Sign its record** — required. The account.
+- **Who you are** — optional, *Skip for now* stays.
+- **Where it lives** — required. A light must live somewhere.
+- **Your links** — optional, *Skip for now* stays.
+- **What shows** — required. Nothing shines until this is answered.
+
+**The questions were never part of registration and never become part of it.** Adrian:
+*"If you don't complete registration, it's not registered. It doesn't mean you have to
+answer questions. Those are optional."* This resolves the apparent conflict with the
+earlier locked rule that the story must never gate registration: the *gathering* is
+structural, the *garden* is not.
+
+**One account across the whole ecosystem.** The account created here is not this piece's
+and not this site's. The same name and password open Mandala Codes readings, the ledger,
+and ordering from Adrian, already signed in. Adrian's reason is commercial as well as tidy:
+*"it makes people have an easy time ordering as well."*
+
+This is the first place the identity direction becomes real, and it carries that
+direction's clock: moving real customer accounts off a vendor after launch is risky, doing
+it now while the sites are on test accounts is clean. See
+`i64os/substrate/directions/identity.md`.
+
 ### Three tiers, and what outlives you. SETTLED 2026-08-10
 
 Every private thing placed in a piece needs a destination, because the piece travels and

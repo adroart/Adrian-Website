@@ -446,6 +446,14 @@ body{
   margin-top:14px;width:100%;text-align:left;
   font-size:11.5px;line-height:1.6;color:var(--cream-3);font-style:italic
 }
+/* a required screen says so, so that leaving is a known choice and not an
+   accident. Registration is binary: incomplete means not registered. The
+   questions were never part of it and never become part of it. */
+.walk-req{
+  margin-top:14px;width:100%;text-align:left;
+  font-size:11.5px;line-height:1.6;color:var(--cream-3);
+  border-top:1px solid var(--hair-soft);padding-top:11px
+}
 
 /* a question screen carries the most of any walk screen: the question, the
    guidance, the field, three tiers and the heirs line. Its own middle scrolls,
@@ -2024,8 +2032,12 @@ tbody tr:hover td{color:var(--cream)}
       b:'Earth’s Breath will carry your name from today. Your email is where the '+
         'piece will write to you.',
       fields:[['first name','last name'],['email'],['create a password']],
+      note:'One account, and it is not only this piece’s. The same name and password '+
+        'open your readings on Mandala Codes, the ledger, and anything you order from '+
+        'Adrian, already signed in.',
       pill:'Sign', to:'born',
-      cap:'One of five · the account born as a signature' },
+      req:true,
+      cap:'One of five · one account across everything' },
 
     born:{ h:'Who you are', art:'none',
       b:'For the piece’s astrology, and for the ones who will find you through it.',
@@ -2045,6 +2057,7 @@ tbody tr:hover td{color:var(--cream)}
       note:'If even the city feels close, widen it to the region: the light stays true '+
         'but cannot be pinpointed.',
       pill:'Continue', to:'links',
+      req:true,
       cap:'Three of five · the shortest screen in the flow' },
 
     links:{ h:'Your links', art:'none',
@@ -2075,6 +2088,7 @@ tbody tr:hover td{color:var(--cream)}
         'Your face and links · off until you open them'
       ],
       pill:'Keep these choices', to:'light47',
+      req:true,
       cap:'Five of five · the piece shines, the person opts in' },
 
     /* ── ignition ── */
@@ -2247,6 +2261,8 @@ tbody tr:hover td{color:var(--cream)}
       '</button>';
     }
     if(s.lock) mid+='<p class="walk-lock">'+esc(s.lock)+'</p>';
+    if(s.req) mid+='<p class="walk-req">The piece is not registered until this is '+
+      'placed. Leaving now leaves it unregistered; nothing you have written is lost.</p>';
     if(s.why) mid+='<button class="walk-why" data-go="explain">'+esc(s.why)+'</button>';
 
     walkB.innerHTML=body+mid;
