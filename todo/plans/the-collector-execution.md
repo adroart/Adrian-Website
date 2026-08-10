@@ -352,3 +352,43 @@ correct artwork record.
 
 **Next: Phase 3 begins with contributors around one canonical keeper.** Then build optional video,
 warning delivery, and the sale door. Stop here until a Phase 3 session begins.
+
+**2026-08-10: the verified-sales and reconnection foundation is complete locally and has not been
+deployed.** The private artist workspace can begin with only an email, so an older collector may be
+invited back into the process before Adrian knows which artwork they bought or has a photograph. It
+also records one sale across several artworks, keeps buyer details, references, notes, and prices
+private, and supports exact or approximate sale dates. Older records remain searchable beyond the
+first page. Unknown works can stay unresolved indefinitely, then be identified, registered, linked,
+or invited later without forcing the collector to claim anything.
+
+Creator messages and pictures may be added to an artwork ledger at any later time. They are
+append-only, pictures are never overwritten, and one better image may be selected for the
+certificate while the earlier evidence remains. The public certificate reveals only the selected
+fortune-like message and image after the exact artwork is claimed. Buyer information and prices are
+never public. A signed-in current keeper can see the complete private price history, including later
+resales, and a transfer immediately removes that access from the former keeper. Resales can reuse the
+existing private artwork record, so they extend one price ledger instead of creating a duplicate.
+
+Corrections preserve both the original facts and the current effective facts with permanent reasons.
+One-time Ownership Codes and invitation proofs remain in memory only. Encrypted recovery advanced to
+schema v6 and now includes every private sale, reconnection, artwork-ledger, price, and media record.
+Media-aware restore verifies a read-only copy of every referenced R2 object before it produces any
+restore SQL.
+
+Final local verification passed 743 unit tests, 210 focused security and privacy checks, 12 complete
+sales journeys across desktop and mobile, typecheck, the production build, clean-diff checks, and an
+independent acceptance re-review with no remaining P1 or P2 finding. The broader site browser run
+passed 88 cases with 10 intentional skips; 10 existing smoke cases reached their assertions but were
+blocked by external-resource `net::ERR_INTERNET_DISCONNECTED` console errors and remain queued for an
+online rerun. No production database or storage was read or changed, `livingLegacy` remains false,
+and no deployment was performed.
+
+Adrian's remaining work is data entry, not product design: add real historical sales, emails, prices,
+artwork mappings, pictures, and optional messages gradually after rollout. An email-only case may
+stay open until Adrian and the collector reconnect and identify the piece. Automatic inbound email
+capture is deliberately deferred; the current path keeps that relationship personal and manual.
+
+**Next: continue Phase 3 with contributors around one canonical keeper.** Optional video and warning
+delivery remain unbuilt. The commerce-triggered sale door is also still separate: this completed
+foundation records artist-verified sales and reconnections, but it does not yet turn a new checkout
+into an automatic registration invitation. Stop here at the verified-sales boundary.

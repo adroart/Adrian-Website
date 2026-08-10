@@ -4,12 +4,11 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Soon
 
-- [ ] Build the collector journey: a person buys art, scans the code, registers it, and it becomes a light on the map _(band: agent-runnable | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
-  Phases 0 through 2 are verified and built locally. Phase 3 is next: contributors around one keeper, optional video, warning delivery, and the sale door. Bulk content entry can continue gradually and does not block the first three items.
+- [ ] **Finish the collector journey.** _(band: agent-runnable)_ A person buys art, registers it when ready, and it becomes a light on the map. Phases 0 through 2 and the private verified-sales and reconnection foundation are built locally. Phase 3 still needs contributors around one keeper, optional video, warning delivery, and automatic purchase-to-registration. → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md) · Build: [the-collector-build.md](todo/plans/the-collector-build.md)
 - [ ] Record and refine what each artwork is made of, who made it, where it was made, and its wording _(band: you-required | effort: deep)_ → Spec: [the-collector-journey.md](todo/plans/the-collector-journey.md)
   The certificate editor now provides reusable templates with per-artwork overrides. Fill the desired factual fields gradually; incomplete entries stay hidden until then.
-- [ ] Finish the artwork registry so Adrian can register work directly and hand it to a future custodian _(band: you-required | effort: deep)_ → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
-  Artwork-first registration and optional plate preparation are built locally. Remaining work is the production-copy ownership preflight, rollout and handover, plus real sale-to-artwork mapping before the later sale door is connected.
+- [ ] **Finish the artwork registry rollout and handover.** _(band: you-required)_ Artwork-first registration, optional plate preparation, and the private verified-sales workspace are built locally. Remaining work is the production-copy ownership preflight, rollout, and handover. Historical reconnection may begin with only an email and attach the exact artwork later. → Plan: [artwork-registry-finish-and-handover.md](todo/plans/artwork-registry-finish-and-handover.md)
+- [ ] **Enter historical verified sales.** _(band: you-required)_ After the private workspace is rolled out, add known buyer emails, dates, private prices, artwork mappings, pictures, and optional creator messages gradually. Unknown artworks may remain email-only reconnection cases until Adrian and the collector identify them together.
 
 ### Recent decisions to watch
 
@@ -20,12 +19,12 @@ Living list of outstanding work on the artist portfolio + shop. See `CLAUDE.md` 
 
 ## Pre-launch
 
+- [ ] **Rerun the broad browser smoke gate with network access.** _(band: routine)_ The Phase 3 desktop and mobile journeys pass, but ten existing site-wide smoke checks logged `net::ERR_INTERNET_DISCONNECTED` for external resources. Rerun them in an online browser environment before rollout.
+
 ### Adrian-only: blocks launch
 
 - [ ] **Collector registry rollout rehearsal.** _(band: you-required)_ Run the ownership damage detector against a fresh read-only production copy, then rehearse migration and encrypted restore on copies.
-  Phases 1 and 2 are built locally and their complete gates pass. The journey intentionally remains off. Done when the detector finds no damaged ownership state, migration and clean restore both succeed on copies, the required production bindings are confirmed, the letter runner secret and disabled-by-default schedule are configured, and a canary proves the journey can be enabled without seeding or changing production during rehearsal.
-- [ ] **Collector facts and sale mapping.** _(band: you-required)_ Add the real materials and wording for each artwork, and decide how completed sales map to exact artwork records.
-  Missing certificate facts stay hidden and can be filled gradually, so they do not block contributors, video, or warning delivery. Exact sale mapping is required before the sale door can issue or invite the correct collector.
+  Phases 1 and 2 plus the verified-sales and reconnection foundation are built locally. The journey intentionally remains off. Done when the detector finds no damaged ownership state, migration and clean restore including the private media manifest succeed on copies, the required production bindings are confirmed, the letter runner secret and disabled-by-default schedule are configured, and a canary proves the journey can be enabled without seeding or changing production during rehearsal.
 
 - [ ] **Commit Bali edits** — commit the staged Bali-to-studio wording change (8 files already edited, on their own branch) _(you · quick)_
   The edits exist on a branch but aren't committed, so they're invisible until you commit. Done when the branch is committed and merged.
