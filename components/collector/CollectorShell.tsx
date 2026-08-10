@@ -29,6 +29,7 @@ import { Room, RoomKey } from './rooms';
 import { StateScreen, StateKey } from './states';
 import { LetterScreen, LetterKey } from './letters';
 import { WALK, WalkScreen } from './walk';
+import { KIND_LABEL, Note, REVIEW } from './review';
 
 type View =
   | { kind: 'piece' }
@@ -43,6 +44,121 @@ type View =
  * ------------------------------------------------------------------ */
 
 type Jump = [label: string, go: View];
+
+/**
+ * Where each surface came from, so a review can check a screen against its
+ * source rather than against a memory.
+ *
+ * A value is the design file's own card id. `null` means the designer never
+ * drew it: those were built from the wording record and the interactive spec,
+ * following the shape the drawn screens establish, and they are the ones that
+ * most need Adrian's eye, because nothing exists to compare them to.
+ */
+const SOURCE: Record<string, string | null> = {
+  /* the piece page and the code, from section 2a, the winter piece page.
+     Its loading foot is 20a and its empty state is 20h. */
+  piece: '2a · 20a · 20h',
+  code: '2a',
+  codetrue: '2a',
+
+  /* drawn */
+  sign: '9a',
+  born: '9b',
+  lives: '9c',
+  links: '9d',
+  shows: '9e',
+  light47: '9f',
+  welcome: '9g',
+  explain: '9h',
+  transfer: '19e',
+  passready: '19e',
+  passaccept: '19f',
+
+  /* not drawn: built from the record and the spec */
+  fork: null,
+  gift: null,
+  sealed: null,
+  receiving: null,
+  written: null,
+  pull: null,
+  grid: null,
+  love: null,
+  carries: null,
+  forgot: null,
+  ritual: null,
+  ritualfamily: null,
+  passfork: null,
+  passname: null,
+  passsell: null,
+  passvalue: null,
+  passdone: null,
+  invite: null,
+  invitesent: null,
+  person: null,
+  joinletter: null,
+  joinhello: null,
+  joinwho: null,
+  inheritletter: null,
+  inheritaccept: null,
+  inherit: null,
+  inheritread: null,
+
+  /* the rooms, all drawn */
+  story: '19a',
+  certificate: '19b',
+  history: '14f',
+  dreams: '19c',
+  information: '14a',
+  garden: '15g · 15e · 14c',
+  family: '14d',
+  account: '19g',
+
+  /* the states, all drawn */
+  recordonly: '20b',
+  held: '20e',
+  plate: '20f',
+  offline: '20g',
+  letter: '14e',
+  email: '14g',
+};
+
+/* two rooms share a key with a walked screen, so they are looked up by hand */
+const ROOM_SOURCE: Record<string, string | null> = { grid: '19h' };
+const STATE_SOURCE: Record<string, string | null> = { account: '20c' };
+
+const sourceOf = (v: View): string | null | undefined => {
+  if (v.kind === 'room') return ROOM_SOURCE[v.key] ?? SOURCE[v.key];
+  if (v.kind === 'state') return STATE_SOURCE[v.key] ?? SOURCE[v.key];
+  if (v.kind === 'walk') return SOURCE[v.key];
+  return SOURCE[v.kind];
+};
+
+/**
+ * The journeys, each startable at its first screen.
+ *
+ * Four of them cannot be entered from inside the app and never will be: the
+ * gift's receiving side, the collaborator, the heir, and accepting a passing
+ * all arrive by letter, because none of those people had a door until the
+ * piece reached them. Starting them here is the only way to walk them.
+ */
+const FLOWS: [label: string, start: View, note: string][] = [
+  [
+    'Registering it, all the way',
+    { kind: 'piece' },
+    'Begin, sixteen ones, the vault, the four, all five gathering screens, and out onto the page as yours.',
+  ],
+  ['Giving it as a gift', { kind: 'walk', key: 'fork' }, 'The giver seals words into it and the record never moves.'],
+  ['Receiving one that was a gift', { kind: 'walk', key: 'sealed' }, 'Arrives right after the vault, before everything else.'],
+  ['Passing it to someone you love', { kind: 'walk', key: 'passfork' }, 'It stays inside the house, and the line was set privately.'],
+  ['Selling it to a stranger', { kind: 'walk', key: 'passsell' }, 'What travels is stated in one line rather than triaged.'],
+  ['Accepting a piece passed to you', { kind: 'walk', key: 'passaccept' }, 'Arrives by letter. Nothing moves without their hand on it.'],
+  ['Claiming one someone else holds', { kind: 'walk', key: 'receiving' }, 'Thirty silent days with reminders, and only refusal reaches Adrian.'],
+  ['Being asked onto a piece', { kind: 'walk', key: 'joinletter' }, 'Two screens, never five. She is not registering it and not receiving it.'],
+  ['Inheriting it', { kind: 'walk', key: 'inheritletter' }, 'The payoff of the three tiers, and the one that needs call 5 settled.'],
+  ['The year turning', { kind: 'walk', key: 'ritual' }, 'One occasion, and every person has their own birthday window.'],
+  ['Adding to your piece', { kind: 'room', key: 'garden' }, 'The garden: ask, index, write.'],
+  ['Signing back in', { kind: 'walk', key: 'welcome' }, 'No code for everyday life. The code sleeps until a passing.'],
+];
 
 const JUMP: [string, Jump[]][] = [
   [
@@ -209,6 +325,18 @@ const CollectorShell: React.FC = () => {
               ? 'What the piece writes · never from an app'
               : `The piece page · ${relationship}`;
 
+  const source = sourceOf(view);
+
+  /* what is worth checking on this exact surface */
+  const notes: Note[] =
+    (view.kind === 'state'
+      ? REVIEW[view.key === 'account' ? 'account_state' : view.key]
+      : view.kind === 'room'
+        ? REVIEW[view.key === 'grid' ? 'grid_room' : view.key]
+        : view.kind === 'walk' || view.kind === 'letter'
+          ? REVIEW[view.key]
+          : REVIEW[view.kind]) ?? [];
+
   const screen = (
     <>
       {view.kind === 'piece' && (
@@ -271,6 +399,7 @@ const CollectorShell: React.FC = () => {
         </div>
 
         <p
+          className="collector-caption"
           style={{
             margin: '16px 0 0',
             fontFamily: F.label,
@@ -283,6 +412,27 @@ const CollectorShell: React.FC = () => {
         >
           {caption}
         </p>
+
+        {/* where this surface came from, so it can be checked against its
+            source rather than against a memory */}
+        <p
+          className="collector-source"
+          style={{
+            margin: '8px 0 0',
+            fontFamily: F.body,
+            fontSize: 12.5,
+            color: source ? C.brass : C.wrong,
+            textAlign: 'center',
+          }}
+        >
+          {source
+            ? `Drawn in the design file, card ${source}`
+            : 'Not drawn. Built from the wording record and the spec.'}
+        </p>
+
+        <ReviewPanel notes={notes} source={source} />
+
+        <Flows onStart={next => { if (next.kind === 'room') setRelationship('yours'); if (next.kind === 'piece') setRelationship('unclaimed'); setView(next); }} />
 
         <Controls
           relationship={relationship}
@@ -387,15 +537,180 @@ const Controls: React.FC<{
       This piece’s code is sixteen ones. Sixteen nines runs the wrong-code state.
     </p>
 
+    {/* the crosswalk, in the list itself: a screen the designer drew carries
+        its card id, and a screen nobody drew says so. Those are the ones that
+        most need Adrian's eye, because nothing exists to compare them to. */}
+    <Group label="Reading the list below">
+      <span style={{ fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet, lineHeight: 1.6 }}>
+        A screen with a card id was <span style={{ color: C.brass }}>drawn in the design file</span>; check it
+        against that card. A screen without one was{' '}
+        <span style={{ color: C.wrong }}>built from the wording record and the spec</span>, and there is nothing
+        to compare it to.
+      </span>
+    </Group>
+
     {JUMP.map(([section, items]) => (
       <Group key={section} label={section}>
-        {items.map(([label, target]) => (
-          <Btn key={label} onClick={() => onJump(target)}>
-            {label}
-          </Btn>
-        ))}
+        {items.map(([label, target]) => {
+          const src = sourceOf(target);
+          return (
+            <Btn key={label} onClick={() => onJump(target)} tone={src ? 'drawn' : 'undrawn'}>
+              {label}
+              <span className="collector-src-tag" style={{ fontSize: 10, letterSpacing: '.08em', opacity: 0.75, marginLeft: 7 }}>
+                {src ?? 'new'}
+              </span>
+            </Btn>
+          );
+        })}
       </Group>
     ))}
+  </div>
+);
+
+/**
+ * What is worth checking on the surface in view, and what it should have been
+ * compared against.
+ *
+ * Four kinds of wrong, kept apart because they need different answers: copy
+ * nobody has written, a decision still open, a screen nobody drew, and
+ * something knowingly not right yet.
+ */
+const ReviewPanel: React.FC<{ notes: Note[]; source: string | null | undefined }> = ({ notes, source }) => {
+  if (!notes.length) {
+    return (
+      <p style={{ margin: '14px 0 0', fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet, textAlign: 'center' }}>
+        {source
+          ? 'Nothing flagged here. Check it against the card and it should match.'
+          : 'Nothing flagged here, and nothing to compare it to.'}
+      </p>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        maxWidth: 640,
+        margin: '18px auto 0',
+        border: `1px solid ${C.hairStrong}`,
+        borderRadius: 16,
+        padding: '16px 18px 18px',
+        background: 'rgba(0,0,0,.22)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: F.label,
+          fontSize: 9.5,
+          letterSpacing: '.16em',
+          textTransform: 'uppercase',
+          color: C.inkQuiet,
+        }}
+      >
+        What to check here
+      </span>
+
+      {notes.map((n, i) => (
+        <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <span
+            style={{
+              flex: 'none',
+              marginTop: 6,
+              width: 5,
+              height: 5,
+              borderRadius: '50%',
+              display: 'block',
+              background: n.kind === 'call' ? C.brass : n.kind === 'gap' ? C.wrong : C.inkQuiet,
+              boxShadow: n.kind === 'call' ? '0 0 9px 3px rgba(212,184,138,.35)' : undefined,
+            }}
+          />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                display: 'block',
+                fontFamily: F.label,
+                fontSize: 8.5,
+                letterSpacing: '.16em',
+                textTransform: 'uppercase',
+                color: n.kind === 'call' ? C.brass : n.kind === 'gap' ? C.wrong : C.inkQuiet,
+              }}
+            >
+              {KIND_LABEL[n.kind]}
+            </span>
+            <span
+              style={{
+                display: 'block',
+                paddingTop: 6,
+                fontFamily: F.body,
+                fontSize: 13.5,
+                lineHeight: 1.66,
+                color: C.inkBody,
+              }}
+            >
+              {n.text}
+            </span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/** Start any journey at its first screen. Four of them arrive by letter and
+ *  have no door inside the app, so this is the only way to walk those. */
+const Flows: React.FC<{ onStart: (v: View) => void }> = ({ onStart }) => (
+  <div style={{ width: '100%', maxWidth: 860, paddingTop: 34 }}>
+    <span
+      style={{
+        display: 'block',
+        fontFamily: F.label,
+        fontSize: 9.5,
+        letterSpacing: '.16em',
+        textTransform: 'uppercase',
+        color: C.brass,
+        paddingBottom: 4,
+      }}
+    >
+      Walk a whole flow
+    </span>
+    <span style={{ display: 'block', fontFamily: F.body, fontSize: 12.5, color: C.inkQuiet, paddingBottom: 14 }}>
+      Each starts at its first screen and every press after that is the real one. Four of them arrive by letter and
+      have no door inside the app, so this is the only way to walk those.
+    </span>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
+      {FLOWS.map(([label, start, note]) => (
+        <button
+          key={label}
+          type="button"
+          onClick={() => onStart(start)}
+          style={{
+            textAlign: 'left',
+            border: `1px solid ${C.hairStrong}`,
+            borderRadius: 14,
+            background: 'rgba(0,0,0,.18)',
+            padding: '13px 15px',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'block', fontFamily: F.body, fontSize: 14.5, color: C.ink }}>{label}</span>
+          <span
+            style={{
+              display: 'block',
+              paddingTop: 5,
+              fontFamily: F.body,
+              fontSize: 12,
+              lineHeight: 1.55,
+              color: C.inkQuiet,
+            }}
+          >
+            {note}
+          </span>
+        </button>
+      ))}
+    </div>
   </div>
 );
 
@@ -418,18 +733,24 @@ const Group: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
   </div>
 );
 
-const Btn: React.FC<{ children: React.ReactNode; on?: boolean; onClick: () => void }> = ({ children, on, onClick }) => (
+const Btn: React.FC<{
+  children: React.ReactNode;
+  on?: boolean;
+  onClick: () => void;
+  /** drawn in the design file, or built from the record with nothing to compare */
+  tone?: 'drawn' | 'undrawn';
+}> = ({ children, on, onClick, tone }) => (
   <button
     type="button"
     onClick={onClick}
     style={{
-      border: `1px solid ${on ? C.brassEdge : C.hairStrong}`,
+      border: `1px solid ${on ? C.brassEdge : tone === 'undrawn' ? 'rgba(196,90,60,.34)' : C.hairStrong}`,
       borderRadius: 999,
       padding: '6px 12px',
       background: 'none',
       fontFamily: F.body,
       fontSize: 12.5,
-      color: on ? C.brass : C.inkBody,
+      color: on ? C.brass : tone === 'undrawn' ? C.wrong : C.inkBody,
       cursor: 'pointer',
     }}
   >
