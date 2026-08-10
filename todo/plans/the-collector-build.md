@@ -11,6 +11,20 @@
 
 ---
 
+## Authority and delivery truth
+
+Before using this ordered plan, read `collector-screen-wording.md`,
+`collector-primitives.html`, `collector-flow-chart.html`, and
+`collector-flow-preview.html`. The August 10 wording record is the master. Its locked copy and
+settled behavior outrank this older phase list wherever they disagree.
+
+"Local implementation" means code and tests exist on the collector branch. "Active refinement"
+means a reusable seam still needs integration or master-semantic alignment. "Superseded
+presentation" means an older screen or behavior is not acceptance evidence. "Production rollout"
+is a separate stage and has not begun.
+
+---
+
 ## Inputs and defaults
 
 **B1. Factual content is entered through reusable templates with per-artwork overrides.** Materials,
@@ -18,10 +32,10 @@ makers, manufacture location, certificate wording, and related factual fields ne
 surface. Adrian can apply one template to many works, then change any field on an individual work.
 Missing facts stay absent from the public certificate rather than blocking the build. *Serves step 6.*
 
-**B2. Product calls use conservative defaults and remain tunable.** Invitations are single-use and
-artwork-specific; one canonical keeper retains ownership authority; registered lights have equal
-brightness; video is optional and carries no promise of personal or permanent hosting. These defaults
-can be tuned later without changing the ownership foundation.
+**B2. Product calls follow the August 10 master.** Invitations remain single-use and
+artwork-specific, and one canonical caretaker retains ownership authority. The older equal-brightness
+default is superseded by the master's two-part light behavior. Video remains later work and carries
+no promise of personal or permanent hosting.
 
 ---
 
@@ -275,12 +289,21 @@ brief — one complete example beats three partial ones.
 
 ---
 
-## Document map — what is canonical and what is superseded
+## Document map: authority, working records, and superseded material
 
-**Canonical, read these:**
+**August 10 authority, read these first:**
+
+- `HANDOFF-COLLECTOR.md`: the manual and reading order.
+- `collector-screen-wording.md`: the master record and locked copy.
+- `collector-primitives.html`: the settled interactive behavior.
+- `collector-flow-chart.html` and `collector-flow-preview.html`: the journey and screen cards.
+- `collector-build-prompt.md`: the bounded starting prompt that points back to this authority set.
+
+**Working implementation records, subordinate to the authority above:**
 
 - `the-collector-journey.md` — the spec. What must be true.
-- `the-collector-build.md` — this file. What to do, in order.
+- `the-collector-build.md`: this file. What to do, in order, with current status corrections.
+- `the-collector-execution.md`: the progress record and semantic migration table.
 - `collector-hybrid-execution.md`: the approved multi-agent ownership and merge design.
 - `collector-ownership-foundation-implementation.md`: the Phase 1 correctness preflight packet.
 - `collector-phase-1-implementation.md`: the test-first work packets for the walkable journey.
