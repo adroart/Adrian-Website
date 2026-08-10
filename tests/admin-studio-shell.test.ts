@@ -22,7 +22,7 @@ describe('admin studio shell', () => {
           'Artwork stories',
         ]],
         ['Publishing', ['Stories', 'Poetry', 'Media']],
-        ['Sales', ['Pricing', 'Invoices']],
+        ['Sales', ['Verified sales', 'Pricing', 'Invoices']],
       ],
     );
   });

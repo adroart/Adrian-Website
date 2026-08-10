@@ -35,6 +35,7 @@ const AdminPieces = lazy(() => import('./components/AdminPieces'));
 const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
 const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
+const CollectorSales = lazy(() => import('./components/admin/CollectorSales'));
 const CertificateEditor = lazy(() => import('./components/admin/CertificateEditor'));
 const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
 const PublicInvoice = lazy(() => import('./components/PublicInvoice'));
@@ -172,6 +173,7 @@ const SiteShell: React.FC = () => {
               <Route path="pieces" element={<AdminPieces />} />
               <Route path="registrations" element={<AdminArtworkRegistration />} />
               <Route path="invitations" element={<ArtworkInvitations />} />
+              <Route path="collector-sales" element={<CollectorSales />} />
               <Route path="certificates" element={<CertificateEditor artworks={FULL_ARCHIVE.map(({ id: artworkId, title }) => ({ id: artworkId, title }))} />} />
               <Route path="maintenance" element={<AdminMaintenance />} />
               <Route path="pieces/wizard" element={<AdminPlateWizard />} />
