@@ -476,7 +476,41 @@ body{
 /* [hidden] must win over any display rule, everywhere */
 [hidden]{display:none !important}
 
-/* ── the page dressed by relationship ──
+/* ── ONE PAGE, ONE BODY ──
+   The body of the piece page is identical for everyone who opens it: the piece,
+   its name, its dream, its public rows. It is sized ONCE, here, for the fullest
+   case (a caretaker with every row) so that no relationship reflows it. What
+   differs between a stranger and a caretaker is the FOOT, and rows being
+   APPENDED rather than the layout being swapped. Two layouts wearing one name
+   was the thing this replaces. */
+.screen .piece-slot{grid-template-rows:70px;margin-bottom:10px}
+.screen .piece-slot svg{transform:scale(.58)}
+.screen .head .ul{margin-bottom:5px;font-size:9.5px}
+.screen .head .name{font-size:23px}
+.screen .head .status{margin-top:6px;font-size:11.5px}
+.screen .dream{margin-top:12px}
+.screen .dream p{font-size:16.5px;line-height:1.38}
+.screen .dream cite{margin-top:6px;font-size:9px}
+.screen .rows{margin-top:13px}
+.screen .row{padding:9px 2px;font-size:14px}
+.screen .placed{display:none}
+.screen .spacer{min-height:0;flex:0 1 auto}
+
+/* The caretaker's list is the longest in the system: four public rows plus
+   theirs. The ROWS scroll inside their own band rather than the body being
+   re-sized for them, which is what keeps one body true for everyone.
+   The band FADES at its lower edge so the list is visibly longer than the frame.
+   A row cut mid-word with no sign of more is the no-scroll rule breaking
+   quietly: the page does not move, but the person cannot tell there is more. */
+.rows{overflow-y:auto;min-height:0;scrollbar-width:none}
+.rows::-webkit-scrollbar{display:none}
+.screen.caretaker .rows{
+  flex:1 1 auto;
+  -webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 34px),transparent 100%);
+  mask-image:linear-gradient(180deg,#000 calc(100% - 34px),transparent 100%)
+}
+
+/* ── the foot, the only part that reads relationship ──
    unclaimed: one lit pill, the only bright thing.
    claimed by someone else: no pill, sign in is the move; the code door is quiet.
    yours: no pill and no sign in, the light and your doors instead. */
@@ -491,19 +525,6 @@ body{
 .screen.claimed .foot > .tlink{padding:6px 4px;font-size:13.5px}
 
 .screen.claimed .foot > .pill{display:block;margin:0 auto 2px}
-.screen.claimed .row{padding:11px 2px}
-.screen.claimed .piece-slot{grid-template-rows:76px;margin-bottom:10px}
-.screen.claimed .piece-slot svg{transform:scale(.64)}
-.screen.claimed .placed{display:none}
-.screen.claimed .head .ul{margin-bottom:5px}
-.screen.claimed .head .name{font-size:24px}
-.screen.claimed .head .status{margin-top:6px;font-size:11.5px}
-.screen.claimed .dream{margin-top:13px}
-.screen.claimed .dream p{font-size:17px;line-height:1.4}
-.screen.claimed .dream cite{margin-top:7px}
-.screen.claimed .rows{margin-top:14px}
-.screen.claimed .row{padding:9.5px 2px;font-size:14px}
-.screen.claimed .spacer{min-height:0;flex:0 1 auto}
 /* the account row belongs to the caretaker's page only */
 .care-only{display:none}
 .screen.caretaker .care-only{display:flex}
@@ -711,17 +732,6 @@ body{
 .screen.caretaker .spacer{min-height:0;flex:0 1 auto}
 .screen.caretaker .foot{padding-top:6px}
 /* home carries seven rows plus the light: the list yields, nothing is cut */
-.screen.caretaker .row{padding:8px 2px;font-size:14px}
-.screen.caretaker .rows{margin-top:12px}
-.screen.caretaker .piece-slot{grid-template-rows:64px;margin-bottom:10px}
-.screen.caretaker .piece-slot svg{transform:scale(.56)}
-.screen.caretaker .head .name{font-size:22px}
-.screen.caretaker .head .ul{margin-bottom:6px}
-.screen.caretaker .head .status{display:none}
-.screen.caretaker .placed{display:none}
-.screen.caretaker .dream{display:none}
-.screen.caretaker .meter-label{margin-top:9px;font-size:11.5px}
-.screen.caretaker .meter{height:22px}
 /* the meter survives promotion: it shrinks to a small lit anchor beside the
    header, exactly as the drawing does. Screen 23 is meter and rows together. */
 .screen.caretaker.promoted .foot{
