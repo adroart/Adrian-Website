@@ -71,7 +71,7 @@ const CONFLICT_ERRORS = new Set([
 const RETRY_ERRORS = new Set([
   'atomic_write_unavailable', 'atomic_write_failed', 'media_upload_busy',
   'media_upload_timeout', 'media_backup_failed', 'media_backup_conflict',
-  'media_metadata_failed',
+  'media_metadata_failed', 'integrity_error',
 ]);
 
 export function mappedError(error, fallback = 'artist_sales_failed') {
@@ -116,9 +116,31 @@ export function safeLedgerEntry(entry) {
   };
 }
 
+function safeSaleFacts(facts) {
+  return {
+    reconnectionCaseId: facts.reconnectionCaseId,
+    occurrence: facts.occurrence,
+    buyerEmail: facts.buyerEmail,
+    total: facts.total,
+    privateReference: facts.privateReference,
+    privateNotes: facts.privateNotes,
+    recordedAt: facts.recordedAt,
+  };
+}
+
 export function safeDetail(detail) {
   return {
     sale: safeSale(detail.sale),
+    originalSale: safeSale(detail.originalSale),
+    effectiveSale: safeSale(detail.effectiveSale),
+    corrections: detail.corrections.map((correction) => ({
+      saleEventId: correction.saleEventId,
+      sequence: correction.sequence,
+      reason: correction.reason,
+      createdAt: correction.createdAt,
+      before: safeSaleFacts(correction.before),
+      after: safeSaleFacts(correction.after),
+    })),
     items: detail.items.map((item) => ({
       saleItemId: item.saleItemId,
       artworkRecordId: item.artworkRecordId,

@@ -170,6 +170,7 @@ function serviceEnvironment(options: {
   beforeBatch?: () => Promise<void>;
   skipBatchExecution?: boolean;
   overrideBatchResults?: (results: any[], batchNumber: number) => any;
+  overrideAllResults?: (sql: string, results: any[]) => any[];
   onQuery?: (sql: string) => void;
 } = {}) {
   const db = database();
@@ -180,7 +181,11 @@ function serviceEnvironment(options: {
       const statement = {
         bind(...bound: SQLInputValue[]) { values = bound; return statement; },
         first() { options.onQuery?.(sql); return db.prepare(sql).get(...values) ?? null; },
-        all() { options.onQuery?.(sql); return { results: db.prepare(sql).all(...values) }; },
+        all() {
+          options.onQuery?.(sql);
+          const results = db.prepare(sql).all(...values);
+          return { results: options.overrideAllResults?.(sql, results) ?? results };
+        },
         run() {
           options.onQuery?.(sql);
           const result = db.prepare(sql).run(...values);
@@ -3503,7 +3508,7 @@ describe('artist verified sale records', () => {
       assert.equal(detail.sale.privateNotes, 'Corrected note.');
       assert.deepEqual(detail.events, [{
         saleEventId: corrected.saleEventId, sequence: 1, eventType: 'corrected',
-        reason: 'Transcription correction.', actorUserId: 'artist-admin', createdAt: now,
+        reason: 'Transcription correction.', createdAt: now,
       }]);
       assert.deepEqual({ ...fixture.db.prepare(`SELECT * FROM artist_verified_sales WHERE id = ?1`).get(sale.saleId) }, base);
       assert.deepEqual(fixture.db.prepare(`SELECT * FROM artist_artwork_price_entries ORDER BY id`).all(), prices);
@@ -3515,6 +3520,142 @@ describe('artist verified sale records', () => {
         },
         reason: 'Stale.', idempotencyKey: 'correct-stale', administrator, correctedAt: now,
       }), (error: Error & { code?: string }) => error.code === 'version_conflict');
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('returns immutable original facts, latest effective facts, and complete correction history', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const firstAt = '2026-08-10T12:10:00.000Z';
+      const secondAt = '2026-08-10T12:20:00.000Z';
+      const firstReplacement = {
+        reconnectionCaseId: null, occurrence: { precision: 'exact', value: '2019-04-03' },
+        buyerEmail: 'first@example.com', total: { amountMinor: 910000, currency: 'USD' },
+        privateReference: 'First corrected reference', privateNotes: 'First corrected note.',
+      };
+      const secondReplacement = {
+        reconnectionCaseId: null, occurrence: { precision: 'month', value: '2020-06' },
+        buyerEmail: null, total: null,
+        privateReference: 'Second corrected reference', privateNotes: 'Second corrected note.',
+      };
+      const first = await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 0, replacement: firstReplacement,
+        reason: 'Corrected the studio ledger transcription.', idempotencyKey: 'correction-one',
+        administrator, correctedAt: firstAt,
+      });
+      const second = await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 1, replacement: secondReplacement,
+        reason: 'Corrected the later collector confirmation.', idempotencyKey: 'correction-two',
+        administrator, correctedAt: secondAt,
+      });
+
+      const originalSale = {
+        saleId: sale.saleId, reconnectionCaseId: null,
+        occurrence: { precision: 'year', value: '2018' },
+        buyerEmail: 'collector@example.com', total: { amountMinor: 900000, currency: 'USD' },
+        privateReference: 'studio-ledger-2018-4', privateNotes: null,
+        recordedAt: '2026-08-10T01:00:00.000Z', sequence: 0,
+      };
+      const firstFacts = {
+        reconnectionCaseId: null, occurrence: firstReplacement.occurrence,
+        buyerEmail: firstReplacement.buyerEmail, total: firstReplacement.total,
+        privateReference: firstReplacement.privateReference,
+        privateNotes: firstReplacement.privateNotes,
+        recordedAt: originalSale.recordedAt,
+      };
+      const secondFacts = {
+        reconnectionCaseId: null, occurrence: secondReplacement.occurrence,
+        buyerEmail: secondReplacement.buyerEmail, total: secondReplacement.total,
+        privateReference: secondReplacement.privateReference,
+        privateNotes: secondReplacement.privateNotes,
+        recordedAt: originalSale.recordedAt,
+      };
+      const originalFacts = {
+        reconnectionCaseId: originalSale.reconnectionCaseId,
+        occurrence: originalSale.occurrence, buyerEmail: originalSale.buyerEmail,
+        total: originalSale.total, privateReference: originalSale.privateReference,
+        privateNotes: originalSale.privateNotes, recordedAt: originalSale.recordedAt,
+      };
+      const expectedCorrections = [
+        {
+          saleEventId: first.saleEventId, sequence: 1,
+          reason: 'Corrected the studio ledger transcription.', createdAt: firstAt,
+          before: originalFacts, after: firstFacts,
+        },
+        {
+          saleEventId: second.saleEventId, sequence: 2,
+          reason: 'Corrected the later collector confirmation.', createdAt: secondAt,
+          before: firstFacts, after: secondFacts,
+        },
+      ];
+
+      const detail = await getArtistSaleDetail(fixture.env, sale.saleId);
+      assert.deepEqual(detail.originalSale, originalSale);
+      assert.deepEqual(detail.effectiveSale, {
+        saleId: sale.saleId, ...secondFacts, sequence: 2,
+      });
+      assert.deepEqual(detail.sale, detail.effectiveSale);
+      assert.deepEqual(detail.corrections, expectedCorrections);
+      assert.deepEqual((await getArtistSaleDetail(fixture.env, sale.saleId)).corrections,
+        expectedCorrections);
+      assert.deepEqual({ ...fixture.db.prepare(`
+        SELECT occurrence_precision, occurred_on, buyer_email, currency, total_minor,
+               private_reference, private_notes, recorded_at
+          FROM artist_verified_sales WHERE id = ?1
+      `).get(sale.saleId) }, {
+        occurrence_precision: 'year', occurred_on: '2018',
+        buyer_email: 'collector@example.com', currency: 'USD', total_minor: 900000,
+        private_reference: 'studio-ledger-2018-4', private_notes: null,
+        recorded_at: '2026-08-10T01:00:00.000Z',
+      });
+      assert.doesNotMatch(JSON.stringify(detail),
+        /actorUserId|verifiedByUserId|requestDigest|storageReference|sha256/);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('fails closed when correction sequence or before-snapshot continuity is corrupt', async () => {
+    let corruption: 'sequence' | 'before' | null = null;
+    const fixture = serviceEnvironment({
+      overrideAllResults(sql, results) {
+        if (!corruption || !sql.includes('FROM artist_verified_sale_events')
+          || !sql.includes('before_json')) return results;
+        return results.map((row: any, index: number) => index !== 1 ? row : {
+          ...row,
+          ...(corruption === 'sequence' ? { sequence: 4 } : {
+            before_json: JSON.stringify({
+              ...JSON.parse(row.before_json), buyerEmail: 'corrupt@example.com',
+            }),
+          }),
+        });
+      },
+    });
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const firstReplacement = {
+        reconnectionCaseId: null, occurrence: { precision: 'year', value: '2019' },
+        buyerEmail: 'first@example.com', total: { amountMinor: 910000, currency: 'USD' },
+        privateReference: null, privateNotes: null,
+      };
+      await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 0, replacement: firstReplacement,
+        reason: 'First correction.', idempotencyKey: 'integrity-first',
+        administrator, correctedAt: '2026-08-10T12:10:00.000Z',
+      });
+      await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 1,
+        replacement: { ...firstReplacement, privateNotes: 'Second correction.' },
+        reason: 'Second correction.', idempotencyKey: 'integrity-second',
+        administrator, correctedAt: '2026-08-10T12:20:00.000Z',
+      });
+      for (corruption of ['sequence', 'before'] as const) {
+        await assert.rejects(getArtistSaleDetail(fixture.env, sale.saleId),
+          (error: Error & { code?: string }) => error.code === 'integrity_error');
+      }
     } finally {
       fixture.db.close();
     }

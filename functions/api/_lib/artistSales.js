@@ -794,6 +794,62 @@ function baseSaleSnapshot(row) {
   };
 }
 
+const SALE_SNAPSHOT_KEYS = [
+  'reconnectionCaseId', 'occurrencePrecision', 'occurredOn', 'buyerEmail',
+  'currency', 'totalMinor', 'privateReference', 'privateNotes',
+  'verifiedByUserId', 'recordedAt',
+];
+
+function validatedSaleSnapshot(value) {
+  try {
+    if (!exactKeys(value, SALE_SNAPSHOT_KEYS)) throw new Error();
+    const occurrence = normalizedOccurrence({
+      precision: value.occurrencePrecision, value: value.occurredOn,
+    });
+    const reconnectionCaseId = normalizedId(value.reconnectionCaseId, { nullable: true });
+    const buyerEmail = normalizedEmail(value.buyerEmail, { nullable: true });
+    const total = value.currency === null && value.totalMinor === null
+      ? null : normalizedMoney({ amountMinor: value.totalMinor, currency: value.currency });
+    const privateReference = normalizedText(
+      value.privateReference, LIMITS.reference, { nullable: true },
+    );
+    const privateNotes = normalizedText(value.privateNotes, LIMITS.notes, { nullable: true });
+    const verifiedByUserId = normalizedId(value.verifiedByUserId);
+    const recordedAt = normalizedTimestamp(value.recordedAt);
+    if (reconnectionCaseId !== value.reconnectionCaseId
+      || buyerEmail !== value.buyerEmail
+      || privateReference !== value.privateReference
+      || privateNotes !== value.privateNotes
+      || verifiedByUserId !== value.verifiedByUserId
+      || recordedAt !== value.recordedAt
+      || occurrence.precision !== value.occurrencePrecision
+      || occurrence.value !== value.occurredOn
+      || (total === null
+        ? value.currency !== null || value.totalMinor !== null
+        : total.currency !== value.currency || total.amountMinor !== value.totalMinor)) {
+      throw new Error();
+    }
+    return {
+      reconnectionCaseId, occurrencePrecision: occurrence.precision,
+      occurredOn: occurrence.value, buyerEmail,
+      currency: total?.currency ?? null, totalMinor: total?.amountMinor ?? null,
+      privateReference, privateNotes, verifiedByUserId, recordedAt,
+    };
+  } catch {
+    throw codedError('integrity_error');
+  }
+}
+
+function parsedSaleSnapshot(value) {
+  try { return validatedSaleSnapshot(JSON.parse(value)); } catch {
+    throw codedError('integrity_error');
+  }
+}
+
+function sameSaleSnapshot(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 async function saleState(env, saleId) {
   const sale = await first(env, `
     SELECT id, reconnection_case_id, occurrence_precision, occurred_on, buyer_email,
@@ -996,16 +1052,92 @@ function publicSale(snapshot, id, sequence) {
       : { amountMinor: snapshot.totalMinor, currency: snapshot.currency },
     privateReference: snapshot.privateReference,
     privateNotes: snapshot.privateNotes,
-    verifiedByUserId: snapshot.verifiedByUserId,
     recordedAt: snapshot.recordedAt,
     sequence,
+  };
+}
+
+function saleFactProjection(snapshot) {
+  return {
+    reconnectionCaseId: snapshot.reconnectionCaseId,
+    occurrence: { precision: snapshot.occurrencePrecision, value: snapshot.occurredOn },
+    buyerEmail: snapshot.buyerEmail,
+    total: snapshot.totalMinor == null ? null
+      : { amountMinor: snapshot.totalMinor, currency: snapshot.currency },
+    privateReference: snapshot.privateReference,
+    privateNotes: snapshot.privateNotes,
+    recordedAt: snapshot.recordedAt,
   };
 }
 
 export async function getArtistSaleDetail(env, saleIdValue) {
   if (!env?.DB) throw codedError('invalid_request');
   const saleId = normalizedId(saleIdValue);
-  const state = await saleState(env, saleId);
+  const saleRow = await first(env, `
+    SELECT id, reconnection_case_id, occurrence_precision, occurred_on, buyer_email,
+           currency, total_minor, private_reference, private_notes,
+           verified_by_user_id, recorded_at
+      FROM artist_verified_sales WHERE id = ?1
+  `, saleId);
+  if (!saleRow) throw codedError('sale_not_found');
+  const originalSnapshot = validatedSaleSnapshot(baseSaleSnapshot(saleRow));
+  const eventRows = await all(env, `
+    SELECT id, sequence, event_type, before_json, after_json, reason, created_at
+      FROM artist_verified_sale_events
+     WHERE sale_id = ?1 ORDER BY sequence, id
+  `, saleId);
+  let effectiveSnapshot = originalSnapshot;
+  let expectedSequence = 1;
+  const events = [];
+  const corrections = [];
+  for (const event of eventRows) {
+    let eventId;
+    try {
+      eventId = normalizedId(event.id);
+    } catch {
+      throw codedError('integrity_error');
+    }
+    const sequence = event.sequence;
+    if (typeof sequence !== 'number' || !Number.isSafeInteger(sequence)
+      || sequence !== expectedSequence
+      || !['corrected', 'shared_message_appended'].includes(event.event_type)
+      || eventId !== event.id) {
+      throw codedError('integrity_error');
+    }
+    const before = parsedSaleSnapshot(event.before_json);
+    const after = parsedSaleSnapshot(event.after_json);
+    if (!sameSaleSnapshot(before, effectiveSnapshot)
+      || after.verifiedByUserId !== originalSnapshot.verifiedByUserId
+      || after.recordedAt !== originalSnapshot.recordedAt) {
+      throw codedError('integrity_error');
+    }
+    let reason = null;
+    try {
+      if (event.event_type === 'corrected') {
+        reason = normalizedText(event.reason, LIMITS.reason);
+        if (reason !== event.reason || sameSaleSnapshot(before, after)) throw new Error();
+      } else if (event.reason !== null) throw new Error();
+      normalizedTimestamp(event.created_at);
+    } catch {
+      throw codedError('integrity_error');
+    }
+    const projectedEvent = {
+      saleEventId: eventId, sequence, eventType: event.event_type,
+      reason, createdAt: event.created_at,
+    };
+    events.push(projectedEvent);
+    if (event.event_type === 'corrected') {
+      corrections.push({
+        saleEventId: eventId, sequence, reason, createdAt: event.created_at,
+        before: saleFactProjection(before), after: saleFactProjection(after),
+      });
+    }
+    effectiveSnapshot = after;
+    expectedSequence += 1;
+  }
+  const sequence = expectedSequence - 1;
+  const originalSale = publicSale(originalSnapshot, saleId, 0);
+  const effectiveSale = publicSale(effectiveSnapshot, saleId, sequence);
   const itemRows = await all(env, `
     SELECT item.id AS item_id, item.artwork_record_id, item.amount_minor, item.currency,
            record.artwork_id, record.edition_json, record.keeper_piece_id,
@@ -1024,8 +1156,7 @@ export async function getArtistSaleDetail(env, saleIdValue) {
   `, saleId);
   const ledgerRows = await all(env, `
     SELECT entry.id, entry.artwork_record_id, entry.message, entry.media_id, entry.created_at,
-           media.media_role, media.storage_reference, media.sha256,
-           media.content_type, media.byte_length
+           media.media_role, media.content_type, media.byte_length
       FROM artist_artwork_ledger_entries entry
       LEFT JOIN artist_artwork_media media ON media.id = entry.media_id
      WHERE entry.sale_id = ?1
@@ -1050,8 +1181,7 @@ export async function getArtistSaleDetail(env, saleIdValue) {
       ledgerEntryId: entry.id, message: entry.message, mediaId: entry.media_id,
       createdAt: entry.created_at,
       media: entry.media_id ? {
-        mediaRole: entry.media_role, storageReference: entry.storage_reference,
-        sha256: entry.sha256, contentType: entry.content_type,
+        mediaRole: entry.media_role, contentType: entry.content_type,
         byteLength: Number(entry.byte_length),
       } : null,
     });
@@ -1067,19 +1197,9 @@ export async function getArtistSaleDetail(env, saleIdValue) {
       priceEntries: pricesByItem.get(row.item_id) || [],
       ledgerEntries: ledgerByArtwork.get(row.artwork_record_id) || [],
     }));
-  const events = (await all(env, `
-    SELECT id, sequence, event_type, reason, actor_user_id, created_at
-      FROM artist_verified_sale_events
-     WHERE sale_id = ?1 ORDER BY sequence, id
-  `, saleId)).map((event) => ({
-    saleEventId: event.id,
-    sequence: Number(event.sequence),
-    eventType: event.event_type,
-    reason: event.reason,
-    actorUserId: event.actor_user_id,
-    createdAt: event.created_at,
-  }));
-  return { sale: publicSale(state.snapshot, saleId, state.sequence), items, events };
+  return {
+    sale: effectiveSale, originalSale, effectiveSale, corrections, items, events,
+  };
 }
 
 export async function listArtistSaleWorkspace(env, rawFilters = {}) {

@@ -142,9 +142,27 @@ export type ArtistSaleEvent = {
   saleEventId: string; sequence: number; eventType: string;
   reason: string | null; createdAt: string;
 };
+export type ArtistSaleDetailSummary = Omit<ArtistSaleSummary, 'identificationStatuses'>;
+export type ArtistSaleFactSnapshot = {
+  reconnectionCaseId: string | null;
+  occurrence: ArtistSaleOccurrence;
+  buyerEmail: string | null;
+  total: ArtistSaleMoney | null;
+  privateReference: string | null;
+  privateNotes: string | null;
+  recordedAt: string;
+};
+export type ArtistSaleCorrection = {
+  saleEventId: string; sequence: number; reason: string; createdAt: string;
+  before: ArtistSaleFactSnapshot; after: ArtistSaleFactSnapshot;
+};
 export type ArtistSaleDetailResponse = {
   ok: true;
-  sale: ArtistSaleSummary;
+  /** Compatibility alias for effectiveSale. */
+  sale: ArtistSaleDetailSummary;
+  originalSale: ArtistSaleDetailSummary;
+  effectiveSale: ArtistSaleDetailSummary;
+  corrections: ArtistSaleCorrection[];
   items: ArtistSaleItem[];
   events: ArtistSaleEvent[];
 };
@@ -462,13 +480,88 @@ function parseSaleEvent(value: unknown): ArtistSaleEvent {
   };
 }
 
-export function parseArtistSaleDetailResponse(value: unknown): ArtistSaleDetailResponse {
-  const response = exact(value, ['ok', 'sale', 'items', 'events']);
-  if (response.ok !== true) throw new Error('invalid_response');
+function parseSaleFactSnapshot(value: unknown): ArtistSaleFactSnapshot {
+  const fact = exact(value, [
+    'reconnectionCaseId', 'occurrence', 'buyerEmail', 'total',
+    'privateReference', 'privateNotes', 'recordedAt',
+  ]);
   return {
-    ok: true, sale: parseSale(response.sale),
+    reconnectionCaseId: fact.reconnectionCaseId === null
+      ? null : privateId(fact.reconnectionCaseId),
+    occurrence: parseOccurrence(fact.occurrence),
+    buyerEmail: nullableEmail(fact.buyerEmail),
+    total: parseMoney(fact.total),
+    privateReference: nullableString(fact.privateReference),
+    privateNotes: nullableString(fact.privateNotes),
+    recordedAt: timestamp(fact.recordedAt),
+  };
+}
+
+function parseSaleCorrection(value: unknown): ArtistSaleCorrection {
+  const correction = exact(value, [
+    'saleEventId', 'sequence', 'reason', 'createdAt', 'before', 'after',
+  ]);
+  return {
+    saleEventId: privateId(correction.saleEventId),
+    sequence: integer(correction.sequence, 1),
+    reason: string(correction.reason),
+    createdAt: timestamp(correction.createdAt),
+    before: parseSaleFactSnapshot(correction.before),
+    after: parseSaleFactSnapshot(correction.after),
+  };
+}
+
+function sameParsedValue(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function saleFacts(sale: ArtistSaleDetailSummary): ArtistSaleFactSnapshot {
+  return {
+    reconnectionCaseId: sale.reconnectionCaseId,
+    occurrence: sale.occurrence,
+    buyerEmail: sale.buyerEmail,
+    total: sale.total,
+    privateReference: sale.privateReference,
+    privateNotes: sale.privateNotes,
+    recordedAt: sale.recordedAt,
+  };
+}
+
+export function parseArtistSaleDetailResponse(value: unknown): ArtistSaleDetailResponse {
+  const response = exact(value, [
+    'ok', 'sale', 'originalSale', 'effectiveSale', 'corrections', 'items', 'events',
+  ]);
+  if (response.ok !== true) throw new Error('invalid_response');
+  const sale = parseSale(response.sale) as ArtistSaleDetailSummary;
+  const originalSale = parseSale(response.originalSale) as ArtistSaleDetailSummary;
+  const effectiveSale = parseSale(response.effectiveSale) as ArtistSaleDetailSummary;
+  const corrections = array(response.corrections).map(parseSaleCorrection);
+  const events = array(response.events).map(parseSaleEvent);
+  let priorFacts = saleFacts(originalSale);
+  for (const correction of corrections) {
+    if (!sameParsedValue(correction.before, priorFacts)) throw new Error('invalid_response');
+    priorFacts = correction.after;
+  }
+  const latestSequence = events.length === 0 ? 0 : events.at(-1)!.sequence;
+  if (originalSale.sequence !== 0 || sale.saleId !== originalSale.saleId
+    || sale.saleId !== effectiveSale.saleId || !sameParsedValue(sale, effectiveSale)
+    || effectiveSale.sequence !== latestSequence
+    || !sameParsedValue(priorFacts, saleFacts(effectiveSale))
+    || events.some((event, index) => event.sequence !== index + 1)
+    || corrections.some((correction, index) => index > 0
+      && correction.sequence <= corrections[index - 1].sequence)
+    || corrections.some((correction) => !events.some((event) =>
+      event.eventType === 'corrected'
+      && event.saleEventId === correction.saleEventId
+      && event.sequence === correction.sequence
+      && event.reason === correction.reason
+      && event.createdAt === correction.createdAt))) {
+    throw new Error('invalid_response');
+  }
+  return {
+    ok: true, sale, originalSale, effectiveSale, corrections,
     items: array(response.items).map(parseSaleItem),
-    events: array(response.events).map(parseSaleEvent),
+    events,
   };
 }
 

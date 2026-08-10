@@ -5,6 +5,7 @@ import { after, beforeEach, describe, it, mock } from 'node:test';
 import {
   beginArtistSaleAttempt,
   finishArtistSaleAttempt,
+  parseArtistSaleDetailResponse,
   parseArtistLedgerMediaResponse,
   parseArtistSaleMutationResponse,
   parseArtistSaleWorkspaceResponse,
@@ -21,6 +22,7 @@ const administrator = {
 let coreCalls: Array<{ operation: string; input: Record<string, unknown> }> = [];
 let mediaStoreCalls = 0;
 let detailSequence = 0;
+let detailErrorCode: string | null = null;
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
@@ -64,9 +66,19 @@ mock.module('../functions/api/_lib/artistSales.js', {
     }),
     getArtistSaleDetail: async (_env: unknown, saleId: string) => {
       coreCalls.push({ operation: 'getArtistSaleDetail', input: { saleId } });
+      if (detailErrorCode) throw Object.assign(new Error('private detail failure'), {
+        code: detailErrorCode,
+      });
+      const sale = {
+        saleId, reconnectionCaseId: 'case-one',
+        occurrence: { precision: 'year', value: '2020' },
+        buyerEmail: 'collector@example.com', total: null,
+        privateReference: null, privateNotes: null,
+        recordedAt: '2026-08-10T00:00:00.000Z', sequence: detailSequence,
+      };
       return {
-        sale: { saleId, reconnectionCaseId: 'case-one', sequence: detailSequence },
-        items: [], events: [],
+        sale, originalSale: { ...sale, sequence: 0 }, effectiveSale: sale,
+        corrections: [], items: [], events: [],
       };
     },
     appendReconnectionEvent: operation('appendReconnectionEvent', {
@@ -119,7 +131,9 @@ mock.module('../functions/api/_lib/artworkLedgerMedia.js', {
   },
 });
 
-beforeEach(() => { coreCalls = []; mediaStoreCalls = 0; detailSequence = 0; });
+beforeEach(() => {
+  coreCalls = []; mediaStoreCalls = 0; detailSequence = 0; detailErrorCode = null;
+});
 after(() => mock.reset());
 
 describe('artist sales frozen client attempts', () => {
@@ -239,6 +253,49 @@ describe('artist sales frozen client attempts', () => {
     }));
   });
 
+  it('strictly parses immutable and effective sale facts without private correction fields', () => {
+    const originalSale = {
+      saleId: 'sale-1', reconnectionCaseId: null,
+      occurrence: { precision: 'year', value: '2018' },
+      buyerEmail: 'collector@example.com', total: { amountMinor: 900000, currency: 'USD' },
+      privateReference: 'ledger-2018', privateNotes: null,
+      recordedAt: '2026-08-10T00:00:00.000Z', sequence: 0,
+    };
+    const before = {
+      reconnectionCaseId: null, occurrence: originalSale.occurrence,
+      buyerEmail: originalSale.buyerEmail, total: originalSale.total,
+      privateReference: originalSale.privateReference, privateNotes: null,
+      recordedAt: originalSale.recordedAt,
+    };
+    const after = {
+      ...before, occurrence: { precision: 'year', value: '2019' },
+      privateReference: 'corrected-ledger',
+    };
+    const effectiveSale = { saleId: 'sale-1', ...after, sequence: 1 };
+    const correction = {
+      saleEventId: 'event-1', sequence: 1, reason: 'Corrected transcription.',
+      createdAt: '2026-08-10T01:00:00.000Z', before, after,
+    };
+    const response = {
+      ok: true, sale: effectiveSale, originalSale, effectiveSale,
+      corrections: [correction], items: [], events: [{
+        saleEventId: 'event-1', sequence: 1, eventType: 'corrected',
+        reason: correction.reason, createdAt: correction.createdAt,
+      }],
+    };
+    assert.deepEqual(parseArtistSaleDetailResponse(response), response);
+    for (const invalid of [
+      { ...response, originalSale: undefined },
+      { ...response, corrections: [{ ...correction, actorUserId: 'admin-user' }] },
+      { ...response, corrections: [{ ...correction, before: { ...before, requestDigest: 'private' } }] },
+      { ...response, corrections: [{
+        ...correction, before: { ...before, buyerEmail: 'other@example.com' },
+      }] },
+      { ...response, effectiveSale: { ...effectiveSale, storageReference: 'private/key' } },
+      { ...response, sale: { ...effectiveSale, privateReference: 'different' } },
+    ]) assert.throws(() => parseArtistSaleDetailResponse(invalid));
+  });
+
   it('uploads a raw blob with private metadata only in exact headers', async () => {
     const file = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });
     let captured: [RequestInfo | URL, RequestInit | undefined] | null = null;
@@ -301,6 +358,31 @@ describe('private artist sales route modules', () => {
     assert.equal(await modules[3].mediaIdentityId('admin-one', 'upload-key'), first);
     assert.notEqual(await modules[3].mediaIdentityId('admin-two', 'upload-key'), first);
     assert.notEqual(await modules[3].mediaIdentityId('admin-one', 'other-key'), first);
+  });
+
+  it('returns the explicit original/effective detail allowlist and fails corrupt chains closed', async () => {
+    const detail = await import('../functions/api/admin/collector-sales/[id].js');
+    const invoke = () => detail.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-sales/sale-one`),
+      env: { DB: {} }, params: { id: 'sale-one' },
+    });
+    const response = await invoke();
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    const body = await response.json() as Record<string, any>;
+    assert.deepEqual(Object.keys(body).sort(), [
+      'corrections', 'effectiveSale', 'events', 'items', 'ok', 'originalSale', 'sale',
+    ]);
+    assert.deepEqual(body.sale, body.effectiveSale);
+    assert.equal(body.originalSale.sequence, 0);
+    assert.doesNotMatch(JSON.stringify(body),
+      /actorUserId|verifiedByUserId|requestDigest|storageReference|sha256/);
+
+    detailErrorCode = 'integrity_error';
+    const corrupt = await invoke();
+    assert.equal(corrupt.status, 503);
+    assert.deepEqual(await corrupt.json(), { ok: false, error: 'integrity_error' });
+    assert.equal(corrupt.headers.get('Cache-Control'), 'no-store');
   });
 
   it('keeps uploads raw-streamed and private response projections explicit', () => {
