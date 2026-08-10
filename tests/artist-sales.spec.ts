@@ -48,6 +48,7 @@ type SalesMockOptions = {
   failCorrectionReason?: string;
   deferRegistration?: boolean;
   deferInvitation?: boolean;
+  workspacePageSize?: number;
 };
 
 function deferredResponse() {
@@ -154,10 +155,44 @@ async function installSalesMock(page: Page, options: SalesMockOptions = {}) {
       }
       return detail ? reply(route, { ok: true, ...detail }) : reply(route, { ok: false, error: 'sale_not_found' }, 404);
     }
-    if (request.method() === 'GET') return reply(route, {
-      ok: true, sales: state.sales, reconnectionCases: state.cases,
-      pagination: { limit: 25, offset: 0, sales: { hasMore: false, nextOffset: null }, reconnectionCases: { hasMore: false, nextOffset: null } },
-    });
+    if (request.method() === 'GET') {
+      const limit = Math.min(Number(url.searchParams.get('limit') || options.workspacePageSize || 25), options.workspacePageSize || 25);
+      const offset = Number(url.searchParams.get('offset') || 0);
+      const sales = state.sales.slice(offset, offset + limit);
+      const cases = state.cases.slice(offset, offset + limit);
+      const selectableItems = [...state.details.values()]
+        .flatMap(detail => detail.items)
+        .filter(item => item.identificationStatus !== 'unresolved');
+      const artworkRecords = [...new Map(
+        selectableItems.map(item => [
+          item.artworkRecordId,
+          {
+            artworkRecordId: item.artworkRecordId,
+            artworkId: item.artworkId,
+            edition: item.edition,
+            identificationStatus: item.identificationStatus,
+            publicCode: item.identificationStatus === 'identity_linked' ? 'AR-BCDEFGHJ' : null,
+          },
+        ]),
+      ).values()].slice(offset, offset + limit);
+      const salesHasMore = offset + limit < state.sales.length;
+      const casesHaveMore = offset + limit < state.cases.length;
+      const artworkRecordsHaveMore = offset + limit < new Set(
+        selectableItems.map(item => item.artworkRecordId),
+      ).size;
+      return reply(route, {
+        ok: true, sales, reconnectionCases: cases, artworkRecords,
+        pagination: {
+          limit, offset,
+          sales: { hasMore: salesHasMore, nextOffset: salesHasMore ? offset + limit : null },
+          reconnectionCases: { hasMore: casesHaveMore, nextOffset: casesHaveMore ? offset + limit : null },
+          artworkRecords: {
+            hasMore: artworkRecordsHaveMore,
+            nextOffset: artworkRecordsHaveMore ? offset + limit : null,
+          },
+        },
+      });
+    }
     if (!match && body.action === 'createReconnection') {
       const reconnectionCaseId = 'case-one';
       state.cases.push({ reconnectionCaseId, recipientEmail: body.recipientEmail, recipientName: body.recipientName, privateContext: body.privateContext, status: 'open', createdAt: now });
@@ -166,12 +201,38 @@ async function installSalesMock(page: Page, options: SalesMockOptions = {}) {
     if (!match && body.action === 'createSale') {
       const saleId = 'sale-one';
       const sale = { saleId, reconnectionCaseId: body.reconnectionCaseId, occurrence: body.occurrence, buyerEmail: body.buyerEmail, total: body.total, privateReference: body.privateReference, privateNotes: body.privateNotes, recordedAt: now, sequence: 0 };
-      const items: Artwork[] = body.artworks.map((item: any, index: number) => ({
-        saleItemId: `item-${index + 1}`, artworkRecordId: `record-${index + 1}`,
-        artworkId: item.artworkId, edition: item.edition ? { ...item.edition, number: null, size: null } : null,
-        keeperPieceId: null, identificationStatus: item.artworkId ? 'identified' : 'unresolved',
-        recordVersion: 1, price: item.price, priceEntries: [], ledgerEntries: [],
-      }));
+      const items: Artwork[] = body.artworks.map((item: any, index: number) => {
+        const existing = item.artworkRecordId
+          ? [...state.details.values()].flatMap(value => value.items)
+            .find(value => value.artworkRecordId === item.artworkRecordId)
+          : null;
+        const priceEntries = [
+          ...(existing?.priceEntries || []),
+          ...(item.price ? [{
+            priceEntryId: `price-sale-one-${index + 1}`,
+            ...item.price,
+            occurrence: body.occurrence,
+            recordedAt: now,
+          }] : []),
+        ];
+        return {
+          saleItemId: `item-${index + 1}`,
+          artworkRecordId: item.artworkRecordId || `record-${index + 1}`,
+          artworkId: existing?.artworkId ?? item.artworkId,
+          edition: existing?.edition ?? (item.edition ? {
+            ...item.edition,
+            number: item.edition.kind === 'numbered' ? item.edition.number : null,
+            size: item.edition.kind === 'numbered' ? item.edition.size : null,
+          } : null),
+          keeperPieceId: existing?.keeperPieceId ?? null,
+          identificationStatus: existing?.identificationStatus
+            ?? (item.artworkId ? 'identified' : 'unresolved'),
+          recordVersion: existing?.recordVersion ?? 1,
+          price: item.price,
+          priceEntries,
+          ledgerEntries: existing?.ledgerEntries || [],
+        };
+      });
       state.sales.push({ ...sale, identificationStatuses: items.map(item => item.identificationStatus) });
       state.details.set(saleId, {
         sale, originalSale: { ...sale }, effectiveSale: sale,
@@ -275,6 +336,68 @@ async function installSalesMock(page: Page, options: SalesMockOptions = {}) {
     resolveInvitation: invitationResponse.resolve,
   };
 }
+
+test('loads every deterministic workspace page so the twenty-sixth private record is reachable', async ({ page }) => {
+  const details = Array.from({ length: 26 }, (_, index) => seededDetail(
+    `sale-page-${index + 1}`,
+    String(2000 + index),
+    `page-${index + 1}@example.com`,
+    `Private page reference ${index + 1}`,
+    `Private page note ${index + 1}`,
+    [seededArtwork(`page-${index + 1}`, 1, 'identified')],
+  ));
+  await installSalesMock(page, { seedDetails: details, workspacePageSize: 25 });
+
+  await page.goto('/admin/collector-sales');
+
+  await expect(page.getByRole('button', { name: /Sale from 2025/ })).toBeVisible();
+  const captured = await page.evaluate(async () => (window as any).__salesTestState());
+  const workspaceGets = captured.requests.filter((item: any) => item.method === 'GET'
+    && new URL(item.url).pathname.endsWith('/collector-sales'));
+  expect(workspaceGets.map((item: any) => new URL(item.url).searchParams.get('offset'))).toEqual([
+    null,
+    '25',
+  ]);
+});
+
+test('attaches a resale price to the existing private artwork record', async ({ page }) => {
+  const existing = seededArtwork('resale', 1, 'identity_linked');
+  existing.price = { amountMinor: 125000, currency: 'USD' };
+  existing.priceEntries = [{
+    priceEntryId: 'price-original', amountMinor: 125000, currency: 'USD',
+    occurrence: { precision: 'year', value: '2014' }, recordedAt: now,
+  }];
+  const original = seededDetail(
+    'sale-original', '2014', 'first-owner@example.com', 'Original receipt', 'Original sale',
+    [existing],
+  );
+  await installSalesMock(page, { seedDetails: [original] });
+  await page.goto('/admin/collector-sales');
+
+  await page.getByRole('button', { name: 'Record a verified sale' }).click();
+  await page.getByLabel('Year', { exact: true }).check();
+  await page.getByLabel('Sale year').fill('2026');
+  await page.getByLabel('Existing private artwork', { exact: true }).check();
+  await page.getByLabel('Existing artwork 1').selectOption(existing.artworkRecordId);
+  await page.getByLabel('Price, optional').fill('2500');
+  await page.getByRole('button', { name: 'Save verified sale', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Sale from 2026' })).toBeVisible();
+
+  const captured = await page.evaluate(async () => (window as any).__salesTestState());
+  const request = captured.requests.findLast((item: any) => item.body?.action === 'createSale');
+  expect(request.body.artworks).toEqual([{
+    artworkRecordId: existing.artworkRecordId,
+    artworkId: null,
+    edition: null,
+    price: { amountMinor: 250000, currency: 'USD' },
+  }]);
+  const resale = captured.persisted.details.find(([saleId]: [string, unknown]) => saleId === 'sale-one')[1];
+  expect(resale.items[0].artworkRecordId).toBe(existing.artworkRecordId);
+  expect(resale.items[0].priceEntries.map((entry: any) => entry.amountMinor)).toEqual([
+    125000,
+    250000,
+  ]);
+});
 
 test('records and reconnects through the complete private verified-sale journey', async ({ page }, testInfo) => {
   await installSalesMock(page);

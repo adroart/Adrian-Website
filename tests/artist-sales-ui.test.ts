@@ -35,6 +35,18 @@ describe('verified sales admin workspace', () => {
     assert.match(component, /artworks\.map/);
   });
 
+  it('loads every bounded page and attaches resales to an existing private artwork record', () => {
+    const component = source('components/admin/CollectorSales.tsx');
+    for (const phrase of [
+      'pagination.sales.hasMore', 'pagination.reconnectionCases.hasMore',
+      'pagination.artworkRecords.hasMore', 'Existing private artwork',
+      'Choose an existing private artwork', 'existing private price history',
+    ]) assert.match(component, new RegExp(phrase, 'i'), phrase);
+    assert.match(component, /artworkRecordId:\s*row\.artworkRecordId/);
+    assert.match(component, /artworkId:\s*null/);
+    assert.match(component, /edition:\s*null/);
+  });
+
   it('keeps retry attempts frozen and private data out of browser persistence', () => {
     const component = source('components/admin/CollectorSales.tsx');
     assert.match(component, /beginArtistSaleAttempt/);

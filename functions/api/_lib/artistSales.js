@@ -1330,9 +1330,28 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
       recipientName: row.recipient_name, privateContext: row.private_context,
       status: row.effective_status, createdAt: row.created_at,
     }));
+  const artworkRecordRows = await all(env, `
+    SELECT record.id, record.artwork_id, record.edition_json,
+           record.identification_status, piece.public_code
+      FROM artist_artwork_records record
+      LEFT JOIN keeper_pieces piece ON piece.id = record.keeper_piece_id
+     WHERE record.identification_status IN ('identified', 'identity_linked')
+     ORDER BY CASE WHEN record.identification_status = 'identity_linked' THEN 0 ELSE 1 END,
+              record.updated_at DESC, record.id DESC
+     LIMIT ?1 OFFSET ?2
+  `, pageSize, offset);
+  const artworkRecordsHaveMore = artworkRecordRows.length > limit;
+  const artworkRecords = artworkRecordRows.slice(0, limit).map((row) => ({
+    artworkRecordId: row.id,
+    artworkId: row.artwork_id,
+    edition: editionFromJson(row.edition_json),
+    identificationStatus: row.identification_status,
+    publicCode: row.public_code,
+  }));
   return {
     sales,
     reconnectionCases,
+    artworkRecords,
     pagination: {
       limit,
       offset,
@@ -1340,6 +1359,10 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
       reconnectionCases: {
         hasMore: caseHasMore,
         nextOffset: caseHasMore ? offset + limit : null,
+      },
+      artworkRecords: {
+        hasMore: artworkRecordsHaveMore,
+        nextOffset: artworkRecordsHaveMore ? offset + limit : null,
       },
     },
   };

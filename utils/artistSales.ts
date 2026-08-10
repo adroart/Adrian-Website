@@ -103,6 +103,13 @@ export type ArtistSaleSummary = {
   sequence: number;
   identificationStatuses?: Array<'unresolved' | 'identified' | 'identity_linked'>;
 };
+export type ArtistSaleArtworkRecordOption = {
+  artworkRecordId: string;
+  artworkId: string;
+  edition: ArtistSaleStoredEdition;
+  identificationStatus: 'identified' | 'identity_linked';
+  publicCode: string | null;
+};
 export type ArtistSaleWorkspaceResponse = {
   ok: true;
   sales: ArtistSaleSummary[];
@@ -111,10 +118,12 @@ export type ArtistSaleWorkspaceResponse = {
     privateContext: string | null; status: 'open' | 'partially_resolved' | 'resolved' | 'closed';
     createdAt: string;
   }>;
+  artworkRecords: ArtistSaleArtworkRecordOption[];
   pagination: {
     limit: number; offset: number;
     sales: { hasMore: boolean; nextOffset: number | null };
     reconnectionCases: { hasMore: boolean; nextOffset: number | null };
+    artworkRecords: { hasMore: boolean; nextOffset: number | null };
   };
 };
 export type ArtistSaleStoredEdition =
@@ -384,9 +393,11 @@ function parsePage(value: unknown): { hasMore: boolean; nextOffset: number | nul
 }
 
 export function parseArtistSaleWorkspaceResponse(value: unknown): ArtistSaleWorkspaceResponse {
-  const response = exact(value, ['ok', 'sales', 'reconnectionCases', 'pagination']);
+  const response = exact(value, ['ok', 'sales', 'reconnectionCases', 'artworkRecords', 'pagination']);
   if (response.ok !== true) throw new Error('invalid_response');
-  const pagination = exact(response.pagination, ['limit', 'offset', 'sales', 'reconnectionCases']);
+  const pagination = exact(response.pagination, [
+    'limit', 'offset', 'sales', 'reconnectionCases', 'artworkRecords',
+  ]);
   return {
     ok: true,
     sales: array(response.sales).map((sale) => parseSale(sale, true)),
@@ -406,9 +417,33 @@ export function parseArtistSaleWorkspaceResponse(value: unknown): ArtistSaleWork
         createdAt: timestamp(item.createdAt),
       };
     }),
+    artworkRecords: array(response.artworkRecords).map((value) => {
+      const item = exact(value, [
+        'artworkRecordId', 'artworkId', 'edition', 'identificationStatus', 'publicCode',
+      ]);
+      const identificationStatus = string(item.identificationStatus);
+      if (!['identified', 'identity_linked'].includes(identificationStatus)) {
+        throw new Error('invalid_response');
+      }
+      const publicCode = nullableString(item.publicCode);
+      if (publicCode !== null && !/^AR-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/.test(publicCode)) {
+        throw new Error('invalid_response');
+      }
+      const artworkId = privateId(item.artworkId);
+      const edition = parseStoredEdition(item.edition);
+      if (edition === null) throw new Error('invalid_response');
+      return {
+        artworkRecordId: privateId(item.artworkRecordId),
+        artworkId,
+        edition,
+        identificationStatus: identificationStatus as ArtistSaleArtworkRecordOption['identificationStatus'],
+        publicCode,
+      };
+    }),
     pagination: {
       limit: integer(pagination.limit, 1), offset: integer(pagination.offset),
       sales: parsePage(pagination.sales), reconnectionCases: parsePage(pagination.reconnectionCases),
+      artworkRecords: parsePage(pagination.artworkRecords),
     },
   };
 }

@@ -58,10 +58,15 @@ mock.module('../functions/api/_lib/artistSales.js', {
       priceEntryIds: [], replayed: false,
     }),
     listArtistSaleWorkspace: async () => ({
-      sales: [], reconnectionCases: [], pagination: {
+      sales: [], reconnectionCases: [], artworkRecords: [{
+        artworkRecordId: 'record-one', artworkId: 'UL-100',
+        edition: { kind: 'unique', number: null, size: null },
+        identificationStatus: 'identity_linked', publicCode: 'AR-BCDEFGHJ',
+      }], pagination: {
         limit: 25, offset: 0,
         sales: { hasMore: false, nextOffset: null },
         reconnectionCases: { hasMore: false, nextOffset: null },
+        artworkRecords: { hasMore: false, nextOffset: null },
       },
     }),
     getArtistSaleDetail: async (_env: unknown, saleId: string) => {
@@ -194,10 +199,16 @@ describe('artist sales frozen client attempts', () => {
         sequence: 0, identificationStatuses: ['unresolved'],
       }],
       reconnectionCases: [],
+      artworkRecords: [{
+        artworkRecordId: 'record-1', artworkId: 'UL-100',
+        edition: { kind: 'unique', number: null, size: null },
+        identificationStatus: 'identity_linked', publicCode: 'AR-BCDEFGHJ',
+      }],
       pagination: {
         limit: 25, offset: 0,
         sales: { hasMore: false, nextOffset: null },
         reconnectionCases: { hasMore: false, nextOffset: null },
+        artworkRecords: { hasMore: false, nextOffset: null },
       },
     };
     assert.deepEqual(parseArtistSaleWorkspaceResponse(response), response);
@@ -205,12 +216,32 @@ describe('artist sales frozen client attempts', () => {
       ...response,
       sales: [{ ...response.sales[0], verifiedByUserId: 'private-user' }],
     }));
+    assert.throws(() => parseArtistSaleWorkspaceResponse({
+      ...response,
+      artworkRecords: [{ ...response.artworkRecords[0], keeperPieceId: 'private-keeper' }],
+    }));
+    assert.throws(() => parseArtistSaleWorkspaceResponse({
+      ...response,
+      artworkRecords: [{ ...response.artworkRecords[0], publicCode: 'AR-INVALID0' }],
+    }));
+    assert.throws(() => parseArtistSaleWorkspaceResponse({
+      ...response,
+      artworkRecords: [{ ...response.artworkRecords[0], identificationStatus: 'unresolved' }],
+    }));
+    for (const invalid of [
+      { ...response.artworkRecords[0], artworkId: null },
+      { ...response.artworkRecords[0], edition: null },
+    ]) assert.throws(() => parseArtistSaleWorkspaceResponse({
+      ...response,
+      artworkRecords: [invalid],
+    }));
   });
 
   it('requires normalized non-null recipient emails in reconnection responses', () => {
     const workspace = {
       ok: true,
       sales: [],
+      artworkRecords: [],
       reconnectionCases: [{
         reconnectionCaseId: 'case-1', recipientEmail: 'collector@example.com',
         recipientName: null, privateContext: null, status: 'open',
@@ -220,6 +251,7 @@ describe('artist sales frozen client attempts', () => {
         limit: 25, offset: 0,
         sales: { hasMore: false, nextOffset: null },
         reconnectionCases: { hasMore: false, nextOffset: null },
+        artworkRecords: { hasMore: false, nextOffset: null },
       },
     };
     const mutation = {
@@ -383,6 +415,22 @@ describe('private artist sales route modules', () => {
     assert.equal(corrupt.status, 503);
     assert.deepEqual(await corrupt.json(), { ok: false, error: 'integrity_error' });
     assert.equal(corrupt.headers.get('Cache-Control'), 'no-store');
+  });
+
+  it('returns only the bounded private artwork-record selection fields', async () => {
+    const sales = await import('../functions/api/admin/collector-sales.js');
+    const response = await sales.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-sales`),
+      env: { DB: {} },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    const body = await response.json() as Record<string, any>;
+    assert.deepEqual(Object.keys(body.artworkRecords[0]).sort(), [
+      'artworkId', 'artworkRecordId', 'edition',
+      'identificationStatus', 'publicCode',
+    ]);
+    assert.doesNotMatch(JSON.stringify(body.artworkRecords), /keeperPieceId|userId|email/);
   });
 
   it('keeps uploads raw-streamed and private response projections explicit', () => {

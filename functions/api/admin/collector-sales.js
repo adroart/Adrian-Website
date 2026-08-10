@@ -291,6 +291,13 @@ function safeWorkspace(workspace) {
       status: item.status,
       createdAt: item.createdAt,
     })),
+    artworkRecords: workspace.artworkRecords.map((item) => ({
+      artworkRecordId: item.artworkRecordId,
+      artworkId: item.artworkId,
+      edition: item.edition,
+      identificationStatus: item.identificationStatus,
+      publicCode: item.publicCode,
+    })),
     pagination: {
       limit: workspace.pagination.limit,
       offset: workspace.pagination.offset,
@@ -301,6 +308,10 @@ function safeWorkspace(workspace) {
       reconnectionCases: {
         hasMore: workspace.pagination.reconnectionCases.hasMore,
         nextOffset: workspace.pagination.reconnectionCases.nextOffset,
+      },
+      artworkRecords: {
+        hasMore: workspace.pagination.artworkRecords.hasMore,
+        nextOffset: workspace.pagination.artworkRecords.nextOffset,
       },
     },
   };

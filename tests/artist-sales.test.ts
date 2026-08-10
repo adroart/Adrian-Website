@@ -3085,6 +3085,41 @@ describe('artist verified sale records', () => {
     }
   });
 
+  it('appends a resale price to the existing artwork record without creating a duplicate', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const original = await createVerifiedSale(fixture.env, saleInput());
+      const artworkRecordId = original.artworkRecordIds[0];
+      const resale = await createVerifiedSale(fixture.env, saleInput({
+        occurrence: { precision: 'year', value: '2026' },
+        buyerEmail: 'next-owner@example.com',
+        total: { amountMinor: 425000, currency: 'USD' },
+        artworks: [{
+          artworkRecordId,
+          artworkId: null,
+          edition: null,
+          price: { amountMinor: 425000, currency: 'USD' },
+        }],
+        idempotencyKey: 'sale-resale-existing-record',
+        recordedAt: '2026-08-10T02:00:00.000Z',
+      }));
+
+      assert.deepEqual(resale.artworkRecordIds, [artworkRecordId]);
+      assert.equal(count(fixture.db, 'artist_artwork_records'), 3);
+      assert.deepEqual(fixture.db.prepare(`
+        SELECT amount_minor, currency, occurred_on, occurrence_precision
+          FROM artist_artwork_price_entries
+         WHERE artwork_record_id = ?1
+         ORDER BY recorded_at, id
+      `).all(artworkRecordId).map((row) => ({ ...row })), [
+        { amount_minor: 300000, currency: 'USD', occurred_on: '2018', occurrence_precision: 'year' },
+        { amount_minor: 425000, currency: 'USD', occurred_on: '2026', occurrence_precision: 'year' },
+      ]);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
   it('recovers an exact sale replay after a committed response is lost and rolls back every forced failure', async () => {
     const lost = serviceEnvironment({ loseFirstResponse: true });
     try {
@@ -3734,7 +3769,12 @@ describe('artist verified sale records', () => {
 
       for (let index = 1; index < 55; index += 1) {
         await createVerifiedSale(fixture.env, saleInput({
-          artworks: [{ artworkRecordId: null, artworkId: null, edition: null, price: null }],
+          artworks: [{
+            artworkRecordId: null,
+            artworkId: 'UL-100',
+            edition: { kind: 'numbered', number: index, size: 64 },
+            price: null,
+          }],
           idempotencyKey: `workspace-sale-${index}`,
         }));
       }
@@ -3750,13 +3790,17 @@ describe('artist verified sale records', () => {
       const firstPage = await listArtistSaleWorkspace(fixture.env, { limit: 25, offset: 0 });
       assert.equal(firstPage.sales.length, 25);
       assert.equal(firstPage.reconnectionCases.length, 25);
+      assert.equal(firstPage.artworkRecords.length, 25);
+      assert.equal(Object.hasOwn(firstPage.artworkRecords[0], 'keeperPieceId'), false);
+      assert.equal(firstPage.artworkRecords.some((record: any) => record.identificationStatus === 'unresolved'), false);
       assert.deepEqual(firstPage.pagination, {
         limit: 25,
         offset: 0,
         sales: { hasMore: true, nextOffset: 25 },
         reconnectionCases: { hasMore: true, nextOffset: 25 },
+        artworkRecords: { hasMore: true, nextOffset: 25 },
       });
-      assert.ok(queryCount <= 3, `workspace page used ${queryCount} queries`);
+      assert.ok(queryCount <= 4, `workspace page used ${queryCount} queries`);
 
       queryCount = 0;
       const secondPage = await listArtistSaleWorkspace(fixture.env, { limit: 25, offset: 25 });
@@ -3764,7 +3808,11 @@ describe('artist verified sale records', () => {
         ...firstPage.sales.map((sale: any) => sale.saleId),
         ...secondPage.sales.map((sale: any) => sale.saleId),
       ]).size, firstPage.sales.length + secondPage.sales.length);
-      assert.ok(queryCount <= 3, `second workspace page used ${queryCount} queries`);
+      assert.equal(new Set([
+        ...firstPage.artworkRecords.map((record: any) => record.artworkRecordId),
+        ...secondPage.artworkRecords.map((record: any) => record.artworkRecordId),
+      ]).size, firstPage.artworkRecords.length + secondPage.artworkRecords.length);
+      assert.ok(queryCount <= 4, `second workspace page used ${queryCount} queries`);
       await assert.rejects(listArtistSaleWorkspace(fixture.env, { limit: 51, offset: 0 }),
         (error: Error & { code?: string }) => error.code === 'invalid_request');
     } finally {

@@ -35,6 +35,8 @@ type RecordSelection = { kind: 'sale' | 'reconnection'; id: string };
 type ReconnectionStatus = ArtistSaleWorkspaceResponse['reconnectionCases'][number]['status'];
 type ArtworkDraft = {
   rowId: string;
+  source: 'new' | 'existing';
+  artworkRecordId: string;
   artworkId: string;
   editionKind: 'unique' | 'numbered';
   editionNumber: string;
@@ -69,6 +71,7 @@ const statusText: Record<ReconnectionStatus, string> = {
 
 const emptyArtwork = (index = 0): ArtworkDraft => ({
   rowId: `${Date.now()}-${index}-${crypto.randomUUID()}`,
+  source: 'new', artworkRecordId: '',
   artworkId: '', editionKind: 'unique', editionNumber: '1', editionSize: '',
   price: '', currency: 'USD',
 });
@@ -148,6 +151,17 @@ function editionLabel(value: ArtistSaleItem['edition']): string {
   if (!value) return 'Edition not identified';
   if (value.kind === 'unique') return 'Unique work';
   return value.size ? `Number ${value.number} of ${value.size}` : `Number ${value.number}`;
+}
+
+function existingArtworkLabel(
+  value: ArtistSaleWorkspaceResponse['artworkRecords'][number],
+): string {
+  const identity = value.publicCode
+    ? `Registered ${value.publicCode}`
+    : value.identificationStatus === 'identity_linked'
+      ? 'Registered identity'
+      : 'Identified, not registered';
+  return `${artworkTitle(value.artworkId)} · ${editionLabel(value.edition)} · ${identity}`;
 }
 
 async function jsonRequest(url: string, init: RequestInit = {}): Promise<unknown> {
@@ -273,8 +287,54 @@ const CollectorSales: React.FC = () => {
     setLoading(true);
     setLoadError('');
     try {
-      const value = await jsonRequest('/api/admin/collector-sales', { signal });
-      setWorkspace(parseArtistSaleWorkspaceResponse(value));
+      const firstValue = await jsonRequest('/api/admin/collector-sales', { signal });
+      const firstPage = parseArtistSaleWorkspaceResponse(firstValue);
+      const pages = [firstPage];
+      let page = firstPage;
+      while (page.pagination.sales.hasMore
+        || page.pagination.reconnectionCases.hasMore
+        || page.pagination.artworkRecords.hasMore) {
+        const offsets = [
+          page.pagination.sales.nextOffset,
+          page.pagination.reconnectionCases.nextOffset,
+          page.pagination.artworkRecords.nextOffset,
+        ].filter((value): value is number => value !== null);
+        const nextOffset = Math.min(...offsets);
+        if (!Number.isSafeInteger(nextOffset) || nextOffset <= page.pagination.offset) {
+          throw new Error('invalid_response');
+        }
+        const nextValue = await jsonRequest(
+          `/api/admin/collector-sales?limit=${page.pagination.limit}&offset=${nextOffset}`,
+          { signal },
+        );
+        page = parseArtistSaleWorkspaceResponse(nextValue);
+        if (page.pagination.offset !== nextOffset || page.pagination.limit !== firstPage.pagination.limit) {
+          throw new Error('invalid_response');
+        }
+        pages.push(page);
+      }
+      const unique = <T,>(values: T[], id: (value: T) => string): T[] => [
+        ...new Map(values.map(value => [id(value), value])).values(),
+      ];
+      setWorkspace({
+        ok: true,
+        sales: unique(pages.flatMap(value => value.sales), value => value.saleId),
+        reconnectionCases: unique(
+          pages.flatMap(value => value.reconnectionCases),
+          value => value.reconnectionCaseId,
+        ),
+        artworkRecords: unique(
+          pages.flatMap(value => value.artworkRecords),
+          value => value.artworkRecordId,
+        ),
+        pagination: {
+          limit: firstPage.pagination.limit,
+          offset: 0,
+          sales: { hasMore: false, nextOffset: null },
+          reconnectionCases: { hasMore: false, nextOffset: null },
+          artworkRecords: { hasMore: false, nextOffset: null },
+        },
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       setLoadError(recoveryMessage(error));
@@ -420,10 +480,23 @@ const CollectorSales: React.FC = () => {
         privateReference: privateReference.trim() || null,
         privateNotes: privateNotes.trim() || null,
         reconnectionCaseId: linkedCaseId || null,
-        artworks: artworks.map(row => ({
-          artworkRecordId: null, artworkId: row.artworkId || null,
-          edition: edition(row), price: money(row.price, row.currency),
-        })),
+        artworks: artworks.map(row => {
+          if (row.source === 'existing') {
+            if (!row.artworkRecordId) throw new Error('invalid_artwork_record');
+            return {
+              artworkRecordId: row.artworkRecordId,
+              artworkId: null,
+              edition: null,
+              price: money(row.price, row.currency),
+            };
+          }
+          return {
+            artworkRecordId: null,
+            artworkId: row.artworkId || null,
+            edition: edition(row),
+            price: money(row.price, row.currency),
+          };
+        }),
       };
       const attempt = beginArtistSaleAttempt(saleAttempt, draft);
       usedAttempt = attempt;
@@ -591,10 +664,20 @@ const CollectorSales: React.FC = () => {
               {artworks.map((row, index) => (
                 <fieldset key={row.rowId} className="space-y-4 border-b border-wood-200 py-6" disabled={Boolean(saleAttempt)}>
                   <legend className="font-serif text-xl text-wood-900">Artwork {index + 1}</legend>
+                  <fieldset className="space-y-3">
+                    <legend className="font-sans text-base font-semibold text-wood-800">How should this artwork be recorded?</legend>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex min-h-11 items-center gap-3 font-sans text-base text-wood-800"><input className="h-5 w-5" type="radio" name={`artwork-source-${row.rowId}`} checked={row.source === 'new'} onChange={() => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, source: 'new', artworkRecordId: '' } : item))} />New or unidentified artwork</label>
+                      <label className="flex min-h-11 items-center gap-3 font-sans text-base text-wood-800"><input className="h-5 w-5" type="radio" name={`artwork-source-${row.rowId}`} checked={row.source === 'existing'} disabled={!workspace?.artworkRecords.length} onChange={() => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, source: 'existing', artworkId: '', artworkRecordId: '' } : item))} />Existing private artwork</label>
+                    </div>
+                    {!workspace?.artworkRecords.length && <p className="font-sans text-base text-wood-600">No earlier artwork records are available yet.</p>}
+                  </fieldset>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className={labelClass}>Artwork {index + 1}<select className={inputClass} value={row.artworkId} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, artworkId: event.target.value } : item))}><option value="">Artwork not identified yet</option>{FULL_ARCHIVE.map(item => <option key={item.id} value={item.id}>{item.title} · {item.id}</option>)}</select></label>
-                    <label className={labelClass}>Edition kind<select className={inputClass} value={row.editionKind} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionKind: event.target.value as ArtworkDraft['editionKind'] } : item))}><option value="unique">Unique work</option><option value="numbered">Numbered edition</option></select></label>
-                    {row.editionKind === 'numbered' && <><label className={labelClass}>Edition number<input className={inputClass} type="number" min="1" value={row.editionNumber} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionNumber: event.target.value } : item))} /></label><label className={labelClass}>Edition size, optional<input className={inputClass} type="number" min={row.editionNumber || '1'} value={row.editionSize} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionSize: event.target.value } : item))} /></label></>}
+                    {row.source === 'existing' ? <label className={`${labelClass} md:col-span-2`}>Existing artwork {index + 1}<select className={inputClass} required value={row.artworkRecordId} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, artworkRecordId: event.target.value } : item))}><option value="">Choose an existing private artwork</option>{workspace?.artworkRecords.map(item => <option key={item.artworkRecordId} value={item.artworkRecordId} disabled={artworks.some(other => other.rowId !== row.rowId && other.source === 'existing' && other.artworkRecordId === item.artworkRecordId)}>{existingArtworkLabel(item)}</option>)}</select><span className="mt-2 block font-sans text-base font-normal text-wood-600">The new price will join this artwork's existing private price history.</span></label> : <>
+                      <label className={labelClass}>Artwork {index + 1}<select className={inputClass} value={row.artworkId} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, artworkId: event.target.value } : item))}><option value="">Artwork not identified yet</option>{FULL_ARCHIVE.map(item => <option key={item.id} value={item.id}>{item.title} · {item.id}</option>)}</select></label>
+                      <label className={labelClass}>Edition kind<select className={inputClass} value={row.editionKind} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionKind: event.target.value as ArtworkDraft['editionKind'] } : item))}><option value="unique">Unique work</option><option value="numbered">Numbered edition</option></select></label>
+                      {row.editionKind === 'numbered' && <><label className={labelClass}>Edition number<input className={inputClass} type="number" min="1" value={row.editionNumber} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionNumber: event.target.value } : item))} /></label><label className={labelClass}>Edition size, optional<input className={inputClass} type="number" min={row.editionNumber || '1'} value={row.editionSize} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, editionSize: event.target.value } : item))} /></label></>}
+                    </>}
                     <label className={labelClass}>Price, optional<input className={inputClass} type="number" min="0" step="0.01" inputMode="decimal" value={row.price} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, price: event.target.value } : item))} /></label>
                     <label className={labelClass}>Currency<select className={inputClass} value={row.currency} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, currency: event.target.value } : item))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label>
                   </div>
