@@ -481,13 +481,17 @@ export async function appendReconnectionEvent(env, rawInput) {
   }
   const digest = await requestDigest(input);
   const replay = await first(env, `
-    SELECT id, event_type, request_digest FROM artist_reconnection_events
+    SELECT id, event_type, private_note, request_digest FROM artist_reconnection_events
      WHERE idempotency_key = ?1
   `, input.idempotencyKey);
   if (replay) {
     if (replay.request_digest !== digest) throw codedError('idempotency_conflict');
-    return { reconnectionEventId: replay.id, eventType: replay.event_type,
-      status: await effectiveCaseStatus(env, input.reconnectionCaseId), replayed: true };
+    return {
+      reconnectionEventId: replay.id,
+      eventType: replay.event_type,
+      ...(replay.event_type === 'status_changed' ? { status: replay.private_note } : {}),
+      replayed: true,
+    };
   }
   const base = await first(env, `
     SELECT id, status FROM artist_reconnection_cases WHERE id = ?1
@@ -530,26 +534,36 @@ export async function appendReconnectionEvent(env, rawInput) {
     `, id, input.reconnectionCaseId, eventType, storedNote, input.artworkRecordId,
     input.administrator.userId, input.idempotencyKey, digest, input.createdAt);
   try {
-    const [result] = await env.DB.batch([insert]);
-    if (eventType === 'status_changed'
-      && (!result?.success || Number(result?.meta?.changes) !== 1)) {
+    const results = await env.DB.batch([insert]);
+    if (eventType === 'status_changed' && Array.isArray(results) && results.length === 1
+      && results[0]?.success === true && Number(results[0]?.meta?.changes) === 0) {
       throw codedError('version_conflict');
     }
+    requireBatchResults(results, 1);
   } catch (error) {
     const concurrent = await first(env, `
-      SELECT id, event_type, request_digest FROM artist_reconnection_events
+      SELECT id, event_type, private_note, request_digest FROM artist_reconnection_events
        WHERE idempotency_key = ?1
     `, input.idempotencyKey);
     if (concurrent) {
       if (concurrent.request_digest !== digest) throw codedError('idempotency_conflict');
-      return { reconnectionEventId: concurrent.id, eventType: concurrent.event_type,
-        status: await effectiveCaseStatus(env, input.reconnectionCaseId), replayed: true };
+      return {
+        reconnectionEventId: concurrent.id,
+        eventType: concurrent.event_type,
+        ...(concurrent.event_type === 'status_changed'
+          ? { status: concurrent.private_note } : {}),
+        replayed: true,
+      };
     }
-    if (eventType === 'status_changed') throw codedError('version_conflict');
-    throw error;
+    if (error?.code === 'version_conflict' || error?.code === 'atomic_write_failed') throw error;
+    throw codedError('atomic_write_failed');
   }
-  return { reconnectionEventId: id, eventType,
-    status: eventType === 'status_changed' ? input.newStatus : currentStatus, replayed: false };
+  return {
+    reconnectionEventId: id,
+    eventType,
+    ...(eventType === 'status_changed' ? { status: input.newStatus } : {}),
+    replayed: false,
+  };
 }
 
 function normalizeIdentityInput(input, mode) {
@@ -998,44 +1012,59 @@ export async function getArtistSaleDetail(env, saleIdValue) {
       JOIN artist_artwork_records record ON record.id = item.artwork_record_id
      WHERE item.sale_id = ?1 ORDER BY item.created_at, item.id
   `, saleId);
-  const items = [];
-  for (const row of itemRows) {
-    const prices = await all(env, `
-      SELECT id, amount_minor, currency, occurred_on, occurrence_precision, recorded_at
-        FROM artist_artwork_price_entries WHERE sale_item_id = ?1 ORDER BY recorded_at, id
-    `, row.item_id);
-    const ledger = await all(env, `
-      SELECT entry.id, entry.message, entry.media_id, entry.created_at,
-             media.media_role, media.storage_reference, media.sha256,
-             media.content_type, media.byte_length
-        FROM artist_artwork_ledger_entries entry
-        LEFT JOIN artist_artwork_media media ON media.id = entry.media_id
-       WHERE entry.sale_id = ?1 AND entry.artwork_record_id = ?2
-       ORDER BY entry.created_at, entry.id
-    `, saleId, row.artwork_record_id);
-    items.push({
+  const priceRows = await all(env, `
+    SELECT price.id, price.sale_item_id, price.amount_minor, price.currency,
+           price.occurred_on, price.occurrence_precision, price.recorded_at
+      FROM artist_artwork_price_entries price
+      JOIN artist_verified_sale_items item ON item.id = price.sale_item_id
+     WHERE item.sale_id = ?1
+     ORDER BY price.sale_item_id, price.recorded_at, price.id
+  `, saleId);
+  const ledgerRows = await all(env, `
+    SELECT entry.id, entry.artwork_record_id, entry.message, entry.media_id, entry.created_at,
+           media.media_role, media.storage_reference, media.sha256,
+           media.content_type, media.byte_length
+      FROM artist_artwork_ledger_entries entry
+      LEFT JOIN artist_artwork_media media ON media.id = entry.media_id
+     WHERE entry.sale_id = ?1
+     ORDER BY entry.artwork_record_id, entry.created_at, entry.id
+  `, saleId);
+  const pricesByItem = new Map();
+  for (const price of priceRows) {
+    const entries = pricesByItem.get(price.sale_item_id) || [];
+    entries.push({
+      priceEntryId: price.id,
+      amountMinor: Number(price.amount_minor),
+      currency: price.currency,
+      occurrence: { precision: price.occurrence_precision, value: price.occurred_on },
+      recordedAt: price.recorded_at,
+    });
+    pricesByItem.set(price.sale_item_id, entries);
+  }
+  const ledgerByArtwork = new Map();
+  for (const entry of ledgerRows) {
+    const entries = ledgerByArtwork.get(entry.artwork_record_id) || [];
+    entries.push({
+      ledgerEntryId: entry.id, message: entry.message, mediaId: entry.media_id,
+      createdAt: entry.created_at,
+      media: entry.media_id ? {
+        mediaRole: entry.media_role, storageReference: entry.storage_reference,
+        sha256: entry.sha256, contentType: entry.content_type,
+        byteLength: Number(entry.byte_length),
+      } : null,
+    });
+    ledgerByArtwork.set(entry.artwork_record_id, entries);
+  }
+  const items = itemRows.map((row) => ({
       saleItemId: row.item_id, artworkRecordId: row.artwork_record_id,
       artworkId: row.artwork_id, edition: editionFromJson(row.edition_json),
       keeperPieceId: row.keeper_piece_id, identificationStatus: row.identification_status,
       recordVersion: Number(row.record_version),
       price: row.amount_minor == null ? null
         : { amountMinor: Number(row.amount_minor), currency: row.currency },
-      priceEntries: prices.map((price) => ({
-        priceEntryId: price.id, amountMinor: Number(price.amount_minor), currency: price.currency,
-        occurrence: { precision: price.occurrence_precision, value: price.occurred_on },
-        recordedAt: price.recorded_at,
-      })),
-      ledgerEntries: ledger.map((entry) => ({
-        ledgerEntryId: entry.id, message: entry.message, mediaId: entry.media_id,
-        createdAt: entry.created_at,
-        media: entry.media_id ? {
-          mediaRole: entry.media_role, storageReference: entry.storage_reference,
-          sha256: entry.sha256, contentType: entry.content_type,
-          byteLength: Number(entry.byte_length),
-        } : null,
-      })),
-    });
-  }
+      priceEntries: pricesByItem.get(row.item_id) || [],
+      ledgerEntries: ledgerByArtwork.get(row.artwork_record_id) || [],
+    }));
   const events = (await all(env, `
     SELECT id, sequence, event_type, reason, actor_user_id, created_at
       FROM artist_verified_sale_events
@@ -1052,7 +1081,15 @@ export async function getArtistSaleDetail(env, saleIdValue) {
 }
 
 export async function listArtistSaleWorkspace(env, rawFilters = {}) {
-  if (!env?.DB || !exactKeys(rawFilters, [], ['caseStatus', 'search', 'identificationStatus'])) {
+  if (!env?.DB || !exactKeys(rawFilters, [], [
+    'caseStatus', 'search', 'identificationStatus', 'limit', 'offset',
+  ])) {
+    throw codedError('invalid_request');
+  }
+  const limit = rawFilters.limit === undefined ? 25 : rawFilters.limit;
+  const offset = rawFilters.offset === undefined ? 0 : rawFilters.offset;
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50
+    || !Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
     throw codedError('invalid_request');
   }
   const filters = {
@@ -1066,48 +1103,122 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
   if (filters.identificationStatus && !IDENTIFICATION_STATUSES.has(filters.identificationStatus)) {
     throw codedError('invalid_request');
   }
+  const searchPattern = filters.search ? `%${filters.search}%` : null;
+  const pageSize = limit + 1;
   const saleRows = await all(env, `
-    SELECT id, reconnection_case_id, occurrence_precision, occurred_on, buyer_email,
-           currency, total_minor, private_reference, private_notes,
-           verified_by_user_id, recorded_at
-      FROM artist_verified_sales ORDER BY recorded_at DESC, id DESC
-  `);
-  const sales = [];
-  for (const row of saleRows) {
-    const event = await first(env, `
-      SELECT sequence, after_json FROM artist_verified_sale_events
-       WHERE sale_id = ?1 ORDER BY sequence DESC LIMIT 1
-    `, row.id);
-    const snapshot = event ? JSON.parse(event.after_json) : baseSaleSnapshot(row);
-    const statuses = (await all(env, `
-      SELECT record.identification_status
+    WITH ranked_events AS (
+      SELECT sale_id, sequence, after_json,
+             ROW_NUMBER() OVER (
+               PARTITION BY sale_id ORDER BY sequence DESC, id DESC
+             ) AS event_rank
+        FROM artist_verified_sale_events
+    )
+    SELECT sale.id, sale.reconnection_case_id, sale.occurrence_precision,
+           sale.occurred_on, sale.buyer_email, sale.currency, sale.total_minor,
+           sale.private_reference, sale.private_notes, sale.verified_by_user_id,
+           sale.recorded_at, latest.sequence AS latest_sequence,
+           latest.after_json AS latest_after_json
+      FROM artist_verified_sales sale
+      LEFT JOIN ranked_events latest
+        ON latest.sale_id = sale.id AND latest.event_rank = 1
+     WHERE (
+       ?1 IS NULL
+       OR lower(
+         sale.id || char(10)
+         || coalesce(CASE WHEN latest.sequence IS NULL THEN sale.buyer_email
+              ELSE json_extract(latest.after_json, '$.buyerEmail') END, '') || char(10)
+         || coalesce(CASE WHEN latest.sequence IS NULL THEN sale.private_reference
+              ELSE json_extract(latest.after_json, '$.privateReference') END, '') || char(10)
+         || coalesce(CASE WHEN latest.sequence IS NULL THEN sale.private_notes
+              ELSE json_extract(latest.after_json, '$.privateNotes') END, '')
+       ) LIKE ?2
+     )
+       AND (
+         ?3 IS NULL OR EXISTS (
+           SELECT 1
+             FROM artist_verified_sale_items filtered_item
+             JOIN artist_artwork_records filtered_record
+               ON filtered_record.id = filtered_item.artwork_record_id
+            WHERE filtered_item.sale_id = sale.id
+              AND filtered_record.identification_status = ?3
+         )
+       )
+     ORDER BY sale.recorded_at DESC, sale.id DESC
+     LIMIT ?4 OFFSET ?5
+  `, filters.search, searchPattern, filters.identificationStatus, pageSize, offset);
+  const saleHasMore = saleRows.length > limit;
+  const salePageRows = saleRows.slice(0, limit);
+  const saleIds = salePageRows.map((row) => row.id);
+  const statusesBySale = new Map(saleIds.map((id) => [id, []]));
+  if (saleIds.length > 0) {
+    const placeholders = saleIds.map((_, index) => `?${index + 1}`).join(', ');
+    const statusRows = await all(env, `
+      SELECT item.sale_id, record.identification_status
         FROM artist_verified_sale_items item
         JOIN artist_artwork_records record ON record.id = item.artwork_record_id
-       WHERE item.sale_id = ?1 ORDER BY item.id
-    `, row.id)).map((entry) => entry.identification_status);
-    const sale = { ...publicSale(snapshot, row.id, event ? Number(event.sequence) : 0),
-      identificationStatuses: statuses };
-    const searchable = [sale.buyerEmail, sale.privateReference, sale.privateNotes, sale.saleId]
-      .filter(Boolean).join('\n').toLowerCase();
-    if ((!filters.search || searchable.includes(filters.search))
-      && (!filters.identificationStatus || statuses.includes(filters.identificationStatus))) sales.push(sale);
+       WHERE item.sale_id IN (${placeholders})
+       ORDER BY item.sale_id, item.created_at, item.id
+    `, ...saleIds);
+    for (const row of statusRows) statusesBySale.get(row.sale_id)?.push(row.identification_status);
   }
+  const sales = salePageRows.map((row) => {
+    const sequence = row.latest_sequence == null ? 0 : Number(row.latest_sequence);
+    const snapshot = row.latest_after_json
+      ? JSON.parse(row.latest_after_json)
+      : baseSaleSnapshot(row);
+    return {
+      ...publicSale(snapshot, row.id, sequence),
+      identificationStatuses: statusesBySale.get(row.id) || [],
+    };
+  });
   const caseRows = await all(env, `
-    SELECT id, recipient_email, recipient_name, private_context, status, created_at
-      FROM artist_reconnection_cases ORDER BY created_at DESC, id DESC
-  `);
-  const reconnectionCases = [];
-  for (const row of caseRows) {
-    const status = await effectiveCaseStatus(env, row.id, row.status);
-    const item = {
+    WITH ranked_status AS (
+      SELECT reconnection_case_id, private_note,
+             ROW_NUMBER() OVER (
+               PARTITION BY reconnection_case_id
+               ORDER BY CASE private_note
+                 WHEN 'closed' THEN 3 WHEN 'resolved' THEN 2
+                 WHEN 'partially_resolved' THEN 1 ELSE 0 END DESC,
+                 created_at DESC, id DESC
+             ) AS status_rank
+        FROM artist_reconnection_events
+       WHERE event_type = 'status_changed'
+    )
+    SELECT reconnect.id, reconnect.recipient_email, reconnect.recipient_name,
+           reconnect.private_context, reconnect.created_at,
+           coalesce(latest.private_note, reconnect.status) AS effective_status
+      FROM artist_reconnection_cases reconnect
+      LEFT JOIN ranked_status latest
+        ON latest.reconnection_case_id = reconnect.id AND latest.status_rank = 1
+     WHERE (?1 IS NULL OR coalesce(latest.private_note, reconnect.status) = ?1)
+       AND (
+         ?2 IS NULL
+         OR lower(
+           reconnect.id || char(10) || reconnect.recipient_email || char(10)
+           || coalesce(reconnect.recipient_name, '') || char(10)
+           || coalesce(reconnect.private_context, '')
+         ) LIKE ?3
+       )
+     ORDER BY reconnect.created_at DESC, reconnect.id DESC
+     LIMIT ?4 OFFSET ?5
+  `, filters.caseStatus, filters.search, searchPattern, pageSize, offset);
+  const caseHasMore = caseRows.length > limit;
+  const reconnectionCases = caseRows.slice(0, limit).map((row) => ({
       reconnectionCaseId: row.id, recipientEmail: row.recipient_email,
       recipientName: row.recipient_name, privateContext: row.private_context,
-      status, createdAt: row.created_at,
-    };
-    const searchable = [item.recipientEmail, item.recipientName, item.privateContext, item.reconnectionCaseId]
-      .filter(Boolean).join('\n').toLowerCase();
-    if ((!filters.caseStatus || status === filters.caseStatus)
-      && (!filters.search || searchable.includes(filters.search))) reconnectionCases.push(item);
-  }
-  return { sales, reconnectionCases };
+      status: row.effective_status, createdAt: row.created_at,
+    }));
+  return {
+    sales,
+    reconnectionCases,
+    pagination: {
+      limit,
+      offset,
+      sales: { hasMore: saleHasMore, nextOffset: saleHasMore ? offset + limit : null },
+      reconnectionCases: {
+        hasMore: caseHasMore,
+        nextOffset: caseHasMore ? offset + limit : null,
+      },
+    },
+  };
 }

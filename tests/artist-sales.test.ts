@@ -161,7 +161,11 @@ function count(db: DatabaseSync, table: string) {
 function serviceEnvironment(options: {
   failBatchAt?: number;
   loseFirstResponse?: boolean;
+  loseResponseAtBatch?: number;
   beforeBatch?: () => Promise<void>;
+  skipBatchExecution?: boolean;
+  overrideBatchResults?: (results: any[], batchNumber: number) => any;
+  onQuery?: (sql: string) => void;
 } = {}) {
   const db = database();
   let batches = 0;
@@ -170,9 +174,10 @@ function serviceEnvironment(options: {
       let values: SQLInputValue[] = [];
       const statement = {
         bind(...bound: SQLInputValue[]) { values = bound; return statement; },
-        first() { return db.prepare(sql).get(...values) ?? null; },
-        all() { return { results: db.prepare(sql).all(...values) }; },
+        first() { options.onQuery?.(sql); return db.prepare(sql).get(...values) ?? null; },
+        all() { options.onQuery?.(sql); return { results: db.prepare(sql).all(...values) }; },
         run() {
+          options.onQuery?.(sql);
           const result = db.prepare(sql).run(...values);
           return { success: true, meta: { changes: Number(result.changes) } };
         },
@@ -184,16 +189,21 @@ function serviceEnvironment(options: {
     async batch(statements: Array<{ sql: string; values: SQLInputValue[] }>) {
       await options.beforeBatch?.();
       batches += 1;
+      if (options.skipBatchExecution) {
+        return options.overrideBatchResults?.([], batches) ?? [];
+      }
       db.exec('BEGIN IMMEDIATE');
       try {
         const results = statements.map((statement, index) => {
           if (options.failBatchAt === index) throw new Error('simulated batch failure');
+          options.onQuery?.(statement.sql);
           const result = db.prepare(statement.sql).run(...statement.values);
           return { success: true, meta: { changes: Number(result.changes) } };
         });
         db.exec('COMMIT');
-        if (options.loseFirstResponse && batches === 1) throw new Error('simulated lost response');
-        return results;
+        if ((options.loseFirstResponse && batches === 1)
+          || options.loseResponseAtBatch === batches) throw new Error('simulated lost response');
+        return options.overrideBatchResults?.(results, batches) ?? results;
       } catch (error) {
         if (db.isTransaction) db.exec('ROLLBACK');
         throw error;
@@ -1607,14 +1617,12 @@ describe('artist verified sale records', () => {
   });
 
   it('recovers an exact sale replay after a committed response is lost and rolls back every forced failure', async () => {
-    const lost = serviceEnvironment();
+    const lost = serviceEnvironment({ loseFirstResponse: true });
     try {
-      await assert.rejects((async () => {
-        await createVerifiedSale(lost.env, saleInput());
-        throw new Error('simulated lost response');
-      })(), /lost response/);
+      const recovered = await createVerifiedSale(lost.env, saleInput());
+      assert.equal(recovered.replayed, true);
       const replay = await createVerifiedSale(lost.env, saleInput());
-      assert.equal(replay.replayed, true);
+      assert.deepEqual(replay, recovered);
       assert.equal(count(lost.db, 'artist_verified_sales'), 1);
     } finally {
       lost.db.close();
@@ -1715,6 +1723,118 @@ describe('artist verified sale records', () => {
         SELECT COUNT(*) AS count FROM artist_reconnection_events
          WHERE reconnection_case_id = ?1 AND event_type = 'artwork_added'
       `).get(created.reconnectionCaseId)?.count, 3);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('requires complete successful reconnection-event batch results and recovers exact lost responses', async () => {
+    for (const malformed of [
+      [],
+      [{ success: false, meta: { changes: 1 } }],
+      [{ success: true, meta: { changes: 0 } }],
+      undefined,
+    ]) {
+      const options: {
+        skipBatchExecution?: boolean;
+        overrideBatchResults?: (results: any[], batchNumber: number) => any;
+      } = {};
+      const fixture = serviceEnvironment(options);
+      try {
+        const created = await createReconnectionCase(fixture.env, {
+          recipientEmail: 'collector@example.com', recipientName: null, privateContext: null,
+          idempotencyKey: `malformed-case-${String(malformed)}`, administrator, createdAt: now,
+        });
+        options.skipBatchExecution = true;
+        options.overrideBatchResults = () => malformed;
+        await assert.rejects(appendReconnectionEvent(fixture.env, {
+          reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
+          privateNote: 'Must not claim success.', artworkRecordId: null, newStatus: null,
+          idempotencyKey: `malformed-event-${String(malformed)}`, administrator, createdAt: now,
+        }), (error: Error & { code?: string }) => error.code === 'atomic_write_failed');
+        assert.equal(count(fixture.db, 'artist_reconnection_events'), 0);
+      } finally {
+        fixture.db.close();
+      }
+    }
+
+    const guardedOptions: {
+      skipBatchExecution?: boolean;
+      overrideBatchResults?: (results: any[], batchNumber: number) => any;
+    } = {};
+    const guarded = serviceEnvironment(guardedOptions);
+    try {
+      const created = await createReconnectionCase(guarded.env, {
+        recipientEmail: 'guarded@example.com', recipientName: null, privateContext: null,
+        idempotencyKey: 'guarded-case', administrator, createdAt: now,
+      });
+      guardedOptions.skipBatchExecution = true;
+      guardedOptions.overrideBatchResults = () => [{ success: true, meta: { changes: 0 } }];
+      await assert.rejects(appendReconnectionEvent(guarded.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'partially_resolved',
+        idempotencyKey: 'guarded-status', administrator, createdAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'version_conflict');
+    } finally {
+      guarded.db.close();
+    }
+
+    const lostOptions: { loseResponseAtBatch?: number } = {};
+    const lost = serviceEnvironment(lostOptions);
+    try {
+      const created = await createReconnectionCase(lost.env, {
+        recipientEmail: 'lost@example.com', recipientName: null, privateContext: null,
+        idempotencyKey: 'lost-event-case', administrator, createdAt: now,
+      });
+      lostOptions.loseResponseAtBatch = 2;
+      const recovered = await appendReconnectionEvent(lost.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
+        privateNote: 'Committed before response loss.', artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'lost-note-event', administrator, createdAt: now,
+      });
+      assert.equal(recovered.replayed, true);
+      assert.equal(count(lost.db, 'artist_reconnection_events'), 1);
+    } finally {
+      lost.db.close();
+    }
+  });
+
+  it('replays immutable reconnection-event data after later case progress', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const created = await createReconnectionCase(fixture.env, {
+        recipientEmail: 'immutable@example.com', recipientName: null, privateContext: null,
+        idempotencyKey: 'immutable-case', administrator, createdAt: now,
+      });
+      const noteInput = {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
+        privateNote: 'Original immutable note.', artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'immutable-note', administrator, createdAt: now,
+      };
+      const note = await appendReconnectionEvent(fixture.env, noteInput);
+      assert.equal('status' in note, false);
+      await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'partially_resolved',
+        idempotencyKey: 'immutable-partial', administrator, createdAt: now,
+      });
+      await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'resolved',
+        idempotencyKey: 'immutable-resolved', administrator,
+        createdAt: '2026-08-10T12:00:01.000Z',
+      });
+      assert.deepEqual(await appendReconnectionEvent(fixture.env, {
+        ...noteInput,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+      }), { ...note, replayed: true });
+      const resolvedReplay = await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'resolved',
+        idempotencyKey: 'immutable-resolved', administrator,
+        createdAt: '2026-08-10T12:00:01.000Z',
+      });
+      assert.equal(resolvedReplay.status, 'resolved');
     } finally {
       fixture.db.close();
     }
@@ -1926,6 +2046,62 @@ describe('artist verified sale records', () => {
       assert.deepEqual(Object.fromEntries(Object.keys(before).map((table) => [table, count(fixture.db, table)])), before);
       await assert.rejects(getArtistSaleDetail(fixture.env, 'missing-sale'),
         (error: Error & { code?: string }) => error.code === 'sale_not_found');
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('keeps large sale detail and paginated workspace reads within constant query budgets', async () => {
+    let queryCount = 0;
+    const options = { onQuery: (_sql: string) => { queryCount += 1; } };
+    const fixture = serviceEnvironment(options);
+    try {
+      const maximumArtworks = Array.from({ length: 100 }, () => ({
+        artworkRecordId: null, artworkId: null, edition: null, price: null,
+      }));
+      const largeSale = await createVerifiedSale(fixture.env, saleInput({
+        artworks: maximumArtworks, idempotencyKey: 'maximum-size-sale',
+      }));
+      queryCount = 0;
+      const detail = await getArtistSaleDetail(fixture.env, largeSale.saleId);
+      assert.equal(detail.items.length, 100);
+      assert.ok(queryCount <= 6, `sale detail used ${queryCount} queries`);
+
+      for (let index = 1; index < 55; index += 1) {
+        await createVerifiedSale(fixture.env, saleInput({
+          artworks: [{ artworkRecordId: null, artworkId: null, edition: null, price: null }],
+          idempotencyKey: `workspace-sale-${index}`,
+        }));
+      }
+      for (let index = 0; index < 55; index += 1) {
+        await createReconnectionCase(fixture.env, {
+          recipientEmail: `collector-${index}@example.com`, recipientName: null,
+          privateContext: null, idempotencyKey: `workspace-case-${index}`,
+          administrator, createdAt: now,
+        });
+      }
+
+      queryCount = 0;
+      const firstPage = await listArtistSaleWorkspace(fixture.env, { limit: 25, offset: 0 });
+      assert.equal(firstPage.sales.length, 25);
+      assert.equal(firstPage.reconnectionCases.length, 25);
+      assert.deepEqual(firstPage.pagination, {
+        limit: 25,
+        offset: 0,
+        sales: { hasMore: true, nextOffset: 25 },
+        reconnectionCases: { hasMore: true, nextOffset: 25 },
+      });
+      assert.ok(queryCount <= 3, `workspace page used ${queryCount} queries`);
+
+      queryCount = 0;
+      const secondPage = await listArtistSaleWorkspace(fixture.env, { limit: 25, offset: 25 });
+      assert.equal(new Set([
+        ...firstPage.sales.map((sale: any) => sale.saleId),
+        ...secondPage.sales.map((sale: any) => sale.saleId),
+      ]).size, firstPage.sales.length + secondPage.sales.length);
+      assert.ok(queryCount <= 3, `second workspace page used ${queryCount} queries`);
+      await assert.rejects(listArtistSaleWorkspace(fixture.env, { limit: 51, offset: 0 }),
+        (error: Error & { code?: string }) => error.code === 'invalid_request');
     } finally {
       fixture.db.close();
     }
