@@ -1,5 +1,12 @@
 import { resolveArtwork } from './artworkCatalog.js';
+import { readRegisteredArtworkIdentity } from './artworkRegistration.js';
+import { readArtworkInvitationProjection } from './artworkInvitations.js';
+import {
+  readArtistArtworkRecordProjection,
+  readVerifiedSaleProjection,
+} from './artistSales.js';
 import { resolveArtworkCertificate } from './certificateContent.js';
+import { readMaintenanceWorkspaceProjection } from './registryMaintenance.js';
 import {
   identityRecoveryDependenciesForRow,
   identityRecoveryQualificationStatus,
@@ -18,47 +25,15 @@ function workspaceError(code) {
   return Object.assign(new Error(code), { code });
 }
 
-async function first(env, sql, ...values) {
-  return env.DB.prepare(sql).bind(...values).first();
-}
-
-async function all(env, sql, ...values) {
-  const result = await env.DB.prepare(sql).bind(...values).all();
-  return result?.results ?? [];
-}
-
 async function selectedRecord(env, selector) {
+  const result = await readArtistArtworkRecordProjection(env, selector);
   if (selector.artistArtworkRecordId) {
-    const row = await first(env, `
-      SELECT id, artwork_id, edition_json, keeper_piece_id, identification_status,
-             created_at, updated_at
-        FROM artist_artwork_records
-       WHERE id = ?1
-    `, selector.artistArtworkRecordId);
+    const row = result;
     if (!row) throw workspaceError('workspace_not_found');
     return row;
   }
-  if (selector.keeperPieceId) {
-    const rows = await all(env, `
-      SELECT id, artwork_id, edition_json, keeper_piece_id, identification_status,
-             created_at, updated_at
-        FROM artist_artwork_records
-       WHERE keeper_piece_id = ?1
-       ORDER BY id
-       LIMIT 2
-    `, selector.keeperPieceId);
-    if (rows.length > 1) throw workspaceError('workspace_data_corrupt');
-    return rows[0] ?? null;
-  }
-  if (!selector.artworkId) return null;
-  const rows = await all(env, `
-    SELECT id, artwork_id, edition_json, keeper_piece_id, identification_status,
-           created_at, updated_at
-      FROM artist_artwork_records
-     WHERE artwork_id = ?1
-     ORDER BY id
-     LIMIT 2
-  `, selector.artworkId);
+  const rows = result;
+  if (selector.keeperPieceId && rows.length > 1) throw workspaceError('workspace_data_corrupt');
   if (rows.length > 1) throw workspaceError('workspace_selector_conflict');
   return rows[0] ?? null;
 }
@@ -66,17 +41,9 @@ async function selectedRecord(env, selector) {
 async function selectedKeeper(env, selector, record) {
   const keeperPieceId = selector.keeperPieceId ?? record?.keeper_piece_id ?? null;
   if (!keeperPieceId) return null;
-  const row = await first(env, `
-    SELECT id, piece_id, edition_number, keeper_user_id, registered_at, claimed_at, released_at,
-           public_code, plate_status, backup_status, backup_reference, backup_sha256,
-           ownership_code_key_version, front_svg_sha256, back_svg_sha256,
-           identity_backup_status, identity_backup_reference, identity_backup_sha256,
-           registration_status, plate_generated_at, plate_activated_at
-      FROM keeper_pieces
-     WHERE id = ?1
-  `, keeperPieceId);
-  if (!row) throw workspaceError('workspace_not_found');
-  return row;
+  const identity = await readRegisteredArtworkIdentity(env, keeperPieceId);
+  if (!identity) throw workspaceError('workspace_not_found');
+  return identity;
 }
 
 function validateRecord(row) {
@@ -151,70 +118,6 @@ async function certificateProjection(env, artworkId) {
   };
 }
 
-async function invitationProjection(env, keeperPieceId, now) {
-  if (!keeperPieceId) return null;
-  const row = await first(env, `
-    SELECT invitation.id, invitation.expires_at, invitation.revoked_at,
-           redemption.redeemed_at
-      FROM artwork_invitations invitation
-      LEFT JOIN artwork_invitation_redemptions redemption
-        ON redemption.invitation_id = invitation.id
-     WHERE invitation.keeper_piece_id = ?1
-     ORDER BY invitation.created_at DESC, invitation.id DESC
-     LIMIT 1
-  `, keeperPieceId);
-  if (!row) return null;
-  const state = row.redeemed_at ? 'redeemed'
-    : row.revoked_at ? 'revoked'
-      : Date.parse(row.expires_at) <= Date.parse(now) ? 'expired' : 'available';
-  return { state, invitationId: row.id };
-}
-
-function caretakerProjection(keeper) {
-  if (!keeper) return { state: 'not_registered' };
-  if (keeper.keeper_user_id && keeper.claimed_at && keeper.released_at === null) {
-    return { state: 'active' };
-  }
-  if (!keeper.keeper_user_id && !keeper.claimed_at && keeper.released_at === null) {
-    return { state: 'unclaimed' };
-  }
-  if (!keeper.keeper_user_id && keeper.claimed_at && keeper.released_at) {
-    return { state: 'released' };
-  }
-  throw workspaceError('workspace_data_corrupt');
-}
-
-async function saleProjection(env, record, keeper) {
-  if (record) {
-    const verified = await first(env, `
-      SELECT sale.id
-        FROM artist_verified_sale_items item
-        JOIN artist_verified_sales sale ON sale.id = item.sale_id
-       WHERE item.artwork_record_id = ?1
-       ORDER BY sale.recorded_at DESC, sale.id DESC
-       LIMIT 1
-    `, record.id);
-    if (verified) return {
-      public: { state: 'verified', verifiedSaleId: verified.id },
-      legacyAcquisitionId: null,
-    };
-  }
-  if (keeper) {
-    const legacy = await first(env, `
-      SELECT id
-        FROM artwork_acquisitions
-       WHERE keeper_piece_id = ?1 AND acquisition_type = 'sale'
-       ORDER BY COALESCE(acquired_at, created_at) DESC, id DESC
-       LIMIT 1
-    `, keeper.id);
-    if (legacy) return {
-      public: { state: 'legacy_candidate', verifiedSaleId: null },
-      legacyAcquisitionId: legacy.id,
-    };
-  }
-  return null;
-}
-
 async function plateProjection(env, keeper) {
   if (!keeper) return null;
   const identityQualification = await loadLatestPassedIdentityQualification(env.DB, keeper.id);
@@ -251,72 +154,15 @@ function addActivity(activity, kind, occurredAt, label) {
   activity.push({ kind, occurredAt, label });
 }
 
-async function activityProjection(env, record, keeper) {
+function activityProjection(record, identity, invitationActivity, saleActivity, maintenanceActivity) {
   const activity = [];
   if (record) {
     addActivity(activity, 'sales_record_created', record.created_at,
       'Private artwork sales record created');
-    const rows = await all(env, `
-      SELECT action, created_at
-        FROM artist_artwork_record_events
-       WHERE artwork_record_id = ?1
-       ORDER BY created_at DESC, id DESC
-       LIMIT 20
-    `, record.id);
-    for (const row of rows) {
-      const label = row.action === 'identity_linked' ? 'Permanent identity linked'
-        : row.action === 'identified' ? 'Artwork identified' : 'Artwork identification corrected';
-      addActivity(activity, 'identity_changed', row.created_at, label);
-    }
-    const sales = await all(env, `
-      SELECT sale.recorded_at
-        FROM artist_verified_sale_items item
-        JOIN artist_verified_sales sale ON sale.id = item.sale_id
-       WHERE item.artwork_record_id = ?1
-       ORDER BY sale.recorded_at DESC, sale.id DESC
-       LIMIT 20
-    `, record.id);
-    for (const sale of sales) {
-      addActivity(activity, 'sale_verified', sale.recorded_at, 'Sale verified');
-    }
   }
-  if (keeper) {
-    addActivity(activity, 'identity_registered', keeper.registered_at,
-      'Permanent identity registered');
-    addActivity(activity, 'caretaker_claimed', keeper.claimed_at, 'Caretaker connected');
-    addActivity(activity, 'caretaker_released', keeper.released_at, 'Caretaker released');
-    addActivity(activity, 'plate_generated', keeper.plate_generated_at, 'Plate generated');
-    addActivity(activity, 'plate_activated', keeper.plate_activated_at, 'Plate activated');
-    const invitations = await all(env, `
-      SELECT invitation.created_at, invitation.revoked_at, redemption.redeemed_at
-        FROM artwork_invitations invitation
-        LEFT JOIN artwork_invitation_redemptions redemption
-          ON redemption.invitation_id = invitation.id
-       WHERE invitation.keeper_piece_id = ?1
-       ORDER BY invitation.created_at DESC, invitation.id DESC
-       LIMIT 20
-    `, keeper.id);
-    for (const invitation of invitations) {
-      addActivity(activity, 'invitation_created', invitation.created_at,
-        'Caretaker invitation created');
-      addActivity(activity, 'invitation_revoked', invitation.revoked_at,
-        'Caretaker invitation revoked');
-      addActivity(activity, 'invitation_redeemed', invitation.redeemed_at,
-        'Caretaker invitation redeemed');
-    }
-    const maintenance = await all(env, `
-      SELECT event_type, created_at
-        FROM registry_maintenance_events
-       WHERE keeper_piece_id = ?1 AND outcome = 'succeeded'
-       ORDER BY created_at DESC, id DESC
-       LIMIT 20
-    `, keeper.id);
-    for (const event of maintenance) {
-      addActivity(activity, 'maintenance_recorded', event.created_at,
-        event.event_type === 'artwork_registered'
-          ? 'Artwork registration recorded' : 'Registry maintenance recorded');
-    }
-  }
+  for (const [kind, occurredAt, label] of [
+    ...(identity?.activity ?? []), ...invitationActivity, ...saleActivity, ...maintenanceActivity,
+  ]) addActivity(activity, kind, occurredAt, label);
   return activity
     .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt)
       || left.kind.localeCompare(right.kind) || left.label.localeCompare(right.label))
@@ -403,7 +249,8 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
   if (!env?.DB) throw workspaceError('db_not_configured');
   const record = await selectedRecord(env, selector);
   validateRecord(record);
-  const keeper = await selectedKeeper(env, selector, record);
+  const identityProjection = await selectedKeeper(env, selector, record);
+  const keeper = identityProjection?.row ?? null;
   validateSelection(selector, record, keeper);
 
   const artworkId = selector.artworkId ?? record?.artwork_id ?? keeper?.piece_id ?? null;
@@ -417,14 +264,25 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
     throw workspaceError('workspace_data_corrupt');
   }
 
-  const [certificate, invitation, sale, plate, activity] = await Promise.all([
+  const [certificate, invitationRead, verifiedRead, maintenanceRead, plate] = await Promise.all([
     certificateProjection(env, artwork?.id ?? null),
-    invitationProjection(env, keeper?.id ?? null, now),
-    saleProjection(env, record, keeper),
+    readArtworkInvitationProjection(env, keeper?.id ?? null, now),
+    readVerifiedSaleProjection(env, record?.id ?? null),
+    readMaintenanceWorkspaceProjection(env, keeper?.id ?? null),
     plateProjection(env, keeper),
-    activityProjection(env, record, keeper),
   ]);
-  const caretaker = caretakerProjection(keeper);
+  const invitation = invitationRead.invitation;
+  const caretaker = { state: identityProjection?.caretaker ?? 'not_registered' };
+  const sale = verifiedRead.sale ? {
+    public: verifiedRead.sale, legacyAcquisitionId: null,
+  } : maintenanceRead.legacySale ? {
+    public: { state: 'legacy_candidate', verifiedSaleId: null },
+    legacyAcquisitionId: maintenanceRead.legacySale.acquisitionId,
+  } : null;
+  const activity = activityProjection(
+    record, identityProjection, invitationRead.activity,
+    verifiedRead.activity, maintenanceRead.activity,
+  );
   const nextAction = nextActionProjection({
     record, keeper, artwork, certificate, invitation, caretaker, plate,
     sale: sale ? { ...sale.public, legacyAcquisitionId: sale.legacyAcquisitionId } : null,

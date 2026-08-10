@@ -1,6 +1,28 @@
 export const MAINTENANCE_REASON_MAX = 500;
 export const MAINTENANCE_IDEMPOTENCY_KEY_MAX = 128;
 
+/** Legacy sale candidate and bounded maintenance activity for one registered identity. */
+export async function readMaintenanceWorkspaceProjection(env, keeperPieceId) {
+  if (!keeperPieceId) return { legacySale: null, activity: [] };
+  const [legacy, events] = await Promise.all([
+    env.DB.prepare(`SELECT id FROM artwork_acquisitions
+      WHERE keeper_piece_id = ?1 AND acquisition_type = 'sale'
+      ORDER BY COALESCE(acquired_at, created_at) DESC, id DESC LIMIT 1`)
+      .bind(keeperPieceId).first(),
+    env.DB.prepare(`SELECT event_type, created_at FROM registry_maintenance_events
+      WHERE keeper_piece_id = ?1 AND outcome = 'succeeded'
+      ORDER BY created_at DESC, id DESC LIMIT 20`).bind(keeperPieceId).all(),
+  ]);
+  return {
+    legacySale: legacy ? { state: 'legacy_candidate', acquisitionId: legacy.id } : null,
+    activity: (events?.results ?? []).map((event) => [
+      'maintenance_recorded', event.created_at,
+      event.event_type === 'artwork_registered'
+        ? 'Artwork registration recorded' : 'Registry maintenance recorded',
+    ]),
+  };
+}
+
 const ACQUISITION_TYPES = new Set([
   'gift',
   'retained',

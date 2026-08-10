@@ -169,6 +169,45 @@ async function all(env, sql, ...values) {
   return rows(await env.DB.prepare(sql).bind(...values).all());
 }
 
+/** Resolve one private artwork record from exactly one stable workspace selector. */
+export async function readArtistArtworkRecordProjection(env, selector) {
+  if (selector.artistArtworkRecordId) {
+    return first(env, `SELECT id, artwork_id, edition_json, keeper_piece_id,
+      identification_status, created_at, updated_at FROM artist_artwork_records WHERE id = ?1`,
+    selector.artistArtworkRecordId);
+  }
+  const column = selector.keeperPieceId ? 'keeper_piece_id'
+    : selector.artworkId ? 'artwork_id' : null;
+  const value = selector.keeperPieceId ?? selector.artworkId ?? null;
+  if (!column) return [];
+  return all(env, `SELECT id, artwork_id, edition_json, keeper_piece_id,
+    identification_status, created_at, updated_at FROM artist_artwork_records
+    WHERE ${column} = ?1 ORDER BY id LIMIT 2`, value);
+}
+
+/** Latest verified sale plus bounded artist-owned activity for one artwork record. */
+export async function readVerifiedSaleProjection(env, artworkRecordId) {
+  if (!artworkRecordId) return { sale: null, activity: [] };
+  const [sales, events] = await Promise.all([
+    all(env, `SELECT sale.id, sale.recorded_at FROM artist_verified_sale_items item
+      JOIN artist_verified_sales sale ON sale.id = item.sale_id
+      WHERE item.artwork_record_id = ?1 ORDER BY sale.recorded_at DESC, sale.id DESC LIMIT 20`,
+    artworkRecordId),
+    all(env, `SELECT action, created_at FROM artist_artwork_record_events
+      WHERE artwork_record_id = ?1 ORDER BY created_at DESC, id DESC LIMIT 20`, artworkRecordId),
+  ]);
+  return {
+    sale: sales[0] ? { state: 'verified', verifiedSaleId: sales[0].id } : null,
+    activity: [
+      ...sales.map((row) => ['sale_verified', row.recorded_at, 'Sale verified']),
+      ...events.map((row) => ['identity_changed', row.created_at,
+        row.action === 'identity_linked' ? 'Permanent identity linked'
+          : row.action === 'identified' ? 'Artwork identified'
+            : 'Artwork identification corrected']),
+    ],
+  };
+}
+
 function requireAtomic(env) {
   if (!env?.DB || typeof env.DB.prepare !== 'function' || typeof env.DB.batch !== 'function') {
     throw codedError('atomic_write_unavailable');

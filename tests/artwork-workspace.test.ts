@@ -174,6 +174,22 @@ function collectKeysAndStrings(value: unknown, keys: string[] = [], strings: str
 }
 
 describe('read-only artwork workspace projection', () => {
+  it('delegates canonical storage reads to their owning modules', async () => {
+    const registration = await import('../functions/api/_lib/artworkRegistration.js');
+    const invitations = await import('../functions/api/_lib/artworkInvitations.js');
+    const sales = await import('../functions/api/_lib/artistSales.js');
+    const maintenance = await import('../functions/api/_lib/registryMaintenance.js');
+    assert.equal(typeof registration.readRegisteredArtworkIdentity, 'function');
+    assert.equal(typeof invitations.readArtworkInvitationProjection, 'function');
+    assert.equal(typeof sales.readArtistArtworkRecordProjection, 'function');
+    assert.equal(typeof sales.readVerifiedSaleProjection, 'function');
+    assert.equal(typeof maintenance.readMaintenanceWorkspaceProjection, 'function');
+    const source = readFileSync(
+      new URL('../functions/api/_lib/artworkWorkspace.js', import.meta.url), 'utf8',
+    );
+    assert.doesNotMatch(source, /FROM\s+(?:artist_|keeper_pieces|artwork_invitations|artwork_acquisitions|registry_maintenance_events)/i);
+  });
+
   it('resolves unresolved, identified, linked, catalog-only, and registered-only workspaces', async () => {
     const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
     const f = fixture();
