@@ -1,7 +1,20 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { describe, it } from 'node:test';
+
+import {
+  appendArtworkLedgerEntry,
+  appendReconnectionEvent,
+  appendSharedSaleMessage,
+  correctVerifiedSale,
+  createReconnectionCase,
+  createVerifiedSale,
+  getArtistSaleDetail,
+  identifyArtworkRecord,
+  linkArtworkIdentity,
+  listArtistSaleWorkspace,
+} from '../functions/api/_lib/artistSales.js';
 
 const readMigration = (name: string) => readFileSync(
   new URL(`../migrations/${name}`, import.meta.url), 'utf8',
@@ -143,6 +156,68 @@ function insertPrimarySale(db: DatabaseSync) {
 
 function count(db: DatabaseSync, table: string) {
   return Number(db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get()?.count);
+}
+
+function serviceEnvironment(options: { failBatchAt?: number; loseFirstResponse?: boolean } = {}) {
+  const db = database();
+  let batches = 0;
+  const DB = {
+    prepare(sql: string) {
+      let values: SQLInputValue[] = [];
+      const statement = {
+        bind(...bound: SQLInputValue[]) { values = bound; return statement; },
+        first() { return db.prepare(sql).get(...values) ?? null; },
+        all() { return { results: db.prepare(sql).all(...values) }; },
+        run() {
+          const result = db.prepare(sql).run(...values);
+          return { success: true, meta: { changes: Number(result.changes) } };
+        },
+        get sql() { return sql; },
+        get values() { return values; },
+      };
+      return statement;
+    },
+    async batch(statements: Array<{ sql: string; values: SQLInputValue[] }>) {
+      batches += 1;
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        const results = statements.map((statement, index) => {
+          if (options.failBatchAt === index) throw new Error('simulated batch failure');
+          const result = db.prepare(statement.sql).run(...statement.values);
+          return { success: true, meta: { changes: Number(result.changes) } };
+        });
+        db.exec('COMMIT');
+        if (options.loseFirstResponse && batches === 1) throw new Error('simulated lost response');
+        return results;
+      } catch (error) {
+        if (db.isTransaction) db.exec('ROLLBACK');
+        throw error;
+      }
+    },
+  };
+  return { db, env: { DB }, get batches() { return batches; } };
+}
+
+const administrator = { userId: 'artist-admin', email: 'artist@example.com' };
+
+function saleInput(overrides: Record<string, unknown> = {}) {
+  return {
+    occurrence: { precision: 'year', value: '2018' },
+    buyerEmail: ' Collector@Example.com ',
+    total: { amountMinor: 900000, currency: 'usd' },
+    privateReference: ' studio-ledger-2018-4 ',
+    privateNotes: null,
+    reconnectionCaseId: null,
+    artworks: [
+      { artworkRecordId: null, artworkId: 'UL-100', edition: { kind: 'numbered', number: 1, size: 64 }, price: { amountMinor: 300000, currency: 'usd' } },
+      { artworkRecordId: null, artworkId: 'UL-101', edition: { kind: 'numbered', number: 2, size: 64 }, price: { amountMinor: 250000, currency: 'USD' } },
+      { artworkRecordId: null, artworkId: null, edition: null, price: null },
+    ],
+    idempotencyKey: 'sale-create-2018-4',
+    administrator,
+    recordedAt: '2026-08-10T01:00:00.000Z',
+    ...overrides,
+  };
 }
 
 describe('artist verified sale records', () => {
@@ -1447,6 +1522,320 @@ describe('artist verified sale records', () => {
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
       db.close();
+    }
+  });
+
+  it('creates a canonical multi-artwork sale atomically and exactly replays it', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const created = await createVerifiedSale(fixture.env, saleInput());
+      assert.equal(created.replayed, false);
+      assert.equal(created.artworkRecordIds.length, 3);
+      assert.equal(new Set(created.artworkRecordIds).size, 3);
+      assert.equal(count(fixture.db, 'artist_verified_sales'), 1);
+      assert.equal(count(fixture.db, 'artist_verified_sale_items'), 3);
+      assert.equal(count(fixture.db, 'artist_artwork_records'), 3);
+      assert.equal(count(fixture.db, 'artist_artwork_price_entries'), 2);
+      assert.deepEqual({ ...fixture.db.prepare(`
+        SELECT buyer_email, currency, total_minor, private_reference
+          FROM artist_verified_sales WHERE id = ?1
+      `).get(created.saleId) }, {
+        buyer_email: 'collector@example.com', currency: 'USD', total_minor: 900000,
+        private_reference: 'studio-ledger-2018-4',
+      });
+      assert.equal(fixture.db.prepare(`
+        SELECT identification_status FROM artist_artwork_records WHERE id = ?1
+      `).get(created.artworkRecordIds[2])?.identification_status, 'unresolved');
+
+      const replay = await createVerifiedSale(fixture.env, saleInput());
+      assert.deepEqual(replay, { ...created, replayed: true });
+      await assert.rejects(
+        createVerifiedSale(fixture.env, saleInput({ buyerEmail: 'changed@example.com' })),
+        (error: Error & { code?: string }) => error.code === 'idempotency_conflict',
+      );
+      assert.equal(count(fixture.db, 'artist_verified_sales'), 1);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('recovers an exact sale replay after a committed response is lost and rolls back every forced failure', async () => {
+    const lost = serviceEnvironment();
+    try {
+      await assert.rejects((async () => {
+        await createVerifiedSale(lost.env, saleInput());
+        throw new Error('simulated lost response');
+      })(), /lost response/);
+      const replay = await createVerifiedSale(lost.env, saleInput());
+      assert.equal(replay.replayed, true);
+      assert.equal(count(lost.db, 'artist_verified_sales'), 1);
+    } finally {
+      lost.db.close();
+    }
+
+    for (const failBatchAt of [1, 4, 8]) {
+      const failed = serviceEnvironment({ failBatchAt });
+      try {
+        await assert.rejects(createVerifiedSale(failed.env, saleInput()), /batch failure/);
+        for (const table of [
+          'artist_verified_sales', 'artist_verified_sale_items',
+          'artist_artwork_records', 'artist_artwork_price_entries',
+        ]) assert.equal(count(failed.db, table), 0, `${table} at ${failBatchAt}`);
+      } finally {
+        failed.db.close();
+      }
+    }
+  });
+
+  it('rejects unknown authority and resolves racing sale creates without partial rows', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      await assert.rejects(createVerifiedSale(fixture.env, {
+        ...saleInput(), elevatedRole: 'owner',
+      }), (error: Error & { code?: string }) => error.code === 'invalid_request');
+      await assert.rejects(createVerifiedSale(fixture.env, saleInput({
+        artworks: [{
+          artworkRecordId: null, artworkId: null, edition: null, price: null,
+          fabricatedKeeperPieceId: 'kp-sale-one',
+        }],
+      })), (error: Error & { code?: string }) => error.code === 'invalid_request');
+
+      const outcomes = await Promise.allSettled([
+        createVerifiedSale(fixture.env, saleInput()),
+        createVerifiedSale(fixture.env, saleInput({
+          administrator: { userId: 'artist-second', email: 'second@example.com' },
+        })),
+      ]);
+      assert.deepEqual(outcomes.map((result) => result.status).sort(), ['fulfilled', 'rejected']);
+      const rejected = outcomes.find((result) => result.status === 'rejected') as PromiseRejectedResult;
+      assert.equal(rejected.reason.code, 'idempotency_conflict');
+      assert.equal(count(fixture.db, 'artist_verified_sales'), 1);
+      assert.equal(count(fixture.db, 'artist_verified_sale_items'), 3);
+      assert.equal(count(fixture.db, 'artist_artwork_records'), 3);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('keeps email-only reconnection cases open and records manual progress exactly', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const created = await createReconnectionCase(fixture.env, {
+        recipientEmail: ' Collector@Example.com ', recipientName: null,
+        privateContext: ' Old address book. ', idempotencyKey: 'reconnect-email-only',
+        administrator, createdAt: now,
+      });
+      assert.equal(created.status, 'open');
+      assert.equal(created.replayed, false);
+      assert.equal(count(fixture.db, 'artist_artwork_records'), 0);
+      assert.deepEqual(await createReconnectionCase(fixture.env, {
+        recipientEmail: 'collector@example.com', recipientName: null,
+        privateContext: 'Old address book.', idempotencyKey: 'reconnect-email-only',
+        administrator, createdAt: now,
+      }), { ...created, replayed: true });
+
+      const note = await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
+        privateNote: ' Try the gallery. ', artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'reconnect-note', administrator, createdAt: now,
+      });
+      const progressed = await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'partially_resolved',
+        idempotencyKey: 'reconnect-progress', administrator, createdAt: now,
+      });
+      assert.equal(note.eventType, 'note_added');
+      assert.equal(progressed.status, 'partially_resolved');
+      assert.equal((await listArtistSaleWorkspace(fixture.env, {})).reconnectionCases[0].status,
+        'partially_resolved');
+      await assert.rejects(appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
+        privateNote: null, artworkRecordId: null, newStatus: 'open',
+        idempotencyKey: 'reconnect-backwards', administrator, createdAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'invalid_request');
+
+      const attachedSale = await createVerifiedSale(fixture.env, saleInput({
+        idempotencyKey: 'sale-attached-case', reconnectionCaseId: created.reconnectionCaseId,
+      }));
+      assert.equal(attachedSale.artworkRecordIds.length, 3);
+      assert.equal(fixture.db.prepare(`
+        SELECT COUNT(*) AS count FROM artist_reconnection_events
+         WHERE reconnection_case_id = ?1 AND event_type = 'artwork_added'
+      `).get(created.reconnectionCaseId)?.count, 3);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('identifies records with event-gated optimistic versions and links only exact keeper identities', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const unresolvedId = sale.artworkRecordIds[2];
+      await assert.rejects(identifyArtworkRecord(fixture.env, {
+        artworkRecordId: unresolvedId, artworkId: 'ZZ-999', edition: { kind: 'unique' },
+        expectedVersion: 1, idempotencyKey: 'identify-unknown', administrator, identifiedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'artwork_not_found');
+
+      const identified = await identifyArtworkRecord(fixture.env, {
+        artworkRecordId: unresolvedId, artworkId: 'UL-100',
+        edition: { kind: 'numbered', number: 1, size: 64 }, expectedVersion: 1,
+        idempotencyKey: 'identify-record', administrator, identifiedAt: now,
+      });
+      assert.deepEqual(identified, {
+        artworkRecordId: unresolvedId, identificationStatus: 'identified', artworkId: 'UL-100',
+        edition: { kind: 'numbered', number: 1, size: 64 }, keeperPieceId: null,
+        recordVersion: 2, replayed: false,
+      });
+      assert.deepEqual(await identifyArtworkRecord(fixture.env, {
+        artworkRecordId: unresolvedId, artworkId: 'UL-100',
+        edition: { kind: 'numbered', number: 1, size: 64 }, expectedVersion: 1,
+        idempotencyKey: 'identify-record', administrator, identifiedAt: now,
+      }), { ...identified, replayed: true });
+      await assert.rejects(identifyArtworkRecord(fixture.env, {
+        artworkRecordId: unresolvedId, artworkId: 'UL-101',
+        edition: { kind: 'numbered', number: 2, size: 64 }, expectedVersion: 1,
+        idempotencyKey: 'identify-stale', administrator, identifiedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'version_conflict');
+
+      await assert.rejects(linkArtworkIdentity(fixture.env, {
+        artworkRecordId: unresolvedId, keeperPieceId: 'missing', expectedVersion: 2,
+        idempotencyKey: 'link-missing', administrator, linkedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'keeper_identity_not_found');
+      await assert.rejects(linkArtworkIdentity(fixture.env, {
+        artworkRecordId: unresolvedId, keeperPieceId: 'kp-sale-two', expectedVersion: 2,
+        idempotencyKey: 'link-mismatch', administrator, linkedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'artwork_identity_mismatch');
+      fixture.db.exec(`
+        INSERT INTO keeper_pieces
+          (id, piece_id, edition_number, recovery_code_hash, registered_at)
+        VALUES ('kp-sale-wrong-edition', 'UL-100', 2, '${digest('f')}', '${now}')
+      `);
+      await assert.rejects(linkArtworkIdentity(fixture.env, {
+        artworkRecordId: unresolvedId, keeperPieceId: 'kp-sale-wrong-edition', expectedVersion: 2,
+        idempotencyKey: 'link-number-mismatch', administrator, linkedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'artwork_identity_mismatch');
+      const linked = await linkArtworkIdentity(fixture.env, {
+        artworkRecordId: unresolvedId, keeperPieceId: 'kp-sale-one', expectedVersion: 2,
+        idempotencyKey: 'link-match', administrator, linkedAt: now,
+      });
+      assert.equal(linked.identificationStatus, 'identity_linked');
+      assert.equal(linked.recordVersion, 3);
+      assert.equal(linked.keeperPieceId, 'kp-sale-one');
+      await assert.rejects(linkArtworkIdentity(fixture.env, {
+        artworkRecordId: sale.artworkRecordIds[0], keeperPieceId: 'kp-sale-one', expectedVersion: 1,
+        idempotencyKey: 'link-duplicate-keeper', administrator, linkedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'artwork_identity_mismatch');
+      assert.equal(count(fixture.db, 'artwork_lineage_events'), 0);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('appends exact ledger and shared sale messages only to sale artworks', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const one = await appendArtworkLedgerEntry(fixture.env, {
+        artworkRecordId: sale.artworkRecordIds[0], saleId: sale.saleId,
+        message: ' Creator note. ', mediaId: null, idempotencyKey: 'ledger-one',
+        administrator, createdAt: now,
+      });
+      assert.equal(one.replayed, false);
+      const shared = await appendSharedSaleMessage(fixture.env, {
+        saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
+        message: ' Thank you for keeping this work. ', expectedSequence: 0,
+        idempotencyKey: 'shared-message', administrator, createdAt: now,
+      });
+      assert.equal(shared.entries.length, 2);
+      assert.equal(new Set(shared.entries.map((entry: any) => entry.ledgerEntryId)).size, 2);
+      assert.deepEqual(await appendSharedSaleMessage(fixture.env, {
+        saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
+        message: 'Thank you for keeping this work.', expectedSequence: 0,
+        idempotencyKey: 'shared-message', administrator, createdAt: now,
+      }), { ...shared, replayed: true });
+      await assert.rejects(appendSharedSaleMessage(fixture.env, {
+        saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(1),
+        message: 'Thank you for keeping this work.', expectedSequence: 0,
+        idempotencyKey: 'shared-message', administrator, createdAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'idempotency_conflict');
+      assert.equal(count(fixture.db, 'artist_verified_sale_events'), 1);
+      assert.equal(count(fixture.db, 'artwork_lineage_events'), 0);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('rolls back every shared-message child and its event on a final batch failure', async () => {
+    const options: { failBatchAt?: number } = {};
+    const fixture = serviceEnvironment(options);
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      options.failBatchAt = 2;
+      await assert.rejects(appendSharedSaleMessage(fixture.env, {
+        saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds,
+        message: 'This response must roll back.', expectedSequence: 0,
+        idempotencyKey: 'shared-rollback', administrator, createdAt: now,
+      }));
+      assert.equal(count(fixture.db, 'artist_artwork_ledger_entries'), 0);
+      assert.equal(count(fixture.db, 'artist_verified_sale_events'), 0);
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('overlays complete sale corrections without changing base sales or price history', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const base = { ...fixture.db.prepare(`SELECT * FROM artist_verified_sales WHERE id = ?1`).get(sale.saleId) };
+      const prices = fixture.db.prepare(`SELECT * FROM artist_artwork_price_entries ORDER BY id`).all();
+      const corrected = await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 0,
+        replacement: {
+          reconnectionCaseId: null, occurrence: { precision: 'year', value: '2019' },
+          buyerEmail: 'new@example.com', total: { amountMinor: 910000, currency: 'USD' },
+          privateReference: 'Corrected ledger reference', privateNotes: 'Corrected note.',
+        },
+        reason: 'Transcription correction.', idempotencyKey: 'correct-sale',
+        administrator, correctedAt: now,
+      });
+      assert.equal(corrected.sequence, 1);
+      const detail = await getArtistSaleDetail(fixture.env, sale.saleId);
+      assert.equal(detail.sale.occurrence.value, '2019');
+      assert.equal(detail.sale.buyerEmail, 'new@example.com');
+      assert.equal(detail.sale.privateNotes, 'Corrected note.');
+      assert.deepEqual({ ...fixture.db.prepare(`SELECT * FROM artist_verified_sales WHERE id = ?1`).get(sale.saleId) }, base);
+      assert.deepEqual(fixture.db.prepare(`SELECT * FROM artist_artwork_price_entries ORDER BY id`).all(), prices);
+      await assert.rejects(correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 0,
+        replacement: {
+          reconnectionCaseId: null, occurrence: { precision: 'year', value: '2020' },
+          buyerEmail: null, total: null, privateReference: null, privateNotes: null,
+        },
+        reason: 'Stale.', idempotencyKey: 'correct-stale', administrator, correctedAt: now,
+      }), (error: Error & { code?: string }) => error.code === 'version_conflict');
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('returns deterministic side-effect-free private projections and safe missing failures', async () => {
+    const fixture = serviceEnvironment();
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const before = Object.fromEntries([
+        'artist_verified_sales', 'artist_verified_sale_events', 'artist_artwork_ledger_entries',
+      ].map((table) => [table, count(fixture.db, table)]));
+      const first = await listArtistSaleWorkspace(fixture.env, { search: 'collector' });
+      const second = await listArtistSaleWorkspace(fixture.env, { search: 'collector' });
+      assert.deepEqual(second, first);
+      assert.equal(first.sales[0].saleId, sale.saleId);
+      assert.deepEqual(Object.fromEntries(Object.keys(before).map((table) => [table, count(fixture.db, table)])), before);
+      await assert.rejects(getArtistSaleDetail(fixture.env, 'missing-sale'),
+        (error: Error & { code?: string }) => error.code === 'sale_not_found');
+    } finally {
+      fixture.db.close();
     }
   });
 });
