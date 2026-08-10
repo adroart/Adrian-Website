@@ -265,6 +265,11 @@ function nullableEmail(value: unknown): string | null {
   }
   return email;
 }
+function normalizedEmail(value: unknown): string {
+  const email = nullableEmail(value);
+  if (email === null) throw new Error('invalid_response');
+  return email;
+}
 function nullableString(value: unknown): string | null {
   return value === null ? null : string(value);
 }
@@ -376,7 +381,8 @@ export function parseArtistSaleWorkspaceResponse(value: unknown): ArtistSaleWork
         throw new Error('invalid_response');
       }
       return {
-        reconnectionCaseId: privateId(item.reconnectionCaseId), recipientEmail: nullableEmail(item.recipientEmail) as string,
+        reconnectionCaseId: privateId(item.reconnectionCaseId),
+        recipientEmail: normalizedEmail(item.recipientEmail),
         recipientName: nullableString(item.recipientName), privateContext: nullableString(item.privateContext),
         status: status as ArtistSaleWorkspaceResponse['reconnectionCases'][number]['status'],
         createdAt: timestamp(item.createdAt),
@@ -597,7 +603,7 @@ function parseMutationResult(value: unknown): ArtistSaleMutationResult {
       else if (['artworkId', 'keeperPieceId', 'mediaId'].includes(key)) {
         if (item !== null) privateId(item);
       } else nullableString(item);
-    } else if (['recipientEmail'].includes(key)) nullableEmail(item);
+    } else if (['recipientEmail'].includes(key)) normalizedEmail(item);
     else if (['replayed'].includes(key)) bool(item);
     else if (['status'].includes(key)) {
       if (!['open', 'partially_resolved', 'resolved', 'closed'].includes(string(item))) {

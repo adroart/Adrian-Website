@@ -193,6 +193,52 @@ describe('artist sales frozen client attempts', () => {
     }));
   });
 
+  it('requires normalized non-null recipient emails in reconnection responses', () => {
+    const workspace = {
+      ok: true,
+      sales: [],
+      reconnectionCases: [{
+        reconnectionCaseId: 'case-1', recipientEmail: 'collector@example.com',
+        recipientName: null, privateContext: null, status: 'open',
+        createdAt: '2026-08-10T00:00:00.000Z',
+      }],
+      pagination: {
+        limit: 25, offset: 0,
+        sales: { hasMore: false, nextOffset: null },
+        reconnectionCases: { hasMore: false, nextOffset: null },
+      },
+    };
+    const mutation = {
+      ok: true,
+      result: {
+        reconnectionCaseId: 'case-1', recipientEmail: 'collector@example.com',
+        status: 'open', replayed: false,
+      },
+    };
+    assert.deepEqual(parseArtistSaleWorkspaceResponse(workspace), workspace);
+    assert.deepEqual(parseArtistSaleMutationResponse(mutation), mutation);
+
+    for (const recipientEmail of [
+      null, 'Collector@example.com', ' collector@example.com',
+      'collector@example.com ', 'collector-at-example.com',
+    ]) {
+      assert.throws(() => parseArtistSaleWorkspaceResponse({
+        ...workspace,
+        reconnectionCases: [{ ...workspace.reconnectionCases[0], recipientEmail }],
+      }));
+      assert.throws(() => parseArtistSaleMutationResponse({
+        ...mutation, result: { ...mutation.result, recipientEmail },
+      }));
+    }
+    assert.throws(() => parseArtistSaleWorkspaceResponse({
+      ...workspace,
+      reconnectionCases: [{ ...workspace.reconnectionCases[0], extra: true }],
+    }));
+    assert.throws(() => parseArtistSaleMutationResponse({
+      ...mutation, result: { ...mutation.result, extra: true },
+    }));
+  });
+
   it('uploads a raw blob with private metadata only in exact headers', async () => {
     const file = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });
     let captured: [RequestInfo | URL, RequestInit | undefined] | null = null;
@@ -526,5 +572,150 @@ describe('private artist sales route modules', () => {
     assert.equal(changedBytes.status, 409);
     assert.equal(mediaStoreCalls, 3);
     assert.equal(row?.id, mediaId);
+  });
+
+  it('fails closed on thrown or malformed media metadata lookups before R2 work', async () => {
+    const mediaRoute = await import('../functions/api/admin/collector-ledger/media.js');
+    const upload = (DB: unknown) => mediaRoute.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-ledger/media`, {
+        method: 'POST',
+        headers: {
+          Origin: ORIGIN, 'Content-Type': 'image/png', 'X-Content-Length': '3',
+          'X-Artwork-Record-Id': 'record-one',
+          'X-Artwork-Media-Role': 'certificate_image',
+          'X-Idempotency-Key': 'metadata-lookup',
+        },
+        body: new Uint8Array([1, 2, 3]),
+      }),
+      env: { DB, ARTWORK_REGISTRY_BACKUP: {} },
+    });
+    const database = ({ media, artwork }: {
+      media: () => unknown | Promise<unknown>;
+      artwork: () => unknown | Promise<unknown>;
+    }) => ({
+      prepare(sql: string) {
+        return {
+          bind() { return this; },
+          first: sql.includes('artist_artwork_media') ? media : artwork,
+          async run() { throw new Error('insert must not run'); },
+        };
+      },
+    });
+    const cases = [
+      database({
+        media: async () => { throw new Error('private media lookup failure'); },
+        artwork: async () => ({ id: 'record-one' }),
+      }),
+      database({ media: async () => ({ id: 'malformed' }), artwork: async () => ({ id: 'record-one' }) }),
+      database({
+        media: async () => null,
+        artwork: async () => { throw new Error('private artwork lookup failure'); },
+      }),
+      database({ media: async () => null, artwork: async () => ({}) }),
+    ];
+
+    for (const DB of cases) {
+      mediaStoreCalls = 0;
+      const response = await upload(DB);
+      assert.equal(response.status, 503);
+      assert.equal(response.headers.get('Cache-Control'), 'no-store');
+      assert.deepEqual(await response.json(), { ok: false, error: 'media_metadata_failed' });
+      assert.equal(mediaStoreCalls, 0);
+    }
+  });
+
+  it('requires one confirmed D1 metadata change and safely resolves insert races', async () => {
+    const mediaRoute = await import('../functions/api/admin/collector-ledger/media.js');
+    type RunnerResult = unknown | 'throw';
+    type Reread = 'exact' | 'changed' | 'missing' | 'malformed' | 'throw';
+    const database = (runnerResult: RunnerResult, reread: Reread) => {
+      let insertValues: unknown[] | null = null;
+      let mediaReads = 0;
+      const stored = () => {
+        assert.ok(insertValues);
+        return {
+          id: insertValues[0], artwork_record_id: insertValues[1], media_role: insertValues[2],
+          storage_reference: insertValues[3], sha256: insertValues[4],
+          content_type: insertValues[5], byte_length: insertValues[6],
+          uploaded_by_user_id: insertValues[7], created_at: insertValues[8],
+        };
+      };
+      return {
+        prepare(sql: string) {
+          let values: unknown[] = [];
+          return {
+            bind(...bound: unknown[]) { values = bound; return this; },
+            async first() {
+              if (sql.includes('artist_artwork_media')) {
+                mediaReads += 1;
+                if (mediaReads <= 2) return null;
+                if (reread === 'throw') throw new Error('private reread failure');
+                if (reread === 'missing') return null;
+                if (reread === 'malformed') return { id: insertValues?.[0] };
+                const row = stored();
+                return reread === 'changed' ? { ...row, media_role: 'identification_evidence' } : row;
+              }
+              if (sql.includes('artist_artwork_records')) return { id: values[0] };
+              return null;
+            },
+            async run() {
+              insertValues = values;
+              if (runnerResult === 'throw') throw new Error('private insert constraint');
+              return runnerResult;
+            },
+          };
+        },
+      };
+    };
+    const upload = (DB: unknown, key: string) => mediaRoute.onRequest({
+      request: new Request(`${ORIGIN}/api/admin/collector-ledger/media`, {
+        method: 'POST',
+        headers: {
+          Origin: ORIGIN, 'Content-Type': 'image/png', 'X-Content-Length': '3',
+          'X-Artwork-Record-Id': 'record-one',
+          'X-Artwork-Media-Role': 'certificate_image', 'X-Idempotency-Key': key,
+        },
+        body: new Uint8Array([1, 2, 3]),
+      }),
+      env: { DB, ARTWORK_REGISTRY_BACKUP: {} },
+    });
+
+    const permissiveResults = [
+      undefined, null, true, {}, { success: false, meta: { changes: 1 } },
+      { success: true }, { success: true, meta: {} },
+      { success: true, meta: { changes: 0 } }, { success: true, meta: { changes: 2 } },
+    ];
+    for (const [index, result] of permissiveResults.entries()) {
+      const response = await upload(database(result, 'missing'), `invalid-runner-${index}`);
+      assert.equal(response.status, 503, JSON.stringify(result));
+      assert.equal(response.headers.get('Cache-Control'), 'no-store');
+      assert.deepEqual(await response.json(), { ok: false, error: 'media_metadata_failed' });
+    }
+
+    const created = await upload(
+      database({ success: true, meta: { changes: 1 } }, 'missing'),
+      'confirmed-insert',
+    );
+    assert.equal(created.status, 201);
+    assert.equal((await created.json()).replayed, false);
+
+    for (const runnerResult of [{ success: true, meta: { changes: 0 } }, 'throw'] as const) {
+      const replay = await upload(database(runnerResult, 'exact'), `race-${String(runnerResult)}`);
+      assert.equal(replay.status, 200);
+      const body = await replay.json();
+      assert.equal(body.replayed, true);
+      assert.equal(Object.hasOwn(body.media, 'storage_reference'), false);
+      assert.equal(Object.hasOwn(body.media, 'sha256'), false);
+    }
+
+    for (const reread of ['changed', 'missing', 'malformed', 'throw'] as const) {
+      const response = await upload(database('throw', reread), `reread-${reread}`);
+      const expectedStatus = reread === 'changed' ? 409 : 503;
+      const expectedError = reread === 'changed' ? 'idempotency_conflict' : 'media_metadata_failed';
+      assert.equal(response.status, expectedStatus, reread);
+      const body = await response.json();
+      assert.deepEqual(body, { ok: false, error: expectedError });
+      assert.doesNotMatch(JSON.stringify(body), /storage_reference|sha256|private/);
+    }
   });
 });

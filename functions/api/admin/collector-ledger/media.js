@@ -10,9 +10,16 @@ import {
 const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
 const CONTENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MEDIA_ROLES = new Set(['identification_evidence', 'certificate_image']);
+const MEDIA_EXTENSIONS = new Map([
+  ['image/jpeg', 'jpg'], ['image/png', 'png'], ['image/webp', 'webp'],
+]);
 const ALLOWED_ARTWORK_HEADERS = new Set([
   'x-artwork-record-id', 'x-artwork-media-role',
 ]);
+const STORED_MEDIA_KEYS = [
+  'id', 'artwork_record_id', 'media_role', 'storage_reference', 'sha256',
+  'content_type', 'byte_length', 'uploaded_by_user_id', 'created_at',
+].sort();
 
 function canonicalLength(value) {
   if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) return null;
@@ -46,6 +53,35 @@ function safeMedia(row) {
   };
 }
 
+function validStoredMediaRow(row) {
+  try {
+    if (!row || typeof row !== 'object' || Array.isArray(row)
+      || Object.keys(row).sort().join('\0') !== STORED_MEDIA_KEYS.join('\0')) return false;
+    const extension = MEDIA_EXTENSIONS.get(row.content_type);
+    return validPrivateId(row.id)
+      && validPrivateId(row.artwork_record_id)
+      && MEDIA_ROLES.has(row.media_role)
+      && typeof row.sha256 === 'string' && /^[0-9a-f]{64}$/.test(row.sha256)
+      && typeof row.storage_reference === 'string'
+      && row.storage_reference
+        === `artwork-ledger/${row.artwork_record_id}/${row.sha256}.${extension}`
+      && CONTENT_TYPES.has(row.content_type)
+      && typeof row.byte_length === 'number' && Number.isSafeInteger(row.byte_length)
+      && row.byte_length >= 1 && row.byte_length <= MAX_MEDIA_BYTES
+      && validPrivateId(row.uploaded_by_user_id)
+      && typeof row.created_at === 'string'
+      && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.created_at)
+      && new Date(row.created_at).toISOString() === row.created_at;
+  } catch { return false; }
+}
+
+function validArtworkRow(row, artworkRecordId) {
+  try {
+    return row && typeof row === 'object' && !Array.isArray(row)
+      && Object.keys(row).length === 1 && row.id === artworkRecordId;
+  } catch { return false; }
+}
+
 function exactStored(row, expected) {
   return row
     && row.id === expected.id
@@ -76,13 +112,34 @@ async function findById(env, id) {
   `).bind(id).first();
 }
 
-async function findExisting(env, id, reference) {
-  return env.DB.prepare(`
-    SELECT id, artwork_record_id, media_role, storage_reference, sha256,
-           content_type, byte_length, uploaded_by_user_id, created_at
-      FROM artist_artwork_media
-     WHERE id = ?1 OR storage_reference = ?2 LIMIT 1
-  `).bind(id, reference).first();
+function insertedExactlyOnce(result) {
+  try {
+    return result && typeof result === 'object' && !Array.isArray(result)
+      && result.success === true
+      && result.meta && typeof result.meta === 'object' && !Array.isArray(result.meta)
+      && result.meta.changes === 1;
+  } catch { return false; }
+}
+
+function replayResponse(row) {
+  return new Response(JSON.stringify({ media: safeMedia(row), replayed: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+}
+
+async function resolveMetadataRace(env, id, expected) {
+  let row;
+  try { row = await findById(env, id); } catch {
+    return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+  }
+  if (row === null || !validStoredMediaRow(row)) {
+    return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+  }
+  if (!exactStored(row, expected)) {
+    return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
+  }
+  return replayResponse(row);
 }
 
 export async function onRequest({ request, env }) {
@@ -127,14 +184,25 @@ export async function onRequest({ request, env }) {
     try { keyedExisting = await findById(env, id); } catch {
       return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
     }
+    if (keyedExisting !== null && !validStoredMediaRow(keyedExisting)) {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+    }
     if (keyedExisting && !exactHeaders(keyedExisting, headerExpectation)) {
       return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
     }
 
-    const artwork = await env.DB.prepare(
-      'SELECT id FROM artist_artwork_records WHERE id = ?1',
-    ).bind(artworkRecordId).first();
-    if (!artwork) return jsonResponse({ ok: false, error: 'artwork_record_not_found' }, 404);
+    let artwork;
+    try {
+      artwork = await env.DB.prepare(
+        'SELECT id FROM artist_artwork_records WHERE id = ?1',
+      ).bind(artworkRecordId).first();
+    } catch {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+    }
+    if (artwork === null) return jsonResponse({ ok: false, error: 'artwork_record_not_found' }, 404);
+    if (!validArtworkRow(artwork, artworkRecordId)) {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+    }
 
     const verified = await storeArtworkLedgerMedia(env.ARTWORK_REGISTRY_BACKUP, {
       artworkRecordId,
@@ -149,22 +217,26 @@ export async function onRequest({ request, env }) {
       byteLength: verified.byteLength, userId: administrator.userId,
     };
     let existing;
-    try { existing = keyedExisting || await findExisting(env, id, verified.reference); } catch {
+    try { existing = keyedExisting || await findById(env, id); } catch {
       return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
     }
     if (existing) {
+      if (!validStoredMediaRow(existing)) {
+        return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+      }
       if (!exactStored(existing, expected)) {
         return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
       }
-      return new Response(JSON.stringify({ media: safeMedia(existing), replayed: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-      });
+      return replayResponse(existing);
+    }
+    if (existing !== null) {
+      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
     }
 
     const createdAt = new Date().toISOString();
+    let inserted;
     try {
-      const inserted = await env.DB.prepare(`
+      inserted = await env.DB.prepare(`
         INSERT INTO artist_artwork_media
           (id, artwork_record_id, media_role, storage_reference, sha256,
            content_type, byte_length, uploaded_by_user_id, created_at)
@@ -173,22 +245,11 @@ export async function onRequest({ request, env }) {
         id, artworkRecordId, role, verified.reference, verified.sha256,
         verified.contentType, verified.byteLength, administrator.userId, createdAt,
       ).run();
-      if (inserted?.success === false) throw new Error('metadata_insert_failed');
     } catch {
-      let concurrent;
-      try { concurrent = await findExisting(env, id, verified.reference); } catch {
-        return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
-      }
-      if (concurrent) {
-        if (!exactStored(concurrent, expected)) {
-          return jsonResponse({ ok: false, error: 'idempotency_conflict' }, 409);
-        }
-        return new Response(JSON.stringify({ media: safeMedia(concurrent), replayed: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-        });
-      }
-      return jsonResponse({ ok: false, error: 'media_metadata_failed' }, 503);
+      return resolveMetadataRace(env, id, expected);
+    }
+    if (!insertedExactlyOnce(inserted)) {
+      return resolveMetadataRace(env, id, expected);
     }
 
     return new Response(JSON.stringify({

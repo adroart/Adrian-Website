@@ -296,6 +296,199 @@ describe('registry maintenance mutation security matrix', () => {
   }
 });
 
+describe('private collector route security matrix', () => {
+  const endpoints = [
+    {
+      name: 'collector sales collection', path: '/api/admin/collector-sales', params: {},
+      body: {
+        action: 'createReconnection', recipientEmail: 'collector@example.com',
+        recipientName: null, privateContext: null, idempotencyKey: 'security-case',
+      },
+      load: async () => (await import('../functions/api/admin/collector-sales.js')).onRequest,
+    },
+    {
+      name: 'collector sale detail', path: '/api/admin/collector-sales/sale-one',
+      params: { id: 'sale-one' },
+      body: { action: 'addReconnectionNote', note: 'Private note.', idempotencyKey: 'security-note' },
+      load: async () => (await import('../functions/api/admin/collector-sales/[id].js')).onRequest,
+    },
+    {
+      name: 'collector ledger', path: '/api/admin/collector-ledger', params: {},
+      body: {
+        action: 'append', artworkRecordId: 'record-one', saleId: null,
+        message: 'Private note.', mediaId: null, idempotencyKey: 'security-ledger',
+      },
+      load: async () => (await import('../functions/api/admin/collector-ledger.js')).onRequest,
+    },
+    {
+      name: 'collector ledger media', path: '/api/admin/collector-ledger/media', params: {},
+      body: new Uint8Array([1, 2, 3]),
+      load: async () => (await import('../functions/api/admin/collector-ledger/media.js')).onRequest,
+    },
+  ] as const;
+
+  function observedRequest(
+    endpoint: typeof endpoints[number], origin: string | undefined, cookie?: string,
+  ) {
+    let bodyReads = 0;
+    const headers = new Headers();
+    if (cookie) headers.set('Cookie', cookie);
+    if (origin !== undefined) headers.set('Origin', origin);
+    headers.set('Content-Type', endpoint.name.endsWith('media') ? 'image/png' : 'application/json');
+    const base = new Request(`${ORIGIN}${endpoint.path}`, {
+      method: 'POST', headers,
+      body: endpoint.body instanceof Uint8Array
+        ? endpoint.body : JSON.stringify(endpoint.body),
+    });
+    const request = new Proxy(base, {
+      get(target, property) {
+        if (property === 'body') bodyReads += 1;
+        const value = Reflect.get(target, property, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+    return { request, bodyReads: () => bodyReads };
+  }
+
+  function guardedBindings() {
+    let dbCalls = 0;
+    let r2Calls = 0;
+    return {
+      DB: {
+        prepare() { dbCalls += 1; throw new Error('business DB must not run'); },
+      },
+      ARTWORK_REGISTRY_BACKUP: new Proxy({}, {
+        get() { r2Calls += 1; throw new Error('R2 must not run'); },
+      }),
+      counts: () => ({ dbCalls, r2Calls }),
+    };
+  }
+
+  async function assertDenied(
+    response: Response, expectedStatus: number, expectedError: string,
+    observed: ReturnType<typeof observedRequest>,
+    bindings: ReturnType<typeof guardedBindings>,
+  ) {
+    assert.equal(response.status, expectedStatus);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.deepEqual(await response.json(), { ok: false, error: expectedError });
+    assert.equal(observed.bodyReads(), 0);
+    assert.deepEqual(bindings.counts(), { dbCalls: 0, r2Calls: 0 });
+  }
+
+  for (const endpoint of endpoints) {
+    it(`${endpoint.name}: rejects before body, business DB, or R2 access`, async () => {
+      const handler = await endpoint.load();
+      const invokeDenied = async (
+        origin: string | undefined,
+        environment: Record<string, unknown>,
+        cookie?: string,
+      ) => {
+        const observed = observedRequest(endpoint, origin, cookie);
+        return {
+          observed,
+          response: await (handler as any)({
+            request: observed.request, env: environment, params: endpoint.params,
+          }),
+        };
+      };
+      const baseEnvironment = {
+        ADMIN_EMAILS: 'artist@example.com',
+        REGISTRY_STEP_UP_SECRET: 'collector-security-secret',
+      };
+
+      let bindings = guardedBindings();
+      let attempt = await invokeDenied(ORIGIN, { ...baseEnvironment, ...bindings });
+      await assertDenied(attempt.response, 401, 'unauthorized', attempt.observed, bindings);
+
+      signIn('collector@example.com');
+      bindings = guardedBindings();
+      attempt = await invokeDenied(ORIGIN, { ...baseEnvironment, ...bindings });
+      await assertDenied(attempt.response, 403, 'forbidden', attempt.observed, bindings);
+
+      signIn();
+      for (const origin of [undefined, 'https://example.com']) {
+        bindings = guardedBindings();
+        attempt = await invokeDenied(origin, { ...baseEnvironment, ...bindings });
+        await assertDenied(attempt.response, 403, 'origin_forbidden', attempt.observed, bindings);
+      }
+
+      bindings = guardedBindings();
+      attempt = await invokeDenied(ORIGIN, { ...baseEnvironment, ...bindings });
+      await assertDenied(attempt.response, 403, 'registry_locked', attempt.observed, bindings);
+
+      const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+      const tokenIdentity = {
+        userId: 'user-1', email: 'artist@example.com', session: { id: 'session-1' },
+      };
+      const expired = await createRegistryUnlockToken(baseEnvironment, tokenIdentity, -1);
+      bindings = guardedBindings();
+      attempt = await invokeDenied(
+        ORIGIN, { ...baseEnvironment, ...bindings },
+        `better-auth.session_token=test-session; registry_unlock=${expired}`,
+      );
+      await assertDenied(attempt.response, 403, 'registry_locked', attempt.observed, bindings);
+
+      const active = await createRegistryUnlockToken(baseEnvironment, tokenIdentity);
+      const activeCookie = `better-auth.session_token=test-session; registry_unlock=${active}`;
+      const noDbObserved = observedRequest(endpoint, ORIGIN, activeCookie);
+      const noDbResponse = await (handler as any)({
+        request: noDbObserved.request, env: baseEnvironment, params: endpoint.params,
+      });
+      assert.equal(noDbResponse.status, 401);
+      assert.equal(noDbResponse.headers.get('Cache-Control'), 'no-store');
+      assert.deepEqual(await noDbResponse.json(), { ok: false, error: 'unauthorized' });
+      assert.equal(noDbObserved.bodyReads(), 0);
+
+      if (endpoint.name.endsWith('media')) {
+        bindings = guardedBindings();
+        const { ARTWORK_REGISTRY_BACKUP: _backup, ...withoutR2 } = bindings;
+        attempt = await invokeDenied(
+          ORIGIN, { ...baseEnvironment, ...withoutR2 }, activeCookie,
+        );
+        await assertDenied(
+          attempt.response, 503, 'backup_not_configured', attempt.observed,
+          bindings,
+        );
+      }
+    });
+  }
+
+  it('does not require Origin for authenticated GET requests', async () => {
+    signIn();
+    const baseEnvironment = {
+      ADMIN_EMAILS: 'artist@example.com', DB: guardedBindings().DB,
+      REGISTRY_STEP_UP_SECRET: 'collector-security-secret',
+    };
+    const { createRegistryUnlockToken } = await import('../functions/api/_lib/admin.js');
+    const token = await createRegistryUnlockToken(baseEnvironment, {
+      userId: 'user-1', email: 'artist@example.com', session: { id: 'session-1' },
+    });
+    const cookie = `better-auth.session_token=test-session; registry_unlock=${token}`;
+    const getCases = [
+      [(await import('../functions/api/admin/collector-sales.js')).onRequest,
+        '/api/admin/collector-sales?unexpected=1', {}],
+      [(await import('../functions/api/admin/collector-sales/[id].js')).onRequest,
+        '/api/admin/collector-sales/bad.id', { id: 'bad.id' }],
+      [(await import('../functions/api/admin/collector-ledger.js')).onRequest,
+        '/api/admin/collector-ledger', {}],
+    ] as const;
+    for (const origin of [undefined, 'https://example.com']) {
+      for (const [handler, path, params] of getCases) {
+        const headers = new Headers({ Cookie: cookie });
+        if (origin !== undefined) headers.set('Origin', origin);
+        const response = await handler({
+          request: new Request(`${ORIGIN}${path}`, { headers }),
+          env: baseEnvironment, params,
+        });
+        assert.equal(response.status, 400, `${origin || 'missing origin'} ${path}`);
+        assert.equal(response.headers.get('Cache-Control'), 'no-store');
+        assert.deepEqual(await response.json(), { ok: false, error: 'invalid_request' });
+      }
+    }
+  });
+});
+
 describe('private registry recovery export security', () => {
   it('requires the administrator step-up and returns only a private encrypted attachment', async () => {
     const environment = {
