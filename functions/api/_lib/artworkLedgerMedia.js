@@ -6,8 +6,7 @@ const MEDIA_EXTENSIONS = new Map([
   ['image/webp', 'webp'],
 ]);
 
-const LOCAL_CODED_ERROR = Symbol('localCodedError');
-const MEDIA_LEASE_DURATION_MS = 2 * 60 * 1000;
+const LOCAL_CODED_ERRORS = new WeakSet();
 const TYPED_ARRAY_PROTOTYPE = Object.getPrototypeOf(Uint8Array.prototype);
 const typedArrayBuffer = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'buffer').get;
 const typedArrayByteOffset = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTYPE, 'byteOffset').get;
@@ -15,24 +14,17 @@ const typedArrayByteLength = Object.getOwnPropertyDescriptor(TYPED_ARRAY_PROTOTY
 const dataViewBuffer = Object.getOwnPropertyDescriptor(DataView.prototype, 'buffer').get;
 const dataViewByteOffset = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteOffset').get;
 const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, 'byteLength').get;
-let nextMediaLeaseGeneration = 0n;
-let activeMediaLeaseGeneration = 0n;
-let mediaLeaseExpiresAt = 0;
+let mediaUploadActive = false;
 
 function codedError(code) {
   const error = new Error(code);
   error.code = code;
-  Object.defineProperty(error, LOCAL_CODED_ERROR, { value: true });
+  LOCAL_CODED_ERRORS.add(error);
   return error;
 }
 
 function isLocalCodedError(error) {
-  try {
-    return (typeof error === 'object' && error !== null)
-      && error[LOCAL_CODED_ERROR] === true;
-  } catch {
-    return false;
-  }
+  return (typeof error === 'object' && error !== null) && LOCAL_CODED_ERRORS.has(error);
 }
 
 function viewDetails(value) {
@@ -88,23 +80,13 @@ function readBackBytes(value) {
   throw new TypeError('unreadable media body');
 }
 
-function acquireMediaLease() {
-  const now = Date.now();
-  if (activeMediaLeaseGeneration !== 0n && now < mediaLeaseExpiresAt) {
-    throw codedError('media_upload_busy');
-  }
-
-  nextMediaLeaseGeneration += 1n;
-  activeMediaLeaseGeneration = nextMediaLeaseGeneration;
-  mediaLeaseExpiresAt = now + MEDIA_LEASE_DURATION_MS;
-  return activeMediaLeaseGeneration;
+function acquireMediaAdmission() {
+  if (mediaUploadActive) throw codedError('media_upload_busy');
+  mediaUploadActive = true;
 }
 
-function releaseMediaLease(generation) {
-  if (activeMediaLeaseGeneration === generation) {
-    activeMediaLeaseGeneration = 0n;
-    mediaLeaseExpiresAt = 0;
-  }
+function releaseMediaAdmission() {
+  mediaUploadActive = false;
 }
 
 async function sha256Hex(bytes) {
@@ -130,74 +112,94 @@ function isConditionalPutError(error) {
     || property('name') === 'PreconditionFailed';
 }
 
-async function verifyStreamBody(body, expectedBytes, failureCode) {
+async function verifyStreamBody(body, expectedBytes, mismatchCode) {
   let reader;
   let streamEnded = false;
+  let verificationError;
   try {
-    if (!body || typeof body.getReader !== 'function') throw codedError(failureCode);
+    if (!body || typeof body.getReader !== 'function') {
+      throw codedError('media_backup_failed');
+    }
     reader = body.getReader();
     let offset = 0;
     while (true) {
       const read = await reader.read();
-      if (!read || read.done === true) {
+      if (!read || typeof read !== 'object') throw codedError('media_backup_failed');
+      if (read.done === true) {
         streamEnded = true;
-        if (offset !== expectedBytes.byteLength) throw codedError(failureCode);
-        return;
+        if (offset !== expectedBytes.byteLength) throw codedError(mismatchCode);
+        break;
       }
-      const chunk = readBackBytes(read.value);
+      let chunk;
+      try {
+        chunk = readBackBytes(read.value);
+      } catch {
+        throw codedError('media_backup_failed');
+      }
+      if (chunk.byteLength === 0) throw codedError('media_backup_failed');
       if (offset + chunk.byteLength > expectedBytes.byteLength) {
-        throw codedError(failureCode);
+        throw codedError(mismatchCode);
       }
       for (let index = 0; index < chunk.byteLength; index += 1) {
-        if (chunk[index] !== expectedBytes[offset + index]) throw codedError(failureCode);
+        if (chunk[index] !== expectedBytes[offset + index]) throw codedError(mismatchCode);
       }
       offset += chunk.byteLength;
     }
   } catch (error) {
-    if (isLocalCodedError(error)) throw error;
-    throw codedError(failureCode);
-  } finally {
-    if (reader) {
-      if (!streamEnded) {
-        try {
-          await reader.cancel();
-        } catch {
-          // Preserve the stable verification error rather than exposing cancellation details.
-        }
-      }
+    verificationError = isLocalCodedError(error)
+      ? error : codedError('media_backup_failed');
+  }
+
+  let cleanupFailed = false;
+  if (reader) {
+    if (!streamEnded) {
       try {
-        reader.releaseLock();
+        await reader.cancel();
       } catch {
-        // A hostile or already-released reader must not replace the verification result.
+        cleanupFailed = true;
       }
     }
+    try {
+      reader.releaseLock();
+    } catch {
+      cleanupFailed = true;
+    }
   }
+  if (cleanupFailed) throw codedError('media_backup_failed');
+  if (verificationError) throw verificationError;
 }
 
 async function verifyStoredObject(bucket, expected, conflict) {
-  const failureCode = conflict ? 'media_backup_conflict' : 'media_backup_failed';
+  const mismatchCode = conflict ? 'media_backup_conflict' : 'media_backup_failed';
   let stored;
   try {
     stored = await bucket.get(expected.reference);
   } catch {
-    throw codedError(failureCode);
+    throw codedError('media_backup_failed');
   }
 
-  try {
-    if (!stored) throw codedError(failureCode);
-    if (stored.key !== expected.reference) throw codedError(failureCode);
-    if (stored.size !== expected.byteLength) throw codedError(failureCode);
-    const storedContentType = stored.httpMetadata?.contentType;
-    if (storedContentType !== expected.contentType) {
-      throw codedError(failureCode);
-    }
-    const body = stored.body;
-    if (body === undefined || body === null) throw codedError(failureCode);
-    await verifyStreamBody(body, expected.bytes, failureCode);
-  } catch (error) {
-    if (isLocalCodedError(error)) throw error;
-    throw codedError(failureCode);
+  if (!stored || (typeof stored !== 'object' && typeof stored !== 'function')) {
+    throw codedError('media_backup_failed');
   }
+
+  let key;
+  let size;
+  let storedContentType;
+  let body;
+  try {
+    key = stored.key;
+    size = stored.size;
+    storedContentType = stored.httpMetadata?.contentType;
+    body = stored.body;
+  } catch {
+    throw codedError('media_backup_failed');
+  }
+
+  if (key !== expected.reference) throw codedError(mismatchCode);
+  if (size !== expected.byteLength) throw codedError(mismatchCode);
+  if (storedContentType !== expected.contentType) throw codedError(mismatchCode);
+  if (body === undefined || body === null) throw codedError('media_backup_failed');
+  await verifyStreamBody(body, expected.bytes, mismatchCode);
 }
 
 export async function storeArtworkLedgerMedia(bucket, {
@@ -214,7 +216,7 @@ export async function storeArtworkLedgerMedia(bucket, {
     throw codedError('invalid_media_size');
   }
 
-  const leaseGeneration = acquireMediaLease();
+  acquireMediaAdmission();
   try {
     const bytes = inputBytes(rawBytes);
     if (bytes.byteLength < 1 || bytes.byteLength > MAX_MEDIA_BYTES) {
@@ -243,6 +245,6 @@ export async function storeArtworkLedgerMedia(bucket, {
     await verifyStoredObject(bucket, expected, conditionalReplay);
     return result;
   } finally {
-    releaseMediaLease(leaseGeneration);
+    releaseMediaAdmission();
   }
 }

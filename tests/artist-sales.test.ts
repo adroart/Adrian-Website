@@ -221,8 +221,12 @@ type FakeMediaObject = {
   bytes: Uint8Array;
   contentType?: string;
   arrayBufferFailure?: Error;
+  cancelFailure?: Error;
+  releaseLockFailure?: Error;
+  reportedKey?: string;
   reportedSize?: number;
   streamBytes?: Uint8Array;
+  streamChunkValue?: unknown;
   streamFailure?: Error;
   streamFailureAtRead?: number;
 };
@@ -284,15 +288,17 @@ function mediaBucket(options: {
           return;
         }
         const end = Math.min(offset + chunkSize, bytes.byteLength);
-        const chunk = new Uint8Array(bytes.subarray(offset, end));
+        const chunk = stored.streamChunkValue === undefined
+          ? new Uint8Array(bytes.subarray(offset, end))
+          : stored.streamChunkValue;
         offset = end;
-        outstanding = chunk.byteLength;
+        outstanding = chunk instanceof Uint8Array ? chunk.byteLength : 0;
         streamMetrics.activeChunkBytes += outstanding;
         streamMetrics.maxActiveChunkBytes = Math.max(
           streamMetrics.maxActiveChunkBytes, streamMetrics.activeChunkBytes,
         );
-        streamMetrics.maxChunkBytes = Math.max(streamMetrics.maxChunkBytes, chunk.byteLength);
-        controller.enqueue(chunk);
+        streamMetrics.maxChunkBytes = Math.max(streamMetrics.maxChunkBytes, outstanding);
+        controller.enqueue(chunk as Uint8Array);
       },
       cancel() {
         releaseOutstanding();
@@ -308,9 +314,14 @@ function mediaBucket(options: {
           read: () => reader.read(),
           cancel: (reason?: unknown) => {
             streamMetrics.cancelRequests += 1;
-            return reader.cancel(reason);
+            return reader.cancel(reason).then(() => {
+              if (stored.cancelFailure) throw stored.cancelFailure;
+            });
           },
-          releaseLock: () => reader.releaseLock(),
+          releaseLock: () => {
+            reader.releaseLock();
+            if (stored.releaseLockFailure) throw stored.releaseLockFailure;
+          },
         };
       },
     });
@@ -361,7 +372,7 @@ function mediaBucket(options: {
         const stored = objects.get(key);
         if (!stored) return null;
         return {
-          key,
+          key: stored.reportedKey ?? key,
           size: stored.reportedSize ?? stored.bytes.byteLength,
           httpMetadata: stored.contentType === undefined
             ? undefined : { contentType: stored.contentType },
@@ -398,15 +409,16 @@ function assertSanitizedMediaError(
 }
 
 describe('authenticity media immutable R2 storage', () => {
-  it('keeps module admission state primitive and stores no cross-request continuation', () => {
+  it('keeps admission state primitive with unforgeable local-error branding and no continuation', () => {
     const source = readFileSync(
       new URL('../functions/api/_lib/artworkLedgerMedia.js', import.meta.url), 'utf8',
     );
     const moduleState = source.slice(0, source.indexOf('function codedError'));
-    assert.doesNotMatch(moduleState, /WeakSet|Promise|resolver|Queue|\[\]/);
-    assert.doesNotMatch(source, /mediaAdmissionQueue|withMediaAdmission/);
-    assert.match(moduleState, /let activeMediaLeaseGeneration = 0n;/);
-    assert.match(moduleState, /let mediaLeaseExpiresAt = 0;/);
+    assert.match(moduleState, /const LOCAL_CODED_ERRORS = new WeakSet\(\);/);
+    assert.doesNotMatch(moduleState, /Symbol\(['"]localCodedError|Date\.now|LEASE_DURATION|Expires|Generation/);
+    assert.doesNotMatch(moduleState, /Promise|resolver|Queue|\[\]/);
+    assert.doesNotMatch(source, /Date\.now|mediaLeaseExpiresAt|mediaAdmissionQueue|withMediaAdmission/);
+    assert.match(moduleState, /let mediaUploadActive = false;/);
   });
 
   it('stores JPEG, PNG, and WebP bytes exactly with content-addressed keys and immutable options', async () => {
@@ -542,14 +554,20 @@ describe('authenticity media immutable R2 storage', () => {
     assert.deepEqual(fake.objects.get(first.reference)?.bytes, input.bytes);
   });
 
-  it('rejects conflicting existing bytes or content type and never overwrites them', async () => {
-    for (const conflict of ['bytes', 'content-type'] as const) {
+  it('rejects positively observed replay key, size, metadata, byte, and EOF conflicts', async () => {
+    for (const conflict of ['bytes', 'content-type', 'key', 'size', 'eof'] as const) {
       const fake = mediaBucket();
       const input = { artworkRecordId: `record-${conflict}`, bytes: new Uint8Array([8, 6, 7]), contentType: 'image/png' };
       const first = await storeArtworkLedgerMedia(fake.bucket, input);
       const stored = fake.objects.get(first.reference)!;
       if (conflict === 'bytes') stored.bytes = new Uint8Array([5, 3, 0]);
-      else stored.contentType = 'image/jpeg';
+      else if (conflict === 'content-type') stored.contentType = 'image/jpeg';
+      else if (conflict === 'key') stored.reportedKey = `${first.reference}-wrong`;
+      else if (conflict === 'size') stored.reportedSize = input.bytes.byteLength + 1;
+      else {
+        stored.reportedSize = input.bytes.byteLength;
+        stored.streamBytes = new Uint8Array([8, 6]);
+      }
       await assert.rejects(storeArtworkLedgerMedia(fake.bucket, input),
         mediaErrorCode('media_backup_conflict'));
       assert.equal(fake.objects.size, 1);
@@ -581,7 +599,7 @@ describe('authenticity media immutable R2 storage', () => {
     }
   });
 
-  it('handles R2 conditional null and precondition exceptions as verification-only replays', async () => {
+  it('converges with independent R2 writers after conditional null or precondition errors', async () => {
     const bytes = new Uint8Array([2, 7, 1, 8]);
     const input = { artworkRecordId: 'record-conditional', bytes, contentType: 'image/jpeg' };
     const nullFake = mediaBucket();
@@ -615,6 +633,49 @@ describe('authenticity media immutable R2 storage', () => {
       assert.deepEqual(await storeArtworkLedgerMedia(bucket, input), first);
       assert.equal(gets, 1);
     }
+  });
+
+  it('keeps replay retrieval, readability, and cleanup faults retryable as backup failures', async () => {
+    const privateText = 'private-replay-read-failure';
+    const scenarios: Array<[
+      string,
+      (options: any, stored: FakeMediaObject) => void,
+    ]> = [
+      ['get', (options) => { options.getFailure = new Error(privateText); }],
+      ['missing', (options) => { options.missingReadBack = true; }],
+      ['body', (options) => { options.omitBody = true; }],
+      ['unreadable', (_options, stored) => { stored.streamChunkValue = privateText; }],
+      ['cancel', (_options, stored) => {
+        stored.streamBytes = new Uint8Array([9, 2, 3, 4]);
+        stored.cancelFailure = new Error(privateText);
+      }],
+      ['release', (_options, stored) => { stored.releaseLockFailure = new Error(privateText); }],
+    ];
+
+    for (const [name, configure] of scenarios) {
+      const options: any = { streamChunkSize: 2 };
+      const fake = mediaBucket(options);
+      const input = {
+        artworkRecordId: `record-replay-retryable-${name}`,
+        bytes: new Uint8Array([1, 2, 3, 4]),
+        contentType: 'image/png',
+      };
+      const first = await storeArtworkLedgerMedia(fake.bucket, input);
+      configure(options, fake.objects.get(first.reference)!);
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, input), (error: Error & {
+        code?: string;
+      }) => {
+        assertSanitizedMediaError(error, 'media_backup_failed', [privateText]);
+        return true;
+      });
+    }
+
+    const afterFailure = await storeArtworkLedgerMedia(mediaBucket().bucket, {
+      artworkRecordId: 'record-after-replay-failure',
+      bytes: new Uint8Array([5]),
+      contentType: 'image/png',
+    });
+    assert.match(afterFailure.reference, /^artwork-ledger\/record-after-replay-failure\//);
   });
 
   it('does not mask arbitrary R2 put outages as replays', async () => {
@@ -764,56 +825,37 @@ describe('authenticity media immutable R2 storage', () => {
     assert.equal(fake.streamMetrics.activeLifecycles, 0);
   });
 
-  it('expires an abandoned lease and prevents its old completion from clearing the newer generation', async () => {
-    const originalNow = Date.now;
-    let now = 1_000_000;
-    Date.now = () => now;
-    try {
-      let releaseOld: (() => void) | undefined;
-      let oldEnteredResolve: (() => void) | undefined;
-      let releaseNew: (() => void) | undefined;
-      let newEnteredResolve: (() => void) | undefined;
-      const oldEntered = new Promise<void>((resolve) => { oldEnteredResolve = resolve; });
-      const oldGate = new Promise<void>((resolve) => { releaseOld = resolve; });
-      const newEntered = new Promise<void>((resolve) => { newEnteredResolve = resolve; });
-      const newGate = new Promise<void>((resolve) => { releaseNew = resolve; });
-      const fake = mediaBucket({
-        async beforePut(putNumber) {
-          if (putNumber === 1) {
-            oldEnteredResolve?.();
-            await oldGate;
-          } else if (putNumber === 2) {
-            newEnteredResolve?.();
-            await newGate;
-          }
-        },
-      });
-      const oldPending = storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-expired-old', bytes: new Uint8Array([1]), contentType: 'image/png',
-      });
-      await oldEntered;
-      now += 10 * 60 * 1000;
-      const newPending = storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-after-expiry', bytes: new Uint8Array([2]), contentType: 'image/png',
-      });
-      releaseOld?.();
-      await oldPending;
-      await newEntered;
-
-      const thirdPending = storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-must-stay-busy', bytes: new Uint8Array([3]), contentType: 'image/png',
-      });
-      const thirdBusy = assert.rejects(thirdPending, mediaErrorCode('media_upload_busy'));
-      releaseNew?.();
-      await thirdBusy;
-      await newPending;
-      const after = await storeArtworkLedgerMedia(fake.bucket, {
-        artworkRecordId: 'record-after-release', bytes: new Uint8Array([4]), contentType: 'image/png',
-      });
-      assert.match(after.reference, /^artwork-ledger\/record-after-release\//);
-    } finally {
-      Date.now = originalNow;
+  it('keeps a long-pending operation busy until it settles, then admits the next request', async () => {
+    let releasePut: (() => void) | undefined;
+    let putEnteredResolve: (() => void) | undefined;
+    const putEntered = new Promise<void>((resolve) => { putEnteredResolve = resolve; });
+    const putGate = new Promise<void>((resolve) => { releasePut = resolve; });
+    const fake = mediaBucket({
+      async beforePut(putNumber) {
+        if (putNumber === 1) {
+          putEnteredResolve?.();
+          await putGate;
+        }
+      },
+    });
+    const pending = storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-long-pending', bytes: new Uint8Array([1]), contentType: 'image/png',
+    });
+    await putEntered;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    for (const recordId of ['record-still-busy-one', 'record-still-busy-two']) {
+      await assert.rejects(storeArtworkLedgerMedia(fake.bucket, {
+        artworkRecordId: recordId, bytes: new Uint8Array([2]), contentType: 'image/png',
+      }), mediaErrorCode('media_upload_busy'));
     }
+    assert.equal(fake.puts.length, 1);
+
+    releasePut?.();
+    await pending;
+    const after = await storeArtworkLedgerMedia(fake.bucket, {
+      artworkRecordId: 'record-after-settlement', bytes: new Uint8Array([4]), contentType: 'image/png',
+    });
+    assert.match(after.reference, /^artwork-ledger\/record-after-settlement\//);
   });
 
   it('rejects truncated, extra, wrong, and throwing streams and cancels unfinished readers', async () => {
@@ -872,7 +914,7 @@ describe('authenticity media immutable R2 storage', () => {
     });
     await assert.rejects(storeArtworkLedgerMedia(replayFailure.bucket, replayInput),
       (error: Error & { code?: string; reference?: unknown }) => {
-        assertSanitizedMediaError(error, 'media_backup_conflict', [
+        assertSanitizedMediaError(error, 'media_backup_failed', [
           'private replay stream', first.reference,
         ]);
         return true;
@@ -911,6 +953,16 @@ describe('authenticity media immutable R2 storage', () => {
     };
     const scenarios = [
       mediaBucket({ putFailure: spoofed('media_backup_failed') }),
+      mediaBucket({
+        putFailure: new Proxy(spoofed('media_backup_failed'), {
+          get(target, property, receiver) {
+            if (typeof property === 'symbol') return true;
+            if (property === 'code') return 'media_backup_failed';
+            return Reflect.get(target, property, receiver);
+          },
+          getPrototypeOf() { return Error.prototype; },
+        }),
+      }),
       mediaBucket({ getFailure: spoofed('media_backup_conflict') }),
       mediaBucket({
         omitBody: true,
