@@ -216,6 +216,23 @@ describe('read-only artwork workspace projection', () => {
     } finally { f.database.close(); }
   });
 
+  it('attaches the linked sales record and verified history to a keeper-only lookup', async () => {
+    const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
+    const f = fixture();
+    try {
+      seedComposedReadState(f.database);
+      const workspace = await getArtworkWorkspace(f.env, {
+        keeperPieceId: 'keeper-linked',
+      }, now);
+      assert.deepEqual(workspace.salesRecord, {
+        artworkRecordId: 'record-linked', state: 'identity_linked',
+      });
+      assert.deepEqual(workspace.sale, {
+        state: 'verified', verifiedSaleId: 'sale-linked',
+      });
+    } finally { f.database.close(); }
+  });
+
   it('composes allowlisted certificate, invitation, caretaker, plate, and sale states', async () => {
     const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
     const f = fixture();
@@ -394,6 +411,53 @@ describe('read-only artwork workspace projection', () => {
     } finally { f.database.close(); }
   });
 
+  it('does not offer a first-bind invitation action to active or released caretakers', async () => {
+    const { getArtworkWorkspace } = await import('../functions/api/_lib/artworkWorkspace.js');
+    const f = fixture();
+    try {
+      seedComposedReadState(f.database);
+      f.database.exec(`
+        UPDATE certificate_templates
+           SET content_json = '{"materials":["Wood"],"makers":[{"name":"Adrian Rasmussen","role":"Artist"}],"origin":"Bali","techniques":["Handmade"],"yearWording":"Made in 2026","editionWording":"Unique work","certificateWording":"Certificate","openingWording":"Welcome"}'
+         WHERE id = 'template-one';
+        INSERT INTO artwork_identity_recovery_qualifications
+          (id, keeper_piece_id, result, copied_artifact, schema_version,
+           build_version, key_version, verifier_version, backup_reference,
+           backup_sha256, administrator_user_id, administrator_email,
+           safe_failure_code, qualified_at)
+        VALUES
+          ('identity-proof-action', 'keeper-linked', 'passed', 1, '1',
+           'registry-recovery-build-v1', 1, 'copied-identity-v1',
+           'identities/AR-7KQ9M2WX/${digest('b')}.json', '${digest('b')}',
+           'artist-admin', 'artist@example.com', NULL, '${now}');
+      `);
+      const triggers = f.database.prepare(
+        "SELECT name FROM sqlite_schema WHERE type = 'trigger' AND tbl_name = 'keeper_pieces'",
+      ).all() as Array<{ name: string }>;
+      for (const trigger of triggers) f.database.exec(`DROP TRIGGER "${trigger.name}"`);
+
+      f.database.exec(`
+        UPDATE keeper_pieces
+           SET keeper_user_id = 'artist-admin', claimed_at = '${now}', released_at = NULL
+         WHERE id = 'keeper-linked';
+      `);
+      const active = await getArtworkWorkspace(f.env, { keeperPieceId: 'keeper-linked' }, now);
+      assert.equal(active.caretaker.state, 'active');
+      assert.notEqual(active.nextAction?.label, 'Resolve caretaker invitation');
+      assert.notEqual(active.nextAction?.label, 'Create caretaker invitation');
+
+      f.database.exec(`
+        UPDATE keeper_pieces
+           SET keeper_user_id = NULL, released_at = '2026-08-10T12:01:00.000Z'
+         WHERE id = 'keeper-linked';
+      `);
+      const released = await getArtworkWorkspace(f.env, { keeperPieceId: 'keeper-linked' }, now);
+      assert.equal(released.caretaker.state, 'released');
+      assert.notEqual(released.nextAction?.label, 'Resolve caretaker invitation');
+      assert.notEqual(released.nextAction?.label, 'Create caretaker invitation');
+    } finally { f.database.close(); }
+  });
+
   it('exposes one authenticated GET endpoint with strict selector validation and no-store responses', async () => {
     const { onRequest } = await import('../functions/api/admin/artwork-workspace.js');
     const f = fixture();
@@ -490,6 +554,36 @@ describe('read-only artwork workspace projection', () => {
         workspace: {
           ...workspace,
           nextAction: { label: 'Email buyer@example.com', href: '/admin/pieces', reason: 'Unsafe' },
+        },
+      }));
+
+      const withoutIdentity = {
+        ...workspace, salesRecord: null, identity: null, invitation: null,
+        caretaker: { state: 'not_registered' }, plate: null,
+      };
+      for (const contradictory of [
+        { ...workspace, identity: null },
+        { ...withoutIdentity, caretaker: { state: 'active' } },
+        { ...withoutIdentity, invitation: workspace.invitation },
+        { ...withoutIdentity, plate: workspace.plate },
+      ]) assert.throws(() => parseArtworkWorkspaceResponse({ ok: true, workspace: contradictory }));
+
+      assert.throws(() => parseArtworkWorkspaceResponse({
+        ok: true,
+        workspace: {
+          ...workspace,
+          nextAction: { label: 'Review', href: '/admin/pieces', reason: 'Missing stable ID' },
+        },
+      }));
+      assert.throws(() => parseArtworkWorkspaceResponse({
+        ok: true,
+        workspace: {
+          ...workspace,
+          nextAction: {
+            label: 'Review',
+            href: '/admin/collector-sales?source=arbitrary&artworkId=SIG-100',
+            reason: 'Arbitrary source',
+          },
         },
       }));
     } finally { f.database.close(); }

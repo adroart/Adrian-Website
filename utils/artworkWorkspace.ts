@@ -176,6 +176,25 @@ function safeActionHref(value: unknown): string {
     if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) invalid();
   }
   for (const value of url.searchParams.values()) text(value, 128);
+  const keys = [...url.searchParams.keys()].sort();
+  const exactQuery = (required: string[]) => keys.join('\0') === [...required].sort().join('\0');
+  if (url.pathname === '/admin/collector-sales') {
+    const recordLookup = exactQuery(['artistArtworkRecordId']);
+    const legacyLookup = exactQuery([
+      'acquisitionId', 'artworkId', 'keeperPieceId', 'source',
+    ]) && url.searchParams.get('source') === 'legacy_acquisition';
+    if (!recordLookup && !legacyLookup) invalid();
+  } else if (url.pathname === '/admin/pieces/wizard'
+    || url.pathname === '/admin/invitations' || url.pathname === '/admin/pieces') {
+    if (!exactQuery(['keeperPieceId'])) invalid();
+  } else if (url.pathname === '/admin/registrations') {
+    if (!exactQuery(['artistArtworkRecordId', 'artworkId'])) invalid();
+  } else if (url.pathname === '/admin/certificates') {
+    if (!exactQuery(['artworkId'])) invalid();
+  } else if (url.pathname === '/admin/maintenance') {
+    if (!exactQuery(['artworkId']) && !exactQuery(['keeperPieceId'])
+      && !exactQuery(['artworkId', 'keeperPieceId'])) invalid();
+  }
   return href;
 }
 
@@ -208,7 +227,7 @@ export function parseArtworkWorkspaceResponse(value: unknown): ArtworkWorkspace 
     'catalog', 'salesRecord', 'identity', 'certificate', 'invitation', 'caretaker',
     'plate', 'sale', 'nextAction', 'activity',
   ]);
-  return {
+  const parsed: ArtworkWorkspace = {
     catalog: nullable(workspace.catalog, parseCatalog),
     salesRecord: nullable(workspace.salesRecord, parseSalesRecord),
     identity: nullable(workspace.identity, parseIdentity),
@@ -220,6 +239,18 @@ export function parseArtworkWorkspaceResponse(value: unknown): ArtworkWorkspace 
     nextAction: nullable(workspace.nextAction, parseNextAction),
     activity: parseActivity(workspace.activity),
   };
+  if (parsed.identity && !parsed.catalog) invalid();
+  if (parsed.salesRecord?.state === 'unresolved'
+    && (parsed.catalog !== null || parsed.identity !== null)) invalid();
+  if (parsed.salesRecord?.state === 'identified'
+    && (parsed.catalog === null || parsed.identity !== null)) invalid();
+  if (parsed.salesRecord?.state === 'identity_linked'
+    && (parsed.catalog === null || parsed.identity === null)) invalid();
+  if (parsed.identity === null) {
+    if (parsed.caretaker.state !== 'not_registered' || parsed.invitation || parsed.plate) invalid();
+  } else if (parsed.caretaker.state === 'not_registered') invalid();
+  if (parsed.sale?.state === 'legacy_candidate' && !parsed.identity) invalid();
+  return parsed;
 }
 
 const SELECTOR_LIMITS: Record<keyof ArtworkWorkspaceSelector, number> = {

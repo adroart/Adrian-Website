@@ -38,6 +38,18 @@ async function selectedRecord(env, selector) {
     if (!row) throw workspaceError('workspace_not_found');
     return row;
   }
+  if (selector.keeperPieceId) {
+    const rows = await all(env, `
+      SELECT id, artwork_id, edition_json, keeper_piece_id, identification_status,
+             created_at, updated_at
+        FROM artist_artwork_records
+       WHERE keeper_piece_id = ?1
+       ORDER BY id
+       LIMIT 2
+    `, selector.keeperPieceId);
+    if (rows.length > 1) throw workspaceError('workspace_data_corrupt');
+    return rows[0] ?? null;
+  }
   if (!selector.artworkId) return null;
   const rows = await all(env, `
     SELECT id, artwork_id, edition_json, keeper_piece_id, identification_status,
@@ -316,7 +328,9 @@ function stablePath(path, params) {
   return `${path}?${query}`;
 }
 
-function nextActionProjection({ record, keeper, artwork, certificate, invitation, plate, sale }) {
+function nextActionProjection({
+  record, keeper, artwork, certificate, invitation, caretaker, plate, sale,
+}) {
   if (record?.identification_status === 'unresolved') {
     return {
       label: 'Resolve artwork identity',
@@ -354,7 +368,8 @@ function nextActionProjection({ record, keeper, artwork, certificate, invitation
       reason: 'The effective certificate is missing required facts.',
     };
   }
-  if (keeper && (!invitation || ['available', 'expired', 'revoked'].includes(invitation.state))) {
+  if (keeper && caretaker.state === 'unclaimed'
+    && (!invitation || ['available', 'expired', 'revoked'].includes(invitation.state))) {
     return {
       label: invitation?.state === 'available'
         ? 'Resolve caretaker invitation' : 'Create caretaker invitation',
@@ -409,8 +424,9 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
     plateProjection(env, keeper),
     activityProjection(env, record, keeper),
   ]);
+  const caretaker = caretakerProjection(keeper);
   const nextAction = nextActionProjection({
-    record, keeper, artwork, certificate, invitation, plate,
+    record, keeper, artwork, certificate, invitation, caretaker, plate,
     sale: sale ? { ...sale.public, legacyAcquisitionId: sale.legacyAcquisitionId } : null,
   });
 
@@ -431,7 +447,7 @@ export async function getArtworkWorkspace(env, selector, now = new Date().toISOS
     } : null,
     certificate,
     invitation,
-    caretaker: caretakerProjection(keeper),
+    caretaker,
     plate,
     sale: sale?.public ?? null,
     nextAction,
