@@ -248,6 +248,14 @@ CREATE TABLE artist_verified_sale_events (
   after_json TEXT NOT NULL CHECK (
     json_valid(after_json) AND json_type(after_json) = 'object'
   ),
+  reason TEXT CHECK (
+    reason IS NULL
+    OR (
+      typeof(reason) = 'text'
+      AND length(reason) BETWEEN 1 AND 1000
+      AND reason = trim(reason)
+    )
+  ),
   actor_user_id TEXT NOT NULL REFERENCES user(id) ON DELETE RESTRICT,
   idempotency_key TEXT NOT NULL UNIQUE CHECK (
     typeof(idempotency_key) = 'text' AND length(trim(idempotency_key)) BETWEEN 1 AND 256
@@ -268,7 +276,11 @@ CREATE TABLE artist_verified_sale_events (
     AND substr(created_at, 12, 2) BETWEEN '00' AND '23'
     AND COALESCE(strftime('%Y-%m-%dT%H:%M:%fZ', created_at) = created_at, 0) = 1
   ),
-  UNIQUE (sale_id, sequence)
+  UNIQUE (sale_id, sequence),
+  CHECK (
+    (event_type = 'corrected' AND reason IS NOT NULL)
+    OR (event_type = 'shared_message_appended' AND reason IS NULL)
+  )
 );
 
 CREATE TABLE artist_verified_sale_items (

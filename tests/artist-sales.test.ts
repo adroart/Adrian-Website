@@ -158,7 +158,11 @@ function count(db: DatabaseSync, table: string) {
   return Number(db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get()?.count);
 }
 
-function serviceEnvironment(options: { failBatchAt?: number; loseFirstResponse?: boolean } = {}) {
+function serviceEnvironment(options: {
+  failBatchAt?: number;
+  loseFirstResponse?: boolean;
+  beforeBatch?: () => Promise<void>;
+} = {}) {
   const db = database();
   let batches = 0;
   const DB = {
@@ -178,6 +182,7 @@ function serviceEnvironment(options: { failBatchAt?: number; loseFirstResponse?:
       return statement;
     },
     async batch(statements: Array<{ sql: string; values: SQLInputValue[] }>) {
+      await options.beforeBatch?.();
       batches += 1;
       db.exec('BEGIN IMMEDIATE');
       try {
@@ -259,7 +264,7 @@ describe('artist verified sale records', () => {
         ],
         artist_verified_sale_events: [
           'id', 'sale_id', 'sequence', 'event_type', 'before_json', 'after_json',
-          'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
+          'reason', 'actor_user_id', 'idempotency_key', 'request_digest', 'created_at',
         ],
         artist_verified_sale_items: [
           'id', 'sale_id', 'artwork_record_id', 'amount_minor', 'currency', 'created_at',
@@ -343,6 +348,45 @@ describe('artist verified sale records', () => {
           .some((column) => column.name === 'last_event_id')
       ), false);
       assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+    } finally {
+      db.close();
+    }
+  });
+
+  it('requires a canonical private reason only for corrected sale events', () => {
+    const db = database();
+    try {
+      seedCaseAndRecords(db);
+      insertPrimarySale(db);
+      const before = saleSnapshot();
+      const after = saleSnapshot({ buyerEmail: 'corrected@example.com' });
+      for (const reason of [null, '', '   ', ' padded ', 'x'.repeat(1001)]) {
+        assert.throws(() => db.prepare(`
+          INSERT INTO artist_verified_sale_events
+            (id, sale_id, sequence, event_type, before_json, after_json, reason,
+             actor_user_id, idempotency_key, request_digest, created_at)
+          VALUES (?1, 'sale-one', 1, 'corrected', ?2, ?3, ?4,
+            'artist-admin', ?5, ?6, ?7)
+        `).run(`invalid-reason-${String(reason).length}`, before, after, reason,
+          `invalid-reason-key-${String(reason).length}`, digest('e'), now));
+      }
+      assert.throws(() => db.prepare(`
+        INSERT INTO artist_verified_sale_events
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
+           actor_user_id, idempotency_key, request_digest, created_at)
+        VALUES ('shared-with-reason', 'sale-one', 1, 'shared_message_appended',
+          ?1, ?2, 'private reason', 'artist-admin', 'shared-with-reason-key', ?3, ?4)
+      `).run(before, saleSnapshot({ privateNotes: 'Shared creator note.' }), digest('f'), now));
+      db.prepare(`
+        INSERT INTO artist_verified_sale_events
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
+           actor_user_id, idempotency_key, request_digest, created_at)
+        VALUES ('valid-reason', 'sale-one', 1, 'corrected', ?1, ?2,
+          'Transcription correction.', 'artist-admin', 'valid-reason-key', ?3, ?4)
+      `).run(before, after, digest('a'), now);
+      assert.equal(db.prepare(`
+        SELECT reason FROM artist_verified_sale_events WHERE id = 'valid-reason'
+      `).get()?.reason, 'Transcription correction.');
     } finally {
       db.close();
     }
@@ -809,9 +853,9 @@ describe('artist verified sale records', () => {
       `).run(beforeRecord, afterRecord, digest('7'), outOfRangeTimestamp), /constraint/i);
       assert.throws(() => db.prepare(`
         INSERT INTO artist_verified_sale_events
-          (id, sale_id, sequence, event_type, before_json, after_json,
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
            actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('bad-sale-event-created-at', 'sale-one', 1, 'corrected', ?1, ?2,
+        VALUES ('bad-sale-event-created-at', 'sale-one', 1, 'corrected', ?1, ?2, 'Timestamp correction.',
           'artist-admin', 'bad-sale-event-created-at-key', ?3, ?4)
       `).run(
         saleSnapshot(), saleSnapshot({ totalMinor: 300001 }), digest('8'), outOfRangeTimestamp,
@@ -861,9 +905,9 @@ describe('artist verified sale records', () => {
       ] as const) {
         assert.throws(() => db.prepare(`
           INSERT INTO artist_verified_sale_events
-            (id, sale_id, sequence, event_type, before_json, after_json,
+            (id, sale_id, sequence, event_type, before_json, after_json, reason,
              actor_user_id, idempotency_key, request_digest, created_at)
-          VALUES (?1, 'sale-one', 1, 'corrected', ?2, ?3,
+          VALUES (?1, 'sale-one', 1, 'corrected', ?2, ?3, 'Date correction.',
             'artist-admin', ?4, ?5, ?6)
         `).run(
           id, saleSnapshot(), saleSnapshot(overrides), `${id}-key`, digest('9'), now,
@@ -887,9 +931,9 @@ describe('artist verified sale records', () => {
       ] as const) {
         db.prepare(`
           INSERT INTO artist_verified_sale_events
-            (id, sale_id, sequence, event_type, before_json, after_json,
+            (id, sale_id, sequence, event_type, before_json, after_json, reason,
              actor_user_id, idempotency_key, request_digest, created_at)
-          VALUES (?1, 'sale-one', ?2, 'corrected', ?3, ?4,
+          VALUES (?1, 'sale-one', ?2, 'corrected', ?3, ?4, 'Date correction.',
             'artist-admin', ?5, ?6, ?7)
         `).run(id, sequence, before, after, `${id}-key`, digest('a'), now);
       }
@@ -1156,9 +1200,9 @@ describe('artist verified sale records', () => {
       const afterSale = saleSnapshot({ totalMinor: 310000 });
       assert.throws(() => db.prepare(`
         INSERT INTO artist_verified_sale_events
-          (id, sale_id, sequence, event_type, before_json, after_json,
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
            actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('invalid-sale-event', 'sale-one', 1, 'corrected', ?1, ?2,
+        VALUES ('invalid-sale-event', 'sale-one', 1, 'corrected', ?1, ?2, 'Invalid correction.',
           'artist-admin', 'invalid-sale-event-key', ?3, ?4)
       `).run(
         beforeSale,
@@ -1167,9 +1211,9 @@ describe('artist verified sale records', () => {
       ), /snapshot|foreign|reference/i);
       db.prepare(`
         INSERT INTO artist_verified_sale_events
-          (id, sale_id, sequence, event_type, before_json, after_json,
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
            actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2,
+        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2, 'Total correction.',
           'artist-admin', 'sale-event-one-key', ?3, ?4)
       `).run(beforeSale, afterSale, digest('3'), now);
       db.exec(`
@@ -1265,9 +1309,9 @@ describe('artist verified sale records', () => {
       `);
       db.prepare(`
         INSERT INTO artist_verified_sale_events
-          (id, sale_id, sequence, event_type, before_json, after_json,
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
            actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2,
+        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2, 'Total correction.',
           'artist-admin', 'sale-event-one-key', ?3, ?4)
       `).run(saleSnapshot(), saleSnapshot({ totalMinor: 310000 }), digest('6'), now);
 
@@ -1329,9 +1373,9 @@ describe('artist verified sale records', () => {
       }
       assert.throws(() => db.prepare(`
         INSERT OR REPLACE INTO artist_verified_sale_events
-          (id, sale_id, sequence, event_type, before_json, after_json,
+          (id, sale_id, sequence, event_type, before_json, after_json, reason,
            actor_user_id, idempotency_key, request_digest, created_at)
-        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2,
+        VALUES ('sale-event-one', 'sale-one', 1, 'corrected', ?1, ?2, 'Replacement correction.',
           'artist-second', 'replacement-event-key', ?3, ?4)
       `).run(
         saleSnapshot(), saleSnapshot({ totalMinor: 320000 }), digest('b'), now,
@@ -1430,6 +1474,7 @@ describe('artist verified sale records', () => {
         { buyerEmail: 'collector@example.com' },
         { amount_minor: 100000, currency: 'USD' },
         { details: { privateNotes: 'Do not publish this.' } },
+        { reason: 'Private transcription correction.' },
         { storage_reference: 'artist-sales/private/front.webp' },
         { artistArtworkRecordId: 'record-unresolved' },
         { creatorMessage: 'The collector asked for discretion.' },
@@ -1547,7 +1592,9 @@ describe('artist verified sale records', () => {
         SELECT identification_status FROM artist_artwork_records WHERE id = ?1
       `).get(created.artworkRecordIds[2])?.identification_status, 'unresolved');
 
-      const replay = await createVerifiedSale(fixture.env, saleInput());
+      const replay = await createVerifiedSale(fixture.env, saleInput({
+        administrator: { ...administrator, email: 'renamed-artist@example.com' },
+      }));
       assert.deepEqual(replay, { ...created, replayed: true });
       await assert.rejects(
         createVerifiedSale(fixture.env, saleInput({ buyerEmail: 'changed@example.com' })),
@@ -1631,7 +1678,7 @@ describe('artist verified sale records', () => {
       assert.deepEqual(await createReconnectionCase(fixture.env, {
         recipientEmail: 'collector@example.com', recipientName: null,
         privateContext: 'Old address book.', idempotencyKey: 'reconnect-email-only',
-        administrator, createdAt: now,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
       }), { ...created, replayed: true });
 
       const note = await appendReconnectionEvent(fixture.env, {
@@ -1639,6 +1686,12 @@ describe('artist verified sale records', () => {
         privateNote: ' Try the gallery. ', artworkRecordId: null, newStatus: null,
         idempotencyKey: 'reconnect-note', administrator, createdAt: now,
       });
+      assert.deepEqual(await appendReconnectionEvent(fixture.env, {
+        reconnectionCaseId: created.reconnectionCaseId, eventType: 'note_added',
+        privateNote: 'Try the gallery.', artworkRecordId: null, newStatus: null,
+        idempotencyKey: 'reconnect-note',
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+      }), { ...note, replayed: true });
       const progressed = await appendReconnectionEvent(fixture.env, {
         reconnectionCaseId: created.reconnectionCaseId, eventType: 'status_changed',
         privateNote: null, artworkRecordId: null, newStatus: 'partially_resolved',
@@ -1690,7 +1743,8 @@ describe('artist verified sale records', () => {
       assert.deepEqual(await identifyArtworkRecord(fixture.env, {
         artworkRecordId: unresolvedId, artworkId: 'UL-100',
         edition: { kind: 'numbered', number: 1, size: 64 }, expectedVersion: 1,
-        idempotencyKey: 'identify-record', administrator, identifiedAt: now,
+        idempotencyKey: 'identify-record',
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, identifiedAt: now,
       }), { ...identified, replayed: true });
       await assert.rejects(identifyArtworkRecord(fixture.env, {
         artworkRecordId: unresolvedId, artworkId: 'UL-101',
@@ -1722,6 +1776,11 @@ describe('artist verified sale records', () => {
       assert.equal(linked.identificationStatus, 'identity_linked');
       assert.equal(linked.recordVersion, 3);
       assert.equal(linked.keeperPieceId, 'kp-sale-one');
+      assert.deepEqual(await linkArtworkIdentity(fixture.env, {
+        artworkRecordId: unresolvedId, keeperPieceId: 'kp-sale-one', expectedVersion: 2,
+        idempotencyKey: 'link-match',
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, linkedAt: now,
+      }), { ...linked, replayed: true });
       await assert.rejects(linkArtworkIdentity(fixture.env, {
         artworkRecordId: sale.artworkRecordIds[0], keeperPieceId: 'kp-sale-one', expectedVersion: 1,
         idempotencyKey: 'link-duplicate-keeper', administrator, linkedAt: now,
@@ -1742,22 +1801,38 @@ describe('artist verified sale records', () => {
         administrator, createdAt: now,
       });
       assert.equal(one.replayed, false);
+      assert.deepEqual(await appendArtworkLedgerEntry(fixture.env, {
+        artworkRecordId: sale.artworkRecordIds[0], saleId: sale.saleId,
+        message: 'Creator note.', mediaId: null, idempotencyKey: 'ledger-one',
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
+      }), { ...one, replayed: true });
+      const maximumParentKey = 'k'.repeat(256);
       const shared = await appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
         message: ' Thank you for keeping this work. ', expectedSequence: 0,
-        idempotencyKey: 'shared-message', administrator, createdAt: now,
+        idempotencyKey: maximumParentKey, administrator, createdAt: now,
       });
       assert.equal(shared.entries.length, 2);
       assert.equal(new Set(shared.entries.map((entry: any) => entry.ledgerEntryId)).size, 2);
+      const storedChildKeys = fixture.db.prepare(`
+        SELECT idempotency_key FROM artist_artwork_ledger_entries
+         WHERE id IN (?1, ?2) ORDER BY id
+      `).all(...shared.entries.map((entry: any) => entry.ledgerEntryId));
+      assert.equal(storedChildKeys.length, 2);
+      assert.ok(storedChildKeys.every((row) =>
+        String(row.idempotency_key).startsWith('artist-shared-ledger-')
+        && String(row.idempotency_key).length <= 256
+      ));
       assert.deepEqual(await appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(0, 2),
         message: 'Thank you for keeping this work.', expectedSequence: 0,
-        idempotencyKey: 'shared-message', administrator, createdAt: now,
+        idempotencyKey: maximumParentKey,
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, createdAt: now,
       }), { ...shared, replayed: true });
       await assert.rejects(appendSharedSaleMessage(fixture.env, {
         saleId: sale.saleId, artworkRecordIds: sale.artworkRecordIds.slice(1),
         message: 'Thank you for keeping this work.', expectedSequence: 0,
-        idempotencyKey: 'shared-message', administrator, createdAt: now,
+        idempotencyKey: maximumParentKey, administrator, createdAt: now,
       }), (error: Error & { code?: string }) => error.code === 'idempotency_conflict');
       assert.equal(count(fixture.db, 'artist_verified_sale_events'), 1);
       assert.equal(count(fixture.db, 'artwork_lineage_events'), 0);
@@ -1801,10 +1876,27 @@ describe('artist verified sale records', () => {
         administrator, correctedAt: now,
       });
       assert.equal(corrected.sequence, 1);
+      assert.equal(fixture.db.prepare(`
+        SELECT reason FROM artist_verified_sale_events WHERE id = ?1
+      `).get(corrected.saleEventId)?.reason, 'Transcription correction.');
+      assert.deepEqual(await correctVerifiedSale(fixture.env, {
+        saleId: sale.saleId, expectedSequence: 0,
+        replacement: {
+          reconnectionCaseId: null, occurrence: { precision: 'year', value: '2019' },
+          buyerEmail: 'new@example.com', total: { amountMinor: 910000, currency: 'USD' },
+          privateReference: 'Corrected ledger reference', privateNotes: 'Corrected note.',
+        },
+        reason: 'Transcription correction.', idempotencyKey: 'correct-sale',
+        administrator: { ...administrator, email: 'renamed-artist@example.com' }, correctedAt: now,
+      }), { ...corrected, replayed: true });
       const detail = await getArtistSaleDetail(fixture.env, sale.saleId);
       assert.equal(detail.sale.occurrence.value, '2019');
       assert.equal(detail.sale.buyerEmail, 'new@example.com');
       assert.equal(detail.sale.privateNotes, 'Corrected note.');
+      assert.deepEqual(detail.events, [{
+        saleEventId: corrected.saleEventId, sequence: 1, eventType: 'corrected',
+        reason: 'Transcription correction.', actorUserId: 'artist-admin', createdAt: now,
+      }]);
       assert.deepEqual({ ...fixture.db.prepare(`SELECT * FROM artist_verified_sales WHERE id = ?1`).get(sale.saleId) }, base);
       assert.deepEqual(fixture.db.prepare(`SELECT * FROM artist_artwork_price_entries ORDER BY id`).all(), prices);
       await assert.rejects(correctVerifiedSale(fixture.env, {
@@ -1834,6 +1926,53 @@ describe('artist verified sale records', () => {
       assert.deepEqual(Object.fromEntries(Object.keys(before).map((table) => [table, count(fixture.db, table)])), before);
       await assert.rejects(getArtistSaleDetail(fixture.env, 'missing-sale'),
         (error: Error & { code?: string }) => error.code === 'sale_not_found');
+    } finally {
+      fixture.db.close();
+    }
+  });
+
+  it('serializes a real two-administrator identification race without losing its audit', async () => {
+    const options: { beforeBatch?: () => Promise<void> } = {};
+    const fixture = serviceEnvironment(options);
+    try {
+      const sale = await createVerifiedSale(fixture.env, saleInput());
+      const target = sale.artworkRecordIds[2];
+      let arrived = 0;
+      let release: (() => void) | undefined;
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      options.beforeBatch = async () => {
+        arrived += 1;
+        if (arrived === 2) release?.();
+        await gate;
+      };
+      const outcomes = await Promise.allSettled([
+        identifyArtworkRecord(fixture.env, {
+          artworkRecordId: target, artworkId: 'UL-100',
+          edition: { kind: 'numbered', number: 1, size: 64 }, expectedVersion: 1,
+          idempotencyKey: 'identify-race-one', administrator, identifiedAt: now,
+        }),
+        identifyArtworkRecord(fixture.env, {
+          artworkRecordId: target, artworkId: 'UL-101',
+          edition: { kind: 'numbered', number: 2, size: 64 }, expectedVersion: 1,
+          idempotencyKey: 'identify-race-two',
+          administrator: { userId: 'artist-second', email: 'second@example.com' }, identifiedAt: now,
+        }),
+      ]);
+      assert.deepEqual(outcomes.map((outcome) => outcome.status).sort(), ['fulfilled', 'rejected']);
+      const loser = outcomes.find((outcome) => outcome.status === 'rejected') as PromiseRejectedResult;
+      assert.equal(loser.reason.code, 'version_conflict');
+      assert.equal(fixture.db.prepare(`
+        SELECT record_version FROM artist_artwork_records WHERE id = ?1
+      `).get(target)?.record_version, 2);
+      assert.equal(fixture.db.prepare(`
+        SELECT COUNT(*) AS count FROM artist_artwork_record_events WHERE artwork_record_id = ?1
+      `).get(target)?.count, 1);
+      const audit = fixture.db.prepare(`
+        SELECT resulting_version, actor_user_id FROM artist_artwork_record_events
+         WHERE artwork_record_id = ?1
+      `).get(target);
+      assert.equal(audit?.resulting_version, 2);
+      assert.ok(['artist-admin', 'artist-second'].includes(String(audit?.actor_user_id)));
     } finally {
       fixture.db.close();
     }

@@ -133,12 +133,27 @@ async function sha256(value) {
 }
 
 async function requestDigest(value) {
-  return sha256(JSON.stringify(value));
+  const durableValue = isObject(value) && isObject(value.administrator)
+    ? { ...value, administrator: { userId: value.administrator.userId } }
+    : value;
+  return sha256(JSON.stringify(durableValue));
 }
 
 async function stableId(kind, digest, suffix = '') {
   const hash = suffix ? await sha256(`${digest}:${suffix}`) : digest;
   return `${kind}-${hash.slice(0, 32)}`;
+}
+
+async function sharedMessageChildIdentity(parentKey, artworkRecordId) {
+  const digest = await sha256(JSON.stringify({
+    namespace: 'artist-shared-sale-message-v1',
+    parentKey,
+    artworkRecordId,
+  }));
+  return {
+    ledgerEntryId: `ledger-${digest.slice(0, 32)}`,
+    idempotencyKey: `artist-shared-ledger-${digest}`,
+  };
 }
 
 function rows(result) {
@@ -809,7 +824,10 @@ export async function appendSharedSaleMessage(env, rawInput) {
   const replayResponse = async (event) => ({
     saleEventId: event.id, saleId: event.sale_id, sequence: Number(event.sequence),
     entries: await Promise.all(targets.map(async (artworkRecordId) => ({
-      ledgerEntryId: await stableId('ledger', digest, `shared:${artworkRecordId}`), artworkRecordId,
+      ledgerEntryId: (await sharedMessageChildIdentity(
+        input.idempotencyKey, artworkRecordId,
+      )).ledgerEntryId,
+      artworkRecordId,
     }))),
     replayed: true,
   });
@@ -831,9 +849,8 @@ export async function appendSharedSaleMessage(env, rawInput) {
   const entries = [];
   const statements = [];
   for (const artworkRecordId of targets) {
-    const ledgerEntryId = await stableId('ledger', digest, `shared:${artworkRecordId}`);
-    const childKey = `${input.idempotencyKey}:${artworkRecordId}`;
-    if (childKey.length > LIMITS.idempotencyKey) throw codedError('invalid_request');
+    const child = await sharedMessageChildIdentity(input.idempotencyKey, artworkRecordId);
+    const { ledgerEntryId } = child;
     entries.push({ ledgerEntryId, artworkRecordId });
     statements.push(statement(env, `
       INSERT INTO artist_artwork_ledger_entries
@@ -841,13 +858,13 @@ export async function appendSharedSaleMessage(env, rawInput) {
          idempotency_key, request_digest, created_at)
       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
     `, ledgerEntryId, artworkRecordId, input.saleId, input.message,
-    input.administrator.userId, childKey, digest, input.createdAt));
+    input.administrator.userId, child.idempotencyKey, digest, input.createdAt));
   }
   statements.push(statement(env, `
     INSERT INTO artist_verified_sale_events
       (id, sale_id, sequence, event_type, before_json, after_json,
-       actor_user_id, idempotency_key, request_digest, created_at)
-    VALUES (?1, ?2, ?3, 'shared_message_appended', ?4, ?5, ?6, ?7, ?8, ?9)
+       reason, actor_user_id, idempotency_key, request_digest, created_at)
+    VALUES (?1, ?2, ?3, 'shared_message_appended', ?4, ?5, NULL, ?6, ?7, ?8, ?9)
   `, eventId, input.saleId, sequence, JSON.stringify(before), JSON.stringify(after),
   input.administrator.userId, input.idempotencyKey, digest, input.createdAt));
   try {
@@ -899,13 +916,13 @@ export async function correctVerifiedSale(env, rawInput) {
   };
   const digest = await requestDigest(input);
   const existing = await first(env, `
-    SELECT id, sale_id, sequence, request_digest FROM artist_verified_sale_events
+    SELECT id, sale_id, sequence, reason, request_digest FROM artist_verified_sale_events
      WHERE idempotency_key = ?1
   `, input.idempotencyKey);
   if (existing) {
     if (existing.request_digest !== digest) throw codedError('idempotency_conflict');
     return { saleEventId: existing.id, saleId: existing.sale_id,
-      sequence: Number(existing.sequence), replayed: true };
+      sequence: Number(existing.sequence), reason: existing.reason, replayed: true };
   }
   if (input.replacement.reconnectionCaseId && !await first(env,
     'SELECT id FROM artist_reconnection_cases WHERE id = ?1',
@@ -932,24 +949,25 @@ export async function correctVerifiedSale(env, rawInput) {
     const statements = [statement(env, `
       INSERT INTO artist_verified_sale_events
         (id, sale_id, sequence, event_type, before_json, after_json,
-         actor_user_id, idempotency_key, request_digest, created_at)
-      VALUES (?1, ?2, ?3, 'corrected', ?4, ?5, ?6, ?7, ?8, ?9)
+         reason, actor_user_id, idempotency_key, request_digest, created_at)
+      VALUES (?1, ?2, ?3, 'corrected', ?4, ?5, ?6, ?7, ?8, ?9, ?10)
     `, id, input.saleId, sequence, JSON.stringify(state.snapshot), JSON.stringify(after),
-    input.administrator.userId, input.idempotencyKey, digest, input.correctedAt)];
+    input.reason, input.administrator.userId, input.idempotencyKey, digest, input.correctedAt)];
     requireBatchResults(await env.DB.batch(statements), statements.length);
   } catch (error) {
     const concurrent = await first(env, `
-      SELECT id, sale_id, sequence, request_digest FROM artist_verified_sale_events
+      SELECT id, sale_id, sequence, reason, request_digest FROM artist_verified_sale_events
        WHERE idempotency_key = ?1
     `, input.idempotencyKey);
     if (concurrent) {
       if (concurrent.request_digest !== digest) throw codedError('idempotency_conflict');
       return { saleEventId: concurrent.id, saleId: concurrent.sale_id,
-        sequence: Number(concurrent.sequence), replayed: true };
+        sequence: Number(concurrent.sequence), reason: concurrent.reason, replayed: true };
     }
     throw codedError('version_conflict');
   }
-  return { saleEventId: id, saleId: input.saleId, sequence, replayed: false };
+  return { saleEventId: id, saleId: input.saleId, sequence,
+    reason: input.reason, replayed: false };
 }
 
 function publicSale(snapshot, id, sequence) {
@@ -1018,7 +1036,19 @@ export async function getArtistSaleDetail(env, saleIdValue) {
       })),
     });
   }
-  return { sale: publicSale(state.snapshot, saleId, state.sequence), items };
+  const events = (await all(env, `
+    SELECT id, sequence, event_type, reason, actor_user_id, created_at
+      FROM artist_verified_sale_events
+     WHERE sale_id = ?1 ORDER BY sequence, id
+  `, saleId)).map((event) => ({
+    saleEventId: event.id,
+    sequence: Number(event.sequence),
+    eventType: event.event_type,
+    reason: event.reason,
+    actorUserId: event.actor_user_id,
+    createdAt: event.created_at,
+  }));
+  return { sale: publicSale(state.snapshot, saleId, state.sequence), items, events };
 }
 
 export async function listArtistSaleWorkspace(env, rawFilters = {}) {
