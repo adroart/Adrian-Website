@@ -76,6 +76,7 @@ const migrations = [
   '028_collector_privacy.sql', '029_collector_dreams.sql', '030_collector_field.sql',
   '031_collector_letters.sql', '032_artist_verified_sales.sql',
   '033_artwork_contributors.sql',
+  '034_artwork_contributor_invite_rate_limit.sql',
 ].map((name) => readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8')).join('\n');
 
 function fixture() {
@@ -88,7 +89,10 @@ function fixture() {
       ('keeper-one', 'Keeper One', 'keeper@example.com', 1, 1, 1),
       ('keeper-other', 'Other Keeper', 'other@example.com', 1, 1, 1),
       ('contributor-one', 'Contributor One', 'contributor@example.com', 1, 1, 1),
-      ('contributor-two', 'Contributor Two', 'second@example.com', 1, 1, 1);
+      ('contributor-two', 'Contributor Two', 'second@example.com', 1, 1, 1),
+      ('contributor-unverified', 'Unverified', 'unverified@example.com', 0, 1, 1),
+      ('contributor-ambiguous-a', 'Ambiguous A', 'Twin@Example.com', 1, 1, 1),
+      ('contributor-ambiguous-b', 'Ambiguous B', 'twin@example.com', 1, 1, 1);
     INSERT INTO keeper_pieces
       (id, piece_id, edition_number, keeper_user_id, recovery_code_hash,
        claimed_at, registered_at)
@@ -394,6 +398,118 @@ describe('protected artwork contributor API boundary', () => {
     assert.deepEqual(await rawFailure.json(), {
       ok: false, error: 'contributor_request_failed',
     });
+  });
+
+  it('returns one stable recipient-unavailable projection for every account state', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const outcomes = [];
+    for (const [index, email] of [
+      'missing@example.com',
+      'unverified@example.com',
+      'twin@example.com',
+    ].entries()) {
+      const target = fixture();
+      try {
+        const response = await keeperEndpoint({
+          request: request('/api/keeper/contributors', 'POST', {
+            ...validInvite,
+            intendedRecipientEmail: email,
+            idempotencyKey: `opaque-recipient-${index}`,
+          }),
+          env: target.env,
+        });
+        outcomes.push({
+          status: response.status,
+          databaseStatements: target.prepares(),
+          headers: [...response.headers.entries()].sort(),
+          body: await response.json(),
+        });
+        assert.equal(target.database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
+      } finally { target.database.close(); }
+    }
+    assert.deepEqual(outcomes, Array.from({ length: 3 }, () => ({
+      status: 409,
+      databaseStatements: 4,
+      headers: [
+        ['cache-control', 'no-store'],
+        ['content-type', 'application/json'],
+      ],
+      body: { ok: false, error: 'contributor_recipient_not_available' },
+    })));
+  });
+
+  it('rate limits across recipient and key changes without mutating invitations or returning a token', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const target = fixture();
+    try {
+      for (let index = 0; index < 10; index += 1) {
+        const response = await keeperEndpoint({
+          request: request('/api/keeper/contributors', 'POST', {
+            ...validInvite,
+            intendedRecipientEmail: `route-missing-${index}@example.com`,
+            idempotencyKey: `route-missing-key-${index}`,
+          }),
+          env: target.env,
+        });
+        assert.equal(response.status, 409);
+        assert.deepEqual(await response.json(), {
+          ok: false, error: 'contributor_recipient_not_available',
+        });
+      }
+      const rejected = await keeperEndpoint({
+        request: request('/api/keeper/contributors', 'POST', {
+          ...validInvite,
+          intendedRecipientEmail: 'second@example.com',
+          idempotencyKey: 'route-different-recipient-and-key',
+        }),
+        env: target.env,
+      });
+      assert.equal(rejected.status, 429);
+      const rejectedBody = await rejected.json();
+      assert.deepEqual(rejectedBody, {
+        ok: false, error: 'contributor_invite_rate_limited',
+      });
+      assert.match(rejected.headers.get('Retry-After') || '', /^([1-9]|[1-9][0-9]{1,2}|[1-2][0-9]{3}|3[0-5][0-9]{2}|3600)$/);
+      assert.equal(target.database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+      assert.equal(JSON.stringify(rejectedBody).includes('token'), false);
+    } finally { target.database.close(); }
+  });
+
+  it('replays an exact successful invite after the bucket fills without consuming it again', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const target = fixture();
+    try {
+      const createdResponse = await keeperEndpoint({
+        request: request('/api/keeper/contributors', 'POST', validInvite), env: target.env,
+      });
+      const created = await createdResponse.json() as any;
+      assert.equal(createdResponse.status, 201);
+      for (let index = 1; index < 10; index += 1) {
+        const unavailable = await keeperEndpoint({
+          request: request('/api/keeper/contributors', 'POST', {
+            ...validInvite,
+            intendedRecipientEmail: `replay-route-${index}@example.com`,
+            idempotencyKey: `replay-route-key-${index}`,
+          }),
+          env: target.env,
+        });
+        assert.equal(unavailable.status, 409);
+      }
+      const replay = await keeperEndpoint({
+        request: request('/api/keeper/contributors', 'POST', validInvite), env: target.env,
+      });
+      assert.equal(replay.status, 200);
+      assert.deepEqual(await replay.json(), {
+        ok: true, invitationId: created.invitationId, status: 'replay',
+      });
+      assert.equal(target.database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+    } finally { target.database.close(); }
   });
 
   it('maps idempotency conflicts and pending revocation to stable token-free responses', async () => {

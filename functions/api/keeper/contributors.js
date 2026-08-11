@@ -48,13 +48,13 @@ function statusFor(code) {
     'contributor_access_not_found',
   ].includes(code)) return 404;
   if ([
-    'stale_keeper_authority', 'contributor_recipient_not_found',
-    'contributor_recipient_unverified', 'contributor_recipient_ambiguous',
+    'stale_keeper_authority', 'contributor_recipient_not_available',
     'contributor_cannot_be_keeper', 'contributor_already_invited',
     'contributor_already_active', 'contributor_idempotency_conflict',
     'contributor_invitation_used', 'contributor_invitation_revoked',
     'contributor_invitation_expired', 'contributor_invitation_not_available',
   ].includes(code)) return 409;
+  if (code === 'contributor_invite_rate_limited') return 429;
   if (code === 'contributor_db_required') return 503;
   return 500;
 }
@@ -154,7 +154,12 @@ export async function onRequest({ request, env }) {
     const code = error?.isArtworkContributorError && typeof error.code === 'string'
       ? error.code
       : '';
-    if (code) return json({ ok: false, error: code }, statusFor(code));
+    if (code) {
+      const headers = code === 'contributor_invite_rate_limited'
+        ? { 'Retry-After': String(error.retryAfter) }
+        : {};
+      return json({ ok: false, error: code }, statusFor(code), headers);
+    }
     return json({ ok: false, error: 'contributor_request_failed' }, 500);
   }
 }

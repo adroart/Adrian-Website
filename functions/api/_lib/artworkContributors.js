@@ -1,7 +1,11 @@
-function contributorError(code) {
+const CONTRIBUTOR_INVITE_RATE_LIMIT = 10;
+const CONTRIBUTOR_INVITE_RATE_WINDOW_MS = 60 * 60 * 1000;
+
+function contributorError(code, details = {}) {
   const error = new Error(code);
   error.code = code;
   error.isArtworkContributorError = true;
+  Object.assign(error, details);
   return error;
 }
 
@@ -104,16 +108,57 @@ export async function requireKeeperAuthority(env, input) {
 }
 
 async function resolveRecipient(env, email) {
-  const result = await env.DB.prepare(
-    `SELECT id, emailVerified FROM user WHERE lower(email) = ?1 ORDER BY id`,
-  ).bind(email).all();
-  const accounts = result?.results || [];
-  if (accounts.length === 0) throw contributorError('contributor_recipient_not_found');
-  if (accounts.length > 1) throw contributorError('contributor_recipient_ambiguous');
-  if (Number(accounts[0].emailVerified) !== 1) {
-    throw contributorError('contributor_recipient_unverified');
+  const recipient = await env.DB.prepare(
+    `SELECT CASE
+              WHEN COUNT(*) = 1 AND MAX(emailVerified) = 1 THEN MAX(id)
+              ELSE NULL
+            END AS verified_recipient_id
+       FROM user
+      WHERE lower(email) = ?1`,
+  ).bind(email).first();
+  if (!recipient?.verified_recipient_id) {
+    throw contributorError('contributor_recipient_not_available');
   }
-  return accounts[0].id;
+  return recipient.verified_recipient_id;
+}
+
+function inviteRateWindow(at) {
+  const start = Math.floor(Date.parse(at) / CONTRIBUTOR_INVITE_RATE_WINDOW_MS)
+    * CONTRIBUTOR_INVITE_RATE_WINDOW_MS;
+  return new Date(start).toISOString();
+}
+
+async function consumeContributorInviteAttempt(env, keeperUserId, at) {
+  const windowStartedAt = inviteRateWindow(at);
+  const consumed = await env.DB.prepare(
+    `INSERT INTO artwork_contributor_invite_rate_limits
+       (keeper_user_id, window_started_at, attempt_count, last_attempt_at)
+     VALUES (?1, ?2, 1, ?3)
+     ON CONFLICT(keeper_user_id) DO UPDATE SET
+       window_started_at = excluded.window_started_at,
+       attempt_count = CASE
+         WHEN excluded.window_started_at
+              > artwork_contributor_invite_rate_limits.window_started_at THEN 1
+         ELSE artwork_contributor_invite_rate_limits.attempt_count + 1
+       END,
+       last_attempt_at = excluded.last_attempt_at
+     WHERE (
+       excluded.window_started_at
+         > artwork_contributor_invite_rate_limits.window_started_at
+       OR (
+         excluded.window_started_at
+           = artwork_contributor_invite_rate_limits.window_started_at
+         AND artwork_contributor_invite_rate_limits.attempt_count < ?4
+       )
+     )`,
+  ).bind(
+    keeperUserId, windowStartedAt, at, CONTRIBUTOR_INVITE_RATE_LIMIT,
+  ).run();
+  if (Number(consumed?.meta?.changes) === 1) return;
+  const retryAfter = Math.max(1, Math.ceil(
+    (Date.parse(windowStartedAt) + CONTRIBUTOR_INVITE_RATE_WINDOW_MS - Date.parse(at)) / 1000,
+  ));
+  throw contributorError('contributor_invite_rate_limited', { retryAfter });
 }
 
 async function contributorRelationshipState(env, {
@@ -202,15 +247,9 @@ async function reclassifyInvitationInsertFailure(env, {
         AND claimed_at IS NOT NULL AND released_at IS NULL`,
   ).bind(keeperPieceId, keeperUserId, stewardVersion).first();
   if (!currentEpoch) throw contributorError('stale_keeper_authority');
-  const recipient = await env.DB.prepare(
-    `SELECT email, emailVerified FROM user WHERE id = ?1`,
-  ).bind(recipientUserId).first();
-  if (!recipient) throw contributorError('contributor_recipient_not_found');
-  if (Number(recipient.emailVerified) !== 1) {
-    throw contributorError('contributor_recipient_unverified');
-  }
-  if (String(recipient.email).trim().toLowerCase() !== recipientEmail) {
-    throw contributorError('contributor_recipient_not_found');
+  const currentRecipientUserId = await resolveRecipient(env, recipientEmail);
+  if (currentRecipientUserId !== recipientUserId) {
+    throw contributorError('contributor_recipient_not_available');
   }
 }
 
@@ -233,10 +272,7 @@ export async function inviteArtworkContributor(env, input) {
     `SELECT id, request_fingerprint
        FROM artwork_contributor_invitations WHERE idempotency_key = ?1`,
   ).bind(idempotencyKey).first();
-  if (replay) {
-    if (replay.request_fingerprint !== requestFingerprint) {
-      throw contributorError('contributor_idempotency_conflict');
-    }
+  if (replay?.request_fingerprint === requestFingerprint) {
     return { invitationId: replay.id, status: 'replay' };
   }
   if (Date.parse(expiresAt) <= Date.parse(invitedAt)) {
@@ -247,6 +283,8 @@ export async function inviteArtworkContributor(env, input) {
     userId: keeperUserId,
     ...(requestedVersion === null ? {} : { stewardVersion: requestedVersion }),
   });
+  await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
+  if (replay) throw contributorError('contributor_idempotency_conflict');
   const recipientUserId = await resolveRecipient(env, recipientEmail);
   if (recipientUserId === keeperUserId) throw contributorError('contributor_cannot_be_keeper');
 
@@ -277,7 +315,12 @@ export async function inviteArtworkContributor(env, input) {
           AND piece.steward_version = ?4
           AND piece.claimed_at IS NOT NULL
           AND piece.released_at IS NULL
-          AND piece.keeper_user_id <> recipient.id`,
+          AND piece.keeper_user_id <> recipient.id
+          AND lower(recipient.email) = ?6
+          AND (
+            SELECT COUNT(*) FROM user AS matching_recipient
+             WHERE lower(matching_recipient.email) = ?6
+          ) = 1`,
     ).bind(
       invitationId, keeperPieceId, keeperUserId, authority.stewardVersion,
       recipientUserId, recipientEmail, tokenHash, idempotencyKey,

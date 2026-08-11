@@ -37,6 +37,7 @@ const migrationsThroughContributors = [
   '028_collector_privacy.sql', '029_collector_dreams.sql',
   '030_collector_field.sql', '031_collector_letters.sql',
   '032_artist_verified_sales.sql', '033_artwork_contributors.sql',
+  '034_artwork_contributor_invite_rate_limit.sql',
 ].map(readMigration).join('\n');
 
 const invitedAt = '2026-08-10T10:00:00.000Z';
@@ -276,20 +277,178 @@ describe('artwork contributor access foundation', () => {
     } finally { database.close(); }
   });
 
-  it('rejects self, unknown, unverified, and ambiguous intended recipients', async () => {
-    for (const [email, code] of [
-      ['keeper@example.com', 'contributor_cannot_be_keeper'],
-      ['missing@example.com', 'contributor_recipient_not_found'],
-      ['unverified@example.com', 'contributor_recipient_unverified'],
-      ['twin@example.com', 'contributor_recipient_ambiguous'],
+  it('keeps missing, unverified, and ambiguous recipient account state opaque', async () => {
+    for (const email of [
+      'missing@example.com',
+      'unverified@example.com',
+      'twin@example.com',
     ]) {
       const { database, env } = fixture();
       try {
         await expectCode(inviteArtworkContributor(env, inviteInput({
           intendedRecipientEmail: email,
-        })), code);
+        })), 'contributor_recipient_not_available');
+        assert.equal(database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
       } finally { database.close(); }
     }
+  });
+
+  it('keeps the current keeper self-invitation rejection typed', async () => {
+    const { database, env } = fixture();
+    try {
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'keeper@example.com',
+      })), 'contributor_cannot_be_keeper');
+    } finally { database.close(); }
+  });
+
+  it('freezes a private keeper-scoped ten-per-hour attempt bucket', () => {
+    const { database } = fixture();
+    try {
+      const table = database.prepare(
+        `SELECT sql FROM sqlite_master
+          WHERE type = 'table' AND name = 'artwork_contributor_invite_rate_limits'`,
+      ).get() as { sql?: string } | undefined;
+      assert.ok(table?.sql);
+      assert.deepEqual(database.prepare(
+        "SELECT name FROM pragma_table_info('artwork_contributor_invite_rate_limits') ORDER BY cid",
+      ).all().map((row) => row.name), [
+        'keeper_user_id', 'window_started_at', 'attempt_count', 'last_attempt_at',
+      ]);
+      assert.doesNotMatch(table.sql, /recipient|email|token|idempotency|keeper_piece/i);
+      assert.match(table.sql, /attempt_count[\s\S]*between 1 and 10/i);
+    } finally { database.close(); }
+  });
+
+  it('atomically bounds attempts across different recipients and idempotency keys', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 10; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `missing-${index}@example.com`,
+          idempotencyKey: `invite-missing-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'second@example.com',
+        idempotencyKey: 'invite-after-limit',
+      })), 'contributor_invite_rate_limited');
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+      assert.deepEqual({ ...database.prepare(
+        `SELECT keeper_user_id, attempt_count
+           FROM artwork_contributor_invite_rate_limits`,
+      ).get() }, { keeper_user_id: 'keeper-one', attempt_count: 10 });
+    } finally { database.close(); }
+  });
+
+  it('allows exactly one racing boundary attempt and keeps every rejection typed', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 9; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `warmup-${index}@example.com`,
+          idempotencyKey: `invite-warmup-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      const raced = await Promise.allSettled([
+        inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: 'race-missing-a@example.com',
+          idempotencyKey: 'invite-race-limit-a',
+        })),
+        inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: 'race-missing-b@example.com',
+          idempotencyKey: 'invite-race-limit-b',
+        })),
+      ]);
+      assert.deepEqual(raced.map((result) => result.status === 'rejected'
+        ? (result.reason as { code?: string }).code
+        : 'unexpected_success').sort(), [
+        'contributor_invite_rate_limited',
+        'contributor_recipient_not_available',
+      ]);
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+    } finally { database.close(); }
+  });
+
+  it('does not consume the bucket or mint another token for exact successful replay', async () => {
+    const { database, env } = fixture();
+    try {
+      const created = await inviteArtworkContributor(env, inviteInput());
+      for (let index = 1; index < 10; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `missing-replay-${index}@example.com`,
+          idempotencyKey: `invite-replay-limit-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      assert.deepEqual(await inviteArtworkContributor(env, inviteInput()), {
+        invitationId: created.invitationId,
+        status: 'replay',
+      });
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'second@example.com',
+        idempotencyKey: 'invite-post-replay-limit',
+      })), 'contributor_invite_rate_limited');
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+    } finally { database.close(); }
+  });
+
+  it('counts non-exact conflicts against the bucket before returning the conflict', async () => {
+    const { database, env } = fixture();
+    try {
+      await inviteArtworkContributor(env, inviteInput());
+      for (let index = 1; index < 10; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: 'second@example.com',
+          expiresAt: `2026-08-${17 + index}T10:00:00.000Z`,
+        })), 'contributor_idempotency_conflict');
+      }
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'second@example.com',
+        expiresAt: '2026-08-27T10:00:00.000Z',
+      })), 'contributor_invite_rate_limited');
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+    } finally { database.close(); }
+  });
+
+  it('rolls back a rejected boundary counter write without changing the bucket', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 10; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `rollback-${index}@example.com`,
+          idempotencyKey: `invite-rollback-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      const before = { ...database.prepare(
+        'SELECT * FROM artwork_contributor_invite_rate_limits',
+      ).get() };
+      await expectCode(inviteArtworkContributor(env, inviteInput({
+        intendedRecipientEmail: 'rollback-rejected@example.com',
+        idempotencyKey: 'invite-rollback-rejected',
+      })), 'contributor_invite_rate_limited');
+      assert.deepEqual({ ...database.prepare(
+        'SELECT * FROM artwork_contributor_invite_rate_limits',
+      ).get() }, before);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+    } finally { database.close(); }
   });
 
   it('rejects noncanonical instants before persistence', async () => {
@@ -389,7 +548,7 @@ describe('artwork contributor access foundation', () => {
       );
       await expectCode(
         inviteArtworkContributor(env, inviteInput()),
-        'contributor_recipient_unverified',
+        'contributor_recipient_not_available',
       );
       assert.equal(database.prepare(
         'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
@@ -409,7 +568,28 @@ describe('artwork contributor access foundation', () => {
       );
       await expectCode(
         inviteArtworkContributor(env, inviteInput()),
-        'contributor_recipient_not_found',
+        'contributor_recipient_not_available',
+      );
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+    } finally { database.close(); }
+  });
+
+  it('types a recipient ambiguity race opaquely without creating an invitation', async () => {
+    const { database, env } = fixture();
+    try {
+      interceptNextRun(
+        env,
+        'INSERT INTO artwork_contributor_invitations',
+        () => database.prepare(
+          `INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
+           VALUES ('contributor-race-twin', 'Race Twin', 'Contributor@Example.com', 1, 1, 1)`,
+        ).run(),
+      );
+      await expectCode(
+        inviteArtworkContributor(env, inviteInput()),
+        'contributor_recipient_not_available',
       );
       assert.equal(database.prepare(
         'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
