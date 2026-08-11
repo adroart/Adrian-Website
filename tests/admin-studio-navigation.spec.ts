@@ -219,7 +219,7 @@ test('artwork workspace keeps its header stable and renders exact relationships 
   await expect(page.getByRole('link', { name: 'Open public piece preview' })).toHaveAttribute(
     'href', '/works/UL-100?instance=AR-BCDEFGHJ',
   );
-  await expect(page.getByRole('link', { name: 'Open plate and recovery' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open exact piece in plate registry' })).toHaveAttribute(
     'href', '/admin/pieces?keeperPieceId=keeper-1',
   );
   await expect(page.getByRole('link', { name: 'Open Maintenance' })).toHaveAttribute(

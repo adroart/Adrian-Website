@@ -252,6 +252,8 @@ git diff --check
 
 ## Task 5: Add the artwork-centered admin screen
 
+Completed locally through `ac4b27f`, with the final integrated browser assertion corrected in the following Task 5 closeout commit. Specification and quality review approved the connected route, exact specialist selections, retry-safe relationship completion, one-time credential gate, responsive behavior, and launch-flag preservation.
+
 **Files:**
 
 - Create: `components/admin/ArtworkWorkspace.tsx`
@@ -265,15 +267,15 @@ git diff --check
 - Modify: `tests/admin-studio-navigation.spec.ts`
 - Create: `tests/admin-artwork-workspace.test.ts`
 
-- [ ] **Step 1: Add the route**
+- [x] **Step 1: Add the route**
 
 Add `/admin/artworks/:artworkId`. Accept `instance` and `record` query parameters for `keeperPieceId` and `artistArtworkRecordId`. The route renders a stable workspace header even while details load.
 
-- [ ] **Step 2: Build the header around identity and next action**
+- [x] **Step 2: Build the header around identity and next action**
 
 Show title, catalog ID, public code when present, relationship state, and exactly one next meaningful action. Do not put mutation forms in the header.
 
-- [ ] **Step 3: Compose existing specialist tools**
+- [x] **Step 3: Compose existing specialist tools**
 
 The first version contains summaries and deep links for:
 
@@ -286,11 +288,11 @@ The first version contains summaries and deep links for:
 
 The links carry stable IDs. The workspace calls existing routes and writers rather than embedding copies of their forms.
 
-- [ ] **Step 4: Link every artwork-bearing admin surface back to the workspace**
+- [x] **Step 4: Link every artwork-bearing admin surface back to the workspace**
 
 Add “Open artwork” links to registration results, verified-sale artwork rows, registry pieces, maintenance details, and plate completion. Fix the existing `/admin/plate-wizard` dead link by using `/admin/pieces/wizard`.
 
-- [ ] **Step 5: Test desktop, mobile, keyboard, and missing-state behavior**
+- [x] **Step 5: Test desktop, mobile, keyboard, and missing-state behavior**
 
 The screen must remain useful for unresolved, identified, registered, invited, claimed, plate-free, and legacy records. Verify 390px and desktop layouts and ensure focus moves to status and conflict messages.
 
