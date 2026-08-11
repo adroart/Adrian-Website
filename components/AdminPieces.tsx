@@ -102,6 +102,15 @@ function errorMessage(value: unknown, fallback: string): string {
   return value instanceof Error ? value.message : fallback;
 }
 
+export function registryKeeperPieceSelection(searchParams: URLSearchParams): string | null {
+  const values = searchParams.getAll('keeperPieceId');
+  if (values.length !== 1) return null;
+  const value = values[0];
+  if (!value || value !== value.trim() || value.length > 128
+    || /[\u0000-\u001f\u007f]/.test(value)) return null;
+  return value;
+}
+
 async function jsonRequest(url: string, body?: Record<string, unknown>) {
   const response = await fetch(url, body ? {
     method: 'POST',
@@ -129,6 +138,9 @@ function downloadText(filename: string, mimeType: string, content: string) {
 const AdminPieces: React.FC = () => {
   const [searchParams] = useSearchParams();
   const issueMode = adminMode(searchParams) === 'issue';
+  const linkedKeeperPieceId = registryKeeperPieceSelection(searchParams);
+  const rowRefs = useRef(new Map<string, HTMLElement>());
+  const appliedKeeperPieceRef = useRef<string | null>(null);
   const [rows, setRows] = useState<PieceRow[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState('');
@@ -239,6 +251,18 @@ const AdminPieces: React.FC = () => {
       .catch(() => setRegistryUnlocked(false));
     void loadDrafts();
   }, [loadDrafts, loadPieces]);
+
+  useEffect(() => {
+    if (!linkedKeeperPieceId || listLoading
+      || appliedKeeperPieceRef.current === linkedKeeperPieceId) return;
+    const selectedRow = rowRefs.current.get(linkedKeeperPieceId);
+    if (!selectedRow) return;
+    appliedKeeperPieceRef.current = linkedKeeperPieceId;
+    window.requestAnimationFrame(() => {
+      selectedRow.scrollIntoView({ block: 'center' });
+      selectedRow.focus({ preventScroll: true });
+    });
+  }, [linkedKeeperPieceId, listLoading, rows]);
 
   const dismissSensitiveState = () => {
     setSensitive(emptySensitiveState);
@@ -697,7 +721,16 @@ const AdminPieces: React.FC = () => {
             ) : (
               <div className="border border-wood-200 bg-white divide-y divide-wood-200">
                 {rows.map((row) => (
-                  <article key={row.id} className="p-5">
+                  <article
+                    key={row.id}
+                    ref={(node) => {
+                      if (node) rowRefs.current.set(row.id, node);
+                      else rowRefs.current.delete(row.id);
+                    }}
+                    tabIndex={linkedKeeperPieceId === row.id ? -1 : undefined}
+                    aria-current={linkedKeeperPieceId === row.id ? 'true' : undefined}
+                    className={`p-5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-bronze-500 ${linkedKeeperPieceId === row.id ? 'bg-bronze-200/20' : ''}`}
+                  >
                     <div className="grid md:grid-cols-[1fr_auto] gap-5">
                       <div>
                         <h3 className="font-serif text-lg text-wood-900">{titleFor(row.pieceId)} <span className="font-sans text-sm text-wood-500">{row.pieceId} · edition {row.editionNumber}</span></h3>

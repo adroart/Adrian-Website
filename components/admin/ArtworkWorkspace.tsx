@@ -45,6 +45,46 @@ function queryPath(path: string, values: Record<string, string | undefined>): st
   return suffix ? `${path}?${suffix}` : path;
 }
 
+type PlateDestination = { href: string; label: string };
+
+export function artworkPlateDestination(
+  keeperPieceId: string | null | undefined,
+  plate: ArtworkWorkspaceData['plate'],
+): PlateDestination | null {
+  if (!keeperPieceId || !plate) return null;
+  const wizardActionable = plate.state === 'generated'
+    || (plate.state === 'active'
+      && (plate.recoveryState === 'plate_recovery_missing'
+        || plate.recoveryState === 'plate_recovery_stale'));
+  return wizardActionable
+    ? {
+        href: queryPath('/admin/pieces/wizard', { keeperPieceId }),
+        label: 'Open plate and recovery wizard',
+      }
+    : {
+        href: queryPath('/admin/pieces', { keeperPieceId }),
+        label: 'Open exact piece in plate registry',
+      };
+}
+
+function workspaceWithUsefulPlateAction(
+  workspace: ArtworkWorkspaceData,
+): ArtworkWorkspaceData {
+  if (!workspace.nextAction?.href.startsWith('/admin/pieces/wizard?')) return workspace;
+  const destination = artworkPlateDestination(
+    workspace.identity?.keeperPieceId,
+    workspace.plate,
+  );
+  if (!destination || destination.href.startsWith('/admin/pieces/wizard?')) return workspace;
+  return {
+    ...workspace,
+    nextAction: {
+      ...destination,
+      reason: 'Review this exact physical identity in the plate registry.',
+    },
+  };
+}
+
 function stateLabel(value: string | null | undefined): string {
   return value ? value.replaceAll('_', ' ') : 'Not recorded';
 }
@@ -66,6 +106,7 @@ function WorkspaceSummaries({ workspace }: { workspace: ArtworkWorkspaceData }) 
   const artworkId = workspace.catalog?.artworkId;
   const keeperPieceId = workspace.identity?.keeperPieceId;
   const artistArtworkRecordId = workspace.salesRecord?.artworkRecordId;
+  const plateDestination = artworkPlateDestination(keeperPieceId, workspace.plate);
   const publicPath = artworkId
     ? queryPath(`/works/${encodeURIComponent(artworkId)}`, {
         instance: workspace.identity?.publicCode,
@@ -135,7 +176,7 @@ function WorkspaceSummaries({ workspace }: { workspace: ArtworkWorkspaceData }) 
             ['Recovery', stateLabel(workspace.plate?.recoveryState)],
             ['Physical identity', keeperPieceId || 'Not registered'],
           ]} />
-          {keeperPieceId && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/pieces/wizard', { keeperPieceId })}>Open plate and recovery wizard</Link></p>}
+          {plateDestination && <p className="mt-5"><Link className={linkClass} to={plateDestination.href}>{plateDestination.label}</Link></p>}
         </AdminSection>
       </div>
 
@@ -173,6 +214,7 @@ const ArtworkWorkspace: React.FC = () => {
       return error;
     }
   }, [artworkId, query]);
+  const headerWorkspace = workspace ? workspaceWithUsefulPlateAction(workspace) : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -206,7 +248,7 @@ const ArtworkWorkspace: React.FC = () => {
 
   return (
     <AdminPage width="wide">
-      <ArtworkWorkspaceHeader artworkId={stableArtworkId} workspace={workspace} />
+      <ArtworkWorkspaceHeader artworkId={stableArtworkId} workspace={headerWorkspace} />
 
       {status === 'loading' && <AdminAlert tone="info" live>Loading artwork workspace.</AdminAlert>}
       {status === 'missing' && (

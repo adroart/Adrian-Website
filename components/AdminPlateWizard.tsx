@@ -17,7 +17,7 @@
  * is the in-wizard second factor.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
@@ -162,6 +162,7 @@ function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
 
 const AdminPlateWizard: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
   const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
   const appliedDeepLinkRef = useRef('');
@@ -371,8 +372,12 @@ const AdminPlateWizard: React.FC = () => {
       setLoadError('The linked physical artwork was not found in the plate registry.');
       return;
     }
+    if (!plateWizardStageForPiece(snapshotOf(row))) {
+      navigate(`/admin/pieces?${new URLSearchParams({ keeperPieceId: row.id })}`, { replace: true });
+      return;
+    }
     resumePiece(row);
-  }, [linkedKeeperPieceId, loading, rows]);
+  }, [linkedKeeperPieceId, loading, navigate, rows]);
 
   const downloadLedger = async () => {
     setStepError('');
