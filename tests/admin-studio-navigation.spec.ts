@@ -90,9 +90,10 @@ test('admin work queue shows exact actions and never reports clear work on an in
 
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Work that needs you' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /INV-OPEN/ })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: /INV-OPEN.*Open invoice/ })).toHaveAttribute(
     'href', '/admin/invoices?invoiceId=2',
   );
+  await expect(page.getByText('Open invoice', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Recent artworks' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Recent collectors or reconnections' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Start new' })).toBeVisible();

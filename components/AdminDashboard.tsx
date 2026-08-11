@@ -46,11 +46,15 @@ const RecentList: React.FC<{ items: RecentItem[]; empty: string }> = ({ items, e
   items.length === 0
     ? <p className="font-sans text-sm text-wood-600">{empty}</p>
     : (
-      <div className="admin-attention-list">
+      <div className="border-t border-wood-200">
         {items.map(item => (
-          <Link to={item.href} key={`${item.href}:${item.title}`} className="admin-attention-row">
-            <span>{item.title}</span>
-            <span>{item.signal}</span>
+          <Link
+            to={item.href}
+            key={`${item.href}:${item.title}`}
+            className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-wood-200 py-3 font-sans text-sm text-wood-800 transition-colors hover:bg-paper-100"
+          >
+            <span className="min-w-0">{item.title}</span>
+            <span className="text-xs text-wood-500">{item.signal}</span>
           </Link>
         ))}
       </div>
@@ -109,16 +113,22 @@ const AdminDashboard: React.FC = () => {
           />
         )}
         {!loading && !failed && overview && overview.queue.items.length > 0 && (
-          <div className="admin-attention-list">
+          <div className="border-t border-wood-200">
             {overview.queue.items.map(item => (
-              <Link to={item.href} key={`${item.domain}:${item.href}:${item.state}`} className="admin-attention-row">
-                <span>
+              <Link
+                to={item.href}
+                key={`${item.domain}:${item.href}:${item.state}`}
+                className="grid min-h-16 grid-cols-1 gap-2 border-b border-wood-200 py-4 text-wood-800 transition-colors hover:bg-paper-100 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4"
+              >
+                <span className="min-w-0">
                   <strong className="block font-serif text-lg text-wood-900">{item.title}</strong>
                   <span className="block font-sans text-xs text-wood-600">
                     {stateText(item.state)} · {item.signal}
                   </span>
                 </span>
-                <span>{item.actionLabel}</span>
+                <span className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-wood-500">
+                  {item.actionLabel}
+                </span>
               </Link>
             ))}
           </div>
