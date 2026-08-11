@@ -711,15 +711,18 @@ const AdminPieces: React.FC = () => {
                           <div><dt className="font-semibold">Backup reference</dt><dd className="break-all">{row.backupReference || 'Not yet'}</dd></div>
                         </dl>
                       </div>
-                      {row.publicCode && (
-                        <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
-                          {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
-                          {row.backupStatus === 'verified' && row.recoveryQualification?.status !== 'current' && <Link className={quietButtonClass} to="/admin/plate-wizard">Prove copied-file recovery in wizard</Link>}
-                          <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
-                          <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
-                          {row.plateStatus === 'generated' && row.backupStatus === 'verified' && row.recoveryQualification?.status === 'current' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
-                        </div>
-                      )}
+                      <div className="flex md:flex-col flex-wrap gap-2 md:items-stretch">
+                        <Link className={quietButtonClass} to={`/admin/artworks/${encodeURIComponent(row.pieceId)}?${new URLSearchParams({ instance: row.id })}`}>Open artwork</Link>
+                        {row.publicCode && (
+                          <>
+                            {row.backupStatus !== 'verified' && <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'backup')}>{rowBusy === `${row.id}:backup` ? 'Retrying…' : 'Retry backup'}</button>}
+                            {row.backupStatus === 'verified' && row.recoveryQualification?.status !== 'current' && <Link className={quietButtonClass} to={`/admin/pieces/wizard?${new URLSearchParams({ keeperPieceId: row.id })}`}>Prove copied-file recovery in wizard</Link>}
+                            <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'reveal')}>{rowBusy === `${row.id}:reveal` ? 'Revealing…' : 'Reveal Ownership Code'}</button>
+                            <button type="button" className={quietButtonClass} disabled={Boolean(rowBusy)} onClick={() => void runRowAction(row, 'package')}>{rowBusy === `${row.id}:package` ? 'Recovering…' : 'Recover full fabrication package'}</button>
+                            {row.plateStatus === 'generated' && row.backupStatus === 'verified' && row.recoveryQualification?.status === 'current' && <button type="button" className={buttonClass} disabled={Boolean(rowBusy)} onClick={() => openActivation(row)}>Physical checks</button>}
+                          </>
+                        )}
+                      </div>
                     </div>
                     {rowSuccess[row.id] && <p className="font-sans text-sm text-green-800 mt-3" role="status">{rowSuccess[row.id]}</p>}
                     {rowError[row.id] && <p className="font-sans text-sm text-red-700 mt-3" role="alert">{rowError[row.id]}</p>}

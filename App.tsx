@@ -32,6 +32,7 @@ const AdminPoetry = lazy(() => import('./components/AdminPoetry'));
 const AdminBookEditor = lazy(() => import('./components/AdminBookEditor'));
 const AdminViewings = lazy(() => import('./components/AdminViewings'));
 const AdminPieces = lazy(() => import('./components/AdminPieces'));
+const ArtworkWorkspace = lazy(() => import('./components/admin/ArtworkWorkspace'));
 const AdminMaintenance = lazy(() => import('./components/AdminMaintenance'));
 const AdminPlateWizard = lazy(() => import('./components/AdminPlateWizard'));
 const ArtworkInvitations = lazy(() => import('./components/admin/ArtworkInvitations'));
@@ -171,6 +172,7 @@ const SiteShell: React.FC = () => {
               {/* Private registry staging remains reachable to authenticated
                   admins while the public Living Legacy surface is disabled. */}
               <Route path="pieces" element={<AdminPieces />} />
+              <Route path="artworks/:artworkId" element={<ArtworkWorkspace />} />
               <Route path="registrations" element={<AdminArtworkRegistration />} />
               <Route path="invitations" element={<ArtworkInvitations />} />
               <Route path="collector-sales" element={<CollectorSales />} />
@@ -364,6 +366,14 @@ function AdminArtworkRegistration() {
           <p className="font-sans text-sm text-wood-700">Edition: <strong>{result.editionLabel}</strong></p>
           <p className="font-sans text-sm text-wood-700">Public code: <strong>{result.publicCode}</strong></p>
           <p className="font-sans text-sm text-wood-700">Invitation reference: <strong>{result.keeperPieceId}</strong></p>
+          <p>
+            <Link
+              className="collector-button-secondary"
+              to={`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({ instance: result.keeperPieceId })}`}
+            >
+              Open artwork
+            </Link>
+          </p>
           {result.ownershipCode ? (
             <>
               <p className="font-sans text-sm text-wood-700">Copy the Ownership Code now. It cannot be shown here again.</p>

@@ -1325,6 +1325,17 @@ const AdminMaintenance: React.FC = () => {
             <h2>{selected.public.title}</h2>
             <p>{selected.acquisitions.length} acquisition record{selected.acquisitions.length === 1 ? '' : 's'} · record version {selected.physical.recordVersion}</p>
           </div>
+          <div className="maintenance-section-actions">
+            <Link
+              className={quietButtonClass}
+              aria-disabled={transitionBusy || undefined}
+              tabIndex={transitionBusy ? -1 : undefined}
+              to={`/admin/artworks/${encodeURIComponent(selected.public.artworkId)}?${new URLSearchParams({ instance: selected.id })}`}
+              onClick={guardMaintenanceNavigation}
+            >
+              Open artwork
+            </Link>
+          </div>
 
           <AdminSection title="Current public truth">
             <DefinitionList items={[

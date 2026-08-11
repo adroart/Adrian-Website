@@ -828,6 +828,7 @@ const AdminPlateWizard: React.FC = () => {
               <button type="button" className={quietButtonClass} onClick={() => void downloadLedger()}>Download offline ledger</button>
               <button type="button" className={quietButtonClass} onClick={() => void syncDrive()}>Sync to Google Drive</button>
               <button type="button" className={quietButtonClass} onClick={goToChoose}>Back to start</button>
+              {piece && <Link to={`/admin/artworks/${encodeURIComponent(piece.pieceId)}?${new URLSearchParams({ instance: piece.id })}`} className={quietButtonClass}>Open artwork</Link>}
               <Link to="/admin/pieces" className={quietButtonClass}>Open the full desk</Link>
             </div>
             {driveStatus && <p className="font-sans text-sm text-wood-600 mt-4" role="status">{driveStatus}</p>}

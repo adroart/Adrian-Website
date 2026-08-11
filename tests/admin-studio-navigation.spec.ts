@@ -115,6 +115,10 @@ test('admin artwork navigation exposes registration, invitations, certificates, 
   await expect(page.getByText(firstArtworkLabel || '', { exact: true })).toBeVisible();
   await expect(page.getByText('Unique work', { exact: true })).toBeVisible();
   await expect(page.getByText('BCDE-FGHJ-KMNP-QRST')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
+    'href',
+    /\/admin\/artworks\/.+\?instance=kp-admin-registration-1$/,
+  );
   await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Register artwork' })).toHaveCount(0);
   expect(registrationBodies[0]).toEqual({
@@ -152,6 +156,107 @@ test('admin artwork navigation exposes registration, invitations, certificates, 
   expect(registrationBodies[1].idempotencyKey).not.toBe(registrationBodies[0].idempotencyKey);
 });
 
+test('artwork workspace keeps its header stable and renders exact relationships at desktop and 390px', async ({ page }) => {
+  let releaseWorkspace: (() => void) | undefined;
+  let requestedQuery: Record<string, string> | undefined;
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('**/api/admin/artwork-workspace**', async route => {
+    const url = new URL(route.request().url());
+    requestedQuery = Object.fromEntries(url.searchParams);
+    await new Promise<void>(resolve => { releaseWorkspace = resolve; });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        workspace: {
+          catalog: { artworkId: 'UL-100', title: 'Art of Living' },
+          salesRecord: { artworkRecordId: 'record-1', state: 'identity_linked' },
+          identity: { keeperPieceId: 'keeper-1', publicCode: 'AR-BCDEFGHJ', state: 'registered' },
+          certificate: { state: 'complete', missingFields: [] },
+          invitation: { state: 'redeemed', invitationId: 'invitation-1' },
+          caretaker: { state: 'active' },
+          plate: { state: 'legacy', recoveryState: 'not_required' },
+          sale: { state: 'verified', verifiedSaleId: 'sale-1' },
+          nextAction: {
+            label: 'Review caretaker experience',
+            href: '/admin/pieces?keeperPieceId=keeper-1',
+            reason: 'The core artwork record is ready for experience review.',
+          },
+          activity: [{
+            kind: 'caretaker_claimed',
+            occurredAt: '2026-08-10T12:00:00.000Z',
+            label: 'Caretaker claimed the artwork',
+          }],
+        },
+      }),
+    });
+  });
+
+  await page.goto('/admin/artworks/UL-100?instance=keeper-1&record=record-1');
+  await expect(page.getByRole('heading', { name: 'Artwork UL-100' })).toBeVisible();
+  await expect(page.getByText('Loading artwork workspace.')).toBeVisible();
+  releaseWorkspace?.();
+
+  await expect(page.getByRole('heading', { name: 'Art of Living' })).toBeVisible();
+  expect(requestedQuery).toEqual({
+    artworkId: 'UL-100', keeperPieceId: 'keeper-1', artistArtworkRecordId: 'record-1',
+  });
+  for (const title of [
+    'Record and certificate', 'Verified sale and artwork ledger',
+    'Invitation and caretaker state', 'Public piece preview',
+    'Plate and recovery', 'Maintenance and custody history',
+  ]) await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Review caretaker experience' })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Open sales record' })).toHaveAttribute(
+    'href', '/admin/collector-sales?artistArtworkRecordId=record-1',
+  );
+  await expect(page.getByRole('link', { name: 'Open public piece preview' })).toHaveAttribute(
+    'href', '/works/UL-100?instance=AR-BCDEFGHJ',
+  );
+  await expect(page.getByRole('link', { name: 'Open plate and recovery wizard' })).toHaveAttribute(
+    'href', '/admin/pieces/wizard?keeperPieceId=keeper-1',
+  );
+  await expect(page.getByRole('link', { name: 'Open Maintenance' })).toHaveAttribute(
+    'href', '/admin/maintenance?artworkId=UL-100&keeperPieceId=keeper-1',
+  );
+  await page.getByRole('link', { name: 'Review caretaker experience' }).focus();
+  await expect(page.getByRole('link', { name: 'Review caretaker experience' })).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact || ''))).toEqual([]);
+});
+
+test('artwork workspace focuses missing and conflicting exact identity states', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  let error = 'workspace_not_found';
+  await page.route('**/api/admin/artwork-workspace**', route => route.fulfill({
+    status: error === 'workspace_not_found' ? 404 : 409,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: false, error }),
+  }));
+
+  await page.goto('/admin/artworks/MISSING-100');
+  const missing = page.getByRole('heading', { name: 'Artwork workspace not found' });
+  await expect(missing).toBeVisible();
+  await expect.poll(() => missing.evaluate(node => node.parentElement?.parentElement === document.activeElement)).toBe(true);
+
+  error = 'workspace_selector_conflict';
+  await page.goto('/admin/artworks/UL-100?instance=wrong-instance&record=record-1');
+  const conflict = page.getByRole('alert').filter({ hasText: /do not identify the same artwork/i });
+  await expect(conflict).toBeVisible();
+  await expect.poll(() => conflict.evaluate(node => node.parentElement === document.activeElement)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+});
+
 test('opens Maintenance from Artwork and renders the private five-section detail accessibly', async ({ page }) => {
   await page.goto('/admin');
   if ((page.viewportSize()?.width || 0) < 768) {
@@ -163,6 +268,9 @@ test('opens Maintenance from Artwork and renders the private five-section detail
   await expect(page).toHaveURL(/\/admin\/maintenance$/);
   await expect(page.getByRole('heading', { name: 'Maintenance', exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Art of Living - 32/ }).click();
+  await expect(page.getByRole('link', { name: 'Open artwork' })).toHaveAttribute(
+    'href', /\/admin\/artworks\/UL-100\?instance=kp-local-maintenance$/,
+  );
 
   for (const title of [
     'Current public truth',
