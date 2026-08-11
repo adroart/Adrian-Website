@@ -29,6 +29,7 @@ import { Star } from './Orbit';
  * keys would reference itself. Three targets are not screens:
  *   __home   the piece page, as yours
  *   __garden Add to your piece
+ *   __family The people you love
  *   __code   the code page
  */
 export type Target = string;
@@ -57,6 +58,20 @@ export type Screen = {
   /** the quiet way out */
   link?: string;
   linkTo?: Target;
+  /**
+   * A quiet back link, top right, the one navigation the shared design rules
+   * allow: "no navigation beyond a quiet back link."
+   *
+   * It goes on a screen for exactly two reasons and no others:
+   *   a person can be wrong about something they just typed, or
+   *   the screen would otherwise trap them with no way out at all.
+   *
+   * It is deliberately absent from the four, where nothing is asked and there
+   * is nothing to correct; from the threshold, because crossing it is the
+   * point; from ignition; and from every terminal screen that already says
+   * Return to the piece.
+   */
+  back?: Target;
   /** the italic door into the explainer */
   why?: string;
   /** tap anywhere advances, and there is no skip link */
@@ -103,6 +118,7 @@ export const WALK = {
       [COPY.threshold.forkGift, COPY.threshold.forkGiftNote, 'gift'],
       [COPY.threshold.forkPass, COPY.threshold.forkPassNote, 'transfer'],
     ],
+    back: 'codetrue',
     light: 'e',
     caption: 'The fork · two intentions, separated',
   },
@@ -111,6 +127,7 @@ export const WALK = {
     head: COPY.threshold.giftHead,
     body: COPY.threshold.giftBody,
     art: 'letter',
+    back: 'fork',
     pill: COPY.threshold.giftSeal,
     to: 'sealed',
     light: 'k',
@@ -228,6 +245,7 @@ export const WALK = {
     eyebrow: G.eyebrow,
     fields: [[G.fieldDate, G.fieldTime], [G.fieldPlace]],
     hints: { [G.fieldDate]: G.hintDate, [G.fieldTime]: G.hintTime, [G.fieldPlace]: G.hintPlace },
+    back: 'sign',
     note: G.bornNote,
     why: G.bornWhy,
     pill: G.continue,
@@ -244,6 +262,7 @@ export const WALK = {
     eyebrow: G.eyebrow,
     fields: [[G.fieldCity]],
     hints: { [G.fieldCity]: G.hintCity },
+    back: 'born',
     note: G.livesNote,
     grain: true,
     pill: G.continue,
@@ -258,6 +277,7 @@ export const WALK = {
     body: G.linksBody,
     eyebrow: G.eyebrow,
     fields: [[G.fieldSite]],
+    back: 'lives',
     hints: { [G.fieldSite]: G.hintSite },
     tiles: true,
     pill: G.continue,
@@ -271,6 +291,7 @@ export const WALK = {
   shows: {
     head: G.showsHead,
     body: G.showsBody,
+    back: 'links',
     eyebrow: G.eyebrow,
     lamps: true,
     pill: G.showsPill,
@@ -328,6 +349,7 @@ export const WALK = {
       ['Ines · waiting for you', '“I hope it is still here when I am big.” · shown without her name', '__home'],
       ['Tomas · asked in March', 'his window has not come round yet', '__home'],
     ],
+    back: 'ritual',
     note: COPY.ritual.familyNote,
     light: 'l',
     caption: 'The year turns · each person at their own birthday',
@@ -359,6 +381,7 @@ export const WALK = {
       ['Ines', 'daughter · second', 'passready'],
       ['Tomas', 'brother · not in line', 'passready'],
     ],
+    back: 'passfork',
     note: COPY.passing.nameNote,
     light: 'l',
     caption: 'Passing it on · the line you already set',
@@ -367,6 +390,7 @@ export const WALK = {
   passsell: {
     head: COPY.passing.sellHead,
     body: COPY.passing.sellBody,
+    back: 'passfork',
     note: COPY.passing.sellNote,
     pill: G.continue,
     to: 'passvalue',
@@ -386,6 +410,7 @@ export const WALK = {
       [COPY.passing.valueTrade, COPY.passing.valueTradeNote, 'passready'],
       [COPY.passing.valueGiven, COPY.passing.valueGivenNote, 'passready'],
     ],
+    back: 'passsell',
     note: COPY.passing.valueNote,
     light: 'm',
     caption: 'The ledger · the chain is public, the sums are not',
@@ -459,6 +484,7 @@ export const WALK = {
       [COPY.people.personStands, COPY.people.personStandsNote, 'person'],
       [COPY.people.personRemove, COPY.people.personRemoveNote, 'person'],
     ],
+    back: '__family',
     note: COPY.people.personNote,
     light: 'm',
     caption: 'One person · the line is private, the removal is total',
@@ -493,6 +519,7 @@ export const WALK = {
     head: COPY.people.joinWhoHead,
     body: COPY.people.joinWhoBody,
     fields: [[COPY.people.joinWhoName], [COPY.people.joinWhoBorn]],
+    back: 'joinhello',
     note: COPY.people.joinWhoNote,
     pill: COPY.people.joinWhoPill,
     to: '__home',
@@ -543,6 +570,7 @@ export const WALK = {
       ['“I have looked at it every morning since.”', '2004 · he never let this shine', '__home'],
       ['“If you are reading this it went to you, which is what I wanted.”', '2019 · he marked this one for you', '__home'],
     ],
+    back: 'inherit',
     note: COPY.heir.readNote,
     light: 'm',
     caption: 'The heir reads · and decides what the world learns',
@@ -586,9 +614,20 @@ export const WALK = {
 type Props = {
   screen: Screen;
   onGo: (key: string) => void;
+  /**
+   * What has been typed across the whole gathering, keyed by field label.
+   *
+   * It lives above the screen rather than inside it because a back link is
+   * worthless if the field is empty when you arrive: the reason to go back is
+   * that something in it was wrong, and you cannot fix what is no longer
+   * there. It also keeps the promise the required screens make out loud:
+   * "nothing you have written is lost."
+   */
+  values?: Record<string, string>;
+  onType?: (label: string, value: string) => void;
 };
 
-export const WalkScreen: React.FC<Props> = ({ screen, onGo }) => {
+export const WalkScreen: React.FC<Props> = ({ screen, onGo, values, onType }) => {
   const [grain, setGrain] = useState<0 | 1>(0);
   const [lamps, setLamps] = useState<boolean[]>([true, true, false]);
   const [linksOpen, setLinksOpen] = useState(false);
@@ -647,9 +686,39 @@ export const WalkScreen: React.FC<Props> = ({ screen, onGo }) => {
         />
       )}
 
-      {screen.eyebrow && (
-        <div style={{ position: 'relative', flex: 'none' }}>
-          <Eyebrow size={10.5}>{screen.eyebrow}</Eyebrow>
+      {/* the eyebrow, and the one navigation the design rules allow. They share
+          a line so the back link costs no vertical space on a screen that must
+          not scroll. */}
+      {(screen.eyebrow || screen.back) && (
+        <div
+          style={{
+            position: 'relative',
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: screen.eyebrow ? 'space-between' : 'flex-end',
+            gap: 14,
+            minHeight: 18,
+          }}
+        >
+          {screen.eyebrow && <Eyebrow size={10.5}>{screen.eyebrow}</Eyebrow>}
+          {screen.back && (
+            <button
+              type="button"
+              onClick={() => onGo(screen.back as string)}
+              style={{
+                background: 'none',
+                border: 0,
+                cursor: 'pointer',
+                fontFamily: F.body,
+                fontSize: 13.5,
+                color: C.inkQuiet,
+                padding: 0,
+              }}
+            >
+              Back
+            </button>
+          )}
         </div>
       )}
 
@@ -714,6 +783,8 @@ export const WalkScreen: React.FC<Props> = ({ screen, onGo }) => {
                       label={label as string}
                       hint={screen.hints?.[label as string]}
                       lit={r === 0 && i === 0}
+                      value={values?.[label as string] ?? ''}
+                      onChange={v => onType?.(label as string, v)}
                     />
                   ))}
                 </div>

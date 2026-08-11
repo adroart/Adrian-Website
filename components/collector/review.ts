@@ -84,6 +84,10 @@ export const REVIEW: Record<string, Note[]> = {
 
   sign: [
     { kind: 'gap', text: 'The note about one account across everything comes from the interactive spec, not from card 9a. The card has no note under the fields.' },
+    {
+      kind: 'mine',
+      text: 'This is the one gathering screen with no back link, because nothing before it is correctable: behind it is the fourth of the four, which is pure receiving. Every screen after it has one, and what you type here survives going back to fix it.',
+    },
   ],
   born: [
     { kind: 'gap', text: 'Order changed. The wording record’s map puts Who you are second of five; the interactive spec skipped it entirely. Built in the record’s order, so a full walk reaches every gathering screen.' },

@@ -95,8 +95,34 @@ export const CodePage: React.FC<Props> = ({ onTrue, onNoCode, onGift, onBack }) 
     <Ground light="j" pad="44px 30px 30px">
       {vault && <Vault />}
 
-      <div style={{ position: 'relative', flex: 'none' }}>
+      {/* the piece's name, and the way back to its page. Pressing Begin is
+          easy to do by accident, and nothing has happened yet. */}
+      <div
+        style={{
+          position: 'relative',
+          flex: 'none',
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          gap: 14,
+        }}
+      >
         <Eyebrow>{PIECE.name}</Eyebrow>
+        <button
+          type="button"
+          onClick={onBack}
+          style={{
+            background: 'none',
+            border: 0,
+            cursor: 'pointer',
+            fontFamily: F.body,
+            fontSize: 13.5,
+            color: C.inkQuiet,
+            padding: 0,
+          }}
+        >
+          Back
+        </button>
       </div>
       <h1
         style={{

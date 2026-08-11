@@ -278,6 +278,9 @@ const CollectorShell: React.FC = () => {
   const [placed, setPlaced] = useState(7);
   const [near, setNear] = useState(1);
   const [marks, setMarks] = useState(MARKS_DEFAULT);
+  /* what has been typed anywhere in the flow, so a back link can actually be
+     used to correct something rather than only to look at it again */
+  const [typed, setTyped] = useState<Record<string, string>>({});
   /* Where the review has been. The design deliberately gives the flow no global
      back: the four advance on a tap and nothing behind them is meant to be
      revisited. So back lives in the harness, under the phone, and it restores
@@ -341,6 +344,10 @@ const CollectorShell: React.FC = () => {
       visit({ kind: 'code' });
       return;
     }
+    if (key === '__family') {
+      visit({ kind: 'room', key: 'family' }, 'yours');
+      return;
+    }
     if (key in WALK) visit({ kind: 'walk', key: key as keyof typeof WALK });
   };
 
@@ -389,7 +396,14 @@ const CollectorShell: React.FC = () => {
           onBack={() => visit({ kind: 'piece' })}
         />
       )}
-      {view.kind === 'walk' && <WalkScreen screen={WALK[view.key]} onGo={go} />}
+      {view.kind === 'walk' && (
+        <WalkScreen
+          screen={WALK[view.key]}
+          onGo={go}
+          values={typed}
+          onType={(label, value) => setTyped(t => ({ ...t, [label]: value }))}
+        />
+      )}
       {view.kind === 'room' && (
         <Room room={view.key} onClose={() => visit({ kind: 'piece' })} onWalk={go} />
       )}
@@ -460,7 +474,10 @@ const CollectorShell: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => visit({ kind: 'piece' }, 'unclaimed')}
+            onClick={() => {
+              setTyped({});
+              visit({ kind: 'piece' }, 'unclaimed');
+            }}
             style={{
               border: `1px solid ${C.hairStrong}`,
               borderRadius: 999,
