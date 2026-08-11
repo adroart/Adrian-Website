@@ -1,6 +1,6 @@
 
 import React, { useEffect, Suspense, lazy, useRef, useState } from 'react';
-import { Routes, Route, Navigate, useLocation, useParams, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams, useSearchParams, Link } from 'react-router-dom';
 
 const KeystaticRoute = lazy(() => import('./components/KeystaticRoute'));
 const Home = lazy(() => import('./components/Home'));
@@ -62,6 +62,7 @@ import Navigation from './components/Navigation';
 import CartDrawer from './components/CartDrawer';
 import MiniPlayer from './components/MiniPlayer';
 import { FULL_ARCHIVE } from './data/mockData';
+import { loadArtworkWorkspace } from './utils/artworkWorkspace';
 
 const AppInner: React.FC = () => {
   const location = useLocation();
@@ -220,7 +221,22 @@ const App: React.FC = () => (
 );
 
 function AdminArtworkRegistration() {
-  const [artworkId, setArtworkId] = useState(FULL_ARCHIVE[0]?.id || '');
+  const [searchParams] = useSearchParams();
+  const registrationQuery = searchParams.toString();
+  const linkedParams = new URLSearchParams(registrationQuery);
+  const linkedArtworkIds = linkedParams.getAll('artworkId');
+  const linkedRecordIds = linkedParams.getAll('artistArtworkRecordId');
+  const linkedKeys = [...linkedParams.keys()].sort().join('\0');
+  const linkedArtworkId = linkedArtworkIds.length === 1 ? linkedArtworkIds[0] : '';
+  const linkedRecordId = linkedRecordIds.length === 1 ? linkedRecordIds[0] : '';
+  const hasLinkedSelector = linkedParams.has('artworkId') || linkedParams.has('artistArtworkRecordId');
+  const hasExactLinkedSelector = Boolean(linkedArtworkId && linkedRecordId
+    && linkedKeys === 'artistArtworkRecordId\0artworkId');
+  const [linkedStatus, setLinkedStatus] = useState<'generic' | 'loading' | 'ready' | 'error'>(
+    hasExactLinkedSelector ? 'loading' : hasLinkedSelector ? 'error' : 'generic',
+  );
+  const linkedStatusRef = useRef<HTMLDivElement>(null);
+  const [artworkId, setArtworkId] = useState(linkedArtworkId || FULL_ARCHIVE[0]?.id || '');
   const [editionKind, setEditionKind] = useState<'' | 'unique' | 'numbered'>('');
   const [editionNumber, setEditionNumber] = useState('1');
   const [editionSize, setEditionSize] = useState('');
@@ -237,6 +253,38 @@ function AdminArtworkRegistration() {
     keeperPieceId: string;
   } | null>(null);
   const attemptKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    setResult(null);
+    attemptKey.current = null;
+    if (!hasExactLinkedSelector) {
+      setLinkedStatus(hasLinkedSelector ? 'error' : 'generic');
+      if (hasLinkedSelector) window.requestAnimationFrame(() => linkedStatusRef.current?.focus());
+      return;
+    }
+    const controller = new AbortController();
+    setLinkedStatus('loading');
+    setArtworkId(linkedArtworkId);
+    void loadArtworkWorkspace({
+      artworkId: linkedArtworkId,
+      artistArtworkRecordId: linkedRecordId,
+    }, controller.signal).then((workspace) => {
+      if (controller.signal.aborted) return;
+      if (workspace.catalog?.artworkId !== linkedArtworkId
+        || workspace.salesRecord?.artworkRecordId !== linkedRecordId
+        || workspace.salesRecord.state !== 'identified'
+        || workspace.identity !== null) {
+        throw new Error('registration_target_mismatch');
+      }
+      setLinkedStatus('ready');
+    }).catch((caught: unknown) => {
+      if (controller.signal.aborted
+        || (caught instanceof DOMException && caught.name === 'AbortError')) return;
+      setLinkedStatus('error');
+      window.requestAnimationFrame(() => linkedStatusRef.current?.focus());
+    });
+    return () => controller.abort();
+  }, [registrationQuery]);
 
   const unlock = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -263,6 +311,8 @@ function AdminArtworkRegistration() {
     setBusy(true);
     setError('');
     try {
+      if (hasLinkedSelector && linkedStatus !== 'ready') throw new Error('registration_target_unverified');
+      if (hasExactLinkedSelector && artworkId !== linkedArtworkId) throw new Error('registration_target_mismatch');
       attemptKey.current ||= crypto.randomUUID();
       if (!editionKind) throw new Error('edition_required');
       const edition = editionKind === 'unique'
@@ -311,6 +361,16 @@ function AdminArtworkRegistration() {
     attemptKey.current = null;
   };
 
+  const copyOwnershipCode = async () => {
+    if (!result?.ownershipCode) return;
+    try {
+      await navigator.clipboard.writeText(result.ownershipCode);
+      setResult({ ...result, ownershipCode: undefined });
+    } catch {
+      setError('The Ownership Code could not be copied. Copy it manually, then dismiss it before leaving this screen.');
+    }
+  };
+
   return (
     <div className="admin-page admin-page-narrow">
       <header className="admin-page-header">
@@ -324,6 +384,17 @@ function AdminArtworkRegistration() {
       </header>
 
       {error && <p className="admin-alert admin-alert-error" role="alert">{error}</p>}
+      {linkedStatus === 'loading' && (
+        <p className="admin-alert" role="status">Verifying the exact sales record registration target.</p>
+      )}
+      {linkedStatus === 'error' && (
+        <div ref={linkedStatusRef} tabIndex={-1} className="outline-none">
+          <p className="admin-alert admin-alert-error" role="alert">The linked catalog artwork and sales record could not be verified. Registration is unavailable from this link.</p>
+        </div>
+      )}
+      {linkedStatus === 'ready' && (
+        <p className="admin-alert" role="status">Sales record {linkedRecordId} · exact catalog target {linkedArtworkId}</p>
+      )}
       {!unlocked ? (
         <form onSubmit={unlock} className="admin-section space-y-4">
           <h2 className="admin-section-title">Unlock the private registry</h2>
@@ -333,12 +404,12 @@ function AdminArtworkRegistration() {
           </label>
           <button type="submit" disabled={busy} className="collector-button-primary">{busy ? 'Unlocking' : 'Unlock registry'}</button>
         </form>
-      ) : !result ? (
+      ) : !result && linkedStatus !== 'error' ? (
         <form onSubmit={register} className="admin-section space-y-5">
           <h2 className="admin-section-title">Register one artwork instance</h2>
           <label className="block font-label text-xs uppercase tracking-[0.12em] text-wood-700">
             Artwork
-            <select value={artworkId} onChange={(event) => { setArtworkId(event.target.value); setEditionKind(''); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base normal-case tracking-normal">
+            <select value={artworkId} disabled={linkedStatus === 'loading' || linkedStatus === 'ready'} onChange={(event) => { setArtworkId(event.target.value); setEditionKind(''); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base normal-case tracking-normal">
               {FULL_ARCHIVE.map((artwork) => <option key={artwork.id} value={artwork.id}>{artwork.title} · {artwork.id}</option>)}
             </select>
           </label>
@@ -353,7 +424,7 @@ function AdminArtworkRegistration() {
               <label className="font-label text-xs uppercase tracking-[0.12em] text-wood-700">Edition size, optional<input type="number" min={editionNumber || '1'} value={editionSize} onChange={(event) => { setEditionSize(event.target.value); attemptKey.current = null; }} className="mt-2 block w-full border border-wood-300 bg-white p-3 font-sans text-base" /></label>
             </div>
           )}
-          <button type="submit" disabled={busy || !editionKind} className="collector-button-primary">{busy ? 'Registering' : 'Register artwork'}</button>
+          <button type="submit" disabled={busy || !editionKind || linkedStatus === 'loading'} className="collector-button-primary">{busy ? 'Registering' : 'Register artwork'}</button>
         </form>
       ) : null}
 
@@ -366,24 +437,25 @@ function AdminArtworkRegistration() {
           <p className="font-sans text-sm text-wood-700">Edition: <strong>{result.editionLabel}</strong></p>
           <p className="font-sans text-sm text-wood-700">Public code: <strong>{result.publicCode}</strong></p>
           <p className="font-sans text-sm text-wood-700">Invitation reference: <strong>{result.keeperPieceId}</strong></p>
-          <p>
-            <Link
-              className="collector-button-secondary"
-              to={`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({ instance: result.keeperPieceId })}`}
-            >
-              Open artwork
-            </Link>
-          </p>
           {result.ownershipCode ? (
             <>
               <p className="font-sans text-sm text-wood-700">Copy the Ownership Code now. It cannot be shown here again.</p>
               <p className="font-mono text-lg break-all select-all">{result.ownershipCode}</p>
+              <button type="button" className="collector-button-secondary" onClick={() => void copyOwnershipCode()}>Copy Ownership Code</button>
               <button type="button" className="collector-button-secondary" onClick={() => setResult({ ...result, ownershipCode: undefined })}>Dismiss Ownership Code</button>
             </>
           ) : (
             <>
               <p className="font-sans text-sm text-wood-600">The identity is ready. Plate preparation remains optional.</p>
-              <button type="button" className="collector-button-secondary" onClick={resetRegistration}>Register another artwork</button>
+              <p>
+                <Link
+                  className="collector-button-secondary"
+                  to={`/admin/artworks/${encodeURIComponent(result.artworkId)}?${new URLSearchParams({ instance: result.keeperPieceId })}`}
+                >
+                  Open artwork
+                </Link>
+              </p>
+              {linkedStatus === 'generic' && <button type="button" className="collector-button-secondary" onClick={resetRegistration}>Register another artwork</button>}
             </>
           )}
         </section>

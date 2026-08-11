@@ -25,6 +25,11 @@ import {
 } from '../../utils/artistSales';
 import { loadArtworkWorkspace } from '../../utils/artworkWorkspace';
 import {
+  currencyAmountToInput,
+  getMaintenanceDetail,
+  isLegacySaleAcquisition,
+} from '../../utils/adminRegistryMaintenance';
+import {
   beginInvitationCreateAttempt,
   type AdminInvitation,
   type InvitationCreateAttempt,
@@ -34,6 +39,7 @@ import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection }
 type StartMode = 'records' | 'reconnection' | 'sale';
 type WithoutKey<T> = T extends unknown ? Omit<T, 'idempotencyKey'> : never;
 type RecordSelection = { kind: 'sale' | 'reconnection'; id: string };
+type LegacySaleTarget = { acquisitionId: string; artworkId: string; keeperPieceId: string };
 type ReconnectionStatus = ArtistSaleWorkspaceResponse['reconnectionCases'][number]['status'];
 type ArtworkDraft = {
   rowId: string;
@@ -232,6 +238,21 @@ const CollectorSales: React.FC = () => {
     ? deepLinkParams.get('artistArtworkRecordId') : null;
   const deepLinkedKeeperPieceId = deepLinkParams.getAll('keeperPieceId').length === 1
     ? deepLinkParams.get('keeperPieceId') : null;
+  const deepLinkKeys = [...deepLinkParams.keys()].sort().join('\0');
+  const legacySource = deepLinkParams.getAll('source').length === 1
+    ? deepLinkParams.get('source') : null;
+  const legacyAcquisitionId = deepLinkParams.getAll('acquisitionId').length === 1
+    ? deepLinkParams.get('acquisitionId') : null;
+  const legacyArtworkId = deepLinkParams.getAll('artworkId').length === 1
+    ? deepLinkParams.get('artworkId') : null;
+  const legacyKeeperPieceId = deepLinkParams.getAll('keeperPieceId').length === 1
+    ? deepLinkParams.get('keeperPieceId') : null;
+  const hasExactLegacyTarget = legacySource === 'legacy_acquisition'
+    && Boolean(legacyAcquisitionId && legacyArtworkId && legacyKeeperPieceId)
+    && deepLinkKeys === 'acquisitionId\0artworkId\0keeperPieceId\0source';
+  const hasRecordTarget = Boolean(deepLinkedArtworkRecordId)
+    && (deepLinkKeys === 'artistArtworkRecordId'
+      || deepLinkKeys === 'artistArtworkRecordId\0keeperPieceId');
   const [workspace, setWorkspace] = useState<ArtistSaleWorkspaceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -241,6 +262,8 @@ const CollectorSales: React.FC = () => {
   const [detailLoadError, setDetailLoadError] = useState('');
   const [ledgers, setLedgers] = useState<Record<string, ArtistLedgerDetailResponse>>({});
   const [detailLoading, setDetailLoading] = useState(false);
+  const [linkedTargetLoading, setLinkedTargetLoading] = useState(false);
+  const [legacyTarget, setLegacyTarget] = useState<LegacySaleTarget | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | ReconnectionStatus>('all');
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
@@ -260,6 +283,8 @@ const CollectorSales: React.FC = () => {
   const activeSaleIdRef = useRef<string | null>(null);
   const activeSelectionRef = useRef<RecordSelection | null>(null);
   const previousSaleIdRef = useRef<string | null>(null);
+  const requestedArtworkRecordIdRef = useRef<string | null>(null);
+  const requestedKeeperPieceIdRef = useRef<string | null>(null);
 
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
@@ -273,6 +298,8 @@ const CollectorSales: React.FC = () => {
   const [privateNotes, setPrivateNotes] = useState('');
   const [linkedCaseId, setLinkedCaseId] = useState('');
   const [artworks, setArtworks] = useState<ArtworkDraft[]>([emptyArtwork()]);
+  requestedArtworkRecordIdRef.current = hasRecordTarget ? deepLinkedArtworkRecordId : null;
+  requestedKeeperPieceIdRef.current = hasRecordTarget ? deepLinkedKeeperPieceId : null;
   activeSaleIdRef.current = selection?.kind === 'sale' ? selection.id : null;
   activeSelectionRef.current = selection;
   const activeRecordScope = selection ? recordScopeKey(selection) : null;
@@ -299,10 +326,16 @@ const CollectorSales: React.FC = () => {
   }, [loadWorkspace]);
 
   useEffect(() => {
-    if (!deepLinkedArtworkRecordId) return;
+    if (!hasRecordTarget) return;
     const controller = new AbortController();
+    setSelection(null);
+    setDetail(null);
+    setDetailLoadError('');
+    setLegacyTarget(null);
+    setMode('records');
+    setLinkedTargetLoading(true);
     void loadArtworkWorkspace({
-      artistArtworkRecordId: deepLinkedArtworkRecordId,
+      artistArtworkRecordId: deepLinkedArtworkRecordId!,
       ...(deepLinkedKeeperPieceId ? { keeperPieceId: deepLinkedKeeperPieceId } : {}),
     }, controller.signal).then((linkedWorkspace) => {
       if (controller.signal.aborted) return;
@@ -315,9 +348,61 @@ const CollectorSales: React.FC = () => {
       if (controller.signal.aborted
         || (error instanceof DOMException && error.name === 'AbortError')) return;
       setActionError('The linked artwork sale record could not be opened. Return to the artwork workspace and try again.');
+    }).finally(() => {
+      if (!controller.signal.aborted) setLinkedTargetLoading(false);
     });
     return () => controller.abort();
-  }, [deepLinkedArtworkRecordId, deepLinkedKeeperPieceId]);
+  }, [deepLinkQuery]);
+
+  useEffect(() => {
+    if (!hasExactLegacyTarget) return;
+    const controller = new AbortController();
+    setSelection(null);
+    setDetail(null);
+    setDetailLoadError('');
+    setLegacyTarget(null);
+    setMode('records');
+    setLinkedTargetLoading(true);
+    void getMaintenanceDetail(legacyKeeperPieceId!, controller.signal).then((piece) => {
+      if (controller.signal.aborted) return;
+      const acquisition = piece.acquisitions.find((candidate) => (
+        candidate.acquisitionId === legacyAcquisitionId && isLegacySaleAcquisition(candidate)
+      ));
+      if (piece.id !== legacyKeeperPieceId || piece.public.artworkId !== legacyArtworkId
+        || !acquisition || acquisition.keeperPieceId !== legacyKeeperPieceId) {
+        throw new Error('legacy_sale_target_mismatch');
+      }
+      const numbered = piece.public.editionNumber > 0;
+      setPrecision(acquisition.acquiredAt ? 'exact' : 'unknown');
+      setOccurrenceValue(acquisition.acquiredAt || '');
+      setTotalAmount(acquisition.amountMinor !== null && acquisition.currency
+        ? currencyAmountToInput(acquisition.amountMinor, acquisition.currency) : '');
+      setTotalCurrency(acquisition.currency || 'USD');
+      setPrivateReference(acquisition.acquirerReference || '');
+      setPrivateNotes(acquisition.privateNotes || '');
+      setArtworks([{
+        ...emptyArtwork(), artworkId: legacyArtworkId!,
+        editionKind: numbered ? 'numbered' : 'unique',
+        editionNumber: numbered ? String(piece.public.editionNumber) : '1',
+        editionSize: numbered && piece.public.editionSize ? String(piece.public.editionSize) : '',
+        price: acquisition.amountMinor !== null && acquisition.currency
+          ? currencyAmountToInput(acquisition.amountMinor, acquisition.currency) : '',
+        currency: acquisition.currency || 'USD',
+      }]);
+      setLegacyTarget({
+        acquisitionId: legacyAcquisitionId!, artworkId: legacyArtworkId!,
+        keeperPieceId: legacyKeeperPieceId!,
+      });
+      setMode('sale');
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted
+        || (error instanceof DOMException && error.name === 'AbortError')) return;
+      setActionError('The exact legacy acquisition could not be verified. No sale can be recorded from this link.');
+    }).finally(() => {
+      if (!controller.signal.aborted) setLinkedTargetLoading(false);
+    });
+    return () => controller.abort();
+  }, [deepLinkQuery]);
 
   const loadSale = useCallback(async (saleId: string, signal?: AbortSignal) => {
     setDetailLoading(true);
@@ -326,11 +411,19 @@ const CollectorSales: React.FC = () => {
       const value = await jsonRequest(`/api/admin/collector-sales/${saleId}`, { signal });
       const parsed = parseArtistSaleDetailResponse(value);
       if (activeSaleIdRef.current !== saleId) return;
+      const requestedRecordId = requestedArtworkRecordIdRef.current;
+      const requestedKeeperPieceId = requestedKeeperPieceIdRef.current;
+      if (requestedRecordId && !parsed.items.some((item) => (
+        item.artworkRecordId === requestedRecordId
+        && (!requestedKeeperPieceId || item.keeperPieceId === requestedKeeperPieceId)
+      ))) throw new Error('linked_artwork_record_missing');
       setDetail(parsed);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       if (activeSaleIdRef.current !== saleId) return;
-      setDetailLoadError(detailRecoveryMessage(error));
+      setDetailLoadError(error instanceof Error && error.message === 'linked_artwork_record_missing'
+        ? 'This verified sale does not contain the requested artwork record. No mutation target was opened.'
+        : detailRecoveryMessage(error));
       setDetail(null);
     } finally {
       if (!signal?.aborted && activeSaleIdRef.current === saleId) setDetailLoading(false);
@@ -442,6 +535,10 @@ const CollectorSales: React.FC = () => {
     setBusy('sale'); setActionError(''); setNotice('');
     let usedAttempt = saleAttempt;
     try {
+      if (legacyTarget && (artworks.length !== 1
+        || artworks[0].artworkId !== legacyTarget.artworkId)) {
+        throw new Error('legacy_sale_target_mismatch');
+      }
       const draft = {
         action: 'createSale' as const,
         occurrence: occurrence(precision, occurrenceValue),
@@ -564,6 +661,11 @@ const CollectorSales: React.FC = () => {
         {notice && <AdminAlert tone="success" live>{notice}</AdminAlert>}
         {actionError && <AdminAlert tone="error" live>{actionError}</AdminAlert>}
       </div>
+      {linkedTargetLoading && (
+        <div role="status" aria-label="Loading linked artwork record" className="h-20 animate-pulse bg-wood-100 motion-reduce:animate-none">
+          <span className="sr-only">Loading linked artwork record</span>
+        </div>
+      )}
       {detailAttempt && activeRecordScope && <AdminAlert tone="warning"><p>A detail action has an uncertain response. Every other record action is frozen until this exact body and key are retried, or you explicitly cancel after checking the record.</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} disabled={Boolean(busy)} onClick={() => void retryDetail()}>Retry exact action</button><button type="button" className={buttonSecondary} disabled={Boolean(busy)} onClick={() => { setDetailAttempts(value => setScopedValue(value, activeRecordScope, null)); setActionError('Frozen action cancelled. Refresh and verify the record before making a new change.'); }}>Cancel frozen action</button></div></AdminAlert>}
 
       <div className="grid gap-3 sm:grid-cols-2" aria-label="Start a record">
@@ -595,8 +697,18 @@ const CollectorSales: React.FC = () => {
       )}
 
       {mode === 'sale' && (
-        <AdminSection title="Record a verified sale" description="Unknown dates and unidentified artworks are valid records. Private buyer and price evidence is never published here.">
+        <AdminSection
+          title={legacyTarget ? 'Verify legacy sale' : 'Record a verified sale'}
+          description={legacyTarget
+            ? 'Review this exact legacy acquisition, then preserve it in the verified sales ledger.'
+            : 'Unknown dates and unidentified artworks are valid records. Private buyer and price evidence is never published here.'}
+        >
           <form className="space-y-7" onSubmit={event => { event.preventDefault(); void saveSale(false); }}>
+            {legacyTarget && (
+              <AdminAlert tone="info">
+                Legacy acquisition {legacyTarget.acquisitionId} · exact artwork {legacyTarget.artworkId} · physical identity {legacyTarget.keeperPieceId}
+              </AdminAlert>
+            )}
             <fieldset className="space-y-3" disabled={Boolean(saleAttempt)}>
               <legend className="font-serif text-xl text-wood-900">When did the sale occur?</legend>
               <div className="grid gap-2 sm:grid-cols-4">
@@ -619,7 +731,7 @@ const CollectorSales: React.FC = () => {
             <p className="font-sans text-base text-wood-700">Private buyer and price evidence. Artwork prices can remain blank and do not need to add up to the sale total.</p>
             <div className="border-t border-wood-200">
               {artworks.map((row, index) => (
-                <fieldset key={row.rowId} className="space-y-4 border-b border-wood-200 py-6" disabled={Boolean(saleAttempt)}>
+                <fieldset key={row.rowId} className="space-y-4 border-b border-wood-200 py-6" disabled={Boolean(saleAttempt) || Boolean(legacyTarget)}>
                   <legend className="font-serif text-xl text-wood-900">Artwork {index + 1}</legend>
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className={labelClass}>Artwork {index + 1}<select className={inputClass} value={row.artworkId} onChange={event => setArtworks(current => current.map(item => item.rowId === row.rowId ? { ...item, artworkId: event.target.value } : item))}><option value="">Artwork not identified yet</option>{FULL_ARCHIVE.map(item => <option key={item.id} value={item.id}>{item.title} · {item.id}</option>)}</select></label>
@@ -632,13 +744,13 @@ const CollectorSales: React.FC = () => {
                 </fieldset>
               ))}
             </div>
-            <button type="button" className={buttonSecondary} disabled={Boolean(saleAttempt)} onClick={() => setArtworks(current => [...current, emptyArtwork(current.length)])}>Add another artwork</button>
+            {!legacyTarget && <button type="button" className={buttonSecondary} disabled={Boolean(saleAttempt)} onClick={() => setArtworks(current => [...current, emptyArtwork(current.length)])}>Add another artwork</button>}
             {saleAttempt && <AdminAlert tone="warning">This exact request and key are frozen after an uncertain response. Retry without editing, or cancel only after checking the records.</AdminAlert>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <button className={buttonPrimary} disabled={busy === 'sale'} type="submit">{saleAttempt ? 'Retry exact sale' : 'Save verified sale'}</button>
-              <button className={buttonSecondary} disabled={Boolean(saleAttempt) || busy === 'sale'} type="button" onClick={() => void saveSale(true)}>Save and add another</button>
+              {!legacyTarget && <button className={buttonSecondary} disabled={Boolean(saleAttempt) || busy === 'sale'} type="button" onClick={() => void saveSale(true)}>Save and add another</button>}
               {saleAttempt && <button className={buttonSecondary} type="button" onClick={() => { setSaleAttempt(null); setActionError('Attempt cancelled. Check the record list before saving again.'); }}>Cancel frozen attempt</button>}
-              <button className={buttonSecondary} type="button" onClick={() => setMode('records')}>Back to records</button>
+              {!legacyTarget && <button className={buttonSecondary} type="button" onClick={() => setMode('records')}>Back to records</button>}
             </div>
           </form>
         </AdminSection>
@@ -681,6 +793,7 @@ const CollectorSales: React.FC = () => {
               {selection?.kind === 'sale' && detailLoadError && !detailLoading && <AdminAlert tone="error" live><p>{detailLoadError}</p><div className="mt-3 flex flex-col gap-3 sm:flex-row"><button type="button" className={buttonPrimary} onClick={() => void loadSale(selection.id)}>Retry record</button><button type="button" className={buttonSecondary} onClick={() => { setDetailLoadError(''); setSelection(null); }}>Back to records</button></div></AdminAlert>}
               {selection?.kind === 'sale' && detail?.effectiveSale.saleId === selection.id && <SaleDetail
                 key={detail.effectiveSale.saleId} detail={detail} ledgers={ledgers} busy={busy || (detailAttempt ? 'frozen' : '')}
+                targetArtworkRecordId={deepLinkedArtworkRecordId}
                 invitations={invitations}
                 registrationAttempts={registrationAttempts} invitationAttempts={invitationAttempts}
                 uploadAttempts={uploadAttempts} pendingLinks={pendingLinks}
@@ -851,6 +964,7 @@ const CorrectionHistory: React.FC<{ corrections: ArtistSaleCorrection[] }> = ({ 
 const SaleDetail: React.FC<{
   detail: ArtistSaleDetailResponse;
   ledgers: Record<string, ArtistLedgerDetailResponse>; invitations: AdminInvitation[];
+  targetArtworkRecordId: string | null;
   registrationAttempts: Record<string, FrozenArtistSaleAttempt<RegistrationRequest>>;
   invitationAttempts: Record<string, InvitationCreateAttempt>;
   uploadAttempts: Record<string, FrozenArtistSaleAttempt<MediaUploadRequest>>; busy: string;
@@ -867,7 +981,7 @@ const SaleDetail: React.FC<{
   onCancelRegistration: (artworkRecordId: string) => void;
   onCancelInvitation: (artworkRecordId: string) => void;
   onRetryLink: (item: ArtistSaleItem) => Promise<void>;
-}> = ({ detail, ledgers, invitations, registrationAttempts, invitationAttempts, uploadAttempts, pendingLinks, busy, ownershipSecrets, invitationSecrets, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+}> = ({ detail, ledgers, invitations, targetArtworkRecordId, registrationAttempts, invitationAttempts, uploadAttempts, pendingLinks, busy, ownershipSecrets, invitationSecrets, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
   const [sharedMessage, setSharedMessage] = useState('');
   const [showCorrection, setShowCorrection] = useState(false);
   const initial = saleDraftFrom(detail);
@@ -891,19 +1005,19 @@ const SaleDetail: React.FC<{
     <CorrectionHistory corrections={detail.corrections} />
     <div><button type="button" className={buttonSecondary} onClick={() => setShowCorrection(value => !value)}>Correct sale facts</button>{showCorrection && <form className="mt-5 space-y-4 border-t border-bronze-500 pt-5" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'correctSale', expectedSequence: detail.effectiveSale.sequence, occurrence: occurrence(correction.precision, correction.occurrenceValue), buyerEmail: correction.buyerEmail.trim().toLowerCase() || null, total: money(correction.totalAmount, correction.totalCurrency), privateReference: correction.privateReference.trim() || null, privateNotes: correction.privateNotes.trim() || null, reason: correctionReason }, 'Correction appended. Originally recorded facts remain unchanged.'); if (ok) { setShowCorrection(false); setCorrectionReason(''); } }}><fieldset disabled={Boolean(busy)} className="contents"><p className="font-sans text-base text-wood-700">Corrections append history. They do not erase the originally recorded facts.</p><fieldset><legend className="font-sans text-base font-semibold text-wood-800">Corrected occurrence precision</legend><div className="grid gap-2 sm:grid-cols-4">{([['unknown', 'Unknown'], ['year', 'Year'], ['month', 'Month'], ['exact', 'Exact date']] as const).map(([value, label]) => <label key={value} className="flex min-h-11 items-center gap-3 font-sans text-base"><input className="h-5 w-5" type="radio" name="correction-precision" checked={correction.precision === value} onChange={() => setCorrection(current => ({ ...current, precision: value, occurrenceValue: '' }))} />{label}</label>)}</div></fieldset>{correction.precision === 'year' && <label className={labelClass}>Corrected sale year<input className={inputClass} type="number" min="1000" max="9999" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'month' && <label className={labelClass}>Corrected sale month<input className={inputClass} type="month" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}{correction.precision === 'exact' && <label className={labelClass}>Corrected sale date<input className={inputClass} type="date" required value={correction.occurrenceValue} onChange={event => setCorrection(value => ({ ...value, occurrenceValue: event.target.value }))} /></label>}<label className={labelClass}>Corrected buyer email<input className={inputClass} type="email" value={correction.buyerEmail} onChange={event => setCorrection(value => ({ ...value, buyerEmail: event.target.value }))} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Corrected total<input className={inputClass} type="number" min="0" step="0.01" value={correction.totalAmount} onChange={event => setCorrection(value => ({ ...value, totalAmount: event.target.value }))} /></label><label className={labelClass}>Corrected currency<select className={inputClass} value={correction.totalCurrency} onChange={event => setCorrection(value => ({ ...value, totalCurrency: event.target.value }))}>{['USD', 'IDR', 'EUR', 'AUD', 'GBP'].map(value => <option key={value}>{value}</option>)}</select></label></div><label className={labelClass}>Corrected private reference<input className={inputClass} value={correction.privateReference} onChange={event => setCorrection(value => ({ ...value, privateReference: event.target.value }))} /></label><label className={labelClass}>Corrected private notes<textarea className={`${inputClass} min-h-24`} value={correction.privateNotes} onChange={event => setCorrection(value => ({ ...value, privateNotes: event.target.value }))} /></label><label className={labelClass}>Correction reason<input className={inputClass} required value={correctionReason} onChange={event => setCorrectionReason(event.target.value)} /></label><button type="submit" className={buttonPrimary}>Save correction</button></fieldset></form>}</div>
 
-    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required disabled={Boolean(busy)} value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Seal shared message</button></form>
+    <form className="space-y-3 border-y border-wood-200 py-6" onSubmit={async event => { event.preventDefault(); const ok = await onPost(detail.effectiveSale.saleId, { action: 'appendSharedSaleMessage', saleId: detail.effectiveSale.saleId, artworkRecordIds: detail.items.map(item => item.artworkRecordId), message: sharedMessage }, 'Shared sealed message appended to every artwork in this sale.'); if (ok) setSharedMessage(''); }}><label className={labelClass}>Shared sealed message<textarea className={`${inputClass} min-h-24`} required disabled={Boolean(busy) || Boolean(targetArtworkRecordId)} value={sharedMessage} onChange={event => setSharedMessage(event.target.value)} /></label><p className="font-sans text-base text-wood-700">This sealed note becomes visible only when that artwork is claimed.</p><button className={buttonPrimary} type="submit" disabled={Boolean(busy) || Boolean(targetArtworkRecordId)}>Seal shared message</button></form>
 
     <div className="border-t border-wood-200">
       {detail.items.map((item, index) => {
         const scopeKey = saleArtworkScopeKey(detail.effectiveSale.saleId, item.artworkRecordId);
-        return <ArtworkActions key={scopeKey} index={index} item={item} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[scopeKey])} invitationFrozen={Boolean(invitationAttempts[scopeKey])} uploadFrozen={Boolean(uploadAttempts[scopeKey])} linkPending={Boolean(pendingLinks[scopeKey])} busy={busy} ownershipSecret={ownershipSecrets[scopeKey] || null} invitationSecret={invitationSecrets[scopeKey] || null} onDismissOwnership={() => onDismissOwnership(item.artworkRecordId)} onDismissInvitation={() => onDismissInvitation(item.artworkRecordId)} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onCancelUpload={onCancelUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />;
+        return <ArtworkActions key={scopeKey} index={index} item={item} deepLinkScoped={Boolean(targetArtworkRecordId)} targeted={item.artworkRecordId === targetArtworkRecordId} sale={detail.effectiveSale} ledger={ledgers[item.artworkRecordId]} invitation={invitations.find(value => value.keeperPieceId === item.keeperPieceId)} registrationFrozen={Boolean(registrationAttempts[scopeKey])} invitationFrozen={Boolean(invitationAttempts[scopeKey])} uploadFrozen={Boolean(uploadAttempts[scopeKey])} linkPending={Boolean(pendingLinks[scopeKey])} busy={busy} ownershipSecret={ownershipSecrets[scopeKey] || null} invitationSecret={invitationSecrets[scopeKey] || null} onDismissOwnership={() => onDismissOwnership(item.artworkRecordId)} onDismissInvitation={() => onDismissInvitation(item.artworkRecordId)} onRefreshLedger={onRefreshLedger} onPost={onPost} onUpload={onUpload} onCancelUpload={onCancelUpload} onRegister={onRegister} onInvite={onInvite} onCancelRegistration={onCancelRegistration} onCancelInvitation={onCancelInvitation} onRetryLink={onRetryLink} />;
       })}
     </div>
   </div>;
 };
 
 const ArtworkActions: React.FC<{
-  index: number; item: ArtistSaleItem; sale: ArtistSaleDetailResponse['sale']; ledger?: ArtistLedgerDetailResponse; invitation?: AdminInvitation; registrationFrozen: boolean; invitationFrozen: boolean; uploadFrozen: boolean; linkPending: boolean; busy: string;
+  index: number; item: ArtistSaleItem; deepLinkScoped: boolean; targeted: boolean; sale: ArtistSaleDetailResponse['sale']; ledger?: ArtistLedgerDetailResponse; invitation?: AdminInvitation; registrationFrozen: boolean; invitationFrozen: boolean; uploadFrozen: boolean; linkPending: boolean; busy: string;
   ownershipSecret: string | null; invitationSecret: string | null;
   onDismissOwnership: () => void; onDismissInvitation: () => void; onRefreshLedger: (id: string) => Promise<void>;
   onPost: (pathId: string, draft: WithoutKey<ArtistSaleDetailMutation | ArtistLedgerMutation>, success: string) => Promise<boolean>;
@@ -912,7 +1026,8 @@ const ArtworkActions: React.FC<{
   onRegister: (item: ArtistSaleItem) => Promise<void>; onInvite: (item: ArtistSaleItem, email: string, expiresAt: string) => Promise<void>;
   onCancelRegistration: (artworkRecordId: string) => void; onCancelInvitation: (artworkRecordId: string) => void;
   onRetryLink: (item: ArtistSaleItem) => Promise<void>;
-}> = ({ index, item, sale, ledger, invitation, registrationFrozen, invitationFrozen, uploadFrozen, linkPending, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+}> = ({ index, item, deepLinkScoped, targeted, sale, ledger, invitation, registrationFrozen, invitationFrozen, uploadFrozen, linkPending, busy, ownershipSecret, invitationSecret, onDismissOwnership, onDismissInvitation, onRefreshLedger, onPost, onUpload, onCancelUpload, onRegister, onInvite, onCancelRegistration, onCancelInvitation, onRetryLink }) => {
+  const targetRef = useRef<HTMLFieldSetElement>(null);
   const [identifyId, setIdentifyId] = useState('');
   const [editionKind, setEditionKind] = useState<'unique' | 'numbered'>('unique');
   const [editionNumber, setEditionNumber] = useState('1');
@@ -933,12 +1048,15 @@ const ArtworkActions: React.FC<{
     setInvitationEmail(sale.buyerEmail || '');
     setExpiresAt(invitationExpiryValue());
   }, [sale.saleId]);
+  useEffect(() => {
+    if (targeted) window.requestAnimationFrame(() => targetRef.current?.focus());
+  }, [targeted, item.artworkRecordId]);
   const artworkWorkspacePath = item.identificationStatus !== 'unresolved' && item.artworkId
     ? `/admin/artworks/${encodeURIComponent(item.artworkId)}?${new URLSearchParams(item.keeperPieceId
         ? { instance: item.keeperPieceId, record: item.artworkRecordId }
         : { record: item.artworkRecordId })}`
     : null;
-  return <fieldset className="space-y-5 border-b border-wood-200 py-7" aria-label={`Artwork ${index + 1} actions`} disabled={busy === 'frozen'}>
+  return <fieldset ref={targetRef} tabIndex={targeted ? -1 : undefined} className={`space-y-5 border-b py-7 outline-none ${targeted ? 'border-bronze-500 border-l-2 pl-4 focus:ring-2 focus:ring-bronze-400' : 'border-wood-200'}`} aria-label={`Artwork ${index + 1} actions`} disabled={busy === 'frozen' || (deepLinkScoped && !targeted)}>
     <legend className="font-serif text-2xl text-wood-900">Artwork {index + 1}</legend>
     <div><p className="font-sans text-base font-semibold text-wood-900">{artworkTitle(item.artworkId)}</p><p className="mt-1 font-sans text-base text-wood-600">{editionLabel(item.edition)} · {item.identificationStatus === 'unresolved' ? 'Unresolved identification' : item.identificationStatus === 'identity_linked' ? 'Identity linked' : 'Identified'}</p><p className="mt-1 font-sans text-base text-wood-600">Private price: {moneyLabel(item.price)}</p>{artworkWorkspacePath && <p className="mt-3"><Link className={quietButton} to={artworkWorkspacePath}>Open artwork</Link></p>}</div>
     {item.identificationStatus === 'unresolved' && <form className="grid gap-4 sm:grid-cols-2" onSubmit={async event => { event.preventDefault(); const selectedEdition: ArtistSaleEdition = editionKind === 'unique' ? { kind: 'unique' } : { kind: 'numbered', number: Number(editionNumber), size: editionSize ? Number(editionSize) : null }; await onPost(sale.saleId, { action: 'identifyArtwork', artworkRecordId: item.artworkRecordId, artworkId: identifyId, edition: selectedEdition, expectedVersion: item.recordVersion }, 'Artwork identification appended.'); }}><label className={labelClass}>Identify artwork<select className={inputClass} required value={identifyId} onChange={event => setIdentifyId(event.target.value)}><option value="">Choose exact catalog artwork</option>{FULL_ARCHIVE.map(value => <option key={value.id} value={value.id}>{value.title} · {value.id}</option>)}</select></label><label className={labelClass}>Edition<select className={inputClass} value={editionKind} onChange={event => setEditionKind(event.target.value as typeof editionKind)}><option value="unique">Unique work</option><option value="numbered">Numbered edition</option></select></label>{editionKind === 'numbered' && <><label className={labelClass}>Edition number<input className={inputClass} type="number" min="1" value={editionNumber} onChange={event => setEditionNumber(event.target.value)} /></label><label className={labelClass}>Edition size, optional<input className={inputClass} type="number" min={editionNumber || '1'} value={editionSize} onChange={event => setEditionSize(event.target.value)} /></label></>}<button className={buttonPrimary} type="submit" disabled={Boolean(busy)}>Confirm identification</button></form>}
