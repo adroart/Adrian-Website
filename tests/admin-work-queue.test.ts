@@ -22,15 +22,15 @@ const keepers = [
 
 function rows(sql: string, bindings: unknown[]): Row[] {
   if (sql.includes('artwork_identity_recovery_qualifications')) {
-    const id = String(bindings[0]);
-    if (id === 'kp-missing') return [];
-    return [{
-      id: `iq-${id}`, result: 'passed', copied_artifact: 1, schema_version: '1',
+    const qualifications = keepers.filter(({ id }) => id !== 'kp-missing').map(({ id }) => ({
+      id: `iq-${id}`, keeper_piece_id: id, result: 'passed', copied_artifact: 1, schema_version: '1',
       build_version: id === 'kp-stale' ? 'old-build' : 'registry-recovery-build-v1',
       key_version: 1, verifier_version: 'copied-identity-v1',
       backup_reference: `identity/${id}.json`, backup_sha256: 'a'.repeat(64),
       qualified_at: '2026-08-10T00:00:00.000Z',
-    }];
+    }));
+    if (sql.includes('ROW_NUMBER')) return qualifications;
+    return qualifications.filter(({ keeper_piece_id }) => keeper_piece_id === String(bindings[0]));
   }
   if (sql.includes('registry_recovery_qualifications')) return [];
   if (sql.includes('artist_verified_sale_items')) return [{
@@ -64,6 +64,9 @@ function rows(sql: string, bindings: unknown[]): Row[] {
   if (sql.includes('viewings')) return [
     { id: 11, public_token: 'draft-token', status: 'draft', recipient_name: 'Sofia', invoice_token: null, updated_at: 1786406400, requested_at: null },
     { id: 12, public_token: 'request-token', status: 'requested', recipient_name: 'Ilan', invoice_token: 'linked-draft-invoice-token', updated_at: 1786406400, requested_at: 1786406400 },
+    { id: 13, public_token: 'duplicate-request-token', status: 'requested', recipient_name: 'Noah', invoice_token: 'open-token', updated_at: 1786406400, requested_at: 1786406400 },
+    { id: 14, public_token: 'paid-request-token', status: 'requested', recipient_name: 'Mira', invoice_token: 'paid-token', updated_at: 1786406400, requested_at: 1786406400 },
+    { id: 15, public_token: 'same-draft-request-token', status: 'requested', recipient_name: 'Ilan', invoice_token: 'linked-draft-invoice-token', updated_at: 1786406400, requested_at: 1786406400 },
   ];
   if (sql.includes('artwork_invitations')) return [
     { id: 'iv-ready', keeper_piece_id: 'kp-ready', created_at: '2026-08-10T00:00:00.000Z', expires_at: '2099-08-20T00:00:00.000Z', revoked_at: null, redeemed_at: null },
@@ -73,12 +76,17 @@ function rows(sql: string, bindings: unknown[]): Row[] {
     id: 'acq-legacy', keeper_piece_id: 'kp-legacy', acquisition_type: 'sale',
     acquired_at: '2025-06-01', updated_at: '2026-08-01T00:00:00.000Z', piece_id: 'UL-105',
   }];
-  if (sql.includes('artist_reconnection_cases')) return [];
+  if (sql.includes('artist_reconnection_cases')) return [{
+    id: 'case-one', recipient_name: 'Private Collector', created_at: '2025-01-01T00:00:00.000Z',
+    updated_at: '2025-01-01T00:00:00.000Z', effective_status: 'open',
+    last_touched_at: '2026-08-10T00:00:00.000Z',
+  }];
   return [];
 }
 
-function database(fail = '') {
+function database(fail = '', seen: string[] = []) {
   return { prepare(sql: string) {
+    seen.push(sql);
     if (fail && sql.includes(fail)) throw new Error(`no such table: ${fail}`);
     let bindings: unknown[] = [];
     return {
@@ -91,17 +99,18 @@ function database(fail = '') {
 
 describe('admin work queue', () => {
   it('returns exact item-level actions for every supported actionable state', async () => {
-    const result = await readAdminWorkQueue({ DB: database() }, { now: NOW });
+    const seen: string[] = [];
+    const result = await readAdminWorkQueue({ DB: database('', seen) }, { now: NOW });
     const states = (domain: string) => result.queue.items
       .filter((item) => item.domain === domain).map((item) => item.state).sort();
 
     assert.equal(result.queue.complete, true);
     assert.deepEqual(states('recovery'), ['missing', 'stale']);
     assert.deepEqual(states('sale_artwork'), ['ready_for_registration']);
-    assert.deepEqual(states('invoice'), ['open', 'overdue', 'partial', 'sale_verification_needed']);
+    assert.deepEqual(states('invoice'), ['open', 'overdue', 'partial']);
     assert.deepEqual(states('viewing'), ['draft', 'requested_with_invoice']);
-    assert.deepEqual(states('invitation'), ['expired', 'ready', 'unresolved']);
-    assert.deepEqual(states('legacy_sale'), ['awaiting_verification']);
+    assert.deepEqual(states('invitation'), ['expired', 'ready']);
+    assert.deepEqual(states('legacy_sale'), []);
     for (const item of result.queue.items) {
       assert.deepEqual(Object.keys(item).sort(), ['actionLabel', 'domain', 'href', 'signal', 'state', 'title']);
       assert.ok(item.title && item.signal && item.actionLabel);
@@ -112,17 +121,28 @@ describe('admin work queue', () => {
     assert.equal(result.recentCollectors.length <= 5, true);
     assert.equal(result.queue.items.find((item) => item.domain === 'sale_artwork')?.href,
       '/admin/registrations?artworkId=UL-106&artistArtworkRecordId=record-identified');
-    assert.equal(result.queue.items.find((item) => item.domain === 'legacy_sale')?.href,
-      '/admin/collector-sales?source=legacy_acquisition&acquisitionId=acq-legacy&artworkId=UL-105&keeperPieceId=kp-legacy');
+    assert.equal(result.queue.items.some((item) => item.href.includes('invoiceId=1')), false);
+    assert.doesNotMatch(JSON.stringify(result.queue), /sale verification|verify sale/i);
+    assert.equal(result.queue.items.some((item) => item.href.includes('keeperPieceId=kp-unresolved')), false);
+    assert.equal(seen.filter((sql) => sql.includes('artwork_acquisitions')).length, 0,
+      'legacy acquisition alerts are deferred until an exact completion relation exists');
+    assert.equal(seen.filter((sql) => sql.includes('artwork_identity_recovery_qualifications')).length, 1);
+    assert.equal(seen.filter((sql) => sql.includes('registry_recovery_qualifications')).length, 1);
     assert.equal(result.queue.items.find((item) => item.state === 'open')?.href,
       '/admin/invoices?invoiceId=2');
     assert.equal(result.queue.items.find((item) => item.state === 'draft')?.href,
       '/admin/viewings?viewingId=11');
     assert.equal(result.queue.items.find((item) => item.state === 'requested_with_invoice')?.href,
       '/admin/invoices?invoiceId=5');
+    assert.equal(result.queue.items.filter((item) => item.href === '/admin/invoices?invoiceId=2').length, 1,
+      'one linked request and invoice must project as one canonical task');
+    assert.deepEqual(result.recentCollectors, [{
+      title: 'Collector reconnection', signal: 'open · 1 day ago',
+      href: '/admin/collector-sales?reconnectionCaseId=case-one',
+    }]);
     assert.doesNotMatch(
       JSON.stringify(result),
-      /collector@example\.com|paid-token|request-token|\bMira\b|\bNoah\b/,
+      /collector@example\.com|paid-token|request-token|Private Collector|\bMira\b|\bNoah\b/,
     );
     assert.deepEqual(await readAdminWorkQueue({ DB: database() }, { now: NOW }), result);
   });

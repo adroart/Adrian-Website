@@ -79,11 +79,19 @@ describe('admin studio shell', () => {
   });
 
   it('connects stable creation links and visible workflow stages', async () => {
-    const { adminMode } = await import('../components/admin/adminMode.ts');
+    const { adminMode, exactAdminPageSelection } = await import('../components/admin/adminMode.ts');
     const { poetryCreatePath } = await import('../components/AdminFileUpload.tsx');
     assert.equal(adminMode(new URLSearchParams('mode=create')), 'create');
     assert.equal(adminMode(new URLSearchParams('mode=issue')), 'issue');
     assert.equal(adminMode(new URLSearchParams('mode=unknown')), null);
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams(), 'invoiceId'), { kind: 'list' });
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('mode=create'), 'invoiceId'), { kind: 'create' });
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('invoiceId=17'), 'invoiceId'), { kind: 'exact', id: 17 });
+    for (const query of [
+      'mode=create&invoiceId=17', 'unexpected=1', 'invoiceId=17&invoiceId=18',
+      'invoiceId=017', 'invoiceId=%2017', 'mode=create&mode=create', 'mode=issue',
+    ]) assert.deepEqual(exactAdminPageSelection(new URLSearchParams(query), 'invoiceId'), { kind: 'invalid' }, query);
+    assert.deepEqual(exactAdminPageSelection(new URLSearchParams('viewingId=9'), 'viewingId'), { kind: 'exact', id: 9 });
     assert.equal(
       poetryCreatePath('https://files.example/audio.mp3'),
       '/admin/poetry?mode=create&audio=https%3A%2F%2Ffiles.example%2Faudio.mp3',

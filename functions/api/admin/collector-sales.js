@@ -254,6 +254,14 @@ export function requireZeroSearchParams(url) {
 
 function readFilters(url) {
   const params = new URL(url).searchParams;
+  const reconnectionCaseIds = params.getAll('reconnectionCaseId');
+  if (reconnectionCaseIds.length > 0) {
+    if (params.size !== 1 || reconnectionCaseIds.length !== 1
+      || !validPrivateId(reconnectionCaseIds[0])) {
+      throw Object.assign(new Error(), { code: 'invalid_request' });
+    }
+    return { reconnectionCaseId: reconnectionCaseIds[0] };
+  }
   const allowed = new Set(['caseStatus', 'search', 'identificationStatus', 'limit', 'offset']);
   if ([...params.keys()].some((key) => !allowed.has(key) || params.getAll(key).length !== 1)) {
     throw Object.assign(new Error(), { code: 'invalid_request' });

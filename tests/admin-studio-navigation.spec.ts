@@ -71,6 +71,7 @@ test('admin work queue shows exact actions and never reports clear work on an in
     body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
   }));
   let complete = true;
+  const collectorQueries: string[] = [];
   await page.route('/api/admin/overview', route => route.fulfill({
     status: complete ? 200 : 503,
     contentType: 'application/json',
@@ -84,9 +85,30 @@ test('admin work queue shows exact actions and never reports clear work on an in
         title: 'Artwork UL-100', signal: 'Today',
         href: '/admin/artworks/UL-100?instance=keeper-100',
       }],
-      recentCollectors: [],
+      recentCollectors: [{
+        title: 'Collector reconnection', signal: 'open · Today',
+        href: '/admin/collector-sales?reconnectionCaseId=case-older',
+      }],
     } : { ok: false, error: 'overview_incomplete' }),
   }));
+  await page.route('**/api/admin/collector-sales**', route => {
+    const params = new URL(route.request().url()).searchParams;
+    collectorQueries.push(params.toString());
+    const exact = params.get('reconnectionCaseId');
+    return route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({
+        ok: true, sales: [], reconnectionCases: exact ? [{
+          reconnectionCaseId: exact, recipientEmail: 'private@example.com',
+          recipientName: exact === 'case-older' ? 'Older collector' : 'Newer collector',
+          privateContext: null, status: 'open',
+          createdAt: '2025-01-01T00:00:00.000Z',
+        }] : [],
+        pagination: { limit: 25, offset: 0,
+          sales: { hasMore: false, nextOffset: null },
+          reconnectionCases: { hasMore: false, nextOffset: null } },
+      }),
+    });
+  });
 
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Work that needs you' })).toBeVisible();
@@ -100,13 +122,26 @@ test('admin work queue shows exact actions and never reports clear work on an in
   await expect(page.getByText('Nothing is waiting')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 
+  await page.getByRole('link', { name: /Collector reconnection.*open.*Today/i }).click();
+  await expect(page).toHaveURL(/reconnectionCaseId=case-older/);
+  await expect(page.getByRole('heading', { name: 'Reconnection with Older collector' })).toBeVisible();
+  expect(collectorQueries).toContain('reconnectionCaseId=case-older');
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/collector-sales?reconnectionCaseId=case-newer');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('heading', { name: 'Reconnection with Newer collector' })).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+
   complete = false;
-  await page.reload();
+  await page.goto('/admin');
   await expect(page.getByText(/complete work queue could not be checked/i)).toBeVisible();
   await expect(page.getByText('Nothing is waiting')).toHaveCount(0);
 });
 
 test('invoice and viewing work links select the exact record on fresh load and URL change', async ({ page }) => {
+  const invoiceExactRequests: string[] = [];
+  const viewingExactRequests: string[] = [];
   await page.route('/api/admin/verify', route => route.fulfill({
     status: 200, contentType: 'application/json',
     body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
@@ -125,7 +160,9 @@ test('invoice and viewing work links select the exact record on fresh load and U
     paymentOptions: [], notes: '', amountPaidCents: 0,
   });
   await page.route('**/api/admin/invoices?**', route => {
-    const selected = Number(new URL(route.request().url()).searchParams.get('invoiceId'));
+    const params = new URL(route.request().url()).searchParams;
+    if (params.has('invoiceId')) invoiceExactRequests.push(params.toString());
+    const selected = Number(params.get('invoiceId'));
     const invoices = selected ? [invoice(selected, selected === 99 ? 'Noah' : 'Aya')] : [invoice(2, 'Recent')];
     return route.fulfill({
       status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, invoices }),
@@ -138,7 +175,9 @@ test('invoice and viewing work links select the exact record on fresh load and U
     invoiceToken: null, createdAt: 1,
   });
   await page.route('**/api/admin/viewings**', route => {
-    const selected = Number(new URL(route.request().url()).searchParams.get('viewingId'));
+    const params = new URL(route.request().url()).searchParams;
+    if (params.has('viewingId')) viewingExactRequests.push(params.toString());
+    const selected = Number(params.get('viewingId'));
     const viewings = selected === 999 ? []
       : selected ? [viewing(selected, selected === 99 ? 'Sofia' : 'Ilan')]
         : [viewing(11, 'Recent')];
@@ -154,6 +193,14 @@ test('invoice and viewing work links select the exact record on fresh load and U
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByLabel('Client name')).toHaveValue('Aya');
+  const invoiceRequestsBeforeInvalid = invoiceExactRequests.length;
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/invoices?mode=create&invoiceId=0100');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('alert')).toContainText('invoice link is not valid');
+  await expect(page.getByLabel('Client name')).toHaveValue('');
+  expect(invoiceExactRequests).toHaveLength(invoiceRequestsBeforeInvalid);
 
   await page.goto('/admin/viewings?viewingId=99');
   await expect(page.getByRole('heading', { name: 'Editing · Sofia' })).toBeVisible();
@@ -162,6 +209,23 @@ test('invoice and viewing work links select the exact record on fresh load and U
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByRole('heading', { name: 'Editing · Ilan' })).toBeVisible();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/viewings?mode=create');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('heading', { name: 'Build a Viewing' })).toBeVisible();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/viewings?viewingId=100');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('heading', { name: 'Editing · Ilan' })).toBeVisible();
+  const viewingRequestsBeforeInvalid = viewingExactRequests.length;
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/viewings?mode=create&viewingId=0100');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('alert')).toContainText('viewing link is not valid');
+  expect(viewingExactRequests).toHaveLength(viewingRequestsBeforeInvalid);
   await page.evaluate(() => {
     history.pushState({}, '', '/admin/viewings?viewingId=999');
     window.dispatchEvent(new PopStateEvent('popstate'));

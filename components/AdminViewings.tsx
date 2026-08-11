@@ -19,7 +19,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AdminAlert, AdminPage } from './admin/AdminPage';
-import { adminMode } from './admin/adminMode';
+import { exactAdminPageSelection } from './admin/adminMode';
 import Viewing from './viewing/Viewing';
 import type { ViewingData, ViewingPiece } from './viewing/viewingTypes';
 import {
@@ -137,11 +137,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const AdminViewings: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const viewingIdValues = searchParams.getAll('viewingId');
-  const hasViewingSelector = viewingIdValues.length > 0;
-  const linkedViewingId = viewingIdValues.length === 1 && /^\d+$/.test(viewingIdValues[0])
-    && Number.isSafeInteger(Number(viewingIdValues[0])) && Number(viewingIdValues[0]) > 0
-    ? Number(viewingIdValues[0]) : null;
+  const pageSelection = exactAdminPageSelection(searchParams, 'viewingId');
+  const linkedViewingId = pageSelection.kind === 'exact' ? pageSelection.id : null;
   const selectedFromUrlRef = useRef<number | null>(null);
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [rows, setRows] = useState<ViewingRow[]>([]);
@@ -257,8 +254,8 @@ const AdminViewings: React.FC = () => {
   };
 
   useEffect(() => {
-    if (adminMode(searchParams) === 'create') openNew();
-  }, [searchParams]);
+    if (pageSelection.kind === 'create') openNew();
+  }, [pageSelection.kind]);
 
   const openExisting = (row: ViewingRow) => {
     resetEditor();
@@ -294,11 +291,14 @@ const AdminViewings: React.FC = () => {
       }
       return;
     }
-    if (hasViewingSelector) {
+    if (pageSelection.kind === 'invalid') {
       selectedFromUrlRef.current = null;
       resetEditor();
       setView('list');
       setSelectionError('The viewing link is not valid.');
+    } else if (pageSelection.kind === 'create') {
+      selectedFromUrlRef.current = null;
+      setSelectionError('');
     } else {
       if (selectedFromUrlRef.current !== null) {
         selectedFromUrlRef.current = null;
@@ -307,7 +307,7 @@ const AdminViewings: React.FC = () => {
       }
       setSelectionError('');
     }
-  }, [exactViewingLoading, exactViewingResult, hasViewingSelector, linkedViewingId]);
+  }, [exactViewingLoading, exactViewingResult, linkedViewingId, pageSelection.kind]);
 
   useEffect(() => {
     if (!selectionError || view !== 'list') return;

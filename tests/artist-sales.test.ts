@@ -3738,12 +3738,14 @@ describe('artist verified sale records', () => {
           idempotencyKey: `workspace-sale-${index}`,
         }));
       }
+      let exactOlderCaseId = '';
       for (let index = 0; index < 55; index += 1) {
-        await createReconnectionCase(fixture.env, {
+        const created = await createReconnectionCase(fixture.env, {
           recipientEmail: `collector-${index}@example.com`, recipientName: null,
           privateContext: null, idempotencyKey: `workspace-case-${index}`,
           administrator, createdAt: now,
         });
+        if (index === 0) exactOlderCaseId = created.reconnectionCaseId;
       }
 
       queryCount = 0;
@@ -3765,6 +3767,11 @@ describe('artist verified sale records', () => {
         ...secondPage.sales.map((sale: any) => sale.saleId),
       ]).size, firstPage.sales.length + secondPage.sales.length);
       assert.ok(queryCount <= 3, `second workspace page used ${queryCount} queries`);
+      const exactOlder = await listArtistSaleWorkspace(fixture.env, {
+        reconnectionCaseId: exactOlderCaseId,
+      });
+      assert.deepEqual(exactOlder.reconnectionCases.map((item: any) => item.reconnectionCaseId),
+        [exactOlderCaseId]);
       await assert.rejects(listArtistSaleWorkspace(fixture.env, { limit: 51, offset: 0 }),
         (error: Error & { code?: string }) => error.code === 'invalid_request');
     } finally {

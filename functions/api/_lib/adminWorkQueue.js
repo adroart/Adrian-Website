@@ -1,10 +1,10 @@
 import {
   identityRecoveryDependenciesForRow,
   identityRecoveryQualificationStatus,
-  loadLatestPassedIdentityQualification,
-  loadLatestPassedPieceQualification,
   recoveryDependenciesForRow,
   recoveryQualificationStatus,
+  storedIdentityQualificationFromRow,
+  storedQualificationFromRow,
 } from './recoveryQualification.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -64,11 +64,59 @@ function itemOrder(left, right) {
     || left.href.localeCompare(right.href);
 }
 
+function uniqueExactTasks(items) {
+  const hrefs = new Set();
+  return items.filter((value) => {
+    if (hrefs.has(value.href)) return false;
+    hrefs.add(value.href);
+    return true;
+  });
+}
+
 async function readRecoveryItems(env, keepers, now) {
   const items = [];
   const current = new Set();
+  const [identityRows, pieceRows] = await Promise.all([
+    all(env, `WITH ranked AS (
+      SELECT qualification.keeper_piece_id, qualification.id, qualification.result,
+        qualification.copied_artifact, qualification.schema_version,
+        qualification.build_version, qualification.key_version,
+        qualification.verifier_version, qualification.backup_reference,
+        qualification.backup_sha256, qualification.qualified_at,
+        ROW_NUMBER() OVER (
+          PARTITION BY qualification.keeper_piece_id
+          ORDER BY qualification.qualified_at DESC, qualification.id DESC
+        ) AS qualification_rank
+      FROM artwork_identity_recovery_qualifications qualification
+      JOIN keeper_pieces keeper ON keeper.id = qualification.keeper_piece_id
+      WHERE keeper.registration_status = 'registered'
+        AND qualification.result = 'passed' AND qualification.copied_artifact = 1
+    ) SELECT * FROM ranked WHERE qualification_rank = 1 ORDER BY keeper_piece_id`),
+    all(env, `WITH ranked AS (
+      SELECT qualification.keeper_piece_id, qualification.id, qualification.result,
+        qualification.copied_artifacts, qualification.schema_version,
+        qualification.build_version, qualification.key_version,
+        qualification.generator_version, qualification.verifier_version,
+        qualification.backup_reference, qualification.backup_sha256,
+        qualification.qualified_at,
+        ROW_NUMBER() OVER (
+          PARTITION BY qualification.keeper_piece_id
+          ORDER BY qualification.qualified_at DESC, qualification.id DESC
+        ) AS qualification_rank
+      FROM registry_recovery_qualifications qualification
+      JOIN keeper_pieces keeper ON keeper.id = qualification.keeper_piece_id
+      WHERE keeper.registration_status = 'registered' AND qualification.scope = 'piece'
+        AND qualification.result = 'passed' AND qualification.copied_artifacts = 1
+    ) SELECT * FROM ranked WHERE qualification_rank = 1 ORDER BY keeper_piece_id`),
+  ]);
+  const identityByKeeper = new Map(identityRows.map((row) => [
+    row.keeper_piece_id, storedIdentityQualificationFromRow(row),
+  ]));
+  const pieceByKeeper = new Map(pieceRows.map((row) => [
+    row.keeper_piece_id, storedQualificationFromRow(row),
+  ]));
   for (const keeper of keepers) {
-    const identityQualification = await loadLatestPassedIdentityQualification(env.DB, keeper.id);
+    const identityQualification = identityByKeeper.get(keeper.id) ?? null;
     const identity = identityRecoveryQualificationStatus(
       identityQualification,
       identityRecoveryDependenciesForRow(keeper, env),
@@ -85,7 +133,7 @@ async function readRecoveryItems(env, keepers, now) {
     }
 
     if (['generated', 'active'].includes(keeper.plate_status)) {
-      const plateQualification = await loadLatestPassedPieceQualification(env.DB, keeper.id);
+      const plateQualification = pieceByKeeper.get(keeper.id) ?? null;
       const plate = recoveryQualificationStatus(
         plateQualification,
         recoveryDependenciesForRow(keeper, env),
@@ -121,7 +169,7 @@ export async function readAdminWorkQueue(env, options = {}) {
 
     const { items: recoveryItems, current: recoveryCurrent } = await readRecoveryItems(env, keepers, now);
 
-    const [saleItems, artworkRecords, verifiedSales, invoices, viewings, invitations, legacySales, reconnections]
+    const [saleItems, artworkRecords, verifiedSales, invoices, viewings, invitations, reconnections]
       = await Promise.all([
         all(env, `SELECT id, sale_id, artwork_record_id, created_at
           FROM artist_verified_sale_items ORDER BY created_at DESC, id DESC`),
@@ -142,21 +190,27 @@ export async function readAdminWorkQueue(env, options = {}) {
           FROM artwork_invitations invitation
           LEFT JOIN artwork_invitation_redemptions redemption ON redemption.invitation_id = invitation.id
           ORDER BY invitation.created_at DESC, invitation.id DESC`),
-        all(env, `SELECT acquisition.id, acquisition.keeper_piece_id, acquisition.acquisition_type,
-          acquisition.acquired_at, acquisition.updated_at
-          FROM artwork_acquisitions acquisition
-          WHERE acquisition.acquisition_type = 'sale'
-          ORDER BY acquisition.updated_at DESC, acquisition.id DESC`),
         all(env, `WITH ranked_status AS (
           SELECT reconnection_case_id, private_note,
-            ROW_NUMBER() OVER (PARTITION BY reconnection_case_id ORDER BY created_at DESC, id DESC) AS rank
+            ROW_NUMBER() OVER (
+              PARTITION BY reconnection_case_id
+              ORDER BY CASE private_note
+                WHEN 'closed' THEN 3 WHEN 'resolved' THEN 2
+                WHEN 'partially_resolved' THEN 1 ELSE 0 END DESC,
+                created_at DESC, id DESC
+            ) AS rank
           FROM artist_reconnection_events WHERE event_type = 'status_changed'
+        ), latest_touch AS (
+          SELECT reconnection_case_id, MAX(created_at) AS last_touched_at
+          FROM artist_reconnection_events GROUP BY reconnection_case_id
         )
-        SELECT reconnect.id, reconnect.recipient_name, reconnect.created_at, reconnect.updated_at,
-          coalesce(latest.private_note, reconnect.status) AS effective_status
+        SELECT reconnect.id, reconnect.created_at,
+          coalesce(latest.private_note, reconnect.status) AS effective_status,
+          coalesce(touch.last_touched_at, reconnect.created_at) AS last_touched_at
         FROM artist_reconnection_cases reconnect
         LEFT JOIN ranked_status latest ON latest.reconnection_case_id = reconnect.id AND latest.rank = 1
-        ORDER BY reconnect.updated_at DESC, reconnect.id DESC LIMIT 20`),
+        LEFT JOIN latest_touch touch ON touch.reconnection_case_id = reconnect.id
+        ORDER BY last_touched_at DESC, reconnect.id DESC LIMIT 20`),
       ]);
 
     const queue = [...recoveryItems];
@@ -182,17 +236,21 @@ export async function readAdminWorkQueue(env, options = {}) {
     }
 
     const invoiceByToken = new Map(invoices.map((row) => [row.public_token, row]));
+    const actionableInvoiceIds = new Set();
+    const completedInvoiceIds = new Set();
     for (const invoice of invoices) {
       const total = Number(invoice.total_cents) || 0;
       const paid = Number(invoice.amount_paid_cents) || 0;
       let state = null;
       let actionLabel = 'Open invoice';
       let priority = 4;
+      // A paid invoice has no exact, clearable relation to a verified sale yet.
+      // Task 7 may add that relation; until then it must not claim verification work.
       if (invoice.status === 'paid' || (total > 0 && paid >= total)) {
-        state = 'sale_verification_needed';
-        actionLabel = 'Verify sale from paid invoice';
-        priority = 2;
-      } else if (invoice.status === 'overdue') state = 'overdue';
+        completedInvoiceIds.add(invoice.id);
+        continue;
+      }
+      if (invoice.status === 'overdue') state = 'overdue';
       else if (paid > 0 && paid < total) state = 'partial';
       else if (invoice.status === 'sent') state = 'open';
       if (!state) continue;
@@ -202,6 +260,7 @@ export async function readAdminWorkQueue(env, options = {}) {
         actionLabel, exactPath('/admin/invoices', { invoiceId: invoice.id }),
         invoice.paid_at ?? invoice.updated_at, priority,
       ));
+      actionableInvoiceIds.add(invoice.id);
     }
 
     for (const viewing of viewings) {
@@ -213,6 +272,8 @@ export async function readAdminWorkQueue(env, options = {}) {
         ));
       } else if (viewing.status === 'requested' && invoiceByToken.has(viewing.invoice_token)) {
         const linkedInvoice = invoiceByToken.get(viewing.invoice_token);
+        if (completedInvoiceIds.has(linkedInvoice.id)
+          || actionableInvoiceIds.has(linkedInvoice.id)) continue;
         queue.push(item(
           'viewing', `Viewing ${viewing.id}`, 'requested_with_invoice',
           ageSignal(viewing.requested_at ?? viewing.updated_at, now), 'Open linked invoice',
@@ -226,38 +287,26 @@ export async function readAdminWorkQueue(env, options = {}) {
     for (const invitation of invitations) if (!latestInvitation.has(invitation.keeper_piece_id)) {
       latestInvitation.set(invitation.keeper_piece_id, invitation);
     }
-    const keeperById = new Map(keepers.map((row) => [row.id, row]));
-    const legacyKeeperIds = new Set(legacySales.map((row) => row.keeper_piece_id));
     for (const keeper of keepers) {
-      if (!recoveryCurrent.has(keeper.id) || legacyKeeperIds.has(keeper.id)
+      if (!recoveryCurrent.has(keeper.id)
         || keeper.keeper_user_id || keeper.claimed_at || keeper.released_at) continue;
       const invitation = latestInvitation.get(keeper.id);
+      if (!invitation) continue;
       if (invitation?.redeemed_at || invitation?.revoked_at) continue;
       const expired = invitation && instant(invitation.expires_at) <= instant(now);
-      const state = invitation ? (expired ? 'expired' : 'ready') : 'unresolved';
+      const state = expired ? 'expired' : 'ready';
       queue.push(item(
         'invitation', `Artwork ${keeper.piece_id}`, state,
-        invitation ? (expired ? `Expired ${ageSignal(invitation.expires_at, now)}` : ageSignal(invitation.created_at, now))
-          : 'No invitation prepared',
-        state === 'expired' ? 'Replace invitation' : state === 'ready' ? 'Open invitation' : 'Create invitation',
+        expired ? `Expired ${ageSignal(invitation.expires_at, now)}` : ageSignal(invitation.created_at, now),
+        state === 'expired' ? 'Replace invitation' : 'Open invitation',
         exactPath('/admin/invitations', { keeperPieceId: keeper.id }),
-        invitation?.created_at ?? keeper.registered_at, 5,
+        invitation.created_at, 5,
       ));
     }
 
-    for (const acquisition of legacySales) {
-      const artworkId = acquisition.piece_id ?? keeperById.get(acquisition.keeper_piece_id)?.piece_id;
-      if (!artworkId) throw new Error('legacy_sale_artwork_missing');
-      queue.push(item(
-        'legacy_sale', `Artwork ${artworkId}`, 'awaiting_verification',
-        ageSignal(acquisition.updated_at ?? acquisition.acquired_at, now), 'Verify legacy sale',
-        exactPath('/admin/collector-sales', {
-          source: 'legacy_acquisition', acquisitionId: acquisition.id,
-          artworkId, keeperPieceId: acquisition.keeper_piece_id,
-        }),
-        acquisition.updated_at ?? acquisition.acquired_at, 6,
-      ));
-    }
+    // Legacy acquisition verification is intentionally deferred until Task 7 can persist
+    // an exact acquisition-to-verified-sale relation. Keeper-based inference can never
+    // prove completion and would leave permanent or prematurely cleared alerts.
 
     const recentArtworks = keepers.slice(0, RECENT_LIMIT).map((keeper) => ({
       title: `Artwork ${keeper.piece_id}`,
@@ -265,13 +314,16 @@ export async function readAdminWorkQueue(env, options = {}) {
       href: exactPath(`/admin/artworks/${encodeURIComponent(keeper.piece_id)}`, { instance: keeper.id }),
     }));
     const recentCollectors = reconnections.slice(0, RECENT_LIMIT).map((record) => ({
-      title: record.recipient_name ? `Reconnection · ${record.recipient_name}` : 'Collector reconnection',
-      signal: `${record.effective_status || 'open'} · ${ageSignal(record.updated_at ?? record.created_at, now)}`,
-      href: '/admin/collector-sales',
+      title: 'Collector reconnection',
+      signal: `${record.effective_status || 'open'} · ${ageSignal(record.last_touched_at, now)}`,
+      href: exactPath('/admin/collector-sales', { reconnectionCaseId: record.id }),
     }));
 
     return {
-      queue: { complete: true, items: queue.sort(itemOrder).slice(0, QUEUE_LIMIT).map(publicItem) },
+      queue: {
+        complete: true,
+        items: uniqueExactTasks(queue.sort(itemOrder)).slice(0, QUEUE_LIMIT).map(publicItem),
+      },
       recentArtworks,
       recentCollectors,
     };

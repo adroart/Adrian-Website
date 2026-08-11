@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AdminPage } from './admin/AdminPage';
-import { adminMode } from './admin/adminMode';
+import { AdminAlert, AdminPage } from './admin/AdminPage';
+import { exactAdminPageSelection } from './admin/adminMode';
 import type {
   Invoice,
   InvoiceDraft,
@@ -115,12 +115,9 @@ function invoiceToDraft(invoice: Invoice): InvoiceDraft {
 
 const AdminInvoices: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const creatingFromShortcut = adminMode(searchParams) === 'create';
-  const invoiceIdValues = searchParams.getAll('invoiceId');
-  const hasInvoiceSelector = invoiceIdValues.length > 0;
-  const linkedInvoiceId = invoiceIdValues.length === 1 && /^\d+$/.test(invoiceIdValues[0])
-    && Number.isSafeInteger(Number(invoiceIdValues[0])) && Number(invoiceIdValues[0]) > 0
-    ? Number(invoiceIdValues[0]) : null;
+  const pageSelection = exactAdminPageSelection(searchParams, 'invoiceId');
+  const creatingFromShortcut = pageSelection.kind === 'create';
+  const linkedInvoiceId = pageSelection.kind === 'exact' ? pageSelection.id : null;
   const selectedFromUrlRef = useRef<number | null>(null);
   const [presets, setPresets] = useState<PaymentPreset[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -421,7 +418,7 @@ const AdminInvoices: React.FC = () => {
       }
       return;
     }
-    if (hasInvoiceSelector) {
+    if (pageSelection.kind === 'invalid') {
       selectedFromUrlRef.current = null;
       resetForm();
       setMessage({ type: 'err', text: 'The invoice link is not valid.' });
@@ -429,7 +426,7 @@ const AdminInvoices: React.FC = () => {
       selectedFromUrlRef.current = null;
       resetForm();
     }
-  }, [exactInvoiceLoading, exactInvoiceResult, hasInvoiceSelector, linkedInvoiceId, loading]);
+  }, [exactInvoiceLoading, exactInvoiceResult, linkedInvoiceId, loading, pageSelection.kind]);
 
   const markPaid = async (invoice: Invoice) => {
     const paidSoFar = invoice.amountPaidCents || 0;
@@ -578,15 +575,10 @@ const AdminInvoices: React.FC = () => {
             </div>
           </div>
 
-          {message && (
-            <div className={`mb-6 border px-4 py-3 font-sans text-sm ${
-              message.type === 'ok'
-                ? 'border-bronze-300 bg-bronze-50 text-bronze-900 dark:text-bronze-600'
-                : 'border-red-300 bg-red-50 text-red-800'
-            }`}>
-              {message.text}
-            </div>
-          )}
+          {message && <div className="mb-6"><AdminAlert
+            tone={message.type === 'ok' ? 'success' : 'error'}
+            live={message.type === 'err'}
+          >{message.text}</AdminAlert></div>}
 
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-8">

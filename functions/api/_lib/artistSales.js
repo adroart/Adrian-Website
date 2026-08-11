@@ -1243,8 +1243,11 @@ export async function getArtistSaleDetail(env, saleIdValue) {
 
 export async function listArtistSaleWorkspace(env, rawFilters = {}) {
   if (!env?.DB || !exactKeys(rawFilters, [], [
-    'caseStatus', 'search', 'identificationStatus', 'limit', 'offset',
+    'caseStatus', 'search', 'identificationStatus', 'limit', 'offset', 'reconnectionCaseId',
   ])) {
+    throw codedError('invalid_request');
+  }
+  if (rawFilters.reconnectionCaseId !== undefined && Object.keys(rawFilters).length !== 1) {
     throw codedError('invalid_request');
   }
   const limit = rawFilters.limit === undefined ? 25 : rawFilters.limit;
@@ -1259,14 +1262,18 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
       : normalizedText(rawFilters.search, LIMITS.search).toLowerCase(),
     identificationStatus: rawFilters.identificationStatus === undefined ? null
       : normalizedText(rawFilters.identificationStatus, 30),
+    reconnectionCaseId: rawFilters.reconnectionCaseId === undefined ? null
+      : normalizedId(rawFilters.reconnectionCaseId),
   };
+  if (filters.reconnectionCaseId !== null
+    && filters.reconnectionCaseId !== rawFilters.reconnectionCaseId) throw codedError('invalid_request');
   if (filters.caseStatus && !CASE_STATUSES.includes(filters.caseStatus)) throw codedError('invalid_request');
   if (filters.identificationStatus && !IDENTIFICATION_STATUSES.has(filters.identificationStatus)) {
     throw codedError('invalid_request');
   }
   const searchPattern = filters.search ? `%${filters.search}%` : null;
   const pageSize = limit + 1;
-  const saleRows = await all(env, `
+  const saleRows = filters.reconnectionCaseId ? [] : await all(env, `
     WITH ranked_events AS (
       SELECT sale_id, sequence, after_json,
              ROW_NUMBER() OVER (
@@ -1360,9 +1367,10 @@ export async function listArtistSaleWorkspace(env, rawFilters = {}) {
            || coalesce(reconnect.private_context, '')
          ) LIKE ?3
        )
+       AND (?4 IS NULL OR reconnect.id = ?4)
      ORDER BY reconnect.created_at DESC, reconnect.id DESC
-     LIMIT ?4 OFFSET ?5
-  `, filters.caseStatus, filters.search, searchPattern, pageSize, offset);
+     LIMIT ?5 OFFSET ?6
+  `, filters.caseStatus, filters.search, searchPattern, filters.reconnectionCaseId, pageSize, offset);
   const caseHasMore = caseRows.length > limit;
   const reconnectionCases = caseRows.slice(0, limit).map((row) => ({
       reconnectionCaseId: row.id, recipientEmail: row.recipient_email,

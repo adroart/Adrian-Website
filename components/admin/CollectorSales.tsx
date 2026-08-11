@@ -253,12 +253,16 @@ const CollectorSales: React.FC = () => {
     ? deepLinkParams.get('artworkId') : null;
   const legacyKeeperPieceId = deepLinkParams.getAll('keeperPieceId').length === 1
     ? deepLinkParams.get('keeperPieceId') : null;
+  const reconnectionCaseId = deepLinkParams.getAll('reconnectionCaseId').length === 1
+    ? deepLinkParams.get('reconnectionCaseId') : null;
   const hasExactLegacyTarget = legacySource === 'legacy_acquisition'
     && Boolean(legacyAcquisitionId && legacyArtworkId && legacyKeeperPieceId)
     && deepLinkKeys === 'acquisitionId\0artworkId\0keeperPieceId\0source';
   const hasRecordTarget = Boolean(deepLinkedArtworkRecordId)
     && (deepLinkKeys === 'artistArtworkRecordId'
       || deepLinkKeys === 'artistArtworkRecordId\0keeperPieceId');
+  const hasReconnectionTarget = Boolean(reconnectionCaseId && /^[A-Za-z0-9_-]{1,128}$/.test(reconnectionCaseId))
+    && deepLinkKeys === 'reconnectionCaseId';
   const [workspace, setWorkspace] = useState<ArtistSaleWorkspaceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -312,11 +316,14 @@ const CollectorSales: React.FC = () => {
   const activeRecordScope = selection ? recordScopeKey(selection) : null;
   const detailAttempt = selection ? detailAttempts[recordScopeKey(selection)] || null : null;
 
+  const workspacePath = hasReconnectionTarget
+    ? `/api/admin/collector-sales?reconnectionCaseId=${encodeURIComponent(reconnectionCaseId!)}`
+    : '/api/admin/collector-sales';
   const loadWorkspace = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setLoadError('');
     try {
-      const value = await jsonRequest('/api/admin/collector-sales', { signal });
+      const value = await jsonRequest(workspacePath, { signal });
       setWorkspace(parseArtistSaleWorkspaceResponse(value));
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -324,13 +331,33 @@ const CollectorSales: React.FC = () => {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, []);
+  }, [workspacePath]);
 
   useEffect(() => {
     const controller = new AbortController();
     void loadWorkspace(controller.signal);
     return () => controller.abort();
   }, [loadWorkspace]);
+
+  useEffect(() => {
+    if (!hasReconnectionTarget) return;
+    setSelection(null);
+    setDetail(null);
+    setDetailLoadError('');
+    setLegacyTarget(null);
+    setLegacyLinkCompletion(null);
+    setMode('records');
+    setActionError('');
+  }, [deepLinkQuery]);
+
+  useEffect(() => {
+    if (!hasReconnectionTarget || loading || !workspace) return;
+    const exactCase = workspace.reconnectionCases.find((item) => (
+      item.reconnectionCaseId === reconnectionCaseId
+    ));
+    if (exactCase) setSelection({ kind: 'reconnection', id: exactCase.reconnectionCaseId });
+    else setActionError('The linked reconnection record could not be opened.');
+  }, [hasReconnectionTarget, loading, reconnectionCaseId, workspace]);
 
   useEffect(() => {
     if (!hasRecordTarget) return;
