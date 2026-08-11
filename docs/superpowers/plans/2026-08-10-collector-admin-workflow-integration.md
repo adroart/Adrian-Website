@@ -298,6 +298,10 @@ The screen must remain useful for unresolved, identified, registered, invited, c
 
 ## Task 6: Replace dashboard counts with an item-level work queue
 
+**Authorized scope reconciliation, 2026-08-11:** Adrian authorized the truthful
+temporary boundary below. This records the accepted Task 6 behavior while its
+remaining reviews are still pending; it does not mark Task 6 complete.
+
 **Files:**
 
 - Create: `functions/api/_lib/adminWorkQueue.js`
@@ -312,12 +316,19 @@ Cover at least:
 
 - recovery proof missing or stale;
 - identified sale artwork ready for optional registration;
-- paid invoice waiting for sale verification;
 - draft viewing;
 - requested viewing with linked invoice;
 - open, partial, or overdue invoice;
-- invitation ready, expired, or unresolved;
-- legacy sale acquisition awaiting verification.
+- an existing invitation that is ready or expired.
+
+Invitation absence is not work by itself. Task 6 must not emit an unresolved
+invitation item for an unsold or retained piece with no invitation row.
+
+Paid-invoice sale-verification alerts and legacy-acquisition verification alerts
+are deliberately deferred to Task 7. The current schema has no exact, clearable
+source-to-verified-sale resolution for either workflow. Task 6 must not infer
+completion from a keeper identity or emit a permanent false alarm that cannot be
+cleared by its destination action.
 
 - [ ] **Step 2: Return action items, not category counts**
 
@@ -355,9 +366,16 @@ Test that “Nothing is waiting” cannot appear when any supported queue source
 - Modify: `functions/api/_lib/invoices.js`
 - Modify: `functions/api/admin/invoices.js`
 - Modify: `components/AdminInvoices.tsx`
+- Modify: `functions/api/_lib/adminWorkQueue.js`
+- Modify: `functions/api/_lib/artistSales.js`
+- Modify: `functions/api/admin/collector-sales.js`
+- Modify: `components/admin/CollectorSales.tsx`
 - Modify: `tests/invoice-utils.test.mjs`
 - Modify: `tests/invoice-ui.test.ts`
 - Modify: `tests/public-registry-ui.test.ts`
+- Modify: `tests/admin-work-queue.test.ts`
+- Modify: `tests/artist-sales.test.ts`
+- Modify: `tests/artist-sales-admin.test.ts`
 - Create: `tests/admin-workflow-context.test.ts`
 
 - [ ] **Step 1: Add a narrow context model**
@@ -379,6 +397,24 @@ type ArtifactSource = {
 
 Add valid JSON context columns to pricing quotes, viewings, and invoices. Add source kind and source ID to invoices. Keep every field optional for legacy records.
 
+Add one private source-resolution relation owned by the verified-sales domain:
+
+```ts
+type SaleSourceResolution = {
+  sourceKind: 'paid_invoice' | 'legacy_acquisition';
+  sourceId: string;
+  resolutionKind: 'verified_sale' | 'not_a_sale';
+  verifiedSaleId: string | null;
+  resolvedAt: string;
+};
+```
+
+The migration enforces one resolution per exact `(sourceKind, sourceId)`. A
+`verified_sale` resolution requires a valid `verifiedSaleId`; `not_a_sale`
+requires it to be null. This relation stores the exact invoice ID or acquisition
+ID. A shared `keeperPieceId` is never sufficient evidence that a source was
+reviewed or resolved.
+
 - [ ] **Step 2: Give viewing pieces canonical catalog IDs**
 
 Keep `ViewingPiece.id` for selection compatibility and add `artworkId`. Map Universal Language gate 1 to `UL-100`, gate 2 to `UL-101`, through gate 64 to `UL-163`. Store those IDs in the viewing’s persisted context.
@@ -399,9 +435,33 @@ Invoice normalization and serialization retain the context and source while prev
 
 A paid invoice with artwork context shows “Verify sale details.” It opens the existing verified-sales workspace with source context. Adrian confirms occurrence, buyer, exact artwork, and artwork-level price before any verified sale or price entry is appended.
 
+The protected verified-sales writer records the exact paid-invoice source
+resolution in the same successful workflow as the confirmed verified sale, or
+records an explicit `not_a_sale` review outcome. Legacy acquisition review does
+the same with the exact acquisition ID after Adrian confirms the facts. Neither
+path resolves by matching only `keeperPieceId`, artwork title, line-item text, or
+price. A paid-invoice `verified_sale` resolution commits only after every
+persisted invoice artwork context is represented by an exact verified-sale item;
+partial or ambiguous artwork matching does not clear the queue item.
+
+Activate queue items only when the source is reviewable and unresolved:
+
+- a paid invoice is eligible only when it is paid and has persisted artwork
+  context;
+- a legacy acquisition is eligible only when it is an existing legacy `sale`
+  acquisition with an exact acquisition ID;
+- the item clears only after the exact source-resolution row commits;
+- a failed, ambiguous, or mismatched write leaves the item active and retryable;
+- retries cannot create a second verified sale or a second source resolution.
+
 - [ ] **Step 7: Verify old and new records**
 
-Prove legacy rows with no context still open, multi-artwork viewings remain multi-artwork invoices, public responses contain no private context, and retries cannot duplicate links.
+Prove legacy rows with no context still open, multi-artwork viewings remain
+multi-artwork invoices, public responses contain no private context, and retries
+cannot duplicate links. Add focused migration, verified-sales, endpoint, and work
+queue tests showing paid invoices and legacy acquisitions activate only when
+eligible, remain active after failed or ambiguous writes, clear after their exact
+resolution commits, and never clear from keeper-only inference.
 
 ## Task 8: Make delivery states honest
 
