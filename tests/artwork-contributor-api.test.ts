@@ -127,6 +127,14 @@ const validInvite = {
   idempotencyKey: 'contributor-invite-one',
 };
 
+async function inviteFingerprint(body: typeof validInvite) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([
+    'invite', body.keeperPieceId, 'keeper-one', null,
+    body.intendedRecipientEmail.trim().toLowerCase(), body.expiresAt,
+  ])));
+  return Buffer.from(digest).toString('hex');
+}
+
 describe('protected artwork contributor API boundary', () => {
   it('provides separate keeper and recipient endpoints plus a typed client contract', () => {
     for (const path of [
@@ -431,7 +439,7 @@ describe('protected artwork contributor API boundary', () => {
     }
     assert.deepEqual(outcomes, Array.from({ length: 3 }, () => ({
       status: 409,
-      databaseStatements: 6,
+      databaseStatements: 8,
       headers: [
         ['cache-control', 'no-store'],
         ['content-type', 'application/json'],
@@ -520,7 +528,42 @@ describe('protected artwork contributor API boundary', () => {
         ).get().attempt_count, 10);
       } finally { target.database.close(); }
     }
-    assert.deepEqual(statementCounts, [4, 4, 4, 4]);
+    assert.deepEqual(statementCounts, [5, 5, 5, 5]);
+  });
+
+  it('projects an active exact reservation as stable retryable token-free in-progress', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const target = fixture();
+    try {
+      const now = new Date();
+      target.database.prepare(
+        `INSERT INTO artwork_contributor_invite_reservations
+          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+           reservation_status, reserved_at, lease_expires_at)
+         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+      ).run(
+        validInvite.idempotencyKey,
+        await inviteFingerprint(validInvite),
+        now.toISOString(),
+        new Date(now.getTime() + 30_000).toISOString(),
+      );
+      const before = target.prepares();
+      const response = await keeperEndpoint({
+        request: request('/api/keeper/contributors', 'POST', validInvite), env: target.env,
+      });
+      assert.equal(response.status, 409);
+      const body = await response.json();
+      assert.deepEqual(body, { ok: false, error: 'contributor_invite_in_progress' });
+      assert.match(response.headers.get('Retry-After') || '', /^(?:[1-9]|[12][0-9]|30)$/);
+      assert.equal(JSON.stringify(body).includes('token'), false);
+      assert.equal(target.prepares() - before, 5);
+      assert.equal(target.database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+      assert.equal(target.database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+      ).get().n, 0);
+    } finally { target.database.close(); }
   });
 
   it('replays an exact successful invite after the bucket fills without consuming it again', async () => {

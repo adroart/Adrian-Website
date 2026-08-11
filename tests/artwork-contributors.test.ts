@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 
 import {
   acceptArtworkContributorInvitation,
@@ -48,7 +48,7 @@ const verifiedContributor = {
   verifiedEmail: 'contributor@example.com',
 };
 
-function fixture() {
+function fixture(initialContributorInviteNow = new Date().toISOString()) {
   const database = new DatabaseSync(':memory:');
   database.exec(`
     PRAGMA foreign_keys = ON;
@@ -102,7 +102,16 @@ function fixture() {
       }
     },
   };
-  return { database, env: { DB } };
+  let contributorInviteNow = initialContributorInviteNow;
+  const env = {
+    DB,
+    CONTRIBUTOR_INVITE_NOW: () => contributorInviteNow,
+  };
+  return {
+    database,
+    env,
+    setContributorInviteNow(value: string) { contributorInviteNow = value; },
+  };
 }
 
 function inviteInput(overrides: Record<string, unknown> = {}) {
@@ -115,6 +124,31 @@ function inviteInput(overrides: Record<string, unknown> = {}) {
     invitedAt,
     ...overrides,
   };
+}
+
+async function inviteRequestFingerprint(overrides: Record<string, unknown> = {}) {
+  const input = inviteInput(overrides);
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([
+    'invite', input.keeperPieceId, input.keeperUserId, null,
+    String(input.intendedRecipientEmail).trim().toLowerCase(), input.expiresAt,
+  ])));
+  return Buffer.from(digest).toString('hex');
+}
+
+function ensureInviteReservationTable(database: DatabaseSync) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS artwork_contributor_invite_reservations (
+      idempotency_key TEXT PRIMARY KEY,
+      request_fingerprint TEXT NOT NULL,
+      keeper_user_id TEXT NOT NULL,
+      lease_generation INTEGER NOT NULL,
+      reservation_status TEXT NOT NULL,
+      reserved_at TEXT NOT NULL,
+      lease_expires_at TEXT NOT NULL,
+      completed_invitation_id TEXT,
+      completed_at TEXT
+    );
+  `);
 }
 
 function interceptNextRun(
@@ -378,6 +412,30 @@ describe('artwork contributor access foundation', () => {
       ).get() as { sql?: string } | undefined;
       assert.match(trigger?.sql || '', /BEFORE INSERT ON artwork_contributor_invitations/i);
       assert.match(trigger?.sql || '', /RAISE\(ABORT, 'contributor invite rate limited'\)/i);
+      const reservation = database.prepare(
+        `SELECT sql FROM sqlite_master
+          WHERE type = 'table' AND name = 'artwork_contributor_invite_reservations'`,
+      ).get() as { sql?: string } | undefined;
+      assert.ok(reservation?.sql);
+      const reservationColumns = database.prepare(
+        "SELECT name FROM pragma_table_info('artwork_contributor_invite_reservations') ORDER BY cid",
+      ).all().map((row) => row.name);
+      assert.deepEqual(reservationColumns, [
+        'idempotency_key', 'request_fingerprint', 'keeper_user_id', 'lease_generation',
+        'reservation_status', 'reserved_at', 'lease_expires_at',
+        'completed_invitation_id', 'completed_at',
+      ]);
+      assert.doesNotMatch(reservationColumns.join(' '), /recipient|email|token|keeper_piece/i);
+      assert.match(reservation.sql, /reservation_status[\s\S]*reserved[\s\S]*completed/i);
+      assert.deepEqual(database.prepare(
+        `SELECT name FROM sqlite_master
+          WHERE type = 'trigger' AND name LIKE 'artwork_contributor_invite_%'
+          ORDER BY name`,
+      ).all().map((row) => row.name), [
+        'artwork_contributor_invite_rate_limit_guard',
+        'artwork_contributor_invite_reservation_complete',
+        'artwork_contributor_invite_reservation_guard',
+      ]);
     } finally { database.close(); }
   });
 
@@ -437,6 +495,18 @@ describe('artwork contributor access foundation', () => {
 
   it('charges one synchronized exact invite race once at the bucket boundary', async () => {
     const { database, env } = fixture();
+    const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
+    const originalRandomUUID = crypto.randomUUID.bind(crypto);
+    let tokenGenerations = 0;
+    let invitationIdGenerations = 0;
+    const getRandomValues = mock.method(crypto, 'getRandomValues', ((array: Uint8Array) => {
+      tokenGenerations += 1;
+      return originalGetRandomValues(array);
+    }) as typeof crypto.getRandomValues);
+    const randomUUID = mock.method(crypto, 'randomUUID', () => {
+      invitationIdGenerations += 1;
+      return originalRandomUUID();
+    });
     try {
       for (let index = 0; index < 9; index += 1) {
         await expectCode(inviteArtworkContributor(env, inviteInput({
@@ -449,19 +519,33 @@ describe('artwork contributor access foundation', () => {
         'FROM artwork_contributor_invitations WHERE idempotency_key = ?1',
         4,
       );
-      const results = await Promise.all(Array.from(
+      const settled = await Promise.allSettled(Array.from(
         { length: 4 },
         () => inviteArtworkContributor(env, inviteInput({
           idempotencyKey: 'invite-synchronized-exact-race',
         })),
       ));
+      const results = settled.flatMap((result) => result.status === 'fulfilled'
+        ? [result.value]
+        : []);
+      const inProgress = settled.flatMap((result) => result.status === 'rejected'
+        ? [result.reason]
+        : []);
       const created = results.filter((result) => result.status === 'created');
       const replayed = results.filter((result) => result.status === 'replay');
       assert.equal(created.length, 1);
-      assert.equal(replayed.length, 3);
+      assert.equal(replayed.length + inProgress.length, 3);
+      assert.equal(inProgress.every((error) => error?.code === 'contributor_invite_in_progress'
+        && error?.retryAfter === 30 && !Object.hasOwn(error, 'token')), true);
       assert.equal(typeof created[0].token, 'string');
       assert.equal(replayed.every((result) => !Object.hasOwn(result, 'token')), true);
       assert.equal(new Set(results.map((result) => result.invitationId)).size, 1);
+      assert.deepEqual(await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-synchronized-exact-race',
+      })), {
+        invitationId: created[0].invitationId,
+        status: 'replay',
+      });
       assert.equal(database.prepare(
         'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
       ).get().attempt_count, 10);
@@ -469,7 +553,183 @@ describe('artwork contributor access foundation', () => {
         `SELECT COUNT(*) AS invitations, COUNT(DISTINCT token_hash) AS proofs
            FROM artwork_contributor_invitations`,
       ).get() }, { invitations: 1, proofs: 1 });
-    } finally { database.close(); }
+      assert.equal(tokenGenerations, 1);
+      assert.equal(invitationIdGenerations, 1);
+    } finally {
+      getRandomValues.mock.restore();
+      randomUUID.mock.restore();
+      database.close();
+    }
+  });
+
+  it('returns stable in-progress without charging or generating while the exact lease is active', async () => {
+    const leaseAt = new Date().toISOString();
+    const { database, env } = fixture(leaseAt);
+    const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
+    const originalRandomUUID = crypto.randomUUID.bind(crypto);
+    let tokenGenerations = 0;
+    let invitationIdGenerations = 0;
+    const getRandomValues = mock.method(crypto, 'getRandomValues', ((array: Uint8Array) => {
+      tokenGenerations += 1;
+      return originalGetRandomValues(array);
+    }) as typeof crypto.getRandomValues);
+    const randomUUID = mock.method(crypto, 'randomUUID', () => {
+      invitationIdGenerations += 1;
+      return originalRandomUUID();
+    });
+    try {
+      ensureInviteReservationTable(database);
+      database.prepare(
+        `INSERT INTO artwork_contributor_invite_reservations
+          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+           reservation_status, reserved_at, lease_expires_at)
+         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+      ).run(
+        'invite-active-reservation',
+        await inviteRequestFingerprint({ idempotencyKey: 'invite-active-reservation' }),
+        invitedAt,
+        new Date(Date.parse(leaseAt) + 30_000).toISOString(),
+      );
+      database.prepare(
+        `INSERT INTO artwork_contributor_invite_rate_limits
+          (keeper_user_id, window_started_at, attempt_count, last_attempt_at)
+         VALUES ('keeper-one', '2026-08-10T10:00:00.000Z', 10, ?)`,
+      ).run(invitedAt);
+      await assert.rejects(inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-active-reservation',
+      })), (error: any) => error?.code === 'contributor_invite_in_progress'
+        && error?.retryAfter === 30);
+      assert.equal(tokenGenerations, 0);
+      assert.equal(invitationIdGenerations, 0);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 0);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invite_rate_limits',
+      ).get().n, 1);
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+    } finally {
+      getRandomValues.mock.restore();
+      randomUUID.mock.restore();
+      database.close();
+    }
+  });
+
+  it('elects one generation-CAS takeover for an expired exact reservation', async () => {
+    const { database, env } = fixture();
+    const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
+    const originalRandomUUID = crypto.randomUUID.bind(crypto);
+    let tokenGenerations = 0;
+    let invitationIdGenerations = 0;
+    const getRandomValues = mock.method(crypto, 'getRandomValues', ((array: Uint8Array) => {
+      tokenGenerations += 1;
+      return originalGetRandomValues(array);
+    }) as typeof crypto.getRandomValues);
+    const randomUUID = mock.method(crypto, 'randomUUID', () => {
+      invitationIdGenerations += 1;
+      return originalRandomUUID();
+    });
+    try {
+      ensureInviteReservationTable(database);
+      database.prepare(
+        `INSERT INTO artwork_contributor_invite_reservations
+          (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+           reservation_status, reserved_at, lease_expires_at)
+         VALUES (?, ?, 'keeper-one', 1, 'reserved', ?, ?)`,
+      ).run(
+        'invite-expired-reservation',
+        await inviteRequestFingerprint({ idempotencyKey: 'invite-expired-reservation' }),
+        '2026-08-10T09:59:00.000Z',
+        '2026-08-10T09:59:30.000Z',
+      );
+      synchronizeNextFirsts(
+        env,
+        'FROM artwork_contributor_invitations WHERE idempotency_key = ?1',
+        2,
+      );
+      const settled = await Promise.allSettled(Array.from({ length: 2 }, () =>
+        inviteArtworkContributor(env, inviteInput({
+          idempotencyKey: 'invite-expired-reservation',
+        }))));
+      const created = settled.flatMap((result) => result.status === 'fulfilled'
+        && result.value.status === 'created' ? [result.value] : []);
+      const nonowners = settled.flatMap((result) => result.status === 'fulfilled'
+        ? result.value.status === 'replay' ? [result.value] : []
+        : result.reason?.code === 'contributor_invite_in_progress' ? [result.reason] : []);
+      assert.equal(created.length, 1);
+      assert.equal(nonowners.length, 1);
+      assert.deepEqual({ ...database.prepare(
+        `SELECT lease_generation, reservation_status, completed_invitation_id
+           FROM artwork_contributor_invite_reservations
+          WHERE idempotency_key = 'invite-expired-reservation'`,
+      ).get() }, {
+        lease_generation: 2,
+        reservation_status: 'completed',
+        completed_invitation_id: created[0].invitationId,
+      });
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 1);
+      assert.equal(tokenGenerations, 1);
+      assert.equal(invitationIdGenerations, 1);
+    } finally {
+      getRandomValues.mock.restore();
+      randomUUID.mock.restore();
+      database.close();
+    }
+  });
+
+  it('fences a paused stale owner before proof generation after lease takeover', async () => {
+    const initialLeaseAt = new Date().toISOString();
+    const { database, env, setContributorInviteNow } = fixture(initialLeaseAt);
+    const originalGetRandomValues = crypto.getRandomValues.bind(crypto);
+    const originalRandomUUID = crypto.randomUUID.bind(crypto);
+    let tokenGenerations = 0;
+    let invitationIdGenerations = 0;
+    const getRandomValues = mock.method(crypto, 'getRandomValues', ((array: Uint8Array) => {
+      tokenGenerations += 1;
+      return originalGetRandomValues(array);
+    }) as typeof crypto.getRandomValues);
+    const randomUUID = mock.method(crypto, 'randomUUID', () => {
+      invitationIdGenerations += 1;
+      return originalRandomUUID();
+    });
+    try {
+      const paused = pauseNextFirst(env, 'SELECT\n       EXISTS (');
+      const staleOwner = inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-stale-owner-takeover',
+      }));
+      await paused.reached;
+      setContributorInviteNow(new Date(Date.parse(initialLeaseAt) + 31_000).toISOString());
+      const takeover = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-stale-owner-takeover',
+        invitedAt: '2026-08-10T10:00:31.000Z',
+      }));
+      assert.equal(takeover.status, 'created');
+      assert.equal(typeof takeover.token, 'string');
+      paused.release();
+      assert.deepEqual(await staleOwner, {
+        invitationId: takeover.invitationId,
+        status: 'replay',
+      });
+      assert.equal(tokenGenerations, 1);
+      assert.equal(invitationIdGenerations, 1);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 1);
+    } finally {
+      getRandomValues.mock.restore();
+      randomUUID.mock.restore();
+      database.close();
+    }
   });
 
   it('replays a loser that reaches preflight only after the boundary winner commits', async () => {
@@ -509,7 +769,7 @@ describe('artwork contributor access foundation', () => {
     } finally { database.close(); }
   });
 
-  it('replays a loser that sees the boundary winner during relationship lookup', async () => {
+  it('keeps a non-owner in progress while the elected request pauses during recipient lookup', async () => {
     const { database, env } = fixture();
     try {
       for (let index = 0; index < 9; index += 1) {
@@ -522,19 +782,21 @@ describe('artwork contributor access foundation', () => {
         env,
         'FROM user\n      WHERE lower(email) = ?1',
       );
-      const loserPromise = inviteArtworkContributor(env, inviteInput({
+      const ownerPromise = inviteArtworkContributor(env, inviteInput({
         idempotencyKey: 'invite-relationship-exact-race',
       }));
       await paused.reached;
-      const winner = await inviteArtworkContributor(env, inviteInput({
+      await expectCode(inviteArtworkContributor(env, inviteInput({
         idempotencyKey: 'invite-relationship-exact-race',
-      }));
+      })), 'contributor_invite_in_progress');
       paused.release();
-      const loser = await loserPromise;
-      assert.equal(winner.status, 'created');
-      assert.equal(typeof winner.token, 'string');
-      assert.deepEqual(loser, {
-        invitationId: winner.invitationId,
+      const owner = await ownerPromise;
+      assert.equal(owner.status, 'created');
+      assert.equal(typeof owner.token, 'string');
+      assert.deepEqual(await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-relationship-exact-race',
+      })), {
+        invitationId: owner.invitationId,
         status: 'replay',
       });
       assert.equal(database.prepare(

@@ -55,6 +55,7 @@ function statusFor(code) {
     'contributor_invitation_expired', 'contributor_invitation_not_available',
   ].includes(code)) return 409;
   if (code === 'contributor_invite_rate_limited') return 429;
+  if (code === 'contributor_invite_in_progress') return 409;
   if (code === 'contributor_db_required') return 503;
   return 500;
 }
@@ -156,6 +157,7 @@ export async function onRequest({ request, env }) {
       : '';
     if (code) {
       const headers = code === 'contributor_invite_rate_limited'
+        || code === 'contributor_invite_in_progress'
         ? { 'Retry-After': String(error.retryAfter) }
         : {};
       return json({ ok: false, error: code }, statusFor(code), headers);

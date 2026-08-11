@@ -1,5 +1,6 @@
 const CONTRIBUTOR_INVITE_RATE_LIMIT = 10;
 const CONTRIBUTOR_INVITE_RATE_WINDOW_MS = 60 * 60 * 1000;
+const CONTRIBUTOR_INVITE_RESERVATION_LEASE_MS = 30 * 1000;
 
 function contributorError(code, details = {}) {
   const error = new Error(code);
@@ -175,6 +176,179 @@ async function contributorInviteRateLimitRetryAfter(env, keeperUserId, at) {
   ));
 }
 
+function contributorInviteReservationRetryAfter(leaseExpiresAt, at) {
+  return Math.max(1, Math.ceil(
+    (Date.parse(leaseExpiresAt) - Date.parse(at)) / 1000,
+  ));
+}
+
+function contributorInviteNow(env) {
+  const value = typeof env.CONTRIBUTOR_INVITE_NOW === 'function'
+    ? env.CONTRIBUTOR_INVITE_NOW()
+    : new Date().toISOString();
+  return isoInstant(value, 'invalid_invited_at');
+}
+
+async function completedContributorInviteReservation(env, reservation, requestFingerprint) {
+  if (reservation?.reservation_status !== 'completed'
+    || reservation.request_fingerprint !== requestFingerprint
+    || !reservation.completed_invitation_id) return null;
+  const invitation = await env.DB.prepare(
+    `SELECT id, request_fingerprint
+       FROM artwork_contributor_invitations
+      WHERE id = ?1 AND idempotency_key = ?2`,
+  ).bind(reservation.completed_invitation_id, reservation.idempotency_key).first();
+  if (invitation?.request_fingerprint !== requestFingerprint) return null;
+  return { invitationId: invitation.id, status: 'replay' };
+}
+
+async function reserveContributorInvite(env, {
+  idempotencyKey, requestFingerprint, keeperUserId, recordedAt, leaseAt,
+}) {
+  const leaseExpiresAt = new Date(
+    Date.parse(leaseAt) + CONTRIBUTOR_INVITE_RESERVATION_LEASE_MS,
+  ).toISOString();
+  const inserted = await env.DB.prepare(
+    `INSERT INTO artwork_contributor_invite_reservations
+       (idempotency_key, request_fingerprint, keeper_user_id, lease_generation,
+        reservation_status, reserved_at, lease_expires_at)
+     VALUES (?1, ?2, ?3, 1, 'reserved', ?4, ?5)
+     ON CONFLICT(idempotency_key) DO NOTHING`,
+  ).bind(
+    idempotencyKey, requestFingerprint, keeperUserId, recordedAt, leaseExpiresAt,
+  ).run();
+  if (Number(inserted?.meta?.changes) === 1) {
+    return { kind: 'winner', leaseGeneration: 1 };
+  }
+
+  let reservation = await env.DB.prepare(
+    `SELECT idempotency_key, request_fingerprint, keeper_user_id,
+            lease_generation, reservation_status, lease_expires_at,
+            completed_invitation_id
+       FROM artwork_contributor_invite_reservations
+      WHERE idempotency_key = ?1`,
+  ).bind(idempotencyKey).first();
+  if (!reservation) {
+    throw contributorError('contributor_invite_in_progress', { retryAfter: 1 });
+  }
+  if (reservation.request_fingerprint !== requestFingerprint
+    || reservation.keeper_user_id !== keeperUserId) {
+    await consumeContributorInviteAttempt(env, keeperUserId, recordedAt);
+    throw contributorError('contributor_idempotency_conflict');
+  }
+  const completed = await completedContributorInviteReservation(
+    env, reservation, requestFingerprint,
+  );
+  if (completed) return { kind: 'replay', result: completed };
+  if (reservation.reservation_status !== 'reserved') {
+    throw contributorError('contributor_invite_in_progress', { retryAfter: 1 });
+  }
+  if (Date.parse(reservation.lease_expires_at) > Date.parse(leaseAt)) {
+    throw contributorError('contributor_invite_in_progress', {
+      retryAfter: contributorInviteReservationRetryAfter(reservation.lease_expires_at, leaseAt),
+    });
+  }
+
+  const priorGeneration = Number(reservation.lease_generation);
+  const takenOver = await env.DB.prepare(
+    `UPDATE artwork_contributor_invite_reservations
+        SET lease_generation = lease_generation + 1,
+            reserved_at = ?4,
+            lease_expires_at = ?5
+      WHERE idempotency_key = ?1
+        AND request_fingerprint = ?2
+        AND keeper_user_id = ?3
+        AND lease_generation = ?6
+        AND reservation_status = 'reserved'
+        AND julianday(lease_expires_at) <= julianday(?7)`,
+  ).bind(
+    idempotencyKey, requestFingerprint, keeperUserId, recordedAt, leaseExpiresAt,
+    priorGeneration, leaseAt,
+  ).run();
+  if (Number(takenOver?.meta?.changes) === 1) {
+    return { kind: 'winner', leaseGeneration: priorGeneration + 1 };
+  }
+  reservation = await env.DB.prepare(
+    `SELECT idempotency_key, request_fingerprint, keeper_user_id,
+            lease_generation, reservation_status, lease_expires_at,
+            completed_invitation_id
+       FROM artwork_contributor_invite_reservations
+      WHERE idempotency_key = ?1`,
+  ).bind(idempotencyKey).first();
+  const racedCompletion = await completedContributorInviteReservation(
+    env, reservation, requestFingerprint,
+  );
+  if (racedCompletion) return { kind: 'replay', result: racedCompletion };
+  throw contributorError('contributor_invite_in_progress', {
+    retryAfter: reservation?.lease_expires_at
+      ? contributorInviteReservationRetryAfter(reservation.lease_expires_at, leaseAt)
+      : 1,
+  });
+}
+
+async function currentContributorInviteReservation(env, identity, at) {
+  const reservation = await env.DB.prepare(
+    `SELECT idempotency_key, request_fingerprint, keeper_user_id,
+            lease_generation, reservation_status, lease_expires_at,
+            completed_invitation_id
+       FROM artwork_contributor_invite_reservations
+      WHERE idempotency_key = ?1`,
+  ).bind(identity.idempotencyKey).first();
+  if (reservation?.request_fingerprint !== identity.requestFingerprint
+    || reservation.keeper_user_id !== identity.keeperUserId) return null;
+  const completed = await completedContributorInviteReservation(
+    env, reservation, identity.requestFingerprint,
+  );
+  if (completed) return { kind: 'replay', result: completed };
+  if (reservation.reservation_status === 'reserved'
+    && Number(reservation.lease_generation) !== identity.leaseGeneration) {
+    throw contributorError('contributor_invite_in_progress', {
+      retryAfter: reservation.lease_expires_at
+        ? contributorInviteReservationRetryAfter(reservation.lease_expires_at, at)
+        : 1,
+    });
+  }
+  return null;
+}
+
+async function refreshContributorInviteReservation(env, identity, at) {
+  const leaseExpiresAt = new Date(
+    Date.parse(at) + CONTRIBUTOR_INVITE_RESERVATION_LEASE_MS,
+  ).toISOString();
+  const refreshed = await env.DB.prepare(
+    `UPDATE artwork_contributor_invite_reservations
+        SET lease_expires_at = ?5
+      WHERE idempotency_key = ?1
+        AND request_fingerprint = ?2
+        AND keeper_user_id = ?3
+        AND lease_generation = ?4
+        AND reservation_status = 'reserved'
+        AND julianday(lease_expires_at) > julianday(?6)`,
+  ).bind(
+    identity.idempotencyKey, identity.requestFingerprint, identity.keeperUserId,
+    identity.leaseGeneration, leaseExpiresAt, at,
+  ).run();
+  if (Number(refreshed?.meta?.changes) === 1) return { kind: 'winner', checkedAt: at };
+  const raced = await currentContributorInviteReservation(env, identity, at);
+  if (raced) return raced;
+  throw contributorError('contributor_invite_in_progress', { retryAfter: 1 });
+}
+
+async function releaseContributorInviteReservation(env, {
+  idempotencyKey, requestFingerprint, keeperUserId, leaseGeneration,
+}) {
+  await env.DB.prepare(
+    `DELETE FROM artwork_contributor_invite_reservations
+      WHERE idempotency_key = ?1
+        AND request_fingerprint = ?2
+        AND keeper_user_id = ?3
+        AND lease_generation = ?4
+        AND reservation_status = 'reserved'`,
+  ).bind(
+    idempotencyKey, requestFingerprint, keeperUserId, leaseGeneration,
+  ).run();
+}
+
 async function contributorRelationshipState(env, {
   keeperPieceId, keeperUserId, stewardVersion, recipientUserId, at,
 }) {
@@ -308,12 +482,48 @@ export async function inviteArtworkContributor(env, input) {
     if (raced?.request_fingerprint === requestFingerprint) {
       return { invitationId: raced.id, status: 'replay' };
     }
+    const activeReservation = await env.DB.prepare(
+      `SELECT idempotency_key, request_fingerprint, keeper_user_id,
+              reservation_status, lease_expires_at, completed_invitation_id
+         FROM artwork_contributor_invite_reservations
+        WHERE idempotency_key = ?1`,
+    ).bind(idempotencyKey).first();
+    if (activeReservation?.request_fingerprint === requestFingerprint
+      && activeReservation.keeper_user_id === keeperUserId) {
+      const completed = await completedContributorInviteReservation(
+        env, activeReservation, requestFingerprint,
+      );
+      if (completed) return completed;
+      const reservationAt = contributorInviteNow(env);
+      if (activeReservation.reservation_status === 'reserved'
+        && Date.parse(activeReservation.lease_expires_at) > Date.parse(reservationAt)) {
+        throw contributorError('contributor_invite_in_progress', {
+          retryAfter: contributorInviteReservationRetryAfter(
+            activeReservation.lease_expires_at, reservationAt,
+          ),
+        });
+      }
+    }
     throw contributorError('contributor_invite_rate_limited', { retryAfter });
   }
   if (replay) {
     await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     throw contributorError('contributor_idempotency_conflict');
   }
+  const reservation = await reserveContributorInvite(env, {
+    idempotencyKey,
+    requestFingerprint,
+    keeperUserId,
+    recordedAt: invitedAt,
+    leaseAt: contributorInviteNow(env),
+  });
+  if (reservation.kind === 'replay') return reservation.result;
+  const reservationIdentity = {
+    idempotencyKey,
+    requestFingerprint,
+    keeperUserId,
+    leaseGeneration: reservation.leaseGeneration,
+  };
   let recipientUserId;
   try {
     recipientUserId = await resolveRecipient(env, recipientEmail);
@@ -333,12 +543,17 @@ export async function inviteArtworkContributor(env, input) {
     if (raced?.request_fingerprint === requestFingerprint) {
       return { invitationId: raced.id, status: 'replay' };
     }
+    await releaseContributorInviteReservation(env, reservationIdentity);
     await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     throw error;
   }
+  const refreshed = await refreshContributorInviteReservation(
+    env, reservationIdentity, contributorInviteNow(env),
+  );
+  if (refreshed.kind === 'replay') return refreshed.result;
   const token = createToken();
-  const tokenHash = await sha256Hex(token);
   const invitationId = `aci-${crypto.randomUUID()}`;
+  const tokenHash = await sha256Hex(token);
   let inserted;
   try {
     inserted = await env.DB.prepare(
@@ -350,6 +565,13 @@ export async function inviteArtworkContributor(env, input) {
               ?5, ?6, ?7, ?8, ?9, ?10, ?11
          FROM keeper_pieces AS piece
           JOIN user AS recipient ON recipient.id = ?5 AND recipient.emailVerified = 1
+          JOIN artwork_contributor_invite_reservations AS reservation
+            ON reservation.idempotency_key = ?8
+           AND reservation.request_fingerprint = ?9
+           AND reservation.keeper_user_id = ?3
+           AND reservation.lease_generation = ?12
+           AND reservation.reservation_status = 'reserved'
+           AND julianday(reservation.lease_expires_at) > julianday(?13)
         WHERE piece.id = ?2
           AND piece.keeper_user_id = ?3
           AND piece.steward_version = ?4
@@ -364,7 +586,8 @@ export async function inviteArtworkContributor(env, input) {
     ).bind(
       invitationId, keeperPieceId, keeperUserId, authority.stewardVersion,
       recipientUserId, recipientEmail, tokenHash, idempotencyKey,
-      requestFingerprint, invitedAt, expiresAt,
+      requestFingerprint, invitedAt, expiresAt, reservation.leaseGeneration,
+      refreshed.checkedAt,
     ).run();
   } catch (error) {
     const raced = await env.DB.prepare(
@@ -374,6 +597,14 @@ export async function inviteArtworkContributor(env, input) {
     if (raced?.request_fingerprint === requestFingerprint) {
       return { invitationId: raced.id, status: 'replay' };
     }
+    if (databaseErrorIncludes(error, 'contributor invite reservation unavailable')) {
+      const reservationRace = await currentContributorInviteReservation(
+        env, reservationIdentity, contributorInviteNow(env),
+      );
+      if (reservationRace) return reservationRace.result;
+      throw contributorError('contributor_invite_in_progress', { retryAfter: 1 });
+    }
+    await releaseContributorInviteReservation(env, reservationIdentity);
     await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     if (raced) throw contributorError('contributor_idempotency_conflict');
     await reclassifyInvitationInsertFailure(env, {
@@ -399,6 +630,18 @@ export async function inviteArtworkContributor(env, input) {
     throw error;
   }
   if (Number(inserted?.meta?.changes) !== 1) {
+    const raced = await env.DB.prepare(
+      `SELECT id, request_fingerprint
+         FROM artwork_contributor_invitations WHERE idempotency_key = ?1`,
+    ).bind(idempotencyKey).first();
+    if (raced?.request_fingerprint === requestFingerprint) {
+      return { invitationId: raced.id, status: 'replay' };
+    }
+    const reservationRace = await currentContributorInviteReservation(
+      env, reservationIdentity, contributorInviteNow(env),
+    );
+    if (reservationRace) return reservationRace.result;
+    await releaseContributorInviteReservation(env, reservationIdentity);
     await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     await reclassifyInvitationInsertFailure(env, {
       keeperPieceId,

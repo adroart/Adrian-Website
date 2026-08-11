@@ -66,7 +66,8 @@ const phase2Migrations = `${readMigration('029_collector_dreams.sql')}
 \n${readMigration('030_collector_field.sql')}\n${readMigration('031_collector_letters.sql')}`;
 const registryMigrations = `${registryMigrationsThroughOwnership}\n${phase1Migrations}
 \n${phase2Migrations}\n${readMigration('032_artist_verified_sales.sql')}
-\n${readMigration('033_artwork_contributors.sql')}`;
+\n${readMigration('033_artwork_contributors.sql')}
+\n${readMigration('034_artwork_contributor_invite_rate_limit.sql')}`;
 
 const exportKey = Buffer.alloc(32, 91).toString('base64');
 const exportKeyId = 'registry-recovery-key-v1';
@@ -836,6 +837,14 @@ const contributorUsers = [
 ] as const;
 
 function seedContributorRecovery(database: DatabaseSync) {
+  const operationalRateTriggerSql = database.prepare(
+    `SELECT sql FROM sqlite_master
+      WHERE type = 'trigger' AND name = 'artwork_contributor_invite_rate_limit_guard'`,
+  ).get()?.sql;
+  if (operationalRateTriggerSql) {
+    database.exec('DROP TRIGGER artwork_contributor_invite_rate_limit_guard;');
+  }
+  try {
   for (const [id, email] of contributorUsers) {
     database.prepare(
       `INSERT INTO user (id, name, email, emailVerified, createdAt, updatedAt)
@@ -917,6 +926,9 @@ function seedContributorRecovery(database: DatabaseSync) {
        '2026-07-31T08:00:00.000Z');
   `);
   appendSecondTransfer(database);
+  } finally {
+    if (operationalRateTriggerSql) database.exec(String(operationalRateTriggerSql));
+  }
 }
 
 function tableCount(database: DatabaseSync, table: string) {
@@ -1517,6 +1529,9 @@ describe('clean-only private registry restore', () => {
       });
       const liveObjects = [
         ['view', 'artwork_contributor_current_access'],
+        ['trigger', 'artwork_contributor_invite_reservation_guard'],
+        ['trigger', 'artwork_contributor_invite_rate_limit_guard'],
+        ['trigger', 'artwork_contributor_invite_reservation_complete'],
         ['trigger', 'artwork_contributor_invitation_insert_guard'],
         ['trigger', 'artwork_contributor_invitation_accept_guard'],
         ['trigger', 'artwork_contributor_invitation_accept_grant'],
@@ -1546,6 +1561,8 @@ describe('clean-only private registry restore', () => {
       assert.equal(tableCount(target.database, 'artwork_contributor_invitation_acceptances'), 3);
       assert.equal(tableCount(target.database, 'artwork_contributor_access_grants'), 3);
       assert.equal(tableCount(target.database, 'artwork_contributor_revocations'), 2);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invite_rate_limits'), 0);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invite_reservations'), 0);
       assert.deepEqual(target.database.prepare('PRAGMA foreign_key_check').all(), []);
       for (const [type, name] of liveObjects) {
         assert.equal(normalize(target.database.prepare(
@@ -1568,6 +1585,113 @@ describe('clean-only private registry restore', () => {
     } finally {
       source.database.close();
       target.database.close();
+    }
+  });
+
+  it('restores eleven historical same-hour invitations without reconstructing operational state', async () => {
+    const source = createSqliteD1();
+    const target = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      target.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedContributorRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = structuredClone(await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      }));
+      const historical = payload.tables.artwork_contributor_invitations.find((row: any) =>
+        row.id === 'aci-00000000-0000-4000-8000-000000000002')!;
+      for (let index = 7; index <= 17; index += 1) {
+        payload.tables.artwork_contributor_invitations.push({
+          ...historical,
+          id: `aci-00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+          token_hash: index.toString(16).padStart(64, '0'),
+          idempotency_key: `historical-contributor-burst-${index}`,
+          request_fingerprint: (index + 32).toString(16).padStart(64, '0'),
+          invited_at: `2026-07-01T04:${String(index).padStart(2, '0')}:00.000Z`,
+          expires_at: `2026-07-02T04:${String(index).padStart(2, '0')}:00.000Z`,
+        });
+      }
+      payload.tables.artwork_contributor_invitations.sort((left: any, right: any) =>
+        Buffer.from(left.id).compare(Buffer.from(right.id)));
+
+      target.database.exec(buildRegistryRestoreSql(payload));
+
+      assert.equal(payload.tables.artwork_contributor_invitations.filter((row: any) =>
+        String(row.idempotency_key).startsWith('historical-contributor-burst-')).length, 11);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invitations'), 17);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invite_rate_limits'), 0);
+      assert.equal(tableCount(target.database, 'artwork_contributor_invite_reservations'), 0);
+    } finally {
+      source.database.close();
+      target.database.close();
+    }
+  });
+
+  it('rolls back when an operational contributor trigger is missing or altered at recreation', async () => {
+    const source = createSqliteD1();
+    const missingTarget = createSqliteD1();
+    const alteredTarget = createSqliteD1();
+    try {
+      source.database.exec(registryMigrations);
+      missingTarget.database.exec(registryMigrations);
+      alteredTarget.database.exec(registryMigrations);
+      seedCompleteRegistry(source.database);
+      seedContributorRecovery(source.database);
+      const archive = await buildPrivateRecoveryExport({
+        ...source.env,
+        REGISTRY_RECOVERY_EXPORT_KEY: exportKey,
+        REGISTRY_RECOVERY_EXPORT_KEY_ID: exportKeyId,
+      }, { exportedAt });
+      const payload = await decryptPrivateRecoveryExport(archive, {
+        key: exportKey, keyId: exportKeyId,
+      });
+      const sql = buildRegistryRestoreSql(payload);
+
+      const missingMarker = 'CREATE TRIGGER artwork_contributor_invite_rate_limit_guard';
+      const missingStart = sql.lastIndexOf(missingMarker);
+      assert.notEqual(missingStart, -1);
+      const missingSql = `${sql.slice(0, missingStart)}${sql.slice(missingStart).replace(
+        missingMarker, 'CREATE TRIGGER omitted_artwork_contributor_invite_rate_limit_guard',
+      )}`;
+      assert.throws(() => missingTarget.database.exec(missingSql),
+        /registry_recovery_incomplete_restore/i);
+
+      const alteredMarker = 'CREATE TRIGGER artwork_contributor_invite_reservation_guard';
+      const alteredStart = sql.lastIndexOf(alteredMarker);
+      assert.notEqual(alteredStart, -1);
+      const alteredSql = `${sql.slice(0, alteredStart)}${sql.slice(alteredStart).replace(
+        "'contributor invite reservation unavailable'",
+        "'altered contributor invite reservation unavailable'",
+      )}`;
+      assert.throws(() => alteredTarget.database.exec(alteredSql),
+        /registry_recovery_incomplete_restore/i);
+
+      for (const target of [missingTarget, alteredTarget]) {
+        for (const table of REGISTRY_RECOVERY_TABLES) {
+          assert.equal(tableCount(target.database, table), 0, table);
+        }
+        assert.equal(tableCount(target.database, 'artwork_contributor_invite_rate_limits'), 0);
+        assert.equal(tableCount(target.database, 'artwork_contributor_invite_reservations'), 0);
+        assert.equal(target.database.prepare(
+          `SELECT COUNT(*) AS n FROM sqlite_master
+            WHERE type = 'trigger'
+              AND name IN (
+                'artwork_contributor_invite_reservation_guard',
+                'artwork_contributor_invite_rate_limit_guard',
+                'artwork_contributor_invite_reservation_complete'
+              )`,
+        ).get().n, 3);
+      }
+    } finally {
+      source.database.close();
+      missingTarget.database.close();
+      alteredTarget.database.close();
     }
   });
 

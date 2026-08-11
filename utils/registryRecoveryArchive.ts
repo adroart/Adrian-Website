@@ -156,6 +156,8 @@ const RECOVERY_CLEANLINESS_TABLES = [
   ...REGISTRY_RECOVERY_TABLES,
   'session',
   'verification',
+  'artwork_contributor_invite_rate_limits',
+  'artwork_contributor_invite_reservations',
 ] as const;
 
 export type RegistryRecoveryTable = typeof REGISTRY_RECOVERY_TABLES[number];
@@ -1732,6 +1734,81 @@ const CONTRIBUTOR_RESTORE_TRIGGER_NAMES = [
   'artwork_contributor_access_revoke_guard',
 ] as const;
 
+const CONTRIBUTOR_OPERATIONAL_TRIGGER_SQL = [
+  `CREATE TRIGGER artwork_contributor_invite_reservation_guard
+BEFORE INSERT ON artwork_contributor_invitations
+WHEN EXISTS (
+  SELECT 1 FROM artwork_contributor_invite_reservations
+   WHERE idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  SELECT CASE WHEN NOT EXISTS (
+    SELECT 1 FROM artwork_contributor_invite_reservations
+     WHERE idempotency_key = NEW.idempotency_key
+       AND request_fingerprint = NEW.request_fingerprint
+       AND keeper_user_id = NEW.keeper_user_id
+       AND reservation_status = 'reserved'
+       AND completed_invitation_id IS NULL
+       AND julianday(lease_expires_at) > julianday('now')
+  ) THEN RAISE(ABORT, 'contributor invite reservation unavailable') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_invite_rate_limit_guard
+BEFORE INSERT ON artwork_contributor_invitations
+BEGIN
+  INSERT INTO artwork_contributor_invite_rate_limits
+    (keeper_user_id, window_started_at, attempt_count, last_attempt_at)
+  VALUES (
+    NEW.keeper_user_id,
+    strftime('%Y-%m-%dT%H:00:00.000Z', NEW.invited_at),
+    1,
+    NEW.invited_at
+  )
+  ON CONFLICT(keeper_user_id) DO UPDATE SET
+    window_started_at = excluded.window_started_at,
+    attempt_count = CASE
+      WHEN excluded.window_started_at
+           > artwork_contributor_invite_rate_limits.window_started_at THEN 1
+      ELSE artwork_contributor_invite_rate_limits.attempt_count + 1
+    END,
+    last_attempt_at = excluded.last_attempt_at
+  WHERE (
+    excluded.window_started_at
+      > artwork_contributor_invite_rate_limits.window_started_at
+    OR (
+      excluded.window_started_at
+        = artwork_contributor_invite_rate_limits.window_started_at
+      AND artwork_contributor_invite_rate_limits.attempt_count < 10
+    )
+  );
+  SELECT CASE WHEN changes() <> 1
+    THEN RAISE(ABORT, 'contributor invite rate limited') END;
+END;`,
+  `CREATE TRIGGER artwork_contributor_invite_reservation_complete
+AFTER INSERT ON artwork_contributor_invitations
+WHEN EXISTS (
+  SELECT 1 FROM artwork_contributor_invite_reservations
+   WHERE idempotency_key = NEW.idempotency_key
+)
+BEGIN
+  UPDATE artwork_contributor_invite_reservations
+     SET reservation_status = 'completed',
+         completed_invitation_id = NEW.id,
+         completed_at = NEW.invited_at
+   WHERE idempotency_key = NEW.idempotency_key
+     AND request_fingerprint = NEW.request_fingerprint
+     AND keeper_user_id = NEW.keeper_user_id
+     AND reservation_status = 'reserved';
+  SELECT CASE WHEN changes() <> 1
+    THEN RAISE(ABORT, 'contributor invite reservation completion failed') END;
+END;`,
+] as const;
+
+const CONTRIBUTOR_OPERATIONAL_TRIGGER_NAMES = [
+  'artwork_contributor_invite_reservation_guard',
+  'artwork_contributor_invite_rate_limit_guard',
+  'artwork_contributor_invite_reservation_complete',
+] as const;
+
 /**
  * Generate offline-only SQL after the encrypted artifact has been fully
  * authenticated. Every insert is guarded, conflict-failing and transactional.
@@ -1772,6 +1849,12 @@ function buildRegistryRestoreSqlInternal(
           `NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'trigger' `
           + `AND name = ${sqlValue(trigger)} `
           + `AND sql = ${sqlValue(CONTRIBUTOR_RESTORE_TRIGGER_SQL[index].slice(0, -1))})`),
+        ...CONTRIBUTOR_OPERATIONAL_TRIGGER_NAMES.map((trigger, index) =>
+          `NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'trigger' `
+          + `AND name = ${sqlValue(trigger)} `
+          + `AND sql = ${sqlValue(CONTRIBUTOR_OPERATIONAL_TRIGGER_SQL[index].slice(0, -1))})`),
+        '(SELECT COUNT(*) FROM artwork_contributor_invite_rate_limits) <> 0',
+        '(SELECT COUNT(*) FROM artwork_contributor_invite_reservations) <> 0',
       ].join(' OR ')
       + ` BEGIN SELECT RAISE(ROLLBACK, 'registry_recovery_incomplete_restore'); END;`,
     'BEGIN IMMEDIATE;',
@@ -1868,6 +1951,9 @@ function buildRegistryRestoreSqlInternal(
   for (const trigger of CONTRIBUTOR_RESTORE_TRIGGER_NAMES) {
     statements.push(`DROP TRIGGER ${trigger};`);
   }
+  for (const trigger of CONTRIBUTOR_OPERATIONAL_TRIGGER_NAMES) {
+    statements.push(`DROP TRIGGER ${trigger};`);
+  }
   insertTables([
     'artwork_contributor_invitations',
     'artwork_contributor_invitation_acceptances',
@@ -1875,6 +1961,7 @@ function buildRegistryRestoreSqlInternal(
     'artwork_contributor_revocations',
   ]);
   statements.push(...CONTRIBUTOR_RESTORE_TRIGGER_SQL);
+  statements.push(...CONTRIBUTOR_OPERATIONAL_TRIGGER_SQL);
   statements.push(`INSERT INTO ${completionTable} (token) VALUES (1);`);
   statements.push('COMMIT;');
   statements.push(`DROP TRIGGER ${completionTrigger};`);
