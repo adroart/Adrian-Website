@@ -161,6 +161,20 @@ async function consumeContributorInviteAttempt(env, keeperUserId, at) {
   throw contributorError('contributor_invite_rate_limited', { retryAfter });
 }
 
+async function contributorInviteRateLimitRetryAfter(env, keeperUserId, at) {
+  const windowStartedAt = inviteRateWindow(at);
+  const limited = await env.DB.prepare(
+    `SELECT 1 AS is_limited FROM artwork_contributor_invite_rate_limits
+      WHERE keeper_user_id = ?1
+        AND window_started_at = ?2
+        AND attempt_count >= ?3`,
+  ).bind(keeperUserId, windowStartedAt, CONTRIBUTOR_INVITE_RATE_LIMIT).first();
+  if (!limited) return null;
+  return Math.max(1, Math.ceil(
+    (Date.parse(windowStartedAt) + CONTRIBUTOR_INVITE_RATE_WINDOW_MS - Date.parse(at)) / 1000,
+  ));
+}
+
 async function contributorRelationshipState(env, {
   keeperPieceId, keeperUserId, stewardVersion, recipientUserId, at,
 }) {
@@ -283,19 +297,45 @@ export async function inviteArtworkContributor(env, input) {
     userId: keeperUserId,
     ...(requestedVersion === null ? {} : { stewardVersion: requestedVersion }),
   });
-  await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
-  if (replay) throw contributorError('contributor_idempotency_conflict');
-  const recipientUserId = await resolveRecipient(env, recipientEmail);
-  if (recipientUserId === keeperUserId) throw contributorError('contributor_cannot_be_keeper');
-
-  throwRelationshipConflict(await contributorRelationshipState(env, {
-    keeperPieceId,
-    keeperUserId,
-    stewardVersion: authority.stewardVersion,
-    recipientUserId,
-    at: invitedAt,
-  }));
-
+  const retryAfter = await contributorInviteRateLimitRetryAfter(
+    env, keeperUserId, invitedAt,
+  );
+  if (retryAfter !== null) {
+    const raced = await env.DB.prepare(
+      `SELECT id, request_fingerprint
+         FROM artwork_contributor_invitations WHERE idempotency_key = ?1`,
+    ).bind(idempotencyKey).first();
+    if (raced?.request_fingerprint === requestFingerprint) {
+      return { invitationId: raced.id, status: 'replay' };
+    }
+    throw contributorError('contributor_invite_rate_limited', { retryAfter });
+  }
+  if (replay) {
+    await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
+    throw contributorError('contributor_idempotency_conflict');
+  }
+  let recipientUserId;
+  try {
+    recipientUserId = await resolveRecipient(env, recipientEmail);
+    if (recipientUserId === keeperUserId) throw contributorError('contributor_cannot_be_keeper');
+    throwRelationshipConflict(await contributorRelationshipState(env, {
+      keeperPieceId,
+      keeperUserId,
+      stewardVersion: authority.stewardVersion,
+      recipientUserId,
+      at: invitedAt,
+    }));
+  } catch (error) {
+    const raced = await env.DB.prepare(
+      `SELECT id, request_fingerprint
+         FROM artwork_contributor_invitations WHERE idempotency_key = ?1`,
+    ).bind(idempotencyKey).first();
+    if (raced?.request_fingerprint === requestFingerprint) {
+      return { invitationId: raced.id, status: 'replay' };
+    }
+    await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
+    throw error;
+  }
   const token = createToken();
   const tokenHash = await sha256Hex(token);
   const invitationId = `aci-${crypto.randomUUID()}`;
@@ -334,6 +374,7 @@ export async function inviteArtworkContributor(env, input) {
     if (raced?.request_fingerprint === requestFingerprint) {
       return { invitationId: raced.id, status: 'replay' };
     }
+    await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     if (raced) throw contributorError('contributor_idempotency_conflict');
     await reclassifyInvitationInsertFailure(env, {
       keeperPieceId,
@@ -358,6 +399,7 @@ export async function inviteArtworkContributor(env, input) {
     throw error;
   }
   if (Number(inserted?.meta?.changes) !== 1) {
+    await consumeContributorInviteAttempt(env, keeperUserId, invitedAt);
     await reclassifyInvitationInsertFailure(env, {
       keeperPieceId,
       keeperUserId,

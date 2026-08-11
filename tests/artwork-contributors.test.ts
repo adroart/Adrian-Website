@@ -138,6 +138,58 @@ function interceptNextRun(
   };
 }
 
+function synchronizeNextFirsts(
+  env: ReturnType<typeof fixture>['env'],
+  sqlFragment: string,
+  count: number,
+) {
+  const originalPrepare = env.DB.prepare.bind(env.DB);
+  let arrivals = 0;
+  let release: (() => void) | undefined;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  env.DB.prepare = (sql: string) => {
+    const statement = originalPrepare(sql);
+    if (sql.includes(sqlFragment) && arrivals < count) {
+      const originalFirst = statement.first.bind(statement);
+      statement.first = async () => {
+        const result = originalFirst();
+        arrivals += 1;
+        if (arrivals === count) release?.();
+        await gate;
+        return result;
+      };
+    }
+    return statement;
+  };
+}
+
+function pauseNextFirst(
+  env: ReturnType<typeof fixture>['env'],
+  sqlFragment: string,
+) {
+  const originalPrepare = env.DB.prepare.bind(env.DB);
+  let intercepted = false;
+  let markReached: (() => void) | undefined;
+  let releaseGate: (() => void) | undefined;
+  const reached = new Promise<void>((resolve) => { markReached = resolve; });
+  const gate = new Promise<void>((resolve) => { releaseGate = resolve; });
+  env.DB.prepare = (sql: string) => {
+    const statement = originalPrepare(sql);
+    if (!intercepted && sql.includes(sqlFragment)) {
+      const originalFirst = statement.first.bind(statement);
+      statement.first = async () => {
+        intercepted = true;
+        const result = originalFirst();
+        markReached?.();
+        await gate;
+        return result;
+      };
+    }
+    return statement;
+  };
+  return { reached, release: () => releaseGate?.() };
+}
+
 function acceptInput(token: string, overrides: Record<string, unknown> = {}) {
   return {
     token,
@@ -319,6 +371,13 @@ describe('artwork contributor access foundation', () => {
       ]);
       assert.doesNotMatch(table.sql, /recipient|email|token|idempotency|keeper_piece/i);
       assert.match(table.sql, /attempt_count[\s\S]*between 1 and 10/i);
+      const trigger = database.prepare(
+        `SELECT sql FROM sqlite_master
+          WHERE type = 'trigger'
+            AND name = 'artwork_contributor_invite_rate_limit_guard'`,
+      ).get() as { sql?: string } | undefined;
+      assert.match(trigger?.sql || '', /BEFORE INSERT ON artwork_contributor_invitations/i);
+      assert.match(trigger?.sql || '', /RAISE\(ABORT, 'contributor invite rate limited'\)/i);
     } finally { database.close(); }
   });
 
@@ -373,6 +432,117 @@ describe('artwork contributor access foundation', () => {
       assert.equal(database.prepare(
         'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
       ).get().attempt_count, 10);
+    } finally { database.close(); }
+  });
+
+  it('charges one synchronized exact invite race once at the bucket boundary', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 9; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `exact-race-warmup-${index}@example.com`,
+          idempotencyKey: `exact-race-warmup-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      synchronizeNextFirsts(
+        env,
+        'FROM artwork_contributor_invitations WHERE idempotency_key = ?1',
+        4,
+      );
+      const results = await Promise.all(Array.from(
+        { length: 4 },
+        () => inviteArtworkContributor(env, inviteInput({
+          idempotencyKey: 'invite-synchronized-exact-race',
+        })),
+      ));
+      const created = results.filter((result) => result.status === 'created');
+      const replayed = results.filter((result) => result.status === 'replay');
+      assert.equal(created.length, 1);
+      assert.equal(replayed.length, 3);
+      assert.equal(typeof created[0].token, 'string');
+      assert.equal(replayed.every((result) => !Object.hasOwn(result, 'token')), true);
+      assert.equal(new Set(results.map((result) => result.invitationId)).size, 1);
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+      assert.deepEqual({ ...database.prepare(
+        `SELECT COUNT(*) AS invitations, COUNT(DISTINCT token_hash) AS proofs
+           FROM artwork_contributor_invitations`,
+      ).get() }, { invitations: 1, proofs: 1 });
+    } finally { database.close(); }
+  });
+
+  it('replays a loser that reaches preflight only after the boundary winner commits', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 9; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `delayed-race-warmup-${index}@example.com`,
+          idempotencyKey: `delayed-race-warmup-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      const paused = pauseNextFirst(
+        env,
+        'FROM artwork_contributor_invitations WHERE idempotency_key = ?1',
+      );
+      const loserPromise = inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-delayed-exact-race',
+      }));
+      await paused.reached;
+      const winner = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-delayed-exact-race',
+      }));
+      paused.release();
+      const loser = await loserPromise;
+      assert.equal(winner.status, 'created');
+      assert.equal(typeof winner.token, 'string');
+      assert.deepEqual(loser, {
+        invitationId: winner.invitationId,
+        status: 'replay',
+      });
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
+    } finally { database.close(); }
+  });
+
+  it('replays a loser that sees the boundary winner during relationship lookup', async () => {
+    const { database, env } = fixture();
+    try {
+      for (let index = 0; index < 9; index += 1) {
+        await expectCode(inviteArtworkContributor(env, inviteInput({
+          intendedRecipientEmail: `relationship-race-warmup-${index}@example.com`,
+          idempotencyKey: `relationship-race-warmup-${index}`,
+        })), 'contributor_recipient_not_available');
+      }
+      const paused = pauseNextFirst(
+        env,
+        'FROM user\n      WHERE lower(email) = ?1',
+      );
+      const loserPromise = inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-relationship-exact-race',
+      }));
+      await paused.reached;
+      const winner = await inviteArtworkContributor(env, inviteInput({
+        idempotencyKey: 'invite-relationship-exact-race',
+      }));
+      paused.release();
+      const loser = await loserPromise;
+      assert.equal(winner.status, 'created');
+      assert.equal(typeof winner.token, 'string');
+      assert.deepEqual(loser, {
+        invitationId: winner.invitationId,
+        status: 'replay',
+      });
+      assert.equal(database.prepare(
+        'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+      ).get().attempt_count, 10);
+      assert.equal(database.prepare(
+        'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+      ).get().n, 1);
     } finally { database.close(); }
   });
 

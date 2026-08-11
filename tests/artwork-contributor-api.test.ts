@@ -431,7 +431,7 @@ describe('protected artwork contributor API boundary', () => {
     }
     assert.deepEqual(outcomes, Array.from({ length: 3 }, () => ({
       status: 409,
-      databaseStatements: 4,
+      databaseStatements: 6,
       headers: [
         ['cache-control', 'no-store'],
         ['content-type', 'application/json'],
@@ -477,6 +477,50 @@ describe('protected artwork contributor API boundary', () => {
       ).get().n, 0);
       assert.equal(JSON.stringify(rejectedBody).includes('token'), false);
     } finally { target.database.close(); }
+  });
+
+  it('uses one saturated-bucket path for valid and unavailable recipient account states', async () => {
+    LAUNCH_FLAGS.livingLegacy = true;
+    const statementCounts = [];
+    for (const [index, email] of [
+      'contributor@example.com',
+      'missing@example.com',
+      'unverified@example.com',
+      'twin@example.com',
+    ].entries()) {
+      const target = fixture();
+      try {
+        const now = new Date().toISOString();
+        target.database.prepare(
+          `INSERT INTO artwork_contributor_invite_rate_limits
+             (keeper_user_id, window_started_at, attempt_count, last_attempt_at)
+           VALUES (?1, ?2, 10, ?3)`,
+        ).run('keeper-one', `${now.slice(0, 13)}:00:00.000Z`, now);
+        const before = target.prepares();
+        const response = await keeperEndpoint({
+          request: request('/api/keeper/contributors', 'POST', {
+            ...validInvite,
+            intendedRecipientEmail: email,
+            idempotencyKey: `saturated-account-state-${index}`,
+          }),
+          env: target.env,
+        });
+        statementCounts.push(target.prepares() - before);
+        assert.equal(response.status, 429);
+        const body = await response.json();
+        assert.deepEqual(body, {
+          ok: false, error: 'contributor_invite_rate_limited',
+        });
+        assert.equal(JSON.stringify(body).includes('token'), false);
+        assert.equal(target.database.prepare(
+          'SELECT COUNT(*) AS n FROM artwork_contributor_invitations',
+        ).get().n, 0);
+        assert.equal(target.database.prepare(
+          'SELECT attempt_count FROM artwork_contributor_invite_rate_limits',
+        ).get().attempt_count, 10);
+      } finally { target.database.close(); }
+    }
+    assert.deepEqual(statementCounts, [4, 4, 4, 4]);
   });
 
   it('replays an exact successful invite after the bucket fills without consuming it again', async () => {
