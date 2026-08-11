@@ -18,7 +18,7 @@
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AdminPage } from './admin/AdminPage';
+import { AdminAlert, AdminPage } from './admin/AdminPage';
 import { adminMode } from './admin/adminMode';
 import Viewing from './viewing/Viewing';
 import type { ViewingData, ViewingPiece } from './viewing/viewingTypes';
@@ -146,6 +146,14 @@ const AdminViewings: React.FC = () => {
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [rows, setRows] = useState<ViewingRow[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [exactViewingLoading, setExactViewingLoading] = useState(false);
+  const [exactViewingResult, setExactViewingResult] = useState<{
+    requestId: number;
+    viewing: ViewingRow | null;
+    error: string | null;
+  } | null>(null);
+  const [selectionError, setSelectionError] = useState('');
+  const selectionStatusRef = useRef<HTMLDivElement>(null);
 
   // Intake
   const [recipientName, setRecipientName] = useState('');
@@ -186,6 +194,46 @@ const AdminViewings: React.FC = () => {
     loadList();
   }, []);
 
+  useEffect(() => {
+    if (linkedViewingId === null) {
+      setExactViewingResult(null);
+      setExactViewingLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setExactViewingLoading(true);
+    setExactViewingResult(null);
+    setSelectionError('');
+    setView('list');
+    void fetch(`/api/admin/viewings?viewingId=${encodeURIComponent(String(linkedViewingId))}`, {
+      cache: 'no-store', signal: controller.signal,
+    })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.ok || !Array.isArray(data.viewings)) {
+          throw new Error(data?.error || `request_failed_${response.status}`);
+        }
+        if (data.viewings.length > 1) throw new Error('invalid_response');
+        return data.viewings as ViewingRow[];
+      })
+      .then(exact => {
+        if (!controller.signal.aborted) setExactViewingResult({
+          requestId: linkedViewingId, viewing: exact[0] || null, error: null,
+        });
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) setExactViewingResult({
+          requestId: linkedViewingId,
+          viewing: null,
+          error: error instanceof Error ? error.message : 'The requested viewing could not be loaded.',
+        });
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setExactViewingLoading(false);
+      });
+    return () => controller.abort();
+  }, [linkedViewingId]);
+
   const resetEditor = () => {
     setRecipientName('');
     setIntention('');
@@ -214,6 +262,7 @@ const AdminViewings: React.FC = () => {
 
   const openExisting = (row: ViewingRow) => {
     resetEditor();
+    setSelectionError('');
     setRecipientName(row.recipientName || '');
     setIntention(row.intention || '');
     setViewingId(row.id);
@@ -229,17 +278,19 @@ const AdminViewings: React.FC = () => {
   };
 
   useEffect(() => {
-    if (listLoading) return;
+    if (exactViewingLoading) return;
     if (linkedViewingId !== null) {
-      const row = rows.find(item => item.id === linkedViewingId);
-      if (row) {
+      if (!exactViewingResult || exactViewingResult.requestId !== linkedViewingId) return;
+      if (exactViewingResult.viewing) {
         selectedFromUrlRef.current = linkedViewingId;
-        openExisting(row);
+        openExisting(exactViewingResult.viewing);
       } else {
         selectedFromUrlRef.current = null;
         resetEditor();
         setView('list');
-        setError('The requested viewing was not found.');
+        setSelectionError(
+          exactViewingResult.error || 'The requested viewing was not found.',
+        );
       }
       return;
     }
@@ -247,13 +298,22 @@ const AdminViewings: React.FC = () => {
       selectedFromUrlRef.current = null;
       resetEditor();
       setView('list');
-      setError('The viewing link is not valid.');
-    } else if (selectedFromUrlRef.current !== null) {
-      selectedFromUrlRef.current = null;
-      resetEditor();
-      setView('list');
+      setSelectionError('The viewing link is not valid.');
+    } else {
+      if (selectedFromUrlRef.current !== null) {
+        selectedFromUrlRef.current = null;
+        resetEditor();
+        setView('list');
+      }
+      setSelectionError('');
     }
-  }, [hasViewingSelector, linkedViewingId, listLoading, rows]);
+  }, [exactViewingLoading, exactViewingResult, hasViewingSelector, linkedViewingId]);
+
+  useEffect(() => {
+    if (!selectionError || view !== 'list') return;
+    const frame = requestAnimationFrame(() => selectionStatusRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [selectionError, view]);
 
   const viewingStage = shareUrl ? 3 : showPreview ? 2 : pieces.length > 0 ? 1 : 0;
   const viewingStages = ['Intake', 'Curate', 'Preview', 'Send'];
@@ -353,6 +413,12 @@ const AdminViewings: React.FC = () => {
                 + New viewing
               </button>
             </div>
+
+            {selectionError && (
+              <div ref={selectionStatusRef} tabIndex={-1} className="mb-6 focus:outline-none">
+                <AdminAlert tone="error" live><p>{selectionError}</p></AdminAlert>
+              </div>
+            )}
 
             {listLoading && rows.length === 0 ? (
               <p className="font-sans text-sm text-wood-500">Loading…</p>

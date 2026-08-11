@@ -124,36 +124,51 @@ test('invoice and viewing work links select the exact record on fresh load and U
     dueTodayCents: 10000, paymentPresetId: null, paymentPresetIds: [], paymentSnapshot: {},
     paymentOptions: [], notes: '', amountPaidCents: 0,
   });
-  await page.route('**/api/admin/invoices?**', route => route.fulfill({
-    status: 200, contentType: 'application/json',
-    body: JSON.stringify({ ok: true, invoices: [invoice(2, 'Noah'), invoice(3, 'Aya')] }),
-  }));
+  await page.route('**/api/admin/invoices?**', route => {
+    const selected = Number(new URL(route.request().url()).searchParams.get('invoiceId'));
+    const invoices = selected ? [invoice(selected, selected === 99 ? 'Noah' : 'Aya')] : [invoice(2, 'Recent')];
+    return route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, invoices }),
+    });
+  });
   const viewing = (id: number, recipientName: string) => ({
     id, publicToken: `viewing-token-${id}`, publicUrlPath: `/viewing/viewing-token-${id}`,
     status: 'draft', recipientName, intention: `Intention ${id}`, chart: {},
     data: { pieces: [], recommendation: { picks: [], closing: 'Closing' } },
     invoiceToken: null, createdAt: 1,
   });
-  await page.route('/api/admin/viewings', route => route.fulfill({
-    status: 200, contentType: 'application/json',
-    body: JSON.stringify({ ok: true, viewings: [viewing(11, 'Sofia'), viewing(12, 'Ilan')] }),
-  }));
+  await page.route('**/api/admin/viewings**', route => {
+    const selected = Number(new URL(route.request().url()).searchParams.get('viewingId'));
+    const viewings = selected === 999 ? []
+      : selected ? [viewing(selected, selected === 99 ? 'Sofia' : 'Ilan')]
+        : [viewing(11, 'Recent')];
+    return route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, viewings }),
+    });
+  });
 
-  await page.goto('/admin/invoices?invoiceId=2');
+  await page.goto('/admin/invoices?invoiceId=99');
   await expect(page.getByLabel('Client name')).toHaveValue('Noah');
   await page.evaluate(() => {
-    history.pushState({}, '', '/admin/invoices?invoiceId=3');
+    history.pushState({}, '', '/admin/invoices?invoiceId=100');
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByLabel('Client name')).toHaveValue('Aya');
 
-  await page.goto('/admin/viewings?viewingId=11');
+  await page.goto('/admin/viewings?viewingId=99');
   await expect(page.getByRole('heading', { name: 'Editing · Sofia' })).toBeVisible();
   await page.evaluate(() => {
-    history.pushState({}, '', '/admin/viewings?viewingId=12');
+    history.pushState({}, '', '/admin/viewings?viewingId=100');
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByRole('heading', { name: 'Editing · Ilan' })).toBeVisible();
+  await page.evaluate(() => {
+    history.pushState({}, '', '/admin/viewings?viewingId=999');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  const missingViewing = page.getByRole('alert').filter({ hasText: /requested viewing was not found/i });
+  await expect(missingViewing).toBeVisible();
+  await expect.poll(() => missingViewing.evaluate(node => node.parentElement === document.activeElement)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
 });
 

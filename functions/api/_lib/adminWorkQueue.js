@@ -132,7 +132,7 @@ export async function readAdminWorkQueue(env, options = {}) {
           ORDER BY recorded_at DESC, id DESC`),
         all(env, `SELECT id, invoice_number, public_token, status, job_title,
           total_cents, amount_paid_cents, updated_at, paid_at
-          FROM invoices WHERE status IN ('sent', 'paid', 'overdue') OR amount_paid_cents > 0
+          FROM invoices WHERE status IN ('draft', 'sent', 'paid', 'overdue') OR amount_paid_cents > 0
           ORDER BY updated_at DESC, id DESC`),
         all(env, `SELECT id, status, recipient_name, invoice_token, updated_at, requested_at
           FROM viewings WHERE status IN ('draft', 'requested')

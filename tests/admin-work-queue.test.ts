@@ -48,15 +48,22 @@ function rows(sql: string, bindings: unknown[]): Row[] {
     artwork_id: 'UL-106', keeper_piece_id: null,
   }];
   if (sql.includes('keeper_pieces')) return keepers;
-  if (sql.includes('invoices')) return [
+  if (sql.includes('invoices')) {
+    const invoices = [
     { id: 1, invoice_number: 'INV-PAID', public_token: 'paid-token', status: 'paid', client_name: 'Mira', job_title: 'Original sculpture', total_cents: 10000, amount_paid_cents: 10000, updated_at: 1786406400, paid_at: 1786406400 },
     { id: 2, invoice_number: 'INV-OPEN', public_token: 'open-token', status: 'sent', client_name: 'Noah', job_title: 'Commission', total_cents: 20000, amount_paid_cents: 0, updated_at: 1786406400, paid_at: null },
     { id: 3, invoice_number: 'INV-PART', public_token: 'part-token', status: 'sent', client_name: 'Aya', job_title: 'Edition', total_cents: 30000, amount_paid_cents: 5000, updated_at: 1786406400, paid_at: null },
     { id: 4, invoice_number: 'INV-LATE', public_token: 'late-token', status: 'overdue', client_name: 'Leo', job_title: 'Sculpture', total_cents: 40000, amount_paid_cents: 0, updated_at: 1786406400, paid_at: null },
-  ];
+    { id: 5, invoice_number: 'INV-DRAFT', public_token: 'linked-draft-invoice-token', status: 'draft', client_name: 'Ilan', job_title: 'Requested work', total_cents: 50000, amount_paid_cents: 0, updated_at: 1786406400, paid_at: null },
+    ];
+    return sql.includes("status IN ('sent', 'paid', 'overdue')")
+      ? invoices.filter((invoice) => ['sent', 'paid', 'overdue'].includes(invoice.status)
+        || Number(invoice.amount_paid_cents) > 0)
+      : invoices;
+  }
   if (sql.includes('viewings')) return [
     { id: 11, public_token: 'draft-token', status: 'draft', recipient_name: 'Sofia', invoice_token: null, updated_at: 1786406400, requested_at: null },
-    { id: 12, public_token: 'request-token', status: 'requested', recipient_name: 'Ilan', invoice_token: 'open-token', updated_at: 1786406400, requested_at: 1786406400 },
+    { id: 12, public_token: 'request-token', status: 'requested', recipient_name: 'Ilan', invoice_token: 'linked-draft-invoice-token', updated_at: 1786406400, requested_at: 1786406400 },
   ];
   if (sql.includes('artwork_invitations')) return [
     { id: 'iv-ready', keeper_piece_id: 'kp-ready', created_at: '2026-08-10T00:00:00.000Z', expires_at: '2099-08-20T00:00:00.000Z', revoked_at: null, redeemed_at: null },
@@ -111,6 +118,8 @@ describe('admin work queue', () => {
       '/admin/invoices?invoiceId=2');
     assert.equal(result.queue.items.find((item) => item.state === 'draft')?.href,
       '/admin/viewings?viewingId=11');
+    assert.equal(result.queue.items.find((item) => item.state === 'requested_with_invoice')?.href,
+      '/admin/invoices?invoiceId=5');
     assert.doesNotMatch(
       JSON.stringify(result),
       /collector@example\.com|paid-token|request-token|\bMira\b|\bNoah\b/,

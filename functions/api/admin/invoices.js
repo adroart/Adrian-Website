@@ -20,6 +20,25 @@ export async function onRequest(context) {
 
 async function listInvoices(request, env) {
   const url = new URL(request.url);
+  const keys = [...url.searchParams.keys()];
+  const invoiceIds = url.searchParams.getAll('invoiceId');
+  if (invoiceIds.length > 0) {
+    const rawId = invoiceIds[0];
+    const invoiceId = Number(rawId);
+    if (invoiceIds.length !== 1 || keys.length !== 1 || !/^\d+$/.test(rawId)
+      || !Number.isSafeInteger(invoiceId) || invoiceId < 1 || String(invoiceId) !== rawId) {
+      return jsonResponse({ ok: false, error: 'invalid_query' }, 400);
+    }
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM invoices WHERE id = ?1 LIMIT 1',
+    ).bind(invoiceId).all();
+    return jsonResponse({ ok: true, invoices: (results || []).map(serializeInvoiceRow) });
+  }
+  const allowed = new Set(['status', 'limit', 'offset']);
+  if (keys.some(key => !allowed.has(key))
+    || [...allowed].some(key => url.searchParams.getAll(key).length > 1)) {
+    return jsonResponse({ ok: false, error: 'invalid_query' }, 400);
+  }
   const status = url.searchParams.get('status');
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100);
   const offset = Math.max(0, Number(url.searchParams.get('offset') || 0) || 0);

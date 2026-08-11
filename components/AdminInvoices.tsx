@@ -130,6 +130,12 @@ const AdminInvoices: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savedInvoice, setSavedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exactInvoiceLoading, setExactInvoiceLoading] = useState(false);
+  const [exactInvoiceResult, setExactInvoiceResult] = useState<{
+    requestId: number;
+    invoice: Invoice | null;
+    error: string | null;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [presetSaving, setPresetSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
@@ -149,7 +155,7 @@ const AdminInvoices: React.FC = () => {
     try {
       const [presetData, invoiceData] = await Promise.all([
         fetch('/api/admin/payment-presets').then(res => readJson<{ ok: boolean; presets: PaymentPreset[] }>(res)),
-        fetch('/api/admin/invoices?limit=100').then(res => readJson<{ ok: boolean; invoices: Invoice[] }>(res)),
+        fetch('/api/admin/invoices?limit=30').then(res => readJson<{ ok: boolean; invoices: Invoice[] }>(res)),
       ]);
       const nextPresets = sortPaymentPresets(presetData.presets || []);
       setPresets(nextPresets);
@@ -166,6 +172,38 @@ const AdminInvoices: React.FC = () => {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (linkedInvoiceId === null) {
+      setExactInvoiceResult(null);
+      setExactInvoiceLoading(false);
+      return;
+    }
+    const controller = new AbortController();
+    setExactInvoiceLoading(true);
+    setExactInvoiceResult(null);
+    setEditingId(null);
+    setSavedInvoice(null);
+    setDraft({ ...EMPTY_DRAFT, paymentPresetIds: presets.map(preset => preset.id) });
+    void fetch(`/api/admin/invoices?invoiceId=${encodeURIComponent(String(linkedInvoiceId))}`, {
+      cache: 'no-store', signal: controller.signal,
+    })
+      .then(response => readJson<{ ok: boolean; invoices: Invoice[] }>(response))
+      .then(data => {
+        if (controller.signal.aborted) return;
+        const exact = data.invoices || [];
+        if (exact.length > 1) throw new Error('invalid_response');
+        setExactInvoiceResult({ requestId: linkedInvoiceId, invoice: exact[0] || null, error: null });
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setExactInvoiceResult({ requestId: linkedInvoiceId, invoice: null, error: niceError(error) });
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setExactInvoiceLoading(false);
+      });
+    return () => controller.abort();
+  }, [linkedInvoiceId]);
 
   // Prefill from the pricing calculator's "Draft an invoice from this quote"
   // hand-off (sessionStorage key 'pricing:invoice-draft'). One-shot: consume
@@ -367,16 +405,19 @@ const AdminInvoices: React.FC = () => {
   };
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || exactInvoiceLoading) return;
     if (linkedInvoiceId !== null) {
-      const invoice = invoices.find(item => item.id === linkedInvoiceId);
-      if (invoice) {
+      if (!exactInvoiceResult || exactInvoiceResult.requestId !== linkedInvoiceId) return;
+      if (exactInvoiceResult.invoice) {
         selectedFromUrlRef.current = linkedInvoiceId;
-        editInvoice(invoice);
+        editInvoice(exactInvoiceResult.invoice);
       } else {
         selectedFromUrlRef.current = null;
         resetForm();
-        setMessage({ type: 'err', text: 'The requested invoice was not found.' });
+        setMessage({
+          type: 'err',
+          text: exactInvoiceResult.error || 'The requested invoice was not found.',
+        });
       }
       return;
     }
@@ -388,7 +429,7 @@ const AdminInvoices: React.FC = () => {
       selectedFromUrlRef.current = null;
       resetForm();
     }
-  }, [hasInvoiceSelector, invoices, linkedInvoiceId, loading]);
+  }, [exactInvoiceLoading, exactInvoiceResult, hasInvoiceSelector, linkedInvoiceId, loading]);
 
   const markPaid = async (invoice: Invoice) => {
     const paidSoFar = invoice.amountPaidCents || 0;
