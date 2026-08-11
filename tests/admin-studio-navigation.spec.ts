@@ -213,7 +213,7 @@ test('artwork workspace keeps its header stable and renders exact relationships 
   ]) await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Review caretaker experience' })).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'Open sales record' })).toHaveAttribute(
-    'href', '/admin/collector-sales?artistArtworkRecordId=record-1',
+    'href', '/admin/collector-sales?artistArtworkRecordId=record-1&keeperPieceId=keeper-1',
   );
   await expect(page.getByRole('link', { name: 'Open public piece preview' })).toHaveAttribute(
     'href', '/works/UL-100?instance=AR-BCDEFGHJ',
@@ -255,6 +255,197 @@ test('artwork workspace focuses missing and conflicting exact identity states', 
   await expect(conflict).toBeVisible();
   await expect.poll(() => conflict.evaluate(node => node.parentElement === document.activeElement)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+});
+
+test('verified sales deep link opens the exact artwork record on a fresh load', async ({ page }) => {
+  const now = '2026-08-10T12:00:00.000Z';
+  const sale = {
+    saleId: 'sale-target', reconnectionCaseId: null,
+    occurrence: { precision: 'year', value: '2024' }, buyerEmail: null,
+    total: null, privateReference: null, privateNotes: null,
+    recordedAt: now, sequence: 0,
+  };
+  const item = {
+    saleItemId: 'sale-item-target', artworkRecordId: 'record-target',
+    artworkId: 'UL-100', edition: { kind: 'unique', number: null, size: null },
+    keeperPieceId: 'keeper-target', identificationStatus: 'identity_linked',
+    recordVersion: 1, price: null, priceEntries: [], ledgerEntries: [],
+  };
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('**/api/admin/artwork-workspace**', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      workspace: {
+        catalog: { artworkId: 'UL-100', title: 'Art of Living' },
+        salesRecord: { artworkRecordId: 'record-target', state: 'identity_linked' },
+        identity: { keeperPieceId: 'keeper-target', publicCode: 'AR-BCDEFGHJ', state: 'registered' },
+        certificate: { state: 'complete', missingFields: [] },
+        invitation: null, caretaker: { state: 'unclaimed' },
+        plate: { state: 'legacy', recoveryState: 'not_required' },
+        sale: { state: 'verified', verifiedSaleId: 'sale-target' },
+        nextAction: null, activity: [],
+      },
+    }),
+  }));
+  await page.route('**/api/admin/collector-sales**', route => {
+    const url = new URL(route.request().url());
+    const detail = url.pathname.endsWith('/sale-target');
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify(detail ? {
+        ok: true, sale, originalSale: sale, effectiveSale: sale,
+        corrections: [], items: [item], events: [],
+      } : {
+        ok: true, sales: [{ ...sale, identificationStatuses: ['identity_linked'] }],
+        reconnectionCases: [],
+        pagination: {
+          limit: 25, offset: 0,
+          sales: { hasMore: false, nextOffset: null },
+          reconnectionCases: { hasMore: false, nextOffset: null },
+        },
+      }),
+    });
+  });
+  await page.route('**/api/admin/collector-ledger**', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      artworkRecord: {
+        artworkRecordId: 'record-target', artworkId: 'UL-100',
+        edition: { kind: 'unique', number: null, size: null },
+        keeperPieceId: 'keeper-target', identificationStatus: 'identity_linked',
+        recordVersion: 1, createdAt: now, updatedAt: now,
+      },
+      ledgerEntries: [], media: [], selectedCertificateImage: null, saleContext: null,
+    }),
+  }));
+  await page.route('/api/admin/invitations', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, invitations: [] }),
+  }));
+
+  await page.goto('/admin/collector-sales?artistArtworkRecordId=record-target&keeperPieceId=keeper-target');
+  await expect(page.getByRole('heading', { name: 'Sale from 2024' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Artwork 1 actions' })).toContainText('Identity linked');
+});
+
+test('certificate deep link selects and loads the exact artwork on a fresh load', async ({ page }) => {
+  let requestedArtworkId = '';
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/certificate-templates', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, templates: [] }),
+  }));
+  await page.route('**/api/admin/certificate-overrides**', route => {
+    requestedArtworkId = new URL(route.request().url()).searchParams.get('artworkId') || '';
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        state: {
+          artworkId: 'UL-100', assignment: null, overrides: {},
+          effective: { materials: ['Wood'] },
+        },
+      }),
+    });
+  });
+
+  await page.goto('/admin/certificates?artworkId=UL-100');
+  await expect(page.getByRole('combobox', { name: 'Artwork' })).toHaveValue('UL-100');
+  await expect(page.getByText(/"materials":/)).toBeVisible();
+  expect(requestedArtworkId).toBe('UL-100');
+});
+
+test('invitation deep link prefills the exact physical identity on a fresh load', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/invitations', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, invitations: [] }),
+  }));
+
+  await page.goto('/admin/invitations?keeperPieceId=keeper-target');
+  await expect(page.getByLabel('Registered piece ID')).toHaveValue('keeper-target');
+});
+
+test('Maintenance deep link opens the exact physical record on a fresh load', async ({ page }) => {
+  const detail = {
+    id: 'keeper-target',
+    public: {
+      artworkId: 'UL-100', title: 'Deep linked artwork', series: 'Universal Language',
+      editionNumber: 1, editionSize: 64, publicCode: 'AR-BCDEFGHJ', plateStatus: 'active',
+    },
+    physical: {
+      registeredAt: '2026-08-01T00:00:00.000Z',
+      plateGeneratedAt: '2026-08-02T00:00:00.000Z',
+      plateActivatedAt: '2026-08-03T00:00:00.000Z', recordVersion: 1,
+      recovery: { verifierPresent: true, envelopePresent: true, backupStatus: 'verified', backupAt: '2026-08-03T00:00:00.000Z' },
+    },
+    stewardVersion: 0, steward: null, acquisitions: [], creatorHistory: [], maintenanceHistory: [],
+  };
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/registry-unlock', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, unlocked: false }),
+  }));
+  await page.route('**/api/admin/maintenance**', route => {
+    const url = new URL(route.request().url());
+    const isDetail = url.pathname.endsWith('/keeper-target');
+    return route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify(isDetail ? { ok: true, piece: detail } : {
+        ok: true,
+        pieces: [{
+          id: 'keeper-target', artworkId: 'UL-100', title: 'Deep linked artwork',
+          editionNumber: 1, publicCode: 'AR-BCDEFGHJ', plateStatus: 'active',
+        }],
+      }),
+    });
+  });
+
+  await page.goto('/admin/maintenance?artworkId=UL-100&keeperPieceId=keeper-target');
+  await expect(page.getByRole('heading', { name: 'Deep linked artwork' })).toBeVisible();
+  await expect(page.getByLabel('Artwork ID')).toHaveValue('UL-100');
+});
+
+test('plate wizard deep link resumes the exact physical identity on a fresh load', async ({ page }) => {
+  await page.route('/api/admin/verify', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, admin: { id: 'admin-1', email: 'artist@example.com' } }),
+  }));
+  await page.route('/api/admin/registry-unlock', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, unlocked: true }),
+  }));
+  await page.route('/api/admin/artworks', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, artworks: [] }),
+  }));
+  await page.route('/api/admin/pieces', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      pieces: [{
+        id: 'keeper-target', pieceId: 'UL-100', editionNumber: 1,
+        publicCode: 'AR-BCDEFGHJ', plateStatus: 'generated', backupStatus: null,
+        backupReference: null, backupSha256: null, frontSha256: null, undersideSha256: null,
+        plateGeneratedAt: '2026-08-02T00:00:00.000Z', plateActivatedAt: null,
+        backupAt: null, keeperBound: false, currentDisplayLocation: null,
+        registeredAt: '2026-08-01T00:00:00.000Z', claimedAt: null, releasedAt: null,
+        recoveryQualification: { status: 'missing', reasons: ['not verified'], qualifiedAt: null },
+      }],
+    }),
+  }));
+
+  await page.goto('/admin/pieces/wizard?keeperPieceId=keeper-target');
+  await expect(page.getByRole('heading', { name: 'Encrypted backup' })).toBeVisible();
+  await expect(page.getByText(/UL-100 · edition 1/)).toBeVisible();
 });
 
 test('opens Maintenance from Artwork and renders the private five-section detail accessibly', async ({ page }) => {

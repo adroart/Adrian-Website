@@ -17,7 +17,7 @@
  * is the in-wizard second factor.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AdminPage } from './admin/AdminPage';
 import { FULL_ARCHIVE } from '../data/mockData';
 import {
@@ -161,6 +161,10 @@ function snapshotOf(row: PieceRow): PlateLifecycleSnapshot {
 }
 
 const AdminPlateWizard: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const appliedDeepLinkRef = useRef('');
   // Access + data
   const [registryUnlocked, setRegistryUnlocked] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -358,6 +362,17 @@ const AdminPlateWizard: React.FC = () => {
     setStageIndex(plateWizardStageIndex(target));
     setStarted(true);
   };
+
+  useEffect(() => {
+    if (!linkedKeeperPieceId || loading || appliedDeepLinkRef.current === linkedKeeperPieceId) return;
+    const row = rows.find((candidate) => candidate.id === linkedKeeperPieceId);
+    appliedDeepLinkRef.current = linkedKeeperPieceId;
+    if (!row) {
+      setLoadError('The linked physical artwork was not found in the plate registry.');
+      return;
+    }
+    resumePiece(row);
+  }, [linkedKeeperPieceId, loading, rows]);
 
   const downloadLedger = async () => {
     setStepError('');

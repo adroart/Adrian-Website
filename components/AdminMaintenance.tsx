@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AdminAlert,
   AdminEmptyState,
@@ -356,7 +356,14 @@ const ProvenanceSnapshot: React.FC<{
 };
 
 const AdminMaintenance: React.FC = () => {
-  const [searchDraft, setSearchDraft] = useState<SearchDraft>(EMPTY_SEARCH);
+  const [searchParams] = useSearchParams();
+  const queryArtworkIds = searchParams.getAll('artworkId');
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedArtworkId = queryArtworkIds.length === 1 ? queryArtworkIds[0] : '';
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const [searchDraft, setSearchDraft] = useState<SearchDraft>({
+    ...EMPTY_SEARCH, artworkId: linkedArtworkId,
+  });
   const [results, setResults] = useState<MaintenanceListItem[]>([]);
   const [searching, setSearching] = useState(true);
   const [searchError, setSearchError] = useState('');
@@ -515,13 +522,22 @@ const AdminMaintenance: React.FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadSearch({}, controller.signal);
+    setSearchDraft((current) => ({ ...current, artworkId: linkedArtworkId }));
+    void loadSearch(linkedArtworkId ? { artworkId: linkedArtworkId } : {}, controller.signal);
+    if (linkedKeeperPieceId) {
+      void loadDetail(linkedKeeperPieceId, controller.signal).then((detail) => {
+        if (linkedArtworkId && detail.public.artworkId !== linkedArtworkId) {
+          setSelected(null);
+          setDetailError('The linked physical record does not match this artwork ID.');
+        }
+      }).catch(() => undefined);
+    }
     void fetch('/api/admin/registry-unlock', { cache: 'no-store', signal: controller.signal })
       .then(response => response.json())
       .then(data => setRegistryUnlocked(data?.ok === true && data?.unlocked === true))
       .catch(() => setRegistryUnlocked(false));
     return () => controller.abort();
-  }, [loadSearch]);
+  }, [loadDetail, loadSearch, linkedArtworkId, linkedKeeperPieceId]);
 
   useEffect(() => {
     if (review) reasonRef.current?.focus();

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminAlert, AdminEmptyState, AdminPage, AdminPageHeader, AdminSection } from './AdminPage';
 import {
   beginInvitationCreateAttempt,
@@ -16,7 +17,10 @@ const labelClass = 'font-label text-[11px] uppercase tracking-[0.12em] text-wood
 const buttonClass = 'min-h-11 font-label text-[11px] uppercase tracking-[0.16em] text-bronze-700 border border-bronze-500 px-5 py-2.5 hover:bg-bronze-200 disabled:opacity-50 transition-colors';
 
 export const ArtworkInvitations: React.FC = () => {
-  const [keeperPieceId, setKeeperPieceId] = useState('');
+  const [searchParams] = useSearchParams();
+  const queryKeeperPieceIds = searchParams.getAll('keeperPieceId');
+  const linkedKeeperPieceId = queryKeeperPieceIds.length === 1 ? queryKeeperPieceIds[0] : '';
+  const [keeperPieceId, setKeeperPieceId] = useState(linkedKeeperPieceId);
   const [email, setEmail] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [attempt, setAttempt] = useState<InvitationCreateAttempt | null>(null);
@@ -24,6 +28,10 @@ export const ArtworkInvitations: React.FC = () => {
   const [rows, setRows] = useState<AdminInvitation[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (linkedKeeperPieceId) setKeeperPieceId(linkedKeeperPieceId);
+  }, [linkedKeeperPieceId]);
 
   const load = useCallback(async () => {
     try {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { FULL_ARCHIVE } from '../../data/mockData';
 import {
   beginArtistSaleAttempt,
@@ -23,6 +23,7 @@ import {
   type ArtistSaleWorkspaceResponse,
   type FrozenArtistSaleAttempt,
 } from '../../utils/artistSales';
+import { loadArtworkWorkspace } from '../../utils/artworkWorkspace';
 import {
   beginInvitationCreateAttempt,
   type AdminInvitation,
@@ -224,6 +225,13 @@ function correctionChanges(correction: ArtistSaleCorrection): Array<{
 }
 
 const CollectorSales: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const deepLinkQuery = searchParams.toString();
+  const deepLinkParams = new URLSearchParams(deepLinkQuery);
+  const deepLinkedArtworkRecordId = deepLinkParams.getAll('artistArtworkRecordId').length === 1
+    ? deepLinkParams.get('artistArtworkRecordId') : null;
+  const deepLinkedKeeperPieceId = deepLinkParams.getAll('keeperPieceId').length === 1
+    ? deepLinkParams.get('keeperPieceId') : null;
   const [workspace, setWorkspace] = useState<ArtistSaleWorkspaceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -289,6 +297,27 @@ const CollectorSales: React.FC = () => {
     void loadWorkspace(controller.signal);
     return () => controller.abort();
   }, [loadWorkspace]);
+
+  useEffect(() => {
+    if (!deepLinkedArtworkRecordId) return;
+    const controller = new AbortController();
+    void loadArtworkWorkspace({
+      artistArtworkRecordId: deepLinkedArtworkRecordId,
+      ...(deepLinkedKeeperPieceId ? { keeperPieceId: deepLinkedKeeperPieceId } : {}),
+    }, controller.signal).then((linkedWorkspace) => {
+      if (controller.signal.aborted) return;
+      const saleId = linkedWorkspace.sale?.verifiedSaleId;
+      if (linkedWorkspace.salesRecord?.artworkRecordId !== deepLinkedArtworkRecordId || !saleId) {
+        throw new Error('linked_sale_not_found');
+      }
+      setSelection({ kind: 'sale', id: saleId });
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted
+        || (error instanceof DOMException && error.name === 'AbortError')) return;
+      setActionError('The linked artwork sale record could not be opened. Return to the artwork workspace and try again.');
+    });
+    return () => controller.abort();
+  }, [deepLinkedArtworkRecordId, deepLinkedKeeperPieceId]);
 
   const loadSale = useCallback(async (saleId: string, signal?: AbortSignal) => {
     setDetailLoading(true);

@@ -84,7 +84,7 @@ function WorkspaceSummaries({ workspace }: { workspace: ArtworkWorkspaceData }) 
               ? workspace.certificate.missingFields.map(stateLabel).join(', ') : 'None'],
           ]} />
           <div className="mt-5 flex flex-wrap gap-4">
-            {artistArtworkRecordId && <Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId })}>Open sales record</Link>}
+            {artistArtworkRecordId && <Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId, keeperPieceId })}>Open sales record</Link>}
             {artworkId && <Link className={linkClass} to={queryPath('/admin/certificates', { artworkId })}>Open certificate editor</Link>}
           </div>
         </AdminSection>
@@ -99,7 +99,7 @@ function WorkspaceSummaries({ workspace }: { workspace: ArtworkWorkspaceData }) 
                 ['Verified sale ID', workspace.sale?.verifiedSaleId || 'Not verified'],
                 ['Artwork ledger', artistArtworkRecordId ? 'Available in the sales record' : 'No ledger linked'],
               ]} />
-              {artistArtworkRecordId && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId })}>Open verified sale and ledger</Link></p>}
+              {artistArtworkRecordId && <p className="mt-5"><Link className={linkClass} to={queryPath('/admin/collector-sales', { artistArtworkRecordId, keeperPieceId })}>Open verified sale and ledger</Link></p>}
             </>
           ) : <AdminEmptyState title="No sale relationship" description="No verified sale or artwork ledger is linked to this catalog record." />}
         </AdminSection>
